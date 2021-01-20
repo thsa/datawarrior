@@ -1,0 +1,62 @@
+batik-all.jar created with script, contains:
+- batik-all-1.11.jar
+- xmlgraphics-commons-2.3.jar (needed by batik-all-1.11.jar)
+
+(capka.jar)
+Contains at least the needed subset of the ChemAxon pKa-plugin software needed to calculate pKa values.
+If you have licensed the ChemAxon pKa-plugin, then you may be build a 'capka.jar' file yourself.
+If you build with a capka.jar file, then don't use the chemaxon stubs directory as part of the source code!
+
+commons-math-2.2.jar
+
+jep.jar (JEP Java Expression parser 2.4.1; GPL3)
+
+jni-inchi-0.7-jar-with-dependencies.jar 2010-10-31
+from https://sourceforge.net/projects/jni-inchi/files/latest/download
+Guide: http://jni-inchi.sourceforge.net/guide.html
+
+ojdbc8.jar
+Oracle Database 19c (19.7) JDBC Driver (certified for JDK8,9,11)
+
+mmtf.jar (used to retrieve PDB entries in binary mmtf format) contains:
+- jackson-annotations-2.9.5.jar
+- jackson-core-2.9.5.jar
+- jackson-databind-2.9.5.jar
+- jackson-dataformat-msgpack-0.8.9.jar
+- mmtf-api-1.0.7.jar
+- mmtf-codec-1.0.7.jar
+- mmtf-serialization-1.0.7.jar
+- msgpack-core-0.8.9.jar
+  (was shrunk after merging using proguard to remove unused classes and methods in jackson & msgpack)
+
+mssql-jdbc-7.2.2.jre8
+
+mysql-connector-java-8.0.19.jar
+
+opsin-2.4.0-excludingInChI-jar-with-dependencies.jar from https://bitbucket.org/dan2097/opsin/downloads/
+
+postgresql-42.2.6.jar
+
+substancelaf.jar contains a merge of these 4 files:
+substance-7.31.jar
+trident-7.3-swing.jar
+laf-plugin-7.31.jar
+laf-widget-7.31.jar
+
+tsne_small.jar: original file, but using EJML 0.38 instead of 0.26 (because Debian uses 0.38)
+and used proguard to remove unused dependencies
+and removed all (evidently unused) dlls and shared libraries
+tsneo.jar: tsne_small.jar without the actual tsne code, i.e. dependencies only
+for use with modified tsne code.
+
+javaxVecmath-1.5.2.jar
+
+WMF2Viewer.jar
+
+xml-apis-ext-1.3.04.jar
+
+openchemlib.jar (newest version of openchemlib from github.com)
+
+molviewerlib.jar (newest library version of fxmolviewer from github.com)
+- janino-2.7.0.jar (needed by SunFlow, this version is part of the Debian janino package, part of molviewerlib.jar)
+- commons-compiler-2.7.0.jar (needed by SunFlow, part of Debian janino package, part of molviewerlib.jar)

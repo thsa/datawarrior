@@ -1,0 +1,132 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+  <title>DataWarrior Installation</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+
+<hr align="left" size="2" width="550">
+<h2><a name="Installation"></a>Installation And Customization</h2>
+<hr align="left" size="2" width="550">
+
+<h3><a name="Installers"></a>Installing DataWarrior</h3>
+<p><span class="keyword">DataWarrior</span> installers are available for Linux, Macintosh and Windows.
+DataWarrior was written in Java and its complete source code is published under the
+<span class="keyword">GNU Public License</span>. Installers for the three platforms, and the source code
+can be downloaded from www.openmolecules.org. The DataWarrior installation contains various example
+files and a complete user manual, which is accessible from within the application. In addition to
+the embedded documentation the user manual is also available online at www.openmolecules.org. All
+installers also contain the Java runtime environment needed.</p>
+
+<p>To install <span class="keyword">DataWarrior</span> on Windows just double click the downloaded datawarrior.msi
+file and follow the instructions. Anytime later you may tracelessly uninstall the program using the
+<span class="keyword">Control Panel</span>. <span class="keyword">DataWarrior</span> for Windows is
+a 64-bit application and includes its own 64-bit Java Runtime environment.
+</p>
+<p>To install <span class="keyword">DataWarrior</span> on the <span class="keyword">Macintosh</span>
+just double click the downloaded datawarrior.dmg file and drag the <span class="keyword">DataWarrior</span>
+application icon onto the Application folder. When trying to launch <span class="keyword">DataWarrior</span>
+you may get an error message <i>DataWarrior can not be opened because the developer can not be verified.</i>.
+In this case press <span class="menu">Cancel</span>, open <span class="keyword">System Preferences</span>,
+and go to <span class="keyword">Security and Privacy -> General</span>.
+There will be a message about the program that was blocked, with the option to <span class="menu">Open Anyway</span>.
+In case you want to de-install the software later, just drag the <span class="keyword">DataWarrior</span>
+folder from the application folder into the trash.
+</p>
+To install <span class="keyword">DataWarrior</span> on <span class="keyword">Linux</span> unpack the
+downloaded datawarrior.tar.gz file to any location and run the install script with root privileges.
+To later uninstall <span class="keyword">DataWarrior</span> you may run /opt/uninstall with root privileges.
+</p>
+<br>
+
+<h3>Updating DataWarrior</h3>
+<p>If you didn't disable the automatic update check in the <span class="menu">Help</span> menu, then
+<span class="keyword">DataWarrior</span> checks when the application is launched, whether an updated version
+is available. If an update is found, then a respective message is displayed.</p>
+<p>In order to update an existing <span class="keyword">DataWarrior</span> installation to a newer version,
+we recommend to uninstall the previous version as described above and then to install the new version.
+If you have saved or modified any files in the <span class="keyword">DataWarrior</span> installation directory
+or any of its subfolders (e.g. 'reference', 'example', or the 'macro' folder), then you should copy these files
+to a safe place before uninstalling the outdated <span class="keyword">DataWarrior</span> version.</p>
+<p>Currently, <span class="keyword">DataWarrior</span> is officially updated about once a year. In between,
+there are lots of unofficial <span class="keyword">development updates</span> with bugfixes and new functionality.
+Typically, these updates contain steady improvements. However, they are less tested, new functionality may not
+be documented or not in a final state. You may update the recent official version or any earlier development version
+by downloading a <span class="keyword">development update</span> as zip-file, unpack it and move the obtained
+files into the datawarrior installation directory or its sub-directories, where they typically replace earlier files.
+To be on the save side, you should backup the original files before replacing them. You find the download links
+for the current <span class="keyword">development version</span> on the download page in the small print that
+appears after clicking the <span class="keyword">Read And Understood</span> checkbox.
+On <span class="keyword">Linux</span> and <span class="keyword">Windows</span> the datawarrior installation
+directories are <i>/opt/datawarrior</i> and <i>C:\\Program Files\DataWarrior</i>, respectively.
+On the Macintosh it is <i>/Applications/DataWarrior.app/Contents/Java</i> for all <span class="keyword">jar</span>
+files, while all other files go into <i>/Applications/DataWarrior.app</i>. To open this folder from the
+<span class="keyword">Finder</span>, you need to open the <span class="keyword">Applications</span> folder,
+do a right (or Control) mouse click on the <span class="keyword">DataWarrior</span> icon, and select
+<span class="menu">Show Package Contents</span>.
+</p>
+<br>
+
+<h3><a name="LookAndFeel"></a>Look & Feel</h3>
+<p>When <span class="keyword">DataWarrior</span> launches for the first time, it uses the <span class="keyword">Graphite
+Look & Feel</span>, which means that all user interface elements and the background are drawn in a dark grayish tone.
+This emphasises in particular color-rich views. Since aesthetic perception depends on the individuum,
+the <span class="menu">Help</span> menu allows to choose from a couple of different <span class="keyword">Look & Feels</span>.
+The chosen <span class="keyword">Look & Feels</span> is stored as part of <span class="keyword">DataWarrior's</span>
+settings.</p>
+<p align="center"><img src="help/img/installation/laf.jpeg"></p>
+<p align="center"><i>Three different Look & Feels on a Macintosh</i></p>
+
+<br>
+<h3><a name="HiDPI"></a>Hi-Resolution Monitors</h3>
+<p>During recent years computer and monitor manufacturers have introduced monitors with substantially
+higher resolutions than what was common before. <span class="keyword">DataWarrior</span> supports
+these monitors on all three platforms, but in a slightly different way, because high resolution
+monitors are handled differently on different operating systems. In general user interface elements
+as buttons, combo boxes and menu items are enlarged to make up for the smaller pixel size. Therefore,
+everything looks much sharper.</p>
+<p>On <span class="keyword">Windows</span> the enlargement factor can be defined for all applications
+in the <span class="keyword">Display Control Panel</span> under <span class="keyword">Appearance
+and Personalization</span>. Under some versions of Windows it is also necessary to disable DPI virtualization
+for the DataWarrior application. To do so, right-click the name of the DataWarrior executable file,
+click Properties, click the Compatibility tab, and then select the box labeled <span class="keyword">Disable
+display scaling on high DPI settings</span>.</p>
+<p>On Retina displays of the <span class="keyword">Macintosh</span> this factor is predefined as 2.0.
+And on <span class="keyword">Linux</span> it depends on the Linux dialect. Sometimes the scaling factor
+can be defined in the display settings dialog as it was under Ubuntu with the Unity desktop. On the Gnome
+desktop the scaling factor may be increased for all applications using this command:</p>
+<p><span class="code">gsettings set org.gnome.desktop.interface text-scaling-factor 1.4</span></p>
+<p><span class="keyword">DataWarrior</span> recognizes these settings and increases its fonts and user interface
+elements accordingly. In addition a DataWarrior specific scaling factor can be defined by adding a 'dpifactor'
+parameter after the -X options into the script that launches DataWarrior ('/opt/datawarrior/datawarrior').
+Its second line would then look like this:</p>
+<p><span class="code">java -Xms512m -Xmx4096m -Ddpifactor=1.4 ...</span></p>
+<br>
+
+<h3><a name="Memory"></a>Memory Settings</h3>
+<p>As all Java programs, <span class="keyword">DataWarrior</span> has a predefined maximum memory setting,
+which should allow you to work with rather big data files. If these, however, grow into millions of rows,
+then you may experience <span class="keyword">Out of memory</span> errors. If your computer has enough physical
+memory, then you may increase <span class="keyword">DataWarrior's</span> maximum memory setting the following way:</p>
+<p>On <span class="keyword">Linux</span> this can be easily done by updating the batch file that launches
+<span class="keyword">DataWarrior</span>. Open a shell and type <span class="code">sudo pico /opt/datawarrior/datawarrior</span>
+(if you can't use <span class="code">sudo</span>, then type <span class="code">su</span>, <span class="keyword">Enter</span>
+and, when asked for the password, the super-user password. Then type <span class="code">pico /opt/datawarrior/datawarrior</span>.
+Look for the <span class="code">-Xmx4096</span> setting in the last line, which defines the maximum memory size.
+Increase the number, press <span class="keyword">Ctrl-O</span> and <span class="keyword">Enter</span> to save changes
+and <span class="keyword">Ctrl-X</span> to exit the editor.</p>
+<p>On the <span class="keyword">Macintosh</span> you do the following: Open a terminal window, type
+<span class="code">pico /Applications/DataWarrior.app/Contents/Info.plist</span>. A text editor opens.
+Use the cursor keys to move close to the end of the file, where you will find the <span class="code">-Xmx4096M</span>
+setting. Increase the number, press <span class="keyword">Ctrl-O</span> and <span class="keyword">Enter</span>
+to save changes and <span class="keyword">Ctrl-X</span> to exit the editor.</p>
+<p>If you use Windows, the procedure is a little more complicated. You need to patch the DataWarrior.exe
+file. For that start a hex-editor or your choice, search the file for the string <span class="code">-Xmx3600m</span>
+and increase the number part of it, save the file and you are done.</p>
+<br>
+
+</body>
+</html>

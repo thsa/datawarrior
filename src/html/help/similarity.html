@@ -1,0 +1,182 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+  <title>Similarity & Descriptors</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+<hr align="left" size="2" width="550">
+<h2><a name="MoleculeSimilarity"></a>Molecule or Reaction Similarity and Descriptors</h2>
+
+<hr align="left" size="2" width="550">
+<p>Molecule and reaction similarities play an important role in <span class="keyword">DataWarrior</span>.
+They are calculated, when using a filter to focus on a similar molecule subset and they are used to customize views,
+e.g. to color, size or position markers based on compound similarities.
+Some data analysis algorithms, which typically use alpha-numerical input information, may also consider compound
+similarities, e.g. self organizing maps.
+In addition many dedicated cheminformatics analysis methods need a similarity criterion to wor with,
+e.g. an activity cliff analysis, or compound clustering. <span class="keyword">DataWarrior</span>
+supports various kinds of molecule similarities. These range from a simple chemical similarity based on common
+substructure fragments up to a binding behaviour similarity that considers 3D-geometry of conformers and the
+interaction potential to proteins.</p>
+<p>When <span class="keyword">DataWarrior</span> calculates a similarity value between two molecules,
+then the calculation is not performed on the molecular graphs directly. It rather involves a two step process:
+<li>The molecular graphs of all molecules in a dataset are processed to extract certain molecule features.
+These are compiled into an abstract molecule description, called <span class="keyword">descriptor</span>.
+In the simplest case the descriptor consists of a binary array of which every bit indicates, whether a certain
+feature is present in the molecule. These binary <span class="keyword">descriptors</span> are also referred to as
+<span class="keyword">fingerprints</span>. More complex descriptors may consist of a vector, a tree or a simplified
+graph of the original molecule.</li>
+<li>In a second step the <span class="keyword">descriptors</span> of two molecules are compared with some kind
+of logic to determine the actual similarity value, i.e. how much the two compounds have in common.
+In case of binary descriptor <span class="keyword">DataWarrior</span> devides the number of common features
+by the number of features being available in any of the two molecules. This is referred to
+as <span class="keyword">Tanimoto</span> similarity.</li>
+</p>
+<p>Naturally, the kind of features being collected and the algorithm used to compare these features, have a
+crucial influence on the kind of similarity being calculated. Therefore, the chosen descriptor for similarity
+calculations depends very much on the purpose. For molecules <span class="keyword">DataWarrior</span> supports
+three different binary descriptors and three more advanced similarity methods. These and a reaction descriptor
+are all explained here in more detail.</p>
+<br>
+
+<h3><a name="WhichDescriptor"></a>Which Descriptor Should Be Used For Which Purpose</h3>
+<p>If the purpose is to filter a large compound collection by chemical structure similarity, the default
+<span class="keyword">descriptor FragFp</span> is a good choice, because it is automatically available,
+it does not require much space and similarity calculations are practically instantanious.</p>
+<p>If more fine grained similaries need to be perceived, e.g. if stereo isomers need to be distinguished
+or to achieve best results from clustering or any kind of similarity analysis, then the
+<span class="keyword">SkelSpheres descriptor</span> should be taken. Especially, when creating an evolutionary library
+in vast virtual compound space, then the <span class="keyword">SkelSpheres descriptor</span> outperformes
+the binary fingerprints in quality, because it considers multiple fragment occurence and makes hash collisions unlikely.</p>
+<p>When chemical functionality from a synthetic chemist's point of view is more important than the carbon skeleton
+that carries this functionality, the you should try the <span class="keyword">OrgFunctions descriptor</span>.
+Examples are searching a chemicals database for an alternative reactant to a reaction or arranging a building
+blocks collection in space based synthetically accessible functionality.</p>
+<p>If the similarity of biological binding behaviour is important rather than merely the similarity of the chemical graph,
+then use the <span class="keyword">Flexophore descriptor</span>, which requires more space and significantly more
+time to calculate descriptors as well as similarity values.</p>
+<br>
+
+<h3><a name="FragFp"></a>The <span class="keyword">FragFp</span> Descriptor</h3>
+DataWarrior's default descriptor <span class="keyword">FragFp</span> is a substructure fragment dictionary
+based binary fingerprint similar to the MDL keys. It relies on a dictionary of 512 predefined structure fragments.
+These were selected from the multitude of possible structure fragments by optimizing two criteria:
+All chosen fragments should occurr frequently withing typical organic molecule structures.
+Any two chosen fragments should show little overlap concerning their occurrence in diverse sets of organic compounds.
+The <span class="keyword">FragFp descriptor</span> contains 1 bit for every fragment in the dictionary. A bit set to 1 if
+the corresponding fragment is present in the molecule at least on time. In about half of the fragments
+all hetero atoms have been replaced by wild cards. This way single atom replacements only cause a moderate drop of
+similarity, which reflects a chemists natural similarity perception.</p>
+<p>In addition to calculating molecule similarities <span class="keyword">DataWarrior</span> uses the
+<span class="keyword">FragFp descriptor</span> for a second purpose: The acceleration of the sub-structure filtering.
+Since a sub-structure search is effectively a graph matching algorithm and therefore computationally rather demanding,
+<span class="keyword">DataWarrior</span> employs a pre-screening step that can quickly exclude most compounds from
+the graph-matching. In this step <span class="keyword">DataWarrior</span> determines a list of all dictionary fragments,
+which are part of the sub-structure query. Molecules that don't contain all of the query's fragments
+cannot contain the query itself. Therefore, these are skipped in the graph-matching phase.</p>
+<br>
+
+<h3><a name="PathFp"></a>The <span class="keyword">PathFp</span> Descriptor</h3>
+<p>The <span class="keyword">PathFp descriptor</span> encodes any linear strand of up to 7 atoms into a hashed binary
+fingerprint of 512 bits. Therefore, every path of 7 or less atoms in the molecule is located. In a normalized way an
+identifying text string is constructed from every path that encodes atomic numbers and bond orders.
+From the text string a hash value is created, which is used to set the respective bit of the fingerprint.
+The <span class="keyword">PathFp descriptor</span> is conceptually very similar to the 'folded fingerprints' that
+software of Daylight Inc. uses for calculating chemical similarities.</p>
+<br>
+
+<h3><a name="SphereFp"></a>The <span class="keyword">SphereFp</span> Descriptor</h3>
+<p>The <span class="keyword">SphereFp descriptor</span> encodes circular spheres of atoms and bonds
+into a hashed binary fingerprint of 512 bits. From every atom in the molecule, <span class="keyword">DataWarrior</span>
+constructs fragments of increasing size by including n layers of atom neighbours (n=1 to 5).
+These circular fragments are canonicalized considering aromaticity, but neglecting stereo configurations.
+From the canonical representation a hash code is generated, which is used to set the respective bit of the fingerprint.
+In the literature spherical fingerprints are sometimes referred to as HOSE codes and are in use for spectroscopy prediction.</p>
+<br>
+
+<h3><a name="SkelSpheres"></a>The <span class="keyword">SkelSpheres</span> Descriptor</h3>
+<p>When a more subtle structural similarity is needed, the <span class="keyword">SkeletonSpheres descriptor</span>
+should be used. It is related to the <span class="keyword">SphereFp</span>, but also considers stereochemistry,
+counts duplicate fragments, in addition encodes hetero-atom depleted skeletons, and has twice the resolution leading to less
+hash collisions. It is the most accurate descriptor for calculating similarities of chemical graphs. On the flipside
+it needs more memory and similarity calculations take slightly longer.
+Technically, it is a byte vector with a resolution of 1024 bins.</p>
+<br>
+
+<h3><a name="OrgFunctions"></a>The <span class="keyword">OrgFunctions</span> Descriptor</h3>
+<p>The <span class="keyword">OrgFunctions descriptor</span> perceives molecules with the focus on available
+funtional groups from a synthetic chemist's point of view. It also recognizes the steric or electronic features of
+the neighborhood of the functional groups. It perceives molecules as being very similar, if they carry the same functional
+groups in similar environments independent of the rest of the carbon skeletons.</p>
+<p>The <span class="keyword">OrgFunctions descriptor</span> is neither a fingerprint nor an integer vector.
+It rather stores all synthetically accessible functions of the molecule in a finely grained way.
+DataWarrior distinguishes 1024 core functions, which typically overlap. Butenone for instance is recognized as
+vinyl-alkyl-ketone as well as a carbonyl-activated terminal alkene. All 1024 functional groups are organized in a
+tree structure that permits deriving similarities between related functions. These are taken into account, when
+the similarity between two molecules, i.e. <span class="keyword">OrgFunctions descriptors</span>, is calculated.</p>
+<br>
+
+<h3><a name="Flexophore"></a>The <span class="keyword">Flexophore</span> Descriptor</h3>
+<p>The <span class="keyword">Flexophore descriptor</span> allows predicting 3D-pharmacophore similarities.
+It provides an easy-to-use and yet powerful way to check, whether any two molecules may have a compatible
+protein binding behavior. A high <span class="keyword">Flexophore</span> similarity indicates that a significant
+fraction of conformers of both molecules are similar concerning shape, size, flexibility and pharmacophore points.
+Different from common 3D-pharmacophore approaches, this descriptor matches entire conformer sets rather than comparing
+individual conformers, leading to higher predictability and taking molecular flexibility into account.</p>
+
+<p>The calculation of the <span class="keyword">Flexophore</span> descriptor is computationally quite demanding.
+For a given molecule it starts with the creation of a representative set of up to 250 conformers using
+a self organization based algorithm to construct small rigid molecule fragments, which are then connected with
+likely torsion angles. This conformer generation approach balances high diversity and conformer likelyhood.
+Then, the atoms of the underlying molecule are detected and classified, which have the potential to interact
+with protein atoms in any way. De-facto an enhanced MM2 atom type is used to describe these atoms as interaction point.
+In some cases multiple atoms contribute to one summarized interaction point, e.g. in aromatic rings.</p>
+
+<p align="center"><img src="help/img/similarity/interactionPoints.jpeg" width="400" height="240"></p>
+<p align="center"><i>Sample molecule with assigned interaction points</i></p>
+
+<p>A molecule's <span class="keyword">Flexophore descriptor</span> now consists of a reduced, but complete
+graph of the original molecule with the interaction points being considered graph nodes.
+A graph edge between two nodes is encoded as a distance histogram between these nodes over all conformers.
+Since the <span class="keyword">Flexophore descriptor</span> is a complete graph, every combination of any two nodes
+is encoded and stored as part of the descriptor. Thus, the descriptor creation as well as the similarity calculation
+from two descriptors depend heavily on the number of interaction points in each of them.</p>
+
+<p align="center"><img src="help/img/similarity/completeGraph.jpeg" width="564" height="189"></p>
+<p align="center"><i>Complete graph; distance histogram of highlighted edge</i></p>
+
+<p>The calculation of the similarity between two <span class="keyword">Flexophore descriptors</span> involves a
+graph matching algorithm that not only tries to match the largest possible subgraphs, but also tries to maximize
+edge and node similarities. Edge similarities are derived from the distance histogram overlaps and node similarities
+are taken from a interaction point (extended MM2 atom type) similarity matrix, which was originally derived from a
+ligand-protein interaction analysis of the PDB database.</p>
+<br>
+
+<h3><a name="RxnFp"></a>The <span class="keyword">RxnFp</span> Descriptor for Reactions</h3>
+<p>As the descriptors above describe certain molecules features, the <span class="keyword">RxnFp</span> descriptor
+comprises features that describe a chemical reaction. It is related to the <span class="keyword">SphereFp</span>
+descripor, because it is a binary fingerprint, whose bits encode circular fragments of atoms and their environment.
+This descriptor uses 1024 bits of which the first half is dedicated to describe the reaction center and the second
+half encodes atoms, which don't take part in the reaction, i.e. which neither loose or gain a neighbor atom nor
+change a bond order to any of its atom neighbors. Thus, this descriptor relies on a proper mapping of product atoms
+to reactant atoms. It cannot be calculated for unmapped reactions.</p>
+<p>When comparing reactions, then reaction center atoms and their change of bonding are more important than
+structural features of reactant and products, which don't take part in the reaction. Therefore, when calculating
+reaction similarities from this descriptor, <span class="keyword">DataWarrior</span> independently calculates
+reaction center similarity and reaction periphery similarity. Then it creates a weighted mean of both values
+with emphasis on the reaction center similarity. These weighted mean similarity values are used by
+<span class="keyword">DataWarrior</span> whenever an analysis method requires an opaque row similarity value.
+Examples are a two-dimensional scaling to visualize reaction space or when reaction shall be clustered into
+groups of similars.</p>
+<p>In contrast, the <a href="help/chemistry.html#RxnSimSearch">reaction filter</a> allows using both reaction similarity values independently. Therefore, when
+searching large reaction collections, one may first dig into reactions that contain the same transformation
+as a drawn query reaction. In a second step one may then increase the periphery similarity threshold to check,
+whether there are reactions among the already found ones that share structural elements not taking part in the
+reaction.</p>
+
+</body>
+</html>
+

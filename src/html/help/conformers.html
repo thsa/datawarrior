@@ -1,0 +1,293 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+  <title>3D-Chemistry</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+
+<hr align="left" size="2" width="550">
+<h2><a name="Chemistry3D"></a>Chemistry in 3D</h2>
+<hr align="left" size="2" width="550">
+
+<p>Biological properties of a chemical substance depend largely on its 3-dimensional structure, i.e.
+on the interaction potential of its atoms, their geometrical orientation and on the flexibility of
+the molecule. Typically, a molecule has not one but many low energy conformers and to understand
+the biological potential of a compound one needs to investigate its conformer structures in detail.
+The <span class="keyword">Flexophore</span> descriptor was designed to cover all representative
+conformers of a molecule and to even consider its flexibility. Calculating similarities between
+molecules using the <span class="keyword">Flexophore</span> is easy and allows to detect molecules
+whose conformers have a high potential to interact with a target protein in a similar way.
+Nevertheless, it doesn't reveal any insights into the 3-dimensional nature of a compounds.</p>
+<p><span class="keyword">DataWarrior</span> has a conformer generator and forcefield based energy
+minimization built in, which together allow generating diverse and low energy conformers, which
+can be explored within <span class="keyword">DataWarrior</span>, can be exported to be used in
+other software packages, or can be even rendered to yield photo-realistic images. Within
+<span class="keyword">DataWarrior</span> there are three views, that may show conformers: First, the
+detail area automatically includes a 3D-molecule viewer, if a structure column has associated
+conformer information. Second, the form view may contain a form item that shows conformers and, third,
+the <a href="help/conformers.html#Explore">conformer explorer</a>, of course, shows conformers.
+
+</p>
+<br>
+
+<h3><a name="Generate"></a>Generating Conformers</h3>
+<p>
+This functionality creates one or multiple conformers for every structure within a <span class="keyword">DataWarrior</span>
+document. Various algorithms for the conformer generation and subsequent energy minimization are available.
+To create conformers for the current data window's molecules, select <span class="menu">Generate Conformers...</span>
+from the <span class="menu">Chemistry</span> menu. A dialog allows to define options for the conformer generator.</p>
+
+<p>If you work with <span class="keyword">LigandScout</span> from Inteligand, then you should know that from Version 4.4.2
+on <span class="keyword">LigandScout</span> is able to directly read conformers from native DataWarrior files,
+no matter whether a row contains just one or multiple conformers.</p>
+
+<p align="center"><img src="help/img/conf/generate.jpeg" width="405" height="415"></p>
+<p><center><i>Conformer Generator Options</i></center></p>
+
+<p><b>Structure column:</b> A column containing chemical structures for which to generate the conformers.</p>
+<p><b>Algorithm:</b> Most of the algorithms, which can be selected here, share the same general procedure
+to generate conformers, a rule based assembly of self organized rigid fragments:<br>
+First <span class="keyword">DataWarrior</span> locates all freely rotatable bonds
+of the molecule, which are not part of a ring. By cutting any of these bonds a set of more or less rigid
+fragments is obtained. For any of these fragments a self organization based algorithm creates one or multiple
+fragment conformers.<br>
+In a second step the local environment of every rotatable bond is used to assign the bond to a specific bond class.
+Using bond classes <span class="keyword">DataWarrior</span> assigns preferred torsion angles to any rotatable bond.
+These are taken from experimental, i.e. crystallographic data. Torsion angle likelyhoods are used in addition, which
+reflect how often a particular torsion angle is found in x-ray data.<br>
+In a third step, the fragments are then assembled using the preferred torsions for every rotatable bond.
+A collision check determines, whether the combination of torsions causes any atom collisions.
+If no collision occurs, the conformer is accepted and a new permutation is chosen. Otherwise,
+the algorithm creates a rule about a torsion combination, which leads to a collision. These rules are considered
+when constructing new conformers.<br>
+Potentially, the number of constructable conformers may be very high, depending on the number of rotatable bonds,
+the number of torsions per bond and the number of self-organized fragment conformers. Therefore, a selectable
+algorithm prioritizes how torsion angles are permutated, how atom collisions are handled and to which extend
+likely torsions are preferred:
+<ul>
+<li><span class="keyword">Random, low energy bias:</span> This strategy randomly selects for every new conformer
+a new set of torsions and fragments. However, a weighted random method is used giving more likely torsion angles
+and better scoring fragments a higher chance of being selected that the less likely ones. This is a well ballanced
+strategy leading to diverse low energy conformers.</li>
+<li><span class="keyword">Pure random:</span> The degrees of freedom are selected randomly neglecting any
+likelyhoods. This produces the most diverse conformers, but not necessarily low energy ones.</li>
+<li><span class="keyword">Adaptive collision avoidance, low energy bias:</span> This strategy starts and works
+like the <span class="keyword">low energy biased random</span> strategy until a set of torsion angles causes
+atom collisions. Then, for every rotatable bond is determined to which extend its current rotation state
+contributes to atom collisions. With a weighted random approach one of the rotatable bonds is chosen to be modified
+next, such that the likelyhood for the next conformer is high to escape the collision.</li>
+<li><span class="keyword">Systematic, low energy bias:</span> The starting point for this algorithm is that
+conformer, which uses for any degree of freedom the most likely option, i.e. the torsion angle for every
+rotatable bond and the best scoring fragment conformer where we have multiple choices. For the next conformer
+only that degree of freedom is changed, which goes along with the smallest the drop in overall likelyhood.
+This way, the most likely conformers are produced first, but the initial diversity may not be very high.</li>
+<li><span class="keyword">Self organized:</span> This algorithm does not use the general procedure described above.
+It applies a self organization approach to the entire molecule. For that all atoms are initialized with random
+coordinates. The a list of constraints is determined as follows: Distance constrainst define preferred distances
+between any two atoms. Plane constraints group atoms, which should share the same plane. Other constraints
+handle preferred torsions, stereochemistry and atoms on a straight line. In a kind of minimization procedure
+constraints are randomly picked and their atoms relocated in space to better meet the constraint. This algorithm
+works best with highly constrained, i.e. rigid structures like bridged ring systems.</li>
+</ul>
+</p>
+<p><b>Initial torsion:</b> Since using crystallographic data derived torsion angles introduces a certain bias
+and in order to mimic other conformer generator's construction principles, <span class="keyword">DataWarrior's</span>
+conformer generator may also forgo using experimental torsion data. Instead it may use six torsion angles per rotatable
+bond with 60 degree steps. In this case all six torsion angles are considered equally likely. Of course, conformers constructed this
+way are often far off the local energy minimum and probably should be energy minimized afterwards.</p>
+
+<p><b>Minimize energy:</b> Rule based assembled or self-organized conformers like those created by the above algorithms
+may still suffer from angle strains, slight atom collisions or suboptimal torsions, because the local environment
+of a particular molecule may not be well represented by more general rules that were used for the construction.
+To reduce strain and minimize energies these conformers can be further optimized by applying one of these forcefields:
+<li><span class="keyword">MMFF94s+ forcefield:</span> This is an optimized version of the MMFF94s force field,
+which adresses known and unrealistic torsion parameterization of the original MMFF94s implementation.
+The torsion angle analysis and corrections were done by Joel Wahl. A peer-reviewed publication is in process.</li>
+<li><span class="keyword">MMFF94s forcefield:</span> The Merck Molecular Force Field 94 is a widely used
+and well known forcefield based on the MM3 forcefield. It is parameterized to be applicable to a wide range
+of organic compounds. The implementation that <span class="keyword">DataWarrior</span> uses was ported
+from the RD-Kit to Java and validated by Daniel Bergmann and Paolo Tosco, who earlier had developed the
+MMFF94 implementation in C++ for the RD-Kit as well.</li>
+<li><span class="keyword">Idorsia forcefield:</span> This forcefield is based on the MM2 forcefield. Its
+implementation in Java was developed by Joel Freyss. It is also universally applicable and mainly used for
+in-house purposes at Idorsia.</li>
+<li><span class="keyword">Don't minimize:</span> This option passes through all conformers as they are generated
+by the construction algorithm.</li>
+</p>
+<p><b>Max. conformer count:</b> The number of generated conformers per compound will be limited to this number.
+If more than one conformer is generated and if these are not written into an external file, then these are
+automatically pooled into one row and aligned on the most central rigid fragment of the molecule.</p>
+<p><b>Write into file:</b> When this option is selected, generated conformers are exported into a compound file
+rather than added to the current dataset.</p>
+<p><b>File type:</b> The most widely supported format is probably the SD-file version 2, while the most compact file
+format is certainly a native DataWarrior file.</p>
+<p><b>Pool conformers of same compound:</b> If conformers are saved as a native DataWarrior file, then this option
+allows storing all conformers of one compound into the same target row. Within DataWarrior such a
+conformer set will then be displayed in the detail view as a conformer ensemble that is automatically superposed
+using the most central rigid fragment.</p>
+<p align="center"><img src="help/img/conf/conformerSet.jpeg" width="230" height="202"></p>
+<p><center><i>Conformer ensemble shown in DataWarrior's detail area</i></center></p>
+<p>When conformer ensembles are exported from DataWarrior into SD-files, then every conformer is saved as an individual molecule record.
+However, within a native DataWarrior file the connection table is only stored once, while atom coordinates of every conformer
+are included as a compact text string. Therefore, storing conformer ensembles as native DataWarrior files is very space-efficient
+and flexible at the same time.</p>
+<p><b>Remove small fragments:</b> If this option is selected, then all unconnected fragments except for the largest
+one are removed from the molecule before conformers are generated. This is particularly advisable, if a forcefield
+minimization is used, which may potentially take a very long time to optimize relative positions of non connected
+fragments.</p>
+<p><b>Neutralize remaining fragment:</b> If this option and the <i>Remove small fragment</i>i> option both are selected,
+then <span class="keyword">DataWarrior</span> tries after the removal of all small fragments to neutralize all
+charged atoms of the remaining fragment through protonation or deprotonation. If quarternary nitrogens cannot
+be deprotonated, the <span class="keyword">DataWarrior</span> tries to deprotonate acidic atoms to achieve a
+neutral overall charge.</p>
+<p><b>Skip compounds with more than NN stereo isomers:</b> If a molecule contains undefined stereo centers,
+then the conformer generator randomly constructs stereo isomers. Depending on the purpose, molecules with a high
+potential number of isomers and therefore an even higher number of representing conformers may pose a problem, e.g.
+for virtual screening where they cause high computation time and a low probability that found hits really represent
+the correct stereo isomer. This option allows to just skip this kind of molecules.</p>
+<p><b>Create proper protonation state:</b> This option is available for selection only, if the ChemAxon pKa-Plugin
+is installed and DataWarrior was configured to find it. If this option is selected, then the pKa-values of
+basic and acidic atoms are determined using the ChemAxon method and these atoms are properly protonated
+or deprotonated to reflect their natural state at the given pH value. If the value in the <b>+-</b> text field
+is different from '0', then this defines a pH-range. In this case <span class="keyword">DataWarrior</span> may
+produce more than one protonation state if the pKa of one or more of the basic or acidic atoms fall into the
+pKa range.
+</p>
+<br>
+
+<h3><a name="DetailArea"></a>3D-Structures in Detail Area</h3>
+<p>When a <span class="keyword">DataWarrior</span> file contains 3D-coordinates for chemical structures,
+then the <span class="keyword">Detail Area</span> contains a dedicated 3D-structure viewer. Once the mouse
+moves over a row in any main view, this detail view is updated to display the row's 3D-structure.
+3D-structures can be rotated with the right mouse button, moved in x,y and z dimensions with the middle mouse
+button and the scroll wheel, respectively. A right mouse click opens a popup menu with options to show molecular
+surfaces, change dispay or color modes, or measure angles, torsions and distances among atoms and bonds.</p>
+
+<p>One useful application for the 3D-viewer would be the visual inspection of docking results, i.e.
+comparing the position of the natural ligand with the locations of docked small molecules. For this
+purpose the natural ligand needs to be superposed with any docked molecule in the same coordinate system.
+This can be achieved in <span class="keyword">DataWarrior</span> if a file contains the natural ligand and the
+docked molecules, by selecting the menu item <span class="menu">Superpose Reference Row</span>. In addition
+one needs to make the natural ligand the reference row by clicking it in any view such that it gets a red frame.
+Now, when moving the mouse from row to row, the 3D-detail-view is updated to show the row's docked molecule
+structure together with the natural ligand.</p>
+
+<p align="center"><img src="help/img/conf/alignedconformers.png" width="506" height="263"></p>
+<p><center><i>Detail area with aligned conformers and popup menu.</i></center></p>
+
+<p>Another application may be to compare conformers in regard to their volume overlap when aligned properly.
+For that purpose you need to select both options, <span class="menu">Superpose Reference Row</span> and
+<span class="menu">Align Shapes</span>. The latter option causes <span class="keyword">DataWarrior</span>
+to optimally align both conformers using the <span class="keyword">PheSA</span> algorithm, which is a rigid
+alignment method that optimizes shape overlap as well as pharmacophoric feature overlap.</p>
+<br>
+
+<h3><a name="Explore"></a>Exploring Conformers of a Molecule</h3>
+<p><span class="keyword">DataWarrior</span> has a built-in <span class="keyword">conformer explorer</span>
+that allows to inspect multiple conformers of the same molecule. To open the <span class="keyword">conformer explorer</span>
+select <span class="menu">Explore conformers of 'Structure'...</span> from the popup menu, which appears when clicking
+the right mouse button on top of any structure or marker within any main view. Conformers may be shown with a small delay,
+because one set of conformers is generated immediately. You may use the mouse wheel for zooming and moving conformers
+within the screen plane. Conformers may be rotated using the right mouse button. A right mouse click on a conformer
+opens a context sensitive popup menu with options for rendering, molecular surface display and distance and angle measurement.
+</p>
+<p align="center"><img src="help/img/conf/explorer1.jpeg" width="680" height="433"></p>
+<p><center><i>Conformer Explorer with superposed conformers</i></center></p>
+<p>
+The bottom panel of the <span class="keyword">conformer explorer</span> shows some controls to regenerate
+conformers with different settings, to separate individual conformers, to display molecular surfaces, to save
+conformers into a file and to define, which atoms are super-positioned. To change these atoms, click the
+<span class="menu">Superpose...</span> button, select the atoms, which shall be superposed, and close the dialog.
+</p>
+<p align="center"><img src="help/img/conf/explorer2.jpeg" width="680" height="433"></p>
+<p><center><i>Conformer Explorer with separated conformers and molecular surfaces</i></center></p>
+<p>
+To freshly generate new conformers within the <span class="keyword">conformer explorer</span> you may select
+the maximum number of conformers, the algorithm to be used, and a forcefield for the energy minimization. Then press
+the <span class="menu">Generate</span> button. The available algorithms are explained in previous section.
+</p>
+<br>
+
+<h3><a name="Render"></a>Photorealistic Rendering</h3>
+<p>
+If you select the <span class="menu">Photo-Realistic Image...</span> item from the popup menu of any of
+<span class="keyword">DataWarrior's</span> 3D molecule viewers, then a dialog opens that lets you calculate
+a photo-realistic image using the professional quality ray-tracer <span class="keyword">Sunflow</span>,
+which is part of the <span class="keyword">DataWarrior</span> installation. The dialog lets you choose various options.
+<ul>
+<li><span class="keyword">Image size:</span> This is the size of the created image in pixel.</li>
+<li><span class="keyword">Environment:</span> This option contains some predefined lighting, color and material
+conditions as <i>bright sun</i> and <i>black background</i>.</li>
+<li><span class="keyword">Move and zoom to fill image:</span> If this option is selected, the molecule is rotated
+automatically to expose its largest possible silhouette to the camera. Furthermore, it is zoomed and moved
+to just about fill the image. If this option is not selected, <span class="keyword">DataWarrior</span> tries
+to mimic the perspective and zoom state of the conformer panel. Since the rendering concepts of the ray-tracer and
+the conformer viewer are different, the original perspective will be similar, but not necessarily exactly reproduced.</li>
+</ul>
+As soon as the render dialog is closed, a new window opens, in which all available processor cores are busy to
+render the molecule. Once the image is completed one may save it to a file or copy it to the clipboard by selecting
+the appropriate option from a popup menu. The following picture shows an example taken from the
+<span class="keyword">Crystallography Open Database</span>.
+</p>
+<p align="center"><img src="help/img/conf/raytrace.jpeg"></p>
+<p><center><i>Photorealistic image of COD entry 2230709,<br>
+catena-Poly[[(2,2'-dimethyl-4,4'-bi-1,3-thiazole-N,N')cadmium]-di-bromido]</i></center></p>
+</p>
+<br>
+
+<h3><a name="Superpose"></a>Superposing Conformers</h3>
+
+<p>If the binding conformer of a protein's ligand is known or at least suspected, then this
+is often used to search compound collections for similar conformers regarding shape and
+pharmacophore features. In <span class="keyword">DataWarrior</span> you can perform such
+a virtual screening in two steps: First you <a href="help/conformers.html#Generate">create
+multiple conformers</a> from the molecules to be screened.
+Then you try superposing these conformers with the binding conformer of a known ligand.
+For this purpose <span class="keyword">DataWarrior</span> uses an algorithm called
+<a href="help/phesa.html">PheSA (Pharmacophore enhanced shape alignment)</a>, which uses
+Gaussian functions to calculate and optimize the shared volume of two molecules' conformers
+while considering pharmacophore feature overlay at the same time.</p>
+
+<p>If your dataset contains 3D-atom coordinates, then you may open the dialog to configure
+the superpositioning with <span class="menu">Superpose Conformers...</span> from the
+<span class="menu">Chemistry</span> menu. A simple dialog opens, where you may select the
+column that contains the conformers. Typically there is only one structure column with one
+3D-atom coordinates column, thus, nothing to select from. In addition to the conformer column
+you need to specify the 3D-molecule, which shall be PheSA-matched against all conformers.
+This is done with a right mouse click in the blue initially empty area. A popup menu lets
+you import a molecule from either a molfile, the ligand from a PDB-file or from the PDB-database.
+Alternatively, you can also paste in a structure. If the clipboard contains a molecule with
+2D-atom coordinates, then a low-energy conformer is created on the fly.</p>
+
+<p align="center"><img src="help/img/conf/superposeDialog.jpeg" width="465" height="318"></p>
+<p><center><i>Dialog configured to superpose all energy-minimized 3D-Structures of a data set
+with a given conformer of the CNS-drug Alpidem.</i></center></p>
+
+<p>After clicking <span class="menu">OK</span>, <span class="keyword">DataWarrior</span> tries
+matching the shape of all conformers of any row with the given target molecule(s).
+As result you will receive an additional column 'PheSA Score'. Values being close to 1.0 indicate
+a very high shape and pharmacophore feature match. A second hidden column 'Best Match' contains
+the best matching stereo isomer of the input structure. When the input structure doesn't contain
+multiple stereo isomers, then the best matching structure and input structure are always identical.
+Hence, this column usually is of limited use and, therefore, is hidden as default. You may make it
+visible with a right mouse click on the table header and choosing <span class="menu">Show 'Best Match'</span>.</p>
+<p>Infact, there is another invisible column containing 3D-atom-coordinates of the best matching
+stereo isomer, such that the overlay with the query structure is optimized. The detail area shows
+the best matching conformer together with the superposed query structure.</p>
+
+<p align="center"><img src="help/img/conf/superposeResult.png" width="490" height="223"></p>
+<p><center><i>New columns after superposing; detail area shows two optimally superposed structures.</i></center></p>
+
+<p>If you had defined multiple query structures in the dialog, then you would have received one new
+'PheSA Score' column for each query structure. You would also have got distinct new columns for the
+best matching isomers and 3D-superpositions.</p>
+
+<br>
+<p align="center">Continue with <a href="help/databases.html">Accessing Databases</a>...</p>
+<br>
+
+</body>
+</html>

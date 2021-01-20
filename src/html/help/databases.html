@@ -1,0 +1,178 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+  <title>External Databases</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<p>
+<hr align="left" size="2" width="550">
+<h2><a name="Databases"></a>Accessing External Databases</h2>
+<hr align="left" size="2" width="550">
+</p>
+
+<p><span class="keyword">DataWarrior</span>, as its name already implies, lives from data.
+Since the amount of structured data being freely available over the internet is increasing daily,
+<span class="keyword">DataWarrior</span> has functionality built in to access some of the most
+obvious data sources directly. Our intention is to make more data sources available with
+future software updates.</p>
+<br>
+
+<h3><a name="Wikipedia"></a>Wikipedia</h3>
+<p>
+<span class="keyword">Wikipedia</span> is undoubtedly one of the most important freely available
+sources of knowledge on the internet. Many thousand of its articles are about chemical substances.
+<span class="keyword">DataWarrior</span> allows to retrieve an up-to-date list of all
+<span class="keyword">Wikipedia</span> compound structures with their names and formulas into
+a local <span class="keyword">DataWarrior</span> file. For that choose <span class="menu">Retrieve Wikipedia Molecules</span>
+from the <span class="menu">Database</span> menu. This offers an easy way to search
+or otherwise process the chemical content of <span class="keyword">Wikipedia</span> offline.
+Within the local file every compound has a link back into the corresponding
+<span class="keyword">Wikipedia</span> web page. A right mouse click within
+<span class="keyword">DataWarrior</span> opens a popup menu that allows to open the compound's
+<span class="keyword">Wikipedia</span> article in the web browser.
+</p>
+<br>
+
+<h3><a name="Chembl"></a>The ChEMBL Activity Database</h3>
+
+<p>The ChEMBL database is one of the most widely used compound activity databases available.
+<span class="keyword">DataWarrior</span> permits to query the database by specifying search criteria
+like biological targets, pubmed IDs, or chemical structures. Structure searches may be based on
+chemical similarities, contained substructures, structure equivalence or tautomers.</p>
+
+<p align="center"><img src="help/img/database/chemblQuery.jpeg"></p>
+<p><center><i>ChEMBL Database Query Dialog</i></center></p>
+
+<p>In the following the ChEMBL database query dialog is explained in more detail:</p>
+<p><b>Target Contains:</b> This field allows to quickly filter the target list by target name, gene accession number,
+organism or other available target related information. One may specify multiple search phrases as
+for instance "renin rat".</p>
+<p><b>Hierarchical Protein Family Filter:</b> In the ChEMBL database many target proteins are assigned to
+a small protein family. Multiple small related protein families are grouped on a higher level into a less
+specific larger family. Related larger families are again grouped into an even larger one and so forth.
+This forms a hierarchical tree of related proteins. This filter allows to filter targets by first
+selecting a coarse protein family and then successively selecting subfamilies of the previously selected
+protein family.</p>
+<p><b>Select Target(s):</b> This text area contains a list of targets that are available in the ChEMBL
+database and not filtered out by any filter criteria. If one or multiple targets of this list are
+selected, then the search will only retrieve activity values on these targets.</p>
+<p><b>Target Detail:</b> If one target is selected in the target list above, then this text area shows
+some detail about the target, e.g. the name, UniProt accession number, type, organism and its protein
+family classification.</p>
+<p><b>Structure search options:</b> For running a structure search as part of the ChEMBL database search
+one can either specify (draw, paste or drag&drop) a structure in the <b>Structure</b> field of the dialog
+or you may select one or more structure in a DataWarrior window before opening the ChEMBL search dialog.
+The type of structure search can be selected from a dedicated menu among sub-structure, exact match,
+non-stereo specific match, tautomer match and structure similarity, which would activate a slider to
+define the similarity limit. If some structures were pre-selected and the option <b>any selected structure</b>
+is chosen, then a database compound is considered a hit, if its structure matches any of the
+selected structures.</p>
+<p><b>Pubmed-ID(s) or DOI(s):</b> Here one can specify one of multiple source papers separated by comma,
+semicolon or space. For most papers the ChEMBL database contains Pubmed-IDs, while the DOI is often
+missing. Thus, searching for Pubmed-IDs is much more likely to yield useful results than searching
+for DOIs.</p>
+<p><b>Group results with same compound, target, and result type:</b> If this option is selected then all results
+from the same target and same chemical structure and merged into one result row. Within these rows
+individual result values appear in separated lines within one table cell.</p>
+<p>For running a query one needs to specify at least one of the three kinds of search criteria, targets,
+(a) compound structure(s), or paper references. If your intention is to download the entire database,
+you should do that from the ChEMBL web site.</p>
+<br>
+
+<h3><a name="Enamine"></a>The Enamine Building Block Database</h3>
+<p>Commercially available chemicals are the basis for every custom synthesis and searching
+catalogs of chemical building block providers is a day-to-day business of every bench chemist.
+Acknowledging the role of Enamine as one of the largest building block providers
+<span class="keyword">DataWarrior</span> offers a flexible structure search on the Enamine
+building block database, which can be combined with filter criteria on price and amount.
+To define and run a search select <span class="menu">Search Enamine Building Blocks...</span>
+from the <span class="menu">Database</span> menu. The following dialog opens:</p>
+
+<p align="center"><img src="help/img/database/ebbdialog.jpeg" width="391" height="369"></p>
+<p><center><i>Enamine building block search dialog with aniline substructure</i></center></p>
+<p>The Enamine building block search dialog offers these options:</p>
+<p><b>Structure search options:</b> The type of the structure search can be selected at the top left menu
+from these options: sub-structure, exact match, non-stereo specific match, tautomer match, and structure similarity.
+When the similarity option is chosen, then a slider is activated allowing to adjust a similarity threshold.
+The query structure itself can be defined in the dialog's <b>Structure</b> field by dragging or pasting
+a structure into it and/or by editing the structure in the structure editor that opens upon a double click.
+Alternatively, you may select one or more structures in a DataWarrior window before opening the building block
+search dialog. If you then select the option <b>any selected structure</b> in the top right pupup menu,
+then any database compound is considered a hit, which matches at least one of the preselected structures.</p>
+<p><b>Maximum price:</b> Here you define the maximum price you intend to pay for a building block.</p>
+<p><b>Minimum package size:</b> This is the smallest amount in mg you consider sufficient for your purpose.</p>
+<p><b>Molweight:</b> This allows to restrict the molecular weight building blocks to be restricted to be below
+or above a certain value or to be within a deifned range.</p>
+<p><b>Maximum row count:</b> This limits the number of retrieved building blocks to the given number.</p>
+<p><b>Random, Cheapest, Diverse:</b> If a maximum result count is defined and if the server finds more
+building blocks matching your search criteria, then this option defines the server's strategy for selecting
+a reasonable building block subset that is finally sent to the DataWarrior client. This may be a random,
+the cheapest, or the most diverse subset of all matching compounds.</p>
+
+<p align="center"><img src="help/img/database/ebb.png" width="526" height="269"></p>
+<p><center><i>Result table after Enamine building block search.</i></center></p>
+<br>
+
+<h3><a name="COD"></a>The Crystallography Open Database (COD)</h3>
+<p>
+The COD is probably the most comprehensive open database for crystallographic structures of small
+molecules. It is a valuable resource for studying conformational aspects of molecules like typical
+torsion angles, bond lengths and atom distances. The COD contains more than 360.000 organic and
+organo-metallic structures. <span class="keyword">DataWarrior</span> uses conformational knowledge
+extracted from the COD for its conformation generation algorithm.</p>
+<p><span class="keyword">DataWarrior</span> allows to run sub-structure queries on the COD-database,
+which returns the matching 3D-structures along with meta data. The picture below shows a
+<span class="keyword">DataWarrior</span> window with organic structures from the COD and a form view
+containing a large 3D-structure view.<p>
+<p align="center"><img src="help/img/database/cod.jpeg"></p>
+<p><center><i>COD database entry showing the torsion angle of an sulfonamide</i></center></p>
+<p><b>If you have measured or will create X-ray structures from small molecules, please consider
+uploading them to the COD. Open source software needs open data and the well known
+<span class="keyword">Cambridge Structural Database</span> does not qualify as open data, since
+neither its structures nor any extracted information may be used as part of open source software.</b></p>
+<br>
+<h3><a name="CustomURL"></a>Data From Custom URL</h3>
+<p>The Internet is full of WebServices that offer the retrieval of data tables of any kind typically
+in TAB delimited or other formats. For instance, the <span class="keyword">Open Source Malaria Project
+</span> maintains data in a Google spreadsheet, which can be accessed in TAB delimited format via this
+URL:<br>
+https://docs.google.com/spreadsheets/d/1Rvy6OiM291d1GN_cyT6eSw_C3lSuJ1jaR7AJa8hgGsc/export?format=tsv
+<br>
+One of its columns contains the chemical structures in SMILES format.
+<span class="keyword">DataWarrior</span>'s <span class="menu">Database</span> menu contains an item
+<span class="menu">Retrieve Data From URL</span> to retrieve data from such web resources. Whenever
+a column of such a web resource contains SMILES codes, then
+<span class="keyword">DataWarrior</span> recognizes them and creates an additional column showing
+the associated chemical structures. If one frequently retrieves updated data from the same URL,
+then it may be a good idea to create a short macro with the URL retrieval task and save it in the
+macro folder within the <span class="keyword">DataWarrior</span> installation folder. This way the
+<span class="menu">Macro</span> menu contains an item to directly retrieve the data into a new
+<span class="keyword">DataWarrior</span> window.
+</p>
+<br>
+<h3><a name="SQLQuery"></a>Accessing Relational Databases</h3>
+The majority of all databases are relational databases, which can be accessed using a dedicated
+language called <span class="keyword">Structured Query Language (SQL)</span>. SQL is used to specify
+the tables and columns from which to retrieve data, to define the query conditions, and how to
+logically join tables, when information from multiple tables needs to be retrieved.
+For accessing a relational database directly from <span class="keyword">DataWarrior</span> one needs to
+provide the so-called <span class="keyword">connect-string</span> or <span class="keyword">connection URL</span>
+as well as the SQL command to be executed.</p>
+<p align="center"><img width=640 height=242 src="help/img/database/sqlQuery.jpeg"></p>
+<p><center><i>SQL-Query to retrieve all reliable activity data from the ChEMBL database</i></center></p>
+<p>The screenshot above shows the SQL-Query dialog configured to retrieve data from a ChEMBL database
+in MySQL-format running on a server with the domain name <i>myserver.mycompany.com</i>. In addition to MySQL
+DataWarrior also supports PostgreSQL, Oracle, and Microsoft SQL-Server databases. The SQL statement shown
+is a typical example. After the SELECT keyword it defines a few columns from various tables to retrieve data from.
+The primary table <i>activities</i> after the FROM keyword is logically bound to other tables with the
+JOIN keyword and after the WHERE keyword some conditions are defined that specify and limit the data to be retrieved.</p>
+<p>Note that one of the retrieval columns contains chemical structures in SMILES format. These are
+automatically recognized by <span class="keyword">DataWarrior</span> and an additional column containing
+the corresponding chemical structures is generated.</p>
+<br>
+<p align="center">Continue with <a href="help/lists.html">Creating and using row lists</a>...</p>
+<br>
+</body>
+</html>

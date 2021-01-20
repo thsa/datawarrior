@@ -1,0 +1,272 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+  <title>Loading Data</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+
+<hr align="left" size="2" width="550">
+<h2><a name="LoadingData"></a>Loading Data into DataWarrior</h2>
+<hr align="left" size="2" width="550">
+
+<p>In addition to its own native file formats, <span class="keyword">DataWarrior</span>
+may read or writes TAB-delimited and comma-separated text files containing pure data tables of
+alpha-numerical data. <span class="keyword">DataWarrior</span> also imports and exports SD-files,
+which are the de-facto industry standard for exchanging chemical information.
+Beyond reading data from files, data may be imported from the clipboard or retrieved from databases.
+After reading data from any source, <span class="keyword">DataWarrior</span> analyses every column
+to understand the kind of data it contains, i.e. whether it contains numerical and/or category data,
+whether columns contain chemical structures, and which columns contains unique values or empty values,
+etc. It also checks for numerical correlations between columns. Then it creates default views and filters.</p>
+<p>If <span class="keyword">DataWarrior</span> was installed correctly, then every file type
+discussed in this section should have a proper icon assigned and double clicking a file's
+icon should result in <span class="keyword">DataWarrior</span> opening the file.
+This section explains the interaction with files and the clipboard.
+</p>
+<br>
+
+<h3><i><a name="NativeFiles"></a><img class="icon" src="help/img/icons/dwar.jpeg" width="64" height="64" align="left" hspace="16">
+Native DataWarrior Files</i></h3>
+<p>
+Typically, when saving a data window with <span class="keyword">DataWarrior</span>,
+then a native <span class="keyword">DataWarrior</span> file ending with the <b>.dwar</b> extension is written.
+Native <span class="keyword">DataWarrior</span> files are structured text files that are similar to XML,
+but also contain a data table as TAB delimited section.
+In addition to the plain table data, <b>.dwar</b> files may contain the following kind of information:
+<li>Which views are visible, how they are arranged and what they display</li>
+<li>Which filters are visible, how they are configured and, thus, which data rows are visible</li>
+<li>Which row lists are defined and which rows belong to them</li>
+<li>Which row currently selected and which row is chosen to be the reference row</li>
+<li>An HTML based text describing the file's content</li>
+<li>Column meta data describing column content, e.g. defining range, rounding, references to other columns, etc.</li>
+<li>Cell related detail data like formatted text and images</li>
+<li>Keys and links for on-the-fly retrieval of cell related detail data from external sources</li>
+<li>Hidden columns with molecule and reaction data such as descriptors and atom coordinates</li>
+<li>Macros that allow to completely automate <span class="keyword">DataWarrior</span> (from version 4.0)</li>
+</p>
+<p>To open a native <span class="keyword">DataWarrior</span> file, choose <span class="menu">Open</span>
+from the <span class="menu">File</span> menu or just double-click an icon representing a <b>.dwar</b> file.</p>
+
+<br>
+<h3><i><a name="TemplateFiles"></a><img class="icon" src="help/img/icons/dwat.jpeg" width="64" height="64" align="left" hspace="16">
+DataWarrior Template Files</i></h3>
+<p>
+A <span class="keyword">DataWarrior Template</span> file contains the complete configuration of views and filters,
+as they have been, when  the <span class="keyword">Template</span> file was saved. If you want to store the current
+state of views and filters of an open <span class="keyword">DataWarrior</span> window in order to possibly restore
+it later with the same or another dataset, you may save a <span class="keyword">Template</span> file. To re-apply a
+formerly stored template to an open <span class="keyword">DataWarrior</span> window, choose
+<span class="menu">Open Special -> Apply Template...</span> from the <span class="menu">File</span> menu.
+You may then select either a <b>.dwat</b> or a <b>.dwar</b> file. In both cases the template will be read from
+the file and all views and filters will be replaced by new ones as defined in the file. 
+</p>
+<br>
+
+<h3><i><a name="MacroFiles"></a><img class="icon" src="help/img/icons/dwam.jpeg" width="64" height="64" align="left" hspace="16">
+DataWarrior Macro Files</i></h3>
+<p>
+<span class="keyword">DataWarrior</span> version 4.0 and above support recording, editing and replaying entire workflows.
+These may be stored as part of a native <span class="keyword">DataWarrior</span> file or can be exported into a dedicated
+macro file. Similar to templates you may run a macro by opening a dedicated macro file with
+<span class="menu">Open Special -> Run Macro...</span> from the <span class="menu">File</span> menu.
+</p>
+<br>
+
+<h3><i><a name="SOMFiles"></a><img class="icon" src="help/img/icons/dwas.jpeg" width="64" height="64" align="left" hspace="16">
+DataWarrior SOM Files</i></h3>
+<p>
+By creating a self organized map (SOM) <span class="keyword">DataWarrior</span> can position chemical molecules
+or other objects on a two dimensional area in a way, that any object's closest neighbours in the plane are
+those objects that are the most similar ones in the dataset.
+A calculated SOM is actually a 2-dimensional grid of reference vectors of which everyone resembles
+one or more molecules/objects of the dataset. Once these reference vectors are calculated, the objects
+are one by one assigned to that reference vector, which is the most similar to the object.
+If one intends to map a second set of objects from an external file to a previously calculated SOM,
+then these vectors must have be available. For that reason they can be saved as SOM file,
+which can later be used to map external objects, which is effectively creating compatible 2-dimensional
+object coordinates.
+</p>
+<br>
+
+<h3><a name="QueryFiles"></a><img class="icon" src="help/img/icons/dwaq.jpeg" width="64" height="64" align="left" hspace="16">
+DataWarrior Query Files</h3>
+<p>
+A <b>.dwaq</b> file or <span class="keyword">Query File</span> does not contain any data.
+It rather contains a database query that is performed when the file is opened. Moreover,
+it may contain the template information needed to construct certain views and filter settings
+after the query result data has been retrieved. Query files are used if data in a database is
+frequently changing or to confidentially communicate new results, e.g. via e-mail.
+To open a <b>.dwaq</b> file, select <span class="menu">Open Special -> Run Query...</span> from the
+<span class="menu">File</span> menu, or double-click the icon representing the file.
+</p>
+<br>
+
+<h3><a name="SDFiles"></a><img class="icon" src="help/img/icons/sdf.jpeg" width="64" height="64" align="left" hspace="16">SD-Files</h3>
+<p>
+SD-Files are the de-facto industry standard for exchanging chemical structures and associated
+alpha-numerical information. It has been developed and published by Molecular Design Ltd. (MDL).
+The version most widely used is version 2, which has limited support for stereo chemistry:
+A so-called <i>chiral</i> flag defines for the entire molecule, whether it is a racemate of a mixture of enantiomers.
+With version 2 SD-files it is not possible to define epimers, mixtures of diastereomers, etc.
+In order to tackle the deficiencies, MDL introduced an updated concept called <i>Enhanced Stereo Recognition</i>
+along with an updated file format: Version 3. <span class="keyword">DataWarrior</span> consistently uses this new concept,
+which allows to define for any stereo center within a molecule, whether it is absolute or
+whether it belongs to a group of stereo centers with a specific relative stereo configuration.</p>
+<p>From the <span class="menu">File</span> menu, select <span class="menu">Open...</span>
+and use the dialog window to select the SD-file(s) (the file extension is .sdf) to import.
+<span class="keyword">DataWarrior</span> reads the entire content of the SD-File, displays rows in the Table View, creates
+default 2D- and 3D-Views, a <span class="keyword">Structure View</span> and generates a structure
+index (FragFp descriptor), which is needed internally for some structure related tasks.
+While the indexing process is underway and its progress bar is visible
+in the status area, these functions e.g. sub-structure search are not yet available.</p>
+<br>
+
+<h3><a name="TextFiles"></a>Text Files</h3>
+<p>TAB delimited and comma separated text files ('.txt' and '.csv') are among the
+most portable file formats because they can be created by many programs.
+In these text files each line represents a row and all fields within the
+row are separated by TABs or commas.
+If one or more columns of the text file contain chemical structures in SMILES format
+or chemical reaction encoded as reaction SMILES,
+then <span class="keyword">DataWarrior</span> automatically recognizes them and creates
+additional columns with structures, reactions and default decriptors for every SMILES containing column.
+From the <span class="menu">File</span> menu, select <span class="menu">Open Special</span>
+and choose <span class="menu">Textfile...</span></p><br>
+
+<h3><a name="ExampleFiles"></a>Example Data Files</h3>
+<p>In the standard <span class="keyword">DataWarrior</span> installation, the <span class="menu">File</span>
+menu contains two submenus with direct access to some example files.
+The option <span class="menu">Open Reference File</span> covers various files
+with chemical structures and related data, e.g. known drugs, pKa values, bioactive compounds,
+and other datasets of interest. <span class="menu">Open Example File</span>
+provides examples that illustrate non-chemistry related aspects of <span class="keyword">DataWarrior</span>.
+Depending on the installation, further submenus may provide quick access to files in user
+defined directories.</p><br>
+
+<h3><a name="PasteData"></a>Paste Data from the Clipboard</h3>
+
+<p>If you copy tabular data from any text editor or spreadsheet
+application, you may paste it directly into <span class="keyword">DataWarrior</span>. This will open
+the data as if it were loaded from a text file. By analyzing the data
+<span class="keyword">DataWarrior</span> will try to evaluate, whether a header row is present.
+If it believes that there is none it will generate default column names.</p>
+
+<p>In most cases <span class="keyword">DataWarrior</span> will correctly predict, whether
+the clipboard content starts with a header row. If it fails because of insuffucient clues,
+then one may use one of the <span class="menu">Paste Special</span> options to hint that
+a row header is present or not.</p>
+
+<p>In the following example some data was selected within a spreadsheet application
+and then copied to the clipboard with Ctrl-C.</p>
+
+<p align="center"><img src="help/img/import/spreadsheet.jpeg"></p>
+
+<p>After switching to <span class="keyword">DataWarrior</span> and after choosing <span class="menu">Paste</span>
+(Ctrl-V) <span class="keyword">DataWarrior</span> responds by displaying the clipboard's content in a new window.
+It has recognized that the column named "Smiles" contains valid SMILES codes and automatically created an additional
+column with chemical structures from the SMILES strings. It also created two graphical default views and, since
+the data now contains chemical structures, it also created a dedicated structure view.</p>
+
+<p align="center"><img src="help/img/import/pasted.jpeg"></p>
+
+<p><a name="PasteInto"></a>While the <span class="menu">Paste</span> item of the main menu creates a new <span class="keyword">DataWarrior</span>
+document, one may also paste TAB-delimited text directly into an existing <span class="keyword">DataWarrior</span> table.
+This is achieved with a right mouse click on a specific cell and selecting <span class="menu">Paste Into Table</span>
+from the popup menu. This causes DataWarrior to replace cell content starting from the selected cell and extending
+to the right and bottom cells to cover a table area reflecting the row and column count of the clipboard's data.
+If the table to be pasted contains more columns or row than the current table has available extending from the chosen cell,
+then DataWarrior will add new columns and/or rows to create the needed space. Please not, that the content of hidden
+rows or columns stay untouched, because only visible cell's content will be replaced.
+Of course, after the data has been pasted the current filter settings apply and may cause changed or new rows to
+be hidden immediately.</p>
+<br>
+
+<h3><a name="ImportData"></a>Importing Data From Databases</h3>
+
+<p>Depending on your particular installation <span class="keyword">DataWarrior</span> is able to directly retrieve
+data from a variety of databases. These include:
+<li>Commercially available building block chemicals from <a href="help/databases.html#Enamine">Enamine</a></li>
+<li>Compounds & Activities from the <a href="help/databases.html#Chembl">ChEMBL database</a></li>
+<li>3D-Structures from the <a href="help/databases.html#COD">Crystallography Open Database</a> (COD)</li>
+<li>All chemicals structures from <a href="help/databases.html#Wikipedia">Wikipedia</a></li>
+<li>Data from <a href="help/databases.html#SQLQuery">relational databases</a> (Oracle, MySQL, Microsoft SQL-Server, PostgreSQL)</li>
+<li>Data from any <a href="help/databases.html#CustomURL">Web-based data source</a> in TAB or comma delimited
+format, e.g. Google spreadsheets</li>
+</p>
+
+<p>If your installation contains plugins from your organization or from other sources,
+then your database menu may contain additional items, which open custom dialogs to to
+define and run queries on internal or external databases. Such plugins can be easily
+developed using the <a href="http://www.openmolecules.org/datawarrior/sdk.html">DataWarrior Plugin SDK</a>.</p>
+
+<p>At Idorsia the following additional database options exist:
+<li>Chemical and biological data from the <span class="keyword">Osiris Database</span></li>
+<li>Reactions and reaction procedures from the chemical lab-notebook <span class="keyword">Mercury</span></li>
+<li>Compounds and data from Actelion's <span class="keyword">Chemical Inventory</span></li>
+<li>Compounds & products from the <span class="keyword">Commercial Chemicals Database</span></li>
+<li>Compounds from the <span class="keyword">Screening Compounds Database</span></li>
+<li>Protein Crystallization Data</li>
+<li>Micro Array Data</li>
+<li>Gene Expression Data</li>
+</p>
+<br>
+
+<h3><a name="MergeData"></a>Merging Data From Files</h3>
+
+<p>Merging data from multiple tables into one table is a frequent activity for any data scientist or analyst.
+For this purpose <span class="keyword">DataWarrior</span> provides powerful merge functionality.
+For merging data from one file into another file you need to open one file first. Then select
+<span class="menu">Merge File...</span> from the <span class="menu">File</span> menu. After selecting
+the file from which to merge information into the first file, a dialog opens and shows available
+merge options.</p>
+
+<p align="center"><img src="help/img/import/mergedialog.png" width=480 height=267></p>
+<p><center><i>"Merge File" dialog configured to merge geo-locations into cost of living data.</i></center></p>
+
+<p> For every column in the second file you need to decide, whether you want to neglect its information,
+put it into a new column, put it into an existing column, or use it as a merge key that identifies
+matching rows between both files. In the example above the first file contains cost of living data
+for many cities of the world. The second file contains cities, states, and the city's geolocation
+as longitude and latitude. For every column of the second file there is a row in the dialog. The
+left combo boxes ask you to either assign these columns columns existing in the first file, to a new
+column, or you may choose to neglegt the column's information. If you assign it to an existing column,
+then the right combo box lets you define a merge option:</p>
+
+<p><b>As merge key:</b>If you select this option, then the row values of this column are used to
+uniquely identify the matching row. Therefore, this column must contain unique values in the second file.
+In the example above, every city may exist only once on the second file. You may define multiple columns
+as merge keys. In this case all column's values must match that a row is considered a match.</p>
+
+<p><b>As merge key (ignore case):</b>This works as the previous option, but neglects whether letters are
+capital or not.</p>
+
+<p><b>As merge key (word search):</b>This option allows to search longer text for words or sequences of words
+that serve as merge key. The picture below shows an example for this merging option. In this case drug names,
+which may consist of multiple words (column 'Name' in second file), are found in study titles within the first
+file. Longer word sequences take preference, e.g. if both keys 'ethanol' and 'ethanol acetate' are found, then
+the text will be matched to the 'ethanol acetate' key. This search option is not case-sensitive
+and cannot be combined with another merge option.</p>
+
+<p><b>Append values:</b>If this option is selected, then the column value of the second file is appended
+to the value in the matching row and assigned column of the first file.</p>
+
+<p><b>Replace with new:</b>This option replaces an existing value with the one from the second file
+if a second file's row can be matched to the first file's row.</p>
+
+<p><b>Replace if empty:</b>This option only copies the value from the second file if the first file does
+not have a value in the matching row.</p>
+
+<p align="center"><img src="help/img/import/wordmatch.png" width=680 height=322></p>
+<p><center><i>Merge example with "Word Search": Chemical structures and identifiers from a drug
+dictionary shall be merged into clinical trial information.</i></center></p>
+</p>
+<br>
+
+
+<p align="center">Continue with <a href="help/views.html">Main Views</a>...</p>
+<br>
+</body>
+</html>

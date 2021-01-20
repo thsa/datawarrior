@@ -1,0 +1,243 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+  <title>Analysing Data</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+<hr align="left" size="2" width="550">
+<h2><a name="DataAnalysis"></a>Analysing Data</h2>
+
+<hr align="left" size="2" width="550">
+<p><span class="keyword">DataWarrior</span> supports you with various means
+in the task of exploring and comprehending large datasets, be it with or without chemical structures.
+</p>
+<br>
+
+<h3><i><a name="Pivoting"></a>Pivoting Data</i></h3>
+
+<p>Consider a data table with three columns, of which the first contains product numbers,
+the second column contains a year and the third the profits gained with this item in the given year.
+Now imagine you intend to correlate profits between the different years. Then you need the data
+table to be arranged differently, i.e. you would need rows to contain products, columns to contain
+years and the individual cells to contain the profit values achieved. Column titles would
+look like 'Product Number', '2010', '2011', '2012', ... This kind of data transformation technique
+is called <i>Pivoting</i> or <i>Cross-Tabulation</i>. This data transformation can be done in
+<i>DataWarrior</i> by choosing <span class="menu">New From Pivoting...</span> in the
+<span class="menu">File</span> menu, which lets you define involved columns in a dialog and
+then creates a new window with the copied and converted data table.</p>
+
+<p align="center"><img src="help/img/analysis/pivot.jpeg"></p>
+
+<p>The example used a file with Dopamine receptor antagonists from the ChEMBL database. Besides
+various other information it contained chemical structures, measured effects and receptor subtype
+(D1 - D5) in separate columns. Columns were selected to group results in one row per chemical structure
+and to split data column into separate columns for every receptor subtype. Three data columns
+were selected, the measured numerical <i>value</i>, the <i>unit</i> and the <i>m</i> column,
+which sometimes contains a modifier (e.g. '&lt;' symbols).</p>
+<br>
+
+<h3><i><a name="ReversePivoting"></a>Reverse Pivoting Data</i></h3>
+
+<p>The <i>Reverse Pivoting</i> transformation is indeed the opposite of the pivoting conversion.
+It creates a new <i>DataWarrior</i> document from the original data table. For every original data row
+it takes the cell content from multiple selected data columns into one new table column, but multiple
+new rows. A second column is created, which receives the column names of the original data columns.
+This way every new row is assigned to one of the original selected data columns.
+Original cell content of other non-selected columns is redundantly copied to any new row.</p>
+
+<p align="center"><img src="help/img/analysis/depivot.jpeg"></p>
+
+<p>The <i>Reverse Pivoting</i> dialog lets one select those column that shall be merged into one
+new column. One also needs to specify a column name for this column as well as for the second new
+column, which receives the original column names and serves to assign rows to original categories.</p>
+<br>
+
+<h3><i><a name="Binning"></a>Binning Numerical Data</i></h3>
+<p>
+If the statistical distribution of all numerical values within one column is of concern,
+and if a histograms shall be displayed, then one needs to create a new column from the
+numerical values, which assigns a bin to each value, i.e. converts the numerical column
+into a special kind of category column.<br>
+The <span class="menu">Add Binned Column...</span> from the <span class="menu">Data</span> menu
+opens the following dialog, where the bin size and the exact location of the first bin can be
+defined, either by moving sliders or by typing in the desired values. A histogram preview shows how
+all rows are distributed among the bins with the current settings.</p>
+<p align="center"><img src="help/img/analysis/binning.jpeg"></p>
+<p><center><i>Binning dialog and histogram view from created new column.</i></center></p>
+</p>
+<br>
+
+<h3><i><a name="JEP"></a>Calculating A New Column From An Expression</i></h3>
+<p>
+<p>Often some columns of a dataset contain alphanumerical data, which if combined together,
+or if converted by a calculation or in some other way, would make it available for filtering,
+view adaption or other purposes. Examples would be the calculation of a ratio between two column,
+doing a conditional number conversion depending on an objects category or calculating a fitness
+value from other properties.</p>
+For calculating a new column from existing column values <span class="keyword">DataWarrior</span>
+has built in the open source expression parser JEP. It lets you define an arithmetical, logical
+or textual expression from constants, operators (+, -, *, >, &, !, ==, etc.), functions as sin(),
+sqrt(), if(), contains(), etc. and variables that represent data from other columns.
+In addition to the standard functions, <span class="keyword">DataWarrior</span>
+has some special functions defined to calculate molecule similarities, ligand efficiencies,
+or occurance frequencies of cell values.
+To define and evaluate a new expression choose <span class="menu">Add Calculated Values...</span>
+from the <span class="menu">Data</span> menu. When typing in a formula you don't need to type variable names.
+You rather should select the column name from the selection in the dialog and click
+<span class="menu">Add Variable</span>. This ensures correct spelling, especially since some column names
+are slightly modified to avoid syntax errors when the expression is parsed.
+The <a href="help/jep.html">Help</a> button opens a window explaining the expression syntax,
+all operators and available functions.</p>
+<br>
+
+<h3><a name="Gini"></a>The Gini Selectivity Score</h3>
+
+<p>The <span class="keyword">Gini Coefficient</span> was originally invented to represent the income or wealth
+distribution of a nation's residents, and is today the most commonly used measure of inequality.
+For instance, in the context of medicinal chemistry P. Graczyk applied it to express the selectivity of
+kinase inhibitors (doi:10.1021/jm070562u). A <span class="keyword">Gini Coefficient</span> of 0.0 expresses
+perfect equality, where all values are the same, while a value of 1.0 represents maximal inequality, e.g. a
+totally selective inhibitor that is only active on one of many kinases.
+Typically, the <span class="keyword">Gini Coefficient</span>
+is used for a large number of positive numerical values of which a few are much larger than the rest.
+Thus, inhibition values are a perfect input, while logarithmic data is a less meaningful data source.</p>
+<p>To calculate the <span class="keyword">Gini Coefficient</span> in <span class="keyword">DataWarrior</span>
+one needs to provide the input values in columns. The <span class="menu">Calculate Selectivity Score...</span>
+item in the <span class="menu">Data</span> menu opens a dialog that lets you define a set of columns by
+either selecting them indiviually from a list or by specifying a common element of the columns' names.
+In addition one may select an option that converts effect values to inhibition values by subtracting the
+original value from 100. <span class="keyword">DataWarrior</span> then calculates a new column containing the
+<span class="keyword">Gini Coefficient</span> using the trapez method as described in the paper by Graczyk.
+However, <span class="keyword">DataWarrior</span> does not change input values to limit the value range
+to 0 to 100, because this would reduce the noise in an unsymmetrical fashion. We consider the
+<span class="keyword">Gini Coefficient</span> robust enough to digest negative input data without
+sacrificing its usefulness.</p>
+<br>
+
+<h3><a name="Fuzzy"></a>Defining a Fuzzy Score</h3>
+
+<p>Sometimes it is helpful to express the fitness or usefulness of an object with a single numerical value,
+which somehow summarizes the fitness of multiple properties. For this purpose
+<span class="keyword">DataWarrior</span> allows to calculate a <span class="keyword">fuzzy score</span>
+from multiple contributing property values. These values may be taken from numerical columns of the data set
+or they may be calculated on-the-fly from a chemical structure. No matter, which individual properties
+are used, <span class="keyword">DataWarrior</span> derives from every contributing property an individual
+score between 0.0 and 1.0. This is done using a smooth sigmoid curve defined for every property.
+In the dialog (see below) this curve is drawn in magenta color. The curve's slope and inflection point(s)
+can be adjusted by setting the <span class="menu">Minimum</span> and <span class="menu">Maximum</span>
+values as well as by moving the <span class="menu">Slope</span> slider.
+An additional <span class="menu">Weight</span> slider allows to reduce or increase the contribution of
+the associated property's score to the overall score.</p>
+<p>The individual valuation scores are then summarized by calculating their mean value or by multiplying all
+individual scores (geometrical mean). Usually the latter method is chosen, if an object can be considered
+useless, if one bad property alone can ruin it.</p>
+<p>The properties that contribute to the overall fuzzy score are compiled by adding property specific
+panels to the lower scrollable part of the dialog. This is done by selecting the property's name in the
+<span class="menu">Contributing Values</span> popup menu and pressing the <span class="menu">Add Value</span>
+button. Then a new panel appears at the end of the property panel list letting you define the valuation curve.
+If the property refers to the current data set, then the distribution of the associated column's data is
+shown as a histogram in the curve area. This helps defining proper valuation curves.</p>
+<p>Defining a fuzzy score profile is often done once and then applied multiple times on the same, but updated
+data set or on different data sets. Therefore, this functionality is often used within a macro.</p>
+<p align="center"><img src="help/img/analysis/fuzzy.jpeg"></p>
+<p><center><i>Fuzzy score dialog defined to reward low IC50 values and low molecular weights.</i></center></p>
+<p></p>
+<br>
+
+<h3><a name="Graph"></a>Working with Graph Data</h3>
+
+<p>Often the rows of a data table represent objects that are logically connected or related,
+e.g. if some objects are similar to others or if objects are parent to or predecessors of others.
+<span class="keyword">DataWarrior</span> uses a simple way to define these kinds of relationships between
+rows, provided that one column contains names or numbers, which uniquely identify every row.
+If then a second column's cells contain one or more of these identifiers, then these rows effectively
+point to (or reference) other rows of the same table. This turns the table of rows into a graph whose nodes
+are represented by table rows and whose edges are defined by row references.
+If you want <span class="keyword">DataWarrior</span>
+to understand and make use of row links you need to tell <span class="keyword">DataWarrior</span> which
+column references which identifier column. Choose <span class="menu">Set Column Reference...</span> from the popup
+menu that appears upon a right mouse click within the referencing column's title area.</p>
+
+<p align="center"><img src="help/img/analysis/setColumnRef.png" width=640 height=172></p>
+<p><center><i>Popup menu and dialog to define a column reference.</i></center></p>
+
+<p><b>Column Name:</b> This is the column that references the identifier column. Typically, it contains zero,
+one, or multiple identifiers in every cell, which establish the link or reference to other rows.
+If the dialog was opened through a column popup menu as shown above, then this column was implicitly chosen
+in that step and cannot be changed in the dialog.</p>
+
+<p><b>Referenced column:</b> This popup menu defines the column containing unique row identifying names or numbers.
+It does not contain columns with duplicate entries.</p>
+
+<p><b>Strength column:</b> This popup menu allows to assign a numerical column, whose values define the strength
+of the link. If choosing a strength column it must have the same number of values in every row as the referencing column,
+i.e. every referencing identifier must have a matching strength value.</p>
+
+<p><b>Links are bi-directional:</b> If links are defined in the referencing column by one entry only,
+then we have a directed graph, which may define one or more trees, cycles or just linear strings of connected
+rows. Typical examples are parent or child relationships. Alternatively, relationships may not have a direction.
+In this case every link is defined by two identifier entries: each of the two linked rows points to its opposite row.
+This kind of link is typical to represent neighbourship or high row similarities.</p>
+
+<p>Once a column reference is defined and therefore rows are crosslinked with each other, what can you do with it?
+<ul>
+<li>Most obvious is that these links can be shown as connection lines in scatter plots. For that to happen choose
+<span class="menu">Set Column Reference...</span> after a right mouse click within the particular 2D- or 3D-view.
+In the connection line dialog choose your referencing column from the <span class="menu">Group & connect by</span>
+menu. You may also adjust the line width or invert the arrow direction in case of directed links. Note that the
+position of your row markers is not touched when showing direction lines. These still depend on which columns
+are assigned to the two or three axes.</li>
+<li>You may configure a view to show a sub-graph starting from the currently selected reference row as root.
+Since reference rows can be changed with one mouse click, such a view is a very dynamic one and shows a
+different sub-graph with every change of the reference row. These sub-graphs are trees whose nodes are automatically
+arranged to optimize the tree layout. You may choose between a circular tree layout with the root in its center or a
+traditional hierarchical tree with the root node at one of the view edges. To show dynamic sub-graphs choose
+anything but <span class="menu">none</span> from the <span class="menu">Detail tree mode</span> options in
+the connection line dialog.</li>
+<li>You may ask <span class="keyword">DataWarrior</span> to calculate an optimized set of 2D-coordinates
+for your rows, which are optimized to visualize your row relations. The used algorithm tries to optimize
+two criteria: Linked rows are placed close to each other and all rows are distributed evenly over the
+available space. The following section explains this in more detail.</li>
+</ul>
+</p>
+<br>
+
+<h3><a name="ArrangeGraph"></a>Arranging Rows According to Graph Relationships</h3>
+
+<p>If one column is defined to reference another one and, therefore, rows are linked to other rows then
+<span class="keyword">DataWarrior</span> may use this information to arrange all rows on a 2-dimensional
+plane such that the distance of linked rows is minimized. For that <span class="keyword">DataWarrior</span>
+uses a <span class="keyword">Rubberband Scaling</span> algorithm that generates new X and Y coordinates
+for each row. When these coordinates are assigned to the two axes of a 2D-view, then even complex graphs can be
+displayed nicely. <span class="keyword">DataWarrior</span> uses the same algorithm to visualize chemical
+space after a <a href="help/chemistry.html#SimAnalysis">similarity</a> or <a href="help/chemistry.html#SimAnalysis">
+activity cliff</a> analysis.</p>
+
+<p>To calculate row coordinates using this method choose <span class="menu">Arrange
+Graph Nodes...</span> from the <span class="menu">Data</span> menu, choose the referenced, the referencing,
+and optionally a connection strength column. Then click <span class="menu">OK</span>.
+Now <span class="keyword">DataWarrior</span> creates a new 2D-view that shows all rows using freshly
+generated coordinates. It also shows a connection line for every defined row relationship.</p>
+
+<p align="center"><img src="help/img/analysis/directedGraph.jpeg" width=489 height=390></p>
+<p><center><i>2D-View displaying directed graph after Rubberband Scaling.</i></center></p>
+
+<p>In addition, a second 2D-view is created and configured to display a sub-graph tree with the current
+reference row as root, provided that a reference row is chosen. Whenever the reference row changes, because
+a different row is clicked with the mouse in any view, then the sub-graph is automatically updated to show
+multiple layers of the newly selected reference row's neighbours.</p>
+
+<p align="center"><img src="help/img/analysis/graph.jpeg" width=539 height=427></p>
+<p><center><i>2D-View configured to show circular detail graph with 'Lightning Injuries' as root.</i></center></p>
+
+<p>For more information about how to use connection lines and detail tree sub-graphs check the section
+on <a href="help/views.html#ConnectionLines">connection lines</a>.</p>
+<br>
+
+<p align="center">Continue with <a href="help/ml.html">Machine Learning</a>...</p>
+<br>
+</body>
+</html>

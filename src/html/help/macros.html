@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+  <title>Automation With Macros</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+
+<hr align="left" size="2" width="550">
+<h2><a name="UsingMacros"></a>Using Macros for Workflow Automation</h2>
+<hr align="left" size="2" width="550">
+
+<p>Workflow based cheminformatics tools like <i>Pipeline Pilot</i> or <i>Knime</i> gained quite some
+popularity, because they allow defining complicated or long task sequences, which can be executed
+at a later time multiple times by different people on different or frequently updated data.<br>
+In <span class="keyword">DataWarrior</span> a defined sequence of tasks is called
+<span class="keyword">macro</span>. In <span class="keyword">DataWarrior</span> new macros can be created
+by creating and defining macro tasks one-by-one interactively, by duplicating and customizing an existing macro,
+or simply by recording normal user interactions. These include creating or changing views,
+filtering data, calculating properties, retrieving data from databases, opening and saving files, and much more.
+Basically, any action that can be done interactively can also be defined as macro task. In addition there
+exist some special macro tasks that cannot be performed interactively.<br>
+Most macro related functionality are accessible through the <span class="menu">Macro</span> menu, which
+allows recording, playing, exporting and importing macros. 
+A dedicated macro editor view lets you create new or customize existing macros. Finally, macro files
+can be opened from the file menu or by double-clicking their icons to immediately run them.
+</p>
+<br>
+
+<h3><a name="Concepts"></a>Macro Concepts</h3>
+<p>
+In order to efficiently work with macros, one needs to understand a few general concepts:<br>
+<li>Typically a macro is owned by a <span class="keyword">DataWarrior</span> document. When this document is saved,
+the macro is saved as part of the document's <i>.dwar</i> file.</li>
+<li>When a new macro is created, either manually within the macro editor or by recording a macro, then the macro
+belongs to that document, whose window was in front during the macro's creation.</li>
+<li>When a longer macro is recorded it may happen that the window, which owns the macro, is pushed to the background,
+e.g. when a task creates a new window. In that case user interactions happen in the new front window,
+but are still added to original macro, which belongs to the background window.</li>
+<li>If a macro is executed, then every one of its tasks is executed in the front window, even if the macro is owned by
+another window that is in the background.</li>
+<li>Macros may be exported into a dedicated <i>.dwam</i> file. Usually, this is done to share the macro with other users or
+to store it independent of a data file for future use.</li>
+<li>When a <i>.dwam</i> file icon is double-clicked or the file is opened from <span class="keyword">DataWarrior's</span>
+<span class="menu">File</span> menu, then the contained macro is executed on the front window's dataset.</li>
+<li>Macro files, which are located in certain predefined directories, are listed in the <span class="menu">Macro</span>
+menu for direct execution.</li>
+<li>Macros can call other macros recursively.</li>
+</p>
+<br>
+
+<h3><a name="RecordAndRun"></a>Recording and Running Macros</h3>
+<p>
+The easy way to create a macro is recording one. To do so, activate that window, which shall host the new macro and
+select <span class="menu">Start Recording...</span> from the <span class="menu">Macro</span> menu.
+A dialog opens to ask for a macro name. After closing that dialog a red message in the bottom right corner of
+every window indicates that all interactions with <span class="keyword">DataWarrior</span> are currently recorded
+as tasks of a new macro until you select <span class="menu">Stop Recording</span> from the <span class="menu">Macro</span> menu.
+Once a macro was recorded its name appears in the <span class="menu">Run Macro</span> and <span class="menu">Export Macro</span>
+items of the <span class="menu">Macro</span> menu. 
+</p>
+<p align="center"><img src="help/img/macros/messages.jpeg"><br>
+<i>A macro is currently being recorded or executed.</i></center></p>
+<p>
+In order to execute a macro select its name from the <span class="menu">Macro -> Run Macro</span> menu.
+Then, the macro's tasks will be sequentially executed in the front-most window, which may change during the execution
+of the macro, if a task brings another window to the front or if a new window is created. During the execution
+of the macro a message and a progress bar in the bottom right corner of every window report on the progress of
+individual tasks. An <span class="menu">X</span> button can be pressed anytime to stop a macro's execution immediately
+(see image above).</p>
+<br>
+
+<h3><a name="Editor"></a>The Macro Editor</h3>
+<p>
+While it is convenient to just record a new macro by naturally interacting with DataWarrior, sometimes it is
+necessary to slightly adapt a recorded macro or even useful to create a new macro from scratch. Moreover,
+there are tasks, which cannot be recorded, e.g. for showing a message or waiting for a few seconds.
+To change an existing macro or to construct a new one from scratch <span class="keyword">DataWarrior</span>
+has built-in macro editor view, which can be opened with a right mouse click on any view's title area and
+selecting <span class="menu">New Macro Editor</span> from the popup menu.</p>
+<p align="center"><img src="help/img/macros/editor.jpeg"></p>
+<p><center><i>Macro Editor</i></center></p>
+<p>The left part of the editor shows all task categories and tasks that are available in <span class="keyword">DataWarrior</span>.
+At the top of the right part one may create macros, rename of delete existing macros from the current data file. If the
+active <span class="keyword">DataWarrior</span> window contains macros, one may select one for editing. All tasks
+of the selected macro are then shown below in the order they will be executed. Available tasks can be dragged and dropped
+from the left into a macro's task list, which causes a new task of this kind to be added or inserted into the currently macro.
+If the task needs further specification, which most tasks do, then a dialog opens to define the task's details.
+Any time later one may double click any task of a macro to open the detail dialog again. A right mouse click of
+a macro task opens a popup menu allowing to rename or remove the task. The task order can be changed by dragging
+tasks to a different position.</p>
+<p>Note that the dialog for editing a macro task may look and behave slightly different from the dialog to configure
+the same task for immediate execution on the current window's dataset. When you edit a macro task,
+<span class="keyword">DataWarrior</span> cannot know the structure of the data, which the macro will run on.
+Nor does it know, which views or filters will be available. Therefore, a higher flexibility is needed for specifying
+a particular data column, a view or a filter. To allow for this higher flexibility dialog items often permit typing in a
+column name in addition to selecting one from a list of compatible columns.
+</p>
+<br>
+
+<h3><a name="ImportExport"></a>Exporting and Importing Macros</h3>
+<p>
+When a new macro is born by either creating it in the macro editor or by recording user interactions, then the macro belongs
+to the <span class="keyword">DataWarrior</span> document that was in front, when the macro creation was started. Whenever
+a document window is in front that contains macros, then its <span class="menu">Run Macro</span> menu allows to execute
+any of the document's internal macros. This way the initial scope of any new macro is more or less limited to the data file
+it belongs to. In order to share a macro with a colleague or to make it available to all data files, it needs to be detached,
+i.e. exported from its original data file. When selecting the macro's name from the <span class="menu">Export Macro</span> menu,
+then the macro is written into a dedicated file that can be sent to a colleague, or converted into a global macro by putting
+it into a directory, which is scanned by <span class="keyword">DataWarrior</span> during launch (see next section).<br>
+Likewise, macro files can be imported into any <span class="keyword">DataWarrior</span> document to quasi marry them with it.
+This is done by selecting <span class="menu">Import Macro...</span> from the <span class="menu">Macro</span> menu.
+Whenever a document with embedded macros is opened, the names of its macros appear in the <span class="menu">Run Macro</span>
+submenu for immediate execution.
+</p>
+<p>
+Macro files are text files with a simple format. They basically contain a macro name and a sequential list of task.
+Tasks also have a name identyfiable by <span class="keyword">DataWarrior</span> and a list of properties, which define
+what exactly the task is supposed to do. If you have a little experience, you may use a text editor to adapt a macro
+to your needs. For convenience reasons <span class="keyword">DataWarrior</span> allows to copy/paste macros in text form
+using <span class="menu">Copy Macro</span> and <span class="menu">Paste Macro</span> from the <span class="menu">Macro</span>
+menu. With these you may quickly copy macros from one document to another, or from and to a text editor for quick modifications.
+</p>
+<br>
+
+<h3><a name="GlobalMacros"></a>Global and User Macros</h3>
+<p>
+When <span class="keyword">DataWarrior</span> is launched, it searches some predefined directory paths for macro files, i.e. for
+files with the extention <i>.dwam</i>. From any found macro file it reads the contained macro's name and adds it to the
+<span class="menu">Run Macro</span> submenu of the <span class="menu">Macro</span> menu. Note that a macro name may be different
+from the name of the file that contains the macro. When any of the <span class="menu">Run Macro</span> submenu's items is selected,
+then the corresponding macro is executed on the active window's dataset. When assembling the macro list
+<span class="keyword">DataWarrior</span> searches these paths:<br>
+<li>The <i>macro</i> folder directly in the <span class="keyword">DataWarrior</span> installation directory. This is <i>/opt/datawarrior/macro</i>,
+<i>/Applications/DataWarrior.app/macro</i>, or <i>C:\Program Files\DataWarrior\macro</i> for Linux, Macintosh or Windows (64-bit),
+respectively. Macro files in these directories are visible to all users on that computer.</li>
+<li>A <i>macro</i> folder in a <i>datawarrior</i> folder in the user's home folder. This is <i>/home/&lt;username&gt;/datawarrior/macro</i> and
+<i>/Users/&lt;username&gt;/datawarrior/macro</i> for Linux and Macintosh, respectively. On Windows the home folder location depends on
+the version of Windows, the version of Java and other settings. Often it is the user's <i>Desktop</i> folder.
+Therefore, <span class="keyword">DataWarrior</span> supports an additional path on Windows:
+<i>C:\\Users\&lt;username&gt;\AppData\Roaming\DataWarrior\Macro</i>. Any macro files in these directories
+are visible to one user only.</li>
+<li>Another option is to define one or more custom macro folders by setting the Java system property <i>macropath</i> when launching
+<span class="keyword">DataWarrior</span> as e.g.: <i>-Dmacropath=/home/thomas/datawarrior/macros:/home/thomas/datawarrior/test/macros</i>
+(on Windows use ';' instead of ':' as separator). On Linux this can be done by updating the launch script <i>/opt/datawarrior/datawarrior</i>.
+On OSX one needs to change <i>Info.plist</i> in the DataWarrior.app folder. On Windows this is again less straight forward:
+One needs to pass the -D option to the executable when that is launched. One option is to create a shortcut and add the option to it.
+However, this approach only works, if DataWarrior is launched from the shortcut. If you know what you are doing, you may also
+edit the registry's shell/open/commands for the file extentions "dwar", "dwam", "sdf".</li>
+</p>
+<br>
+
+<h3><a name="CommandLine"></a>Running Macros from the Command Line</h3>
+<p>
+One way of using macros is to launch <span class="keyword">DataWarrior</span> from the command line or from within a shell
+script and passing a macro file name as the only parameter. This causes <span class="keyword">DataWarrior</span> to execute
+the macro. If the macro's last task is <span class="menu">Exit Program</span>, then <span class="keyword">DataWarrior</span>
+would close after the work is done letting the shell script continue with whatever is supposed to follow.<br>
+If configured from the macro editor, the <span class="menu">Exit Program</span> task allows to select, how open files with
+unsaved content shall be treated when the program closes. The options are not to save anything, to ask, which windows to save,
+or to save all Windows with unsaved changes automatically without asking interactive questions.
+In the latter case <span class="keyword">DataWarrior</span> handles Windows differently depending on whether they already
+have an existing file association. If a Window was earlier opened by reading a <span class="keyword">DataWarrior</span> file
+or if the Window's content was saved earlier into a <span class="keyword">DataWarrior</span> file, then changes would be
+written into that file effectively overwriting the previous content. If, however, there is no file association, because the
+Window's data was retrieved from a database or e.g. created as a combinatorial library, then
+<span class="keyword">DataWarrior</span> would save a new file under a unique name in the user's home directory making sure
+that no existing file is overwritten.
+</p>
+<br>
+
+</body>
+</html>

@@ -1,0 +1,204 @@
+<HTML><HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=ISO-8859-1">
+<TITLE>Regular Expressions Reference - Basic Syntax</TITLE>
+
+<META NAME="Author" CONTENT="Jan Goyvaerts">
+<META NAME="Description" CONTENT="Reference of the various syntactic elements that can appear in regular expressions">
+<META NAME="Keywords" CONTENT="">
+<base href="../">
+<LINK REL=StyleSheet HREF="styles.css" TYPE="text/css">
+</HEAD>
+<BODY BGCOLOR=white TEXT=black>
+
+<H2>Regular Expression Basic Syntax Reference</H2>
+
+<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=4 CLASS=body>
+
+
+<TR><TH COLSPAN=3><H3>Characters</H3></TH></TR>
+
+<TR><TH>Character</TH><TH>Description</TH><TH>Example</TH></TR>
+
+<TR><TD VALIGN=TOP>Any character except <TT>[\^$.|?*+()</TT></TD>
+<TD VALIGN=TOP>All characters except the listed special characters match a single instance of themselves.  <tt>{</tt> and <tt>}</tt> are literal characters, unless they're part of a valid regular expression token (e.g. the <tt>{n}</tt> quantifier).</TD>
+
+<TD VALIGN=TOP><TT CLASS=regex>a</TT> matches <TT CLASS=match>a</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\</TT> (backslash) followed by any of <TT>[\^$.|?*+(){}</TT></TD>
+<TD VALIGN=TOP>A backslash escapes special characters to suppress their special meaning.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>\+</TT> matches <TT CLASS=match>+</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\Q...\E</TT></TD>
+<TD VALIGN=TOP>Matches the characters between <tt>\Q</tt> and <tt>\E</tt> literally, suppressing the meaning of special characters.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>\Q+-*/\E</TT> matches <TT CLASS=match>+-*/</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\xFF</TT> where FF are 2 hexadecimal digits </TT></TD>
+<TD VALIGN=TOP>Matches the character with the specified ASCII/ANSI value, which depends on the code page used.  Can be used in character classes.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>\xA9</TT> matches <TT CLASS=match>&copy;</TT> when using the Latin-1 code page.</TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\n</TT>, <TT>\r</TT> and <TT>\t</TT></TD>
+
+<TD VALIGN=TOP>Match an LF character, CR character and a tab character respectively.  Can be used in character classes.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>\r\n</TT> matches a DOS/Windows CRLF line break.</TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\a</TT>, <TT>\e</TT>, <TT>\f</TT> and <TT>\v</TT></TD>
+<TD VALIGN=TOP>Match a bell character (<tt>\x07</tt>), escape character (<tt>\x1B</tt>), form feed (<tt>\x0C</tt>) and vertical tab (<tt>\x0B</tt>) respectively.  Can be used in character classes.</TD>
+
+<TD>&nbsp;</TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\cA</TT> through <TT>\cZ</TT></TD>
+<TD VALIGN=TOP>Match an ASCII character Control+A through Control+Z, equivalent to <tt class=regex>\x01</tt> through <tt class=regex>\x1A</tt>.  Can be used in character classes.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>\cM\cJ</TT> matches a DOS/Windows CRLF line break.</TD></TR>
+
+<TR><TH COLSPAN=3><H3>Character Classes or Character Sets</H3></TH></TR>
+
+<TR><TH>Character</TH><TH>Description</TH><TH>Example</TH></TR>
+
+<TR><TD VALIGN=TOP><TT>[</TT> (opening square bracket)</TD>
+<TD VALIGN=TOP>Starts a character class.  A character class matches a single character out of all the possibilities offered by the character class.  Inside a character class, different rules apply.  The rules in this section are only valid inside character classes.  The rules outside this section are not valid in character classes, except <TT>\n</TT>, <TT>\r</TT>, <TT>\t</TT> and <TT>\xFF</TT></TD>
+
+<TD>&nbsp;</TD></TR>
+
+<TR><TD VALIGN=TOP>Any character except <NOBR><TT>^-]\</TT></NOBR> add that character to the possible matches for the character class.</TD>
+<TD VALIGN=TOP>All characters except the listed special characters.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>[abc]</TT> matches <TT CLASS=match>a</TT>, <TT CLASS=match>b</TT> or <TT CLASS=match>c</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\</TT> (backslash) followed by any of <NOBR><TT>^-]\</TT></NOBR></TD>
+<TD VALIGN=TOP>A backslash escapes special characters to suppress their special meaning.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>[\^\]]</TT> matches <TT CLASS=match>^</TT> or <TT CLASS=match>]</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>-</TT> (hyphen) except immediately after the opening <TT>[</TT></TD>
+<TD VALIGN=TOP>Specifies a range of characters.  (Specifies a hyphen if placed immediately after the opening <TT>[</TT>)</TD>
+<TD VALIGN=TOP><TT CLASS=regex>[a-zA-Z0-9]</TT> matches any letter or digit</TD></TR>
+
+<TR><TD VALIGN=TOP><TT>^</TT> (caret) immediately after the opening <TT>[</TT></TD>
+
+<TD VALIGN=TOP>Negates the character class, causing it to match a single character <I>not</I> listed in the character class.  (Specifies a caret if placed anywhere except after the opening <TT>[</TT>)</TD>
+<TD VALIGN=TOP><TT CLASS=regex>[^a-d]</TT> matches <TT CLASS=match>x</TT> (any character except a, b, c or d)</TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\d</TT>, <TT>\w</TT> and <TT>\s</TT></TD>
+
+<TD VALIGN=TOP>Shorthand character classes matching digits 0-9, word characters (letters and digits) and whitespace respectively.  Can be used inside and outside character classes.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>[\d\s]</TT> matches a character that is a digit or whitespace</TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\D</TT>, <TT>\W</TT> and <TT>\S</TT></TD>
+<TD VALIGN=TOP>Negated versions of the above.  Should be used only outside character classes.  (Can be used inside, but that is confusing.)</TD>
+<TD VALIGN=TOP><TT CLASS=regex>\D</TT> matches a character that is not a digit</TD></TR>
+
+<TR><TD VALIGN=TOP><TT>[\b]</TT></TD>
+<TD VALIGN=TOP>Inside a character class, <tt>\b</tt> is a backspace character.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>[\b\t]</TT> matches a backspace or tab character</TD></TR>
+
+<TR><TH COLSPAN=3><H3>Dot</H3></TH></TR>
+
+<TR><TH>Character</TH><TH>Description</TH><TH>Example</TH></TR>
+
+<TR><TD VALIGN=TOP><TT>.</TT> (dot)</TD>
+<TD VALIGN=TOP>Matches any single character except line break characters \r and \n.  Most regex flavors have an option to make the dot match line break characters too.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>.</TT> matches <TT CLASS=match>x</TT> or (almost) any other character</TD></TR>
+
+<TR><TH COLSPAN=3><H3>Anchors</H3></TH></TR>
+
+<TR><TH>Character</TH><TH>Description</TH><TH>Example</TH></TR>
+
+<TR><TD VALIGN=TOP><TT>^</TT> (caret)</TD>
+<TD VALIGN=TOP>Matches at the start of the string the regex pattern is applied to.  Matches a position rather than a character.  Most regex flavors have an option to make the caret match after line breaks (i.e. at the start of a line in a file) as well.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>^.</TT> matches <TT CLASS=match>a</TT> in <TT CLASS=string>abc\ndef</TT>.  Also matches <TT CLASS=match>d</TT> in "multi-line" mode.</TD></TR>
+
+<TR><TD VALIGN=TOP><TT>$</TT> (dollar)</TD>
+<TD VALIGN=TOP>Matches at the end of the string the regex pattern is applied to.  Matches a position rather than a character.  Most regex flavors have an option to make the dollar match before line breaks (i.e. at the end of a line in a file) as well.  Also matches before the very last line break if the string ends with a line break.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>.$</TT> matches <TT CLASS=match>f</TT> in <TT CLASS=string>abc\ndef</TT>.  Also matches <TT CLASS=match>c</TT> in "multi-line" mode.</TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\A</TT></TD>
+<TD VALIGN=TOP>Matches at the start of the string the regex pattern is applied to.  Matches a position rather than a character.  Never matches after line breaks.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>\A.</TT> matches <TT CLASS=match>a</TT> in <TT CLASS=string>abc</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\Z</TT></TD>
+<TD VALIGN=TOP>Matches at the end of the string the regex pattern is applied to.  Matches a position rather than a character.  Never matches before line breaks, except for the very last line break if the string ends with a line break.</TD>
+
+<TD VALIGN=TOP><TT CLASS=regex>.\Z</TT> matches <TT CLASS=match>f</TT> in <TT CLASS=string>abc\ndef</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\z</TT></TD>
+<TD VALIGN=TOP>Matches at the end of the string the regex pattern is applied to.  Matches a position rather than a character.  Never matches before line breaks.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>.\z</TT> matches <TT CLASS=match>f</TT> in <TT CLASS=string>abc\ndef</TT></TD></TR>
+
+<TR><TH COLSPAN=3><H3>Word Boundaries</H3></TH></TR>
+
+<TR><TH>Character</TH><TH>Description</TH><TH>Example</TH></TR>
+
+<TR><TD VALIGN=TOP><TT>\b</TT></TD>
+<TD VALIGN=TOP>Matches at the position between a word character (anything matched by <TT CLASS=regex>\w</TT>) and a non-word character (anything matched by <TT CLASS=regex>[^\w]</TT> or <TT CLASS=regex>\W</TT>) as well as at the start and/or end of the string if the first and/or last characters in the string are word characters.</TD>
+
+<TD VALIGN=TOP><TT CLASS=regex>.\b</TT> matches <TT CLASS=match>c</TT> in <TT CLASS=string>abc</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>\B</TT></TD>
+<TD VALIGN=TOP>Matches at the position between two word characters (i.e the position between <TT CLASS=regex>\w\w</TT>) as well as at the position between two non-word characters (i.e. <TT CLASS=regex>\W\W</TT>).</TD>
+
+<TD VALIGN=TOP><TT CLASS=regex>\B.\B</TT> matches <TT CLASS=match>b</TT> in <TT CLASS=string>abc</TT></TD></TR>
+
+<TR><TH COLSPAN=3><H3>Alternation</H3></TH></TR>
+
+<TR><TH>Character</TH><TH>Description</TH><TH>Example</TH></TR>
+
+<TR><TD VALIGN=TOP><TT>|</TT> (pipe)</TD>
+<TD VALIGN=TOP>Causes the regex engine to match either the part on the left side, or the part on the right side.  Can be strung together into a series of options.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>abc|def|xyz</TT> matches <TT CLASS=match>abc</TT>, <TT CLASS=match>def</TT> or <TT CLASS=match>xyz</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>|</TT> (pipe)</TD>
+<TD VALIGN=TOP>The pipe has the lowest precedence of all operators.  Use grouping to alternate only part of the regular expression.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>abc(def|xyz)</TT> matches <TT CLASS=match>abcdef</TT> or <TT CLASS=match>abcxyz</TT></TD></TR>
+
+<TR><TH COLSPAN=3><H3>Quantifiers</H3></TH></TR>
+
+<TR><TH>Character</TH><TH>Description</TH><TH>Example</TH></TR>
+
+<TR><TD VALIGN=TOP><TT>?</TT> (question mark)</TD>
+<TD VALIGN=TOP>Makes the preceding item optional.  Greedy, so the optional item is included in the match if possible.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>abc?</TT> matches <TT CLASS=match>ab</TT> or <TT CLASS=match>abc</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>??</TT></TD>
+<TD VALIGN=TOP>Makes the preceding item optional.  Lazy, so the optional item is excluded in the match if possible.  This construct is often excluded from documentation because of its limited use.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>abc??</TT> matches <TT CLASS=match>ab</TT> or <TT CLASS=match>abc</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>*</TT> (star)</TD>
+
+<TD VALIGN=TOP>Repeats the previous item zero or more times.  Greedy, so as many items as possible will be matched before trying permutations with less matches of the preceding item, up to the point where the preceding item is not matched at all.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>".*"</TT> matches <TT CLASS=match>"def" "ghi"</TT> in <TT CLASS=string>abc "def" "ghi" jkl</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>*?</TT> (lazy star)</TD>
+<TD VALIGN=TOP>Repeats the previous item zero or more times.  Lazy, so the engine first attempts to skip the previous item, before trying permutations with ever increasing matches of the preceding item.</TD>
+
+<TD VALIGN=TOP><TT CLASS=regex>".*?"</TT> matches <TT CLASS=match>"def"</TT> in <TT CLASS=string>abc "def" "ghi" jkl</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>+</TT> (plus)</TD>
+<TD VALIGN=TOP>Repeats the previous item once or more.  Greedy, so as many items as possible will be matched before trying permutations with less matches of the preceding item, up to the point where the preceding item is matched only once.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>".+"</TT> matches <TT CLASS=match>"def" "ghi"</TT> in <TT CLASS=string>abc "def" "ghi" jkl</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>+?</TT> (lazy plus)</TD>
+<TD VALIGN=TOP>Repeats the previous item once or more.  Lazy, so the engine first matches the previous item only once, before trying permutations with ever increasing matches of the preceding item.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>".+?"</TT> matches <TT CLASS=match>"def"</TT> in <TT CLASS=string>abc "def" "ghi" jkl</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>{n}</TT> where n is an integer >= 1</TD>
+
+<TD VALIGN=TOP>Repeats the previous item exactly n times.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>a{3}</TT> matches <TT CLASS=match>aaa</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>{n,m}</TT> where n >= 1 and m >= n</TD>
+<TD VALIGN=TOP>Repeats the previous item between n and m times.  Greedy, so repeating m times is tried before reducing the repetition to n times.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>a{2,4}</TT> matches <TT CLASS=match>aa</TT>, <TT CLASS=match>aaa</TT> or <TT CLASS=match>aaaa</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>{n,m}?</TT> where n >= 1 and m >= n</TD>
+<TD VALIGN=TOP>Repeats the previous item between n and m times.  Lazy, so repeating n times is tried before increasing the repetition to m times.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>a{2,4}?</TT> matches <TT CLASS=match>aaaa</TT>, <TT CLASS=match>aaa</TT> or <TT CLASS=match>aa</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>{n,}</TT> where n >= 1</TD>
+<TD VALIGN=TOP>Repeats the previous item at least n times.  Greedy, so as many items as possible will be matched before trying permutations with less matches of the preceding item, up to the point where the preceding item is matched only n times.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>a{2,}</TT> matches <TT CLASS=match>aaaaa</TT> in <TT CLASS=string>aaaaa</TT></TD></TR>
+
+<TR><TD VALIGN=TOP><TT>{n,}?</TT> where n >= 1</TD>
+
+<TD VALIGN=TOP>Repeats the previous item between n and m times.  Lazy, so the engine first matches the previous item n times, before trying permutations with ever increasing matches of the preceding item.</TD>
+<TD VALIGN=TOP><TT CLASS=regex>a{2,}?</TT> matches <TT CLASS=match>aa</TT> in <TT CLASS=string>aaaaa</TT></TD></TR>
+
+</TABLE>
+</BODY></HTML>

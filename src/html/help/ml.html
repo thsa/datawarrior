@@ -1,0 +1,404 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<head>
+  <title>Machine Learning</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<hr align="left" size="2" width="550">
+<h2><a name="MachineLearning"></a>Machine Learning Methods</h2>
+<hr align="left" size="2" width="550">
+
+<p>Since a few years we see a remarkable hype about <span class="keyword">machine learning</span> and
+<span class="keyword">artificial intelligence</span> in all sectors triggered by a successful
+renaissance of convolutional neural networks in the field of image recognition. In just a few years before 2020
+<a href="https://blog.benchsci.com/startups-using-artificial-intelligence-in-drug-discovery">about
+200 startup companies</a> have been founded applying 'artificial intelligence' for drug discovery.
+This development is fueled by large amounts of money invested by pharmaceutical companies being afraid
+of missing the departing train. In some cases QSAR approaches, which are established and applied since two
+decades, are now renamed to artificial intelligence and successfully commercialized as expensive panacea
+for the future. At the same time new promising approaches arise, e.g. the usage of deep neural networks
+to quickly and accurately estimate quantum chemical energies and forces.</p>
+
+<p>Machine learning methods fall into two broad categories, <span class="keyword">unsupervised</span> and
+<span class="keyword">supervised</span> ones. Unsupervised methods take properties of the data as input
+information and infere that there are multiple different classes without knowing anything else from the data.
+Or they may arrange objects in multiple dimensions according to perceived object similarity in a linear
+or non-linear fashion. These unsupervised learning algorithms have a wide range of applications and solve
+real world problems such as anomaly detection, document grouping, patient segmentation, or finding compounds
+with common properties. The following methods fall into the <span class="keyword">unsupervised learning</span>
+category.</p>
+
+<br>
+
+<h3><a name="PCA"></a>Principal Component Analysis</h3>
+
+<p><span class="keyword">The Principal Component Analysis</span>
+(PCA) is a widely used technique to convert a large number of
+highly correlated variables into a smaller number of less correlated variables. De-facto it does
+a coordinate transformation and re-positions the first axis of the coordinate system such that it perceives
+the maximum possible variance of the multidimensional data. Then the second axis is positioned orthogonal
+to the first one such that it perceives the maximum possible variance of the remaining dimensionality.
+The third axis is again positioned orthogonal to the first two also maximizing the perceived variance
+of the remaining data and so forth. In reality, to not overvalue those dimension with the highest numerical
+values, <i>DataWarrior</i> normalizes and centers the values of every input dimension before applying
+the coordinate transformation.</p>
+
+<p>Often the first dimensions (or components) of a PCA cover much of the variability of the data.
+This is because in reality many dimensions of multi-dimensional data are often highly correlated.
+In chemical data sets, for instance, carbon atom count, ring count, molecular surface, hetero atom count
+are all highly correlated with the molecular weight and therefore almost redundant information.
+Often the first two or three dimensions taken from a PCA can be used to position the objects on a plane
+or in space such that clusters of similar objects can easily be recognized in the view.</p>
+
+<p align="center"><img src="help/img/ml/pca.jpeg"></p>
+
+<p>Since many chemical descriptors are nothing else then binary or numerical vectors, one can
+consider the n dimensions of these vectors as n parameters of the data set. Therefore, the binary
+and SkeletonSpheres descriptors can be selected as parameters to the PCA. This allows to visualise
+chemical space, if the first calculated components are assigned to the axes of a coordinate system.
+In the example above a dataset of a few thousand Cannabinoid receptor antagonists from the ChEMBL database
+was used to calculate the first three principal components from the <span class="keyword">SkeletonSpheres</span>
+descriptor. These were assigned to the axes of a 3D-view. The dataset was clustered with the same descriptor
+joining compounds until cluster similarity reached 80%, forming more than 300 clusters.
+Marker colors were set to represent cluster numbers. The distinct areas of equal color are evidence
+of the chemical space separation that can be achieved by a PCA, even though the dataset consists of rather
+diverse structures.</p>
+<br>
+
+<h3><a name="TSNE"></a>t-SNE Visualization</h3>
+
+<p>T-distributed Stochastic Neighbor Embedding (t-SNE) is a machine learning algorithm for visualization
+developed by Laurens van der Maaten and Geoffrey Hinton. It is a nonlinear dimensionality reduction technique
+well-suited for embedding high-dimensional data for visualization in a low-dimensional space of two or three
+dimensions. Specifically, it models each high-dimensional object by a two- or three-dimensional point in such
+a way that similar objects are modeled by nearby points and dissimilar objects are modeled by distant points
+with high probability.</p>
+
+<p>L.J.P. van der Maaten. <i>Accelerating t-SNE using Tree-Based Algorithms.</i> Journal of Machine Learning Research <b>15</b> (2014), 3221-3245.</p>
+
+<p align="center"><img src="help/img/ml/tsne.jpeg"></p>
+<p align="center"><i>Typical visualization of a 2-dimensional t-SNE plot with about 20.000 data points</i></p>
+
+<p>The t-SNE calculation used in DataWarrior is based on the Java code developed in 2016 by Leiff Jonsson at
+  Delft University of Technology. The source code is publicly available at https://github.com/lejon/T-SNE-Java.</p>
+
+<p>If you choose many input dimensions, especially if you select a chemical descriptor as input,
+than <span class="keyword">DataWarrior</span> may use a principal component analysis (PCA) to reduce the dimensionality
+to a lower number before applying the t-SNE algorithm. The <span class="menu">Source dimensions</span>
+parameter defines the maximum number of dimensions passed to the t-SNE algorithm. If your selected source columns
+contain more dimensions than this parameter, than a PCA is performed. Please note that a chemical descriptor alone
+typically contains 512 or even 1024 dimensions.</p>
+
+<p>DataWarrior uses the Barnes-Hut implementation with a default perplexity value of 20.0 and a maximum of 1000 iterations.
+In addition to the number maximum number of t-SNE input dimensions, the perplexity value and the number of iterations
+can be modified. A good overview of what these parameters mean and how they influence the outcome is available from
+<a href="https://distill.pub/2016/misread-tsne/">Martin Wattenberg et al</a>.</p>
+<br>
+
+<h3><a name="SOM"></a>Self-Organizing Maps</h3>
+<p>
+A <span class="keyword">Self-Organizing Map</span> (SOM) also called
+<span class="keyword">Kohonen Map</span>
+is a popular and robust artificial neural network algorithm to organize objects based on object
+similarity. Typically, this organization happens in 2-dimensional space. For this reason SOMs
+can be used well to visualize the similarity relationsships of hundreds or thousands of
+objects of any kind. Historically, small SOMs (e.g. 10*10) were used in cheminformatics
+to cluster compounds by assigning similar compounds to the same neuron. A typical visualization
+showed the grid with every grid cell colored to represent number of cluster members or an
+averidge property value. In order to visualize individual compounds of the chemical space
+<i>DataWarrior</i> uses many more neurons and adds a sub-neuron resolution explained in the
+following.</p>
+
+<p>Similar to the PCA, the SOM algorithm uses multiple numerical object properties,
+e.g. of a molecule, which together define an object specific n-dimensional vector.
+The vector may either consist of numerical column values
+or - as with the PCA - it may be a chemical descriptor. These object describing vectors are called
+input vectors, because their values are used to train a 2-dimensional grid of equally sized,
+but independent reference vectors (also called neurons).<br>
+The goal of the training is to incrementally optimize the values of the reference vectors
+such that eventually
+<ul><li>every input vector has at least one similar counterpart in the set of reference vectors.</li>
+<li>adjacent reference vectors in the rectangular grid are similar to each other.</li></ul>
+The final grid of reference vectors should represent a rectangular area of smoothly changing
+property space, where every input vector can be assigned to a similar reference vector.</p>
+
+<p align="center"><img src="help/img/ml/som.jpeg"></p>
+<p align="center"><i>Cannabinoid receptor antagonists on a SOM with 50x50 neurons</i></p>
+
+<p>The Cannabinoid receptor antagonists, which have been used in the PCA example, were
+arranged on a SOM considering the <i>SkeletonShperes</i> descriptor as similarity criterion.
+The background colors of the view visualize neighborhood similarity of adjacent neurons
+in landscape inspired colors. Blue to green colors indicate valleys of similar neurons,
+while yellow to orange areas show ridges of more abrupt changes of the chemical space
+between adjacent neurons. Colored markers are located above the background landscape
+on top of those neurons, which represent the compound descriptors best. This way very
+similar compounds huddle in same valleys, while slightly different cluster are separated
+by yellow ridges.<br>
+Please note that <i>DataWarrior</i> uses sub-neuron-resolution to position object on
+the final SOM. After assigning an object to the closest reference vector, any object's
+position is fine-tuned by the object's similarity to the adjacent neurons.</p>
+
+<p>Comparing the SOM to the PCA concerning their ability to visualize chemical space,
+SOMs have these advantages: SOMs use all available space, while PCAs leave parts of the
+available area or space empty. The SOM takes and translates exact similarity values,
+while the PCA uses two or three principal components only to separate objects and,
+therefore, may miss some distinction criteria. High compound similarity is translated
+well into close topological neighborhood on the SOM. However, vicinity on the SOM
+does not necessarily imply object similarity, because close neurons may be separated by
+ridges and represent different areas of the chemical space, especially if the number
+of reference vectors is low. One may also check how well individual objects match
+the reference vectors they are assigned to. For this purpose <i>DataWarrior</i>
+calculates for every row a <i>SOM_Fit</i> value, which is the square root of the
+dissimilarity between the row's input vector and the reference vector the row is
+assigned to. As a rule of thumb, <i>SOM_Fit</i> values below 0.5 are a good indication
+of a well separating SOM.</p>
+
+<p>The SOM algorithm is a rather simple and straightforward one. First the input vectors
+are determined and normalized to avoid distortions of different numerical scales.
+The number of values stored in each input vector equals the number of numerical columns
+selected or the number of dimensions of the chosen descriptor.
+Then a grid of n*n reference vectors is initialized with random numbers.
+The reference vectors have the same dimensionality as the input vectors.<br>
+Then a couple of thousand times the following procedure is repeated:
+In input vector is selected randomly. That reference vector is located, which
+is most similar to the input vector. This reference vector and the reference vectors in
+its circular neighborhood are modified to make them a little more similar to
+the selected input vector. The amount of the modification decreases with increasing
+distance from the central reference vector and it decreases with the number of
+modification rounds already done. This way a coarse grid structure is formed quickly,
+while the more local manifestation of fine-granular details takes the majority of the
+optimization cycles.</p>
+
+To create a SOM from any data set in <i>DataWarrior</i> select
+<span class="menu">Create...</span> from the <span class="menu">Self Organizing Map</span>
+submenu of the <span class="menu">Data</span> menu. The following dialog appears:
+
+<p align="center"><img src="help/img/ml/somDialog.jpeg"></p>
+
+<p><b>Parameters used:</b> The columns selected here define the similarity criterion
+between objects or table rows. All values are normalized by the variance of the column.
+The normalized row values of all selected columns form the vector, which is used
+to calculate an euclidian similarity to other row's vectors. If a chemical
+descriptor is selected here, the SOM uses respective chemical similarities and,
+thus, can be used to visualize chemical space.</p>
+
+<p><b>Neurons per axis:</b> This defines the size of the SOM. As a rule of thumb
+the total number of neurons (square the chosen value) should about match the
+number of rows. A highly diverse dataset will require some more neurons, while
+a highly redundant combinatorial library will be fine with less.</p>
+
+<p><b>Neighbourhood function:</b> This selects the shape of the curve, which defines
+how the factor for neuron modification factor decreases with distance from the
+central neuron. The typical shape is a <span class="menu">gaussean</span> one,
+which usually causes smooth SOMs.</p>
+
+<p><b>Grow map during optimization:</b> Large SOMs take quite some time for the
+algorithm to finish. One way of reducing the time is to start out with a much smaller
+SOM and double the size of each axis three time during the optimization. If
+this option is checked, the map starts with one eightht of the defined neurons
+per axis.</p>
+
+<p><b>Create unlimited map:</b> If this option is checked, then the left edge neurons
+of the grid are considered to be connected to the respective right edge neurons
+and top edge neurons are considered to be connected to bottom edge neurons.
+This effectively converts the rectangular area to the surface of a torus,
+which has no edges anymore and, therefore, avoids edge effects during the
+optimization phase.</p>
+
+<p><b>Fast best match finding:</b> A large part of the calculation time is spent
+on finding the most similar neuron to a randomly picked input vector.
+If this option is checked, then best matching neurons are cached
+for every input vector and are used in later as best match searches as
+starting point. This assumes that a path with steadily increasing similarity
+exists from the previous best matchin neuron to the current one.</p>
+
+<p><b>Show vector similarity landscape in background:</b> After finishing the
+SOM algorithm, <i>DataWarrior</i> creates a 2-dimensional view displaying
+the objects arranged by similarity. If this option is checked, a background
+picture is automatically generated, which shows the neighbourhood similarity
+of the SOMs reference vectors in colors inspired by landscape. Blue, cyan, green,
+yellow, orange and red reflect an increasing dissimilarity between adjacent
+neurons. Markers in the same blue or green valley belong to rather
+similar objects.</p>
+
+<p><b>Use pivot table:</b> This option allows to pivot the data on the fly.
+Imagine a dataset where gene expression values have been determined for a number
+of genes in some different tissues. The results are stored in three columns
+with gene names, expression values, and tissue types. For
+<span class="menu">Group by:</span> you would select <i>Tissue Type</i>
+and for <span class="menu">Split data by:</span> <i>Gene Name</i>.
+<i>DataWarrior</i> would then convert the table layout to yield one
+<i>Tissue Type</i> column and one additional column with expression values
+for every gene name. The generated SOM would then show similarities between
+tissue types considering expression values of multiple genes.</p>
+
+<p><b>Save file with SOM vectors:</b> Use this option to save all reference
+vectors to a file once the optimization is done. Such a file can be used
+later to map objects from a different dataset to the same map, provided
+that they contain the properties or descriptor used to train the SOM.
+One might, for instance, train a large SOM from many diverse compounds
+containing both, mutagenic and non-mutagenic structures. If one would use
+the SOM file to later map a commercial screening library, one could merge
+both files and show toxic and non toxic areas by coloring the background
+of a 2D-view accordingly. The foreground might show the compounds of the
+screening library distributed in toxic and non-toxic regions.</p>
+<br>
+
+<h3><a name="Predictivity"></a>Assessing A Machine Learning Method's Predictivity</h3>
+
+<p>The unsupervised methods above were used to reduce the dimensionality of data,
+to classify or cluster rows based on feature commonalities, or simply to visualize the
+data space in two dimensions. This section now uses supervised machine learning methods,
+to build and train models from existing molecules and their properties. These
+models shall then be used to predict the same properties for new molecules.
+For this purpose <span class="keyword">DataWarrior</span> uses a support vector
+machine (SVM), the k-nearest neighbours (kNN) approach, a partial least squares
+(PLS) regression, or the Power-PLS, which is a PLS modification that supports non-linear
+relationships.</p>
+
+<p>Common to these methods is that they all build a model from numerical X- and Y-values.
+Later then this model can be used to predict Y-values from X-values. X-value in this regard
+are multiple alpha-numerical or purely numerical values that describe the object
+and the Y-value (also called label) is an object property that is either used for model learning
+or is predicted by the final model for objects that where not used during training.
+In the case of drug discovery the object might be a molecule,
+X-values might be some structure descriptors and the Y-value might be some experimental value,
+e.g. a physico-chemical property or a biological effect.<p>
+
+<p>Evident pitfalls for applying machine learning methods in drug discovery for the prediction
+of biological effects of chemical structures are manyfold:
+<il>
+<li>These methods were developed for areas, where objects are characterized by numerical values,
+like historical stock data, gene expression values, pixel color values, etc. Molecules, however,
+consist of 3-dimensional graphs. Their biological properties depend on conformational flexibility
+and conformer interactions with target proteins. Machine learning methods cannot directly digest
+molecules as X-values. Their X-values need to be vectors, i.e. lists of numerical values.
+Therefore, molecular descriptors are calculated from the molecular structure and used surrogate
+in the hope that they describe a molecule well enough for these methods to work.</li>
+<li>2D-descriptor bits encode the presence or absense of small fragments, but not their 3-dimensional
+orientation in space. Also conformational flexibility is not represented.</li>
+<li>Most descriptors are folded (i.e. hashed), which means that the same bit encodes very different
+fragments for different molecules, making it unlikely that descriptor patterns are predictive throughout
+diverse structure classes.</li>
+<li>In drug discovery, typically there is not much training data for a particular property.</li>
+<li>If training data comes from different sources, it is often noisy and not very reliable.</li>
+</il>
+</p>Nevertheless, there is quite some demand for the prediction of biological properties from
+the chemical structure. Given the many pitfalls, it is prudent to apply some skepticism and apply
+sound validation checks to determine, whether a method can be applied for a given problem.</p>
+
+<p>In fields outside of drug drug discovery it is common to assess the predictivity of a machine
+learning method in two steps. First a random subset of data is taken to train a model from X- and Y-data.
+Then, the model is used to predict Y-values for the remaining data. The correlation between predicted
+and known Y-values gives a measure for the model's predictivity for new data. This works well,
+if the data used is evenly distributed in X-value space and if new unknown objects can also be placed
+within the boundaries of the X-value training space. For typical drug discovery datasets both conditions
+are not given. Molecules tend to come in clusters of very similar structures and new molecules are often
+very different from the ones used before. Therefore, a random cross-validation from molecules
+with known properties results in over-optimistic correlations, because a random selection ensures
+that every test set molecule has few very similar ones in the training set, originating from
+the same cluster. More realistic results are achieved, if molecules are ordered along the time
+axis, e.g. using the synthesis date. If then all molecules before a certain date are used for
+model training and the newer ones for model validation, one may hope that obtained correlation values
+can be repeated with the next set of molecules being synthesized for the same project.</p>
+
+<p><span class="keyword">DataWarrior</span> offers a convenient way to quickly assess, whether a
+certain machine learning method may achieve a reasonable predictivity for a given property,
+using a specific descriptor in a certain chemical space. For this it uses a time-based model
+validation as decribed above. The dataset is divided into ten fractions along the time axis.
+A model is build with the first fraction and used to predict the property of the second fraction's
+molecules. Then a second model is built from the first two fractions, which is then applied to
+predict the third fraction. This continues until the nineth model is built from the first nine fractions
+and used to predict the tenth and last fraction. Correlation plots are generated for all nine models,
+which show known versus predicted Y-values along with the calculated correlation coefficient.
+The correlation plots and coefficients provide a solid basis to decide, whether it makes sense
+to employ the chosen descriptor and method to predicts the property for new molecules.</p>
+
+<p>To start the assessment for a given dataset first make sure that you have generated the descriptor,
+which you intend to use and then select <span class="menu">Assess Prediction Quality...</span>
+from the <span class="menu">Chemistry->Machine Learning</span> menu. The following dialog opens.</p>
+
+<p align="center"><img src="help/img/ml/assessmentDialog.jpeg" width=286 height=308></p>
+<p><center><i>The dialog for configuring the 'Assess Prediction Quality' task.</i></center></p>
+
+<p><b>Structure column</b> and <b>Descriptor:</b> Here you select the descriptor type of the chemical
+structure column that serves as independent variable to build the machine learning model.</p>
+
+<p><b>Value column:</b> This selects the dependent variable, i.e. the property that
+is used to train the model and that shall be predicted later.</p>
+
+<p><b>Prediction method:</b> This is the machine learning method that is used.
+<span class="keyword">DataWarrior</span> supports four well known methods. The
+<span class="keyword">kNN regression</span> method is a simple, but robust method that
+locates the most similar neighbors and creates a weighted mean value as prediction.
+The <span class="keyword">PLS</span> (partial least squares) method is basically a multi-linear
+regression, which expects a linear dependency of the predicted variable and normality of the data.
+The <span class="keyword">Power-PLS</span> method is a PLS with a preceeding
+<span class="keyword">Box Cox</span> transformation, which opens the PLS for nolinear
+relationsships and non normal distributed data.
+The <span class="keyword">SVM</span> (support vector machine) is a robust mathematical approach
+for non linear data that was believed for a long time to outperform any multi-layered neural networks.
+More detailled descriptions of the methods are beyond the scope of this manual,
+but can be easily found on the internet.</p>
+
+<p><b>Method parameters:</b> After selecting a method this text field contains default
+parameter settings for the method. Typically, these are not touched. However, if you know, what
+you are doing, you may fine-tune the method by changing individual parameters here.</p>
+
+<p><b>Time, date, or ID-column:</b> As described above, all rows are assigned to the ten data fractions
+according to their position on the time axis. Thus, here a column should be selected
+that ideally contains the creation or measurement date of the value. Often this is not available
+and the synthesis date of the molecule or even its ID can be used as a proxy.</p>
+
+<p><b>Use random fractions instead of time based ones:</b> This option causes random assignments
+of rows to the ten fractions neglecting any selected time column. Since random cross-validations
+produce over-optimistic correlations for chemical property predictions, this option should be used
+with care.</p>
+
+<p>After clicking <span class="menu">OK</span> the dialog closes, the data is devided into ten
+fractions, nine prediction models are generated and used to predict the dependent variable.
+A view is created that shows nine correlation plots, one for every model.</p>
+
+<p align="center"><img src="help/img/ml/mlPotential.jpeg" width=680 height=466></p>
+<p><center><i>Nine correlation plots show the predictivity of an SVM using SkeletonSpheres descriptors
+to predict hERG activity for a given dataset of structurally related compounds devided in fractions along
+the time axis.</i></center></p>
+
+<p>Looking at these plots it is up to the scientist to decide, whether the achieved correlation is sufficiently
+high to serve a a useful guidence in a drug discovery project.</p>
+<br>
+
+<h3><a name="MissingValues"></a>Predicting Missing Values</h3>
+
+<p>If a data set with molecules contains numerical values for some of the molecules, then
+<span class="keyword">DataWarrior</span> can easily predict the missing values using a supervised
+machine learning method and a chosen descriptor of the molecule. While it is easy to generate numbers
+this way, it is advisable before predicting values to assess, whether the chosen machine learning method
+within the given molecular structure space is able to achieve a predictivity that is sufficiently above
+random guessing, which is described in the previous section.</p>
+<p>In order to predict missing values, simply select <span class="menu">Predict Missing Values...</span>
+from the <span class="menu">Chemistry->Machine Learning</span> menu. A dialog opens that lets you choose
+a chemical structure column, a descriptor, a column that has missing numerical values, and a machine learning
+method. For a descriptor to show up in the list, it must have been calculated before and it must be a
+vector, i.e. it must be one of these: FragFp, PathFp, ShpereFp, SkeletonSpheres. As described in the
+previous section, every machine learning method has some parameters, that influence the algorithm.
+<span class="keyword">DataWarrior</span> uses default parameters, which have been proven to work
+reasonably well, but if you know what you are doing, you may experiment with the parameters by
+adapting them in the dialog.</p>
+
+<p align="center"><img src="help/img/ml/predictionDialog.png" width=259 height=249></p>
+<p><center><i>The dialog for configuring the 'Predict Missing Values' task.</i></center></p>
+
+<p>When the dialog is closed by pressing <span class="menu">OK</span>,
+<span class="keyword">DataWarrior</span> builds a model form the selected descriptor and
+existing values in the chosen value column. Then it applies the model to fill all empty cells
+in the values column with predicted values using the model and the structure descriptors
+of the respective rows.</p>
+
+<br>
+<p align="center">Continue with <a href="help/chemistry.html">Chemical Structures</a>...</p>
+<br>
+
+</body>
+</html>

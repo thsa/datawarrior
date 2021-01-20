@@ -1,0 +1,1044 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<head>
+  <title>Chemistry Functionality</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<hr align="left" size="2" width="550">
+<h2><a name="ChemicalStructures"></a>Working With Chemical Structures And Reactions</h2>
+
+<hr align="left" size="2" width="550">
+<p><span class="keyword">DataWarrior</span> was designed from the outset as a chemistry aware
+data analysis and visualization platform. Its built-in chemistry intelligence allows working
+with chemical structures as easily as with alphanumerical data. Rows may be filtered based on
+whether molecules contain certain sub-structures or on various kinds of molecule similarities.
+Views may display molecular structures as labels or on the axes. Various kinds of molecule
+similarities can be translated into marker positions, sizes or colors.
+Data analysis methods like the principal component analysis or self organizing maps can be
+applied to chemical structures equally well as to alphanumerical data.</p>
+<p>Dedicated cheminformatics functionality provide for state-of-the-art analysis methods from the
+mere similarity comparison of two molecule lists to more advanced methods as an activity cliff
+analysis, SAR-table creation or the enumeration of virtual combinatorial substance libraries.
+2-dimensional scaling methods help to visualize compound collections and the prediction of
+compound properties to support the characterization and selection of compounds.</p>
+<br>
+
+<h3><a name="Basics"></a>Chemical Structure Fundamentals</h3>
+
+<p>Internally <span class="keyword">DataWarrior</span> represents chemical structures as
+so-called <span class="keyword">ID-Codes</span>, which are very compact text strings that
+encode chemical structures in a canonical form. This means that no matter, in which order the
+atoms and bonds have been drawn, if two structures represent the same molecule,
+then their ID-Codes are also identical. ID-Codes contain aromaticity information and all stereo features.
+<span class="keyword">DataWarrior</span> fully supports the concept of
+<a href="https://www.3dsbiovia.com/products/pdf/enhanced-stereochemical-representation.pdf">
+Enhanced Stereochemical Representation (ESR)</a>, which not only considers basic stereo features
+(configurations stereo centers and double bonds), but also the relationsships between them.
+This allows to define mixtures of enantiomers, diastereomers, or epimers, when drawing the structure.
+The ESR information is encoded in a canonical form into the ID-Codes and <span class="keyword">DataWarrior</span>
+is using it, whenever appropriate, e.g. when displaying or editing chemical structures,
+during substructure search, or when generating conformers.</p>
+
+<p>ID-Codes that represent substructures as opposed to molecules may also contain atom
+and bond related query features. Reactions can be represented by ID-Codes as well.</p>
+<p>ID-Codes don't include atom coordinates. Therefore, <span class="keyword">DataWarrior</span>
+typically stores atom coordinates in a separate, invisible column.</p>
+
+<p>Much, of what you can do with molecular structures in <span class="keyword">DataWarrior</span>,
+especially if it is related to structure similarity, requires the presence of
+<span class="keyword">descriptors</span> derived from the chemical structure.
+The kind of descriptors, which can be generated and used by <span class="keyword">DataWarrior</span>,
+are explained in more detail in a section called <a href="help/similarity.html">Similarity & Descriptors</a>.
+Like the atom coordinates, descriptors are also stored in invisible columns. To calculate a new
+descriptor column for a given chemical structure column you need to select its name from the
+<span class="menu">Chemistry->From Chemical Structure->Calculate Descriptor</span> menu.</p>
+
+<p>The <span class="menu">Chemistry->From Chemical Structure</span> menu contains various
+additional items, which allow adding a new column with data derived from the chemical structure:</p>
+
+<p><a name="AddFormula"></a><b>Add Molecular Formula...:</b> Adds a new column containing the molecular formular of the
+chosen structure column.</p>
+
+<p><a name="AddSmiles"></a><b>Add SMILES Code...:</b> SMILES codes (simplified molecular-input line-entry system) are a
+widely used text encoding of chemical structures that can be interpreted by humans.
+SMILES were originally developed by David Weininger and used by Daylight Information Systems.
+Basic SMILES were neither encoding stereo features, nor were they canonical. Extended
+versions (isomeric, absolute, and unique SMILES) solved this issue. However, it should be noted that
+SMILES codes cover only basic stereo features. An enhanced stereo representation (ESR) concept is not part of it.
+Canonical SMILES from different vendor's software packages are not necessarily identical, even if
+they encode the same molecule. There is no standard that would define the rules for producing canonical
+SMILES, but the <a href="http://opensmiles.org/opensmiles.html">OpenSMILES Specification</a>
+defines the syntax for isomeric SMILES, which contain the molecular graph including aromaticity and
+basic stereo features. <span class="keyword">DataWarrior</span> generates <span class="keyword">absolute SMILES</span>,
+i.e. canonical SMILES with stereo features. Thus, keep in mind that you loose all ESR information, when
+generating and using SMILES for other purposes.</p>
+
+<p><a name="AddInchi"></a><b>Add Standard Inchi...:</b> InChI is an International Chemical Identifier developed under
+the auspices of IUPAC, the International Union of Pure and Applied Chemistry [1], with principal contributions from NIST
+(the U.S. National Institute of Standards and Technology [2]) and
+the <a href="https://www.inchi-trust.org/">InChI Trust</a>. <span class="keyword">DataWarrior's</span>
+Inchi support is based on the JNI-Inchi project, which implemented Inchi version 1.03. Like SMILES code,
+Inchi does not support <span class="keyword">Enhanced Stereochemical Representation (ESR)</span>.</p>
+
+<p><a name="AddInchiKey"></a><b>Add Inchi Key...:</b> The Inchi key is a hash code of Standard Inchi, which means
+that it is more compact, and a code uniquely derived from the structure, but it cannot be converted back into the
+chemical structure.</p>
+
+<p><a name="AddCanonicalCode"></a><b>Add Canonical Code...:</b> This method constructs a unique hash code from the
+chemical structure. During this process it may neglect stereo information, normalize tautomeric states, and/or remove
+small fragments. Because of this such hash codes may later be used to locate stereo isomers, tautomers, different salts
+of the same structure, or/and combinations of this. Typically, one would afterwards remove redundant structures, or make lists
+of duplicate or distinct structures and use these lists for further analysis.</p>
+<p>After selecting this functionality a dialog opens letting you choose the structure column, and whether to distinguish
+stereo isomers, whether to distinguish tautomers, and in case of multiple fragments whether to use the largest
+fragment only. If, for example, you would neither select to distinguish tautomers nor stereo isomers, then
+<span class="keyword">DataWarrior</span> would take the structure, remove all stereo information,
+construct a normalized tautomer, make a canonical representation from it and finally derive a hash code from that.
+This way different stereo isomers and different tautomers would end up in the same structure and, therefore, produce
+the same hash code.</p>
+
+<p><a name="AddLargestFragment"></a><b>Add Largest Fragment...:</b> This removes counter ions from salts,
+removes water molecules, and removes other potentially not important small molecules from the largest
+and supposedly relevant molecule. The cleaned largest structure is then written into a new structure column.
+If the option <b>Neutralize charges</b> is selected, then <span class="keyword">DataWarrior</span> tries
+to remove charges to neutralize the overall molecule. If <b>Convert to sub-structure</b> is selected, then the
+generated fragments as well as the new column itself are marked to be/contain sub-structures instead of molecules.
+Therefore, the fragments do not have implicit hydrogen atoms and a double click opens the structure editor in
+sub-structure mode, which lets you define atom and bond query features. When selecting a few sub-structures
+before starting a database query, you may choose in the query dialog to search the database agains any of the
+selected sub-structures in one search.
+</p>
+
+<p><a name="AddSubstructureCount"></a><b>Add Substructure Count...:</b> This function determines for every molecule in a
+table column, how many times a given substructure can be found inside the molecule's structure. In addition to the
+substructure fragment itself, one may define whether the substructure search algorithm should only count separate
+matches or whether matches shall be considered, which include atoms being part of an earlier counted match.
+When counting benzene rings, then it would be found one or two times in naphtalene, depending on this setting.</p>
+
+<p align="center"><img src="help/img/chem/substructureCount.jpeg" width=251 height=255></p>
+<p><center><i>Dialog configured to count hydroxy groups in molecules.</i></center></p>
+<br>
+
+
+<h3><a name="StructureFilter"></a>The Structure Filter</h3>
+
+<table class="wspace">
+ <tr>
+  <td class="wspace"><img src="help/img/chem/ssSearch.jpeg"></td>
+  <td class="wspace">If a <i>DataWarrior</i> file contains chemical structures, then usually
+the filter panel contains one or some <span class="keyword">Structure Filters</span>. In any
+case one can always add new <span class="keyword">Structure Filters</span> by selecting
+<span class="menu">New Filter...</span> from the <span class="menu">Edit</span> menu.</td>
+  </tr>
+</table>
+
+<br>
+A <span class="keyword">Structure Filter</span> option menu allows to switch between two
+general operation modes:<br>
+
+<li><span class="menu">contains</span> hides compounds (not) having a
+certain a sub-structure</li>
+
+<li><span class="menu">is similar to [...]</span> hides rows with
+(dis-)similar structures. The descriptor used is given in brackets.</li>
+<br>
+
+<p>A double-click on the filter's structure field opens the <span class="keyword">Osiris
+Structure Editor</span>. Please note that the behavior of the editor differs between the
+sub-structure search and the similarity search. In the former case you edit a potentially
+substituted chemical fragment that may contain query features while in
+the latter case you define a complete molecule.</p>
+
+<p align="center"><img src="help/img/chem/editor.jpeg"></p>
+<p><center><i>Structure editor in molecule mode.</i></center></p>
+
+<p>To edit a structure one typically selects a tool from the buttons on the left and
+uses the mouse to apply the tool in the right structure area. The keyboard can be used
+to accelerate the drawing process, e.g. typing a digit adds a chain of n atoms or changes
+a bond order depending on whether the mouse pointer is on top of an atom or a bond.
+'+' or '-' change an atom charge and <i>Del</i> removes selected atoms.
+Typing one or more letters changes an atom type. More options to modify an existing
+atom are available in the atom dialog, which opens after a double click on an atom.
+A single click just applies the defined options to the clicked atom.</p>
+
+<p align="center"><img src="help/img/chem/atomDialog.jpeg"></p>
+<p><center><i>Atom dialog to define isotops, abnormal valences and custom atom labels.</i></center></p>
+
+Most of the structure editor's buttons are rather self explanatory, while some
+need a little more explanation. For a detailed description of the editor please
+refer to the <a href="help/../editor/editor.html">Structure Editor</a> section.</p>
+<br>
+
+<h3>Substructure Search</h3>
+
+<p>A filter in substructure search mode hides all rows, whose structures do not contain
+the drawn molecule fragment. Required atom or bond features of the query fragment can be defined
+to narrow the search. A double click on an atom or bond after selecting the lasso tool opens
+an corresponding atom or bond query feature dialog. If multiple atoms or bonds have been selected,
+then the dialog's settings are applied to all selected atoms or bonds when the dialog is closed.</p>
+
+<p align="center"><img src="help/img/chem/atomQF.jpeg"><br></p>
+<p><center><i>Atom query feature dialog of structure editor in fragment mode.</i></center></p>
+
+<p align="left">The first option in the atom query feature dialog lets you convert
+a defined atom into a wild-card. In the following field <span class="menu">allowed atoms</span>
+one may specify more precisely, which atom types are allowed at this position.
+If <span class="menu">any atomic number</span> is selected and therefore the atom is
+declared a wild-card then the <span class="menu">allowed atoms</span> field turns
+into an <span class="menu">excluded atoms</span> field. This causes the struture search to accept
+any atom but the explicitly excluded ones. While these options make the query fragment less specific,
+all following options narrow the search. Most of these options are self explanatory.</p>
+
+<p><a name="excludeGroups"></a>The option <span class="menu">is part of an exclude group</span> is a
+powerful feature that goes well beyond a standard substructure search. This option lets you mark one
+or more parts of a query structure to represent unwanted structural features. For instance, you may
+use an exclude group to search for nitrogen atoms not having a carbonyl group attached, or for a
+fluoro group that is not part of a di-or tri-fluoro substitution, for pyridine-groups without
+methoxy in meta-position, or for ketones that don't have an aldehyde in the same molecule.
+Exclude groups are also very useful in the context of generic reactions to build combinatorial
+libraries.</p>
+<p align="center"><img width=654 height=102 src="help/img/chem/excludeGroups.png"></p>
+<p><center><i>Exclude groups are drawn in dark red with a pink background.</i></center></p>
+<p>The image above shows four typical small sub-structure queries using exclude groups:<ul>
+<li>an imidazole ring not being substituted by a carbonyl group at its 1-position</li>
+<li>a nitrogen atom connected to at least one hydrogen, not bearing a carbonyl group, and not being connected to a non-carbon atom</li>
+<li>a molecule containing exactly one nitrogen atom</li>
+<li>a molecule not containing aromatic carbon atoms</li>
+</ul>
+If a query fragment contains any <span class="keyword">exclude groups</span>, then the substructure
+search process runs in two steps. First it locates all matches of the query fragment not considering
+exclude groups. For every match found in the first step, a second step tries to extend the original
+match to include one after another of the exclude groups. If it succeeds with one of the exclude groups,
+then the original match is skipped.</p>
+
+<p>In the <span class="keyword">Structure Editor</span> atom or bond query features are
+usually reflected in the drawing in an obvious way or indicated with small letters
+(<i>s</i>:further substituted, <i>a</i>:aromatic, <i>h</i>:hydrogen count, <i>c</i>:charge,
+<i>n</i>:neighbour count, <i>r</i>:ring size, etc.).
+Some complex query features may not be shown directly. In any case atoms and bonds with query
+features show a yellow spot in their background to indicate their special meaning.</p>
+
+<p align="center"><img src="help/img/chem/query.jpeg"></p>
+<p><center><i>Query fragment with yellow markers to indicate invisible query features.</i></center></p>
+
+<p>In the bond query features dialog one may select more than one bond types, e.g.
+<span class="keyword">Single</span> and <span class="keyword">Delocalized</span> as in the
+example below. This would match the query bond to both, single and delocalized bonds.
+It is important to understand that <span class="keyword">DataWarrior</span>
+considers 5-membered aromatic rings not to be delocalized. Therefore, the
+<span class="keyword">Delocalized</span> option does not match to any bond of an aromatic
+5-membered ring, unless it is annelated to an aromatic 6-membered ring, which is considered
+delocalized and which causes the shared bond between the two rings to be delocalized as well.
+In general <span class="keyword">DataWarrior</span> considers aromatic bonds with no
+preferred mesomeric structure as being delocalized.</p>
+
+<p align="center"><img src="help/img/chem/bondQF.jpeg"></p>
+<p><center><i>Bond query feature dialog of structure editor in fragment mode.</i></center></p>
+
+<p>An <span class="keyword">Atom Bridge</span> option allows to convert any bond of the query
+structure to represent a chain of multiple connected atoms rather than a direct connection.
+One defines the allowed number of atoms within the chain not counting the atoms already drawn
+as part of the query structure.</p>
+
+<p>If <span class="menu">Highlight Structure By -> Recent Filter</span> is selected in column
+header menu of the structure column in the <span class="keyword">Table View</span>, then
+the query fragments as part of the entire molecule are drawn in dark red, while the rest
+of the displayed structures is usually drawn in black.</p>
+<br>
+
+<h3>Structure Similarity Search</h3>
+  
+<p>To find structurally similar compounds rather than compounds sharing a specific
+sub-structure, select any of the <span class="menu">is similar to [...]</span> options. Then
+double-click the filter's structure area and draw a molecule using the
+<span class="keyword">Structure Editor</span> or drag and drop a molecule from somewhere else to the filter.
+You may adjust the similarity level to your needs. Typically, chemists will perceive molecules
+as very similar if their similarity value is about 0.90 or above.</p>
+
+<p align="center"><img src="help/img/chem/simSearch.jpeg"></p>
+
+<p>If <span class="menu">Highlight Structure By -> Recent Filter</span> is selected in column
+header menu of the structure column in the <span class="keyword">Table View</span>, then structural
+elements that are shared between displayed structures and the query structure are highlighted in green.</p>
+
+<p>Per default Datawarrior calculates a <span class="keyword">FragFp descriptor</span>
+of the first structure column within the data table. This descriptor can be used to
+calculate similarities between molecules. The <span class="keyword">FragFp</span> similarity
+between two molecules is the number of fragments that both molecules have in common
+devided by the number of fragments being found in any of the two molecules.
+If your dataset contains other descriptors, then your filter menu contains associated
+<span class="menu">is similar to [...]</span> options that you may choose to filter
+by another similarity criterion. Other descriptors can be calculated by choosing
+<span class="menu">Chemistry->From Chemical Structure->Calculate Descriptor->...</span>
+from the menu. Once the calculation has been finished, the associated similarity option
+gets available in the filter menu.
+Here you can find more information on <a href="help/similarity.html">descriptors and similarities</a>
+and <a href="help/similarity.html#WhichDescriptor">which kind of similarity</a> should be used for which purpose.</p>
+<br>
+
+<h3><a name="ReactionFilter"></a>Reaction Sub-Structure Search</h3>
+
+<p><p>If an open <span class="keyword">DataWarrior</span> window contains a column with chemical reactions,
+then typically, the filter panel shows two filters offering reaction search, a reaction filter and a
+retron filter. More filters can be added with <span class="menu">Edit->New Filter...</span>, e.g.
+structure filters to search the reactants or products. Like the <span class="keyword">structure filter</span>
+a <span class="keyword">reaction filter</span> (see below) has an option menu to choose between two modes,
+<span class="menu">contains</span> and <span class="menu">is similar to [RxnFp]</span>.
+If the <span class="menu">contains</span> mode is active, then one may draw, drag or paste in a
+<span class="keyword">reaction sub-structure</span>. This is a generic reaction of which all reactants and
+products consist of incomplete sub-structures. Their atoms and bond may also contain query features, i.e.
+additional conditions for atoms or bonds to be considered a match. Moreover, reactant atoms that exist on
+the reaction's product side, should be properly mapped with the reaction editor's mapping tool.</p>
+<p>Once a <span class="keyword">reaction sub-structure</span> is defined, <span class="keyword">DataWarrior</span>
+performes a search in the reaction column to hide those rows, whose reactions don't match the specified reaction.
+For that <span class="keyword">DataWarrior</span> runs a sub-structure search on the reactants and on the products.
+Furthermore, it checks, whether sub-structure matches are consistent with the defined atom mapping.</p>
+
+<p align="center"><img width=320 height=224 src="help/img/chem/rssFilter.jpeg"></p>
+
+<p>The reaction filter shown above contains a reaction sub-structure describing an intramolecular
+Suzuki reaction. The carbon atoms are decorated with a small 'a', which indicate that they carry a query
+feature to match <b>a</b>romatic atoms only. The bond on the product side, which is formed by the reaction,
+is marked with the label 'r!a', because two query features define it to be a <b>non-a</b>romatic <b>r</b>ing bond.
+Effectively, this makes the reaction an intramolecular one. What can not be seen in the above image,
+is that both carbon atoms on the reactant side are mapped to the two product carbon atoms.
+The '[4]' indicates an atom list with four atoms. In this case these are Cl,Br,I, and O.</p>
+<p>Please note that the example reaction is intentionally incomplete: Both leaving groups, the boronic acid
+substituent as well as the halogene/oxygen atom are not drawn on the product side and therefore don't carry atom
+mapping numbers.
+This is intentional, because in typical reaction collections, these leaving groups are not part of the specified
+products either. If we would have included them in the query, then the sub-structure search on the product would
+not match those reactions, which are stored without leaving groups.</p>
+<br>
+
+<h3><a name="RxnSimSearch"></a>Reaction Similarity Search</h3>
+
+<p>If an open <span class="keyword">DataWarrior</span> window contains a column with chemical reactions,
+then this reaction column will typically have an associated <span class="keyword">RxnFp</span> descriptor
+in an invisible column. Typically, in this case there will also be a reaction filter among all filters
+on the right. If this is missing, you may add it with <span class="menu">Edit->New Filter...</span>,
+choose <span class="menu">Reaction [Reaction]</span>, which means 'Reaction'-filter for column 'Reaction',
+and press <span class="menu">OK</span>. If the <span class="keyword">RxnFp</span> descriptor doesn't exist,
+you may choose <span class="menu">Chemistry->From Chemical Structure->Calculate Descriptor->RxnFp</span>
+to generate it.</p>
+
+<p align="center"><img src="help/img/basics/reactionFilter.png"></p>
+
+<p>If the filter mode is <span class="menu">is similar to [RxnFp]</span>, then the two sliders
+are also active, which let you set similarity thresholds for both, the <span class="keyword">reaction
+center</span> and the reaction <span class="keyword">periphery</span>. The reaction center refers to
+those reactant and product atoms, which change direct connections to any neighbor atoms.
+These may be a broken or newly formed bond or just a change in the bond order. The reaction
+<span class="keyword">periphery</span> designates all remaining atoms, those that don't belong to the
+<span class="keyword">reaction center</span>.</p>
+<p>For reaction similarity filtering not only the reaction column needs to contain a proper atom mapping.
+The query reaction used in the filter needs the same. If the query reaction was taken by copy/paste or
+drag&drop from a mapped reaction column, then it should be properly mapped. If it, however, was drawn
+by hand, then it should be carefully mapped with the editor's mapping tool.</p>
+<p>When drawing a reaction, one should usually take care that all reaction center atoms are present
+on the reactant and on the product side and that they are properly mapped. However, typical reaction
+databases are sometimes incomplete in this regard. Often leaving groups don't show up on the product
+list. Small reactants, especially if the solvent serves as reactant as well, are frequently not part
+of the explicit reactant list. Examples are methylations of hydroxy groups, where methyl-iodide often
+is missing, or deprotection reactions where the protective group disappears into nothing.
+For best search results it is advisable to adapt your query style to the dataset you are searching.
+</p>
+<br>
+
+<h3><a name="RetronSearch"></a>Reaction Retron Search</h3>
+
+<p>The <span class="keyword">retron</span> filter offers a simple and yet surprisingly effective reaction
+search method. <span class="keyword">Retrons</span> are substructure fragments that occurr on the product
+side of the reaction but don't exist among the reactants, thus they must have been built by the reaction.
+Different to other reaction search methods, a <span class="keyword">retron</span> search does not even
+require searched reactions to me mapped. Since <span class="keyword">retrons</span> are simple sub-structures,
+they may also contain atom and bond query features.</p>
+
+<p align="center"><img width=320 height=165 src="help/img/chem/retronFilter.jpeg"></p>
+
+<p>The <span class="keyword">retron</span> filter shown above searches a reaction collection for the
+synthesis of 1,3,4-thiadiazoles without any substituent in position 2 and without an attached nitrogen
+at position 5.</p>
+<p>The only requirement for a <span class="keyword">retron</span> filter to work is that the
+<span class="keyword">FragFp</span> descriptor has been generated for both, reactants and products of the
+reaction column to be searched. Typically, these descriptors are calculated as default. However, if missing
+they may be calculated selecting e.g. <span class="menu">Chemistry->From Chemical Reaction->Calculate
+Descriptor->Reactants->FragFp</span>.</p>
+<p>In detail the <span class="keyword">retron</span> search algorithm runs a sub-structure search on the
+product side and determines how often the particular fragment can be found. If the fragment is found at
+least once, then the number of sub-structure matches on the reactant side is determined. If the fragment
+is contained more often on the product side, then the reaction is considered a match, because the assumtion
+is that this fragment must have been built. Some reactions turn out to be false positive hits, e.g. if a
+significant side product as shown beside the main product. If the reaction is mapped, side products can
+be identified by their duplicate mapping numbers. Therefore, <span class="keyword">DataWarrior</span>
+applies a mapping number uniqueness check to remove false positives, if the reactions are mapped.</p>
+<br>
+
+<h3><a name="FindReplace"></a>Find & Replace with Text and Chemical Structures</h3>
+<p>
+Usually, <span class="keyword">Find & Replace</span> functionality is performed on text data.
+For this purpose the <span class="keyword">Find & Replace</span> dialog (left) lets you select a column,
+a text string to be searched for and another piece of text as a replacement string.
+You may also choose all empty cells or any cell content to be replaced by a new content.
+In addition you may define, whether the replacement shall take place in all rows, or whether
+it shall be restricted to visible or selected rows only. This way you may for instance choose
+to replace any content of all selected cells with some new content.</p>
+<p>When using this dialog to replace text, then the option <span class="menu">Find regex:</span>
+allows to specify a <a class="links" href="help/regex.html">regular expression</a> instead of a
+simple character sequence to be matched and replaced. Such an expressions may also be used to
+define a zero length sub-string being characterized by neighbour characters. This would effectively
+insert the replacement string rather than replacing existing chanarcters. An example would be
+the expression "(?<=\D)(?=\d)|(?<=\d)(?=\D)", which locates any text position that separates a
+digit from a non-digit character. When giving this regex and a space character as the replacement string,
+the string "acb123def456" would be changed to "abc 123 def 456".</p>
+<p align="center"><img src="help/img/chem/searchReplace.jpeg"></p>
+<p><center><i>Find & Replace dialogs for alphanumerial and structure columns.</i></center></p>
+<p>If the target column doesn't contain text but chemical structures, then the dialog changes
+and shows two substructure fields instead of text fields to define the search and replacement
+fragments (dialog on the right). For replacing one substructure by another,
+<span class="keyword">DataWarrior</span> needs to know, which attachment points on
+the search target match which atoms on the replacement fragment. This is defined by adding R-groups
+to both fragments. In oder to replace a phenyl group with a cyclohexyl substituent, one needs
+to draw phenyl-R1 and cyclohexyl-R1. Atoms of the search fragment, which don't carry an R-group,
+are considered not to carry any more substituents. To define linkers or scaffolds instead of
+single bonded substituents one needs to attach two or more R-groups to the search target
+and replacement fragment.</p>
+<p>If neither search nor replacement fragment carry any R-group, then the search fragment
+effectively defines an unconnected structure to be replaced. If in this case the replacement
+fragment is kept empty, then the search fragments are just removed from the target structures.</p>
+<p>Typical structure related use cases are:
+<li>Replace a given scaffold/linker/substituent by another one</li>
+<li>Fill empty structures cells with a given structure</li>
+<li>Remove certain unwanted fragments, e.g. HCl</li>
+<li>Remove all selected structures</li>
+</p><br>
+
+<h3><a name="Add2DCoords"></a>Unifying 2D Atom Coordinates</h3>
+<p>
+Typically, every column that contains chemical structures is accompanied by an invisible column
+with 2-dimensional atom coordinates, which allow <span class="keyword">DataWarrior</span> to
+draw chemical structures in their original orientation. When no 2-dimensional atom coordinates exist,
+e.g. if an input file contains 3-dimensional coordinates only or if the structures were created
+from Smiles codes, then <span class="keyword">DataWarrior</span> creates atom coordinates on the fly
+whenever a structure is displayed. If original atom coordinates are not satisfactory or if molecules
+with shared scaffolds shall always be drawn with the same scaffold orientation, then one should (re-)generate
+new atom coordinates for a given structure column. To create new atom coordinates select
+<span class="menu">Generate 2D Atom Coordinates...</span> from the <span class="menu">Chemistry</span> menu.
+A dialog opens where one can choose the structure column to be used.
+</p>
+<p align="center"><img src="help/img/chem/add2DCoords.jpeg"></p>
+<p><center><i>Options for 2D atom coordinate calculation and unification.</i></center></p>
+<p>
+If no further options are selected and OK is pressed, then <span class="keyword">DataWarrior</span>
+tries to generate atom coordinates for every structure individually. If, however, as in the example
+above, some scaffold are defined, then <span class="keyword">DataWarrior</span> checks every
+structure of the selected column, whether it contains any of the given scaffolds. If a scaffold is
+found then the corresponding atoms' coordinates are copied from the scaffold and the remaining atoms'
+coordinates are optimized around the scaffold without touching the scaffold's orientation.</p>
+<p>
+If <span class="menu">Automatically detect scaffolds...</span> is selected, then
+<span class="keyword">DataWarrior</span> still considers manually defined scaffolds, if there are any.
+In addition it processes all structures, which don't contain manually defined scaffolds.
+From these structures it compiles a unique list of unsubstituted scaffolds. Then it generates atom
+coordinates for every one of these scaffolds. Afterwards it processes all structures again. Every structure
+that contains a scaffold of the list will receive new atom coordinates that contain the scaffold's
+optimized coordinates. This ensures that compounds based on the same scaffold are always drawn in
+the same orientation.
+<br>
+The algorithm used for automatic scaffold location can be selected from among these:
+<ul>
+<li><span class="menu">Most central ring system</span>: Imagine one removes all atoms and bonds that
+are not part of any ring of a given molecule. In this case we retain all separated and unsubstituted
+ring systems of this molecule. The most central ring system is the one that is topologically closest
+to the center of the molecule.</li>
+<li><span class="menu">Murcko scaffold</span>: If we locate all ring systems of a molecule and add all
+atoms and bonds that directly connect different ring systems, and remove all other bonds and atoms,
+we retain the so-called Murcko scaffold. Basically it is the original molecule with all substituents
+removed that do not contain any ring.</li>
+</ul>
+Both options require the existence of at least one ring in the molecule. In molecules that don't
+contain rings no scaffold is found. Hence, newly created coordinates for these molecules won't be
+influenced by the list of found scaffolds.
+</p>
+<br>
+
+<h3><a name="CompareFiles"></a>Comparing Structure Files</h3>
+<p>
+Sometimes one needs to compare two rather big sets of compounds for overlaps, i.e. for
+compounds within one set, which have (or don't have) a similar or equal counterpart in the other set.
+Potential use cases may be:<ul>
+<li>locating commercially available compounds, which are substancially dissimilar to any compound
+of an existing screening library. In a second step one might purchase a subset of those compounds
+that matches a desired physico-chemical property profile.</li>
+<li>a virtual screening for those commercially available compounds, which are similar to at least
+one of a known set of bioactive compounds. Both, chemical or flexophore similarity may be useful
+in this case.</li>
+<li>checking a commercial compound set against an in-house collection for equals considering
+tautomers and different salts as being equal.</li>
+</ul></p>
+<p>This task compares all compounds of the currently active <span class="keyword">DataWarrior</span>
+window with any compound of another specified compound file. This compound comparison may either
+use a descriptor similarity or it may be an exact compund match, which may or may not include
+other stereo-isomers, tautomers and/or salts.</p>
+<p>The comparison results may be used in various ways. First, the open window will receive a new column
+containing the most similar structure of the other file and another new column containing the
+similarity value. Optionally, one may select more information from the external file to be included
+into new columns of the open window, e.g. a compound identifier. Second, one may also create new files
+containing all similar structures or all dissimilar structure from the external file. And third,
+one may write all compared compound pairs or just the similar ones into a new file.</p>
+<p align="center"><img src="help/img/chem/compareFiles.jpeg"></p>
+<p><center><i>Options for locating (dis-)similar compounds between two files.</i></center></p>
+<p><b>File:</b> Click <span class="menu">Choose</span> to select the external structure file,
+which the active window's structures shall be compared to. This file may also be the
+very file that was opened to show the active window.</p>
+<p><b>Structure column & comparison method:</b> One may choose either a descriptor of a chemical
+structure column or the <span class="menu">[Exact]</span> method. In the first case a similarity
+slider will let you define a similarity limit, while with the latter option you may select, whether
+to neglect stereo-, tautomer-, and/or salt information, when doing an otherwise exact structure
+match. You may only choose among those descriptors, which already exist in your open window.
+If an external file does not contain the selected descriptor then it is calculated on the fly.</p>
+<p><b>Similarity limit:</b> This defines the similarity threshold above which two compounds
+are considered similar. If a compound of the open DataWarrior window has similar counterpart(s)
+above this limit, then the most similar of these structures will be shown in a new column of the
+active window. If a compound pair file is written, then this will include pairs only, if their
+similarity is above this threshold. The similarity slider is visible only, if a descriptor
+is selected in the option above.</p>
+<p><b>Neglect stereo features, Consider tautomers equal, Consider largest fragment only:</b>
+In case of an exact structure match, these options allow to weaken the compound comparison
+by considering any stereo-isomers, any tautomers, and/or any salts of otherwise equal compounds
+as still being equal. These options are only available, if an <span class="menu">[Exact]</span>
+comparison is selected above.</p>
+<p><b>Select columns:</b> This allows to select columns from the compared file, which
+shall be included as new columns into the current window and populated with the respective
+information of the most similar compound for each row.</p>
+<p><b>Save similar compounds to file:</b> Select this to define a file name for storing
+all compounds of the external file that are found to be similar to any of the current window's
+compounds.</p>
+<p><b>Save dissimilar compounds to file:</b> Select this to define a file name for storing
+all compounds of the external file that are not found to be similar to any of the current window's
+compounds.</p>
+<p><b>Save similar compound pairs to file:</b> Select this to define a file name for storing
+all compound pairs that are more similar than the defined similarity limit.</p>
+<p><b>Compound-ID of this dataset:</b> Here you may select a column from the active window
+containing compound identifiers, which will be written into the compound pair file.</p>
+<p><b>Compound-ID of external file:</b> Here you may select a column from the external
+file containing compound identifiers, which will be written into the compound pair file.</p>
+<p><b>Create half matrix:</b> This option is only available, if the active window's content was
+read from the same file that it is compared against. If this option is selected,
+then only half of the similarity matrix is processed, because this already covers all
+possible compound pair combinations.</p>
+<br>
+
+<h3><a name="SelectDiverse"></a>Selecting Diverse Compounds from Large Set</h3>
+<p>
+This function is an efficient implementation for locating a most diverse subset
+within a given set of molecules. The algorithm can be preloaded with a second
+set of molecules, causing the algorithm to select molecules, which are both, most
+different to any molecule in the secons set and highly diverse among the selection.
+Especially for this reason, this function is perfectly suited to select diverse
+screening compounds from a provider's catalog avoiding any compound being similar
+to already available in-house compounds.</p>
+<p align="center"><img src="help/img/chem/selectDiverseDialog.jpeg"></p>
+<p><center><i>Dialog configured to select 50000 diverse compound different to currentLibrary.dwar.</i></center></p>
+<p>All binary descriptors can be used with this algorithm. After computing the
+desired number of diverse compounds a column is added to the dataset with ascending
+numbers indicating selected compounds. The compound with number 1 is that compounds,
+which is most different to all the others. Compound number 2 is most different from
+number 1. Compound 3 is the one most different to 1 and 2 and so forth. If a dataset
+contains a few awkward compounds, then these are likely to be picked first. Therefore,
+in reality one would often skip the very first compounds of the diverse selection.</p>
+<br>
+
+<h3><a name="ClusterCompounds"></a>Clustering Compounds</h3>
+<p>Clustering is an old cheminformatics technique for subdividing a typically large
+compound collection into small groups of similar compounds. Clustering was used in
+the old days, when computational resources were expensive, to precompute similarity
+relationships between compounds. Cluster membership could be stored easily in databases
+to be quickly retrieved later, whenever the need arose to locate similar structures
+to any given structure, e.g. after a high-throughput screening. The inherent problem
+of clustering is that cluster borders are arbitrary and may separate very similar
+compounds into different clusters. Therefore, the retrieval of all cluster co-member
+of a given compound does not necessarily result in the most similar compounds.</p>
+
+<p>The cluster algorithm implemented in <i>DataWarrior</i> is simple, reproducible,
+but computationally demanding and, therefore, best used if the dataset doesn't
+contain far beyond 10000 compounds. First the complete similarity matrix is calculated,
+which can be done with any descriptor. Then, in a stepwise process the most similar
+compounds or clusters are merged to form a new cluster, whose similarity to the
+remaining compounds and clusters is re-calculated as a weighted mean from its members.
+The merging process continues until a stop criterion is met. Stop criteria can be
+defined in the cluster dialog.</p>
+
+<p align="center"><img src="help/img/chem/clusterDialog.jpeg"></p>
+
+<p>The clustering process may be defined to stop when the cluster count reaches
+a desired number or when the similarity needed to join two clusters falls below
+a definable limit. If both criteria are defined, then the clustering stops if any
+of both criteria are met.</p>
+<br>
+
+<h3><a name="MolecularProperties"></a>Calculating Molecular Properties</h3>
+
+<p><i>DataWarrior</i> may calculate or estimate various properties directly from
+the chemical structure. These include physico-chemical properties,
+lead- or drug-likeness related parameters, ligand efficiencies, various atom and
+ring counts, molecular shape, flexibility and complexity as well as indications
+for potential toxicity. After calculating properties, these are automatically
+added as new columns to the data table. If chemical structures contain small
+disconnected fragments as water molecules or counter ions, then these are removed
+before the property calculaten, i.e. properties are always calculated for the largest
+fragment only. An exception are the total molweight and the number of disconnected
+fragments, which both refer to the unstripped input structure.</p>
+<p>To calculate any molecular properties from chemical structures select
+<span class="menu">Add Compound Properties...</span> from the <span class="menu">
+Chemistry</span> menu. Select the properties of interest from one or more
+property sections and click <span class="menu">OK</span>.</p>
+
+<p align="center"><img src="help/img/chem/properties.jpeg"></p>
+
+<p>Properties related to the ligand efficiency are based on IC50 values and require
+the selection of a corresponding numerical column that contains IC50-values.</p>
+<p>Some properties match those available in the <i>OSIRIS Property Explorer</i>,
+which was made public in 2000 and in now downloadable on www.openmolecules.org.
+Some of these properties and the algorithms used are explained in more detail
+<a href="help/../properties/properties.html">here</a>.</p> 
+<br>
+
+<h3><a name="VirtualLibraries"></a>Enumerating Virtual Libraries</h3>
+
+<p>DataWarrior can generate all structures of a virtual combinatorial library, given that a
+<span class="keyword">generic reaction</span> is defined and that for every one of its generic reactants
+a list of real reactant structures is provided. Enumerated product structures may then be used
+for many purposes, such as predicting physico-chemical properties, running pharmacophore searches,
+or docking them as potential ligands structures into a pocket of a protein structure.
+Products structures with the most promising properties may then be selected for synthesis.</p>
+
+<p><span class="keyword">Generic reactions</span> consist of chemical sub-structures that define
+compatible reactants and created product(s) of a reaction. The reactant side often contains atom and bond
+query features. Especially, <a href="help/chemistry.html#excludeGroups">exclude groups</a> are frequently
+used to more specifically define chemical functionality to guide chemical reactivity and compatibility issues.
+<span class="keyword">Generic reactions</span> should also contain atom mapping information, which
+assigns product atoms to reactant atoms and this way serves as a transformation description of how
+to construct the product from the reactants in term of which bonds are broken, formed, or changed.
+Ideally, reactant structures carry query features restrictive enough that, if used within a substucture
+search in a building block database, only such molecules would be retrieved, which would react under
+typical reaction conditions.</p>
+
+<p>To create a virtual library, select <span class="menu">Enumerate Combinatorial Library...</span>
+from the <span class="menu">Chemistry</span> menu. To start you may select one of the predefined templates,
+which are taken from Hartenfeller's published<a href="help/chemistry.html#litCCLib"><sup>1</sup></a>
+collection of robust organic reactions. Or you may copy/paste or drag&drop a reaction from somewhere else,
+or draw one yourself.
+You may also load a reaction from a reaction file in <span class="keyword">RXN</span> format. Note that
+<span class="keyword">RXN</span>-files created by <span class="keyword">DataWarrior</span>
+are compatible with other applications, but include a <span class="keyword">DataWarrior</span>
+specific reaction encoding, which ensures that all query features are exactly reproduced,
+when the files is re-opened again by <span class="keyword">DataWarrior</span>. Some of
+<span class="keyword">DataWarrior's</span> query features as <span class="keyword">exclude groups</span>
+are not supported by standard <span class="keyword">RXN</span>-files.</p>
+
+<p align="center"><img width=600 height=430 src="help/img/chem/reactionEditor.jpeg"></p>
+<p align="center"><i>Generic reaction with selected mapping tool and mapping numbers visible.</i></p>
+
+<p>If you decide to draw a new generic reaction yourself, then you may follow these steps:
+<ul>
+<li>Draw all needed atoms and bonds of all reactants and product(s) to properly define the reaction.
+Typically, at least those atoms must be drawn, which change their bonding throughout the reaction.</li>
+<li>Please make sure that all atoms, which exist on the reactant and the product side, get properly mapped using the
+mapping tool <img src="help/../editor/mappingTool.gif">.</li>
+<li>You may use query features and <span class="keyword">exclude groups</span> on the generic reactant side
+to constrain reactant structures. This is done for two reasons: First, the reactant (sub-)structure
+is used to discard non-qualifying reactant molecules, when opening a reactant file. Second, more closely
+defined reactant structures help the reactor to identify the correct functional group within a molecule,
+if there are multiple similar groups.
+</li>
+<li>You may save your generic reaction for later re-use.</li>
+</ul>
+Once the <span class="keyword">generic reaction</span> is defined, click on <span class="menu">Reactants</span>
+to switch from the reaction to the reactant panel.</p>
+
+<p align="center"><img width=600 height=302 src="help/img/chem/reactantDialog.jpeg"></p>
+<p align="center"><i>Imported reactant structures for two generic reactants.</i></p>
+
+<p>You may load reactant structures from a file using the <span class="menu">Open File...</span> button.
+In this case an automatic sub-structure search ensures that only those molecules are used, which contain
+the defined generic reactant. In addition or alternatively, you may add or change reactant structures
+using drag&drop or copy/paste. A right mouse click within the structure area opens a popup menu that lets
+you add, remove and edit individual structures. Once all reactant structures are defined, you may start the
+enumeration by clicking <span class="menu">OK</span>.</p>
+
+<p>When creating the product structures, <i>DataWarrior</i> retains the atom coordinates
+of the generic product. Therefore all products are later shown in the expected orientation.
+After all product structures have been created, <i>DataWarrior</i> creates some default
+views. Now you may calculate physico-chemical properties for all virtual products,
+calculate Flexophore similarities, generate conformers, cluster the products or run
+some other kind of analysis.</p>
+
+<p><b>Note:</b> Usually, query features are used on the reactant's side only.
+However, if you use query features on a reactant bond to allow multiple bond orders and if you draw
+the respective product bond without defining multiple bond orders, then the product is constructed with the
+explicitly drawn bond order, no matter whether any used reactant molecules have a single, double or triple bond
+at that position. In order to tell the reactor to retain the original reactant molecule's bond order,
+you need to assign to the product bond the same bond types that you have defined for the reactant bond.
+You may even define a bond order increase or decrease for bonds with multiple allowed bond types, e.g. by assigning
+<i>single or double</i> to a reactant bond and <i>double or triple</i> to the respective product bonds.</p>
+
+<p>
+<a name="litCCLib"></a>
+1) Hartenfeller M, Eberle M, Meier P, Nieto-Oberhuber C, Altmann K-H, Schneider G, Jacoby E, Renner S; A Collection
+of Robust Organic Synthesis Reactions for In Silico Molecule Design.; <i>J Chem Inf Model</i>, <b>2011</b>, <i>51</i>, 3093-3098
+</p>
+<br>
+
+<h3><a name="EvolutionaryLibraries"></a>Generating Evolutionary Libraries</h3>
+
+<p>Chemical space is huge. There are estimates that the number of distinct, stable molecular
+structures with a molecular weight in the drug-like range is about 10<sup>60</sup>.
+It will never be possible to compute all these structures to search them for the one
+with the most promising property profile for a particular purpose. Nevertheless,
+fishing for unknown promising structures in this vast compound space may be successful
+if the approach is right. It may then lead to completely new ideas or starting points, which
+would not be possible with the traditional structurally constrained virtual screening
+of existing or virtual combinatorial libraries.</p>
+
+<p>Computational methods are called <span class="keyword">De Novo Drug Design</span>, if
+they aim for suggesting entirely new molecules, which are supposedly active on a chosen drug target.
+<span class="keyword">DataWarrior</span> uses an <span class="keyword">evolutionary algorithm</span>
+for this purpose, which somewhat mimicks nature's evolution of plants and animals. The algorithm starts
+with a small initial set of molecules called the <span class="keyword">first generation</span>.
+From any of these molecules it creates multiple derived, new, but similar molecules by applying a
+small random structure modification. All derived structures together form the first offspring generation,
+which is much larger that its parent one. In detail the algorithm uses structure
+modifications like single atom replacements, atom insertions, bond order changes, substituent migrations,
+ring aromatisations, etc. These modifications are selected randomly from a large list of possible changes.</p>
+
+<p>However, the probability values for this random selection and, therefore, the likelyhood that a certain
+modification is selected, also depends on another factor. When the list of all modifications is built,
+then the change is evaluated in regard to as how much it increases or decreases the structure's
+<i>drug-likeness</i> (or optionally <i>natural-product-likeness</i>). Modifications that increase the
+<i>drug-likeness</i> are assigned a higher probability than mutations that decrease it.
+Changes, which would create high ring strains are removed from the list. These modulation of modification
+propabilities ensures that the algorithm stays in the chemical space of drug-like (or natural-product-like)
+compounds.</p>
+
+<p>In a next step the algorithm applies customizable fitness criteria to rank the new generation's molecules
+according to these criteria. The highest ranking molecules from this generation are selected to survive
+and form the parent molecules for the next generation.
+Typically, after a few hundred molecule generations <span class="keyword">DataWarrior</span>
+has arrived at structures that optimally match the defined fitness criteria.</p>
+
+<p>You may define multiple fitness criteria in the <i>Evolutionaly Library Dialog</i>. Criteria may
+be weighted to make them more or less important than others. Together all defined criterial build the
+desired compound property profile.
+
+For simple properties one may define an optimal
+numerical range. One may also require compounds to be similar or dissimilar to
+a definable set of compounds using any descriptor. All individual fitness criteria
+can be weighted to make them more or less important than others.</p>
+
+<p align="center"><img src="help/img/chem/fitness.jpeg"></p>
+
+<p>In the fitness example above we look for compounds, whose chemical structure is
+dissimilar to any of three known inhibitors, while at the same time being similar
+to at least one of these inhibitors considering flexophore similarity. In other
+words, we are looking for compounds with a similar target binding behaviour, but
+with a dissimilar chemical structure to the known inhibitors.</p>
+
+<p align="center"><img src="help/img/chem/eLibrary.jpeg"></p>
+
+<p>The picture above shows the <span class="menu">General</span> panel
+of the dialog after starting the evolutionary process. As starting point the
+structure of LDS has been selected, which is as good as any other starting point.
+The type of compounds being created is set to <span class="menu">natural products</span>.
+We see the structure of the currently mutated parent molecule, the molecules in the
+current generation and the overall best ranking molecule. The background color
+of these molecules reflect how well the fitness portfolio is already met.
+Any time during the evolution process one may click <span class="menu">Stop</span>
+to create a new document with the fittest structures of all generations.</p>
+<br>
+
+<h3><a name="RandomMolecules"></a>Generating Random Molecules</h3>
+
+<p>There have been a few recent publications describing <span class="keyword">Long Short-Term Memory</span>
+(LSTM) networks to generate SMILES codes representing new random molecules.
+Typically, these networks are trained with large text files containing
+thousands of SMILES encoded drug-like molecular structures. LSTM networks, when trained with
+a sequence of characters, learn the propability of specific characters to follow after a sequence
+of previous characters. Thus, a network being trained with thousands of SMILES codes, can make
+reasonable suggestions for the next character when presented with a starting part of a SMILES code.
+This way it may be used to construct new SMILES codes from scratch, which are composed of
+patterns that the network has seen during the training phase. Since LSTM networks cannot understand
+the grammar of SMILES, they produce a certain percentage of invalid SMILES codes, which must be
+filtered out in a second step. The major cause for invalid SMILES are atom labels consisting
+of two atoms, aromaticity encoding by non-capital letters, the encoding of ring closures with
+two matching digits, and the need to match every open parenthesis with a closing one for substituents.
+Suggestions have been made to overcome some of these problems by changing the SMILES grammar for
+this purpose. However, a principal problem remains: LSTM networks are not optimal for polycyclic
+structures, because the underlying data structure is just a sequence of characters.</p>
+
+<p><span class="keyword">DataWarrior</span> uses a different principle for the generation of
+random structures: Starting from a methane molecule it performs many random mutations on the molecule
+until the its size reaches a desired molecular weight range. These mutations include
+atom additions, atom insertions, ring closures, border order changes, atom changes, atom removal,
+and similar small modifications of the molecular structure. The algorithms favors mutations,
+which cause drug-like (or natural-product-like) sub-structures. It also prefers changes that
+let the molecule grow until its non-hydrogen atom count reaches a desired range.</p>
+
+<p>Optionally one may define a structure to start with. In addition one may select a part of the
+starting structure, which would then be protected against mutations. This selected substructure
+would then be retained during molecule growth and, thus, would exists as substructure within every
+generated random molecule. To open the dialog for defining the random molecule generation process
+<span class="menu">Generate Random Molecules...</span> from the <span class="menu">Chemistry</span>
+menu.</p>
+
+<p align="center"><img src="help/img/chem/randomStructureDialog.jpeg" width=341 height=339></p>
+<p><center><i>Dialog configured to generate random 3-amino-4-thio-azetidinones.</i></center></p>
+
+<p><b>Create compounds like:</b> Currently, this option lets you choose among the generation
+of drug-like or natural-product-like structures.</p>
+
+<p><b>Nitrogen and oxygen bias:</b> These slider let you increase to decrease the likelyhood
+to introduce nitrogen or oxygen atoms, respectively.</p>
+
+<p><b>Seed compound:</b> This defines that starting molecule for the algorithm. If you intend
+to generate molecules with a certain substructure, then you need to draw a start molecule that
+contains this substructure and at least one more atom. Then use the lasso tool to select the
+substructure, which causes the algorithm to protect its atoms and bonds from being mutated.
+All generated molecules will then contains the selected substructure.</p>
+
+<p><b>Molecule count:</b> The number of molecules being generated.</p>
+
+<p><b>Minimum and maximum non-H atom count:</b> These fields will influence the size of
+the generated molecules by defining a desired range of non-hydrogen atom counts.</p>
+
+<p><b>Molecule size distribution:</b> Here one may select, whether generated molecule sizes
+will be evenly distributed within the defined range, or whether the majority of generated
+molecules will have non-H counts being around the middle of the defined range.</p>
+
+<p align="center"><img src="help/img/chem/randomStructures.jpeg" width=540 height=270></p>
+<p><center><i>Generated molecules with 3-amino-4-thio-azetidinone substructures.</i></center></p>
+
+<br>
+
+<h3><a name="ScaffoldAnalysis"></a>Analysing Scaffolds</h3>
+
+<p>The <i>Scaffold Analysis</i> locates the core structure(s) of every molecule within a
+given column and creates a new column that contains these scaffolds. The method used to
+locate the core structure(s) depends on the chosen <span class="menu">Scaffold type</span>:
+
+<ul><li><span class="menu">Plain ring systems</span>: This mode locates all single ring
+and annelated ring systems without any substituents.</li>
+<li><span class="menu">Ring systems with substitution pattern</span>: This mode works
+as the previous one, but marks every ring atom as being substituted, which carries an
+exeo-cyclic, non-hydrogen substituent in the original molecule.</li>
+<li><span class="menu">Ring systems with carbon/hetero subst. pattern</span>: This
+mode goes a step further by distinguishing, whether a substituent's first atom was a
+carbon atom or a hetero atom.</li>
+<li><span class="menu">Ring system with atomic-no subst. pattern</span>: This mode
+is even more specific. Every exocyclic substituent is represented by its first atom.</li>
+<li><span class="menu">Murcko scaffold</span>:The <i>Murcko scaffold</i>
+contains all plain ring systems of the given molecule plus all direct connections
+between them. Substituents, which don't contain ring systems are removed from rings and
+ring connecting chains.</li>
+<li><span class="menu">Murcko skeleton</span>: The <i>Murcko skeleton</i> is a
+generalized <i>Murcko scaffold</i>, which has all hetero atoms replaced by carbon atoms.</li>
+<li><span class="menu">Most central ring system</span>: As the name implies, this is
+that ring system of the molecule, which is closest to its topological center. It does not
+contain any exocyclic substitution information.</li></ul></p>
+
+<p>The image below illustrated the different scaffold modes. The original molecule
+structure is shown at the top middle position. The scaffold structures produced by any
+of the seven scaffold modes are shown around the original molecule.</p>
+<p align="center"><img src="help/img/chem/scaffolds.jpeg"></p>
+
+<p>If the <span class="menu">Save scaffold frequency file</span> option is selected, then
+<span class="keyword">DataWarrior</span> creates a new document listing all detected scaffold
+and their occurence frequency. The name and location of the scaffold file can be set
+after pressing the <span class="menu">Choose</span> button.</p>
+
+<br>
+
+<h3><a name="SARTables"></a>Creating SAR-Tables</h3>
+
+<p><i>Structure-Activity Relationship (SAR)</i> Tables are frequently used to
+correlate biological properties with the substitution patterns of compound sets
+that share one or a few chemical scaffolds and often have been synthesised
+in a combinatorial fashion. If a dataset contains chemical structures,
+<i>DataWarrior</i> may decompose the structures by analysing scaffold and substituents
+and putting them into new dedicated columns.
+This can be done either fully automatic or a little more flexible with some user guidance.
+Similar functionality of this kind is sometime called <i>R-group-decomposition</i> or
+<i>R-group-deconvolution</i>.</p>
+
+<p>To automatically create a <span class="keyword">SAR-Table</span> from your dataset,
+select <span class="menu">Automatic SAR-Analysis...</span> from the
+<span class="menu">Chemistry</span> menu. A dialog lets you choose the mechanism
+that is used to determine the scaffold.
+<ul><li><span class="menu">Most central ring system</span>: As the name implies, with
+this option that ring system of the molecule, which is closest to the topological center
+of the molecule, is taken as the scaffold.</li>
+<li><span class="menu">Murcko scaffold</span>: The <i>Murcko scaffold</i> of a molecule
+is determined by locating all ring systems of the molecule and all direct connections
+between them. Everything else is considered as substituents.</li>
+</ul>
+Compounds without any rings are not subjected to the analysis and their cells
+in the new columns remain empty.</p>
+
+<p>If you need more flexibility in determining, which sub-structures should be considered
+the central scaffold, then you should select <span class="menu">Core based SAR-Analysis...</span>
+from the <span class="menu">Chemistry</span> menu. The dialog lets you define a sub-structure
+that may include query features. By using atom wild cards or variable bond bridges,
+one drawn sub-structure may detect multiple different scaffolds at once. Nevertheless,
+often the <span class="menu">Core based SAR-Analysis...</span> function needs to be
+used multiple times to process all scaffolds in the dataset.</p>
+
+<p>Whatever mode you use to generate a <span class="keyword">SAR-Table</span>,
+for every different scaffold, the entire dataset is processed to find those scaffold atoms,
+which have variations concerning their substituents they carry. For all of these, a
+generic R-group is attached to the scaffold. If a scaffold atom is always carrying the
+same substituent, this substituent is attached to the scaffold. The scaffold with attached
+R-groups and substituents is called <span class="keyword">core-fragment</span> and
+put into the first new table column. New R-group columns are added according to the needs.</p>
+
+<p align="center"><img src="help/img/chem/SARResult.jpeg"></p>
+<p><center><i>Table view with new columns added after SAR-Analysis</i></center></p>
+<br>
+
+<h3><a name="SimAnalysis"></a>Similarity Analysis</h3>
+
+<p>In the recent literature<a href="help/chemistry.html#litSimAnalysis"><sup>1-3</sup></a> the terms
+<i>Molecular Similarity Analysis</i>, <i>Activity Cliff Analysis</i>
+or <i>Activity Landscape</i> are hot topics. All these related methods have in common that they usually
+start with a 2-dimensional scaling process of the chemical space, which means that all involved molecules
+are positioned somehow on a 2D-area, such that similar molecules are located close to each other.
+This scaling could be done by running a <i>principal component analysis (PCA)</i> on a descriptor of
+the molecules and using the first two components as coordinates.
+Another approach would be a <i>self organizing map (SOM)</i> from a descriptor. Both of these options are
+limited in terms of the descriptor type, because they require input data to be vector, i.e. a binary or numerical
+array of data.</p>
+<p>While <span class="keyword">DataWarrior</span> allows running PCAs or SOMs on descriptor vectors and
+visualizing the results as a chemical landscape, the <span class="keyword">Similarity Analysis</span>
+is based on a different method. It uses a
+<span class="keyword">Rubberbanding Forcefield</span><a href="help/chemistry.html#litSimAnalysis"><sup>4</sup></a>
+approach, which translates similarity better than a PCA, is faster than a SOM, uses the available space more
+efficiently and works with any type of similarity criterion including the
+<span class="keyword">Flexophore descriptor</span>.</p>
+<p>The approach involves the following steps:<ul>
+<li>randomly position all molecules on the 2D space</li>
+<li>calculate the entire similarity matrix between all molecules</li>
+<li>locate most similar neighbors to be considered for every molecule</li>
+<li>between any two neighbors assume attractive forces, which increase with similarity and distance</li>
+<li>stepwise relocate all molecules parallel to the mean vector of perceived forces</li>
+<li>while attractive forces decrease over time and due to lower distances, introduce increasing short range
+repelling forces among all molecules</li>
+</ul></p>
+<p align="center"><img src="help/img/chem/orgFuncSimAnalysis.jpeg"></p>
+<p><center><i>Three default views after similarity analysis</i></center></p>
+
+<p>When DataWarrior has finished the calculation of molecule positions, it creates three new default views:
+<ul><li>A view depicting the chemical space of all molecules. Similar neighbors are connected with a
+connecting line and the markers that represent the molecules are colored dynamically by molecule similarity
+to the chosen <span class="keyword">Reference Molecule</span>, which changes whenever you click another marker.</li>
+<li>A tree view that shows the direct neighbors of the chosen <span class="keyword">Reference Molecule</span>.
+When a marker or molecule is clicked on in any view, the <span class="keyword">Reference Molecule</span>
+changes and the tree view's content is dynamically updated to show the neighborhood of the new molecule.</li>
+<li>A structure view, which is configured to show selected molecules on top, while the non-selected ones
+are grayed out. The highlight mode of the respective structures column is set to
+<span class="keyword">Reference Row Similarity</span>, causing any displayed molecule to show any structural
+differences to the molecule of the <span class="keyword">Reference Row</span>. Structural elements possessed
+by the reference molecule, which are not part of the depicted molecule, are shown in red. Structural elements
+of the shown molecule, which are not present in the reference molecule, are highlighted with a blue background.
+To change the selection of displayed molecules, you simply need to select different markers in the tree view
+or on the similarity map.</li>
+</ul></p>
+<p>Since a <span class="keyword">Similarity Analysis</span> is very much related to a
+<span class="keyword">Activity Cliff Analysis</span>, more information about how to configure and run
+a similarity analysis can be found at the <a href="help/chemistry.html#SALIAnalysisConfig">end of the next section</a>.</p>
+<p>
+<a name="litSimAnalysis"></a>
+1) Peltason L, Bajorath J; Molecular similarity analysis uncovers heterogeneous structure-activity relationships
+and variable activity landscapes.; <i>Chem Biol.</i>, <b>2007</b>, <i>14</i> (5), pp 489-97<br>
+2) Guha R, Van Drie J H; Structure-Activity Landscape Index: Identifying and Quantifying Activity Cliffs;
+<i>J. Chem. Inf. Model.</i>, <b>2008</b>, <i>48</i> (3), pp 646-658; DOI: 10.1021/ci7004093<br>
+3) Bajorath J, Peltason L, Wawer M, Guha R, Lajiness M S, Van Drie J H; Navigating structure-activity landscapes;
+<i>Drug Discovery Today</i>, <b>2009</b>, <i>14</i> (13-14), pp 698-705<br>
+4) Sander T, Freyss J, Korff M v, Rufener C; DataWarrior: An Open-Source Program For Chemistry Aware Data Visualization
+And Analysis; <i>J. Chem. Inf. Model.</i>, <b>2015</b>, <i>55</i> (2), pp 460-473; DOI: 10.1021/ci500588j
+</p><br>
+
+<h3><a name="SaliAnalysis"></a>Activity Cliff Analysis</h3>
+<p>The <span class="keyword">Activity Cliff Analysis</span> uses the same mechanism already explained
+in the previous section to create a similarity map of all involved molecules. It also detects all
+similarity relationships between them above an automatically determined similarity threshold. To be precise,
+this is not a global cutoff value, but is modulated from molecule to molecule. Depending on the neighborhood
+situation of an individual molecules the threshold may be increased or decreased to accound for many very
+similar or few not even similar neighbors. This reduces singletons and untangles large clusters to some extend.</p>
+<p>In addition to the <span class="keyword">Similarity Analysis</span> the so-called <span class="keyword">
+Structure-Activity Landscape Index (SALI)</span> is calculated for all pairs of similar molecules.
+If two molecules with measured activities a1 and a2 and their structural similarity being s,
+then the SALI value between these molecules is defined as SALI = |a1-a2| / (1-s). The SALI value is a measure
+of how much activity is gained (or lost) with a relatively small change in structure. Molecule pairs
+that show an abrupt change in activity despite having a rather similar structure are called activity cliffs.
+These pairs are particularly interesting, if one tries to understand structure-activity relationships
+in order to design new structural motives with improved activities.</p>
+<p align="center"><img src="help/img/chem/saliView.jpeg"></p>
+<p>After an <span class="keyword">Activity Cliff Analysis</span> the generated similarity view
+encodes SALI values and activites in marker size and marker color, respectively.
+The image above shows a part of such a similarity map. In this case the dataset contained EC50 values
+on Cannabinoid CB1 and CB2 receptors. The marker background color reflects the receptor subtypes
+(CB1:pink, CB2: orange). One can easily recognize clusters of similar compounds, locate active compounds
+(red markers), locate activity cliffs (large markers), and even distinguish CB1 from CB2 inhibitors.</p>
+<br>
+<h3><i><a name="SALIAnalysisConfig"></a>Configuring And Running A Similarity Or Activity Cliff Analysis</i></h3>
+<p>
+To perform a <span class="keyword">Similarity or Activity Cliff Analysis</span> choose
+<span class="menu">Analyse Similarity/Activity Cliffs...</span> from the <span class="menu">Chemistry</span>
+menu. The following dialog appears:</p>
+<p align="center"><img src="help/img/chem/simAnalysisDialog.jpeg"></p>
+<p><center><i>Similarity Analysis Dialog</i></center></p>
+<p><b>Similarity on:</b> Defines the similarity criterion, i.e. the descriptor that is used for arranging
+molecules on the 2D-map. One may use any descriptor that <span class="keyword">DataWarrior</span> knows of,
+provided that is has been calculated previously for the current data file. Most useful descriptors are
+<span class="keyword">SkelSpheres</span> for fine-grained chemical graph similarity,
+<span class="keyword">OrgFunctions</span> for similarity on synthetically relevant organic functionality,
+and <span class="keyword">Flexophore</span> to create a molecule map based on the similarity of protein binding
+characteristics.</p>
+<p><b>Activity column:</b> For a <span class="keyword">Similarity Analysis</span> don't select a column here.
+For an <span class="keyword">Activity Cliff Analysis</span> you need to select that
+column that contains the numerical value to calculate SALI values from. For any pair of molecules the SALI
+value reflects how much activity is gained with a small change of the chemical structure. Very high SALI
+values identify activity cliffs, i.e. those rare points in an activity landscape, where a small change of the
+chemical structure causes a large change in activity (or any other experimentally determined molecule property.
+Identifying these molecule pairs and understanding the structural cause of the activity change can be very
+helpful in the process of designing compounds with better properties.</p>
+<p><b>Identifier column:</b> The <span class="keyword">Similarity or Activity Cliff Analysis</span> detects
+for evey molecule its most similar neighbor molecules and writes a reference to those molecules into a new column.
+Therefore it needs a column that contains a key that uniquely identifies a molecule or data row. If your data
+contains compound identifiers you may select that column. Otherwise, <span class="keyword">DataWarrior</span>
+will create a new number for that purpose.</p>
+<p><b>Separate groups by:</b> In some cases one column contains data experimental data refering to
+multiple targets or measured under different conditions. If a second column contains categories describing
+the conditions, and if only values within the same category can be compared to each other, then you should
+select the category column here. Then SALI value will only be calculated from compatible experimental values.</p>
+<p><b>Similarity limit:</b> Usually <span class="menu">Automatic</span> does a good job. However, if you
+prefer getting more or less neighborship relationships than the automatic process generates, then you may
+disable the automatic setting and (moderately) update the threshold defining slider. If the limit is set too
+high then this may cause the 2D-scaling find too little similarity relationships. The final map may then not
+be much different from the initial state of randomly scattered molecules. If the limit is
+set to low and therefore too many similarity pairs are found, then a highly interconnected bunch of molecules
+won't equilibrate well.</p>
+<p><b>Create view based on similarity relationships:</b> If this option is checked, a similarity map of all
+molecules is created. Therefore a <span class="keyword">Rubberbanding Forcefield</span> is employed to
+incrementally equilibrate 2D-coordinates for all molecules until an energy minimum is reached and all
+molecules are positioned close to their most similar neighbors. Afterwards a 2D-view is created to visualize
+the similarity map.</p>
+<p><b>Create document of structure pairs:</b> If this option is checked, then
+<span class="keyword">DataWarrior</span> creates a new document in an open window, which contains all
+detected similarity relationships in dedicated rows. Two columns contain the two neighbor molecules;
+additional columns contain molecule identifiers, similarity, activities, and SALI values.</p>
+<br>
+<p align="center">Continue with <a href="help/conformers.html">3D-Chemistry</a>...</p>
+<br>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+  <title>PheSA</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+<hr align="left" size="2" width="550">
+<h2><a name="PheSA"></a>Pharmacophore Enhanced Shape Alignment "PheSA"</h2>
+<hr align="left" size="2" width="550">
+<p>For a ligand molecule to inhibit a receptor or enzyme with high efficacy
+it must fit well into the protein's active site, which means that it must have a
+low energy conformer, whose shape fits nicely into the pocket and whose atoms are
+optimally positioned to establish attractive polar and apolar interactions with
+the protein atoms. If the binding conformer of an efficacious ligand structure
+is known, then a typical virtual screening strategy is to assess the shape and
+pharmacophoric feature similarity of multiple conformers of the candidate molecules.</p>
+
+<p align="center"><img src="help/img/phesa/task.png" width="600" height="205"></p>
+<p align="center"><i>Typical task: Binding conformer of CSF1R inhibitor & query structure</i></p>
+
+<p>The PheSA algorithm was designed for this purpose. It first aligns two rigid 3D-molecules
+such that both, their shape and their pharmacophore feature overlap is maximized.
+In this regard PheSA is similar to OpenEye's ROCS technology. The optimized
+alignment of both molecules is then quantitatively described by the <i>PheSA similarity</i>,
+a value ranging from 0.0 to 1.0 that is composed of equal contributions of both, shape
+and pharmacophore similarity.</p>
+
+<p align="center"><img src="help/img/phesa/aligned.png" width="375" height="214"></p>
+<p align="center"><i>Best matching query conformer aligned to known binding CSF1R inhibitor</i></p>
+
+<p>Typical applications of PheSA are the alignment of chemical structures for visual
+inspection or binding-mode hypotheses, as well as for virtual screening to identify
+molecules that have 3D-similarity to a known query.</p>
+
+<p>If you know or believe to know the binding conformer of a small molecule that is active
+as inhibitor or antagonist against a protein target, then you may use the <span class="keyword">PheSA</span>
+algorithm from within <span class="keyword">DataWarrior</span> for these purposes:<il>
+<li>To virtually screen a compound collection for potential target activity judging by the
+<a class=content href="help/conformers.html#Superpose">superpositioning</a> score</li>
+<li>To visualize best conformer shape and pharmacophore similarities after
+<a class=content href="help/conformers.html#Superpose">superpositioning</a></li>
+<li>As fitness criterion when <a class=content href="help/chemistry.html#EvolutionaryLibraries">
+building an evolutionary library</a> to come up with new potentially active compounds</li>
+</il></p>
+<br>
+
+</body>
+</html>
+

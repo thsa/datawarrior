@@ -1,0 +1,9 @@
+mkdir tmp
+cd tmp
+jar -xf ../origjar/janino-2.7.0.jar
+jar -xf ../origjar/commons-compiler-2.7.0.jar
+cd ..
+jar -cvf ../janino.jar -C tmp .
+rm -rf tmp
+
+

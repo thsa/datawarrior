@@ -1,0 +1,591 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+  <title>DataWarrior Main Views</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+<hr align="left" size="2" width="600">
+<h2><b><a name="MainViews"></a>DataWarrior Main Views</b></h2>
+
+<hr align="left" size="2" width="600">
+<p>The <span class="keyword">Main Views</span> of <span class="keyword">DataWarrior</span> are the windows
+to your data. They display all rows or the visible subset of all rows in a view specific way.
+When you open data from a text file, paste data from the clipboard or retrieve data from a database,
+then <span class="keyword">DataWarrior</span> automatically creates a few default views.
+You may, however, at any time close existing views or create new views from the popup menu
+that appears after a right mouse button click on any main view's header area.</p>
+
+<p align="center"><img src="help/img/views/viewPopup.jpeg"></p>
+
+<p>While default views are created side-by-side, views may also be stacked on top of each other.
+<span class="keyword">Main Views</span> can be arranged freely by dragging one view's header area
+to another view and dropping it either on the target view's center or close to one of its four edges.
+A semitransparent ghost view indicates what will happens, when the view is dropped at the current position.
+When dropped at the center, the dragged view would be stacked on top of the target view. Otherwise,
+it would horizontally or vertically split the space of the target view and occupy half of it for itself.
+Views can be resized by dragging the divider area between the views.
+At any time any visible view can be maximized in size to cover the entire main view area by clicking the
+<span class="menu">maximize</span> button on the view's header area.</p>
+
+<br>
+<h3><a name="TableView"></a>The Table View</h3>
+<p>The <span class="keyword">Table View</span> is the only mandatory view, which means that
+it is automatically created when you open data from any source and it cannot be closed.
+It offers a spreadsheet like view on all <span class="keyword">visible rows</span>,
+i.e. those data rows that are not hidden by any filter. It also shows visible columns only.
+Columns may be inherently invisible or they may be temporarily defined to be invisible.</p>
+
+<p>Any column that is shown in the <span class="keyword">Table View</span> displays data
+of an associated column of the underlying data table. Typically, all cells of a column contain
+data of the same kind, e.g. numerical data, dates, categories, chemical structures, identifiers, or text.
+Some columns of the underlying data table may not be displayable, e.g. chemical descriptors or
+3D-atom coordinates. These columns are connected to a displayable parent
+column and hold supporting information for various purposes. Descriptors are used for the calculation
+of chemical similarities or to accelerate sub-structure filterung. Atom coordinates or atom
+color information are used by the molecule depiction of 2D-structures or conformers.</p>
+
+<p><b>Cell coloring:</b> Typically, text and chemical structures are drawn in black or white, depending on the chosen look and feel.
+However, for any column the foreground drawing color as well as the cell's background colors can be chosen
+to reflect the data values of this or other columns' cell values. Colors may also represent
+the similarity of this row's molecule compared to the molecule in the <span class="keyword">Reference Row</span>.
+In this case colors change dynamically, whenever the <span class="keyword">Reference Row</span> is changed.
+Column color assignments can be done with <span class="menu">Set Text/Structure/Background Color...</span> from
+the popup menu that opens upon a right click on the respective column title.</p>
+
+<p align="center"><img src="help/img/views/tableView.png" width="680" height="370"></p>
+<p align="center"><i>Table View with buttons; 1: Scroll to Reference Row, 2: Expand Column Titles, 3: Column Filter</i></p>
+
+<p>Column content is automatically analysed whether it is numerical data, date values,
+categories, or just unstructed text.
+For numerical and date columns the covered data range is determined and for category data a list
+of found categories is maintained. What <span class="keyword">DataWarrior</span> can do with a column
+depends on the kind of data it contains. When you hover with the mouse over a column title,
+then a tooltip with the column's characteristics is shown.</p>
+
+<p align="center"><img src="help/img/views/tabletooltip.png" width="342" height="158"></p>
+<p align="center"><i>Tooltip over column title showing column characteristics</i></p>
+
+<p>Table cells may contain multiple values of a kind, e.g. multiple numerical values. These
+have to be, however, separated by "; " (semicolon and space) separated in multiple lines.
+Therefore, if a column contains category assignments, a row may belong to multiple categories.</p>
+
+<p><b>Note:</b> There are two popup menus to access table view related functionality.
+The popup menu that opens on the table view's header (i.e. title bar) give you acces to
+general view and table view related functionality as font size and column order. The second
+popup menu available from any column title mainly related to functionality concerning that
+respective column. However, there is a gray zoone.</p>
+
+<p align="center"><img src="help/img/views/tablemenus.png" width="400" height="340"></p>
+<p align="center"><i>Popup menus available from table view header and column title</i></p>
+
+<p><b>Display mode:</b> Numerical columns may be defined to show rounded values by selecting the
+<span class="menu">Show Rounded Values...</span> option from the column header's popup menu.
+For columns containing multiple values in at least one cell,
+the <span class="menu">Show Multiple Values As...</span> option from the same popup menu
+allows to select a summary mode. Multiple values will then be summarized into one value being shown in the cell.
+Typically, average or median values are shown, but available options also include the largest, the smallest, or
+the sum of all cell values. If a summary mode is defined for a column, then it is not only shown in
+the <span class="keyword">Table View</span>, but it is used whenever DataWarrior accesses numerical values
+of this column, e.g. in filters, 2D- or 3D-views, in calculations, and even when cells are copied to the clipboard.
+If, for instance, a filter is set to hide objects smaller than 100 cm, and if an object's size column
+contains "80; 110", and if this column's summary mode is set to <span class="menu">Show Highest Value</span>,
+then this object is not hidden by the filter.
+If <span class="menu">All Values</span> are shown, then DataWarrior automatically uses
+a mean value in graphical views and filters. If the column is set to <span class="keyword">logarithmic mode</span>
+then geometric mean values are used.</p>
+
+<p><b>Selecting cells</b> in the <span class="keyword">Table View</span> works in a 2-dimensional way,
+which means that by selecting cells you modify the selection of columns and rows. The latter
+affects all views, because the row selection is shared among all views.
+The column selection, however, is affecting the <span class="keyword">Table View</span> only.
+Nevertheless, the are some issues that need to be understood:
+First, if no columns are selected and you select some rows outside of the <span class="keyword">Table View</span>,
+then you don't see any selection in the <span class="keyword">Table View</span>, because no columns are selected.
+Thus, if you intend to select rows in another view in order to later copy cells from the
+<span class="keyword">Table View</span>,  then select the needed columns first.
+Continuous selection can be achieved by dragging the mouse from one cell to another or by
+selecting one cell first and clicking another cell while pressing the <span class="menu">Shift</span> 
+key. Doing the same thing with the <span class="menu">Ctrl</span> key (<span class="menu">Cmd</span> key on the Macintosh)
+allows to select disconnected cells, columns and rows.</p>
+
+<p>The <span class="keyword">Reference Row</span> is indicated by a red border around it.
+In the <span class="keyword">Table View</span> you may change the <span class="keyword">Reference Row</span>
+by clicking on the row number on the left hand side. If the <span class="keyword">Reference Row</span>
+is not visible because it is scrolled out of the visible range, then the table can be scrolled to reveal
+the current <span class="keyword">Reference Row</span> by clicking the top left arrow-button.</p>
+
+<p><b>Sorting:</b> The rows of a <span class="keyword">Table View</span> may be sorted by clicking
+on the respective column header. Depending on the column's data content the sorting will
+be numerically, alphabetically or by the size of chemical structures. Where cells have the same content,
+the previous sort order is retained. The selection of rows and columns is unaffected by sorting.
+Other views that display rows in order (<span class="keyword">Structure View</span>
+and <span class="keyword">Form View</span>) share the <span class="keyword">Table View</span>'s sort order.
+You may use this behaviour to sort the <span class="keyword">Table View</span>
+for instance by some ascending biological activity and then switch to the
+<span class="keyword">Structure View</span>, where the most active structures 
+now start at the top. If some rows are selected and the <span class="menu">Shift</span>
+key is pressed during sorting, then all selected rows are moved to the top of the
+table; selected and unselected rows are still sorted independently.</p>
+
+<p><b>Column order:</b> The order of visible columns in a table can easily be changed by dragging one
+column title horizontally to a new position. For files with hundreds of columns, however, a complete
+re-organization of the column order this way would be a very tiresome task. This can be done
+more efficiently using a dedicated dialog that opens when selecting <span class="menu">Change
+Column Order...</span> from the view header popup menu. The dialog allows to drag single or multiple
+column titles at once to a new position.</p>
+
+<p><b>Column grouping:</b> Another set of features, which is particularly useful for files with many
+columns is the ability to associate a subset of all column in a group. A column may be member of multiple
+groups. If groups are defined every group has an associated color, which is used to decorate its
+members' column titles. A column that is member of multiple groups, has a decoration in gray.</p>
+
+<p><b>Column visibility:</b> Another set of features, which is particularly useful for files with many
+columns is column hiding. The column title popup menu allows to reversibly hide individual or selected
+columns from the view. When column groups are defined then one can show only those columns that
+belong to a particular group.</p>
+
+<p><b>Column filtering:</b> Clicking the spy glass button at the top left of the table view opens
+a text field that can be used to define filter criteria, which immediately hide not matching columns.
+When the field contains a text string, then only columns are shown, whose title contains the query string.
+Multiple query strings can be given by separating them with commas (','). If the text string starts
+with 'regex:', then everything that follows is interpreted as a <a class="links" href="help/regex.html">
+regular expression</a> for full search flexibility.</p>
+
+<p><b>Editing:</b> The <span class="keyword">Table View</span> also permits editing the data. After
+double clicking into a cell a data type specific editor lets you edit the cell's content.
+After choosing <span class="menu">OK</span> the entire column is re-evaluated, because its
+perceived data type may have been changed after the edit. Filters and views may be updated
+to reflect the change and to avoid conflicts that might arise from a changed data type.</p>
+
+<p><b>Detail data:</b> In DataWarrior a table cell may have associated detail information like pictures
+or formatted text. Such detail information is not shown in the <span class="keyword">Table View</span>.
+Detail information is shown in the <span class="keyword">Detail View</span> in the lower right
+part of every <span class="keyword">DataWarrior</span> window. And it may be shown in form views.
+In the <span class="keyword">Table View</span> cells with detail content display a number
+on a small colored rectangle in the right upper corner indicating how many detail objects are available.
+The detail content itself may be either part of the <span class="keyword">DataWarrior</span> file
+or the file may only contain references to the details along with the information of how to access it.
+Green or brown backgrounds indicate file internal detail or referenced details, respectively.</p>
+
+<p align="center"><img src="help/img/views/detailMarkers.jpeg"></p>
+<p align="center"><i>Table with green detail markers indicating file-embedded detail text and pictures.</i></p>
+
+<p><b>Links:</b> Columns may also contain clickable web links. These may be valid complete URLs,
+or they may just contain keys or names of some kind and the column meta data tells
+<span class="keyword">DataWarrior</span>
+how to construct a full URL from it. Examples are the tables generated by a <span class="keyword">
+Wikipedia</span> retrieval or a <span class="keyword">Google Patents</span> search.</p>
+
+<br>
+
+<h3><a name="2DAnd3D"></a>Graphical 2D- and 3D-Views</h3>
+
+<p>The graphical 2D- and 3D-Views incorporate plenty of functionality. Most important
+are the two or three axes that define the numerical/category space in which the data
+is shown. The <span class="menu">xyz</span> button on the the view's header area opens
+a popup menu for defining, which axis is used in which way. Here you may assign a data
+column to any of the axes by selecting it within the respective axis popup menu.
+Columns that don't contain numerical values, date values, category information or chemical descriptors
+cannot be assigned to axes and, therefore, don't appear in the column menus.
+Columns with incomplete data, i.e. with some empty cells, appear in red color indicating
+that some rows of the data may not be shown, if this column is selected. Non-numerical 
+category columns appear in blue color, while complete numerical or date columns
+are shown in black.<br>
+You may use the double ended range sliders to zoom into the numerical or category space of any axis.
+This is done by dragging the slider's left or right thumb area towards the middle. Pressing the Ctrl-key
+while dragging the thumb increases the resolution by a factor of 20. You may also double click
+the thumb area to type-in an exact value. Finally, using the scroll wheel of a mouse or
+or a scroll gesture on a touch pad will also zoom into or out of the view. After zooming into a 2D-view,
+you may move the visible area by dragging the middle of the range slider. Alternatively, you may
+drag the view  itself with the mouse while pressing the Ctrl-key.
+</p>
+
+<p align="center"><img src="help/img/views/axesColumnMenu.jpeg"></p>
+
+<p>Graphical views can be linked to another view, such that their axes-column assignments and
+their zoom and rotation states are kept synchronized to those of the linked view.
+When you change the axis-assigment of a synchronized view or when you zoom into it or rotate it,
+then all synchronized views behave immedately the same. This way you may use some 3D-views side by side,
+whose markers encode different properties, but show the same objects and rotate and zoom synchronously.
+A view can be synchronized to another view by selecting <span class="menu">Synchronize View To</span>
+from the popup menu in the view's header area. The controlling view, which propagates its settings
+to one or more linked views, mare have more but not less dimensions than any client view.
+This means, a 2D-view may be attached to and controlled by a 3D-view, but not the other way round.</p>
+
+<p align="center"><img src="help/img/views/synchronizedViews.jpeg"></p>
+<p align="center"><i>Synchronized views show different properties with same perspective</i></p>
+
+<p>It is a DataWarrior principle that all visible views, usually, display the same rows of data.
+2D- and 3D-views, however, have thenselfes an influence on the overall visibility of rows.
+For instance, markers that are zoomed out of the view, are not visible anymore.
+Rows are also hidden, if a column with incomplete data is assigned to an axis and if the view is configured
+to not show empty values.
+In such a case these rows are usually hidden in other views as well. If the ristricting
+view itself gets invisible, e.g. because is is send to the background and because another view
+is displayed on top of it, then the formerly hidden rows reappear again in all remaining visible views.
+There are situations, however, where zooming into the data should not affect the row visibility
+of other views. Therefore, graphical views can be configured to not
+<span class="menu">Hide invisible rows in other views</span> in the view's
+<span class="menu">Set General View Options...</span> dialog.</p>
+
+<p> All view specific settings are accessible via a popup menu, which opens with 
+a right mouse click anywhere in the view (2D-view) or over any marker (3D-view).</p>
+
+<p align="center"><img src="help/img/views/2dViewPopup.jpeg"></p>
+
+<p>Since the graphical views support multiple fundamentally different chart/view types,
+often the first thing to do after creating a new view is defining, which view type to show.
+This is done by choosing <span class="menu">Set Preferred Chart Type...</span>
+and configuring the options in the upcoming dialog. If the columns, which are assigned
+to the axes, contain data that is incompatible with the preferred chart type, then
+<span class="keyword">DataWarrior</span> shows a scatterplot instead, because scatterplots
+are compatible with any data type. Bar and pie charts require one or more category columns
+while box and whisker plots need one numerical and one category column.
+Being presented with an unintended scatterplot, one may still change the axis assignment
+to make the preferred chart possible.</p>
+
+<p>Markers and their corresponding data rows can be selected by dragging the mouse
+pointer around markers. If you press the <span class="menu">Alt</span> 
+key before starting the selection, you automatically select a rectangular area.
+Pressing the <span class="menu">Shift</span> key causes any new selection to be added to a
+previous selection. The effects of the <span class="menu">Alt</span> and <span class="menu">Shift</span>
+keys can be combined.</p>
+
+<p>The 3D-View can be rotated by pressing and immediately dragging the mouse with the
+<b>right mouse button</b>. If the <b>Shift</b> key is kept pressed while the view is
+rotated, then the rotation is restricted to a pure horizontal or vertical rotation.
+Note that in 3D-views the right mouse button is used to rotate views as well as to
+show a popup menu to configure view details. If you press and drag, then the view rotates.
+If you press and release or wait for 800 ms then the popup appears.</p>
+
+<p>To visualize more dimensions than already given by the 2D- or 3D-coordinate systems,
+marker colors, sizes or shapes can be associated to data columns to reflect numerical
+or categorical cell values. Naturally, marker shapes can not represent numerical data and
+can only represent category information, if the number of categories does not exceed the
+number of available shapes.</p>
+
+<p> Moreover, the 2D-view allows to tinge the background according to closeby markers'
+column values. In this case every marker emits a corona of color that fades
+with increasing distance. All overlapping colors mix in hue and saturation to create 
+a smooth colorful property landscape, where areas with similar colors visualize areas 
+of similar properties. Consequently, background coloring is particularly useful 
+if the property associated to it correlates to some extend with the column values that
+are assigned to the x- and y-axis. In other words background colors are used best,
+if close markers have similar properties, e.g. in a chemical space visualization.
+The background color dialog is accessible from the <span class="menu">Set Marker
+Background Color...</span> item from the view popup menu.</p>
+
+<p align="center"><img src="help/img/views/bgColorDialog.jpeg"></p>
+
+<p>Both, the radius of the affected area around markers and the color fading with distance
+can be defined in the dialog. One needs to play around a little to find optimal settings.
+As default all visible rows contribute to background coloring. If row lists are defined
+one may alternatively select a row list. The color landscape than visualizes the properties
+of the list members only, even if the markers of these list members are not visible in the view.
+This way a view's background may visualize some property space, while an independent set
+of visible rows is shown on top of it.</p>
+
+<p><span class="menu">Set Marker Labels...</span> offers decorating markers with resizeable
+labels at up to eight positions around the marker. A label may even be shown instead of the
+marker. Labels show the content of an associated column, which may be alphanumerical or a
+chemical structure. Labels may be shown for all markers or only for a subset of markers.
+In the latter case one needs to define a row list containing the rows to be decorated with
+labels. This list then needs to be selected from the <span class="menu">Show labels on</span> choices.
+An alternative way of restricting labels to a subset of all rows would be setting the view's
+<span class="keyword">focus</span> on a data subset (see below).</p>
+
+<p align="center"><img src="help/img/views/labels.jpeg"></p>
+
+<p>The view above shows airplane names for some of the markers. Notice, that the labels were
+manually moved to less populated locations to avoid label collisions with data and other labels.
+In <span class="keyword">DataWarrior</span> labels may simply be dragged from their default locations
+to other locations using the mouse.</p>
+
+<p>The <span class="menu">Set Focus To Row List...</span> option puts a visual focus on a 
+certain group of markers. The markers in focus are drawn on top of the remaining markers,
+while the remaining ones are drawn in a dimmed way. If marker labels are set to be shown, then
+only those row markers are decorated with labels, which are in the focus. This lets 
+you show a certain group of rows in the context of a bigger group. The rows in the focus
+are either those rows that belong to a row list or all selected rows are considered to be in the focus.
+In the latter case the focus is changing, whenever the selection changes.</p>
+
+<p align="center"><img src="help/img/views/focus.jpeg"></p>
+
+<p>The above chart shows GDP and life expectancy of the states of the world in 1950.
+The focus is set to highlight the current G8 states.</p>
+
+<p><span class="menu">Set Marker Jittering...</span> adds an adjustable random displacement 
+to the positions of any marker. This can be useful if you have groups of markers 
+that overlap at exactly the same positions and therefore appear as single markers. 
+Typically, this is happens frequently with category data. Adding some jittering 
+lets you visually perceive the number of markers within every category. Displaying the data
+with a bar or pie chart may often be an alternatively.</p>
+
+<p align="center"><img src="help/img/views/jitteredSOM.jpeg"></p>
+
+<p align="left">In the example above all compounds of a drug discovery project were 
+clustered by a self-organizing map, such that every molecule was assigned to one of
+18 by 18 nodes. The above view shows the nodes in a 2-dimensional grid.
+Some jittering was added to scatter all members of every cluster around the respective grid
+position. The view background and the markers are colored according to the biological 
+activity and compound synthesis date, respectively. Note that background coloring works
+well in this example, because the compound on every node are very similar and, therefore,
+usually have similar activities causing a consisten background color around the node.</p>
+
+<p>The menu item <span class="menu">Split View By Categories...</span> lets you split
+one 2D view into multiple equally scaled 2D-views of which each contains only those
+rows that belong to a certain category. Therefore, defining view splitting means
+selecting one or even two category columns as basis for the splitting.
+If you select one column, then the
+individual views are automatically arranged in a grid such that the grid cell widths
+and heights are similar. If two category columns are defined then the grid will have
+an n*m topology with n and m reflecting the number of categories in each column.
+For an example see the image below.</p>
+
+<p align="center"><img src="help/img/views/splitViews.jpeg"></p>
+<br>
+
+<h3><a name="ConnectionLines"></a>Connection Lines</b></h3>
+
+Whenever the change of a numerical parameter over time shall be visualized, or when
+some logical connection between objects needs to be shown, or whenever a tree graph
+needs to be displayed, then drawing lines between markers is a crucial functionality.
+In <span class="keyword">DataWarrior</span> connection lines can be defined in the dialog
+accessible through <span class="menu">Set Connection Lines...</span>.
+
+<p align="center"><img width=357 height=306 src="help/img/views/connectionLineDialog.jpeg"></p>
+
+<p><b>Group & connect by:</b> This setting defines whether to show connection lines and whether
+in this case a category column is used to group markers. If a category column is chosen, then
+all markers belonging to one category are independently connected by lines.
+Select the option <span class="menu">&lt;Don't group, connect all&gt;</span> if you want all markers
+to be connected with one line.<br>
+Some datasets, e.g. after an <span class="keyword">Activity Cliff Analysis</span>
+contain columns, with define links beween rows. Such row connecting columns also show up
+in this menu and cause, if selected, those links to be shown as connecting lines.</p>
+
+<p><b>Connection order by:</b> This option defines in which order individual markers of
+the selected groups are connected. Typically, marker are simply connected from left to right,
+i.e. along the x-axis. Alternatively, any numerical column can be selected here to define
+the order.</p>
+
+<p><b>Relative line width:</b> This defines the width of the connection lines.</p>
+
+<p><b>Invert arrow direction:</b> If markers are connected by a column, which references key values
+of another column in a directional way, e.g. after creating an <span class="keyword">Evolutionary Library</span>,
+then connection lines are automatically drawn with arrows indicating the direction to the parent marker.
+This option allows to invert the arrow direction..</p>
+
+<p align="center"><img src="help/img/views/connectionLines.jpeg"></p>
+
+<p>In the example above the <i>Country</i> column was selected for grouping and connecting markers.
+<span class="menu">&lt;X-axis&gt;</span> was selected as the connection order. The marker size
+was reduced to zero to effectively hide any markers.</p>
+
+<p><b>Detail tree mode:</b> This mode can only be selected, if in <b>Group & connect by:</b>
+a column is selected that contains references to other rows. If a detail tree mode is chosen,
+and if a <span class="keyword">Reference Row</span> is selected, then the view does not show
+markers being positioned by values of columns assigned to axes. Instead, it takes the
+<span class="keyword">Reference Row</span> as root node of a detail graph. Then it adds all
+directly connected rows as second layer of the graph. All not yet used rows connected to any
+second layer row are added as third layer and so forth until the defined number of graph levels is reached.
+The layout of the detail graph is either radial or a horizontal or vertical tree, depending
+on this menu's setting (see following image).</p>
+
+<p align="center"><img src="help/img/views/detailTrees.jpeg"></p>
+
+<p><span class="menu">Show all markers if no tree root is chosen:</span> If a detail tree mode is selected,
+one may toggle between seeing all markers and a specific detail tree by clicking either on a marker to make
+this the new root or by clicking into the empty space to see all markers again. If a view is meant to show
+a detail graph view only and should never show marker assigned to selected axes, then one may
+deselect this checkbox.</p>
+
+<p><b>If nodes get invisible, re-arrange and remove sub-branches:</b> Like all other views, a detail tree
+view shows markers only, if they are not hidden by filters or other views. If this option is not selected,
+then the graph is constructed once after the root is chosen and using all its visible and non-visible neighbours.
+When rows are hidden, they just disappear with their connection lines from the view. If, however, this option
+is selected, then the layout of the graph is freshly created, whenever rows are hidden or un-hidden, taking only
+those neighbours into consideration that are currently visible. This way marker positions change with visibility,
+but the avaliable space is evenly used.</p>
+
+<p><b>Invert tree line directions:</b> If markers are connected by a column, which references key values
+of another column in a directional way, e.g. after creating an <span class="keyword">Evolutionary Library</span>,
+then a detail graph layer is compiled by taking all rows referenced by the previous layer's rows.
+If this option is chosen, then the next layer is always build from rows referencing the current layer's rows.
+This effectively inverts the direction of reference.</p>
+
+<p><b>Detail tree layers:</b> This defines the maximum number of displayed neighbor levels around
+or beneath the root row.</p>
+<br>
+
+<h3><a name="BarsAndPies"></a>Bar Charts And Pie Charts</b></h3>
+
+<p align="left">If all axis of a graphical view are either unassigned or connected
+to a column with category data, then the view can be configured to show a bar chart
+or pie chart. This is done by selecting <span class="menu">Set Preferred Chart Type...</span>
+from the view's popup menu and selecting <span class="menu">Bar Chart</span> in
+the upcomping dialog.</p>
+<p align="center"><img src="help/img/views/chartTypeDialog.jpeg"></p>
+
+<p>Per default bar charts are histograms, which means that any bar's size
+represents the number of rows in the respective category. 
+Alternatively, the bar's size may reflect numerical values of a specific column.
+Since one bar often represents multiple rows, the values of these rows need to be
+summarized somehow that one bar's size can reflect them. Therefore, one needs to select
+one of the summary modes in the <span class="menu">Bar/Pie size by:</span> menu.
+Current options are mean, minimum, maximum or the sum of the individual values.
+
+<p align="center"><img src="help/img/views/barChart.jpeg"></p>
+
+<p>In the example above bar sizes directly represent values of the <i>Amount</i> column.
+The chart is defined to show <span class="menu">Mean Values</span>, but since in this case
+every bar contains one data row only, the mean values are equal the exact row values.<br>
+This example uses <i>Case Separation</i> to split bars by the 'Kind' column to show
+'Earnings' and 'Spendings' for every year side by side rather than the mean value of both
+values in one bar, which would not make much sense.</p>
+
+<p>If marker colors are associated to a data column with <span class="menu">Set Marker Color...</span>,
+then bars are drawn in multiple colors such that the bar visualizes the property distribution
+within the category that is represented by the bar. Marker background coloring,
+marker shapes and marker sizes cannot be used with bars, because there are no distinct markers anymore.</p>
+
+<p>If a column contains numerical values, e.g. molecular weights of some molecules, and
+if a histogram of the distribution of this value shall be shown, then a category column
+must be created artificially with a process called <a href="help/analysis.html#Binning">
+<span class="keyword">Binning</span></a>.</p>
+
+<p>Pie charts can be configured analogously to bar charts and can represent the same kind
+of information. Since bar bars are typically long and pies are as wide as they are high,
+pie charts are often preferred when both axes show categories of similar sizes.
+Then the pies just use the space more efficiently. Relative pie sizes can be
+adjusted with <span class="menu">Set Marker Size...</span>. This allows oversizing
+large pies in order to recognize very small pies as well. Overlapping pies are usually
+tolerable and therefore pies can often visualize large size variations better than bars.</p>
+<br>
+
+<h3><a name="BoxesAndWhiskers"></a>Box Plots And Whisker Plots</b></h3>
+
+<p><span class="keyword">Box Plots</span> and <span class="keyword">Whisker Plots</span> are
+popular, when measured data can be assigned to groups and where the variation of the data
+within the groups between the groups is of concern. Often the median or mean of a group
+is compared to other groups and statistical significance is deduced from p-values as a
+result of a <span class="keyword">t-test</span>.</p> 
+
+<p align="center"><img src="help/img/views/boxplot.jpeg"></p>
+
+<p>This example shows a simple box plot with the three main cases split a second time by genders.
+The dialog that opens after selecting <span class="menu">Set Statistical View Options...</span>
+from the view's popup menu lets one define, which statistical parameters are directly shown in the
+view, how fold-change and p-values are calculated, and how mean or median values are indicated in the view.</p>
+
+<p><span class="keyword">Whisker Plots</span> are similar to <span class="keyword">Box Plots</span>.
+While the latter depicts a box from the 1st to the 3rd quartile of the data,
+the <span class="keyword">Whisker Plot</span> shows all individual values as markers.
+If there are many individual values, then it is often difficult to judge where all of them are,
+because they highly overlap. In these cases it often helps to add some transparency with
+<span class="menu">Set Marker Transparency...</span></p>
+
+
+
+<p align="center"><img src="help/img/views/whiskerPlot.jpeg"></p>
+
+<p>In the example above we see a whisker plot with lines connecting the <i>Main Cases</i>,
+which are the primary categories shown in a box or whisker plot. Primary cases
+are separated by animal species and marker colors also reflect the species.
+Since we separate three cases, we also have three lines instead of one. Each line connect
+five size groups of one species. Since every species in shown in a different color and
+since every line connects markers of one species only, the lines automatically are drawn
+in the color associated to the particular species.</p>
+<br>
+
+<h3><a name="FormView"></a>The Form View</h3>
+
+<p>With the <span class="keyword">Form View</span>, you can display some or all
+fields of one row in a customizable format using the entire main view area.
+This view is particularly appropriate if your data contains detail information
+that is not visible in the <span class="keyword">Table View</span>. A built-in
+form designer lets you custom tailor your forms by defining an underlying grid,
+column and row resizing rules, and the locations of form items on the grid.</p>
+
+<p>To create a new <span class="keyword">Form View</span> right-click within
+the header area of any existing view and choose
+<span class="menu">New Form View</span> from the popup menu. This action creates a
+new <span class="keyword">Form View</span> with a default layout containing form items
+for every available column or detail information. You can keep it unchanged or
+modify the layout using the <span class="keyword">Form Designer</span>.
+This layout editor allows to customize the resizing behaviour of rows and columns
+of the layout and move, add, delete or modify fields within the
+<span class="keyword">Form View</span>.
+You may toggle between the <span class="keyword">Form View</span> and the
+<span class="keyword">Form Designer</span> by checking and unchecking
+<span class="menu">Design Mode</span> in the popup menu, which appears upon
+a right mouse click on the header area of the <span class="keyword">Form View</span>.</p>
+<p align="center"><img src="help/img/views/designMode.jpeg"></p>
+<p align="left">DataWarrior's forms and their items adapt automatically to the 
+available space, which you notice when you resize the form or print it on different 
+paper formats. This behaviour is achieved through a layout manager that works 
+behind the scenes. The way in which the layout manager assigns the available 
+space to form items works as follows: You may define a certain number of columns. 
+The resizing behaviour of every column is defined by assigning one of these 
+types: <span class="menu">Fixed Size</span>, <span class="menu">Relative Size</span> 
+and <span class="menu">Share Remaining Space</span>. <span class="keyword">Fixed 
+size columns</span> are served first. They get a fixed number of pixels from 
+the available width. <span class="keyword">Relative size columns</span> are 
+defined to get a certain percentage from the remaining width. What is left from 
+the total width after all columns of these two kinds have claimed their part, 
+is devided equally between the columns that are of type <span class="menu">Share 
+Remaining Space</span>. Sharing the available height among all rows works in 
+the same way. Columns and rows together define a grid which can then be used 
+to attach form items. These may just occupy one grid cell or strech across multiple 
+columns and rows. Typically rows or columns, which are used as borders or as 
+spacing between form items are often defined as being of fixed size. Those that 
+bear form items often share the remaining space.</p>
+<p align="left">In the Form Designer you insert or remove colums or rows by means 
+  of a popup menu which appears after a right mouse click on the appropriate lila 
+  colored column or row header area.</p>
+<p align="center"><img src="help/img/views/designModeColumnPopup.jpeg"></p>
+<p align="left">This popup menu also allows to switch between the associated column 
+  or row modes. If you need to remove many of a form's rows or columns this can 
+  be quickly done by selecting them in the row or column header area and then 
+  choosing <span class="menu">Remove Selected Columns</span> from the popup menu. 
+  When you remove columns or rows from a form then form items which are are positioned 
+  exclusively in these rows or columns then these form items are removed as well.</p>
+<p align="left">Form items may be introduced by right clicking into a light blue 
+  cell of a form and selecting <span class="menu">Add &lt;field name&gt;</span> 
+  from the popup menu. Form items may be repositioned by dragging them around 
+  on the form's grid or by moving their edge and corner positions with the mouse. 
+  A right mouse click onto a form icon opens a poopup menu that allows to assign 
+  it to a different data field or to remove it entirely from the form.</p>
+<p align="center"><img src="help/img/views/defaultForm.jpeg"></p>
+
+<p>When all form editing is done, then you may leave the form designer by unchecking 
+  the <span class="menu">Design Mode</span> option in the forms main view popup 
+  menu.</p>
+<br>
+
+<h3><i><a name="StructureView"></a>The Structure View</i></h3>
+
+<p>This view renders all molecules of a data column within a 2-dimensional grid.
+The number of structures per row and with it the size of the structures may be adjusted
+by right-clicking into the view and selecting <span class="menu">number of columns</span>
+from the popup menu. The structure pictures may be decorated with further information from the same data row.
+To do so choose <span class="menu">Show/Hide Label</span> from the same popup menu.
+A dialog lets you assign column titles to predefined label positions around the chemical structure.</p>
+
+<p align="center"><img src="help/img/views/structureView.jpeg" border="0"></p>
+
+<p>The sort order of structures and the <span class="keyword">Structure Highlight Mode</span>
+reflect the settings defined in the <span class="keyword">Table View</span>.</p>
+<p align="center"><img src="help/img/views/dragAndDrop.jpeg"></p>
+<p><b><span class="keyword">Structure Filter</span> TIP</b>: You can drag and drop a molecule from the
+<span class="keyword">Structure View</span> to a <span class="keyword">Structure Filter</span>
+or directly into the <span class="keyword">Structure Editor</span>.</p>
+
+<br>
+<p align="center">Continue with <a href="help/analysis.html">Analysing Data</a>...</p>
+<br>
+</body>
+</html>

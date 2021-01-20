@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+  <title>Creating And Using Row Lists</title>
+  <base href="../">
+  <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<p>
+
+<hr align="left" size="2" width="550">
+<h2><a name="Concept"></a>Row List Concept</h2>
+<hr align="left" size="2" width="550">
+
+<p>A <span class="keyword">row list</span> is a named subset of all rows.
+<span class="keyword">Row lists</span> may be used for various purposes,
+e.g. within a list filter to hide all rows that don't belong to the list. In graphical views list members may
+be shown with larger or differently shaped markers or in a different color. Graphical views may put the emphasis
+on list members by displaying all other rows in a grayish tone in the background. Or labels may be shown for list
+members only. <span class="keyword">Row lists</span> may be used to permanently store a current selection.
+Or a <span class="keyword">row list</span> may define a data subset for a data analysis method.</p>
+<p>Once defined, <span class="keyword">row lists</span> are automatically saved within native
+<span class="keyword">DataWarrior</span> files.
+The <span class="menu">List</span> menu contains functionality to create, manipulate, and delete
+<span class="keyword">row lists</span>. You may add or remove individual or selected rows to or from a
+<span class="keyword">row list</span>. For instance, you may create a few <span class="keyword">row lists</span>
+from different sets of selected rows and afterwards add more rows to some of those lists with the
+<span class="menu">Add Row To List</span> item from the popup menu that opens with a right mouse click on any view.
+This way you may manually assign rows to self defined categories. Alternatively, you may select multiple rows and
+and add them all to a list at once by choosing <span class="menu">Add Selected To</span> from the <span class="menu">List</span> menu.
+<br>
+
+<h3><a name="Creation"></a>Creating Row Lists</h3>
+<p>
+The <span class="menu">List</span> menu's <span class="menu">Create Row List From...</span> submenu offeres various
+tasks of how to create a new <span class="keyword">row list</span>. All of these tasks have in common that they
+open a dialog, which asks for a list name and other options that depend on the particular menu item:<br>
+<li><span class="menu">Selected Rows...</span>:
+After providing a name and clicking <span class="menu">OK</span>
+<span class="keyword">DataWarrior</span> creates a new <span class="keyword">row list</span> with the given name,
+which contains all currently selected rows. This <span class="keyword">row list</span> can now be used for any purpose,
+e.g. the list manipulation tasks from the <span class="menu">List</span> menu.</li>
+<li><span class="menu">Visible Rows...</span>:
+This option works like the one above, except for that it creates a list of all currently visible rows.</li>
+<li><span class="menu">Hidden Rows...</span>:
+This option works like the one above, except for that it creates a list of all currently non visible rows.</li>
+<li><span class="menu">Duplicate Rows...</span>:
+This option creates a list of all <i>duplicate</i> rows, which are those rows that are equal to at least one previous row
+considering the content of one or multiple defined columns. For the sample table shown below, row 3 is the only duplicate row
+if the <i>kind</i> column is chosen for comparison.
+Note that the assigment of which rows are considered duplicates depends on the sort order of rows.</li>
+<p><center><table><tbody>
+<th>
+  <td>kind</td>
+</th>
+<tr>
+  <td>1</td>
+  <td>a</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>b</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>a</td>
+</tr>
+</tbody></table></center></p>
+<li><span class="menu">Unique Rows...</span>:
+This option creates a list of all <i>unique</i> rows, which are those rows that have no equal other row in table
+considering the content of one or multiple defined columns. Considering the <i>kind</i> column
+in the example above only row 2 is unique. Unique rows are independent of the sort order.</li>
+<li><span class="menu">Distinct Rows...</span>:
+This option creates a list of all <i>distinct</i> rows, which are the first rows of every set of equal
+rows considering the content of one or multiple defined columns. A row of any table is
+either a distinct or a duplicate row, depending on whether there are equal rows in the table and whether
+they are above or below this row. In the example table above, row 1 and row 2 are distinct rows.</li>
+<p align="center"><img width="285" height="281" src="help/img/lists/newlist.jpeg"><br>
+<i>Dialog settings for new list of distinct rows sharing the same target name and organism.</i></center></p>
+<li><span class="menu">Clipboard...</span>: A new <span class="keyword">row list</span> can be created from the clipboard's content if
+the clipboard contains a list of names that identify the rows to be added to the new list. This task's dialog
+asks to choose a column that contains row identifiers or object names, which are then matched against the clipboard's content.</li>
+<li><span class="menu">Existing Row Lists...</span>: This option lets you create a new <span class="keyword">row list</span> from two
+existing lists using a logical operation. In case of <span class="menu">OR</span> the new list contains
+all rows that are a member of at least one of the input lists. In case of <span class="menu">AND</span>
+the new list only contains those rows that are members of both input lists.</li>
+</p>
+<p><span class="menu">Extend list to all rows of same category</span> This option can be selected for any of
+<span class="menu">Create Row List</span> tasks. If this option is selected, then a category column must be
+chosen. The initially created <span class="keyword">row list</span> will then be post-processed in two steps. First all of its rows are
+processed to extract all categories represented by the <span class="keyword">row list</span>. In a second step those rows that are not
+yet list members, are added to the list, if they belong to any of the previously extracted categories.</p>
+<br>
+
+<h3><a name="Selection"></a>Row Selections and Row Lists</h3>
+<p>Creating a new list from a selection basically saves a selection for later re-use under a given name.
+There a multiple ways to interact between a current selection and a chosen list: With <span class="menu">Add Selected To</span>
+and <span class="menu">Remove Selected From</span> one may add or remove all currently selected rows to/from any
+existing <span class="keyword">row list</span>. One may also work in the opposite direction, which is adding or removing those rows
+to/from the current row selection, which are member of a given <span class="keyword">row list</span>
+(<span class="menu">Select Rows From</span> and <span class="menu">Select Rows From</span>).</p>
+<p>Sometimes list management means to very frequently add and remove rows to and from a list, which can become a
+tedious task when always done with mouse in the list menu. Therefore, two keyboard shortcuts <span class="keyword">Ctrl-1</span>
+and <span class="keyword">Ctrl-0</span> can be used to add or remove the currently selected row(s) to/from a
+<span class="keyword">Default List</span>. If that list doesn't exist and <span class="keyword">Ctrl-1</span>
+is pressed, then a list with this name is automatically created.</p>
+<br>
+
+<h3><a name="Columns"></a>Column Content and Row Lists</h3>
+<p>
+An alternative way to create a set of <span class="keyword">row lists</span> can be achieved with
+<span class="menu">Create Row Lists From Category Column...</span>
+from the <span class="menu">List</span> menu. This task creates one list for every category being present in a
+given column and assigns table rows accordingly. The list's names are built from the category name and an optional
+prefix and postfix.</p>
+<p>The inverse process can be triggered by choosing <span class="menu">Add Column From Row Lists...</span>, which
+creates a new column and translates the list membership of every row into a cell entry composed of all list names,
+the row is member of.</p>
+<br>
+
+<h3><a name="ImportExport"></a>Exporting and Importing Row Lists</h3>
+<p><span class="keyword">Row lists</span> can be exported into a text file. In order to later identify individual entries, an identifier column must be
+chosen prior to the export. <span class="keyword">DataWarrior</span> writes the name of the identifier column
+into the new <span class="keyword">row list</span> file. Then it creates a list of all distinct identifiers of all list members taken from the identifier
+column. This identifier list is then also written into the export file.</p>
+<p>Analogously, when importing a list file <span class="keyword">DataWarrior</span> asks for a key column that
+contains the identifiers, which are then matched against the identifiers from the list file in order to assign list members.</p>
+<p align="center"><img width="560" height="183" src="help/img/lists/listio.jpeg"><br>
+  <i>Dialogs for row list export and import.</i></center></p>
+<br>
+
+<p align="center">Continue with <a href="help/macros.html">Using Macros</a>...</p>
+<br>
+
+</body>
+</html>

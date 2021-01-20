@@ -1,9 +1,0 @@
-mkdir tmp
-cd tmp
-jar -xf ../origjar/batik-all-1.11.jar
-jar -xf ../origjar/xmlgraphics-commons-2.3.jar
-cd ..
-jar -cvf ../batik-all.jar -C tmp .
-rm -rf tmp
-
-

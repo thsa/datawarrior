@@ -89,7 +89,8 @@ public class JVisualization2D extends JVisualization {
 	private static final float NAN_WIDTH = 2.0f;
 	private static final float NAN_SPACING = 0.5f;
 	private static final float AXIS_TEXT_PADDING = 0.5f;
-	private static final int DIGITS = 4;    // significant digits for in-view values
+	private static final int FLOAT_DIGITS = 4;  // significant digits for in-view floating point values
+	private static final int INT_DIGITS = 8;    // significant digits for in-view integer values
 
 	// if the delay between recent repaint() and paintComponent() is larger than this, we assume a busy EDT and paint with low detail
 	private static final long MAX_REPAINT_DELAY_FOR_FULL_DETAILS = 100;
@@ -476,15 +477,19 @@ public class JVisualization2D extends JVisualization {
 	 * @return rough estimate of how many characters the longest label will be
 	 */
 	private int getLabelWidth() {
+		int width = FLOAT_DIGITS;
 		if (isShowConfidenceInterval())
-			return 8+2*DIGITS;
+			width = Math.max(width, 8+2*FLOAT_DIGITS);
 		if (isShowMeanAndMedianValues())
-			return 7+DIGITS;
+			width = Math.max(width, 7+FLOAT_DIGITS);
 		if (isShowStandardDeviation())
-			return 4+DIGITS;
+			width = Math.max(width, 4+FLOAT_DIGITS);
 		if (isShowValueCount())
-			return 3+(int)Math.log10(mTableModel.getTotalRowCount());  // N=nnn
-		return DIGITS;
+			width = Math.max(width, 3+(int)Math.log10(mTableModel.getTotalRowCount()));  // N=nnn
+		if (isShowBarOrPieSizeValue())
+			width = Math.max(width, getBarOrPieSizeValueDigits());
+
+		return width;
 		}
 
 	/**
@@ -1898,6 +1903,17 @@ public class JVisualization2D extends JVisualization {
 			}
 		}
 
+	private int getBarOrPieSizeValueDigits() {
+		if (mChartMode == cChartModeCount)
+			return 1 + (int)Math.log10(mTableModel.getTotalRowCount());
+		if (mChartMode == cChartModePercent)
+			return FLOAT_DIGITS;
+		if (mTableModel.isColumnTypeInteger(mChartColumn) && !mTableModel.isLogarithmicViewMode(mChartColumn))
+			return INT_DIGITS;
+
+		return FLOAT_DIGITS;
+		}
+
 	private int compileBarAndPieStatisticsLines(int hv, int cat, String[] lineText) {
 		boolean usesCounts = (mChartMode == cChartModeCount || mChartMode == cChartModePercent);
 		boolean isLogarithmic = usesCounts ? false : mTableModel.isLogarithmicViewMode(mChartColumn);
@@ -1908,11 +1924,11 @@ public class JVisualization2D extends JVisualization {
 						|| mChartMode == cChartModePercent
 						|| !mTableModel.isLogarithmicViewMode(mChartColumn) ?
 					mChartInfo.barValue[hv][cat] : Math.pow(10.0, mChartInfo.barValue[hv][cat]);
-			lineText[lineCount++] = DoubleFormat.toString(value, DIGITS);
+			lineText[lineCount++] = DoubleFormat.toString(value, getBarOrPieSizeValueDigits());
 			}
 		if (!usesCounts && isShowMeanAndMedianValues()) {
 			float meanValue = isLogarithmic ? (float) Math.pow(10, mChartInfo.mean[hv][cat]) : mChartInfo.mean[hv][cat];
-			lineText[lineCount++] = "mean=" + DoubleFormat.toString(meanValue, DIGITS);
+			lineText[lineCount++] = "mean=" + DoubleFormat.toString(meanValue, FLOAT_DIGITS);
 			}
 		if (!usesCounts && isShowStandardDeviation()) {
 			if (Float.isInfinite(mChartInfo.stdDev[hv][cat])) {
@@ -1920,7 +1936,7 @@ public class JVisualization2D extends JVisualization {
 				}
 			else {
 				double stdDev = isLogarithmic ? Math.pow(10, mChartInfo.stdDev[hv][cat]) : mChartInfo.stdDev[hv][cat];
-				lineText[lineCount++] = "\u03C3=".concat(DoubleFormat.toString(stdDev, DIGITS));
+				lineText[lineCount++] = "\u03C3=".concat(DoubleFormat.toString(stdDev, FLOAT_DIGITS));
 				}
 			}
 		if (!usesCounts && isShowConfidenceInterval()) {
@@ -1934,7 +1950,7 @@ public class JVisualization2D extends JVisualization {
 					ll = Math.pow(10, ll);
 					hl = Math.pow(10, hl);
 					}
-				lineText[lineCount++] = "CI95: ".concat(DoubleFormat.toString(ll, DIGITS)).concat("-").concat(DoubleFormat.toString(hl, DIGITS));
+				lineText[lineCount++] = "CI95: ".concat(DoubleFormat.toString(ll, FLOAT_DIGITS)).concat("-").concat(DoubleFormat.toString(hl, FLOAT_DIGITS));
 				}
 			}
 		if (isShowValueCount()) {
@@ -2428,19 +2444,20 @@ public class JVisualization2D extends JVisualization {
 					if (boxPlotInfo.pointsInCategory[hv][cat] > 0) {
 						int lineCount = 0;
 						if (isShowMeanAndMedianValues()) {
+							int digits = mTableModel.isColumnTypeInteger(mAxisIndex[boxPlotInfo.barAxis]) ? INT_DIGITS : FLOAT_DIGITS;
 							float meanValue = isLogarithmic ? (float)Math.pow(10, boxPlotInfo.mean[hv][cat]) : boxPlotInfo.mean[hv][cat];
 							float medianValue = isLogarithmic ? (float)Math.pow(10, boxPlotInfo.median[hv][cat]) : boxPlotInfo.median[hv][cat];
 							switch (mBoxplotMeanMode) {
 							case cBoxplotMeanModeMedian:
-								lineText[lineCount++] = "median="+DoubleFormat.toString(medianValue, DIGITS);
+								lineText[lineCount++] = "median="+DoubleFormat.toString(medianValue, digits);
 								break;
 							case cBoxplotMeanModeMean:
-								lineText[lineCount++] = "mean="+DoubleFormat.toString(meanValue, DIGITS);
+								lineText[lineCount++] = "mean="+DoubleFormat.toString(meanValue, digits);
 								break;
 							case cBoxplotMeanModeLines:
 							case cBoxplotMeanModeTriangles:
-								lineText[lineCount++] = "mean="+DoubleFormat.toString(meanValue, DIGITS);
-								lineText[lineCount++] = "median="+DoubleFormat.toString(medianValue, DIGITS);
+								lineText[lineCount++] = "mean="+DoubleFormat.toString(meanValue, digits);
+								lineText[lineCount++] = "median="+DoubleFormat.toString(medianValue, digits);
 								break;
 								}
 							}
@@ -2450,7 +2467,7 @@ public class JVisualization2D extends JVisualization {
 								}
 							else {
 								double stdDev = isLogarithmic ? Math.pow(10, boxPlotInfo.stdDev[hv][cat]) : boxPlotInfo.stdDev[hv][cat];
-								lineText[lineCount++] = "\u03C3=" + DoubleFormat.toString(stdDev, DIGITS);
+								lineText[lineCount++] = "\u03C3=" + DoubleFormat.toString(stdDev, FLOAT_DIGITS);
 								}
 							}
 						if (isShowConfidenceInterval()) {
@@ -2464,7 +2481,7 @@ public class JVisualization2D extends JVisualization {
 									ll = Math.pow(10, ll);
 									hl = Math.pow(10, hl);
 									}
-								lineText[lineCount++] = "CI95: ".concat(DoubleFormat.toString(ll, DIGITS)).concat("-").concat(DoubleFormat.toString(hl, DIGITS));
+								lineText[lineCount++] = "CI95: ".concat(DoubleFormat.toString(ll, FLOAT_DIGITS)).concat("-").concat(DoubleFormat.toString(hl, FLOAT_DIGITS));
 								}
 							}
 						if (isShowValueCount()) {

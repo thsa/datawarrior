@@ -2609,6 +2609,21 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	/**
+	 * Checks whether the column exclusively contains integer values or is defined to contain
+	 * integer values. Accepted are multiple values per cell, values with
+	 * modifiers as (<,>=,?), NaN or empty values.
+	 * If column < 0, then false is returned.
+	 * @param column
+	 * @return
+	 */
+	public boolean isColumnTypeInteger(int column) {
+		return (column >= 0)
+			&& (mColumnInfo[column].type & cColumnTypeDouble) != 0
+			&& mColumnInfo[column].isInteger
+			&& !mColumnInfo[column].logarithmicViewMode;
+		}
+
+	/**
 	 * Checks whether the column exclusively contains values that can be
 	 * numerically interpreted. Accepted are multiple values per cell, values with
 	 * modifiers as (<,>=,?), NaN or empty values and date values.
@@ -4648,26 +4663,38 @@ public class CompoundTableModel extends AbstractTableModel
 	 */
 	private boolean setupDoubleValues(int column, int firstRow) {
 		if (getExplicitDataType(column) != cDataTypeAutomatic
-		 && getExplicitDataType(column) != cDataTypeNumerical)
+		 && getExplicitDataType(column) != cDataTypeFloat
+		 && getExplicitDataType(column) != cDataTypeInteger)
 			return false;
 
 		// if the existing data is not float conform, type cannot be float
 		if (firstRow != 0 && (mColumnInfo[column].type & cColumnTypeDouble) == 0)
 			return false;
 
-		if (firstRow == 0)
+		if (firstRow == 0) {
 			mColumnInfo[column].hasModifiers = false;
+			mColumnInfo[column].isInteger = true;
+			}
 
 		boolean found = false;
 		for (int row=mRecord.length-1; row>=firstRow || (!found && row>=0); row--) {
 			try {
-				mRecord[row].mFloat[column] = tryParseDouble(encodeData(mRecord[row], column), column);
-				if (!Float.isNaN(mRecord[row].mFloat[column]))
+				float value = tryParseDouble(encodeData(mRecord[row], column), column);
+				if (!Float.isNaN(value)) {
+					if (getExplicitDataType(column) == cDataTypeInteger)
+						value = Math.round(value);
+					else if (value - (int)value != 0)
+						mColumnInfo[column].isInteger = false;
+
 					found = true;
+					}
+				mRecord[row].mFloat[column] = value;
 				}
 			catch (NumberFormatException e) {
-				if (getExplicitDataType(column) != cDataTypeNumerical)
+				if (getExplicitDataType(column) != cDataTypeInteger
+				 && getExplicitDataType(column) != cDataTypeFloat) {
 					return false;
+					}
 				mRecord[row].mFloat[column] = Float.NaN;
 				}
 			}
@@ -5600,7 +5627,7 @@ public class CompoundTableModel extends AbstractTableModel
 class CompoundTableColumnInfo {
 	protected volatile boolean	isDescriptorIncomplete;
 	protected int				type,explicitType,summaryMode,significantDigits, hiliteMode;
-	protected boolean			isComplete,isCompleteChild,isUnique,isEqual,
+	protected boolean			isComplete,isCompleteChild,isUnique,isEqual,isInteger,
 								containsMultiLineText,hasDetail,hasMultipleEntries,
 								belongsToMultipleCategories,logarithmicViewMode,
 								hasModifiers,excludeModifierValues,summaryCountHidden,stdDeviationShown;

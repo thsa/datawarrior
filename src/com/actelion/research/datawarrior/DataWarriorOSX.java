@@ -18,6 +18,10 @@
 
 package com.actelion.research.datawarrior;
 
+import com.apple.eawt.Application;
+import com.apple.eawt.ApplicationAdapter;
+import com.apple.eawt.ApplicationEvent;
+
 import javax.swing.*;
 import javax.swing.plaf.MenuBarUI;
 
@@ -123,9 +127,8 @@ public class DataWarriorOSX extends DataWarrior {
 							}
 						});
 
-// They may be deprecated, but the Java 1.6 environment on OSX 10.9.1 still uses these events!!! TLS 19Feb2014
-
-/* TODO check, whether we can really forget this:
+// They may be deprecated, but still with Bellsoft JRE 1.8 232 on OSX 10.15.7 Catalina
+// opening doucuments by icon double click works over these events!!! TLS 21Jan2021
 
 		            Application app = new Application();
 		            app.addApplicationListener(new ApplicationAdapter() {
@@ -157,7 +160,6 @@ public class DataWarriorOSX extends DataWarrior {
 		//            public void handlePreferences(ApplicationEvent event) {}
 		//            public void handleReOpenApplication(ApplicationEvent event) {}
 		                } );
-*/
 					}
 				catch(Exception e) {
 					JOptionPane.showMessageDialog(null, "Unexpected Exception: "+e);

@@ -50,7 +50,7 @@ public class DETaskMergeColumns extends ConfigurableTask {
 	private DETable				mTable;
 
 	public DETaskMergeColumns(DEFrame owner) {
-		super(owner, false);
+		super(owner, true);
 		mTableModel = owner.getTableModel();
 		mTable = owner.getMainFrame().getMainPane().getTable();
 		}
@@ -255,8 +255,12 @@ public class DETaskMergeColumns extends ConfigurableTask {
 
 		if (isStructureMerge) {
 			StereoMolecule[] mol = new StereoMolecule[column.length];
-			for (int row = 0; row<mTableModel.getTotalRowCount(); row++)
+			startProgress("Merging structures...", 0, mTableModel.getTotalRowCount());
+			for (int row = 0; row<mTableModel.getTotalRowCount(); row++) {
+				if ((row & 255) == 255)
+					updateProgress(row);
 				mergeStructureCells(mTableModel.getTotalRecord(row), column, targetColumn, mol);
+				}
 			}
 		else {
 			for (int row = 0; row<mTableModel.getTotalRowCount(); row++)
@@ -274,12 +278,14 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			mTableModel.finalizeChangeAlphaNumericalColumn(column[0], 0, mTableModel.getTotalRowCount());
 
 		if (removeSourceColumns) {
-			boolean[] removeColumn = new boolean[mTableModel.getTotalColumnCount()];
-			int firstColumnIndex = (targetColumnName.length() != 0) ? 0 : 1;
-			int removalCount = column.length - firstColumnIndex;
-			for (int i=firstColumnIndex; i<column.length; i++)
-				removeColumn[column[i]] = true;
-			mTableModel.removeColumns(removeColumn, removalCount);
+			SwingUtilities.invokeLater(() -> {
+				boolean[] removeColumn = new boolean[mTableModel.getTotalColumnCount()];
+				int firstColumnIndex = (targetColumnName.length() != 0) ? 0 : 1;
+				int removalCount = column.length - firstColumnIndex;
+				for (int i=firstColumnIndex; i<column.length; i++)
+					removeColumn[column[i]] = true;
+				mTableModel.removeColumns(removeColumn, removalCount);
+				} );
 			}
 		}
 
@@ -372,13 +378,20 @@ public class DETaskMergeColumns extends ConfigurableTask {
 		boolean[] wasAdded = new boolean[sourceColumn.length];
 		int[] rGroupIndex = getRGroupIndexes(sourceColumn, isRGroup);
 
+		int largestMoleculeIndex = -1;
+		int largestMoleculeSize = 0;
+
 		StereoMolecule[] rGroup = new StereoMolecule[sourceColumn.length];    // we need to cache R-groups, before starting to replace Rn atoms
 		for (int i=0; i<sourceColumn.length; i++) {
-			mol[i] = mTableModel.getChemicalStructure(record, sourceColumn[i], CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
+			mol[i] = mTableModel.getChemicalStructure(record, sourceColumn[i], CompoundTableModel.ATOM_COLOR_MODE_NONE, mol[i]);
 			if (mol[i] != null) {
 				mol[i].ensureHelperArrays(Molecule.cHelperNeighbours);
 				if (isRGroup[i])
 					rGroup[i] = mol[i].getCompactCopy();
+				else if (largestMoleculeSize < mol[i].getAtoms()) {
+					largestMoleculeSize = mol[i].getAtoms();
+					largestMoleculeIndex = i;
+					}
 				}
 			}
 
@@ -392,6 +405,7 @@ public class DETaskMergeColumns extends ConfigurableTask {
 				boolean needsArrangement = false;
 				for (int atom1=0; atom1<originalAtomCount; atom1++) {
 					int atomicNo = mol[i].getAtomicNo(atom1);
+					mol[i].setAtomMarker(atom1, true);  // marker to keep this atom's coordinates
 					// The Rn atom should exactly have one neighbour, but mol may have been edited by an evil user
 					if (atomicNo >= 129 && atomicNo <= 144 && mol[i].getConnAtoms(atom1) >= 1) {
 						int coreAtom = mol[i].getConnAtom(atom1, 0);
@@ -403,7 +417,7 @@ public class DETaskMergeColumns extends ConfigurableTask {
 								}
 							else {
 								int atomStart = mol[i].getAllAtoms();
-								int bondStart = mol[i].getAllAtoms();
+								int bondStart = mol[i].getAllBonds();
 								mol[i].addMolecule(rGroup[rGroupIndex[rGroupNo]]);
 								wasAdded[rGroupIndex[rGroupNo]] = true;
 								needsArrangement = true;
@@ -429,34 +443,29 @@ public class DETaskMergeColumns extends ConfigurableTask {
 				if (needsDeletion)
 					mol[i].deleteMarkedAtomsAndBonds();
 
-				if (needsArrangement) {
-					for (int atom=0; atom<originalAtomCount; atom++)
-						mol[i].setAtomMarker(atom, true);
+				if (needsArrangement)
 					new CoordinateInventor(CoordinateInventor.MODE_KEEP_MARKED_ATOM_COORDS).invent(mol[i]);
-					}
 				}
 			}
 
-		StereoMolecule merged = null;
-		boolean needsArrangement = false;
-		for (int i=0; i<sourceColumn.length; i++) {
-			if (mol[i] != null && !wasAdded[i]) {
-				if (merged == null)
-					merged = mol[i];
-				else {
+		if (largestMoleculeSize != 0) {
+			StereoMolecule merged = mol[largestMoleculeIndex];
+			wasAdded[largestMoleculeIndex] = true;
+
+			boolean needsCoordinateUpdate = false;
+			for (int i=0; i<sourceColumn.length; i++) {
+				if (mol[i] != null && !wasAdded[i]) {
 					merged.addMolecule(mol[i]);
-					needsArrangement = true;
+					needsCoordinateUpdate = true;
 					}
 				}
-			}
 
-		if (needsArrangement) {
-			for (int atom=0; atom<merged.getAllAtoms(); atom++)
-				merged.setAtomMarker(atom, true);
-			new CoordinateInventor(CoordinateInventor.MODE_KEEP_MARKED_ATOM_COORDS).invent(merged);
-			}
+			if (needsCoordinateUpdate) {
+				for (int atom=0; atom<merged.getAllAtoms(); atom++)
+					merged.setAtomMarker(atom, atom<largestMoleculeSize);
+				new CoordinateInventor(CoordinateInventor.MODE_KEEP_MARKED_ATOM_COORDS).invent(merged);
+				}
 
-		if (merged != null) {
 			Canonizer canonizer = new Canonizer(merged);
 			record.setData(canonizer.getIDCode().getBytes(), targetColumn);
 			record.setData(canonizer.getEncodedCoordinates().getBytes(), targetColumn + 1);

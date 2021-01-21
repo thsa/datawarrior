@@ -18,19 +18,22 @@
 
 package com.actelion.research.datawarrior.task.data;
 
-import com.actelion.research.datawarrior.DETable;
-import com.actelion.research.gui.hidpi.HiDPIHelper;
-import info.clearthought.layout.TableLayout;
-
-import java.awt.Dimension;
-import java.util.*;
-
-import javax.swing.*;
-
+import com.actelion.research.chem.Canonizer;
+import com.actelion.research.chem.Molecule;
+import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.chem.coords.CoordinateInventor;
+import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.DETable;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
+import info.clearthought.layout.TableLayout;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.*;
 
 public class DETaskMergeColumns extends ConfigurableTask {
 	private static final String PROPERTY_NEW_COLUMN = "newColumn";
@@ -68,19 +71,16 @@ public class DETaskMergeColumns extends ConfigurableTask {
 
 		content.add(new JLabel("Select columns to be merged:"), "1,5,3,5");
 
-		ArrayList<String> columnList = new ArrayList<String>();
+		ArrayList<String> columnList = new ArrayList<>();
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
-			if (mTableModel.getColumnSpecialType(column) == null)
+			if (mTableModel.getColumnSpecialType(column) == null
+			 || mTableModel.getColumnSpecialType(column).equals(CompoundTableConstants.cColumnTypeIDCode))
 				columnList.add(mTableModel.getColumnTitle(column));
 		String[] itemList = columnList.toArray(new String[0]);
-		Arrays.sort(itemList, new Comparator<String>() {
-					public int compare(String s1, String s2) {
-						return s1.compareToIgnoreCase(s2);
-						}
-					} );
+		Arrays.sort(itemList, (s1, s2) -> s1.compareToIgnoreCase(s2));
 		JScrollPane scrollPane = null;
 		if (isInteractive()) {
-			mListColumns = new JList<String>(itemList);
+			mListColumns = new JList<>(itemList);
 			scrollPane = new JScrollPane(mListColumns);
 			}
 		else {
@@ -151,11 +151,21 @@ public class DETaskMergeColumns extends ConfigurableTask {
 					return false;
 					}
 				}
+			boolean alphaNumFound = false;
+			boolean idcodeFound = false;
 			for (int i=0; i<column.length; i++) {
-				if (mTableModel.getColumnSpecialType(column[i]) != null) {
-					showErrorMessage("Column '"+columnName[i]+"' has a special type and cannot be merged.");
+				if (mTableModel.getColumnSpecialType(column[i]) == null)
+					alphaNumFound = true;
+				else if (mTableModel.getColumnSpecialType(column[i]).equals(CompoundTableConstants.cColumnTypeIDCode))
+					idcodeFound = true;
+				else {
+					showErrorMessage("Column '"+columnName[i]+"' has a special type that cannot be merged.");
 					return false;
 					}
+				}
+			if (alphaNumFound && idcodeFound) {
+				showErrorMessage("Structure columns cannot be merged with alphanumerical columns.");
+				return false;
 				}
 			if (!isExecuting()) {
 				StringBuilder conflictingProperties = new StringBuilder();
@@ -230,21 +240,33 @@ public class DETaskMergeColumns extends ConfigurableTask {
 		for (int i=0; i<columnName.length; i++)
 			column[i] = mTableModel.findColumn(columnName[i]);
 
-		HashMap<String,String> columnProperties = mergeColumnProperties(column, null);
-
 		sortByVisibleOrder(column);
+
+		boolean isStructureMerge = CompoundTableConstants.cColumnTypeIDCode.equals(mTableModel.getColumnSpecialType(column[0]));
 
 		int targetColumn = column[0];
 		if (targetColumnName.length() != 0) {
-			String[] title = new String[1];
+			String[] title = new String[isStructureMerge ? 2 : 1];
 			title[0] = targetColumnName;
+			if (isStructureMerge)
+				title[1] = CompoundTableConstants.cColumnType2DCoordinates;
 			targetColumn = mTableModel.addNewColumns(title);
 			}
 
-		for (int row=0; row<mTableModel.getTotalRowCount(); row++)
-			mergeCellContent(mTableModel.getTotalRecord(row), column, targetColumn);
+		if (isStructureMerge) {
+			StereoMolecule[] mol = new StereoMolecule[column.length];
+			for (int row = 0; row<mTableModel.getTotalRowCount(); row++)
+				mergeStructureCells(mTableModel.getTotalRecord(row), column, targetColumn, mol);
+			}
+		else {
+			for (int row = 0; row<mTableModel.getTotalRowCount(); row++)
+				mergeTextCells(mTableModel.getTotalRecord(row), column, targetColumn);
+			}
 
-		mTableModel.setColumnProperties(targetColumn, columnProperties);
+		if (isStructureMerge)
+			mTableModel.prepareStructureColumns(targetColumn, mTableModel.getColumnTitleNoAlias(targetColumn), true, false);
+		else
+			mTableModel.setColumnProperties(targetColumn, mergeColumnProperties(column, null));
 
 		if (targetColumnName.length() != 0)
 			mTableModel.finalizeNewColumns(targetColumn, this);
@@ -297,7 +319,7 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			column[i] &= 0x0000FFFF;
 		}
 
-	private void mergeCellContent(CompoundRecord record, int[] column, int targetColumn) {
+	private void mergeTextCells(CompoundRecord record, int[] column, int targetColumn) {
 		StringBuffer buf = new StringBuffer();
 		String separator = mTableModel.isMultiLineColumn(column[0]) ?
 				CompoundTableModel.cLineSeparator : CompoundTableModel.cEntrySeparator;
@@ -343,5 +365,129 @@ public class DETaskMergeColumns extends ConfigurableTask {
 		record.setData(mTableModel.decodeData(buf.toString(), targetColumn), targetColumn);
 		if (detail != null)
 			record.setDetailReferences(targetColumn, detail);
+		}
+
+	private void mergeStructureCells(CompoundRecord record, int[] sourceColumn, int targetColumn, StereoMolecule[] mol) {
+		boolean[] isRGroup = new boolean[sourceColumn.length];
+		boolean[] wasAdded = new boolean[sourceColumn.length];
+		int[] rGroupIndex = getRGroupIndexes(sourceColumn, isRGroup);
+
+		StereoMolecule[] rGroup = new StereoMolecule[sourceColumn.length];    // we need to cache R-groups, before starting to replace Rn atoms
+		for (int i=0; i<sourceColumn.length; i++) {
+			mol[i] = mTableModel.getChemicalStructure(record, sourceColumn[i], CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
+			if (mol[i] != null) {
+				mol[i].ensureHelperArrays(Molecule.cHelperNeighbours);
+				if (isRGroup[i])
+					rGroup[i] = mol[i].getCompactCopy();
+				}
+			}
+
+		// If some columns contain R-groups, then merge the R-groups into any molecule, which has a respective Rn substituent!
+		// Mark R-groups that have been merge one or more times. All other R-groups have to be added as unconnected molecules later.
+		// We don't resolve multiple layers of R-grouping, e.g. R1 contains R2 and R2 contains R1.
+		for (int i=0; i<sourceColumn.length; i++) {
+			if (mol[i] != null) {
+				int originalAtomCount = mol[i].getAllAtoms();
+				boolean needsDeletion = false;
+				boolean needsArrangement = false;
+				for (int atom1=0; atom1<originalAtomCount; atom1++) {
+					int atomicNo = mol[i].getAtomicNo(atom1);
+					// The Rn atom should exactly have one neighbour, but mol may have been edited by an evil user
+					if (atomicNo >= 129 && atomicNo <= 144 && mol[i].getConnAtoms(atom1) >= 1) {
+						int coreAtom = mol[i].getConnAtom(atom1, 0);
+						int rGroupNo = (atomicNo >= 142) ? atomicNo - 141 : atomicNo - 125;
+						if (rGroupIndex[rGroupNo] != -1 && rGroupIndex[rGroupNo] != i) {
+							if (rGroup[rGroupIndex[rGroupNo]] == null) {
+								mol[i].markAtomForDeletion(atom1);
+								needsDeletion = true;
+								}
+							else {
+								int atomStart = mol[i].getAllAtoms();
+								int bondStart = mol[i].getAllAtoms();
+								mol[i].addMolecule(rGroup[rGroupIndex[rGroupNo]]);
+								wasAdded[rGroupIndex[rGroupNo]] = true;
+								needsArrangement = true;
+								for (int atom2=atomStart; atom2<mol[i].getAllAtoms(); atom2++) {
+									if (mol[i].getAtomicNo(atom2) == 0) {
+										for (int bond2=bondStart; bond2<mol[i].getAllBonds(); bond2++) {
+											for (int j=0; j<2; j++) {
+												if (mol[i].getBondAtom(j, bond2) == atom2) {
+													mol[i].setBondAtom(j, bond2, coreAtom);
+													}
+												}
+											}
+										mol[i].markAtomForDeletion(atom1);
+										mol[i].markAtomForDeletion(atom2);
+										needsDeletion = true;
+										}
+									}
+								}
+							}
+						}
+					}
+
+				if (needsDeletion)
+					mol[i].deleteMarkedAtomsAndBonds();
+
+				if (needsArrangement) {
+					for (int atom=0; atom<originalAtomCount; atom++)
+						mol[i].setAtomMarker(atom, true);
+					new CoordinateInventor(CoordinateInventor.MODE_KEEP_MARKED_ATOM_COORDS).invent(mol[i]);
+					}
+				}
+			}
+
+		StereoMolecule merged = null;
+		boolean needsArrangement = false;
+		for (int i=0; i<sourceColumn.length; i++) {
+			if (mol[i] != null && !wasAdded[i]) {
+				if (merged == null)
+					merged = mol[i];
+				else {
+					merged.addMolecule(mol[i]);
+					needsArrangement = true;
+					}
+				}
+			}
+
+		if (needsArrangement) {
+			for (int atom=0; atom<merged.getAllAtoms(); atom++)
+				merged.setAtomMarker(atom, true);
+			new CoordinateInventor(CoordinateInventor.MODE_KEEP_MARKED_ATOM_COORDS).invent(merged);
+			}
+
+		if (merged != null) {
+			Canonizer canonizer = new Canonizer(merged);
+			record.setData(canonizer.getIDCode().getBytes(), targetColumn);
+			record.setData(canonizer.getEncodedCoordinates().getBytes(), targetColumn + 1);
+			}
+		}
+
+	private int[] getRGroupIndexes(int[] sourceColumn, boolean[] isRGroup) {
+		int[] rGroupIndex = new int[17];
+		Arrays.fill(rGroupIndex, -1);
+
+		for (int i=0; i<sourceColumn.length; i++) {
+			int rGroup = getRGoupNo(sourceColumn[i]);
+			if (rGroup != -1 && rGroup <= 16 && rGroupIndex[rGroup] == -1) {
+				rGroupIndex[rGroup] = i;
+				isRGroup[i] = true;
+				}
+			}
+
+		return rGroupIndex;
+		}
+
+	private int getRGoupNo(int column) {
+		String columnName = mTableModel.getColumnTitle(column);
+		if (columnName.length() >= 2 && columnName.charAt(0) == 'R' && Character.isDigit(columnName.charAt(1))) {
+			if (columnName.length() == 2 || !Character.isDigit(columnName.charAt(2)))
+				return columnName.charAt(1) - '0';
+			if (columnName.length() > 3 && Character.isDigit(columnName.charAt(2))
+			 && (columnName.length() == 3 || !Character.isDigit(columnName.charAt(3))))
+				return Integer.parseInt(columnName.substring(1, 3));
+			}
+
+		return -1;
 		}
 	}

@@ -113,8 +113,8 @@ public class DEVersionChecker extends JDialog implements ActionListener {
 						"DataWarrior could not check whether you have the latest version.\n"
 								+ "A firewall, local security software, or settings may prevent contacting the server.\n"
 								+ "Do you want DataWarrior to open your web browser for checking?",
-						"DataWarrior Update Check in Web-Browser", JOptionPane.OK_CANCEL_OPTION);
-				if (answer == JOptionPane.OK_OPTION) {
+						"DataWarrior Update Check in Web-Browser", JOptionPane.YES_NO_OPTION);
+				if (answer == JOptionPane.YES_OPTION) {
 					try {
 						BrowserControl.displayURL(url+"&error="+URLEncoder.encode(error, "UTF-8"));
 						}

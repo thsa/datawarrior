@@ -107,6 +107,12 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 		parser.addFunction("ligeff2", new JEPLigEffFunction(mTableModel));
 		parser.addFunction("normalize", new JEPNormalizeFunction(mTableModel, this));
 		parser.addFunction("maxsim", new JEPMaxChemSimilarityFunction(mTableModel));
+		parser.addFunction("increase", new JEPOrderDependentFunction(mTableModel, JEPOrderDependentFunction.TYPE_INCREASE, this));
+		parser.addFunction("increaseInCategory", new JEPOrderDependentInCategoryFunction(mTableModel, JEPOrderDependentInCategoryFunction.TYPE_INCREASE, this));
+		parser.addFunction("percentIncrease", new JEPOrderDependentFunction(mTableModel, JEPOrderDependentFunction.TYPE_PERCENT_INCREASE, this));
+		parser.addFunction("percentIncreaseInCategory", new JEPOrderDependentInCategoryFunction(mTableModel, JEPOrderDependentInCategoryFunction.TYPE_PERCENT_INCREASE, this));
+		parser.addFunction("cumulativeSum", new JEPOrderDependentFunction(mTableModel, JEPOrderDependentFunction.TYPE_CUMULATIVE_SUM, this));
+		parser.addFunction("cumulativeSumInCategory", new JEPOrderDependentInCategoryFunction(mTableModel, JEPOrderDependentInCategoryFunction.TYPE_CUMULATIVE_SUM, this));
 		parser.addFunction("frequency", new JEPFrequencyFunction(mTableModel));
 		parser.addFunction("frequencyInCategory", new JEPFrequencyInCategoryFunction(mTableModel, this));
 		parser.addFunction("categoryFirst", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_FIRST, this));
@@ -115,9 +121,6 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 		parser.addFunction("categorySum", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_SUM, this));
 		parser.addFunction("categoryMean", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_MEAN, this));
 		parser.addFunction("categoryMedian", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_MEDIAN, this));
-		parser.addFunction("increaseInCategory", new JEPOrderDependentInCategoryFunction(mTableModel, JEPOrderDependentInCategoryFunction.TYPE_INCREASE, this));
-		parser.addFunction("percentIncreaseInCategory", new JEPOrderDependentInCategoryFunction(mTableModel, JEPOrderDependentInCategoryFunction.TYPE_PERCENT_INCREASE, this));
-		parser.addFunction("cumulativeSumInCategory", new JEPOrderDependentInCategoryFunction(mTableModel, JEPOrderDependentInCategoryFunction.TYPE_CUMULATIVE_SUM, this));
 		parser.addFunction("movingAverageInCategory", new JEPMovingAverageInCategoryFunction(mTableModel, this));
 		parser.addFunction("refvalue", new JEPRefValueOfCategoryFunction(this, mTableModel));
 		parser.addFunction("year", new JEPValueOfDateFunction(Calendar.YEAR, -1));  // no correction

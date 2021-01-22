@@ -1,7 +1,10 @@
 ## DataWarrior
-*DataWarrior* is a versatile, interactive data analysis and visualization applications.
-Especially, its cheminformatics functionality makes it a unique tool in academia and industry.
-It runs on all major platforms. Pre-built installers exist for Linux, Macintosh and Windows.
+*DataWarrior* is a program for interactive data analysis and visualization. While it is
+widely used by data analysts in general, it is particular useful for cheminformaticians,
+because chemical structures and reactions are native datatypes and because of its rich
+cheminformatics functionality.
+
+*DataWarrior* runs on all major platforms. Pre-built installers exist for Linux, Macintosh and Windows.
 Software installers, documentation, sample data, and a support forum are available on
 www.openmolecules.org/datawarrior.
 
@@ -10,7 +13,7 @@ www.openmolecules.org/datawarrior.
 ### Dependencies
 Apart from a working JDK8 with JavaFX, *DataWarrior* needs various free-to-use/open-source dependencies.
 All required dependency files are provided as part of this project in the ./lib folder.
-The most important are:
+The most important ones are:
 * OpenChemLib: Cheminformatics base functionality to handle molecules and reactions
 * FXMolViewer: 3D-molecule & protein visualization, editing, interaction using JavaFX
   (includes Sunflow ray-tracer and MMTF to download and parse binary structure files from the PDB-database)
@@ -27,7 +30,7 @@ git clone https://github.com/thsa/datawarrior.git
 On Linux or Macintosh just run the 'buildDataWarrior' shell script.
 
 ### How to run the project
-After building it just run the 'runDataWarrior' shell script.
+After building the project just run the 'runDataWarrior' shell script.
 
 ### Platform Integration
 Ideally, *DataWarrior* should be installed in a platform specific way that registers its file

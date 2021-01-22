@@ -8,11 +8,17 @@ www.openmolecules.org/datawarrior.
 *DataWarrior* is built on the open-source projects *OpenChemLib* and *FXMolViewer*. 
 
 ### Dependencies
-Apart from a working JDK8 with JavaFX, *DataWarrior* needs some open-source dependencies.
-All required dependency files are provided as part of this project in the ./lib folder:
+Apart from a working JDK8 with JavaFX, *DataWarrior* needs various free-to-use/open-source dependencies.
+All required dependency files are provided as part of this project in the ./lib folder.
+The most important are:
 * OpenChemLib: Cheminformatics base functionality to handle molecules and reactions
-* SunFlow source code and janino.jar: Ray-Tracer to build photo-realistic images of 3-dimensional scenes
-* mmtf: Java library to download and parse binary structure files from the PDB-database
+* FXMolViewer: 3D-molecule & protein visualization, editing, interaction using JavaFX
+  (includes Sunflow ray-tracer and MMTF to download and parse binary structure files from the PDB-database)
+* Batik: Support for SVG vector graphics
+* Database connectors for: MySQL, PostgreSQL, Oracle, Microsoft SQL-Server
+* Opsin: IUPAC name conversion to chemical structures
+* Substance Look&Feel: professionally designed user interface skin
+* Java Expression Parser: for calculating new column data using custom equations
 
 ### How to download the project
 git clone https://github.com/thsa/datawarrior.git
@@ -24,18 +30,21 @@ On Linux or Macintosh just run the 'buildDataWarrior' shell script.
 After building it just run the 'runDataWarrior' shell script.
 
 ### Platform Integration
-Ideally, *DataWarrior* should be installed in a platform specific way to register its file
-extentions and to properly display file icons. The platform integration is not (yet) part of
-this project. Thus, if you extend *DataWarrior* using the source code and if you don't do the
-platform integration yourself, then it is recommended to use an official installer and just
-replace the original datawarrior.jar file with the freshly built one.
+Ideally, *DataWarrior* should be installed in a platform specific way that registers its file
+extentions and causes proper file icon display. Installers for Linux, Macintosh, and Windows,
+which include proper platform integration, can be downloaded from www.openmolecules.org.
+
+This platform integration is not (yet) part of this project. Thus, if you intend to run *DataWarrior*
+from self compiled source code and if you don't do the platform integration yourself, then
+you may still install *DataWarrior* with the official installer and afterwards replace the original
+datawarrior.jar file with the freshly built one.
 
 Unfortunately, this does not work on Windows platforms, because a proper platform integration on
 Windows requires the application to be an .exe file. Therefore, on Windows the datawarrior.jar,
 the application icon and all document icons are embedded in the DataWarrior.exe file as resources.
 
-Note: The datawarrior.jar file of the platform specific installers are shrunk, which makes the
-datawarrior.jar file significantly smaller, because unused classes and methods are removed
+Note: The datawarrior.jar file of the platform specific installers are shrunk with *Proguard*,
+to reduce the datawarrior.jar file size significantly be the removal of unused classes and methods
 from the byte code.
 
 ### How to contribute

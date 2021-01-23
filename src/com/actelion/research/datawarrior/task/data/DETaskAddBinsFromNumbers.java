@@ -145,7 +145,7 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 
 	@Override
 	public String getHelpURL() {
-		return "/html/help/analysis.html#Binning";
+		return "/html/help/data.html#Binning";
 		}
 
 	public void itemStateChanged(ItemEvent e) {

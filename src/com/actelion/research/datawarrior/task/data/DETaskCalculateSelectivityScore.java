@@ -74,7 +74,7 @@ public class DETaskCalculateSelectivityScore extends AbstractMultiColumnTask {
 
 	@Override
 	public String getHelpURL() {
-		return "/html/help/analysis.html#Gini";
+		return "/html/help/data.html#Gini";
 		}
 
 	@Override

@@ -36,7 +36,7 @@ import java.awt.*;
 import java.util.*;
 
 public class DETaskMergeColumns extends ConfigurableTask {
-	private static final String PROPERTY_NEW_COLUMN = "newColumn";
+	private static final String PROPERTY_TARGET_COLUMN = "newColumn";
 	private static final String PROPERTY_REMOVE_SOURCE_COLUMNS = "remove";
 	private static final String PROPERTY_COLUMN_LIST = "columnList";
 
@@ -44,7 +44,7 @@ public class DETaskMergeColumns extends ConfigurableTask {
 
 	private CompoundTableModel	mTableModel;
 	private JList<String>		mListColumns;
-	private JTextField			mTextFieldNewColumn;
+	private JComboBox			mComboBoxTargetColumn;
 	private JTextArea			mTextArea;
 	private JCheckBox			mCheckBoxRemove;
 	private DETable				mTable;
@@ -64,12 +64,16 @@ public class DETaskMergeColumns extends ConfigurableTask {
 								  TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap } };
 		content.setLayout(new TableLayout(size));
 
-		content.add(new JLabel("New column name:"), "1,1");
-		mTextFieldNewColumn = new JTextField(10);
-		content.add(mTextFieldNewColumn, "3,1");
-		content.add(new JLabel("(keep empty to merge all into first selected column)"), "1,3,3,3");
+		content.add(new JLabel("Name of target column (new or existing):"), "1,1");
+		mComboBoxTargetColumn = new JComboBox();
+		mComboBoxTargetColumn.setEditable(true);
+		for (int i=0; i<mTableModel.getTotalColumnCount(); i++)
+			if (mTableModel.getColumnSpecialType(i) == null
+			 || mTableModel.getColumnSpecialType(i).equals(CompoundTableConstants.cColumnTypeIDCode))
+				mComboBoxTargetColumn.addItem(mTableModel.getColumnTitle(i));
+		content.add(mComboBoxTargetColumn, "1,3");
 
-		content.add(new JLabel("Select columns to be merged:"), "1,5,3,5");
+		content.add(new JLabel("Select source columns to be merged:"), "1,5");
 
 		ArrayList<String> columnList = new ArrayList<>();
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
@@ -88,10 +92,10 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			scrollPane = new JScrollPane(mTextArea);
 			}
 		scrollPane.setPreferredSize(new Dimension(HiDPIHelper.scale(240),HiDPIHelper.scale(160)));
-		content.add(scrollPane, "1,7,3,7");
+		content.add(scrollPane, "1,7");
 
 		mCheckBoxRemove = new JCheckBox("Remove source columns after merging");
-		content.add(mCheckBoxRemove, "1,9,3,9");
+		content.add(mCheckBoxRemove, "1,9");
 
 		return content;
 		}
@@ -100,8 +104,7 @@ public class DETaskMergeColumns extends ConfigurableTask {
 	public Properties getDialogConfiguration() {
 		Properties p = new Properties();
 
-		if (mTextFieldNewColumn.getText().length() != 0)
-			p.setProperty(PROPERTY_NEW_COLUMN, mTextFieldNewColumn.getText());
+		p.setProperty(PROPERTY_TARGET_COLUMN, (String)mComboBoxTargetColumn.getSelectedItem());
 
 		String columnNames = isInteractive() ?
 				  getSelectedColumnsFromList(mListColumns, mTableModel)
@@ -126,18 +129,29 @@ public class DETaskMergeColumns extends ConfigurableTask {
 
 	@Override
 	public boolean isConfigurable() {
-		int columnCount = 0;
-		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
+		int textColumnCount = 0;
+		int structureColumnCount = 0;
+		for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 			if (mTableModel.getColumnSpecialType(column) == null)
-				columnCount++;
-		return columnCount >= 2;
+				textColumnCount++;
+			else if (mTableModel.getColumnSpecialType(column).equals(CompoundTableConstants.cColumnTypeIDCode))
+				structureColumnCount++;
+			}
+		return textColumnCount >= 2 || structureColumnCount >= 2;
 		}
 
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
+		String targetColumn = configuration.getProperty(PROPERTY_TARGET_COLUMN);
+		// targetColumn may be null for compatibility reasons: null means that first source column is target column
+		if (targetColumn != null && targetColumn.length() == 0) {
+			showErrorMessage("No target column defined.");
+			return false;
+			}
+
 		String columnList = configuration.getProperty(PROPERTY_COLUMN_LIST);
 		if (columnList == null) {
-			showErrorMessage("No columns defined.");
+			showErrorMessage("No source columns defined.");
 			return false;
 			}
 
@@ -166,6 +180,19 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			if (alphaNumFound && idcodeFound) {
 				showErrorMessage("Structure columns cannot be merged with alphanumerical columns.");
 				return false;
+				}
+			if (targetColumn != null) {
+				int tc = mTableModel.findColumn(targetColumn);
+				if (tc != -1) {
+					if (idcodeFound && !CompoundTableConstants.cColumnTypeIDCode.equals(mTableModel.getColumnSpecialType(tc))) {
+						showErrorMessage("When merging chemical structures,\n then the target column must be a structure column.");
+						return false;
+						}
+					if (alphaNumFound && mTableModel.getColumnSpecialType(tc) != null) {
+						showErrorMessage("When merging alphanumerical data,\n then the target column cannot be a chemistry column.");
+						return false;
+						}
+					}
 				}
 			if (!isExecuting()) {
 				StringBuilder conflictingProperties = new StringBuilder();
@@ -232,7 +259,7 @@ public class DETaskMergeColumns extends ConfigurableTask {
 
 	@Override
 	public void runTask(Properties configuration) {
-		String targetColumnName = configuration.getProperty(PROPERTY_NEW_COLUMN, "");
+		String targetColumnName = configuration.getProperty(PROPERTY_TARGET_COLUMN);
 		String[] columnName = configuration.getProperty(PROPERTY_COLUMN_LIST).split("\\t");
 		boolean removeSourceColumns = "true".equals(configuration.getProperty(PROPERTY_REMOVE_SOURCE_COLUMNS, "true"));
 
@@ -244,14 +271,26 @@ public class DETaskMergeColumns extends ConfigurableTask {
 
 		boolean isStructureMerge = CompoundTableConstants.cColumnTypeIDCode.equals(mTableModel.getColumnSpecialType(column[0]));
 
-		int targetColumn = column[0];
-		if (targetColumnName.length() != 0) {
+		int targetColumn = (targetColumnName == null) ? column[0] : mTableModel.findColumn(targetColumnName);
+		int targetCoordsColumn = -1;
+		boolean createTargetColumn = (targetColumn == -1);
+
+		if (createTargetColumn) {
 			String[] title = new String[isStructureMerge ? 2 : 1];
 			title[0] = targetColumnName;
 			if (isStructureMerge)
 				title[1] = CompoundTableConstants.cColumnType2DCoordinates;
 			targetColumn = mTableModel.addNewColumns(title);
+			if (isStructureMerge)
+				targetCoordsColumn = targetColumn + 1;
 			}
+
+		if (isStructureMerge && !createTargetColumn) {
+			targetCoordsColumn = mTableModel.getChildColumn(targetColumn, CompoundTableConstants.cColumnType2DCoordinates);
+			}
+
+		// either idcode & coords or text & detail
+		Object[][] result = new Object[mTableModel.getTotalRowCount()][2];
 
 		if (isStructureMerge) {
 			StereoMolecule[] mol = new StereoMolecule[column.length];
@@ -259,31 +298,54 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			for (int row = 0; row<mTableModel.getTotalRowCount(); row++) {
 				if ((row & 255) == 255)
 					updateProgress(row);
-				mergeStructureCells(mTableModel.getTotalRecord(row), column, targetColumn, mol);
+				mergeStructureCells(mTableModel.getTotalRecord(row), column, result[row], mol);
 				}
 			}
 		else {
 			for (int row = 0; row<mTableModel.getTotalRowCount(); row++)
-				mergeTextCells(mTableModel.getTotalRecord(row), column, targetColumn);
+				mergeTextCells(mTableModel.getTotalRecord(row), column, result[row]);
 			}
 
-		if (isStructureMerge)
-			mTableModel.prepareStructureColumns(targetColumn, mTableModel.getColumnTitleNoAlias(targetColumn), true, false);
-		else
+		if (!isStructureMerge) {
 			mTableModel.setColumnProperties(targetColumn, mergeColumnProperties(column, null));
+			}
+		else if (createTargetColumn) {
+			mTableModel.setColumnProperty(targetColumn, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnTypeIDCode);
+			mTableModel.setColumnProperty(targetCoordsColumn, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType2DCoordinates);
+			mTableModel.setColumnProperty(targetCoordsColumn, CompoundTableConstants.cColumnPropertyParentColumn, mTableModel.getColumnTitleNoAlias(targetColumn));
+			}
 
-		if (targetColumnName.length() != 0)
+		if (createTargetColumn) {
 			mTableModel.finalizeNewColumns(targetColumn, this);
-		else
-			mTableModel.finalizeChangeAlphaNumericalColumn(column[0], 0, mTableModel.getTotalRowCount());
+			}
+		else {
+			final int tc1 = targetColumn;
+			final int tc2 = targetCoordsColumn;
+			SwingUtilities.invokeLater(() -> {
+				for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
+					CompoundRecord record = mTableModel.getTotalRecord(row);
+					record.setData(result[row][0], tc1);
+					if (!isStructureMerge)
+						record.setDetailReferences(tc1, (String[][])result[row][1]);
+					else if (tc2 != -1)
+						record.setData(result[row][1], tc2);
+					}
+				mTableModel.finalizeChangeAlphaNumericalColumn(column[0], 0, mTableModel.getTotalRowCount());
+				} );
+			}
 
 		if (removeSourceColumns) {
+			final int tc1 = targetColumn;
+			final int tc2 = targetCoordsColumn;
 			SwingUtilities.invokeLater(() -> {
 				boolean[] removeColumn = new boolean[mTableModel.getTotalColumnCount()];
-				int firstColumnIndex = (targetColumnName.length() != 0) ? 0 : 1;
-				int removalCount = column.length - firstColumnIndex;
-				for (int i=firstColumnIndex; i<column.length; i++)
-					removeColumn[column[i]] = true;
+				int removalCount = 0;
+				for (int i=0; i<column.length; i++) {
+					if (column[i] != tc1 && column[i] != tc2) {
+						removeColumn[column[i]] = true;
+						removalCount++;
+						}
+					}
 				mTableModel.removeColumns(removeColumn, removalCount);
 				} );
 			}
@@ -291,20 +353,26 @@ public class DETaskMergeColumns extends ConfigurableTask {
 
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
-		mTextFieldNewColumn.setText(configuration.getProperty(PROPERTY_NEW_COLUMN, ""));
-
 		String columnNames = configuration.getProperty(PROPERTY_COLUMN_LIST, "");
 		if (isInteractive())
 			selectColumnsInList(mListColumns, columnNames, mTableModel);
 		else
 			mTextArea.setText(columnNames.replace('\t', '\n'));
 
+		String targetColumnName = configuration.getProperty(PROPERTY_TARGET_COLUMN);
+		// historically null was used for: target column is first of source columns
+		if (targetColumnName == null) {
+			int index = columnNames.indexOf('\t');
+			targetColumnName = (index == -1) ? columnNames : columnNames.substring(0, index);
+			}
+		mComboBoxTargetColumn.setSelectedItem(targetColumnName);
+
 		mCheckBoxRemove.setSelected("true".equals(configuration.getProperty(PROPERTY_REMOVE_SOURCE_COLUMNS, "true")));
 		}
 
 	@Override
 	public void setDialogConfigurationToDefault() {
-		mTextFieldNewColumn.setText("Merged Data");
+		mComboBoxTargetColumn.setSelectedItem("Merged Data");
 
 		if (isInteractive())
 			mListColumns.clearSelection();
@@ -325,7 +393,7 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			column[i] &= 0x0000FFFF;
 		}
 
-	private void mergeTextCells(CompoundRecord record, int[] column, int targetColumn) {
+	private void mergeTextCells(CompoundRecord record, int[] column, Object[] result) {
 		StringBuffer buf = new StringBuffer();
 		String separator = mTableModel.isMultiLineColumn(column[0]) ?
 				CompoundTableModel.cLineSeparator : CompoundTableModel.cEntrySeparator;
@@ -368,12 +436,11 @@ public class DETaskMergeColumns extends ConfigurableTask {
 				}
 			}
 
-		record.setData(mTableModel.decodeData(buf.toString(), targetColumn), targetColumn);
-		if (detail != null)
-			record.setDetailReferences(targetColumn, detail);
+		result[0] = (buf.length() == 0) ? null : buf.toString().getBytes();
+		result[1] = detail;
 		}
 
-	private void mergeStructureCells(CompoundRecord record, int[] sourceColumn, int targetColumn, StereoMolecule[] mol) {
+	private void mergeStructureCells(CompoundRecord record, int[] sourceColumn, Object[] result, StereoMolecule[] mol) {
 		boolean[] isRGroup = new boolean[sourceColumn.length];
 		boolean[] wasAdded = new boolean[sourceColumn.length];
 		int[] rGroupIndex = getRGroupIndexes(sourceColumn, isRGroup);
@@ -467,8 +534,8 @@ public class DETaskMergeColumns extends ConfigurableTask {
 				}
 
 			Canonizer canonizer = new Canonizer(merged);
-			record.setData(canonizer.getIDCode().getBytes(), targetColumn);
-			record.setData(canonizer.getEncodedCoordinates().getBytes(), targetColumn + 1);
+			result[0] = canonizer.getIDCode().getBytes();
+			result[1] = canonizer.getEncodedCoordinates().getBytes();
 			}
 		}
 

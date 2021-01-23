@@ -209,7 +209,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 
 	@Override
 	public String getHelpURL() {
-		return "/html/help/analysis.html#JEP";
+		return "/html/help/data.html#JEP";
 		}
 
 	public void actionPerformed(ActionEvent e) {

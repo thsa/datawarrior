@@ -125,7 +125,7 @@ public class DETaskNewFileFromReversePivoting extends ConfigurableTask {
 
 	@Override
 	public String getHelpURL() {
-		return "/html/help/analysis.html#ReversePivoting";
+		return "/html/help/data.html#ReversePivoting";
 		}
 
 	@Override

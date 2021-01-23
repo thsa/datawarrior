@@ -180,7 +180,7 @@ public class DETaskSetColumnReference extends AbstractSingleColumnTask {
 
 	@Override
 	public String getHelpURL() {
-		return "/html/help/analysis.html#Graph";
+		return "/html/help/data.html#Graph";
 		}
 
 	@Override

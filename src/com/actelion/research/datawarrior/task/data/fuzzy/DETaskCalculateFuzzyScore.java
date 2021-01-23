@@ -92,7 +92,7 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 
 	@Override
 	public String getHelpURL() {
-		return "/html/help/analysis.html#Fuzzy";
+		return "/html/help/data.html#Fuzzy";
 	}
 
 	@Override

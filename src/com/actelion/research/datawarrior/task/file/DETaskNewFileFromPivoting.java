@@ -143,7 +143,7 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
 
 	@Override
 	public String getHelpURL() {
-		return "/html/help/analysis.html#Pivoting";
+		return "/html/help/data.html#Pivoting";
 		}
 
 	@Override

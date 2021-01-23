@@ -735,13 +735,20 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 				//  because the Substance LaF uses its own SubstanceDefaultTableCellHeaderRenderer.)
 				for (int visColumn=firstAndLastColumn[0]; visColumn<=firstAndLastColumn[1]; visColumn++) {
 					int column = convertTotalColumnIndexFromView(visColumn);
-					String groupName = ((CompoundTableModel)getModel()).getColumnProperty(column, CompoundTableConstants.cColumnPropertyDisplayGroup);
-					if (groupName != null) {
+					String groupNames = ((CompoundTableModel)getModel()).getColumnProperty(column, CompoundTableConstants.cColumnPropertyDisplayGroup);
+					if (groupNames != null) {
 						Rectangle rect = getTableHeader().getHeaderRect(visColumn);
-						Color color = mColumnGroupToColorMap.get(groupName);
-						g.setColor(color == null ? Color.GRAY : color);
+						String[] groupName = groupNames.split(";");
 						int gap = HiDPIHelper.scale(2);
-						g.fillRect(rect.x+gap, rect.y+gap, rect.width-2*gap, gap);
+						int x = rect.x+gap;
+						int w = rect.width-2*gap;
+						int count = groupName.length;
+						int l = (w+count-1) / count;
+						for (int i=0; i<groupName.length; i++) {
+							Color color = mColumnGroupToColorMap.get(groupName[i]);
+							g.setColor(color == null ? Color.GRAY : color);
+							g.fillRect(x + w*i/count, rect.y+gap, l, gap);
+							}
 						}
 					}
 				}
@@ -836,8 +843,9 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 		CompoundTableModel tableModel = (CompoundTableModel)getModel();
 		for (int column=0; column<tableModel.getTotalColumnCount(); column++) {
 			String groups = tableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyDisplayGroup);
-			if (groups != null && groups.indexOf(';') == -1)
-				mColumnGroupToColorMap.put(groups, Color.GRAY); // place holder
+			if (groups != null)
+				for (String group:groups.split(";"))
+					mColumnGroupToColorMap.put(group, Color.GRAY); // place holder
 		}
 		int colorCount = mColumnGroupToColorMap.keySet().size();
 		if (colorCount != 0) {

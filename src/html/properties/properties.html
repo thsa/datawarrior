@@ -253,6 +253,13 @@ aid in planning compound generations with a changed flexibility profile. For thi
 may calculate the flexibility of a molecule using dihedral angle data from the Crystallography
 Open Database (COD). Molecular flexibility values range from 0.0 (rigid) to 1.0 (completely flexible).</p>
 
+<p>Often the number of rotatable bonds is used as a surrogate for molecular flexibility. Unfortunately,
+this is a rather sub-optimal approach for two reasons: First, bond rotatability is not a binary property.
+While double bonds, amide bonds, and aromatic ring bonds are pretty rigid, 'rotatable' single bonds
+range from highly rotatable to rather rigid depending on their rotation energy barriers. Second,
+the topological position of a rotatable bonds has a strong influence on the flexibility of a molecule.
+DataWarrior's molecular flexibility value tries to circumvent these shortcomings.</p>
+
 <p>These four steps are performed in the calculation:</p>
 
 <p>The conformational flexibility of a molecule and with it the diversity of shapes the molecules can assume

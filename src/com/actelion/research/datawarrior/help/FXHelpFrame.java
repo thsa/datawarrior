@@ -36,8 +36,6 @@ public class FXHelpFrame extends JFrame {
 	private static FXHelpFrame sHelpFrame;
 	private static WebEngine sEngine;
 
-	private final JPanel panel = new JPanel(new BorderLayout());
-
 	private FXHelpFrame(Frame parent) {
 		super("DataWarrior Help");
 

@@ -19,8 +19,8 @@ import java.io.IOException;
 import java.net.*;
 
 public abstract class ClientCommunicator extends CommunicationHelper {
-	private static final int CONNECT_TIME_OUT = 3000;
-	private static final int READ_TIME_OUT = 10000;
+	private static final int CONNECT_TIME_OUT = 5000;
+	private static final int READ_TIME_OUT = 300000; // 0 -> no timeout
 
     private boolean	mWithSessions;
 	private String	mSessionID,mSessionServerURL,mAppicationName;

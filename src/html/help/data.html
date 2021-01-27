@@ -72,11 +72,11 @@ all rows are distributed among the bins with the current settings.</p>
 
 <h3><i><a name="JEP"></a>Calculating Column Data From Custom Expressions</i></h3>
 <p>
-<p>Often some columns of a dataset contain alphanumerical data, which if combined together,
-or if converted by a calculation or in some other way, would make it available for filtering,
-view adaption or other purposes. Examples would be the calculation of a ratio between two column,
-doing a conditional number conversion depending on an objects category or calculating a fitness
-value from other properties.</p>
+<p>Often there is the need to calculate or extract numerical, date, or text data from other columns,
+e.g. to use it for filtering, as graph input values, as merge keys or for other purposes.
+For instance, one may extract <i>year</i> and <i>day of the year</i> from complete date values
+in order to overlay multiple curves in one graph, of which every one represents a different year's
+evolution of some value.</p>
 <p>For calculating a new column from existing column values <span class="keyword">DataWarrior</span>
 has built in the open source expression parser JEP. It lets you define an arithmetical, logical
 or textual expression from constants, operators (+, -, *, >, &, !, ==, etc.), functions as sin(),
@@ -90,7 +90,7 @@ from the <span class="menu">Data</span> menu. When typing in a formula you don't
 You rather should select the column name from the selection in the dialog and click
 <span class="menu">Add Variable</span>. This ensures correct spelling, especially since some column names
 are slightly modified to avoid syntax errors when the expression is parsed.
-The expression syntax, all operators and available functions are explained explained below.</p>
+The expression syntax, all operators and available functions are explained below.</p>
 <br>
 
 <p><b>Operators</b></p>
@@ -524,16 +524,23 @@ The expression syntax, all operators and available functions are explained expla
 <br>
 
 <p><b>Table Related Functions</b></p>
-<p>When DataWarrior is requested to calculate cell values for a new column applying a given
-  custom expression, then it solves the expression individually for every row.
-  During a calculation all variables represent data from the currently processed row only.
+<p>When DataWarrior calculates new column values applying a given custom formula,
+  then it solves the expression for every row individually.
+  During any of these calculations variables represent data from the currently processed row only.
   Data from other rows is not visible to the expression evaluator and cannot be used in the formula.
   For certain purposes, however, the data from other rows must be taken into account. For instance,
-  if a value must be normalized and centered relative to all the column's values, these cannot be unknown.
-  Another typical example is one row's contribution to all rows within the same category.
-  The following functions server this purpose by preprocess the entire table before actually
-  calculating any row's values. This way all background information is available under the hood,
+  if a value must be normalized and centered relative to all values of the same column, then these
+  must be known. Some functions need to know about values of other rows, which belong to a shared
+  category. Or sometimes access of the previous row needed in order to calculate a value increase.
+  The following functions have in common that they all preprocess the entire table before starting
+  to calculate values for every row. This way all background information is available under the hood,
   when the particular row's expression is evaluated.</p>
+<p><b>Note:</b> Some of these function results depend on the table sort order,
+  e.g. the value increase from the previous row obviously must
+  depend on which row is located above the row for which the increase is calculated.</p>
+<p><b>Note:</b> Many of these functions require a column name as parameter,
+  which is not the variable holding the row's value. It is the exact column name as it appears in
+  the table header put into double quotes.</p>
 
 <table align="center" border="0" cellpadding="2" cellspacing="0" width="620">
   <tbody>

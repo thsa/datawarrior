@@ -315,28 +315,26 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			mTableModel.setColumnProperty(targetCoordsColumn, CompoundTableConstants.cColumnPropertyParentColumn, mTableModel.getColumnTitleNoAlias(targetColumn));
 			}
 
-		if (createTargetColumn) {
-			mTableModel.finalizeNewColumns(targetColumn, this);
-			}
-		else {
-			final int tc1 = targetColumn;
-			final int tc2 = targetCoordsColumn;
-			SwingUtilities.invokeLater(() -> {
-				for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
-					CompoundRecord record = mTableModel.getTotalRecord(row);
-					record.setData(result[row][0], tc1);
-					if (!isStructureMerge)
-						record.setDetailReferences(tc1, (String[][])result[row][1]);
-					else if (tc2 != -1)
-						record.setData(result[row][1], tc2);
-					}
+		final int tc1 = targetColumn;
+		final int tc2 = targetCoordsColumn;
+		SwingUtilities.invokeLater(() -> {
+			for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
+				CompoundRecord record = mTableModel.getTotalRecord(row);
+				record.setData(result[row][0], tc1);
+				if (!isStructureMerge)
+					record.setDetailReferences(tc1, (String[][])result[row][1]);
+				else if (tc2 != -1)
+					record.setData(result[row][1], tc2);
+				}
+			if (createTargetColumn)
+				mTableModel.finalizeNewColumns(tc1, this);
+			else if (isStructureMerge)
+				mTableModel.finalizeChangeChemistryColumn(column[0], 0, mTableModel.getTotalRowCount(), true);
+			else
 				mTableModel.finalizeChangeAlphaNumericalColumn(column[0], 0, mTableModel.getTotalRowCount());
-				} );
-			}
+			} );
 
 		if (removeSourceColumns) {
-			final int tc1 = targetColumn;
-			final int tc2 = targetCoordsColumn;
 			SwingUtilities.invokeLater(() -> {
 				boolean[] removeColumn = new boolean[mTableModel.getTotalColumnCount()];
 				int removalCount = 0;

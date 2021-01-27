@@ -101,6 +101,11 @@ public class DETaskMergeColumns extends ConfigurableTask {
 		}
 
 	@Override
+	public String getHelpURL() {
+		return "/html/help/data.html#MergeColumns";
+		}
+
+	@Override
 	public Properties getDialogConfiguration() {
 		Properties p = new Properties();
 

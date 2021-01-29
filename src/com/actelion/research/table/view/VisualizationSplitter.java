@@ -93,9 +93,9 @@ public class VisualizationSplitter {
 
 	/**
 	 * @param hvIndex combined category index
-	 * @return bounds of graph area of respective sub-view
+	 * @return bounds of sub-view area excluding header and including scales
 	 */
-	public Rectangle getGraphBounds(int hvIndex) {
+	public Rectangle getSubViewBounds(int hvIndex) {
 		int hIndex = hvIndex % mHCount;
 		int vIndex = hvIndex / mHCount;
 		return new Rectangle(mX[hIndex]+mHalfSpacing,
@@ -139,6 +139,21 @@ public class VisualizationSplitter {
 
 	public int getVIndex(int hvIndex) {
 		return hvIndex / mHCount;
+		}
+
+	public int getHVIndex(int x, int y, boolean allowHeaderArea) {
+		x -= mX[0];
+		y -= mY[0];
+		int w = mWidth + mSpacing;
+		int h = mHeight + mSpacing;
+		if (x < 0
+		 || y < 0
+		 || x >= mHCount * w
+		 || y >= mVCount * h
+		 || (!allowHeaderArea && (y % h < mHeaderHeight)))
+			return -1;
+
+		return (x / w) + mHCount * (y / h);
 		}
 
 	public void paintGrid(Graphics g, Color borderColor, Color titleBackground) {

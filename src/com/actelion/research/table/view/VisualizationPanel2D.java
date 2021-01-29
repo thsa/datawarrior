@@ -18,17 +18,13 @@
 
 package com.actelion.research.table.view;
 
+import com.actelion.research.table.model.CompoundListSelectionModel;
+import com.actelion.research.table.model.CompoundTableModel;
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-
-import com.actelion.research.table.model.CompoundListSelectionModel;
-import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.config.VPanel2DConfiguration;
 
 public class VisualizationPanel2D extends VisualizationPanel {
     private static final long serialVersionUID = 0x20060904;
@@ -57,7 +53,7 @@ public class VisualizationPanel2D extends VisualizationPanel {
 					mDY = 0;
 					mMouseX = e.getX();
 					mMouseY = e.getY();
-					mGraphBounds = ((JVisualization2D) mVisualization).getGraphBounds(mMouseX, mMouseY);
+					mGraphBounds = ((JVisualization2D) mVisualization).getGraphBounds(mMouseX, mMouseY, false);
 					}
 				}
 			@Override
@@ -110,7 +106,7 @@ public class VisualizationPanel2D extends VisualizationPanel {
 	@Override
     public void zoom(int sx, int sy, int steps) {
     	final float MIN_ZOOM = 0.0001f;
-    	Rectangle bounds = ((JVisualization2D)mVisualization).getGraphBounds(sx, sy);
+    	Rectangle bounds = ((JVisualization2D)mVisualization).getGraphBounds(sx, sy, false);
     	if (bounds != null && bounds.contains(sx, sy)) {
     		boolean zoom = false;
     		float[] low = new float[2];

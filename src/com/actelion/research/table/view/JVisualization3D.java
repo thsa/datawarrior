@@ -2273,7 +2273,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 
 	private void drawReferenceConnectionLines(Rectangle clipRect, int referencedColumn) {
 		if (mConnectionLineMap == null)
-			mConnectionLineMap = createReferenceMap(mConnectionColumn, referencedColumn);
+			mConnectionLineMap = createReferenceMap(referencedColumn);
 
 		String value = (mConnectionColumn < 0) ?
 				null : mTableModel.getColumnProperty(mConnectionColumn, CompoundTableConstants.cColumnPropertyReferencedColumn);

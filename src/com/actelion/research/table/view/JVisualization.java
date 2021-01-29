@@ -171,7 +171,7 @@ public abstract class JVisualization extends JComponent
 	protected CategoryViewInfo		mChartInfo;
 	protected VisualizationPoint[]	mPoint;
 	protected VisualizationPoint 	mHighlightedPoint,mActivePoint;
-	protected LabelPosition2D mHighlightedLabelPosition;
+	protected LabelPosition2D       mHighlightedLabelPosition;
 	protected VisualizationColor	mMarkerColor;
 	protected VisualizationSplitter	mSplitter;
 	protected VisualizationPoint[]  mConnectionLinePoint;
@@ -394,15 +394,17 @@ public abstract class JVisualization extends JComponent
 		}
 
 	protected void drawSelectionOutline(Graphics g) {
-		g.setColor(VisualizationColor.cSelectedColor);
-		if (mDragMode == DRAG_MODE_RECT_SELECT)
-			g.drawRect((mMouseX1<mMouseX2) ? mMouseX1 : mMouseX2,
-					   (mMouseY1<mMouseY2) ? mMouseY1 : mMouseY2,
-					   Math.abs(mMouseX2-mMouseX1),
-					   Math.abs(mMouseY2-mMouseY1));
-
-		if (mDragMode == DRAG_MODE_LASSO_SELECT)
-			g.drawPolygon(mLassoRegion);
+		if (mDragMode == DRAG_MODE_RECT_SELECT
+		 || mDragMode == DRAG_MODE_LASSO_SELECT) {
+			g.setColor(VisualizationColor.cSelectedColor);
+			if (mDragMode == DRAG_MODE_RECT_SELECT)
+				g.drawRect((mMouseX1<mMouseX2) ? mMouseX1 : mMouseX2,
+						   (mMouseY1<mMouseY2) ? mMouseY1 : mMouseY2,
+						   Math.abs(mMouseX2 - mMouseX1),
+						   Math.abs(mMouseY2 - mMouseY1));
+			else
+				g.drawPolygon(mLassoRegion);
+			}
 		}
 
 	protected abstract VisualizationPoint createVisualizationPoint(CompoundRecord record);
@@ -584,7 +586,7 @@ public abstract class JVisualization extends JComponent
 				}
 
 			if (mConnectionLineMap == null)
-				mConnectionLineMap = createReferenceMap(mConnectionColumn, referencedColumn);
+				mConnectionLineMap = createReferenceMap(referencedColumn);
 
 	   		for (int i=0; i<mDataPoints; i++)
 	   			mPoint[i].exclusionFlags |= EXCLUSION_FLAG_DETAIL_GRAPH;
@@ -3335,7 +3337,7 @@ public abstract class JVisualization extends JComponent
 			  : (mIsCategoryAxis[axis]) ? mTableModel.getCategoryIndex(column, record) : record.getDouble(column);
 		}
 
-	protected TreeMap<byte[],VisualizationPoint> createReferenceMap(int referencingColumn, int referencedColumn) {
+	protected TreeMap<byte[],VisualizationPoint> createReferenceMap(int referencedColumn) {
 		// create map of existing and referenced VisualizationPoints
 		TreeMap<byte[],VisualizationPoint> map = new TreeMap<>(new ByteArrayComparator());
 		for (VisualizationPoint vp:mPoint) {
@@ -4264,8 +4266,8 @@ public abstract class JVisualization extends JComponent
 	public void mousePressed(MouseEvent e) {
 		mViewSelectionHelper.setSelectedView((CompoundTableView)getParent());
 
-		mMouseX1 = mMouseX2 = e.getX();
-		mMouseY1 = mMouseY2 = e.getY();
+		mMouseX2 = e.getX();
+		mMouseY2 = e.getY();
 		mMouseIsDown = true;
 		mMouseIsControlDown = e.isControlDown();
 
@@ -4484,9 +4486,11 @@ public abstract class JVisualization extends JComponent
 		}
 
 	public void mouseMoved(MouseEvent e) {
+		mMouseX1 = e.getX();
+		mMouseY1 = e.getY();
 		LabelPosition2D oldLabel = mHighlightedLabelPosition;
 		VisualizationPoint marker = findMarker(e.getX(), e.getY());
-		if (oldLabel != mHighlightedLabelPosition)
+		if (oldLabel != mHighlightedLabelPosition || showCrossHair())
 			repaint();
 		if (mHighlightedPoint != marker)
 			mTableModel.setHighlightedRow((marker == null) ? null : marker.record);
@@ -4514,6 +4518,10 @@ public abstract class JVisualization extends JComponent
 
 			repaint();
 			}
+		}
+
+	public boolean showCrossHair() {
+		return false;
 		}
 
 	@Override

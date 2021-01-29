@@ -43,11 +43,9 @@ import java.awt.image.BufferedImage;
 import java.awt.image.VolatileImage;
 import java.awt.print.PageFormat;
 import java.io.*;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 import static com.actelion.research.table.view.VisualizationColor.cUseAsFilterColor;
 
@@ -338,6 +336,8 @@ public class JVisualization2D extends JVisualization {
 		if (mHighlightedPoint != null)
 			markHighlighted((Graphics2D)g);
 
+		drawCrossHair((Graphics2D)g);
+
 		drawSelectionOutline(g);
 
 		if (mSplittingColumn[0] != cColumnUnassigned && !isSplitView()) {
@@ -548,7 +548,7 @@ public class JVisualization2D extends JVisualization {
 			}
 
 		// total bounds of first split (or total unsplit) graphical including scales
-		Rectangle baseBounds = isSplitView() ? mSplitter.getGraphBounds(0) : bounds;
+		Rectangle baseBounds = isSplitView() ? mSplitter.getSubViewBounds(0) : bounds;
 
 		boolean hasFreshCoords = false;
 		if (!mCoordinatesValid) {
@@ -601,7 +601,7 @@ public class JVisualization2D extends JVisualization {
 																		 : getTitleBackground().brighter().brighter();
 			mSplitter.paintGrid(mG, borderColor, getTitleBackground());
 			for (int hv=0; hv<mHVCount; hv++)
-				paintGraph(getGraphBounds(mSplitter.getGraphBounds(hv)), hv, transparentBG);
+				paintGraph(getGraphBounds(mSplitter.getSubViewBounds(hv)), hv, transparentBG);
 
 			mG.setColor(getContrastGrey(SCALE_STRONG, getTitleBackground()));
 			mG.setFont(new Font(Font.SANS_SERIF, Font.BOLD, scaledFontHeight));
@@ -715,39 +715,70 @@ public class JVisualization2D extends JVisualization {
 
 	/**
 	 * Returns the bounds of the graph area, provided that the given point
-	 * is part of it. If we have split views, then the graph area of that view
+	 * is part of it (or part of its scale area, if tolerant==true).
+	 * If we have split views, then the graph area of that view
 	 * is returned, which contains the the given point.
-	 * If point(x,y) is outside of the/an graph area, then null is returned.
-	 * Scale, legend and border area is not part of the graph bounds.
+	 * If point(x,y) is outside of the graph area (and scale area if tolerant==true),
+	 * then null is returned.
+	 * Scale, legend and border area is not part of the returned graph bounds.
 	 * @param screenX
 	 * @param screenY
-	 * @return graph bounds or null (does not include retinal factor)
+	 * @param tolerant if true, then graph bounds are also returned if the screen point is in the scale area
+	 * @return graph bounds or null (does not include retina factor)
 	 */
-	public Rectangle getGraphBounds(int screenX, int screenY) {
-		int width = getWidth();
-		int height = getHeight();
-		Insets insets = getInsets();
-		Rectangle allBounds = new Rectangle(insets.left, insets.top, width-insets.left-insets.right, height-insets.top-insets.bottom);
+	public Rectangle getGraphBounds(int screenX, int screenY, boolean tolerant) {
 		if (isSplitView()) {
-			for (int hv=0; hv<mHVCount; hv++) {
-				Rectangle bounds = getGraphBounds(mSplitter.getGraphBounds(hv));
-				Rectangle tempBounds = new Rectangle(bounds);
-				tempBounds.grow(2,2);	// to get away with uncertaintees of rounded input coordinates
-				if (tempBounds.contains(screenX, screenY))
-					return bounds;
+			int hv = mSplitter.getHVIndex(screenX, screenY, false);
+			if (hv != -1) {
+				Rectangle viewBounds = mSplitter.getSubViewBounds(hv);
+				Rectangle bounds = getGraphBounds(viewBounds);
+				if (tolerant) {
+					int fontHeight = (int)scaleIfSplitView(mFontHeight);
+					if (screenX > viewBounds.x + fontHeight
+					 && screenX < viewBounds.x + viewBounds.width - mBorder
+					 && screenY > viewBounds.y + mBorder
+					 && screenY < viewBounds.y + viewBounds.height - fontHeight)
+						return bounds;
+					}
+				else {
+					Rectangle tempBounds = new Rectangle(bounds);
+					tempBounds.grow(2,2);	// to get away with uncertaintees of rounded input coordinates
+					if (tempBounds.contains(screenX, screenY))
+						return bounds;
+					}
 				}
-			return null;
 			}
 		else {
+			int width = getWidth();
+			int height = getHeight();
+			Insets insets = getInsets();
+			Rectangle allBounds = new Rectangle(insets.left, insets.top, width-insets.left-insets.right, height-insets.top-insets.bottom);
 			for (VisualizationLegend legend:mLegendList)
 				allBounds.height -= legend.getHeight();
 			Rectangle bounds = getGraphBounds(allBounds);
-			Rectangle tempBounds = new Rectangle(bounds);
-			tempBounds.grow(2,2);	// to get away with uncertaintees of rounded input coordinates
-			return tempBounds.contains(screenX, screenY) ? bounds : null;
+			if (tolerant) {
+				if (screenX > allBounds.x + mFontHeight
+				 && screenX < allBounds.x + allBounds.width - mBorder
+				 && screenY > allBounds.y + mBorder
+				 && screenY < allBounds.y + allBounds.height - mFontHeight)
+					return bounds;
+				}
+			else {
+				Rectangle tempBounds = new Rectangle(bounds);
+				tempBounds.grow(2, 2);    // to get away with uncertaintees of rounded input coordinates
+				if (tempBounds.contains(screenX, screenY))
+					return bounds;
+				}
 			}
+		return null;
 		}
 
+	/**
+	 * Removes border, scale and NaN area from view area to yield the rectangle that can be used for
+	 * the graph itself.
+	 * @param bounds bounds of total view area minus without legend, may be sub view area
+	 * @return bounds for drawing the graph
+	 */
 	private Rectangle getGraphBounds(Rectangle bounds) {
 		float scaledFontHeight = scaleIfSplitView(mFontHeight);
 		Rectangle graphBounds = new Rectangle(
@@ -1487,7 +1518,7 @@ public class JVisualization2D extends JVisualization {
 
 	private boolean drawReferenceConnectionLines(int referencedColumn) {
 		if (mConnectionLineMap == null)
-			mConnectionLineMap = createReferenceMap(mConnectionColumn, referencedColumn);
+			mConnectionLineMap = createReferenceMap(referencedColumn);
 
 		drawReferenceConnectionLines(mFocusList != FocusableView.cFocusNone, false);
 
@@ -2641,7 +2672,7 @@ public class JVisualization2D extends JVisualization {
 	protected void updateHighlightedLabelPosition() {
 		int newX = mHighlightedLabelPosition.getLabelCenterOnScreenX();
 		int newY = mHighlightedLabelPosition.getLabelCenterOnScreenY();
-		Rectangle bounds = getGraphBounds(Math.round(mHighlightedPoint.screenX), Math.round(mHighlightedPoint.screenY));
+		Rectangle bounds = getGraphBounds(Math.round(mHighlightedPoint.screenX), Math.round(mHighlightedPoint.screenY), false);
 		if (bounds != null && bounds.contains(newX, newY)) { // don't allow dragging into another split view
 			int sx1 = bounds.x;
 			int sx2 = bounds.x + bounds.width;
@@ -2668,6 +2699,29 @@ public class JVisualization2D extends JVisualization {
 			}
 
 		markMarker(g, (VisualizationPoint2D)mActivePoint, true);
+		}
+
+	@Override
+	public boolean showCrossHair() {
+		return mSplitter == null || mSplitter.getHVIndex(mMouseX1, mMouseY1, false) != -1;
+		}
+
+	private void drawCrossHair(Graphics2D g) {
+		g.setStroke(mNormalLineStroke);
+		g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, (int)scaleIfSplitView(mFontHeight)));
+		Rectangle bounds = getGraphBounds(mMouseX1, mMouseY1, true);
+		if (bounds != null) {
+			if (mMouseX1 >= bounds.x && mAxisIndex[0] != -1 && !mIsCategoryAxis[0]) {
+				float position = (float)(mMouseX1-bounds.x)/(float)bounds.width;
+				String label = calculateDynamicScaleLabel(0, position);
+				drawScaleLine(g, bounds, 0, label, position, true, false);
+				}
+			if (mMouseY1 <= bounds.y+bounds.height && mAxisIndex[1] != -1 && !mIsCategoryAxis[1]) {
+				float position = (float)(bounds.y+bounds.height-mMouseY1)/(float)bounds.height;
+				String label = calculateDynamicScaleLabel(1, position);
+				drawScaleLine(g, bounds, 1, label, position, true, false);
+				}
+			}
 		}
 
 	private void drawCurves(Rectangle baseGraphRect) {
@@ -4364,16 +4418,24 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private int maxDisplayedCategoryLabels(int axis, int scaleSize) {
-/*		int splitCount = (mSplitter == null) ? 1
-				: (axis == 0) ? mSplitter.getHCount()
-				:			   mSplitter.getVCount();
-
-		int scaledFontSize = (int)scaleIfSplitView(mFontHeight);
-
-		return 64 / splitCount;*/
-
 		float minSpace = mTableModel.isColumnTypeStructure(mAxisIndex[axis]) ? cMinStructureLabelSpace : cMinTextLabelSpace;
 		return Math.round(scaleSize / (minSpace * scaleIfSplitView(mFontHeight)));
+		}
+
+	private String calculateDynamicScaleLabel(int axis, float position) {
+		if (!mIsCategoryAxis[axis]) {
+			double v = mAxisVisMin[axis] + position * (mAxisVisMax[axis]-mAxisVisMin[axis]);
+
+			if (mTableModel.isColumnTypeDate(mAxisIndex[axis]))
+				return DateFormat.getDateInstance().format(new Date(86400000*Math.round(v)+43200000));
+
+			if (mTableModel.isLogarithmicViewMode(mAxisIndex[axis]))
+				v = Math.pow(10, v);
+
+			return DoubleFormat.toString(v, 4, false);
+			}
+
+		return "?";
 		}
 
 	private void compileCategoryScaleLabels(int axis, int scaleSize) {
@@ -5185,12 +5247,16 @@ public class JVisualization2D extends JVisualization {
 
 	private void drawScaleLine(Graphics2D g, Rectangle graphRect, int axis, int index) {
 		ScaleLine scaleLine = mScaleLineList[axis].get(index);
+		drawScaleLine(g, graphRect, axis, scaleLine.label, scaleLine.position, false, (index & 1) == 1);
+		}
+
+	private void drawScaleLine(Graphics2D g, Rectangle graphRect, int axis, Object label, float position, boolean isCrossHair, boolean isShifted) {
 		int scaledFontHeight = (int)scaleIfSplitView(mFontHeight);
 		if (axis == 0) {	// X-axis
-			int axisPosition = graphRect.x + Math.round(graphRect.width*scaleLine.position);
+			int axisPosition = graphRect.x + Math.round(graphRect.width*position);
 			int yBase = graphRect.y+graphRect.height+mNaNSize[1];
 
-			if (mGridMode == cGridModeShown || mGridMode == cGridModeShowVertical) {
+			if (isCrossHair || mGridMode == cGridModeShown || mGridMode == cGridModeShowVertical) {
 				g.setColor(getContrastGrey(SCALE_LIGHT));
 				g.drawLine(axisPosition, graphRect.y, axisPosition, yBase);
 				}
@@ -5199,42 +5265,41 @@ public class JVisualization2D extends JVisualization {
 				g.drawLine(axisPosition, graphRect.y+graphRect.height, axisPosition, graphRect.y+graphRect.height+scaledFontHeight/6);
 				}
 
-			if (scaleLine.label != null && showScale(axis)) {
-				if (scaleLine.label instanceof String) {
-					g.setColor(getContrastGrey(SCALE_MEDIUM));
-					String label = (String)scaleLine.label;
-					int labelWidth = g.getFontMetrics().stringWidth(label);
+			if (label != null && showScale(axis)) {
+				if (label instanceof String) {
+					String text = (String)label;
+					int labelWidth = g.getFontMetrics().stringWidth(text);
 					if (mScaleTextMode[axis] == cScaleTextVertical) {
 						int textX = axisPosition+(int)(scaledFontHeight/3);
 						int textY = yBase+labelWidth+scaledFontHeight/2;
 						g.rotate(-Math.PI/2, textX, textY);
-						g.drawString(label, textX, textY);
+						drawScaleLabel(g, text, textX, textY, isCrossHair);
 						g.rotate(Math.PI/2, textX, textY);
 						}
 					else if (mScaleTextMode[axis] == cScaleTextInclined) {
 						int textX = axisPosition+(int)(scaledFontHeight/3 - 0.71*labelWidth);
 						int textY = yBase+(int)(0.71*(scaledFontHeight+labelWidth));
 						g.rotate(-Math.PI/4, textX, textY);
-						g.drawString(label, textX, textY);
+						drawScaleLabel(g, text, textX, textY, isCrossHair);
 						g.rotate(Math.PI/4, textX, textY);
 						}
 					else {
-						int yShift = ((mScaleTextMode[axis] == cScaleTextAlternating && (index & 1)==1)) ? scaledFontHeight : 0;
-						g.drawString(label, axisPosition-labelWidth/2, yBase+scaledFontHeight+yShift);
+						int yShift = ((mScaleTextMode[axis] == cScaleTextAlternating && isShifted)) ? scaledFontHeight : 0;
+						drawScaleLabel(g, text, axisPosition-labelWidth/2, yBase+scaledFontHeight+yShift, isCrossHair);
 						}
 					}
 				else {
-					Depictor2D depictor = (Depictor2D)scaleLine.label;
+					Depictor2D depictor = (Depictor2D)label;
 					depictor.setOverruleColor(getContrastGrey(SCALE_MEDIUM), null);
-					drawScaleMolecule(g, graphRect, axis, scaleLine.position, depictor);
+					drawScaleMolecule(g, graphRect, axis, position, depictor);
 					}
 				}
 			}
 		else {  // Y-axis
-			int axisPosition = graphRect.y+graphRect.height + Math.round(-graphRect.height*scaleLine.position);
+			int axisPosition = graphRect.y+graphRect.height + Math.round(-graphRect.height*position);
 			int xBase = graphRect.x-mNaNSize[0];
 
-			if (mGridMode == cGridModeShown || mGridMode == cGridModeShowHorizontal) {
+			if (isCrossHair || mGridMode == cGridModeShown || mGridMode == cGridModeShowHorizontal) {
 				g.setColor(getContrastGrey(SCALE_LIGHT));
 				g.drawLine(xBase, axisPosition, graphRect.x+graphRect.width, axisPosition);
 				}
@@ -5243,20 +5308,41 @@ public class JVisualization2D extends JVisualization {
 				g.drawLine(graphRect.x-scaledFontHeight/6, axisPosition, graphRect.x, axisPosition);
 				}
 
-			if (scaleLine.label != null && showScale(axis)) {
-				if (scaleLine.label instanceof String) {
-					g.setColor(getContrastGrey(SCALE_MEDIUM));
-					String label = (String)scaleLine.label;
-					g.drawString(label, xBase-scaledFontHeight/5-g.getFontMetrics().stringWidth(label),
-								 axisPosition+scaledFontHeight/3);
+			if (label != null && showScale(axis)) {
+				if (label instanceof String) {
+					String text = (String)label;
+					drawScaleLabel(g, text, xBase-scaledFontHeight/5-g.getFontMetrics().stringWidth(text),
+									axisPosition+scaledFontHeight/3, isCrossHair);
 					}
 				else {
-					Depictor2D depictor = (Depictor2D)scaleLine.label;
+					Depictor2D depictor = (Depictor2D)label;
 					depictor.setOverruleColor(getContrastGrey(SCALE_MEDIUM), null);
-					drawScaleMolecule(g, graphRect, axis, scaleLine.position, depictor);
+					drawScaleMolecule(g, graphRect, axis, position, depictor);
 					}
 				}
 			}
+		}
+
+	private void drawScaleLabel(Graphics2D g, String text, int x, int y, boolean isCrossHair) {
+		Color textColor;
+		if (isCrossHair) {
+			Color background = getContrastGrey(SCALE_MEDIUM);
+			textColor = getContrastGrey(SCALE_STRONG, background);
+
+			Rectangle2D bounds = g.getFontMetrics().getStringBounds(text, g);
+			float border = (float)bounds.getHeight() / 6;
+			int arc = Math.round((float)bounds.getHeight() / 3);
+			g.setColor(background);
+			g.fillRoundRect(Math.round((float)bounds.getX() + x - border),
+							Math.round((float)bounds.getY() + y - border),
+							Math.round((float)bounds.getWidth() + 2*border),
+							Math.round((float)bounds.getHeight() + 2*border), arc, arc);
+			}
+		else {
+			textColor = getContrastGrey(SCALE_MEDIUM);
+			}
+		g.setColor(textColor);
+		g.drawString(text, x, y);
 		}
 
 	private void drawScaleMolecule(Graphics2D g, Rectangle graphRect, int axis, float position, Depictor2D depictor) {
@@ -5574,7 +5660,7 @@ public class JVisualization2D extends JVisualization {
 
 			if (isSplitView())
 				for (int hv=0; hv<mHVCount; hv++)
-					graphRect[hv] = mSplitter.getGraphBounds(hv);
+					graphRect[hv] = mSplitter.getSubViewBounds(hv);
 			else
 				graphRect[0] = mBaseBounds;
 

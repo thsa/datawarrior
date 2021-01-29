@@ -209,13 +209,13 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 				SwingUtilities.invokeLater(() -> {
 					String s = mTextFieldSearch.getText();
 					filterColumnVisibility(s);
-				});
-			}
-		});
+					} );
+				}
+			} );
 
 		SwingUtilities.invokeLater(() -> createTopLeftButtons());
 		SwingUtilities.invokeLater(() -> createTopRightButton());
-	}
+		}
 
 	public void editCell(CompoundRecord record, int valueColumn) {
 		CompoundTableModel tableModel = (CompoundTableModel)getModel();
@@ -432,15 +432,24 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 	 * comboboxes for column selection and pruning bars.
 	 */
 	public void showSearchControls() {
-		mSearchPopupLocation = mSearchButton.getLocationOnScreen();
-		mSearchPopupLocation.translate(mSearchButton.getWidth(), 0);
-		mSearchControls.pack();
-		mSearchControls.setLocation(mSearchPopupLocation);
-		mSearchControls.setVisible(true);
-		mSearchControls.toFront();
+		if (mSearchButton == null) {
+			// If the table view is set to front with a filled column search field from
+			// DERuntimeProperties when opening a file, then it may happen that mSearchButton
+			// is not existing yet, because adding the buttons is delayed in the DETable
+			// constructor, because the parent JScollpane is not yet accessible.
+			SwingUtilities.invokeLater(() -> showSearchControls());
+			}
+		else {
+			mSearchPopupLocation = mSearchButton.getLocationOnScreen();
+			mSearchPopupLocation.translate(mSearchButton.getWidth(), 0);
+			mSearchControls.pack();
+			mSearchControls.setLocation(mSearchPopupLocation);
+			mSearchControls.setVisible(true);
+			mSearchControls.toFront();
 
-		mParentFrame.addComponentListener(this);
-		getParent().getParent().addComponentListener(this);	// this is the parent scrollpane
+			mParentFrame.addComponentListener(this);
+			getParent().getParent().addComponentListener(this);	// this is the parent scrollpane
+			}
 		}
 
 	public void hideSearchControls() {

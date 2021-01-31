@@ -184,7 +184,7 @@ public abstract class JVisualization extends JComponent
 									mSplittingAspectRatio,mLabelBackgroundTransparency,mScatterPlotMargin,mZoomState,
 									mMarkerSizeMin,mMarkerSizeMax;
 	protected volatile boolean		mOffImageValid;
-	protected boolean               mCoordinatesValid,mShowNaNValues,mLabelsInTreeViewOnly,
+	protected boolean               mCoordinatesValid,mShowNaNValues,mLabelsInTreeViewOnly,mMouseIsDown,
 									mIsMarkerLabelsBlackAndWhite,mIsConnectionLineInverted,mShowLabelBackground,mShowEmptyInSplitView,
 									mIsFastRendering,mOptimizeLabelPositions,mSuppressLegend,mTreeViewShowAll;
 	private boolean                 mShowStandardDeviation,mShowConfidenceInterval,mShowValueCount,mShowBarOrPieSizeValues,
@@ -207,10 +207,10 @@ public abstract class JVisualization extends JComponent
 	private CompoundListSelectionModel mSelectionModel;
 	private int						mDragMode,mLocalExclusionFlagNo,mPreviousLocalExclusionFlagNo;
 	private float[]					mPruningBarLow,mPruningBarHigh,mSimilarityMarkerSize;
-	private int[]					/*mCategoryMin,mCategoryMax,*/mCombinedCategoryCount,mFullCombinedCategoryCount;
+	private int[]					mCombinedCategoryCount,mFullCombinedCategoryCount;
 	private Color					mViewBackground,mTitleBackground;
 	private volatile boolean		mApplyLocalExclusionScheduled;
-	private boolean				    mMouseIsDown,mMouseIsControlDown,mTouchFunctionActive,mLocalAffectsGlobalExclusion,
+	private boolean				    mMouseIsControlDown,mTouchFunctionActive,mLocalAffectsGlobalExclusion,
 									mAddingToSelection,mMarkerSizeInversion,mSuspendGlobalExclusion,
 									mBoxplotShowPValue,mBoxplotShowFoldChange,mSplitViewCountExceeded,
 									mTreeViewIsDynamic,mTreeViewIsInverted,mMarkerSizeProportional,
@@ -1406,7 +1406,7 @@ public abstract class JVisualization extends JComponent
 	 * @return
 	 */
 	protected int calculateVisibleCategoryCount(int column) {
-		if (CompoundTableListHandler.isListColumn(column))
+		if (CompoundTableListHandler.isListOrSelectionColumn(column))
 			return 2;	// don't handle lists here
 
 		if (mVisibleCategoryFromCategory == null)
@@ -1457,7 +1457,7 @@ public abstract class JVisualization extends JComponent
 	 */
 	protected String[] getVisibleCategoryList(int column) {
 		String[] category = mTableModel.getCategoryList(column);
-		if (CompoundTableListHandler.isListColumn(column))
+		if (CompoundTableListHandler.isListOrSelectionColumn(column))
 			return category;
 		String[] visibleCategory = new String[calculateVisibleCategoryCount(column)];
 		for (int i=0; i<mVisibleCategoryFromCategory[column].length; i++)
@@ -1770,7 +1770,7 @@ public abstract class JVisualization extends JComponent
 		if (mChartType == cChartTypeBars
 		 || mChartType == cChartTypePies)
 			return mChartMode != cChartModePercent
-				|| mChartMode != cChartModeCount;
+				&& mChartMode != cChartModeCount;
 		return mChartType == cChartTypeBoxPlot
 			|| mChartType == cChartTypeWhiskerPlot;
 		}
@@ -1779,7 +1779,7 @@ public abstract class JVisualization extends JComponent
 		if (mChartType == cChartTypeBars
 		 || mChartType == cChartTypePies)
 			return mChartMode != cChartModePercent
-				|| mChartMode != cChartModeCount;
+				&& mChartMode != cChartModeCount;
 		return mChartType == cChartTypeBoxPlot
 			|| mChartType == cChartTypeWhiskerPlot;
 		}
@@ -1871,10 +1871,9 @@ public abstract class JVisualization extends JComponent
 	 * @param b
 	 */
 	public void setShowStandardDeviation(boolean b) {
-		if (mShowStandardDeviation != b) {
+		if (supportsShowStdDevAndErrorMergin() && mShowStandardDeviation != b) {
 			mShowStandardDeviation = b;
-			if (supportsShowStdDevAndErrorMergin())
-				invalidateOffImage(true);
+			invalidateOffImage(true);
 			}
 		}
 
@@ -1892,10 +1891,9 @@ public abstract class JVisualization extends JComponent
 	 * @param b
 	 */
 	public void setShowConfidenceInterval(boolean b) {
-		if (mShowConfidenceInterval != b) {
+		if (supportsShowStdDevAndErrorMergin() && mShowConfidenceInterval != b) {
 			mShowConfidenceInterval = b;
-			if (supportsShowStdDevAndErrorMergin())
-				invalidateOffImage(true);
+			invalidateOffImage(true);
 			}
 		}
 
@@ -1913,10 +1911,9 @@ public abstract class JVisualization extends JComponent
 	 * @param b
 	 */
 	public void setShowValueCount(boolean b) {
-		if (mShowValueCount != b) {
+		if (supportsShowValueCount() && mShowValueCount != b) {
 			mShowValueCount = b;
-			if (supportsShowValueCount())
-				invalidateOffImage(true);
+			invalidateOffImage(true);
 			}
 		}
 

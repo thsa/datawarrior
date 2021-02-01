@@ -1800,14 +1800,16 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		int min = Math.round(mAxisVisMin[axis] + 0.5f);
 		int max = Math.round(mAxisVisMax[axis] - 0.5f);
 
-		if (mTableModel.isColumnTypeRangeCategory(mAxisIndex[axis])
-		 && (mChartType != cChartTypeBars || axis != mChartInfo.barAxis)) {
-			for (int i=min; i<=max+1; i++) {
-				float position = ((float)i - 0.5f - mAxisVisMin[axis]) / (mAxisVisMax[axis] - mAxisVisMin[axis]) * 2.0f - 1.0f;
-				int index = categoryList[Math.min(i, max)].indexOf(CompoundTableConstants.cRangeSeparation);
-				String label = (i <= max) ? categoryList[i].substring(0, index)
-						: categoryList[max].substring(index+CompoundTableConstants.cRangeSeparation.length());
-				drawScaleLine(face, edge, axis, i, position, label);
+		if (mTableModel.isColumnTypeRangeCategory(mAxisIndex[axis]) && !USE_FULL_RANGE_CATEGORY_SCALES) {
+//		 && (mChartType != cChartTypeBars || axis != mChartInfo.barAxis)) {
+			if (max >= min) {
+				for (int i=min; i<=max+1; i++) {
+					float position = ((float)i - 0.5f - mAxisVisMin[axis]) / (mAxisVisMax[axis] - mAxisVisMin[axis]) * 2.0f - 1.0f;
+					int index = categoryList[Math.min(i, max)].indexOf(CompoundTableConstants.cRangeSeparation);
+					String label = (i <= max) ? categoryList[i].substring(0, index)
+							: categoryList[max].substring(index+CompoundTableConstants.cRangeSeparation.length());
+					drawScaleLine(face, edge, axis, i, position, label);
+					}
 				}
 			}
 		else {

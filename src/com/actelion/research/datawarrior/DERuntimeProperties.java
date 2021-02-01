@@ -125,6 +125,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cSuppressGrid = "suppressGrid";
 	private static final String cSuppressLegend = "suppressLegend";
 	private static final String cSuppressScale = "suppressScale";
+	private static final String cCrossHairMode = "crosshairMode";
 	private static final String cDynamicScale = "dynamicScale";
 	private static final String cScaleStyle = "scaleStyle";
 	private static final String cDrawMarkerOutline = "drawMarkerOutline";
@@ -820,6 +821,10 @@ public class DERuntimeProperties extends RuntimeProperties {
 					catch (NumberFormatException nfe) {}
 					}
 
+				int crossHairMode = decodeProperty(cCrossHairMode+viewName, JVisualization2D.CROSSHAIR_MODE_CODE);
+				if (crossHairMode != -1)
+					((JVisualization2D)visualization).setCrossHairMode(crossHairMode);
+
 				value = getProperty(cMultiValueMarkerColumns+viewName);
 				if (value != null) {
 					String[] columnName = value.split("\\t");
@@ -1502,6 +1507,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 						if (transparency != 0.0) {
 							setProperty(cMarkerTransparency+viewName, ""+transparency);
 							}
+
+						if (((JVisualization2D)visualization).getCrossHairMode() != JVisualization2D.CROSSHAIR_MODE_AUTOMATIC)
+							setProperty(cCrossHairMode+viewName, JVisualization2D.CROSSHAIR_MODE_CODE[((JVisualization2D)visualization).getCrossHairMode()]);
 
 						int[] multiValueMarkerColumn = ((JVisualization2D)visualization).getMultiValueMarkerColumns();
 						if (multiValueMarkerColumn != null) {

@@ -42,6 +42,7 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 	private static final String PROPERTY_HIDE_LEGEND = "hideLegend";
 	private static final String PROPERTY_HIDE_SCALE = "hideScale";	// allowed: x,y,true,false
 	private static final String PROPERTY_SCALE_STYLE = "scaleStyle";	// allowed: x,y,true,false
+	private static final String PROPERTY_CROSSHAIR_MODE = "crosshair";
 	private static final String PROPERTY_DYNAMIC_SCALE = "dynamicScale";
 	private static final String PROPERTY_SHOW_EMPTY = "showEmpty";
 	private static final String PROPERTY_GLOBAL_EXCLUSION = "globalExclusion";
@@ -62,7 +63,8 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 
 	private static final String ITEM_AUTO_ZOOM_NONE = "<none>";
 
-	private JComboBox       mComboBoxScaleMode,mComboBoxGridMode,mComboBoxExclusionList,mComboBoxAutoZoomColumn;
+	private JComboBox       mComboBoxScaleMode,mComboBoxGridMode,mComboBoxCrossHairMode,mComboBoxExclusionList,
+							mComboBoxAutoZoomColumn;
 	private JSlider			mSliderScaleFontSize;
 	private JCheckBox	    mCheckBoxHideLegend,mCheckBoxShowNaN,mCheckBoxGlobalExclusion,mCheckBoxFastRendering,
 							mCheckBoxShowArrowTips,mCheckBoxIgnoreFilters,mCheckBoxDrawBoxOutline,mCheckBoxDrawMarkerOutline,
@@ -100,7 +102,7 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		JPanel scalePanel = new JPanel();
 		int gap = HiDPIHelper.scale(8);
 		double[][] sizeScalePanel = { {gap, TableLayout.FILL, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL, gap},
-									  {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap,
+									  {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap,
 											TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, gap/2} };
 		scalePanel.setLayout(new TableLayout(sizeScalePanel));
 
@@ -116,24 +118,31 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		mComboBoxGridMode.addActionListener(this);
 		scalePanel.add(mComboBoxGridMode, "4,3");
 
+		if (!hasInteractiveView() || getInteractiveVisualization() instanceof JVisualization2D) {
+			scalePanel.add(new JLabel("Show crosshair:"), "2,5");
+			mComboBoxCrossHairMode = new JComboBox(JVisualization2D.CROSSHAIR_MODE_TEXT);
+			mComboBoxCrossHairMode.addActionListener(this);
+			scalePanel.add(mComboBoxCrossHairMode, "4,5");
+			}
+
 		mSliderScaleFontSize = new JSlider(JSlider.HORIZONTAL, 0, 150, 50);
 		mSliderScaleFontSize.setPreferredSize(new Dimension(HiDPIHelper.scale(150), mSliderScaleFontSize.getPreferredSize().height));
 		mSliderScaleFontSize.addChangeListener(this);
-		scalePanel.add(new JLabel("Scale font size:"), "2,5");
-		scalePanel.add(mSliderScaleFontSize, "4,5");
+		scalePanel.add(new JLabel("Scale font size:"), "2,7");
+		scalePanel.add(mSliderScaleFontSize, "4,7");
 
 		mCheckBoxHideLegend = new JCheckBox("Hide legend", false);
 		mCheckBoxHideLegend.addActionListener(this);
-		scalePanel.add(mCheckBoxHideLegend, "2,7,4,7");
+		scalePanel.add(mCheckBoxHideLegend, "2,9,4,9");
 
 		mCheckBoxDynamicScale = new JCheckBox("Adapt scale dynamically (bar charts only)", false);
 		mCheckBoxDynamicScale.addActionListener(this);
-		scalePanel.add(mCheckBoxDynamicScale, "2,8,4,8");
+		scalePanel.add(mCheckBoxDynamicScale, "2,10,4,10");
 
 		if (!hasInteractiveView() || getInteractiveVisualization() instanceof JVisualization2D) {
 			mCheckBoxShowArrowTips = new JCheckBox("Show arrow tips", false);
 			mCheckBoxShowArrowTips.addActionListener(this);
-			scalePanel.add(mCheckBoxShowArrowTips, "2,9,4,9");
+			scalePanel.add(mCheckBoxShowArrowTips, "2,11,4,11");
 			}
 
 		JPanel staticColorPanel = new JPanel();
@@ -250,6 +259,7 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 	public void setDialogToDefault() {
 		mComboBoxScaleMode.setSelectedIndex(0);
 		mComboBoxGridMode.setSelectedIndex(0);
+		mComboBoxCrossHairMode.setSelectedIndex(0);
 		mSliderScaleFontSize.setValue(50);
 		mCheckBoxHideLegend.setSelected(false);
 		mCheckBoxDynamicScale.setSelected(true);
@@ -291,6 +301,8 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		mComboBoxScaleMode.setSelectedIndex(scaleMode<mComboBoxScaleMode.getItemCount() ? scaleMode : 0);
 		int gridMode = findListIndex(configuration.getProperty(PROPERTY_HIDE_GRID), JVisualization.GRID_MODE_CODE, 0);
 		mComboBoxGridMode.setSelectedIndex(gridMode<mComboBoxGridMode.getItemCount() ? gridMode : 0);
+		int crossHairMode = findListIndex(configuration.getProperty(PROPERTY_CROSSHAIR_MODE), JVisualization2D.CROSSHAIR_MODE_CODE, 0);
+		mComboBoxCrossHairMode.setSelectedIndex(crossHairMode<mComboBoxCrossHairMode.getItemCount() ? crossHairMode : 0);
 		mSliderScaleFontSize.setValue(50+(int)(50.0*Math.log(fontSize)));
 		mCheckBoxHideLegend.setSelected("true".equals(configuration.getProperty(PROPERTY_HIDE_LEGEND)));
 		mCheckBoxDynamicScale.setSelected(!"false".equals(configuration.getProperty(PROPERTY_DYNAMIC_SCALE)));
@@ -339,6 +351,7 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		configuration.setProperty(PROPERTY_FONT_SIZE, ""+size);
 		configuration.setProperty(PROPERTY_HIDE_SCALE, JVisualization.SCALE_MODE_CODE[mComboBoxScaleMode.getSelectedIndex()]);
 		configuration.setProperty(PROPERTY_HIDE_GRID, JVisualization.GRID_MODE_CODE[mComboBoxGridMode.getSelectedIndex()]);
+		configuration.setProperty(PROPERTY_CROSSHAIR_MODE, JVisualization2D.CROSSHAIR_MODE_CODE[mComboBoxCrossHairMode.getSelectedIndex()]);
 		configuration.setProperty(PROPERTY_HIDE_LEGEND, mCheckBoxHideLegend.isSelected() ? "true" : "false");
 		configuration.setProperty(PROPERTY_DYNAMIC_SCALE, mCheckBoxDynamicScale.isSelected() ? "true" : "false");
 		if (mCheckBoxShowArrowTips != null)
@@ -383,6 +396,8 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		configuration.setProperty(PROPERTY_FONT_SIZE, ""+ visualization.getFontSize());
 		configuration.setProperty(PROPERTY_HIDE_SCALE, JVisualization.SCALE_MODE_CODE[visualization.getScaleMode()]);
 		configuration.setProperty(PROPERTY_HIDE_GRID, JVisualization.GRID_MODE_CODE[visualization.getGridMode()]);
+		if (visualization instanceof JVisualization2D)
+			configuration.setProperty(PROPERTY_CROSSHAIR_MODE, JVisualization2D.CROSSHAIR_MODE_CODE[((JVisualization2D)visualization).getCrossHairMode()]);
 		configuration.setProperty(PROPERTY_HIDE_LEGEND, visualization.isLegendSuppressed() ? "true" : "false");
 		configuration.setProperty(PROPERTY_DYNAMIC_SCALE, visualization.isDynamicScale() ? "true" : "false");
 		if (visualization instanceof JVisualization2D)
@@ -440,6 +455,9 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		if ((v instanceof JVisualization2D && gridMode<JVisualization2D.GRID_MODE_TEXT.length)
 		 || (v instanceof JVisualization3D && gridMode<JVisualization3D.GRID_MODE_TEXT.length))
 			v.setGridMode(gridMode);
+		int crossHairMode = findListIndex(configuration.getProperty(PROPERTY_CROSSHAIR_MODE), JVisualization2D.CROSSHAIR_MODE_CODE, 0);
+		if (v instanceof JVisualization2D)
+			((JVisualization2D)v).setCrossHairMode(crossHairMode);
 		try {
 			v.setFontSize(Float.parseFloat(configuration.getProperty(PROPERTY_FONT_SIZE, "1.0")), isAdjusting);
 			}

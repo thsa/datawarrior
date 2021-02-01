@@ -91,6 +91,9 @@ public class JVisualization2D extends JVisualization {
 	private static final int INT_DIGITS = 8;    // significant digits for in-view integer values
 
 	private static final float STATISTIC_LABEL_FONT_FACTOR = 0.8f;
+	private static final float CROSSHAIR_LABEL_BORDER = 0.15f;
+	private static final float CROSSHAIR_ALPHA = 0.8f;
+	private static final int DEFAULT_STRUCTURE_SCALE_SIZE = 4; // is multiplied by font size
 
 	// if the delay between recent repaint() and paintComponent() is larger than this, we assume a busy EDT and paint with low detail
 	private static final long MAX_REPAINT_DELAY_FOR_FULL_DETAILS = 100;
@@ -106,6 +109,13 @@ public class JVisualization2D extends JVisualization {
 
 	public static final String[] SCALE_MODE_TEXT = { "On both axes", "Hide all scales", "On X-axis only", "On Y-axis only" };
 	public static final String[] GRID_MODE_TEXT = { "Show full grid", "Hide any grid", "Vertical lines only", "Horizontal lines only" };
+	public static final String[] CROSSHAIR_MODE_TEXT = { "Automatic", "On both axes", "On X-axis only", "On Y-axis only", "Never ever" };
+	public static final String[] CROSSHAIR_MODE_CODE = { "automatic", "both", "x", "y", "none" };
+	public static final int CROSSHAIR_MODE_AUTOMATIC = 0;
+	private static final int CROSSHAIR_MODE_BOTH = 1;
+	private static final int CROSSHAIR_MODE_X = 2;
+	private static final int CROSSHAIR_MODE_Y = 3;
+	private static final int CROSSHAIR_MODE_NONE = 4;
 
 	public static final String[] CURVE_MODE_TEXT = { "<none>", "Vertical Line", "Horizontal Line", "Fitted Line", "Smooth Curve" };
 	public static final String[] CURVE_MODE_CODE = { "none", "abscissa", "ordinate", "fitted", "smooth" };
@@ -146,13 +156,15 @@ public class JVisualization2D extends JVisualization {
 	private Stroke          mThinLineStroke,mNormalLineStroke,mFatLineStroke,mVeryFatLineStroke,mConnectionStroke;
 	private float[]			mCorrelationCoefficient;
 	private float			mFontScaling,mMarkerTransparency,mCurveLineWidth,mCurveSmoothing;
-	private int				mBorder,mCurveInfo,mBackgroundHCount,mBackgroundVCount,
+	private int				mBorder,mCurveInfo,mBackgroundHCount,mBackgroundVCount,mCrossHairMode,
 							mBackgroundColorRadius,mBackgroundColorFading,mBackgroundColorConsidered,
 							mConnectionFromIndex1,mConnectionFromIndex2,mShownCorrelationType,mMultiValueMarkerMode;
 	private long			mPreviousPaintEnd,mPreviousFullDetailPaintMillis,mMostRecentRepaintMillis;
 	private boolean			mBackgroundValid,mIsHighResolution,mScaleTitleCentered,
 							mDrawMarkerOutline,mDrawBarPieBoxOutline;
-	private int[]			mScaleSize,mScaleTextMode,mScaleDepictorOffset,mSplittingMolIndex,mNaNSize,mMultiValueMarkerColumns;
+	private int[]			mScaleTextMode,mScaleDepictorOffset,mSplittingMolIndex,mMultiValueMarkerColumns;
+	private int[]           mScaleSize; // 0: label area height beneath X-axis; 1: label area width left of y-axis
+	private int[]           mNaNSize;   // 0: NaN area width left of Y-axis; 1: NaN area height beneath X-axis
 	protected VisualizationColor	mBackgroundColor;
 	private LabelHelper     mLabelHelper;
 	private Color[]			mMultiValueMarkerColor;
@@ -209,6 +221,7 @@ public class JVisualization2D extends JVisualization {
 		mDrawBarPieBoxOutline = false;
 		mCurveLineWidth = DEFAULT_CURVE_LINE_WIDTH;
 		mCurveSmoothing = DEFAULT_CURVE_SMOOTHING;
+		mCrossHairMode = CROSSHAIR_MODE_AUTOMATIC;
 		}
 
 	@Override
@@ -481,7 +494,7 @@ public class JVisualization2D extends JVisualization {
 	 * @return
 	 */
 	private float calculateStatisticalLabelWidth(int labelCount) {
-		int scaledFontHeight = (int)scaleIfSplitView(STATISTIC_LABEL_FONT_FACTOR * mFontHeight);
+		int scaledFontHeight = Math.round(scaleIfSplitView(STATISTIC_LABEL_FONT_FACTOR * mFontHeight));
 		mG.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, scaledFontHeight));
 		int width = 0;
 		String[] lineText = new String[labelCount];
@@ -549,7 +562,7 @@ public class JVisualization2D extends JVisualization {
 		calculateLegend(bounds, (int)scaleIfSplitView(mFontHeight));
 
 		if (isSplitView()) {
-			int scaledFontHeight = (int)scaleIfSplitView(mFontHeight);
+			int scaledFontHeight = Math.round(scaleIfSplitView(mFontHeight));
 			if (mLegendList.size() != 0)
 				bounds.height -= scaledFontHeight / 2;
 			compileSplittingHeaderMolecules();
@@ -622,7 +635,7 @@ public class JVisualization2D extends JVisualization {
 				AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f-mLabelBackgroundTransparency) : null;
 
 		if (isSplitView()) {
-			int scaledFontHeight = (int) scaleIfSplitView(mFontHeight);
+			int scaledFontHeight = Math.round(scaleIfSplitView(mFontHeight));
 			float titleBrightness = ColorHelper.perceivedBrightness(getTitleBackground());
 			float backgroundBrightness = ColorHelper.perceivedBrightness(getViewBackground());
 			Color borderColor = (backgroundBrightness > titleBrightness) ? getTitleBackground().darker().darker()
@@ -1844,7 +1857,7 @@ public class JVisualization2D extends JVisualization {
 		if (getBarOrPieLabelCount() != 0) {
 			boolean labelIsLeftOrBelow = isRightBarChart();
 			String[] lineText = new String[5];
-			int scaledFontHeight = (int)scaleIfSplitView(STATISTIC_LABEL_FONT_FACTOR * mFontHeight);
+			int scaledFontHeight = Math.round(scaleIfSplitView(STATISTIC_LABEL_FONT_FACTOR * mFontHeight));
 			g.setColor(getContrastGrey(SCALE_STRONG));
 			g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, scaledFontHeight)); // set font back to plain
 			for (int hv=0; hv<mHVCount; hv++) {
@@ -2123,7 +2136,7 @@ public class JVisualization2D extends JVisualization {
 
 		if (getBarOrPieLabelCount() != 0) {
 			String[] lineText = new String[getBarOrPieLabelCount()];
-			int scaledFontHeight = (int)scaleIfSplitView(STATISTIC_LABEL_FONT_FACTOR * mFontHeight);
+			int scaledFontHeight = Math.round(scaleIfSplitView(STATISTIC_LABEL_FONT_FACTOR * mFontHeight));
 			g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, scaledFontHeight));
 			g.setColor(getContrastGrey(SCALE_STRONG));
 			for (int hv=0; hv<mHVCount; hv++) {
@@ -2487,7 +2500,7 @@ public class JVisualization2D extends JVisualization {
 		 || boxPlotInfo.pValue != null) {
 			String[] lineText = new String[7];
 			g.setColor(getContrastGrey(SCALE_STRONG));
-			int scaledFontHeight = (int)scaleIfSplitView(mFontHeight);
+			int scaledFontHeight = Math.round(scaleIfSplitView(mFontHeight));
 			boolean isLogarithmic = mTableModel.isLogarithmicViewMode(mAxisIndex[boxPlotInfo.barAxis]);
 			for (int hv=0; hv<mHVCount; hv++) {
 				int hOffset = 0;
@@ -2728,7 +2741,7 @@ public class JVisualization2D extends JVisualization {
 
 	@Override
 	public boolean showCrossHair() {
-		return !mMouseIsDown
+		return !mMouseIsDown && mCrossHairMode != CROSSHAIR_MODE_NONE
 			&& (mSplitter == null || mSplitter.getHVIndex(mMouseX1, mMouseY1, false) != -1);
 		}
 
@@ -2737,13 +2750,25 @@ public class JVisualization2D extends JVisualization {
 		if (bounds != null) {
 			g.setStroke(mNormalLineStroke);
 			g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, (int)scaleIfSplitView(mFontHeight)));
-			if (mMouseX1 >= bounds.x) {
+			if (mMouseX1 >= bounds.x
+			 && (mCrossHairMode == CROSSHAIR_MODE_BOTH
+			  || mCrossHairMode == CROSSHAIR_MODE_X
+			  || (mCrossHairMode == CROSSHAIR_MODE_AUTOMATIC
+			   && (mScaleLineList[0].size() == 0
+				|| (mAxisIndex[0] != -1 && !mIsCategoryAxis[0])
+				|| (mAxisIndex[0] == -1 && mChartType == cChartTypeBars && mChartInfo.barAxis == 0))))) {
 				float position = (float)(mMouseX1-bounds.x)/(float)bounds.width;
 				Object label = calculateDynamicScaleLabel(0, position);
 				if (label != null)
 					drawScaleLine(g, bounds, 0, label, position, true, false);
 				}
-			if (mMouseY1 <= bounds.y+bounds.height) {
+			if (mMouseY1 <= bounds.y+bounds.height
+			 && (mCrossHairMode == CROSSHAIR_MODE_BOTH
+			  || mCrossHairMode == CROSSHAIR_MODE_Y
+			  || (mCrossHairMode == CROSSHAIR_MODE_AUTOMATIC
+			   && (mScaleLineList[1].size() == 0
+				|| (mAxisIndex[1] != -1 && !mIsCategoryAxis[1])
+				|| (mAxisIndex[1] == -1 && mChartType == cChartTypeBars && mChartInfo.barAxis == 1))))) {
 				float position = (float)(bounds.y+bounds.height-mMouseY1)/(float)bounds.height;
 				Object label = calculateDynamicScaleLabel(1, position);
 				if (label != null)
@@ -3467,7 +3492,7 @@ public class JVisualization2D extends JVisualization {
 		if (mAxisIndex[0] == cColumnUnassigned || mAxisIndex[1] == cColumnUnassigned)
 			return;
 
-		int scaledFontHeight = (int)scaleIfSplitView(mFontHeight);
+		int scaledFontHeight = Math.round(scaleIfSplitView(mFontHeight));
 		setFontHeight(scaledFontHeight);
 		mG.setColor(getContrastGrey(SCALE_STRONG));
 
@@ -4291,21 +4316,31 @@ public class JVisualization2D extends JVisualization {
 				// If we have an empty scale line because of too many categories,
 				// then we need space for the crosshair label. We use the axis name area for it,
 				// but text labels on the vertical axis and structure labels require more space:
-				int column = mAxisIndex[axis];
+/*		  		int column = mAxisIndex[axis];
 				if (column != -1 && mTableModel.isColumnTypeCategory(column)) {
 					if (mTableModel.isColumnTypeStructure(column)) {
-						usedScaleSize[axis] = 4 * scaledFontSize;
+						usedScaleSize[axis] = DEFAULT_STRUCTURE_SCALE_SIZE * scaledFontSize;
 						}
-					else if (axis == 1) {
+					else if (axis == 1) {   crosshair labels on Y axis are now vertical and don't need additional space
 						CategoryList list = mTableModel.getNativeCategoryList(column);
-						for (int i=0; i<list.getSize(); i++) {
-							String label = list.getString(i);
-							int size = getStringWidth(label) - 2*scaledFontSize;
-							if (usedScaleSize[axis] < size)
-								usedScaleSize[axis] = size;
+						if (mTableModel.isColumnTypeRangeCategory(column)) {
+							String range = list.getString(list.getSize()-1);
+							int index = range.indexOf(CompoundTableConstants.cRangeSeparation);
+							if (index != -1) {
+								usedScaleSize[axis] = Math.max(0, getStringWidth(range.substring(index
+										+ CompoundTableConstants.cRangeSeparation.length())) - 2*scaledFontSize);
+								}
+							}
+						else {
+							for (int i=0; i<list.getSize(); i++) {
+								String label = list.getString(i);
+								int size = getStringWidth(label) - 2*scaledFontSize;
+								if (usedScaleSize[axis] < size)
+									usedScaleSize[axis] = size;
+								}
 							}
 						}
-					}
+					}*/
 				}
 			else if (mScaleDepictor[axis] != null) {	// molecules on scale
 				int w = (axis == 0) ? width : height;
@@ -4338,7 +4373,7 @@ public class JVisualization2D extends JVisualization {
 				if (axis == 0) {
 					// assume vertical scale to take 1/6 of total width
 					int firstLabelWidth = (mScaleLineList[0].size() == 0) ? 0 : getStringWidth((String)mScaleLineList[0].get(0).label);
-					int gridSize = (width - Math.max(mNaNSize[1] + usedScaleSize[1], firstLabelWidth / 2)) / mScaleLineList[0].size();
+					int gridSize = (width - Math.max(mNaNSize[0] + usedScaleSize[1], firstLabelWidth / 2)) / mScaleLineList[0].size();
 					int maxSizeWithPadding = maxLabelSize + scaledFontSize / 2;
 					if (gridSize < 1.75f * scaledFontSize) {
 						usedScaleSize[0] = maxLabelSize;
@@ -4371,11 +4406,11 @@ public class JVisualization2D extends JVisualization {
 
 		for (int axis=0; axis<2; axis++) {
 			if (showScale(axis))
-				mScaleSize[axis] = Math.max(minScaleSize[axis]-mNaNSize[axis], usedScaleSize[axis]);
+				mScaleSize[axis] = Math.max(minScaleSize[axis]-mNaNSize[1-axis], usedScaleSize[axis]);
 			else
-				mScaleSize[axis] = Math.max(minScaleSize[axis]-mNaNSize[axis], 0);
+				mScaleSize[axis] = Math.max(minScaleSize[axis]-mNaNSize[1-axis], 0);
 
-			int allowedMax = 2*((axis == 0 ? height : width)-mNaNSize[axis])/3;
+			int allowedMax = 2*((axis == 0 ? height : width)-mNaNSize[1-axis])/3;
 			if (mScaleSize[axis] > allowedMax)
 				mScaleSize[axis] = allowedMax;
 			}
@@ -4529,8 +4564,8 @@ public class JVisualization2D extends JVisualization {
 		if (entireCategoryCount == 0)
 			return;
 
-		if (mTableModel.isColumnTypeRangeCategory(mAxisIndex[axis])
-		 && (mChartType != cChartTypeBars || axis != mChartInfo.barAxis)) {
+		if (mTableModel.isColumnTypeRangeCategory(mAxisIndex[axis]) && !USE_FULL_RANGE_CATEGORY_SCALES) {
+//		 && (mChartType != cChartTypeBars || axis != mChartInfo.barAxis)) {
 			compileRangeCategoryScaleLabels(axis);
 			return;
 			}
@@ -4557,23 +4592,25 @@ public class JVisualization2D extends JVisualization {
 		int min = Math.round(mAxisVisMin[axis] + 0.5001f);
 		int max = Math.round(mAxisVisMax[axis] - 0.5001f);
 
-		for (int i=min; i<=max+1; i++) {
-			String category = categoryList[Math.min(i, max)];
-			float position = ((float)i - 0.5f - mAxisVisMin[axis]) / (mAxisVisMax[axis] - mAxisVisMin[axis]);
-			String label = "???";	// should not happen
-			if (category == CompoundTableConstants.cRangeNotAvailable) {
-				if (i == max+1)
-					continue;
-				label = "none";
-				position = ((float)i - mAxisVisMin[axis]) / (mAxisVisMax[axis] - mAxisVisMin[axis]);
+		if (max >= min) {
+			for (int i=min; i<=max+1; i++) {
+				String category = categoryList[Math.min(i, max)];
+				float position = ((float)i - 0.5f - mAxisVisMin[axis]) / (mAxisVisMax[axis] - mAxisVisMin[axis]);
+				String label = "???";	// should not happen
+				if (category == CompoundTableConstants.cRangeNotAvailable) {
+					if (i == max+1)
+						continue;
+					label = "none";
+					position = ((float)i - mAxisVisMin[axis]) / (mAxisVisMax[axis] - mAxisVisMin[axis]);
+					}
+				else {
+					int index = category.indexOf(CompoundTableConstants.cRangeSeparation);
+					if (index != -1)
+						label = (i <= max) ? categoryList[i].substring(0, index)
+								: categoryList[max].substring(index + CompoundTableConstants.cRangeSeparation.length());
+					}
+				mScaleLineList[axis].add(new ScaleLine(position, label));
 				}
-			else {
-				int index = category.indexOf(CompoundTableConstants.cRangeSeparation);
-				if (index != -1)
-					label = (i <= max) ? categoryList[i].substring(0, index)
-							: categoryList[max].substring(index + CompoundTableConstants.cRangeSeparation.length());
-				}
-			mScaleLineList[axis].add(new ScaleLine(position, label));
 			}
 		}
 
@@ -5333,7 +5370,8 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private void drawScaleLine(Graphics2D g, Rectangle graphRect, int axis, Object label, float position, boolean isCrossHair, boolean isShifted) {
-		int scaledFontHeight = (int)scaleIfSplitView(mFontHeight);
+		int scaledFontHeight = Math.round(scaleIfSplitView(mFontHeight));
+		int crossHairBorder = Math.round(CROSSHAIR_LABEL_BORDER * scaledFontHeight);
 		if (axis == 0) {	// X-axis
 			int axisPosition = graphRect.x + Math.round(graphRect.width*position);
 			int yBase = graphRect.y+graphRect.height+mNaNSize[1];
@@ -5350,16 +5388,17 @@ public class JVisualization2D extends JVisualization {
 			if (label != null) {
 				if (showScale(axis)) {
 					if (label instanceof String) {
-						String text = (String)label;
-						int labelWidth = g.getFontMetrics().stringWidth(text);
-						if (mScaleTextMode[axis] == cScaleTextVertical) {
-							int textX = axisPosition+scaledFontHeight/3;
-							int textY = yBase+labelWidth;
+						String text = ((String)label).trim();
+						if (!isCrossHair && mScaleTextMode[axis] == cScaleTextVertical) {
+							int textX = axisPosition+scaledFontHeight/3; // middle to assent
+							int textY = yBase+scaledFontHeight/3; // pading
 							g.rotate(-Math.PI/2, textX, textY);
-							drawScaleLabel(g, text, textX, textY, isCrossHair);
+							int labelWidth = g.getFontMetrics().stringWidth(text);  // stringWidth() is different after rotation!!!
+							drawScaleLabel(g, text, textX-labelWidth, textY, isCrossHair);
 							g.rotate(Math.PI/2, textX, textY);
 							}
-						else if (mScaleTextMode[axis] == cScaleTextInclined) {
+						else if (!isCrossHair && mScaleTextMode[axis] == cScaleTextInclined) {
+							int labelWidth = g.getFontMetrics().stringWidth(text);
 							int textX = axisPosition+(int)(scaledFontHeight/3 - 0.71*labelWidth);
 							int textY = yBase+(int)(0.71*(scaledFontHeight+labelWidth));
 							g.rotate(-Math.PI/4, textX, textY);
@@ -5367,9 +5406,14 @@ public class JVisualization2D extends JVisualization {
 							g.rotate(Math.PI/4, textX, textY);
 							}
 						else {
+							int labelWidth = g.getFontMetrics().stringWidth(text);
+							int x = axisPosition - labelWidth/2;
 							int yShift = ((mScaleTextMode[axis] == cScaleTextAlternating && isShifted)) ?
 									scaledFontHeight * 11 / 4 : scaledFontHeight * 5/4;
-							drawScaleLabel(g, text, axisPosition-labelWidth/2, yBase+yShift, isCrossHair);
+							if (isCrossHair)
+								x = Math.max(graphRect.x-mScaleSize[1]-mNaNSize[0]-mBorder-scaledFontHeight,
+									Math.min(graphRect.x+graphRect.width+mBorder-labelWidth-crossHairBorder, x));
+							drawScaleLabel(g, text, x, yBase+yShift, isCrossHair);
 							}
 						}
 					else {
@@ -5380,7 +5424,11 @@ public class JVisualization2D extends JVisualization {
 					if (label instanceof String) {
 						String text = (String)label;
 						int labelWidth = g.getFontMetrics().stringWidth(text);
-						drawScaleLabel(g, text, axisPosition-labelWidth/2, yBase-scaledFontHeight/5, isCrossHair);
+						int x = Math.max(graphRect.x+crossHairBorder,
+								Math.min(graphRect.x+graphRect.width-labelWidth-crossHairBorder,
+										 axisPosition-labelWidth/2));
+						int y = mLegendList.size() == 0 ? yBase-scaledFontHeight/4-crossHairBorder : yBase+scaledFontHeight+crossHairBorder;
+						drawScaleLabel(g, text, x, y, isCrossHair);
 						}
 					else {
 						drawScaleMolecule(g, graphRect, axis, position, (Depictor2D)label, isCrossHair);
@@ -5404,10 +5452,37 @@ public class JVisualization2D extends JVisualization {
 			if (label != null && (showScale(axis) || isCrossHair)) {
 				if (label instanceof String) {
 					String text = (String)label;
-					int x = (isCrossHair && !showScale(axis)) ?
-							xBase : xBase-scaledFontHeight/5-g.getFontMetrics().stringWidth(text);
-					drawScaleLabel(g, text, x,
-									axisPosition+scaledFontHeight/3, isCrossHair);
+					int textWidth = g.getFontMetrics().stringWidth(text);
+					boolean rotateLabel = isCrossHair
+							&& (showScale(axis) && (textWidth > mScaleSize[axis])
+							|| !showScale(axis) && (textWidth > 8*scaledFontHeight));
+					if (isCrossHair && (!showScale(axis) || rotateLabel)) {
+						// If the label is too long to show horizontally, then rotate.
+						// (e.g. full range category label on short range type scale)
+						if (rotateLabel) {
+							int x = showScale(axis) ? xBase-scaledFontHeight/2 : xBase+scaledFontHeight+crossHairBorder;
+							int y = graphRect.y+graphRect.height;
+							g.rotate(-Math.PI/2, x, y);
+							textWidth = g.getFontMetrics().stringWidth(text);   // differs from not rotated font
+							int textX = Math.max(x+crossHairBorder,
+										Math.min(x+graphRect.height-textWidth-crossHairBorder,
+												 x+graphRect.height-axisPosition-textWidth/2));
+							drawScaleLabel(g, text, textX, y, isCrossHair);
+							g.rotate(Math.PI/2, x, y);
+							}
+						else {
+							int x = xBase + crossHairBorder;
+							int y = Math.max(graphRect.y+scaledFontHeight,
+									Math.min(graphRect.y+graphRect.height-crossHairBorder,
+											axisPosition+scaledFontHeight/3));
+							drawScaleLabel(g, text, x, y, isCrossHair);
+							}
+						}
+					else {
+						int x = xBase-scaledFontHeight/3-textWidth;
+						int y = axisPosition+scaledFontHeight/3;
+						drawScaleLabel(g, text, x, y, isCrossHair);
+						}
 					}
 				else {
 					drawScaleMolecule(g, graphRect, axis, position, (Depictor2D)label, isCrossHair);
@@ -5418,18 +5493,22 @@ public class JVisualization2D extends JVisualization {
 
 	private void drawScaleLabel(Graphics2D g, String text, int x, int y, boolean isCrossHair) {
 		Color textColor;
+
 		if (isCrossHair) {
 			Color background = getContrastGrey(SCALE_MEDIUM);
 			textColor = getContrastGrey(SCALE_STRONG, background);
 
 			Rectangle2D bounds = g.getFontMetrics().getStringBounds(text, g);
-			float border = (float)bounds.getHeight() / 6;
+			float border = CROSSHAIR_LABEL_BORDER * scaleIfSplitView(mFontHeight);
 			int arc = Math.round((float)bounds.getHeight() / 3);
 			g.setColor(background);
+			Composite original = g.getComposite();
+			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, CROSSHAIR_ALPHA));
 			g.fillRoundRect(Math.round((float)bounds.getX() + x - border),
 							Math.round((float)bounds.getY() + y - border),
 							Math.round((float)bounds.getWidth() + 2*border),
 							Math.round((float)bounds.getHeight() + 2*border), arc, arc);
+			g.setComposite(original);
 			}
 		else {
 			textColor = getContrastGrey(SCALE_MEDIUM);
@@ -5443,8 +5522,11 @@ public class JVisualization2D extends JVisualization {
 		Color molBackground = getViewBackground();
 
 		int x,y,w,h;
-		int scaledFontHeight = (int)scaleIfSplitView(mFontHeight);
-		int size = isCrossHair ? mScaleSize[axis] + 2*scaledFontHeight : mScaleSize[axis];
+		int scaledFontHeight = Math.round(scaleIfSplitView(mFontHeight));
+		int size = !isCrossHair ? mScaleSize[axis]
+				 : 2*scaledFontHeight // to extend into the axis name area
+				   + (showScale(axis) && mScaleLineList[axis].size() != 0 ? mScaleSize[axis]
+				 : DEFAULT_STRUCTURE_SCALE_SIZE*scaledFontHeight);
 		h = w = size;
 		if (axis == 0) {	// X-axis
 			x = graphRect.x + (int)((float)graphRect.width * position) - w/2;
@@ -5456,11 +5538,26 @@ public class JVisualization2D extends JVisualization {
 			}
 
 		if (isCrossHair) {
-			if (!showScale(axis)) {
-				if (axis == 0)
-					y -= h;
-				else
-					x += w;
+			int crossHairBorder = Math.round(CROSSHAIR_LABEL_BORDER * scaledFontHeight);
+			if (axis == 0) {
+				x = Math.max(graphRect.x, Math.min(graphRect.x+graphRect.width-w, x));
+				if (showScale(axis)) {
+					y += crossHairBorder;
+					}
+				else if (mLegendList.size() == 0) {
+					y -= h + crossHairBorder;
+					}
+				else {
+					int legendSize = 0;
+					for (VisualizationLegend legend:mLegendList)
+						legendSize += legend.getHeight();
+
+					y = Math.min(y+crossHairBorder, y-h-crossHairBorder+legendSize);
+					}
+				}
+			else {
+				x = !showScale(axis) ? x+w+crossHairBorder : Math.max(crossHairBorder, x-crossHairBorder);
+				y = Math.max(graphRect.y, Math.min(graphRect.y+graphRect.height-h, y));
 				}
 
 			molBackground = getContrastGrey(SCALE_MEDIUM);
@@ -5468,7 +5565,11 @@ public class JVisualization2D extends JVisualization {
 
 			int arc = Math.round(scaledFontHeight);
 			g.setColor(molBackground);
+
+			Composite original = g.getComposite();
+			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, CROSSHAIR_ALPHA));
 			g.fillRoundRect(x, y, w, h, arc, arc);
+			g.setComposite(original);
 			}
 		else {
 			molForeground = getContrastGrey(SCALE_MEDIUM);
@@ -5530,6 +5631,14 @@ public class JVisualization2D extends JVisualization {
 			mCurveLineWidth = lineWidth;
 			invalidateOffImage(false);
 			}
+		}
+
+	public int getCrossHairMode() {
+		return mCrossHairMode;
+		}
+
+	public void setCrossHairMode(int mode) {
+		mCrossHairMode = mode;
 		}
 
 	public void setCurveMode(int mode, boolean drawStdDevRange, boolean splitByCategory) {

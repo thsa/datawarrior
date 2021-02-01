@@ -149,6 +149,8 @@ public abstract class JVisualization extends JComponent
 	protected static final float SCALE_MEDIUM = 0.7f;
 	protected static final float SCALE_STRONG = 1.0f;
 
+	protected static final boolean USE_FULL_RANGE_CATEGORY_SCALES = false;
+
 	private static final int DRAG_MODE_NONE = 0;
 	private static final int DRAG_MODE_LASSO_SELECT = 1;
 	private static final int DRAG_MODE_RECT_SELECT = 2;
@@ -1871,9 +1873,10 @@ public abstract class JVisualization extends JComponent
 	 * @param b
 	 */
 	public void setShowStandardDeviation(boolean b) {
-		if (supportsShowStdDevAndErrorMergin() && mShowStandardDeviation != b) {
+		if (mShowStandardDeviation != b) {
 			mShowStandardDeviation = b;
-			invalidateOffImage(true);
+			if (supportsShowStdDevAndErrorMergin())
+				invalidateOffImage(true);
 			}
 		}
 
@@ -1891,9 +1894,10 @@ public abstract class JVisualization extends JComponent
 	 * @param b
 	 */
 	public void setShowConfidenceInterval(boolean b) {
-		if (supportsShowStdDevAndErrorMergin() && mShowConfidenceInterval != b) {
+		if (mShowConfidenceInterval != b) {
 			mShowConfidenceInterval = b;
-			invalidateOffImage(true);
+			if (supportsShowStdDevAndErrorMergin())
+				invalidateOffImage(true);
 			}
 		}
 
@@ -1911,9 +1915,10 @@ public abstract class JVisualization extends JComponent
 	 * @param b
 	 */
 	public void setShowValueCount(boolean b) {
-		if (supportsShowValueCount() && mShowValueCount != b) {
+		if (mShowValueCount != b) {
 			mShowValueCount = b;
-			invalidateOffImage(true);
+			if (supportsShowValueCount())
+				invalidateOffImage(true);
 			}
 		}
 

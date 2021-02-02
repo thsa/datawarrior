@@ -18,6 +18,8 @@ import java.util.TreeMap;
  * Created by thomas on 7/13/17.
  */
 public class DEStructureNameResolver implements IStructureNameResolver {
+	private static final int MAX_NAME_LENGTH = 64;  // actually the name server limit is 40
+
 	private N2SCommunicator sCommunicator;
 	private TreeMap<String,String> sNameMap;
 
@@ -47,7 +49,7 @@ public class DEStructureNameResolver implements IStructureNameResolver {
 
 	@Override
 	public StereoMolecule resolveRemote(String name) {
-		if (name == null)
+		if (name == null || name.length() == 0 || name.length() > MAX_NAME_LENGTH)
 			return null;
 
 		name = name.trim();
@@ -92,7 +94,7 @@ public class DEStructureNameResolver implements IStructureNameResolver {
 		ArrayList<String> unknownList = new ArrayList<>();
 		StringBuilder names = new StringBuilder();
 		for (String name:nameList) {
-			if (name.length() != 0) {
+			if (name.length() != 0 && name.length() <= MAX_NAME_LENGTH) {
 				if (sNameMap == null || sNameMap.get(name) == null) {
 					unknownList.add(name);
 					names.append(name);

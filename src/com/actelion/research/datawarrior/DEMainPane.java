@@ -19,17 +19,19 @@
 package com.actelion.research.datawarrior;
 
 import com.actelion.research.chem.io.CompoundTableConstants;
-import com.actelion.research.datawarrior.help.DETaskSetExplanationHTML;
-import com.actelion.research.datawarrior.help.FXExplanationEditor;
 import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
-import com.actelion.research.datawarrior.task.table.*;
+import com.actelion.research.datawarrior.task.table.DETaskAddColumnsToGroup;
+import com.actelion.research.datawarrior.task.table.DETaskChangeColumnOrder;
+import com.actelion.research.datawarrior.task.table.DETaskRemoveColumnGroup;
+import com.actelion.research.datawarrior.task.table.DETaskShowTableColumnGroup;
 import com.actelion.research.datawarrior.task.view.*;
 import com.actelion.research.gui.JProgressPanel;
-import com.actelion.research.gui.JScrollableMenu;
+import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.gui.dock.Dockable;
 import com.actelion.research.gui.dock.JDockingPanel;
 import com.actelion.research.gui.dock.PopupProvider;
+import com.actelion.research.gui.hidpi.HiDPIIconButton;
 import com.actelion.research.table.CompoundTableColorHandler;
 import com.actelion.research.table.RuntimePropertyEvent;
 import com.actelion.research.table.model.*;
@@ -66,19 +68,8 @@ public class DEMainPane extends JDockingPanel
 	private static final String COMMAND_RENAME = "rename_";
 	private static final String COMMAND_COPY_VIEW = "copyView_";
 	private static final String COMMAND_COPY_STATISTICS = "copyStat_";
-	private static final String COMMAND_SET_FONT_SIZE = "setFontSize_";
-	private static final String COMMAND_SET_HEADER_LINES = "setHeaderLines";
-	private static final String COMMAND_USE_AS_FILTER = "useAsFilter_";
-	private static final String COMMAND_EDIT_WYSIWYG = "wysiwyg";
-	private static final String COMMAND_EDIT_HTML = "html";
-	private static final String COMMAND_RELOAD = "reload";
 	private static final String ITEM_NEW_MACRO_EDITOR = "New Macro Editor";
 	private static final String ITEM_NEW_EXPLANATION_VIEW = "New Explanation View";
-	private static final String CHANGE_COLUMN_ORDER = "columnOrder";
-	private static final String SHOW_GROUP = "showGroup";
-	private static final String GROUP_SELECTED = "groupSelected";
-	private static final String ADD_TO_GROUP = "addToGroup";
-	private static final String REMOVE_GROUP = "removeGroup";
 
 
 	private DEFrame						mParentFrame;
@@ -333,37 +324,6 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 			popup.addSeparator();
 			addMenuItem(popup, "Copy View Image...", COMMAND_COPY_VIEW+title);
 			addMenuItem(popup, "Copy Statistical Values", COMMAND_COPY_STATISTICS+title);
-
-			VisualizationPanel thisVP = (VisualizationPanel)thisDockable.getContent();
-
-			popup.addSeparator();
-			JCheckBoxMenuItem item = new JCheckBoxMenuItem("Use View As Explicit Filter", thisVP.getVisualization().isUsedAsFilter());
-			item.setActionCommand(COMMAND_USE_AS_FILTER+title);
-			item.addActionListener(this);
-			popup.add(item);
-
-			JMenu menuSynchronize = null;
-			ButtonGroup groupSynchronize = null;
-			for (Dockable dockable:getDockables()) {
-				if (dockable != thisDockable && dockable.getContent() instanceof VisualizationPanel) {
-					VisualizationPanel otherVP = (VisualizationPanel)dockable.getContent();
-					if (otherVP.getSynchronizationMaster() == null && thisVP.getDimensionCount() <= otherVP.getDimensionCount()) {
-						if (menuSynchronize == null) {
-							menuSynchronize = new JMenu("Synchronize View To ");
-							groupSynchronize = new ButtonGroup();
-							addRadioButtonItem(menuSynchronize, groupSynchronize, "<none>",
-											   "synchronizeToNone",
-											   thisVP.getSynchronizationMaster() == null);
-							}
-	
-						addRadioButtonItem(menuSynchronize, groupSynchronize, dockable.getTitle(),
-										   "synchronizeTo_"+dockable.getTitle(),
-										   thisVP.getSynchronizationMaster() == otherVP);
-						}
-					}
-				}
-			if (menuSynchronize != null)
-				popup.add(menuSynchronize);
 			}
 
 		if (thisDockable.getContent() instanceof JStructureGrid) {
@@ -374,82 +334,6 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		if (getDockable(title).getContent() instanceof DEFormView) {
 			popup.addSeparator();
 			addMenuItem(popup, "Copy View Image...", COMMAND_COPY_VIEW+title);
-
-			popup.addSeparator();
-
-			boolean isDesignMode = ((DEFormView)getDockable(title).getContent()).isDesignMode();
-			JCheckBoxMenuItem item1 = new JCheckBoxMenuItem("Design Mode", isDesignMode);
-			item1.addActionListener(this);
-			popup.add(item1);
-
-			boolean isEditMode = ((DEFormView)getDockable(title).getContent()).isEditMode();
-			JCheckBoxMenuItem item2 = new JCheckBoxMenuItem("Edit Mode", isEditMode);
-			item2.addActionListener(this);
-			popup.add(item2);
-			}
-
-		if (getDockable(title).getContent() instanceof ExplanationView) {
-			popup.addSeparator();
-
-			addMenuItem(popup, "Edit WYSIWYG...", COMMAND_EDIT_WYSIWYG);
-			addMenuItem(popup, "Edit HTML...", COMMAND_EDIT_HTML);
-			addMenuItem(popup, "Reload Explanation...", COMMAND_RELOAD);
-			}
-
-		if (thisDockable.getContent() instanceof DETableView
-		 || thisDockable.getContent() instanceof DEFormView) {
-			popup.addSeparator();
-			addMenuItem(popup, "Set Font Size...", COMMAND_SET_FONT_SIZE+title);
-			}
-
-		if (thisDockable.getContent() instanceof DETableView) {
-			DETableView tableView = (DETableView)thisDockable.getContent();
-
-			int currentValue = tableView.getHeaderLineCount();
-			JMenu menuHeaderLines = new JMenu("Set Header Line Count ");
-			ButtonGroup groupHeaderLines = new ButtonGroup();
-			for (String option:DETaskSetHeaderLineCount.OPTIONS) {
-				String command = COMMAND_SET_HEADER_LINES + option + "_" + title;
-				addRadioButtonItem(menuHeaderLines, groupHeaderLines, option,  command, Integer.parseInt(option) == currentValue);
-				}
-			popup.add(menuHeaderLines);
-
-			popup.addSeparator();
-			addMenuItem(popup, "Change Column Order...", CHANGE_COLUMN_ORDER);
-
-			String[] columnGroup = DETaskShowTableColumnGroup.getAvailableGroupNames(mTableModel);
-			if (columnGroup.length != 0) {
-				popup.addSeparator();
-
-				JMenu showMenu = new JScrollableMenu("Show Column Group Only");
-				popup.add(showMenu);
-				for (String groupName:columnGroup)
-					addMenuItem(showMenu, groupName, SHOW_GROUP+groupName);
-				}
-
-			popup.addSeparator();
-
-			int selectionCount = 0;
-			JTable table = tableView.getTable();
-			for (int i=0; i<table.getColumnCount(); i++)
-				if (table.isColumnSelected(i))
-					selectionCount++;
-
-			addMenuItem(popup, "Group Selected Columns...", GROUP_SELECTED).setEnabled(selectionCount != 0);
-
-			if (columnGroup.length != 0) {
-				if (selectionCount != 0) {
-					JMenu addToGroupMenu = new JMenu("Add Selected Columns To");
-					popup.add(addToGroupMenu);
-					for (String groupName : columnGroup)
-						addMenuItem(addToGroupMenu, groupName, ADD_TO_GROUP + groupName);
-				}
-
-				JMenu ungroupMenu = new JMenu("Remove Column Group");
-				popup.add(ungroupMenu);
-				for (String groupName:columnGroup)
-					addMenuItem(ungroupMenu, groupName, REMOVE_GROUP+groupName);
-				}
 			}
 
 		return popup;
@@ -465,12 +349,15 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		if (command.equals(ITEM_NEW_MACRO_EDITOR)) {
 			addApplicationView(VIEW_TYPE_MACRO_EDITOR, getDefaultViewName(VIEW_TYPE_MACRO_EDITOR, -1), "root");
 			}
-		else if (command.startsWith("popup_")) {
+		else if (command.startsWith("xyz_")) {
 			if(view instanceof VisualizationPanel) {
-				VisualizationPanel panel = (VisualizationPanel) view;
+				VisualizationPanel panel = (VisualizationPanel)view;
 				panel.showControls();
 			}
 		}
+		else if (command.startsWith("config_")) {
+			showViewConfigPopupMenu(view, (JButton)e.getSource());
+			}
 		else if (command.startsWith("close_")) {
 			new DETaskCloseView(mParentFrame, this, view).defineAndRun();
 			}
@@ -479,48 +366,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 			}
 		else if (e.getActionCommand().startsWith("max_")) {
 			String title = e.getActionCommand().substring(4);
-			maximize(title);
-			}
-		else if (command.equals("Design Mode")) {
-			DEFormView formView = (DEFormView)getSelectedDockable().getContent();
-			boolean mode = ((JCheckBoxMenuItem)e.getSource()).isSelected();
-			if (formView.isEditMode())
-				formView.setEditMode(false);
-			formView.setDesignMode(mode);
-			}
-		else if (command.equals("Edit Mode")) {
-			DEFormView formView = (DEFormView)getSelectedDockable().getContent();
-			boolean mode = ((JCheckBoxMenuItem)e.getSource()).isSelected();
-			if (formView.isDesignMode())
-				formView.setDesignMode(false);
-			formView.setEditMode(mode);
-			}
-		else if (command.equals(COMMAND_EDIT_WYSIWYG)) {
-			// TODO convert to task
-			FXExplanationEditor htmlEditor = new FXExplanationEditor(mParentFrame, mTableModel);
-			htmlEditor.setVisible(true);
-/*
-			final ExplanationView explanationView = (ExplanationView)getSelectedDockable().getContent();
-			Ekit ekit = new Ekit(mParentFrame) {
-				private static final long serialVersionUID = 20131128L;
-
-				@Override
-				public void windowClosing(WindowEvent we) {
-					String text = getEkitCore().getDocumentText();
-					mTableModel.setExtensionData(CompoundTableModel.cExtensionNameFileExplanation, text);
-//					explanationView.setText();
-					setVisible(false);
-					dispose();
-					}
-				};
-			ekit.getEkitCore().setDocumentText(explanationView.getText());
-*/
-			}
-		else if (command.equals(COMMAND_EDIT_HTML)) {
-			new DETaskSetExplanationHTML(mParentFrame, mTableModel).defineAndRun();
-			}
-		else if (command.equalsIgnoreCase(COMMAND_RELOAD)) {
-			((ExplanationView)getSelectedDockable().getContent()).reload();
+			maximize(title, null);
 			}
 		else if (command.startsWith(COMMAND_DUPLICATE)) {
 			new DETaskDuplicateView(mParentFrame, this, view).defineAndRun();
@@ -531,54 +377,8 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		else if (command.startsWith(COMMAND_COPY_VIEW)) {
 			new DETaskCopyViewImage(mParentFrame, this, view).defineAndRun();
 			}
-		else if (command.startsWith(COMMAND_SET_FONT_SIZE)) {
-			new DETaskSetFontSize(mParentFrame, this, view).defineAndRun();
-			}
-		else if (command.startsWith(COMMAND_SET_HEADER_LINES)) {
-			int index = COMMAND_SET_HEADER_LINES.length();
-			int lines = Integer.parseInt(command.substring(index, command.indexOf('_')));
-			new DETaskSetHeaderLineCount(mParentFrame, this, view, lines).defineAndRun();
-			}
-		else if (e.getActionCommand().startsWith(CHANGE_COLUMN_ORDER)) {
-			new DETaskChangeColumnOrder(mParentFrame, getTableView()).defineAndRun();
-			}
-		else if (e.getActionCommand().startsWith(GROUP_SELECTED)) {
-			int[] selectedColumn = getTableView().getSelectedColumns();
-			if (selectedColumn == null)
-				JOptionPane.showMessageDialog(mParentFrame, "No columns selected.");
-			else
-				new DETaskAddColumnsToGroup(mParentFrame, getTableView(), mTableModel, selectedColumn, null).defineAndRun();
-			}
-		else if (e.getActionCommand().startsWith(SHOW_GROUP)) {
-			String groupName = e.getActionCommand().substring(SHOW_GROUP.length());
-			new DETaskShowTableColumnGroup(mParentFrame, getTableView(), mTableModel, groupName).defineAndRun();
-			}
-		else if (e.getActionCommand().startsWith(ADD_TO_GROUP)) {
-			int[] selectedColumn = getTableView().getSelectedColumns();
-			if (selectedColumn == null) {
-				JOptionPane.showMessageDialog(mParentFrame, "No columns selected.");
-			}
-			else {
-				String groupName = e.getActionCommand().substring(ADD_TO_GROUP.length());
-				new DETaskAddColumnsToGroup(mParentFrame, getTableView(), mTableModel, selectedColumn, groupName).defineAndRun();
-				}
-			}
-		else if (e.getActionCommand().startsWith(REMOVE_GROUP)) {
-			String groupName = e.getActionCommand().substring(REMOVE_GROUP.length());
-			new DETaskRemoveColumnGroup(mParentFrame, getTableView(), mTableModel, groupName).defineAndRun();
-			}
 		else if (command.startsWith(COMMAND_COPY_STATISTICS)) {
 			new DETaskCopyStatisticalValues(mParentFrame, this, view).defineAndRun();
-			}
-		else if (command.startsWith(COMMAND_USE_AS_FILTER)) {
-			new DETaskUseAsFilter(mParentFrame, this, view).defineAndRun();
-			}
-		else if (command.equals("synchronizeToNone")) {
-			new DETaskSynchronizeView(mParentFrame, this, getSelectedDockable().getTitle(), null).defineAndRun();
-			}
-		else if (command.startsWith("synchronizeTo_")) {
-			String slave = getSelectedDockable().getTitle();
-			new DETaskSynchronizeView(mParentFrame, this, slave, viewName).defineAndRun();
 			}
 		else if (command.equals("new2D")) {
 			new DETaskNew2DView(mParentFrame, this, getSelectedDockable().getTitle()).defineAndRun();
@@ -605,19 +405,34 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 			}
 		}
 
-	//@Override
-	public void maximize(String title) {
-		Dockable dockable = getDockable(title);
+	private void showViewConfigPopupMenu(CompoundTableView view, JButton button) {
+		JPopupMenu popup = new DEViewConfigPopupMenu(this, view);
+		popup.show(button.getParent(),
+				button.getBounds().x,
+				button.getBounds().y + button.getBounds().height);
+		}
 
-		if (dockable.getContent() instanceof JStructureGrid)
-			((JStructureGrid)dockable.getContent()).setMaximized(isMaximized()? 1f : (float)getWidth()/dockable.getContent().getWidth());
+	//@Override
+	public void maximize(String title, JToolBar maximizeToolBar) {
+		Dockable dockable = getDockable(title);
+		CompoundTableView view = (CompoundTableView)dockable.getContent();
+
+		if (view instanceof JStructureGrid)
+			((JStructureGrid)view).setMaximized(isMaximized()? 1f : (float)getWidth()/dockable.getContent().getWidth());
 
 		if (!isMaximized())	// we are maximizing rather than de-maximizing
 			for (Dockable d:getDockables())
 				if (d != dockable && d.getContent() instanceof VisualizationPanel)
 					((VisualizationPanel)d.getContent()).hideControls();
 
-		super.maximize(title);
+		JToolBar toolBar = null;
+		if (!isMaximized()) {
+			boolean hasAxisPopup = view instanceof VisualizationPanel
+								|| view instanceof JCardView;
+			toolBar = createViewToolBar(title, view);
+			}
+
+		super.maximize(title, isMaximized() ? null : toolBar);
 		}
 
 	public void renameView(String oldTitle, String newTitle) {
@@ -807,6 +622,48 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		menu.add(item);
 		}
 
+	private JToolBar createViewToolBar(String title, CompoundTableView view) {
+		JToolBar toolbar = new JToolBar();
+		if (LookAndFeelHelper.isSubstance())
+			toolbar.addSeparator();
+
+		JButton popupButton = new HiDPIIconButton("editView.png", null, "config_"+title, 0, null);
+		popupButton.addActionListener(this);
+		toolbar.add(popupButton);
+		if (LookAndFeelHelper.isSubstance())
+			toolbar.addSeparator();
+
+		if (view instanceof VisualizationPanel || view instanceof JCardView) {
+			String buttonName = view instanceof VisualizationPanel3D ? "xyzButton.png" : "xyButton.png";
+			JButton axisButton = new HiDPIIconButton(buttonName, null, "xyz_"+title, 0, null);
+			axisButton.addActionListener(this);
+			toolbar.add(axisButton);
+			if (LookAndFeelHelper.isSubstance())
+				toolbar.addSeparator();
+			}
+
+		JButton maxButton = new HiDPIIconButton("maxButton.png", "Maximize view", "max_"+title, 0, null);
+		maxButton.addActionListener(this);
+		toolbar.add(maxButton);
+		if (LookAndFeelHelper.isSubstance())
+			toolbar.addSeparator();
+
+		if (!(view instanceof DETableView)) {
+			JButton closeButton = new HiDPIIconButton("closeButton.png", null, "close_"+title, 0, null);
+			closeButton.addActionListener(this);
+			toolbar.add(closeButton);
+			if (LookAndFeelHelper.isSubstance())
+				toolbar.addSeparator();
+			}
+
+		toolbar.setFloatable(false);
+		toolbar.setRollover(true);
+
+		toolbar.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+		toolbar.setOpaque(false);
+		return toolbar;
+		}
+
 	/**
 	 * Adds a new table view at the given position defined by dockInfo
 	 * @param title
@@ -817,7 +674,9 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		DETableView tableView = new DETableView(mParentFrame, mParentPane, mTableModel, mColorHandler, mListSelectionModel);
 		tableView.setDetailPopupProvider(mParentPane);
 		tableView.setViewSelectionHelper(this);
-		Dockable dockable = new Dockable(this, tableView, validateTitle(title), this, false);
+		title = validateTitle(title);
+		JToolBar toolBar = createViewToolBar(title, tableView);
+		Dockable dockable = new Dockable(this, tableView, validateTitle(title), toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dockable.setPopupProvider(this);
 		dock(dockable, dockInfo);
@@ -834,7 +693,9 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		JStructureGrid structureGrid = new JStructureGrid(mParentFrame, mTableModel, mColorHandler, mListSelectionModel, column, 6);
 		structureGrid.setDetailPopupProvider(mParentPane);
 		structureGrid.setViewSelectionHelper(this);
-		Dockable dockable = new Dockable(this, structureGrid, validateTitle(title), this, true);
+		title = validateTitle(title);
+		JToolBar toolBar = createViewToolBar(title, structureGrid);
+		Dockable dockable = new Dockable(this, structureGrid, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dockable.setPopupProvider(this);
 		dock(dockable, dockInfo);
@@ -851,7 +712,9 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		JCardView cardView = new JCardView(mParentFrame, mTableModel, mColorHandler, mListSelectionModel);
 		cardView.setDetailPopupProvider(mParentPane);
 		cardView.setViewSelectionHelper(this);
-		Dockable dockable = new Dockable(this, cardView, validateTitle(title), this, true, true);
+		title = validateTitle(title);
+		JToolBar toolBar = createViewToolBar(title, cardView);
+		Dockable dockable = new Dockable(this, cardView, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dockable.setPopupProvider(this);
 		dock(dockable, dockInfo);
@@ -871,7 +734,9 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 			view = new ErrorView("View type not supported!");
 
 		view.setViewSelectionHelper(this);
-		Dockable dockable = new Dockable(this, (JComponent)view, validateTitle(title), this, true);
+		title = validateTitle(title);
+		JToolBar toolBar = createViewToolBar(title, view);
+		Dockable dockable = new Dockable(this, (JComponent)view, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dockable.setPopupProvider(this);
 		dock(dockable, dockInfo);
@@ -887,7 +752,9 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 	public ExplanationView addExplanationView(String title, String dockInfo) {
 		ExplanationView view = new ExplanationView(mTableModel);
 		view.setViewSelectionHelper(this);
-		Dockable dockable = new Dockable(this, view, validateTitle(title), this, true);
+		title = validateTitle(title);
+		JToolBar toolBar = createViewToolBar(title, view);
+		Dockable dockable = new Dockable(this, view, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dockable.setPopupProvider(this);
 		dock(dockable, dockInfo);
@@ -906,7 +773,9 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 			panel2D.getVisualization().setDetailPopupProvider(mParentPane);
 			panel2D.addVisualizationListener(this);
 			panel2D.setViewSelectionHelper(this);
-			Dockable dockable = new Dockable(this, panel2D, validateTitle(title), this, true, true);
+			title = validateTitle(title);
+			JToolBar toolBar = createViewToolBar(title, panel2D);
+			Dockable dockable = new Dockable(this, panel2D, title, toolBar);
 			dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 			dockable.setPopupProvider(this);
 			dock(dockable, dockInfo);
@@ -930,7 +799,9 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		panel3D.getVisualization().setDetailPopupProvider(mParentPane);
 		panel3D.addVisualizationListener(this);
 		panel3D.setViewSelectionHelper(this);
-		Dockable dockable = new Dockable(this, panel3D, validateTitle(title), this, true, true);
+		title = validateTitle(title);
+		JToolBar toolBar = createViewToolBar(title, panel3D);
+		Dockable dockable = new Dockable(this, panel3D, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dockable.setPopupProvider(this);
 		dock(dockable, dockInfo);
@@ -949,7 +820,9 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		if (createDefaultLayout)
 			form.createDefaultLayout();
 		form.setViewSelectionHelper(this);
-		Dockable dockable = new Dockable(this, form, validateTitle(title), this, true);
+		title = validateTitle(title);
+		JToolBar toolBar = createViewToolBar(title, form);
+		Dockable dockable = new Dockable(this, form, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dockable.setPopupProvider(this);
 		dock(dockable, dockInfo);

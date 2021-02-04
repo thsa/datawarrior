@@ -2748,7 +2748,6 @@ public class JVisualization2D extends JVisualization {
 	private void drawCrossHair(Graphics2D g) {
 		Rectangle bounds = getGraphBounds(mMouseX1, mMouseY1, true);
 		if (bounds != null) {
-			g.setStroke(mNormalLineStroke);
 			g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, (int)scaleIfSplitView(mFontHeight)));
 			if (mMouseX1 >= bounds.x
 			 && (mCrossHairMode == CROSSHAIR_MODE_BOTH
@@ -5358,7 +5357,6 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private void drawGrid(Graphics2D g, Rectangle graphRect) {
-		g.setStroke(mThinLineStroke);
 		for (int axis=0; axis<2; axis++)
 			for (int i=0; i<mScaleLineList[axis].size(); i++)
 				drawScaleLine(g, graphRect, axis, i);
@@ -5372,6 +5370,7 @@ public class JVisualization2D extends JVisualization {
 	private void drawScaleLine(Graphics2D g, Rectangle graphRect, int axis, Object label, float position, boolean isCrossHair, boolean isShifted) {
 		int scaledFontHeight = Math.round(scaleIfSplitView(mFontHeight));
 		int crossHairBorder = Math.round(CROSSHAIR_LABEL_BORDER * scaledFontHeight);
+		g.setStroke(isCrossHair ? mNormalLineStroke : mThinLineStroke);
 		if (axis == 0) {	// X-axis
 			int axisPosition = graphRect.x + Math.round(graphRect.width*position);
 			int yBase = graphRect.y+graphRect.height+mNaNSize[1];

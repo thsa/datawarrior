@@ -4436,10 +4436,12 @@ public abstract class JVisualization extends JComponent
 	protected boolean showPopupMenu() {
 		if (mDetailPopupProvider != null) {
 			CompoundRecord record = (mHighlightedPoint == null) ? null : mHighlightedPoint.record;
-			JPopupMenu popup = mDetailPopupProvider.createPopupMenu(record, (VisualizationPanel)getParent(), -1, mMouseIsControlDown);
-			if (popup != null) {
-				popup.show(this, mMouseX1, mMouseY1);
-				return true;
+			if (record != null) {
+				JPopupMenu popup = mDetailPopupProvider.createPopupMenu(record, (VisualizationPanel)getParent(), -1, mMouseIsControlDown);
+				if (popup != null) {
+					popup.show(this, mMouseX1, mMouseY1);
+					return true;
+					}
 				}
 			}
 

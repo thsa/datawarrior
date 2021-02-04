@@ -28,7 +28,6 @@ import com.actelion.research.datawarrior.task.chem.DETaskSortReactionsBySimilari
 import com.actelion.research.datawarrior.task.chem.DETaskSortStructuresBySimilarity;
 import com.actelion.research.datawarrior.task.table.DETaskCopyTableCells;
 import com.actelion.research.datawarrior.task.table.DETaskPasteIntoTable;
-import com.actelion.research.datawarrior.task.view.*;
 import com.actelion.research.datawarrior.task.view.cards.*;
 import com.actelion.research.gui.JScrollableMenu;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
@@ -36,7 +35,9 @@ import com.actelion.research.table.filter.JMultiStructureFilterPanel;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.*;
+import com.actelion.research.table.view.CompoundTableView;
+import com.actelion.research.table.view.JCardView;
+import com.actelion.research.table.view.JStructureGrid;
 import com.actelion.research.table.view.card.CardElement;
 import com.actelion.research.table.view.card.JCardPane;
 import com.actelion.research.table.view.card.positioning.CardNumericalShaper1D;
@@ -53,8 +54,6 @@ import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -63,7 +62,7 @@ import java.util.List;
 import java.util.*;
 import java.util.prefs.Preferences;
 
-public class DEDetailPopupMenu extends JPopupMenu implements ActionListener,ItemListener {
+public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 	private static final long serialVersionUID = 0x20060904;
 
 	private static final String GOOGLE_PATENT_URL = "https://patents.google.com/?q=%s&oq=%s";
@@ -72,64 +71,11 @@ public class DEDetailPopupMenu extends JPopupMenu implements ActionListener,Item
 	private static final String SPAYA_DEFAULT = "spaya.ai";
 	private static final String SPAYA_URL = "https://"+SPAYA_DEFAULT+"/retro/21f39dab-8add-4a96-98b6-fa3efaf8e471?smiles=%s";
 
-	private static final String TEXT_STRUCTURE_LABELS = "Show/Hide/Size Labels...";
-	private static final String TEXT_GENERAL_OPTIONS = "Set Graphical View Options...";
-	private static final String TEXT_STATISTICAL_OPTIONS = DETaskSetStatisticalViewOptions.TASK_NAME+"...";
-	private static final String TEXT_CHART_TYPE = DETaskSetPreferredChartType.TASK_NAME+"...";
-	private static final String TEXT_SPLIT_VIEW = DETaskSplitView.TASK_NAME+"...";
-	private static final String TEXT_MARKER_SIZE = DETaskSetMarkerSize.TASK_NAME+"...";
-	private static final String TEXT_MARKER_SHAPE = DETaskSetMarkerShape.TASK_NAME+"...";
-	private static final String TEXT_MARKER_COLOR = DETaskSetMarkerColor.TASK_NAME+"...";
-	private static final String TEXT_MARKER_BG_COLOR = DETaskSetMarkerBackgroundColor.TASK_NAME+"...";
-	private static final String TEXT_MARKER_LABELS = "Set Marker Labels...";
-	private static final String TEXT_MARKER_CONNECTION = DETaskSetConnectionLines.TASK_NAME+"...";
-	private static final String TEXT_MARKER_JITTERING = DETaskSetMarkerJittering.TASK_NAME+"...";
-	private static final String TEXT_MARKER_TRANSPARENCY = DETaskSetMarkerTransparency.TASK_NAME+"...";
-	private static final String TEXT_MULTI_VALUE_MARKER = DETaskSetMultiValueMarker.TASK_NAME+"...";
-	private static final String TEXT_SEPARATE_CASES = DETaskSeparateCases.TASK_NAME+"...";
-	private static final String TEXT_FOCUS = DETaskSetFocus.TASK_NAME+"...";
-	private static final String TEXT_BACKGROUND_IMAGE = DETaskSetBackgroundImage.TASK_NAME+"...";
-	private static final String TEXT_HORIZ_STRUCTURE_COUNT = DETaskSetHorizontalStructureCount.TASK_NAME;
-	private static final String TEXT_COLOR_DISPLAY_MODE = "Set Structure Color Display Mode";
-	private static final String TEXT_STEREO_DISPLAY_MODE = "Set Structure Stereo Display Mode";
-
-	private static final String TEXT_CARD_STACK     = DETaskCreateStackFromSelection.TASK_NAME;
-	private static final String TEXT_CARD_OPTIONS   = "Cards View Options..";
-	private static final String TEXT_CARD_CONFIGURE = "Configure Cards..";
-	private static final String TEXT_CARD_POSITION  = "Position Cards...";
-    private static final String TEXT_CARD_SET_STACK_NAME  = "Set Stack Name...";
-    private static final String TEXT_CARD_CREATE_CATEGORY_COLUMN_FROM_STACKS = "Create Category Column from Stacks";
-	//private static final String TEXT_CARD_WIZARD    = "Card Wizard...";
-
-	//private static final String TEXT_CARD_POS_1D_GRID     = "Card-Sort-1D-Grid";
-	//private static final String TEXT_CARD_POS_SPIRAL      = "Card-Sort-1D-Spiral";
-	//private static final String TEXT_CARD_POS_2D_GRID     = "Card-Sort-2D-Grid";
-	private static final String TEXT_CARD_STACK_FOR_COLUMN = "Card-Stack-ForColumn";
-	private static final String TEXT_CARD_EXPAND_STACK     = "Card-Expand-Stack";
-
-	private static final String TEXT_CARD_FROM_SELECTION_CREATE_SUBSTACKS_FROM_CAT     = "Card-From-Selection-Create-Substacks-Cat";
-	private static final String TEXT_CARD_FROM_SELECTION_CREATE_SUBSTACKS_FROM_HITLIST = "Card-From-Selection-Create-Substacks-HL";
-	private static final String TEXT_CARD_FROM_SELECTION_EXPAND_STACKS                 = "Card-From-Selection-Expand-Stacks";
-	private static final String TEXT_CARD_FROM_SELECTION_SORT_1D_GRID                  = "Card-From-Selection-Sort-1D-Grid";
-	private static final String TEXT_CARD_FROM_SELECTION_SORT_1D_SPIRAL                = "Card-From-Selection-Sort-1D-Spiral";
-	private static final String TEXT_CARD_FROM_SELECTION_SORT_2D                       = "Card-From-Selection-Sort-2D";
-
-	private static final String TEXT_CARD_FROM_ALL_CREATE_SUBSTACKS_FROM_CAT     = "Card-From-All-Create-Substacks-Cat";
-	private static final String TEXT_CARD_FROM_ALL_CREATE_SUBSTACKS_FROM_HITLIST = "Card-From-All-Create-Substacks-HL";
-	private static final String TEXT_CARD_FROM_ALL_EXPAND_STACKS                 = "Card-From-All-Expand-Stacks";
-	private static final String TEXT_CARD_FROM_ALL_SORT_1D_GRID                  = "Card-From-All-Sort-1D-Grid";
-	private static final String TEXT_CARD_FROM_ALL_SORT_1D_SPIRAL                = "Card-From-All-Sort-1D-Spiral";
-	private static final String TEXT_CARD_FROM_ALL_SORT_2D                       = "Card-From-All-Sort-2D";
-	private static final String TEXT_CARD_FROM_ALL_ARRANGE                       = "Card-From-All-Arrange";
-
-
-	private static final String TEXT_CARD_FROM_SELECTION_ARRANGE                 = "Card-From-Selection-Arrange";
 
 	/**
 	 * Variables needed for card actions
 	 */
 	private CardElement mCEMouseOver = null;
-
 
 	private static final String DELIMITER = "@#|";
 	private static final String COPY_STRUCTURE = "structure" + DELIMITER;
@@ -171,6 +117,37 @@ public class DEDetailPopupMenu extends JPopupMenu implements ActionListener,Item
 	private static final String STEREO_DISPLAY_MODE = "stereoDMode" + DELIMITER;
 	private static final String COLOR_DISPLAY_MODE = "colorDMode" + DELIMITER;
 
+	// Card view options are all context sensitive
+	private static final String TEXT_CARD_STACK     = DETaskCreateStackFromSelection.TASK_NAME;
+	private static final String TEXT_CARD_POSITION  = "Position Cards...";
+	private static final String TEXT_CARD_SET_STACK_NAME  = "Set Stack Name...";
+	private static final String TEXT_CARD_CREATE_CATEGORY_COLUMN_FROM_STACKS = "Create Category Column from Stacks";
+	//private static final String TEXT_CARD_WIZARD    = "Card Wizard...";
+
+	//private static final String TEXT_CARD_POS_1D_GRID     = "Card-Sort-1D-Grid";
+	//private static final String TEXT_CARD_POS_SPIRAL      = "Card-Sort-1D-Spiral";
+	//private static final String TEXT_CARD_POS_2D_GRID     = "Card-Sort-2D-Grid";
+	private static final String TEXT_CARD_STACK_FOR_COLUMN = "Card-Stack-ForColumn";
+	private static final String TEXT_CARD_EXPAND_STACK     = "Card-Expand-Stack";
+
+	private static final String TEXT_CARD_FROM_SELECTION_CREATE_SUBSTACKS_FROM_CAT     = "Card-From-Selection-Create-Substacks-Cat";
+	private static final String TEXT_CARD_FROM_SELECTION_CREATE_SUBSTACKS_FROM_HITLIST = "Card-From-Selection-Create-Substacks-HL";
+	private static final String TEXT_CARD_FROM_SELECTION_EXPAND_STACKS                 = "Card-From-Selection-Expand-Stacks";
+	private static final String TEXT_CARD_FROM_SELECTION_SORT_1D_GRID                  = "Card-From-Selection-Sort-1D-Grid";
+	private static final String TEXT_CARD_FROM_SELECTION_SORT_1D_SPIRAL                = "Card-From-Selection-Sort-1D-Spiral";
+	private static final String TEXT_CARD_FROM_SELECTION_SORT_2D                       = "Card-From-Selection-Sort-2D";
+
+	private static final String TEXT_CARD_FROM_ALL_CREATE_SUBSTACKS_FROM_CAT     = "Card-From-All-Create-Substacks-Cat";
+	private static final String TEXT_CARD_FROM_ALL_CREATE_SUBSTACKS_FROM_HITLIST = "Card-From-All-Create-Substacks-HL";
+	private static final String TEXT_CARD_FROM_ALL_EXPAND_STACKS                 = "Card-From-All-Expand-Stacks";
+	private static final String TEXT_CARD_FROM_ALL_SORT_1D_GRID                  = "Card-From-All-Sort-1D-Grid";
+	private static final String TEXT_CARD_FROM_ALL_SORT_1D_SPIRAL                = "Card-From-All-Sort-1D-Spiral";
+	private static final String TEXT_CARD_FROM_ALL_SORT_2D                       = "Card-From-All-Sort-2D";
+	private static final String TEXT_CARD_FROM_ALL_ARRANGE                       = "Card-From-All-Arrange";
+
+	private static final String TEXT_CARD_FROM_SELECTION_ARRANGE                 = "Card-From-Selection-Arrange";
+
+
 	private DEMainPane			mMainPane;
 	private CompoundTableModel	mTableModel;
 	private CompoundRecord		mRecord;
@@ -186,9 +163,9 @@ public class DEDetailPopupMenu extends JPopupMenu implements ActionListener,Item
 	 * @param source
 	 * @param selectedColumn if the source view provides it, otherwise -1
 	 */
-	public DEDetailPopupMenu(DEMainPane mainPane, CompoundRecord record,
-							 DEPruningPanel pruningPanel, CompoundTableView source,
-							 DatabaseActions databaseActions, int selectedColumn, boolean isCtrlDown) {
+	public DERowDetailPopupMenu(DEMainPane mainPane, CompoundRecord record,
+	                            DEPruningPanel pruningPanel, CompoundTableView source,
+	                            DatabaseActions databaseActions, int selectedColumn, boolean isCtrlDown) {
 		super();
 
 		mMainPane = mainPane;
@@ -554,383 +531,9 @@ public class DEDetailPopupMenu extends JPopupMenu implements ActionListener,Item
 				}
 			}
 
-		if (source instanceof VisualizationPanel) {
-			if (getComponentCount() > 0)
-				addSeparator();
-
-			int chartType = ((VisualizationPanel)source).getVisualization().getChartType();
-
-			addMenuItem(TEXT_CHART_TYPE);
-			addSeparator();
-
-			addMenuItem(TEXT_GENERAL_OPTIONS);
-			if (source instanceof VisualizationPanel2D)
-				addMenuItem(TEXT_STATISTICAL_OPTIONS);
-
-			addSeparator();
-
-			addMenuItem(TEXT_MARKER_SIZE);
-
-			if (chartType != JVisualization.cChartTypeBars
-			 && chartType != JVisualization.cChartTypePies)
-				addMenuItem(TEXT_MARKER_SHAPE);
-
-			addMenuItem(TEXT_MARKER_COLOR);
-
-			if (source instanceof VisualizationPanel2D
-			 && chartType != JVisualization.cChartTypeBars)
-				addMenuItem(TEXT_MARKER_BG_COLOR);
-
-			addSeparator();
-
-			if (source instanceof VisualizationPanel2D
-			 || chartType == JVisualization.cChartTypeScatterPlot)
-			addMenuItem(TEXT_MARKER_LABELS);
-
-			if (chartType != JVisualization.cChartTypeBars
-			 && chartType != JVisualization.cChartTypePies) {
-				addMenuItem(TEXT_MARKER_CONNECTION);
-				addMenuItem(TEXT_MARKER_JITTERING);
-				}
-
-			if (source instanceof VisualizationPanel2D) {
-				addMenuItem(TEXT_MARKER_TRANSPARENCY);
-				}
-
-			addSeparator();
-			addMenuItem(TEXT_SEPARATE_CASES);
-			if (source instanceof VisualizationPanel2D) {
-				addMenuItem(TEXT_SPLIT_VIEW);
-
-				if (chartType != JVisualization.cChartTypeBars
-				 && chartType != JVisualization.cChartTypePies)
-					addMenuItem(TEXT_MULTI_VALUE_MARKER);
-
-				addSeparator();
-				addMenuItem(TEXT_BACKGROUND_IMAGE);
-				}
-			}
-		else if (source instanceof JStructureGrid) {
-			if (getComponentCount() > 0)
-				addSeparator();
-
-			addMenuItem(TEXT_STRUCTURE_LABELS);
-			}
-
-		if (source instanceof FocusableView && ! (source instanceof JCardView) ) {
-			if (getComponentCount() > 0)
-				addSeparator();
-			addMenuItem(TEXT_FOCUS);
-			}
-
-		if (source instanceof VisualizationPanel3D) {
-			JVisualization3D visualization3D = (JVisualization3D)((VisualizationPanel3D)source).getVisualization();
-
-			addSeparator();
-
-			JCheckBoxMenuItem itemIsStereo = new JCheckBoxMenuItem("Use Stereo", visualization3D.isStereo());
-			itemIsStereo.addItemListener(this);
-			add(itemIsStereo);
-
-			JMenu stereoModeMenu = new JMenu("Stereo Mode");
-			JCheckBoxMenuItem item2 = new JCheckBoxMenuItem("H-Interlace Left Eye First",
-					visualization3D.getStereoMode() == JVisualization3D.STEREO_MODE_H_INTERLACE_LEFT_EYE_FIRST);
-			item2.addItemListener(this);
-			stereoModeMenu.add(item2);
-
-			JCheckBoxMenuItem item3 = new JCheckBoxMenuItem("H-Interlace Right Eye First",
-					visualization3D.getStereoMode() == JVisualization3D.STEREO_MODE_H_INTERLACE_RIGHT_EYE_FIRST);
-			item3.addItemListener(this);
-			stereoModeMenu.add(item3);
-
-			JCheckBoxMenuItem item4 = new JCheckBoxMenuItem("Vertical Interlace",
-					visualization3D.getStereoMode() == JVisualization3D.STEREO_MODE_V_INTERLACE);
-			item4.addItemListener(this);
-			stereoModeMenu.add(item4);
-
-			JCheckBoxMenuItem item5 = new JCheckBoxMenuItem("Side By Side For 3D-TV",
-					visualization3D.getStereoMode() == JVisualization3D.STEREO_MODE_3DTV_SIDE_BY_SIDE);
-			item5.addItemListener(this);
-			stereoModeMenu.add(item5);
-
-			add(stereoModeMenu);
-			}
-
-		if (source instanceof JStructureGrid) {
-			if (getComponentCount() > 0)
-				addSeparator();
-			JMenu columnMenu = new JMenu(TEXT_HORIZ_STRUCTURE_COUNT);
-			for (String count: DETaskSetHorizontalStructureCount.COUNT_OPTIONS) {
-				JMenuItem menuItem = new JMenuItem(count);
-				menuItem.addActionListener(this);
-				columnMenu.add(menuItem);
-				}
-			add(columnMenu);
-
-			JMenu colorModeMenu = new JMenu(TEXT_COLOR_DISPLAY_MODE);
-			int colorModeIndex = DETaskSetStructureDisplayMode.findColorModeIndex(((JStructureGrid)source).getStructureDisplayMode() & DETaskSetStructureDisplayMode.COLOR_MODE_MASK);
-			for (int i = 0; i<DETaskSetStructureDisplayMode.COLOR_MODE_TEXT.length; i++) {
-				JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem(DETaskSetStructureDisplayMode.COLOR_MODE_TEXT[i], i==colorModeIndex);
-				menuItem.setActionCommand(COLOR_DISPLAY_MODE+DETaskSetStructureDisplayMode.COLOR_MODE_CODE[i]);
-				menuItem.addActionListener(this);
-				colorModeMenu.add(menuItem);
-			}
-			add(colorModeMenu);
-
-			JMenu stereoModeMenu = new JMenu(TEXT_STEREO_DISPLAY_MODE);
-			int stereoModeIndex = DETaskSetStructureDisplayMode.findStereoModeIndex(((JStructureGrid)source).getStructureDisplayMode() & DETaskSetStructureDisplayMode.STEREO_MODE_MASK);
-			for (int i = 0; i<DETaskSetStructureDisplayMode.STEREO_MODE_TEXT.length; i++) {
-				JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem(DETaskSetStructureDisplayMode.STEREO_MODE_TEXT[i], i==stereoModeIndex);
-				menuItem.setActionCommand(STEREO_DISPLAY_MODE+DETaskSetStructureDisplayMode.STEREO_MODE_CODE[i]);
-				menuItem.addActionListener(this);
-				stereoModeMenu.add(menuItem);
-			}
-			add(stereoModeMenu);
-			}
-
-		if((System.getProperty("development") != null)) {
-
-            if (source instanceof JCardView) {
-				// create automatic 1D sorting options:
-				List<Integer> columnsNumeric = new ArrayList<>();
-				for (int zi = 0; zi < mTableModel.getTotalColumnCount(); zi++) {
-					if (mTableModel.isColumnTypeDouble(zi)) {
-						columnsNumeric.add(zi);
-					}
-				}
-				List<Integer> columnsCategorical = new ArrayList<>();
-				for (int zi = 0; zi < mTableModel.getTotalColumnCount(); zi++) {
-					if (mTableModel.isColumnTypeCategory(zi)) {
-						columnsCategorical.add(zi);
-					}
-				}
-
-            	// Find Hitlists:
-            	List<String> listNames = new ArrayList<>();
-				try {
-					listNames = Arrays.asList(mTableModel.getListHandler().getListNames());
-				}
-				catch(Exception e){}
-
-
-                JCardView cardView = (JCardView) source;
-                JCardPane cardPane = cardView.getCardPane();
-
-                mCEMouseOver = cardPane.getHighlightedCardElement();
-
-
-                this.addSeparator();
-
-				JMenuItem cardWizard = new JMenuItem(TEXT_CARD_CONFIGURE);
-				cardWizard.addActionListener(this);
-				this.add(cardWizard);
-
-				this.addSeparator();
-
-//				JMenuItem positionCardItems = new JMenuItem(TEXT_CARD_POSITION);
-//				positionCardItems.addActionListener(this);
-//				this.add(positionCardItems);
-//
-//				this.addSeparator();
-
-                JMenuItem stackItem = new JMenuItem(TEXT_CARD_STACK);
-                stackItem.addActionListener(this);
-                this.add(stackItem);
-
-//				JMenuItem itemExpandStack = new JMenuItem("Expand Stack");
-//				itemExpandStack.setActionCommand(TEXT_CARD_EXPAND_STACK);
-//				itemExpandStack.addActionListener(this);
-//				CardElement ce_mouseOver = null;
-//				if (!cardPane.isMouseOverStack()) {
-//					itemExpandStack.setEnabled(false);
-//				} else {
-//
-//				}
-//				this.add(itemExpandStack);
-//                this.addSeparator();
-
-//                JMenuItem miCreateStackFromSelection = new JMenuItem("Create Stack from Selection");
-
-                //JMenu menuCreateStacksFromAll       = new JMenu("Stack All Cards by");
-				//JMenu menuCreateStacksFromSelection = new JMenu("Stack Selected Cards by");
-
-//				JMenu menuFromSelection = new JMenu("From Selection");
-//				JMenu menuFromAll       = new JMenu("From All");
-
-				// Expand Stacks
-				// A: from selection, B: from all
-				JMenuItem A_ExpandSelectedStacks = new JMenuItem("Expand Selected Stacks");
-				A_ExpandSelectedStacks.setActionCommand(TEXT_CARD_FROM_SELECTION_EXPAND_STACKS);
-				A_ExpandSelectedStacks.addActionListener(this);
-
-                this.add(A_ExpandSelectedStacks);
-
-				JMenuItem B_ExpandSelectedStacks = new JMenuItem("Expand All Stacks");
-				B_ExpandSelectedStacks.setActionCommand(TEXT_CARD_FROM_ALL_EXPAND_STACKS);
-				B_ExpandSelectedStacks.addActionListener(this);
-
-
-                JMenuItem SetStackName = new JMenuItem("Set Stack Name...");
-                SetStackName.setActionCommand(TEXT_CARD_SET_STACK_NAME);
-                SetStackName.addActionListener(this);
-
-                if(!cardPane.isMouseOverStack()) {
-                    SetStackName.setEnabled(false);
-                }
-//                if(mCEMouseOver==null){
-//                    SetStackName.setEnabled(false);
-//                }
-//                else if(! mCEMouseOver.isStack()) {
-//                    SetStackName.setEnabled(false);
-//                }
-
-                this.add(SetStackName);
-
-
-
-//				menuFromSelection.add(A_ExpandStacks);
-//				menuFromAll.add(B_ExpandStacks);
-//
-//				menuFromSelection.addSeparator();
-//				menuFromAll.addSeparator();
-
-
-				this.addSeparator();
-
-				// Create Substacks
-
-				// From Categories
-				// A: from selection, B: from all
-				JMenu A_createSubstacksFromCategories = new JMenu("Stacks All Cards by");
-				JMenu B_createSubstacksFromCategories = new JMenu("Stack Selected Cards by");
-
-				for (Integer ci : columnsCategorical) {
-					JMenuItem cigi = new JMenuItem(mTableModel.getColumnTitle(ci));
-					cigi.setActionCommand(TEXT_CARD_FROM_ALL_CREATE_SUBSTACKS_FROM_CAT + ":" + ci.toString());
-					cigi.addActionListener(this);
-					A_createSubstacksFromCategories.add(cigi);
-				}
-				for (Integer ci : columnsCategorical) {
-					JMenuItem cigi = new JMenuItem(mTableModel.getColumnTitle(ci));
-					cigi.setActionCommand(TEXT_CARD_FROM_SELECTION_CREATE_SUBSTACKS_FROM_CAT + ":" + ci.toString());
-					cigi.addActionListener(this);
-					B_createSubstacksFromCategories.add(cigi);
-				}
-
-				JMenu A_jm_arrangeSelectedCards = new JMenu("Arrange All Cards by");
-				JMenu B_jm_arrangeSelectedCards = new JMenu("Arrange Selected Cards by");
-
-				for (Integer ci : columnsNumeric) {
-					JMenuItem cigi = new JMenuItem(mTableModel.getColumnTitle(ci));
-					cigi.setActionCommand(TEXT_CARD_FROM_ALL_ARRANGE+":"+ci.toString());
-					cigi.addActionListener(this);
-					A_jm_arrangeSelectedCards.add(cigi);
-				}
-
-				for (Integer ci : columnsNumeric) {
-					JMenuItem cigi = new JMenuItem(mTableModel.getColumnTitle(ci));
-					cigi.setActionCommand(TEXT_CARD_FROM_SELECTION_ARRANGE+":"+ci.toString());
-					cigi.addActionListener(this);
-					B_jm_arrangeSelectedCards.add(cigi);
-				}
-
-
-				boolean selection_empty = ((JCardView)source).getCardPane().getSelection().isEmpty();
-
-				if(!selection_empty) {
-					this.add(B_jm_arrangeSelectedCards);
-				}
-				else {
-					this.add(A_jm_arrangeSelectedCards);
-				}
-
-				this.addSeparator();
-
-				// From Hitlist:
-				// A: from selection, B: from all
-//				JMenu A_createSubstacksFromHL = new JMenu("Create Stack from Hitlist");
-//				JMenu B_createSubstacksFromHL = new JMenu("Create Stack from ");
-//
-//				for (String si : listNames) {
-//					JMenuItem cigi = new JMenuItem(si);
-//					cigi.setActionCommand(TEXT_CARD_FROM_SELECTION_CREATE_SUBSTACKS_FROM_HITLIST + ":" + mTableModel.getListHandler().getListFlagNo(si)  );
-//					cigi.addActionListener(this);
-//					A_createSubstacksFromHL.add(cigi);
-//				}
-//				for (String si : listNames) {
-//					JMenuItem cigi = new JMenuItem(si);
-//					cigi.setActionCommand(TEXT_CARD_FROM_ALL_CREATE_SUBSTACKS_FROM_HITLIST + ":" + mTableModel.getListHandler().getListFlagNo(si));
-//					cigi.addActionListener(this);
-//					B_createSubstacksFromHL.add(cigi);
-//				}
-//
-//				if(columnsCategorical.isEmpty()){ A_createSubstacksFromCategories.setEnabled(false); B_createSubstacksFromCategories.setEnabled(false);}
-//				if(listNames.isEmpty()){ A_createSubstacksFromHL.setEnabled(false); B_createSubstacksFromHL.setEnabled(false);}
-
-
-				// Add substack creation:
-//				menuFromSelection.add(A_createSubstacksFromCategories);
-//				menuFromSelection.add(A_createSubstacksFromHL);
-//				menuFromAll.add(B_createSubstacksFromCategories);
-//				menuFromAll.add(B_createSubstacksFromHL);
-
-
-				if(!selection_empty) {
-					this.add(B_createSubstacksFromCategories);
-				}
-				else {
-					this.add(A_createSubstacksFromCategories);
-				}
-
-
-//				menuFromSelection.addSeparator();
-//				menuFromAll.addSeparator();
-
-
-
-//				menuFromSelection.add(A_menuSort2D);
-//				menuFromAll.add(B_menuSort2D);
-
-
-//                JMenu menuCreateStacks = new JMenu("Create Stacks");
-//                for (Integer ci : columnsCategorical) {
-//                    JMenuItem cs_xi = new JMenuItem(mTableModel.getColumnTitle(ci));
-//                    cs_xi.setActionCommand(TEXT_CARD_STACK_FOR_COLUMN + ":" + ci);
-//                    cs_xi.addActionListener(this);
-//                    menuCreateStacks.add(cs_xi);
-//                }
-//                this.add(menuCreateStacks);
-
-				//this.addSeparator();
-				//this.add(menuFromSelection);
-				//this.addSeparator();
-
-				// @TODO: create action and implement!
-				JMenuItem createCategoryFromStacks = new JMenuItem("Create Category Column from Stacks..");
-				createCategoryFromStacks.setActionCommand(TEXT_CARD_CREATE_CATEGORY_COLUMN_FROM_STACKS);
-				createCategoryFromStacks.addActionListener(this);
-				this.add(createCategoryFromStacks);
-
-				this.addSeparator();
-
-				JMenuItem graphicalOptions = new JMenuItem(TEXT_CARD_OPTIONS);
-				graphicalOptions.addActionListener(this);
-				this.add(graphicalOptions);
-
-
-				// deactivate JMenuItems in case that we have nothing selected
-				if( ((JCardView)source).getCardPane().getCardPaneModel().getAllElements().stream().filter( ci -> ci.getSelectedRecords().size()>0 ).count() == 0 ) {
-					B_jm_arrangeSelectedCards.setEnabled(false);
-					B_createSubstacksFromCategories.setEnabled(false);
-					stackItem.setEnabled(false);
-					A_ExpandSelectedStacks.setEnabled(false);
-				}
-
-            }
-
-        }
-
-	}
+		if(System.getProperty("development") != null)
+			addCardViewOptions(source);
+		}
 
 	private void addCopyStructureItems(JMenu copyMenu, int idcodeColumn, String structureColumnSpecifier) {
 		boolean hasExplicitColor = (mTableModel.getChildColumn(idcodeColumn, CompoundTableConstants.cColumnTypeAtomColorInfo) != -1);
@@ -1051,6 +654,225 @@ public class DEDetailPopupMenu extends JPopupMenu implements ActionListener,Item
 			}
 		}
 
+	private void addCardViewOptions(CompoundTableView source) {
+		if (source instanceof JCardView) {
+			// create automatic 1D sorting options:
+			List<Integer> columnsNumeric = new ArrayList<>();
+			for (int zi = 0; zi < mTableModel.getTotalColumnCount(); zi++) {
+				if (mTableModel.isColumnTypeDouble(zi)) {
+					columnsNumeric.add(zi);
+				}
+			}
+			List<Integer> columnsCategorical = new ArrayList<>();
+			for (int zi = 0; zi < mTableModel.getTotalColumnCount(); zi++) {
+				if (mTableModel.isColumnTypeCategory(zi)) {
+					columnsCategorical.add(zi);
+				}
+			}
+
+			// Find Hitlists:
+			List<String> listNames = new ArrayList<>();
+			try {
+				listNames = Arrays.asList(mTableModel.getListHandler().getListNames());
+			}
+			catch(Exception e){}
+
+
+			JCardView cardView = (JCardView) source;
+			JCardPane cardPane = cardView.getCardPane();
+
+			mCEMouseOver = cardPane.getHighlightedCardElement();
+
+			this.addSeparator();
+
+//				JMenuItem positionCardItems = new JMenuItem(TEXT_CARD_POSITION);
+//				positionCardItems.addActionListener(this);
+//				this.add(positionCardItems);
+//
+//				this.addSeparator();
+
+			JMenuItem stackItem = new JMenuItem(TEXT_CARD_STACK);
+			stackItem.addActionListener(this);
+			this.add(stackItem);
+
+//				JMenuItem itemExpandStack = new JMenuItem("Expand Stack");
+//				itemExpandStack.setActionCommand(TEXT_CARD_EXPAND_STACK);
+//				itemExpandStack.addActionListener(this);
+//				CardElement ce_mouseOver = null;
+//				if (!cardPane.isMouseOverStack()) {
+//					itemExpandStack.setEnabled(false);
+//				} else {
+//
+//				}
+//				this.add(itemExpandStack);
+//                this.addSeparator();
+
+//                JMenuItem miCreateStackFromSelection = new JMenuItem("Create Stack from Selection");
+
+			//JMenu menuCreateStacksFromAll       = new JMenu("Stack All Cards by");
+			//JMenu menuCreateStacksFromSelection = new JMenu("Stack Selected Cards by");
+
+//				JMenu menuFromSelection = new JMenu("From Selection");
+//				JMenu menuFromAll       = new JMenu("From All");
+
+			// Expand Stacks
+			// A: from selection, B: from all
+			JMenuItem A_ExpandSelectedStacks = new JMenuItem("Expand Selected Stacks");
+			A_ExpandSelectedStacks.setActionCommand(TEXT_CARD_FROM_SELECTION_EXPAND_STACKS);
+			A_ExpandSelectedStacks.addActionListener(this);
+
+			this.add(A_ExpandSelectedStacks);
+
+			JMenuItem B_ExpandSelectedStacks = new JMenuItem("Expand All Stacks");
+			B_ExpandSelectedStacks.setActionCommand(TEXT_CARD_FROM_ALL_EXPAND_STACKS);
+			B_ExpandSelectedStacks.addActionListener(this);
+
+
+			JMenuItem SetStackName = new JMenuItem("Set Stack Name...");
+			SetStackName.setActionCommand(TEXT_CARD_SET_STACK_NAME);
+			SetStackName.addActionListener(this);
+
+			if(!cardPane.isMouseOverStack()) {
+				SetStackName.setEnabled(false);
+			}
+//                if(mCEMouseOver==null){
+//                    SetStackName.setEnabled(false);
+//                }
+//                else if(! mCEMouseOver.isStack()) {
+//                    SetStackName.setEnabled(false);
+//                }
+
+			this.add(SetStackName);
+
+//				menuFromSelection.add(A_ExpandStacks);
+//				menuFromAll.add(B_ExpandStacks);
+//
+//				menuFromSelection.addSeparator();
+//				menuFromAll.addSeparator();
+
+
+			this.addSeparator();
+
+			// Create Substacks
+
+			// From Categories
+			// A: from selection, B: from all
+			JMenu A_createSubstacksFromCategories = new JMenu("Stacks All Cards by");
+			JMenu B_createSubstacksFromCategories = new JMenu("Stack Selected Cards by");
+
+			for (Integer ci : columnsCategorical) {
+				JMenuItem cigi = new JMenuItem(mTableModel.getColumnTitle(ci));
+				cigi.setActionCommand(TEXT_CARD_FROM_ALL_CREATE_SUBSTACKS_FROM_CAT + ":" + ci.toString());
+				cigi.addActionListener(this);
+				A_createSubstacksFromCategories.add(cigi);
+			}
+			for (Integer ci : columnsCategorical) {
+				JMenuItem cigi = new JMenuItem(mTableModel.getColumnTitle(ci));
+				cigi.setActionCommand(TEXT_CARD_FROM_SELECTION_CREATE_SUBSTACKS_FROM_CAT + ":" + ci.toString());
+				cigi.addActionListener(this);
+				B_createSubstacksFromCategories.add(cigi);
+			}
+
+			JMenu A_jm_arrangeSelectedCards = new JMenu("Arrange All Cards by");
+			JMenu B_jm_arrangeSelectedCards = new JMenu("Arrange Selected Cards by");
+
+			for (Integer ci : columnsNumeric) {
+				JMenuItem cigi = new JMenuItem(mTableModel.getColumnTitle(ci));
+				cigi.setActionCommand(TEXT_CARD_FROM_ALL_ARRANGE+":"+ci.toString());
+				cigi.addActionListener(this);
+				A_jm_arrangeSelectedCards.add(cigi);
+			}
+
+			for (Integer ci : columnsNumeric) {
+				JMenuItem cigi = new JMenuItem(mTableModel.getColumnTitle(ci));
+				cigi.setActionCommand(TEXT_CARD_FROM_SELECTION_ARRANGE+":"+ci.toString());
+				cigi.addActionListener(this);
+				B_jm_arrangeSelectedCards.add(cigi);
+			}
+
+
+			boolean selection_empty = ((JCardView)source).getCardPane().getSelection().isEmpty();
+
+			if(!selection_empty) {
+				this.add(B_jm_arrangeSelectedCards);
+			}
+			else {
+				this.add(A_jm_arrangeSelectedCards);
+			}
+
+			this.addSeparator();
+
+			// From Hitlist:
+			// A: from selection, B: from all
+//				JMenu A_createSubstacksFromHL = new JMenu("Create Stack from Hitlist");
+//				JMenu B_createSubstacksFromHL = new JMenu("Create Stack from ");
+//
+//				for (String si : listNames) {
+//					JMenuItem cigi = new JMenuItem(si);
+//					cigi.setActionCommand(TEXT_CARD_FROM_SELECTION_CREATE_SUBSTACKS_FROM_HITLIST + ":" + mTableModel.getListHandler().getListFlagNo(si)  );
+//					cigi.addActionListener(this);
+//					A_createSubstacksFromHL.add(cigi);
+//				}
+//				for (String si : listNames) {
+//					JMenuItem cigi = new JMenuItem(si);
+//					cigi.setActionCommand(TEXT_CARD_FROM_ALL_CREATE_SUBSTACKS_FROM_HITLIST + ":" + mTableModel.getListHandler().getListFlagNo(si));
+//					cigi.addActionListener(this);
+//					B_createSubstacksFromHL.add(cigi);
+//				}
+//
+//				if(columnsCategorical.isEmpty()){ A_createSubstacksFromCategories.setEnabled(false); B_createSubstacksFromCategories.setEnabled(false);}
+//				if(listNames.isEmpty()){ A_createSubstacksFromHL.setEnabled(false); B_createSubstacksFromHL.setEnabled(false);}
+
+
+			// Add substack creation:
+//				menuFromSelection.add(A_createSubstacksFromCategories);
+//				menuFromSelection.add(A_createSubstacksFromHL);
+//				menuFromAll.add(B_createSubstacksFromCategories);
+//				menuFromAll.add(B_createSubstacksFromHL);
+
+			if(!selection_empty)
+				add(B_createSubstacksFromCategories);
+			else
+				add(A_createSubstacksFromCategories);
+
+//				menuFromSelection.addSeparator();
+//				menuFromAll.addSeparator();
+
+
+
+//				menuFromSelection.add(A_menuSort2D);
+//				menuFromAll.add(B_menuSort2D);
+
+
+//                JMenu menuCreateStacks = new JMenu("Create Stacks");
+//                for (Integer ci : columnsCategorical) {
+//                    JMenuItem cs_xi = new JMenuItem(mTableModel.getColumnTitle(ci));
+//                    cs_xi.setActionCommand(TEXT_CARD_STACK_FOR_COLUMN + ":" + ci);
+//                    cs_xi.addActionListener(this);
+//                    menuCreateStacks.add(cs_xi);
+//                }
+//                this.add(menuCreateStacks);
+
+			//this.addSeparator();
+			//this.add(menuFromSelection);
+			//this.addSeparator();
+
+			// @TODO: create action and implement!
+			JMenuItem createCategoryFromStacks = new JMenuItem("Create Category Column from Stacks..");
+			createCategoryFromStacks.setActionCommand(TEXT_CARD_CREATE_CATEGORY_COLUMN_FROM_STACKS);
+			createCategoryFromStacks.addActionListener(this);
+			this.add(createCategoryFromStacks);
+
+			// deactivate JMenuItems in case that we have nothing selected
+			if( ((JCardView)source).getCardPane().getCardPaneModel().getAllElements().stream().filter( ci -> ci.getSelectedRecords().size()>0 ).count() == 0 ) {
+				B_jm_arrangeSelectedCards.setEnabled(false);
+				B_createSubstacksFromCategories.setEnabled(false);
+				stackItem.setEnabled(false);
+				A_ExpandSelectedStacks.setEnabled(false);
+				}
+			}
+		}
+
 	private String decorateKey(String key, String decoration) {
 		if (decoration != null)
 			key = decoration.replace("%s", key);
@@ -1072,24 +894,6 @@ public class DEDetailPopupMenu extends JPopupMenu implements ActionListener,Item
 		// which is not compatible with wikipedia and molecule names that contain spaces.
 		// (Wikipedia detects "%20" and converts them into '_', which they use in their page names instead of spaces)
 		return URLEncoder.encode(params, "UTF-8").replace("+", "%20");
-		}
-
-	public void itemStateChanged(ItemEvent e) {
-		if (((JCheckBoxMenuItem)e.getItem()).getText().equals("Use Stereo")) {
-			((JVisualization3D)((VisualizationPanel)mSource).getVisualization()).setStereo(((JCheckBoxMenuItem)e.getItem()).isSelected());
-			}
-		else if (((JCheckBoxMenuItem)e.getItem()).getText().equals("H-Interlace Left Eye First")) {
-			((JVisualization3D)((VisualizationPanel)mSource).getVisualization()).setStereoMode(JVisualization3D.STEREO_MODE_H_INTERLACE_LEFT_EYE_FIRST);
-			}
-		else if (((JCheckBoxMenuItem)e.getItem()).getText().equals("H-Interlace Right Eye First")) {
-			((JVisualization3D)((VisualizationPanel)mSource).getVisualization()).setStereoMode(JVisualization3D.STEREO_MODE_H_INTERLACE_RIGHT_EYE_FIRST);
-			}
-		else if (((JCheckBoxMenuItem)e.getItem()).getText().equals("Vertical Interlace")) {
-			((JVisualization3D)((VisualizationPanel)mSource).getVisualization()).setStereoMode(JVisualization3D.STEREO_MODE_V_INTERLACE);
-			}
-		else if (((JCheckBoxMenuItem)e.getItem()).getText().equals("Side By Side For 3D-TV")) {
-			((JVisualization3D)((VisualizationPanel)mSource).getVisualization()).setStereoMode(JVisualization3D.STEREO_MODE_3DTV_SIDE_BY_SIDE);
-			}
 		}
 
 	private Reaction getReaction(String actionCommand) {
@@ -1343,45 +1147,12 @@ public class DEDetailPopupMenu extends JPopupMenu implements ActionListener,Item
 			} catch (IOException ioe) {
 				ioe.printStackTrace();
 			}
-		} else if (actionCommand.equals(TEXT_CHART_TYPE)) {
-			new DETaskSetPreferredChartType(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_STRUCTURE_LABELS)
-				|| actionCommand.equals(TEXT_MARKER_LABELS)) {
-			new DETaskSetMarkerLabels(getParentFrame(), mMainPane, mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_MARKER_SIZE)) {
-			new DETaskSetMarkerSize(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_MARKER_SHAPE)) {
-			new DETaskSetMarkerShape(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_MARKER_COLOR)) {
-			new DETaskSetMarkerColor(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_MARKER_BG_COLOR)) {
-			new DETaskSetMarkerBackgroundColor(getParentFrame(), mMainPane, (VisualizationPanel2D) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_MARKER_TRANSPARENCY)) {
-			new DETaskSetMarkerTransparency(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_MARKER_CONNECTION)) {
-			new DETaskSetConnectionLines(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_FOCUS)) {
-			new DETaskSetFocus(getParentFrame(), mMainPane, (FocusableView) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_MARKER_JITTERING)) {
-			new DETaskSetMarkerJittering(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_MULTI_VALUE_MARKER)) {
-			new DETaskSetMultiValueMarker(getParentFrame(), mMainPane, (VisualizationPanel2D) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_SEPARATE_CASES)) {
-			new DETaskSeparateCases(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
 
-		} else if (actionCommand.equals(TEXT_SPLIT_VIEW)) {
-			new DETaskSplitView(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_BACKGROUND_IMAGE)) {
-			new DETaskSetBackgroundImage(getParentFrame(), mMainPane, (VisualizationPanel2D) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_GENERAL_OPTIONS)) {
-			new DETaskSetGraphicalViewOptions(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
-		} else if (actionCommand.equals(TEXT_STATISTICAL_OPTIONS)) {
-			new DETaskSetStatisticalViewOptions(getParentFrame(), mMainPane, (VisualizationPanel2D) mSource).defineAndRun();
+
+
 		} else if (actionCommand.equals(TEXT_CARD_STACK)) {
 			//new DETaskCreateStackFromSelection(getParentFrame(), ((JCardView) mSource).getCardPane(), ((JCardView) mSource).getCardPane().getLastClickedPoint()).defineAndRun();
 			new DETaskCreateStackFromSelection(getParentFrame(), ((JCardView) mSource).getCardPane(), ((JCardView) mSource).getCardPane().getLastClickedPoint()).runTask(new Properties());
-		} else if (actionCommand.equals(TEXT_CARD_OPTIONS)) {
-            new DETaskSetCardViewOptions(getParentFrame(),mMainPane,((JCardView) this.mSource).getDataWarriorLink(),((JCardView) this.mSource).getCardPane()).defineAndRun();
         } else if (actionCommand.equals(TEXT_CARD_CREATE_CATEGORY_COLUMN_FROM_STACKS)) {
 			new DETaskCreateCategoricalColumnFromStacks(getParentFrame(),((JCardView) this.mSource).getCardPane(),((JCardView) this.mSource).getDataWarriorLink()).defineAndRun();
 		}
@@ -1410,8 +1181,6 @@ public class DEDetailPopupMenu extends JPopupMenu implements ActionListener,Item
 
 		else if (actionCommand.equals(TEXT_CARD_POSITION)) {
 			new DETaskPositionCards(getParentFrame(),((JCardView) this.mSource).getDataWarriorLink(), ((JCardView) this.mSource).getCardPane() ).defineAndRun();
-		} else if (actionCommand.equals(TEXT_CARD_CONFIGURE)) {
-			new DETaskConfigureCard(getParentFrame(), mMainPane, ((JCardView) this.mSource).getCardPane(), ((JCardView) this.mSource).getDataWarriorLink()).defineAndRun();
 		}
 //				JCardWizard2 jCardWizard = new JCardWizard2(((JCardView) this.mSource).getDataWarriorLink(), ((JCardView) this.mSource), ((JCardView) this.mSource).getCardPane(), false, ((JCardView) this.mSource).getCardWizardConfig());
 //				JDialog jdg = new JDialog();
@@ -1592,21 +1361,6 @@ public class DEDetailPopupMenu extends JPopupMenu implements ActionListener,Item
 					}
 				}
 			}
-		}
-		else if (actionCommand.startsWith(COLOR_DISPLAY_MODE)) {
-			int colorModeIndex = DETaskSetStructureDisplayMode.findColorModeIndex(actionCommand.substring(COLOR_DISPLAY_MODE.length()), -1);
-			new DETaskSetStructureDisplayMode(getParentFrame(), mMainPane, (JStructureGrid)mSource, -1, colorModeIndex).defineAndRun();
-		}
-		else if (actionCommand.startsWith(STEREO_DISPLAY_MODE)) {
-			int stereoModeIndex = DETaskSetStructureDisplayMode.findStereoModeIndex(actionCommand.substring(STEREO_DISPLAY_MODE.length()), -1);
-			new DETaskSetStructureDisplayMode(getParentFrame(), mMainPane, (JStructureGrid)mSource, stereoModeIndex, -1).defineAndRun();
-		}
-		else {
-			try {
-				int columnCount = Integer.parseInt(e.getActionCommand());
-				new DETaskSetHorizontalStructureCount(getParentFrame(), mMainPane, (JStructureGrid)mSource, columnCount).defineAndRun();
-				}
-			catch (NumberFormatException nfe) {}
 		}
 	}
 

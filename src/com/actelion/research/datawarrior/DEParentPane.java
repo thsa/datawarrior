@@ -142,7 +142,7 @@ public class DEParentPane extends JComponent implements DetailPopupProvider  {
 		}
 
 	public JPopupMenu createPopupMenu(CompoundRecord record, CompoundTableView source, int selectedColumn, boolean isCtrlDown) {
-        JPopupMenu popup = new DEDetailPopupMenu(mTabbedMainViews, record, mPruningPanel, source, mDatabaseActions, selectedColumn, isCtrlDown);
+        JPopupMenu popup = new DERowDetailPopupMenu(mTabbedMainViews, record, mPruningPanel, source, mDatabaseActions, selectedColumn, isCtrlDown);
         return (popup.getComponentCount() == 0) ? null : popup;
         }
 

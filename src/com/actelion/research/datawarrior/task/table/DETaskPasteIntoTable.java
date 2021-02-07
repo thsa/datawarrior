@@ -8,6 +8,7 @@ import com.actelion.research.chem.reaction.ReactionEncoder;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETable;
 import com.actelion.research.datawarrior.task.AbstractSingleColumnTask;
+import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import info.clearthought.layout.TableLayout;
@@ -17,6 +18,7 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -140,14 +142,15 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 			return false;
 			}
 
-		if (!analyzeClipboard())
+		if (!analyzeClipboard(configuration))
 			return false;
 
 		if (isLive) {
-			int firstVisColumn = mTable.convertTotalColumnIndexToView(getColumn(configuration));
+			int targetColumn = getColumn(configuration);
+			int firstVisColumn = mTable.convertTotalColumnIndexToView(targetColumn);
 			int lastVisColumn = Math.min(mTable.getColumnCount(), firstVisColumn + mClipboardContent[0].length);
 			for (int visColumn=firstVisColumn; visColumn<lastVisColumn; visColumn++) {
-				String type = getTableModel().getColumnSpecialType(mTable.convertTotalColumnIndexFromView(visColumn));
+				String type = getTableModel().getColumnSpecialType(targetColumn);
 				if (type != null
 				 && !type.equals(CompoundTableConstants.cColumnTypeIDCode)
 				 && !type.equals(CompoundTableConstants.cColumnTypeRXNCode)) {
@@ -165,7 +168,7 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 	 * Shows error message in case of error.
 	 * @return whether an error occurred
 	 */
-	private boolean analyzeClipboard() {
+	private boolean analyzeClipboard(Properties configuration) {
 		ArrayList<String[]> rowList = new ArrayList<String[]>();
 		int columnCount = 0;
 
@@ -191,13 +194,41 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 
 			theReader.close();
 			}
+		catch (UnsupportedFlavorException ufe) {
+			// instead of a unicode String we may have a molecule or reaction
+			int targetColumn = getColumn(configuration);
+			String type = getTableModel().getColumnSpecialType(targetColumn);
+			if (type != null) {
+				if (type.equals(CompoundTableConstants.cColumnTypeIDCode)) {
+					StereoMolecule mol = new ClipboardHandler().pasteMolecule();
+					if (mol != null) {
+						mol.setFragment("true".equals(getTableModel().getColumnProperty(targetColumn,
+								CompoundTableConstants.cColumnPropertyIsFragment)));
+						Canonizer canonizer = new Canonizer(mol);
+						mClipboardContent = new String[1][1];
+						mClipboardContent[0][0] = canonizer.getIDCode()+" "+canonizer.getEncodedCoordinates();
+						return true;
+						}
+					}
+				if (type.equals(CompoundTableConstants.cColumnTypeRXNCode)) {
+					Reaction rxn = new ClipboardHandler().pasteReaction();
+					if (rxn != null) {
+						mClipboardContent = new String[1][1];
+						mClipboardContent[0][0] = ReactionEncoder.encode(rxn, false,
+								ReactionEncoder.INCLUDE_MAPPING | ReactionEncoder.INCLUDE_COORDS);;
+						return true;
+						}
+					}
+				}
+			return false;
+			}
 		catch (Exception e) {
 			showErrorMessage("Error while processing clipboard content:"+e.getMessage());
 			return false;
 			}
 
 		if (rowList.isEmpty()) {
-			showErrorMessage("First row is not numerical.");
+			showErrorMessage("No rows found on clipboard.");
 			return false;
 			}
 

@@ -252,7 +252,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 				Reaction newRxn = dialog.getReactionAndDrawings();
 
 				// rescue catalysts, because the editor doesn't handle them
-				if (newRxn != null)
+				if (newRxn != null && oldRxn != null)
 					for (int i = 0; i<oldRxn.getCatalysts(); i++)
 						newRxn.addCatalyst(oldRxn.getCatalyst(i));
 				if (tableModel.setChemicalReaction(record, newRxn, valueColumn))

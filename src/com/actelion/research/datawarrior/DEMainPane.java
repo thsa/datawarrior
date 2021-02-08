@@ -21,10 +21,6 @@ package com.actelion.research.datawarrior;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
-import com.actelion.research.datawarrior.task.table.DETaskAddColumnsToGroup;
-import com.actelion.research.datawarrior.task.table.DETaskChangeColumnOrder;
-import com.actelion.research.datawarrior.task.table.DETaskRemoveColumnGroup;
-import com.actelion.research.datawarrior.task.table.DETaskShowTableColumnGroup;
 import com.actelion.research.datawarrior.task.view.*;
 import com.actelion.research.gui.JProgressPanel;
 import com.actelion.research.gui.LookAndFeelHelper;
@@ -556,6 +552,9 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 	 * @param title the title of an existing view
 	 */
 	public void closeView(String title) {
+		if (isMaximized())
+			maximize(title, null);
+
 		((CompoundTableView)getDockable(title).getContent()).cleanup();
 		undock(title, false);
 

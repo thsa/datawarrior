@@ -49,9 +49,6 @@ public class JTextFormObject extends AbstractFormObject implements FocusListener
 
 			@Override
 			public Point getToolTipLocation(MouseEvent e) {
-//				Point p1 = getParent().getLocation();    // viewport location in scrollpane (includes border insets)
-//				Point p2 = getLocation();    // text field in viewport (negative y values in case of scrolled down text)
-//				return new Point(-p1.x - p2.x, -p1.y - p2.y);
 				return new Point(0, 0);
 				}
 
@@ -158,7 +155,7 @@ public class JTextFormObject extends AbstractFormObject implements FocusListener
 			}
 
 		String text = ((JTextArea)mComponent).getText();
-		int width = mComponent.getWidth();   // scrollpane width
+		int width = mComponent.getWidth();
 		int maxCharsPerLine = (int)(TOOLTIP_WIDTH_FACTOR * width / mComponent.getFont().getSize());
 
 		int index1 = 0;

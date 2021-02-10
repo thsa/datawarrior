@@ -23,57 +23,76 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 
 public class JTextFormObject extends AbstractFormObject implements FocusListener {
 	public static final int SINGLE_LINE_HEIGHT = 1;
 	public static final int MULTI_LINE_HEIGHT = 2;
 
+	// Rough factor to control tooltip width assuming that average character width is 50% of its height.
+	private static final float TOOLTIP_WIDTH_FACTOR = 2;    // Use 2 for tooltips to be about as wide as the textarea
+
 	private String mCurrentText;
-	private JTextArea mTextArea;
 
 	public JTextFormObject(String key, String type) {
 		super(key, type);
 		
-		mTextArea = new JTextArea() {
+		mComponent = new JTextArea() {
 			private static final long serialVersionUID = 0x20070509;
+
+			@Override
 			public void setBorder(Border border) {
 				if (border instanceof FormObjectBorder)
 					super.setBorder(border);
 				}
+
+			@Override
+			public Point getToolTipLocation(MouseEvent e) {
+//				Point p1 = getParent().getLocation();    // viewport location in scrollpane (includes border insets)
+//				Point p2 = getLocation();    // text field in viewport (negative y values in case of scrolled down text)
+//				return new Point(-p1.x - p2.x, -p1.y - p2.y);
+				return new Point(0, 0);
+				}
+
+			@Override
+			public String getToolTipText(MouseEvent e) {
+				return createToolTipText();
+				}
 			};
-		mTextArea.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, mTextArea.getFont().getSize()));
-		mTextArea.addFocusListener(this);
-		mTextArea.setEditable(false);
-		mTextArea.setLineWrap(true);
-		mTextArea.setWrapStyleWord(true);
+		mComponent.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, mComponent.getFont().getSize()));
+		mComponent.addFocusListener(this);
+		((JTextArea)mComponent).setEditable(false);
+		((JTextArea)mComponent).setLineWrap(true);
+		((JTextArea)mComponent).setWrapStyleWord(true);
 
 		// set back to default behaviour, which is "TAB advances to next focusable item"
-		mTextArea.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, null);
-		mTextArea.setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, null);
-		mComponent = new JScrollPane(mTextArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		mComponent.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, null);
+		mComponent.setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS, null);
+
+		mComponent.setToolTipText("");	// to switch on tool-tips
 		}
 
 	public void focusGained(FocusEvent e) {
-		mCurrentText = mTextArea.getText();
+		mCurrentText = ((JTextArea)mComponent).getText();
 		}
 
 	public void focusLost(FocusEvent e) {
-		if (!mTextArea.getText().equals(mCurrentText))
+		if (!((JTextArea)mComponent).getText().equals(mCurrentText))
 			fireDataChanged();
 		}
 	
 	public Object getData() {
-		return mTextArea.getText();
+		return ((JTextArea)mComponent).getText();
 		}
 
 	public void setData(Object data) {
-		mTextArea.setText((String)data);
+		((JTextArea)mComponent).setText((String)data);
 		}
 
 	public void setEditable(boolean b) {
 		super.setEditable(b);
-		mTextArea.setEditable(b);
+		((JTextArea)mComponent).setEditable(b);
 		}
 
 	public int getDefaultRelativeHeight() {
@@ -82,7 +101,7 @@ public class JTextFormObject extends AbstractFormObject implements FocusListener
 
 	public void setFont(Font font) {
 		super.setFont(font);
-		mTextArea.setFont(font);
+		mComponent.setFont(font);
 		}
 
 	public void printContent(Graphics2D g2D, Rectangle2D.Double r, float scale, Object data, boolean isMultipleRows) {
@@ -92,7 +111,7 @@ public class JTextFormObject extends AbstractFormObject implements FocusListener
 				g2D.fill(r);
 				}
 			g2D.setColor(mPrintForeground != null ? mPrintForeground : Color.BLACK);
-			g2D.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, (int)(mTextArea.getFont().getSize2D()*scale+0.5)));
+			g2D.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, (int)(mComponent.getFont().getSize2D()*scale+0.5)));
 			FontMetrics metrics = g2D.getFontMetrics();
 			double height = metrics.getHeight();
 			double border = metrics.getStringBounds(" ", g2D).getWidth();
@@ -122,5 +141,62 @@ public class JTextFormObject extends AbstractFormObject implements FocusListener
 				}
 			g2D.setClip(null);
 			}
+		}
+
+	private String createToolTipText() {
+		if (((JTextArea)mComponent).isEditable())
+			return null;
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("<html>");
+
+		Border border = getBorder();
+		if (border != null && border instanceof FormObjectBorder) {
+			sb.append("<b>");
+			sb.append(((FormObjectBorder)border).getTitle()+":");
+			sb.append("</b><br>");
+			}
+
+		String text = ((JTextArea)mComponent).getText();
+		int width = mComponent.getWidth();   // scrollpane width
+		int maxCharsPerLine = (int)(TOOLTIP_WIDTH_FACTOR * width / mComponent.getFont().getSize());
+
+		int index1 = 0;
+		while (index1 < text.length()) {
+			// skip white space
+			while (index1<text.length() && Character.isWhitespace(text.charAt(index1)))
+				index1++;
+
+			int index2 = index1+1;
+			while (index2<text.length()
+					&& text.charAt(index2) != '\n'
+					&& index2 - index1 < maxCharsPerLine)
+				index2++;
+
+			// if possible go back a few chars to break line at white space
+			if (index2<text.length()
+			 && !Character.isWhitespace(text.charAt(index2))) {
+				int index = index2;
+				int minChars = Math.max(5, maxCharsPerLine*2/3); // not less than 5 chars per line or 2/3 of max length
+				while (index > index1+minChars
+					&& !Character.isWhitespace(text.charAt(index)))
+					index--;
+
+				if (Character.isWhitespace(text.charAt(index))) {    // white space found within acceptable range
+					while (index > index1+minChars
+						&& Character.isWhitespace(text.charAt(index-1)))
+						index--;
+					index2 = index;
+					}
+				}
+
+			sb.append(text, index1, index2);
+			sb.append("<br>");
+
+			index1 = index2;
+			}
+
+		sb.append("</html>");
+		return sb.toString();
 		}
 	}

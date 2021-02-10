@@ -21,7 +21,7 @@ package com.actelion.research.table.view;
 import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.gui.form.*;
-import com.actelion.research.table.*;
+import com.actelion.research.table.CompoundTableColorHandler;
 import com.actelion.research.table.model.*;
 
 import javax.swing.*;

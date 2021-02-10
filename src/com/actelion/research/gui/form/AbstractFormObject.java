@@ -19,6 +19,7 @@
 package com.actelion.research.gui.form;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -39,6 +40,10 @@ public abstract class AbstractFormObject {
 		mType = type;
 		mListener = new ArrayList<>();
 		mRelativeHeight = -1;
+		}
+
+	public Border getBorder() {
+		return mBorder;
 		}
 
 	public JComponent getComponent() {

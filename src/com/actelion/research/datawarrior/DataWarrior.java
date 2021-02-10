@@ -241,6 +241,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 
 	public void initialize() {
 		javafx.application.Platform.setImplicitExit(false);
+		ToolTipManager.sharedInstance().setDismissDelay(600000);    // 10 min
 		Molecule.setDefaultAverageBondLength(HiDPIHelper.scale(24));
 		StructureNameResolver.setInstance(new DEStructureNameResolver());
 		}

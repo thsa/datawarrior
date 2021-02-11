@@ -20,7 +20,6 @@ package com.actelion.research.datawarrior.task.chem;
 
 import com.actelion.research.chem.CanonizerUtil;
 import com.actelion.research.chem.StereoMolecule;
-import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.DescriptorHandler;
 import com.actelion.research.chem.descriptor.DescriptorHelper;
 import com.actelion.research.chem.io.*;
@@ -771,7 +770,7 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 
 		String descriptorType = mTableModel.getColumnSpecialType(chemColumn);
 		@SuppressWarnings("unchecked")
-		final DescriptorHandler<Object,Object> dh = isDescriptor ? mTableModel.getDescriptorHandler(chemColumn) : null;
+		final DescriptorHandler<Object,Object> dh = isDescriptor ? mTableModel.getDescriptorHandler(chemColumn).getThreadSafeCopy() : null;
 
 		DWARFileCreator dwarCreator = null;
 		ArrayList<PairMapEntry> pairMap = null;
@@ -916,7 +915,9 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 		int[] matchCount = new int[mTableModel.getTotalRowCount()];
 		float[] maxSimilarity = isDescriptor ? new float[mTableModel.getTotalRowCount()] : null;
 
-	//try {
+		final float[] similarityList = new float[mTableModel.getTotalRowCount()];
+
+		//try {
 		int rowCount = parser.getRowCount();
 		startProgress("Processing Compounds From File...", 0, (rowCount == -1) ? 0 : rowCount);
 		while (parser.next()) {
@@ -948,32 +949,27 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 					}
 				}
 
-			final float[] similarityList =
-					(isDescriptor && descriptorType.equals(DescriptorConstants.DESCRIPTOR_Flexophore.shortName)) ?
-						new float[mTableModel.getTotalRowCount()] : null;
+			// We pre-calculate similarities on multiple threads...
+			int threadCount = Runtime.getRuntime().availableProcessors();
+			final AtomicInteger smtIndex = new AtomicInteger(mTableModel.getTotalRowCount());
+			final Object _descriptor = descriptor;
 
-					// for the flexophore we pre-calculate similarities on multiple threads...
-			if (similarityList != null) {
-				int threadCount = Runtime.getRuntime().availableProcessors();
-				final AtomicInteger smtIndex = new AtomicInteger(mTableModel.getTotalRowCount());
-				final Object _descriptor = descriptor;
-
-				Thread[] t = new Thread[threadCount];
-				for (int i=0; i<threadCount; i++) {
-					t[i] = new Thread(TASK_NAME+" "+(i+1)) {
-						public void run() {
-							int index;
-							while ((index = smtIndex.decrementAndGet()) >= 0) {
-								CompoundRecord record = mTableModel.getTotalRecord(index);
-								similarityList[index] = dh.getSimilarity(_descriptor, record.getData(chemColumn));
-								}
+			Thread[] t = new Thread[threadCount];
+			for (int i=0; i<threadCount; i++) {
+				t[i] = new Thread(TASK_NAME+" "+(i+1)) {
+					public void run() {
+						int index;
+						while ((index = smtIndex.decrementAndGet()) >= 0) {
+							CompoundRecord record = mTableModel.getTotalRecord(index);
+							similarityList[index] = 0;
+							similarityList[index] = dh.getSimilarity(_descriptor, record.getData(chemColumn));
 							}
-						};
-					t[i].start();
-					}
-				for (int i=0; i<threadCount; i++)
-					try { t[i].join(); } catch (InterruptedException ie) {}
+						}
+					};
+				t[i].start();
 				}
+			for (int i=0; i<threadCount; i++)
+				try { t[i].join(); } catch (InterruptedException ie) {}
 
 			boolean isSimilar = false;
 			byte[] idcodeBytes = (isDescriptor || needsHash) ? null : idcode.getBytes();

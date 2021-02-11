@@ -271,7 +271,9 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		mStatusPanel.setNoOfVisible(mTableModel.getRowCount());
 		}
 
-	private JPopupMenu createNewViewPopupMenu(String title) {
+	private JPopupMenu createNewViewPopupMenu(CompoundTableView view) {
+		Dockable dockable = getDockable((JComponent)view);
+		String title = dockable.getTitle();
 		JPopupMenu popup = new JPopupMenu();
 
 		// Currently there is always exactly one TableView.
@@ -294,7 +296,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		   		addMenuItem(popup, "New Macro Editor", "newMacro");
 
 			popup.addSeparator();
-	
+
 			if (isDuplicatableView((CompoundTableView)getDockable(title).getContent()))
 				addMenuItem(popup, "Duplicate View", COMMAND_DUPLICATE+title);
 			}
@@ -344,27 +346,8 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		if (command.equals(ITEM_NEW_MACRO_EDITOR)) {
 			addApplicationView(VIEW_TYPE_MACRO_EDITOR, getDefaultViewName(VIEW_TYPE_MACRO_EDITOR, -1), "root");
 			}
-		else if (command.startsWith("xyz_")) {
-			if(view instanceof VisualizationPanel) {
-				VisualizationPanel panel = (VisualizationPanel)view;
-				panel.showControls();
-			}
-		}
-		else if (command.startsWith("new_")) {
-			showNewViewPopupMenu(viewName, (JButton)e.getSource());
-			}
-		else if (command.startsWith("config_")) {
-			showViewConfigPopupMenu(view, (JButton)e.getSource());
-			}
-		else if (command.startsWith("close_")) {
-			new DETaskCloseView(mParentFrame, this, view).defineAndRun();
-			}
 		else if (command.startsWith("selected_")) {
 			new DETaskSelectView(mParentFrame, this, view).defineAndRun();
-			}
-		else if (e.getActionCommand().startsWith("max_")) {
-			String title = e.getActionCommand().substring(4);
-			maximize(title, null);
 			}
 		else if (command.startsWith(COMMAND_DUPLICATE)) {
 			new DETaskDuplicateView(mParentFrame, this, view).defineAndRun();
@@ -403,24 +386,21 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 			}
 		}
 
-	private void showNewViewPopupMenu(String viewName, JButton button) {
-		JPopupMenu popup = createNewViewPopupMenu(viewName);
-		popup.show(button.getParent(),
-				button.getBounds().x,
+	private void showNewViewPopupMenu(CompoundTableView view, JButton button) {
+		JPopupMenu popup = createNewViewPopupMenu(view);
+		popup.show(button.getParent(), button.getBounds().x,
 				button.getBounds().y + button.getBounds().height);
 		}
 
 	private void showViewConfigPopupMenu(CompoundTableView view, JButton button) {
 		JPopupMenu popup = new DEViewConfigPopupMenu(this, view);
-		popup.show(button.getParent(),
-				button.getBounds().x,
+		popup.show(button.getParent(), button.getBounds().x,
 				button.getBounds().y + button.getBounds().height);
 		}
 
 	//@Override
-	public void maximize(String title, JToolBar maximizeToolBar) {
-		Dockable dockable = getDockable(title);
-		CompoundTableView view = (CompoundTableView)dockable.getContent();
+	public void maximize(CompoundTableView view, JToolBar maximizeToolBar) {
+		Dockable dockable = getDockable((JComponent)view);
 
 		if (view instanceof JStructureGrid)
 			((JStructureGrid)view).setMaximized(isMaximized()? 1f : (float)getWidth()/dockable.getContent().getWidth());
@@ -434,10 +414,10 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		if (!isMaximized()) {
 			boolean hasAxisPopup = view instanceof VisualizationPanel
 								|| view instanceof JCardView;
-			toolBar = createViewToolBar(title, view);
+			toolBar = createViewToolBar(view);
 			}
 
-		super.maximize(title, isMaximized() ? null : toolBar);
+		super.maximize(dockable.getTitle(), isMaximized() ? null : toolBar);
 		}
 
 	public void renameView(String oldTitle, String newTitle) {
@@ -621,41 +601,41 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		return item;
 		}
 
-	private JToolBar createViewToolBar(String title, CompoundTableView view) {
+	private JToolBar createViewToolBar(CompoundTableView view) {
 		JToolBar toolbar = new JToolBar();
 		if (LookAndFeelHelper.isSubstance())
 			toolbar.addSeparator();
 
-		JButton popupButton1 = new HiDPIIconButton("newView.png", "New/copy/rename view", "new_"+title, 0, null);
-		popupButton1.addActionListener(this);
-		toolbar.add(popupButton1);
+		JButton plusButton = new HiDPIIconButton("plusButton.png", "New/copy/rename view", null, 0, null);
+		plusButton.addActionListener(e -> showNewViewPopupMenu(view, plusButton));
+		toolbar.add(plusButton);
 		if (LookAndFeelHelper.isSubstance())
 			toolbar.addSeparator();
 
-		JButton popupButton2 = new HiDPIIconButton("editView.png", "Configure View", "config_"+title, 0, null);
-		popupButton2.addActionListener(this);
-		toolbar.add(popupButton2);
+		JButton configButton = new HiDPIIconButton("configButton.png", "Configure View", null, 0, null);
+		configButton.addActionListener(e -> showViewConfigPopupMenu(view, configButton));
+		toolbar.add(configButton);
 		if (LookAndFeelHelper.isSubstance())
 			toolbar.addSeparator();
 
-		if (view instanceof VisualizationPanel || view instanceof JCardView) {
+		if (view instanceof VisualizationPanel) {
 			String buttonName = view instanceof VisualizationPanel3D ? "xyzButton.png" : "xyButton.png";
-			JButton axisButton = new HiDPIIconButton(buttonName, "Assign columns to axes", "xyz_"+title, 0, null);
-			axisButton.addActionListener(this);
+			JButton axisButton = new HiDPIIconButton(buttonName, "Assign columns to axes", null, 0, null);
+			axisButton.addActionListener(e -> ((VisualizationPanel)view).showControls());
 			toolbar.add(axisButton);
 			if (LookAndFeelHelper.isSubstance())
 				toolbar.addSeparator();
 			}
 
-		JButton maxButton = new HiDPIIconButton("maxButton.png", "Maximize view", "max_"+title, 0, null);
-		maxButton.addActionListener(this);
+		JButton maxButton = new HiDPIIconButton("maxButton.png", "Maximize view", null, 0, null);
+		maxButton.addActionListener(e -> maximize(view, null));
 		toolbar.add(maxButton);
 		if (LookAndFeelHelper.isSubstance())
 			toolbar.addSeparator();
 
 		if (!(view instanceof DETableView)) {
-			JButton closeButton = new HiDPIIconButton("closeButton.png", "Close View", "close_"+title, 0, null);
-			closeButton.addActionListener(this);
+			JButton closeButton = new HiDPIIconButton("closeButton.png", "Close View", null, 0, null);
+			closeButton.addActionListener(e -> new DETaskCloseView(mParentFrame, this, view).defineAndRun());
 			toolbar.add(closeButton);
 			if (LookAndFeelHelper.isSubstance())
 				toolbar.addSeparator();
@@ -680,7 +660,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		tableView.setDetailPopupProvider(mParentPane);
 		tableView.setViewSelectionHelper(this);
 		title = validateTitle(title);
-		JToolBar toolBar = createViewToolBar(title, tableView);
+		JToolBar toolBar = createViewToolBar(tableView);
 		Dockable dockable = new Dockable(this, tableView, validateTitle(title), toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dock(dockable, dockInfo);
@@ -698,7 +678,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		structureGrid.setDetailPopupProvider(mParentPane);
 		structureGrid.setViewSelectionHelper(this);
 		title = validateTitle(title);
-		JToolBar toolBar = createViewToolBar(title, structureGrid);
+		JToolBar toolBar = createViewToolBar(structureGrid);
 		Dockable dockable = new Dockable(this, structureGrid, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dock(dockable, dockInfo);
@@ -716,7 +696,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		cardView.setDetailPopupProvider(mParentPane);
 		cardView.setViewSelectionHelper(this);
 		title = validateTitle(title);
-		JToolBar toolBar = createViewToolBar(title, cardView);
+		JToolBar toolBar = createViewToolBar(cardView);
 		Dockable dockable = new Dockable(this, cardView, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dock(dockable, dockInfo);
@@ -737,7 +717,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 
 		view.setViewSelectionHelper(this);
 		title = validateTitle(title);
-		JToolBar toolBar = createViewToolBar(title, view);
+		JToolBar toolBar = createViewToolBar(view);
 		Dockable dockable = new Dockable(this, (JComponent)view, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dock(dockable, dockInfo);
@@ -754,7 +734,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		ExplanationView view = new ExplanationView(mTableModel);
 		view.setViewSelectionHelper(this);
 		title = validateTitle(title);
-		JToolBar toolBar = createViewToolBar(title, view);
+		JToolBar toolBar = createViewToolBar(view);
 		Dockable dockable = new Dockable(this, view, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dock(dockable, dockInfo);
@@ -774,7 +754,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 			panel2D.addVisualizationListener(this);
 			panel2D.setViewSelectionHelper(this);
 			title = validateTitle(title);
-			JToolBar toolBar = createViewToolBar(title, panel2D);
+			JToolBar toolBar = createViewToolBar(panel2D);
 			Dockable dockable = new Dockable(this, panel2D, title, toolBar);
 			dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 			dock(dockable, dockInfo);
@@ -799,7 +779,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		panel3D.addVisualizationListener(this);
 		panel3D.setViewSelectionHelper(this);
 		title = validateTitle(title);
-		JToolBar toolBar = createViewToolBar(title, panel3D);
+		JToolBar toolBar = createViewToolBar(panel3D);
 		Dockable dockable = new Dockable(this, panel3D, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dock(dockable, dockInfo);
@@ -819,7 +799,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 			form.createDefaultLayout();
 		form.setViewSelectionHelper(this);
 		title = validateTitle(title);
-		JToolBar toolBar = createViewToolBar(title, form);
+		JToolBar toolBar = createViewToolBar(form);
 		Dockable dockable = new Dockable(this, form, title, toolBar);
 		dockable.setContentMinimumSize(MINIMUM_VIEW_SIZE);
 		dock(dockable, dockInfo);

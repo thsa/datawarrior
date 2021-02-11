@@ -915,7 +915,8 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 		int[] matchCount = new int[mTableModel.getTotalRowCount()];
 		float[] maxSimilarity = isDescriptor ? new float[mTableModel.getTotalRowCount()] : null;
 
-		final float[] similarityList = new float[mTableModel.getTotalRowCount()];
+		int threadCount = Runtime.getRuntime().availableProcessors();
+		final float[] similarityList = (threadCount == 1) ? null : new float[mTableModel.getTotalRowCount()];
 
 		//try {
 		int rowCount = parser.getRowCount();
@@ -950,26 +951,27 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 				}
 
 			// We pre-calculate similarities on multiple threads...
-			int threadCount = Runtime.getRuntime().availableProcessors();
 			final AtomicInteger smtIndex = new AtomicInteger(mTableModel.getTotalRowCount());
 			final Object _descriptor = descriptor;
 
-			Thread[] t = new Thread[threadCount];
-			for (int i=0; i<threadCount; i++) {
-				t[i] = new Thread(TASK_NAME+" "+(i+1)) {
-					public void run() {
-						int index;
-						while ((index = smtIndex.decrementAndGet()) >= 0) {
-							CompoundRecord record = mTableModel.getTotalRecord(index);
-							similarityList[index] = 0;
-							similarityList[index] = dh.getSimilarity(_descriptor, record.getData(chemColumn));
+			if (similarityList != null) {
+				Thread[] t = new Thread[threadCount];
+				for (int i=0; i<threadCount; i++) {
+					t[i] = new Thread(TASK_NAME+" "+(i+1)) {
+						public void run() {
+							int index;
+							while ((index = smtIndex.decrementAndGet()) >= 0) {
+								CompoundRecord record = mTableModel.getTotalRecord(index);
+								similarityList[index] = 0;
+								similarityList[index] = dh.getSimilarity(_descriptor, record.getData(chemColumn));
+								}
 							}
-						}
-					};
-				t[i].start();
+						};
+					t[i].start();
+					}
+				for (int i=0; i<threadCount; i++)
+					try { t[i].join(); } catch (InterruptedException ie) {}
 				}
-			for (int i=0; i<threadCount; i++)
-				try { t[i].join(); } catch (InterruptedException ie) {}
 
 			boolean isSimilar = false;
 			byte[] idcodeBytes = (isDescriptor || needsHash) ? null : idcode.getBytes();

@@ -444,9 +444,11 @@ The expression syntax, all operators and available functions are explained below
 <br>
 
 <p><b>Date Functions</b></p>
-<p>If a column contains date values, then DataWarrior should recognize this fact and
-  handle the values accordingly, e.g. when applying filters or the column is assigned
-  to axes. A set of date functions allows to work with date values for numerical purposes.</p>
+<p>If a column contains date values, then <i>DataWarrior</i> recognizes them automatically.
+  Internally, date values are represented as the number of days that have been passed since Jan 1st, 1970.
+  Therefore, when a date column is used in filters or assigned to an axis, the behaviour is nicely proportional
+  and covers the full date range in a linear way. When used in expressions the following date functions
+  work seemlessly with date values from date columns.</p>
 
 <table align="center" border="0" cellpadding="2" cellspacing="0" width="620">
   <tbody>
@@ -539,8 +541,10 @@ The expression syntax, all operators and available functions are explained below
   a year that matches the respective weekXXX() functions. Here the new year starts with the first day
   that is considered to belong to week 1. This day may still be in December or it may be one of the
   first days of January.</p>
-<p>The today() function returns the current data and, thus, may server as a parameter to the date
-  functions described in the previous paragraph.</p>
+<p>The <b>today()</b> function returns the current date as the number of days that have been passed
+  since Jan 1st, 1970. Because <i>DataWarrior</i> represents date values the same way, the today()
+  function can be used to convert an absolute date into the number of days that
+  have been passed since then. For this use an expression like <i>today()-myDataColumn</i>.</p>
 <br>
 
 <p><b>Table Related Functions</b></p>

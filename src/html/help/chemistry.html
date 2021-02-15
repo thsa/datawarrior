@@ -40,19 +40,22 @@ The ESR information is encoded in a canonical form into the ID-Codes and <span c
 is using it, whenever appropriate, e.g. when displaying or editing chemical structures,
 during substructure search, or when generating conformers.</p>
 
-<p>ID-Codes that represent substructures as opposed to molecules may also contain atom
-and bond related query features. Reactions can be represented by ID-Codes as well.</p>
-<p>ID-Codes don't include atom coordinates. Therefore, <span class="keyword">DataWarrior</span>
-typically stores atom coordinates in a separate, invisible column.</p>
+<p>ID-Codes may also represent substructures or query fragments as opposed to normal molecules.
+Then they may contain atom and bond related query features. Reactions can be represented by ID-Codes as well.</p>
+
+<p>Because atom coordinates cannot be part of a canonical representation, ID-Codes don't include them.
+Instead, <span class="keyword">DataWarrior</span> usually stores atom coordinates in a separate, invisible
+child column associated with the ID-Code column. If atom coordinates are 3D, then that atom coordinate column
+contains conformers.</p>
 
 <p>Much, of what you can do with molecular structures in <span class="keyword">DataWarrior</span>,
 especially if it is related to structure similarity, requires the presence of
-<span class="keyword">descriptors</span> derived from the chemical structure.
-The kind of descriptors, which can be generated and used by <span class="keyword">DataWarrior</span>,
+<span class="keyword">descriptors</span> derived from the chemical structure itself.
+The kinds of descriptors, which can be generated and used by <span class="keyword">DataWarrior</span>,
 are explained in more detail in a section called <a href="help/similarity.html">Similarity & Descriptors</a>.
-Like the atom coordinates, descriptors are also stored in invisible columns. To calculate a new
-descriptor column for a given chemical structure column you need to select its name from the
-<span class="menu">Chemistry->From Chemical Structure->Calculate Descriptor</span> menu.</p>
+Like atom coordinates, descriptors are stored in invisible child columns that are associated with a parent
+ID-Code column. To calculate a new descriptor for a given chemical structure column you need to select its
+name from the <span class="menu">Chemistry->From Chemical Structure->Calculate Descriptor</span> menu.</p>
 
 <p>The <span class="menu">Chemistry->From Chemical Structure</span> menu contains various
 additional items, which allow adding a new column with data derived from the chemical structure:</p>

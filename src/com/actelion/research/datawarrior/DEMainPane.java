@@ -282,7 +282,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		if (!isMaximized()) {
 			addMenuItem(popup, "New 2D-View", "new2D");
 			addMenuItem(popup, "New 3D-View", "new3D");
-			if (System.getProperty("development") != null)	// !!! if you remove this line then also remove this line in the StandardTaskFactory
+			if (DataWarrior.USE_CARDS_VIEW)
 				addMenuItem(popup, "New Cards View", "newCards");
 			addMenuItem(popup, "New Form View", "newForm");
 			for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
@@ -373,7 +373,10 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 				new DETaskNewStructureView(mParentFrame, this, getSelectedDockable().getTitle(), column).defineAndRun();
 			}
 		else if (command.equals("newCards")) {
-			new DETaskNewCardsView(mParentFrame, this, getSelectedDockable().getTitle()).defineAndRun();
+			if (mTableModel.getTotalRowCount() <= 10000)
+				new DETaskNewCardsView(mParentFrame, this, getSelectedDockable().getTitle()).defineAndRun();
+			else
+				JOptionPane.showMessageDialog(mParentFrame, "Cards-Views cannot be created for more that 10000 rows.");
 			}
 		else if (command.equals("newForm")) {
 			new DETaskNewFormView(mParentFrame, this, getSelectedDockable().getTitle()).defineAndRun();

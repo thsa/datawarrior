@@ -72,6 +72,10 @@ public class DETableView extends JScrollPane
 		mTable.getTableHeader().setDefaultRenderer(
 				new WrappingHeaderCellRenderer(this, mTable.getTableHeader().getDefaultRenderer()));
 
+		// If the drop target stays active, then drag&drop of the docking framework
+		// is not working over the JTable, because drag events are consumed.
+		mTable.getDropTarget().setActive(false);
+
 		mColorHandler.addColorListener(this);
 
 		setBorder(BorderFactory.createEmptyBorder());

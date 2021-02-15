@@ -53,6 +53,8 @@ public abstract class DataWarrior implements WindowFocusListener {
 	public static final String PREFERENCES_KEY_LAF_NAME = "laf_name";
 	public static final String PREFERENCES_KEY_SPAYA_SERVER = "spaya_server";
 
+	public static boolean USE_CARDS_VIEW = false;
+
 	public static final String[] RESOURCE_DIR = { "Reference", "Example", "Tutorial" };
 	public static final String MACRO_DIR = "Macro";
 	public static final String PLUGIN_DIR = "Plugin";

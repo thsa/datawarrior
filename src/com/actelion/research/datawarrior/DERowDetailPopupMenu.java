@@ -531,7 +531,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 				}
 			}
 
-		if(System.getProperty("development") != null)
+		if (DataWarrior.USE_CARDS_VIEW)
 			addCardViewOptions(source);
 		}
 
@@ -838,11 +838,8 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 //				menuFromSelection.addSeparator();
 //				menuFromAll.addSeparator();
 
-
-
 //				menuFromSelection.add(A_menuSort2D);
 //				menuFromAll.add(B_menuSort2D);
-
 
 //                JMenu menuCreateStacks = new JMenu("Create Stacks");
 //                for (Integer ci : columnsCategorical) {
@@ -1088,7 +1085,6 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 			final int idcodeColumn = mTableModel.findColumn(actionCommand.substring(CONFORMERS.length(), index));
 			StereoMolecule mol = mTableModel.getChemicalStructure(mRecord, idcodeColumn, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
 			if (mol != null)
-//				new DEConformerDialog(getParentFrame(), mol).generateConformers();
 				new FXConformerDialog(getParentFrame(), mol).generateConformers();
 		} else if (actionCommand.startsWith(PATENT_SEARCH)
 				|| actionCommand.startsWith(SCHOLAR_SEARCH)

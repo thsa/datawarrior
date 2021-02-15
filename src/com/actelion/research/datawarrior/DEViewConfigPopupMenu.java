@@ -352,7 +352,7 @@ public class DEViewConfigPopupMenu extends JPopupMenu implements ActionListener,
 			add(stereoModeMenu);
 			}
 
-		if (source instanceof JCardView && System.getProperty("development") != null) {
+		if (source instanceof JCardView && DataWarrior.USE_CARDS_VIEW) {
 			if (getComponentCount() > 0)
 				addSeparator();
 

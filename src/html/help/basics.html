@@ -32,82 +32,86 @@ This section explains general concepts and explains important keywords.</p>
 <h3><a name="MainAndDetailViews"></a>Main View Area and Detail Area</h3>
 <p>The <span class="keyword">Main View Area</span> shows one or multiple
 <span class="keyword">Main Views</span>, everyone displaying data rows either as data table,
-in a 2- or 3-dimensional interactive chart, or in another kind of view.
+in a 2- or 3-dimensional interactive chart, or in another type of view.
 Typically, multiple <span class="keyword">Main Views</span> show the same (sub-)set of data,
-but display the data in different ways. Multiple <span class="keyword">Main Views</span>
-can coexist either stacked on top of each other
-or side by side.</p>
-<p align="center"><img src="help/img/basics/viewAreas.jpeg"></p>
-<p>Individual <span class="keyword">Main Views</span> can be maximized or closed by clicking the respective
-buttons on the view's header area. A right mouse click within the header area
-opens a popup menu allowing to create new views or to create pictures of the view.
+but display the data different ways. Multiple <span class="keyword">Main Views</span>
+can coexist either stacked on top of each other or side by side.</p>
+<p align="center"><img src="help/img/basics/viewAreas.jpeg" width="680" height="510"></p>
+<p>The <b>+</b> button on any <span class="keyword">Main View's</span> title area allows
+to create a new <span class="keyword">Main View</span> or to create a high resultion picture
+of the view. Other buttons let you configure, maximize, or close the view.
 <span class="keyword">Main Views</span> can be moved to another position
-by dragging its header area to the middle or any edge of another view.</p>
-<p>While <span class="keyword">Main Views</span> show multiple rows, the <span class="keyword">Detail Area</span>
-displays the content of one row in detail. 
-When moving the mouse over a <span class="keyword">Main View</span> the <span class="keyword">Detail Area</span> 
-is constantly updated to reveal the details of the row or marker underneath the mouse pointer.</p>
+by dragging their header area onto the center or any edge of another view.</p>
+<p>While <span class="keyword">Main Views</span> show many rows at a time,
+the <span class="keyword">Detail Area</span> aims to display all information of one particular row.
+When moving the mouse within a <span class="keyword">Main View</span>,
+then the <span class="keyword">Detail Area</span> is constantly updated to reveal the details
+of the row or marker underneath the mouse pointer.</p>
 <br>
 <h3>Table View</h3>
-<p> The <span class="keyword">Table View</span> serves as a direct window to
+<p>The <span class="keyword">Table View</span> serves as a direct window to
 the data contained in a <span class="keyword">DataWarrior</span> file. Through it
-rows can be sorted, data of individual cells can be modified, and display options
+rows can be sorted, data can be modified, and display options
 for individual columns can be changed. The <span class="keyword">Table View</span>
-cannot be removed nor can there be more than one <span class="keyword">Table View</span>.
-Columns may display non-alpha-numerical content like molecules or reactions. The column
-order may be changed and less important columns may be hidden. A column specific popup
-menu is accessible from the column header.
+cannot be removed nor can there be a second <span class="keyword">Table View</span>.
+Columns may contain and display non-alpha-numerical content like molecules or reactions.
+The visible column order may be changed. Columns can be added, grouped, hidden, or removed.
+A column specific popup menu is accessible with a right mouse click on the respective column header.
 <a href="help/views.html#TableView">More...</a></p>
-<p align="center"><img src="help/img/basics/tableView.jpeg"></p>
+<p align="center"><img src="help/img/basics/tableView.jpeg" width="510" height="266"></p>
 
 <br>
 <h3>2D-View</h3>
-<p> This view visualizes table data in a 2-dimensional chart, e.g. as a scatter plot,
-bar or pie chart, box plot, etc. It is dynamically linked with the <span class="keyword">Detail Area</span>
-such that a mouse movement above the view updates the row's details according to the mouse 
-position. Marker colors, shapes, and sizes are customizable and may depend on 
-a column of your data. A right mouse click inside of the view reveals a popup menu
-allowing to customize view settings. The <span class="menu">xyz</span> button in the view's
-header area opens a popup with controls for assigning data columns and to dynamically zoom into each axis. 
+<p>This view visualizes table data in a 2-dimensional chart, e.g. as a scatter plot,
+bar or pie chart, or box plot. The view type and other view related properties can be
+chosen from the popup menu that opens when the title area's <b>wrench</b> button is clicked.
+Colors, marker shapes and sizes, connection lines, labels, font sizes, are customizable.
+The <b>xy</b> button lets you assign columns to axes and axis-wise zoom into the data.</p>
+<p>The view is dynamically linked with the <span class="keyword">Detail Area</span>.
+When the mouse is moved over a marker or bar/pie fraction, then the corresponding row
+data is displayed in the <span class="keyword">Detail Area</span>. A right mouse click
+now opens a popup menu giving access to functionality related to this particular row.
 <a href="help/views.html#2DAnd3DViews">More...</a></p>
-<p align="center"><img src="help/img/basics/2dviews.jpeg"></p>
+<p align="center"><img src="help/img/basics/2dviews.jpeg" width="620" height="292"></p>
 <br>
 <h3>3D-View</h3>
 <p> The <b>3D-View</b> is similar to the 2D-View, however, it displays markers or bars
-in a three dimensional cartesian coordinate system. The left mouse button can be
-used to select row markers or to change the <span class="keyword">Reference Row</span>. Pressing and dragging
-the right mouse button rotates the view. Clicking the right mouse button over a marker opens a popup menu
-for changing view specific settings.
+in a freely rotatable three dimensional cartesian coordinate system. The left mouse button can be
+used to select row markers or to change the <span class="keyword">Reference Row</span>.
+Pressing and dragging the right mouse button rotates the view. Again the <b>wrench</b> and <b>xyz</b>
+give access to view related properties and axis assignments.
 <a href="help/views.html#2DAnd3DViews">More...</a></p>
 <br>
 <h3>Form View</h3>
 <p>
 <span class="keyword">Form Views</span> present your data like a book with one page per data row.
-A <span class="keyword">Design Mode</span> allows to custom tailor the form layout and
-an <span class="keyword">Edit Mode</span> allows to directly manipulate the data shown.
-<span class="keyword">Form Views</span> are particularly useful, if some table cells reference
-html or picture detail information. Such detail information is not shown in the
-<span class="keyword">Table View</span>. Instead the <span class="keyword">Table View</span>
-displays a small number in a colored square indicating that more information is available.
+A <span class="keyword">Design Mode</span> allows to custom tailor the form layout, i.e. to define,
+which column data is displyed where on the form.
+An <span class="keyword">Edit Mode</span> allows to directly modify the displayed data.
+<span class="keyword">Form Views</span> are particularly useful, if rows contain conformers or
+some of their cells reference html or picture detail information. Neither conformers nor referenced
+detail information is displayed in the <span class="keyword">Table View</span>.
+Only the <span class="keyword">detail area</span> or form views show this information.
 <a href="help/views.html#FormView">More...</a>
 </p>
-<p align="center"><img src="help/img/basics/formView.jpeg"></p>
+<p align="center"><img src="help/img/basics/formView.jpeg" width="370" height="290"></p>
 <br>
 
 <h3><a name="Filters"></a>Filters</h3>
 <p>
-Filters may hide rows from main views to temporarily focus on the remaining visible rows.
+Filters are used to hide rows from all main views to temporarily focus on subset of the data.
 Various filter kinds are available, but they all share certain characteristics.
-Filters always apply to all views, i.e. hide the same rows from all views at the same time.
-If a row is excluded by one or more filters, then it is not visible in any view.
-Usually, a filter is associated with one column of the data and the kind of data within a
-column determines, which filter types can be created and used for this column.
+Usually, all filters apply to all views, which means that if a row is hidden by one or more
+filters, then it is not visible in any view. Views, however, can be configured to ignore filters.
+Usually, a filter is associated with one data column. The kind of data determines,
+which filter types can be used for a column.
 The effect of a filter can be inverted by selecting its <span class="menu">Invert</span> button.
 A <span class="menu">Disable</span> button allows to temporarily switch off the filtering effect
-without removing the filter's settings.
-The status panel always displays the number of visible rows, of the selected rows, and of all rows.
-</p>
-<p>Available filter types are:</p>
+without removing the filter's settings. Some filters possess animation options that can be set
+to automatically change the visible data subset over time in a stepwise or smooth fashion.
+The <span class="keyword">Status Area</span> at the bottom of any <span class="keyword">DataWarrior</span>
+window always displays the number of visible rows, selected rows, and all rows.</p>
+<p>These filter types exist:</p>
 <table class="wspace">
   <tbody>
     <tr>
@@ -206,7 +210,7 @@ The status panel always displays the number of visible rows, of the selected row
     </tr>
     <tr>
       <td class="wspace"><p><img src="help/img/basics/explicitViewFilter.jpeg"></p></td>
-      <td class="wspace">One of the graphical views may be defined to serve as an
+      <td class="wspace">One of all graphical views may be chosen to serve as an
       explicit filter. This view then behaves differently, when rows are lasso-surrounded with the mouse.
       Instead of globally selecting rows, the local view shows these rows in <b><font color="#660066">purple</font></b>
       color. This causes all <b>non-<font color="#660066">purple</font></b> rows to disappear from all other views.
@@ -249,17 +253,19 @@ As with the <span class="keyword">Selected Rows</span>, the <span class="keyword
 is shared among all views. Most views mark the <span class="keyword">Reference Row</span> with a
 <b> <font color="#FF0000">red frame</font></b> or show it in <b><font color="#FF0000">red color</font></b>. 
 The <span class="keyword">Form View</span> always shows the <span class="keyword">Reference Row</span>.
-Various display modes use the <span class="keyword">Reference Row</span> as a reference to compare to
-when using color to show similarities or when constructing neighbourship graphs, etc.</p>
+Various view features use the <span class="keyword">Reference Row</span> to compare all other rows to,
+e.g. when using color to show similarities, when compound similarity is assigned to an axis,
+or when constructing neighbourship graphs, etc. Views may be configured to automatically zoom and move
+the view such that the <span class="keyword">Reference Row</span> is displayed in the view's center.</p>
 
 <br>
 <h3><a name="RowLists"></a>Row Lists</h3>
-<p>A <span class="keyword">Row List</span> is a named subset of all rows. In <span class="keyword">DataWarrior</span>
-<span class="keyword">Row Lists</span> may be used for various purposes,
-e.g. to filter rows, to affect marker sizes, shapes or colors, to highlight a group of rows,
-to permanently store a current selection, to define data subset for a data analysis method, etc.
-Defined <span class="keyword">Row Lists</span> are automatically saved within DataWarrior files.
-The <span class="menu">List</span> menu contains functionality to create and
+<p>A <span class="keyword">Row List</span> is a named subset of all rows.
+In <span class="keyword">DataWarrior</span> <span class="keyword">Row Lists</span> may be used for
+various purposes, e.g. to filter rows, to affect marker sizes, shapes or colors, to highlight a group of rows,
+to store a current row selection, to define a data subset for a data analysis method, etc.
+<span class="keyword">Row Lists</span> are automatically saved within DataWarrior files.
+The <span class="menu">List</span> menu contains the functionality to create and
 manipulate <span class="keyword">Row Lists</span>. <a href="help/lists.html">More...</a></p>
 
 <br>
@@ -282,7 +288,8 @@ defining various parameters e.g. to launch a 2-dimensional scaling algorithm. By
 <span class="keyword">tasks</span> in a row one may solve rather complex data analysis problems.</p>
 <p>To support automation and reproducibility <span class="keyword">DataWarrior</span> allows recording
 interactive <span class="keyword">task</span> sequences as <span class="keyword">macros</span>, which can be
-saved to file, edited, and executed at a later time on different or updated data. <a href="help/macros.html">More...</a>
+saved to file, edited, and executed at a later time on different or updated data or by a different person.
+<a href="help/macros.html">More...</a>
 </p>
 <br>
 

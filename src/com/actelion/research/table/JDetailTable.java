@@ -63,7 +63,7 @@ public class JDetailTable extends JTable implements TableModelListener {
 		super.setRowHeight(row, rowHeight);
 
 		CompoundTableModel tableModel = mDetailModel.getParentModel();
-		mRowHeightMap.put(tableModel.getColumnTitleNoAlias(tableModel.convertFromDisplayableColumnIndex(row)), rowHeight);
+		mRowHeightMap.put(tableModel.getColumnTitleNoAlias(mDetailModel.getParentColumn(row)), rowHeight);
 		}
 
 	public void tableChanged(TableModelEvent e) {
@@ -71,8 +71,8 @@ public class JDetailTable extends JTable implements TableModelListener {
 
 		if (mDetailModel != null && e.getColumn() == TableModelEvent.ALL_COLUMNS) {
 			CompoundTableModel tableModel = mDetailModel.getParentModel();
-			for (int row=0; row<tableModel.getColumnCount(); row++) {
-                int column = tableModel.convertFromDisplayableColumnIndex(row);
+			for (int row=0; row<mDetailModel.getRowCount(); row++) {
+                int column = mDetailModel.getParentColumn(row);
 				Integer value = mRowHeightMap.get(tableModel.getColumnTitleNoAlias(column));
 				if (value != null) {
 					setRowHeight(row, value.intValue());

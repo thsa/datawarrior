@@ -5436,7 +5436,7 @@ public class JVisualization2D extends JVisualization {
 				}
 			}
 		else {  // Y-axis
-			int axisPosition = graphRect.y+graphRect.height + Math.round(-graphRect.height*position);
+			int axisPosition = graphRect.y+graphRect.height - Math.round(graphRect.height*position);
 			int xBase = graphRect.x-mNaNSize[0];
 
 			if (isCrossHair || mGridMode == cGridModeShown || mGridMode == cGridModeShowHorizontal) {
@@ -5453,8 +5453,8 @@ public class JVisualization2D extends JVisualization {
 					String text = (String)label;
 					int textWidth = g.getFontMetrics().stringWidth(text);
 					boolean rotateLabel = isCrossHair
-							&& (showScale(axis) && (textWidth > mScaleSize[axis])
-							|| !showScale(axis) && (textWidth > 8*scaledFontHeight));
+							&& (showScale(axis) && (textWidth > mScaleSize[axis]))
+							 || (!showScale(axis) && (textWidth > 8*scaledFontHeight));
 					if (isCrossHair && (!showScale(axis) || rotateLabel)) {
 						// If the label is too long to show horizontally, then rotate.
 						// (e.g. full range category label on short range type scale)
@@ -5464,8 +5464,8 @@ public class JVisualization2D extends JVisualization {
 							g.rotate(-Math.PI/2, x, y);
 							textWidth = g.getFontMetrics().stringWidth(text);   // differs from not rotated font
 							int textX = Math.max(x+crossHairBorder,
-										Math.min(x+graphRect.height-textWidth-crossHairBorder,
-												 x+graphRect.height-axisPosition-textWidth/2));
+										Math.min(x+graphRect.height-textWidth-2*crossHairBorder+graphRect.y,
+												 x+graphRect.height-axisPosition-textWidth/2+graphRect.y));
 							drawScaleLabel(g, text, textX, y, isCrossHair);
 							g.rotate(Math.PI/2, x, y);
 							}

@@ -315,7 +315,6 @@ public abstract class DETaskAbstractSetViewOptions extends AbstractViewTask impl
 		// Therefore, when pressing 'OK', we don't need to perform the task.
 		if (hasInteractiveView()) {
 			// don't set status OK to avoid running the full task, but record task if is recording and apply for other views, if needed
-			Properties configuration = getDialogConfiguration();
 			DEMacroRecorder.record(this, getDialogConfiguration());
 			}
 		else {

@@ -35,6 +35,7 @@ import com.actelion.research.table.view.graph.TreeGraphOptimizer;
 import com.actelion.research.table.view.graph.VisualizationNode;
 import com.actelion.research.util.ColorHelper;
 import com.actelion.research.util.DoubleFormat;
+import org.nfunk.jep.JEP;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -117,14 +118,15 @@ public class JVisualization2D extends JVisualization {
 	private static final int CROSSHAIR_MODE_Y = 3;
 	private static final int CROSSHAIR_MODE_NONE = 4;
 
-	public static final String[] CURVE_MODE_TEXT = { "<none>", "Vertical Line", "Horizontal Line", "Fitted Line", "Smooth Curve" };
-	public static final String[] CURVE_MODE_CODE = { "none", "abscissa", "ordinate", "fitted", "smooth" };
+	public static final String[] CURVE_MODE_TEXT = { "<none>", "Vertical Line", "Horizontal Line", "Fitted Line", "Smooth Curve", "Use Formula" };
+	public static final String[] CURVE_MODE_CODE = { "none", "abscissa", "ordinate", "fitted", "smooth", "formula" };
 	private static final int cCurveModeNone = 0;
 	private static final int cCurveModeMask = 7;
 	public static final int cCurveModeVertical = 1;
 	public static final int cCurveModHorizontal = 2;
 	public static final int cCurveModeFitted = 3;
 	public static final int cCurveModeSmooth = 4;
+	public static final int cCurveModeExpression = 5;
 	private static final int cCurveStandardDeviation = 8;
 	private static final int cCurveSplitByCategory = 16;
 
@@ -176,8 +178,9 @@ public class JVisualization2D extends JVisualization {
 //	private byte[]			mSVGBackgroundData;		// alternative to mBackgroundImage
 	private Graphics2D		mOffG;
 	private ArrayList<ScaleLine>[]	mScaleLineList;
-	private float[][]       mSmoothCurveXMin,mSmoothCurveInc,mCurveStdDev;
-	private float[][][]     mSmoothCurveY;
+	private float[][]       mCurveXMin,mCurveXInc,mCurveStdDev;
+	private float[][][]     mCurveY;
+	private String          mCurveExpression;
 
 	@SuppressWarnings("unchecked")
 	public JVisualization2D(CompoundTableModel tableModel,
@@ -612,8 +615,10 @@ public class JVisualization2D extends JVisualization {
 			mLabelHelper.optimizeLabels();
 			}
 
-		if ((mCurveInfo & cCurveModeMask) == cCurveModeSmooth && mSmoothCurveY == null)
+		if ((mCurveInfo & cCurveModeMask) == cCurveModeSmooth && mCurveY == null)
 			calculateSmoothCurve(baseGraphRect.width);
+		if ((mCurveInfo & cCurveModeMask) == cCurveModeExpression && mCurveY == null)
+			calculateExpressionCurve(baseGraphRect);
 
 		float thinLineWidth = scaleIfSplitView(mFontHeight)/16f;
 		if (mIsFastRendering) {
@@ -885,8 +890,12 @@ public class JVisualization2D extends JVisualization {
 		if (mTreeNodeList == null) {
 			if (mGridMode != cGridModeHidden || mScaleMode != cScaleModeHidden)
 				drawGrid(mG, graphRect);	// draws grid and scale labels
-			if ((mCurveInfo & (cCurveModeMask | cCurveStandardDeviation)) == (cCurveModeSmooth | cCurveStandardDeviation))
-				drawSmoothArea(hvIndex);
+			if ((mCurveInfo & cCurveStandardDeviation) == cCurveStandardDeviation) {
+				if (getCurveMode() == cCurveModeSmooth)
+					drawSmoothCurveArea(hvIndex, graphRect);
+				else if (getCurveMode() == cCurveModeExpression)
+					drawExpressionCurveArea(hvIndex, graphRect);
+				}
 			if (mScaleMode != cScaleModeHidden)
 				drawAxes(mG, graphRect);
 			}
@@ -2795,6 +2804,9 @@ public class JVisualization2D extends JVisualization {
 		case cCurveModeSmooth:
 			drawSmoothCurve();
 			break;
+		case cCurveModeExpression:
+			drawExpressionCurve(baseGraphRect);
+			break;
 			}
 		}
 
@@ -3191,6 +3203,71 @@ public class JVisualization2D extends JVisualization {
 		mG.draw(new Line2D.Float(xmin, y, xmax, y));
 		}
 
+	private void calculateExpressionCurve(Rectangle baseGraphRect) {
+		final int EXPRESSION_CURVE_STEPS = 512; // steps used for full width curve
+
+		if (mCurveExpression == null
+		 || mAxisVisMin[0] == mAxisVisMax[0]
+		 || mAxisVisMin[1] == mAxisVisMax[1])
+			return;
+
+		mCurveXMin = new float[1][1];
+		mCurveXMin[0][0] = baseGraphRect.x;
+		mCurveXInc = new float[1][1];
+		mCurveXInc[0][0] = (float)baseGraphRect.width / EXPRESSION_CURVE_STEPS;
+		mCurveY = new float[1][1][EXPRESSION_CURVE_STEPS + 1];
+
+		JEP parser = new JEP();
+		parser.addStandardFunctions();
+		parser.addStandardConstants();
+		parser.addVariable("x", 0);
+		parser.parseExpression(mCurveExpression);
+		if (parser.hasError())
+			return;
+
+		for (int i=0; i<=EXPRESSION_CURVE_STEPS; i++) {
+			float x = mAxisVisMin[0] + i * (mAxisVisMax[0] - mAxisVisMin[0]) / EXPRESSION_CURVE_STEPS;
+			if (mTableModel.isLogarithmicViewMode(mAxisIndex[0]))
+				x = (float)Math.pow(10.0, x);
+			parser.addVariable("x", x);
+			Object o = parser.getValueAsObject();
+			float y = (o != null && o instanceof Double) ? (float)((Double)o).doubleValue() : Float.NaN;
+			if (mTableModel.isLogarithmicViewMode(mAxisIndex[1]))
+				y = (float)Math.log10(y);
+			mCurveY[0][0][i] = Float.isNaN(y) ? Float.NaN
+					: baseGraphRect.y + baseGraphRect.height * (1 - (y - mAxisVisMin[1]) / (mAxisVisMax[1] - mAxisVisMin[1]));
+			}
+
+		if ((mCurveInfo & cCurveStandardDeviation) != 0) {
+			mCurveStdDev = new float[mHVCount][1];
+			int[][] stdDevCount = new int[mHVCount][1];
+			for (int i=0; i<mDataPoints; i++) {
+				if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
+					int hv = mPoint[i].hvIndex;
+					int dx = mSplitter == null ? 0 : mSplitter.getHIndex(hv) * mSplitter.getGridWidth();
+					int dy = mSplitter == null ? 0 : mSplitter.getVIndex(hv) * mSplitter.getGridHeight();
+					float xrel = (mPoint[i].screenX - dx - mCurveXMin[0][0]) / mCurveXInc[0][0];
+					float ydif;
+					int index = (int)xrel;
+					if (index+1 >= mCurveY[0][0].length) {  // rare but possible case
+						ydif = mPoint[i].screenY - mCurveY[0][0][index];
+						}
+					else {
+						float weight2 = xrel - index;
+						float weight1 = 1f - weight2;
+						ydif = mPoint[i].screenY - dy
+								- (weight1 * mCurveY[0][0][index] + weight2 * mCurveY[0][0][index + 1]);
+						}
+					mCurveStdDev[hv][0] += ydif * ydif;
+					stdDevCount[hv][0]++;
+					}
+				}
+			for (int hv=0; hv<mHVCount; hv++)
+				mCurveStdDev[hv][0] = (stdDevCount[hv][0] <= 1) ? 0f
+						: (float)Math.sqrt(mCurveStdDev[hv][0] / (stdDevCount[hv][0] - 1));
+			}
+		}
+
 	private void calculateSmoothCurve(int graphWidth) {
 		final int SMOOTH_CURVE_STEPS = 128; // steps used for full width curve
 
@@ -3199,12 +3276,12 @@ public class JVisualization2D extends JVisualization {
 				&& mMarkerColor.getColorListMode() == VisualizationColor.cColorListModeCategories) ?
 				mTableModel.getCategoryCount(mMarkerColor.getColorColumn()) : 1;
 
-		mSmoothCurveXMin = new float[mHVCount][catCount];
+		mCurveXMin = new float[mHVCount][catCount];
 		float[][] xmax = new float[mHVCount][catCount];
-		mSmoothCurveInc = new float[mHVCount][catCount];
+		mCurveXInc = new float[mHVCount][catCount];
 		for (int hv=0; hv<mHVCount; hv++) {
 			for (int cat = 0; cat<catCount; cat++) {
-				mSmoothCurveXMin[hv][cat] = Float.MAX_VALUE;
+				mCurveXMin[hv][cat] = Float.MAX_VALUE;
 				xmax[hv][cat] = Float.MIN_VALUE;
 				}
 			}
@@ -3212,26 +3289,26 @@ public class JVisualization2D extends JVisualization {
 			if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
 				int cat = (catCount == 1) ? 0 : mPoint[i].colorIndex - VisualizationColor.cSpecialColorCount;
 				int hv = mPoint[i].hvIndex;
-				if (mSmoothCurveXMin[hv][cat] > mPoint[i].screenX)
-					mSmoothCurveXMin[hv][cat] = mPoint[i].screenX;
+				if (mCurveXMin[hv][cat] > mPoint[i].screenX)
+					mCurveXMin[hv][cat] = mPoint[i].screenX;
 				if (xmax[hv][cat] < mPoint[i].screenX)
 					xmax[hv][cat] = mPoint[i].screenX;
 				}
 			}
 
-		mSmoothCurveY = new float[mHVCount][catCount][];
+		mCurveY = new float[mHVCount][catCount][];
 		float[][][] weight = new float[mHVCount][catCount][];
 
 		for (int hv=0; hv<mHVCount; hv++) {
 			for (int cat = 0; cat<catCount; cat++) {
-				if (mSmoothCurveXMin[hv][cat] != Float.MAX_VALUE) {
-					float xdif = xmax[hv][cat] - mSmoothCurveXMin[hv][cat];
+				if (mCurveXMin[hv][cat] != Float.MAX_VALUE) {
+					float xdif = xmax[hv][cat] - mCurveXMin[hv][cat];
 					if (xdif != 0) {
 						int steps = Math.round(xdif / graphWidth * SMOOTH_CURVE_STEPS);
 						if (steps != 0) {
-							mSmoothCurveY[hv][cat] = new float[steps+1];
+							mCurveY[hv][cat] = new float[steps+1];
 							weight[hv][cat] = new float[steps+1];
-							mSmoothCurveInc[hv][cat] = xdif / steps;
+							mCurveXInc[hv][cat] = xdif / steps;
 							}
 						}
 					}
@@ -3244,12 +3321,12 @@ public class JVisualization2D extends JVisualization {
 			if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
 				int cat = (catCount == 1) ? 0 : mPoint[i].colorIndex - VisualizationColor.cSpecialColorCount;
 				int hv = mPoint[i].hvIndex;
-				if (mSmoothCurveY[hv][cat] != null) {
-					for (int s=0; s<mSmoothCurveY[hv][cat].length; s++) {
-						float xs = mSmoothCurveXMin[hv][cat] + mSmoothCurveInc[hv][cat] * s;
+				if (mCurveY[hv][cat] != null) {
+					for (int s = 0; s<mCurveY[hv][cat].length; s++) {
+						float xs = mCurveXMin[hv][cat] + mCurveXInc[hv][cat] * s;
 						float d = Math.abs(mPoint[i].screenX - xs) / graphWidth;
 						float w = (float)Math.exp(-d * weightFactor);
-						mSmoothCurveY[hv][cat][s] += w * mPoint[i].screenY;
+						mCurveY[hv][cat][s] += w * mPoint[i].screenY;
 						weight[hv][cat][s] += w;
 						}
 					}
@@ -3257,9 +3334,9 @@ public class JVisualization2D extends JVisualization {
 			}
 		for (int hv=0; hv<mHVCount; hv++)
 			for (int cat=0; cat<catCount; cat++)
-				if (mSmoothCurveY[hv][cat] != null)
-					for (int i=0; i<mSmoothCurveY[hv][cat].length; i++)
-						mSmoothCurveY[hv][cat][i] /= weight[hv][cat][i];
+				if (mCurveY[hv][cat] != null)
+					for (int i = 0; i<mCurveY[hv][cat].length; i++)
+						mCurveY[hv][cat][i] /= weight[hv][cat][i];
 
 		if ((mCurveInfo & cCurveStandardDeviation) != 0) {
 			mCurveStdDev = new float[mHVCount][catCount];
@@ -3268,47 +3345,49 @@ public class JVisualization2D extends JVisualization {
 				if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
 					int cat = (catCount == 1) ? 0 : mPoint[i].colorIndex - VisualizationColor.cSpecialColorCount;
 					int hv = mPoint[i].hvIndex;
-					if (mSmoothCurveY[hv][cat] != null) {
-						float xrel = (mPoint[i].screenX - mSmoothCurveXMin[hv][cat]) / mSmoothCurveInc[hv][cat];
-						float dy;
+					if (mCurveY[hv][cat] != null) {
+						float xrel = (mPoint[i].screenX - mCurveXMin[hv][cat]) / mCurveXInc[hv][cat];
+						float ydif;
 						int index = (int)xrel;
-						if (index+1 >= mSmoothCurveY[hv][cat].length) {  // rare but possible case
-							dy = mPoint[i].screenY - mSmoothCurveY[hv][cat][index];
+						if (index+1 >= mCurveY[hv][cat].length) {  // rare but possible case
+							ydif = mPoint[i].screenY - mCurveY[hv][cat][index];
 							}
 						else {
 							float weight2 = xrel - index;
 							float weight1 = 1f - weight2;
-							dy = mPoint[i].screenY
-									- (weight1 * mSmoothCurveY[hv][cat][index] + weight2 * mSmoothCurveY[hv][cat][index + 1]);
+							ydif = mPoint[i].screenY
+									- (weight1 * mCurveY[hv][cat][index] + weight2 * mCurveY[hv][cat][index + 1]);
 							}
-						mCurveStdDev[hv][cat] += dy * dy;
+						mCurveStdDev[hv][cat] += ydif * ydif;
 						stdDevCount[hv][cat]++;
 						}
 					}
 				}
 			for (int hv=0; hv<mHVCount; hv++)
 				for (int cat=0; cat<catCount; cat++)
-					if (mSmoothCurveY[hv][cat] != null)
+					if (mCurveY[hv][cat] != null)
 						mCurveStdDev[hv][cat] = (stdDevCount[hv][cat] <= 1) ? 0f
 											  : (float)Math.sqrt(mCurveStdDev[hv][cat] / (stdDevCount[hv][cat] - 1));
 			}
 		}
 
-	private void drawSmoothArea(int hv) {
-		for (int cat=0; cat<mSmoothCurveY[hv].length; cat++) {
-			if (mSmoothCurveY[hv][cat] != null && mCurveStdDev != null && mCurveStdDev[hv][cat] != 0f) {
+	private void drawSmoothCurveArea(int hv, Rectangle graphRect) {
+		for (int cat = 0; cat<mCurveY[hv].length; cat++) {
+			if (mCurveY[hv][cat] != null && mCurveStdDev != null && mCurveStdDev[hv][cat] != 0f) {
 				Polygon polygon = new Polygon();
-				float x = mSmoothCurveXMin[hv][cat];
-				float dy = mCurveStdDev[hv][cat];
-				for (int i=0; i<mSmoothCurveY[hv][cat].length; i++) {
-					polygon.addPoint(Math.round(x), Math.round(mSmoothCurveY[hv][cat][i]-dy));
-					x += mSmoothCurveInc[hv][cat];
+				float x = mCurveXMin[hv][cat];
+				float ydif = mCurveStdDev[hv][cat];
+				for (int i = 0; i<mCurveY[hv][cat].length; i++) {
+					float y = Math.max(graphRect.y, mCurveY[hv][cat][i]-ydif);
+					polygon.addPoint(Math.round(x), Math.round(y));
+					x += mCurveXInc[hv][cat];
 					}
-				for (int i=mSmoothCurveY[hv][cat].length-1; i>=0; i--) {
-					x -= mSmoothCurveInc[hv][cat];
-					polygon.addPoint(Math.round(x), Math.round(mSmoothCurveY[hv][cat][i]+dy));
+				for (int i = mCurveY[hv][cat].length-1; i>=0; i--) {
+					x -= mCurveXInc[hv][cat];
+					float y = Math.min(graphRect.y+graphRect.height, mCurveY[hv][cat][i]+ydif);
+					polygon.addPoint(Math.round(x), Math.round(y));
 					}
-				if (mSmoothCurveY[hv].length != 1)
+				if (mCurveY[hv].length != 1)
 					mG.setColor(mMarkerColor.getColor(cat));
 				else
 					mG.setColor(getContrastGrey(1.0f));
@@ -3323,15 +3402,87 @@ public class JVisualization2D extends JVisualization {
 
 	private void drawSmoothCurve() {
 		for (int hv=0; hv<mHVCount; hv++) {
-			for (int cat=0; cat<mSmoothCurveY[hv].length; cat++) {
-				if (mSmoothCurveY[hv][cat] != null) {
-					if (mSmoothCurveY[hv].length != 1)
+			for (int cat = 0; cat<mCurveY[hv].length; cat++) {
+				if (mCurveY[hv][cat] != null) {
+					if (mCurveY[hv].length != 1)
 						mG.setColor(mMarkerColor.getColor(cat));
-					float x = mSmoothCurveXMin[hv][cat];
-					for (int i=0; i<mSmoothCurveY[hv][cat].length-1; i++) {
-						mG.draw(new Line2D.Float(x, mSmoothCurveY[hv][cat][i], x + mSmoothCurveInc[hv][cat], mSmoothCurveY[hv][cat][i + 1]));
-						x += mSmoothCurveInc[hv][cat];
+					float x = mCurveXMin[hv][cat];
+					for (int i=0; i<mCurveY[hv][cat].length-1; i++) {
+						mG.draw(new Line2D.Float(x, mCurveY[hv][cat][i], x+mCurveXInc[hv][cat], mCurveY[hv][cat][i+1]));
+						x += mCurveXInc[hv][cat];
 						}
+					}
+				}
+			}
+		}
+
+	private void drawExpressionCurveArea(int hv, Rectangle graphRect) {
+		if (mCurveY != null && mCurveStdDev != null && mCurveStdDev[hv][0] != 0f) {
+			int dx = mSplitter == null ? 0 : mSplitter.getHIndex(hv) * mSplitter.getGridWidth();
+			int dy = mSplitter == null ? 0 : mSplitter.getVIndex(hv) * mSplitter.getGridHeight();
+			float ydif = mCurveStdDev[hv][0];
+			float ymin = graphRect.y - dy - ydif;
+			float ymax = graphRect.y + graphRect.height - dy + ydif;
+			int i1 = 0;
+			while (i1 < mCurveY[0][0].length) {
+				while (i1 < mCurveY[0][0].length
+					&& (mCurveY[0][0][i1] < ymin || mCurveY[0][0][i1] > ymax))
+					i1++;
+
+				int i2 = i1;
+				while (i2 < mCurveY[0][0].length
+					&& (mCurveY[0][0][i2] >= ymin && mCurveY[0][0][i2] <= ymax))
+					i2++;
+
+				if (i2 - i1 >= 2) {
+					Polygon polygon = new Polygon();
+					float x = mCurveXMin[0][0] + dx + i1*mCurveXInc[0][0];
+					for (int i=i1; i<i2; i++) {
+						float y = Math.max(graphRect.y, mCurveY[0][0][i]+dy-ydif);
+						polygon.addPoint(Math.round(x), Math.round(y));
+						x += mCurveXInc[0][0];
+						}
+					for (int i=i2-1; i>=i1; i--) {
+						float y = Math.min(graphRect.y+graphRect.height, mCurveY[0][0][i]+dy+ydif);
+						x -= mCurveXInc[0][0];
+						polygon.addPoint(Math.round(x), Math.round(y));
+						}
+					mG.setColor(getContrastGrey(1.0f));
+					Composite original = mG.getComposite();
+					Composite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.4f);
+					mG.setComposite(composite);
+					mG.fill(polygon);
+					mG.setComposite(original);
+					}
+
+				i1 = i2 + 1;
+				}
+			}
+		}
+
+	private void drawExpressionCurve(Rectangle baseGraphRect) {
+		if (mCurveY != null) {
+			for (int hv=0; hv<mHVCount; hv++) {
+				int dx = mSplitter == null ? 0 : mSplitter.getHIndex(hv) * mSplitter.getGridWidth();
+				int dy = mSplitter == null ? 0 : mSplitter.getVIndex(hv) * mSplitter.getGridHeight();
+
+				for (int i=0; i<mCurveY[0][0].length-1; i++) {
+					if (mCurveY[0][0][i+1] < baseGraphRect.y
+					 || mCurveY[0][0][i+1] > baseGraphRect.y + baseGraphRect.height) {
+						i++;    // skip this and next curve fraction
+						}
+					else if (mCurveY[0][0][i] >= baseGraphRect.y
+						  && mCurveY[0][0][i] <= baseGraphRect.y + baseGraphRect.height) {
+						float x = mCurveXMin[0][0] + dx + i*mCurveXInc[0][0];
+						mG.draw(new Line2D.Float(x, mCurveY[0][0][i] + dy, x + mCurveXInc[0][0], mCurveY[0][0][i + 1] + dy));
+						}
+					}
+
+				if (hv == mHVCount-1) {
+					String formula = "f(x)="+mCurveExpression;
+					int textWidth = mG.getFontMetrics().stringWidth(formula);
+					drawString(formula, baseGraphRect.x+baseGraphRect.width+dx-textWidth,
+							baseGraphRect.y+baseGraphRect.height+dy-mG.getFontMetrics().getDescent());
 					}
 				}
 			}
@@ -3819,7 +3970,7 @@ public class JVisualization2D extends JVisualization {
 				}
 			if (mBackgroundColorConsidered == BACKGROUND_VISIBLE_RECORDS)
 				mBackgroundValid = false;
-			mSmoothCurveY = null;
+			mCurveY = null;
 			}
 		else if (e.getType() == CompoundTableEvent.cAddRows
 			  || e.getType() == CompoundTableEvent.cDeleteRows) {
@@ -4933,7 +5084,7 @@ public class JVisualization2D extends JVisualization {
 			addSplittingOffset();
 			}
 
-		mSmoothCurveY = null;
+		mCurveY = null;
 
 	   	mCoordinatesValid = true;
 		}
@@ -5611,7 +5762,7 @@ public class JVisualization2D extends JVisualization {
 	public void setCurveSmoothing(float smoothing) {
 		if (mCurveSmoothing != smoothing) {
 			mCurveSmoothing = smoothing;
-			mSmoothCurveY = null;
+			mCurveY = null;
 			if ((mCurveInfo & cCurveModeMask) == cCurveModeSmooth)
 				invalidateOffImage(false);
 			}
@@ -5647,10 +5798,43 @@ public class JVisualization2D extends JVisualization {
 		if (mCurveInfo != newInfo) {
 			if (mode != cCurveModeSmooth
 			 || splitByCategory != ((mCurveInfo & cCurveSplitByCategory) != 0))
-				mSmoothCurveY = null;
+				mCurveY = null;
+			if (mode != cCurveModeExpression) {
+				mCurveY = null;
+				}
 			mCurveInfo = newInfo;
 			invalidateOffImage(false);
 			}
+		}
+
+	public String getCurveExpression() {
+		return mCurveExpression;
+		}
+
+	public void setCurveExpression(String e) {
+		if (!isCurveExpressionValid(e))
+			e = null;
+
+		if ((e == null ^ mCurveExpression == null)
+		 || (e != null && !mCurveExpression.equals(e))) {
+			mCurveExpression = e;
+			mCurveY = null;
+			if (getCurveMode() == cCurveModeExpression)
+				invalidateOffImage(false);
+			}
+		}
+
+	private boolean isCurveExpressionValid(String expression) {
+		if (expression != null && expression.length() != 0) {
+			JEP parser = new JEP();
+			parser.addStandardFunctions();
+			parser.addStandardConstants();
+			parser.addVariable("x", 0.0);
+			parser.parseExpression(expression);
+			if (!parser.hasError())
+				return true;
+			}
+		return false;
 		}
 
 	public int[] getMultiValueMarkerColumns() {

@@ -164,6 +164,9 @@ public class JTextFormObject extends AbstractFormObject implements FocusListener
 			while (index1<text.length() && Character.isWhitespace(text.charAt(index1)))
 				index1++;
 
+			if (index1 == text.length())
+				break;
+
 			int index2 = index1+1;
 			while (index2<text.length()
 					&& text.charAt(index2) != '\n'

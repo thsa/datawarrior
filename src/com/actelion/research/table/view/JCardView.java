@@ -762,6 +762,20 @@ public class JCardView extends JPanel implements CompoundTableView, HighlightLis
 
     private int mFocusListFlag = -1;
 
+
+	/**
+	 * Implement the graphics export..
+	 *
+	 * @param g
+	 * @param bounds
+	 * @param fontScaling
+	 * @param transparentBG
+	 * @param isPrinting
+	 */
+	public void paintHighResolution(Graphics2D g, Rectangle bounds, float fontScaling, boolean transparentBG, boolean isPrinting) {
+		this.mCardPane.paintHighResolution(g,bounds,fontScaling,transparentBG,isPrinting);
+	}
+
     @Override
     public void setFocusList(int no) {
 

@@ -2,5 +2,5 @@ mkdir ./bin
 cp -r ./src/html ./bin/
 cp -r ./src/images ./bin/
 javac -d ./bin -sourcepath ./src:./stubs -classpath "./lib/*" src/com/actelion/research/datawarrior/DataWarriorLinux.java
-jar -cvfm datawarrior.jar manifest_additions.txt -C ./bin .
+jar -cfm datawarrior.jar manifest_additions.txt -C ./bin .
 rm -r bin

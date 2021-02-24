@@ -30,6 +30,8 @@ import info.clearthought.layout.TableLayout;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.Properties;
 
 
@@ -38,7 +40,7 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 	public static final String TASK_NAME = "Set Statistical View Options";
 
     private static final String PROPERTY_CORRELATION_TYPE = "correlationType";
-    private static final String PROPERTY_MEAN_LINE_TYPE = "meanLineType";
+    private static final String PROPERTY_CURVE_TYPE = "meanLineType";
     private static final String PROPERTY_SHOW_STDDEV_AREA = "showStdDev";
     private static final String PROPERTY_SPLIT_BY_CATEGORY = "splitCurvesByCategory";
 	private static final String PROPERTY_CURVE_LINE_WIDTH = "curveWidth";
@@ -53,12 +55,14 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
     private static final String PROPERTY_PVALUE_REF_CATEGORY = "pValueRefCategory";
     private static final String PROPERTY_BOXPLOT_MEAN_MODE = "boxPlotMeanMode";
     private static final String PROPERTY_BOXPLOT_MEAN_VALUES = "boxPlotMeanValues";
+	private static final String PROPERTY_CURVE_FORMULA = "formula";
 
-	private JComboBox	mComboBoxCorrelationType,mComboBoxLineMode,mComboBoxBoxplotMeanMode;
+	private JComboBox	mComboBoxCorrelationType, mComboBoxCurveMode,mComboBoxBoxplotMeanMode;
 	private JCheckBox	mCheckBoxScatterStdDev,mCheckBoxMultipleCurves,mCheckBoxShowMeanValues,
 						mCheckBoxShowPValues,mCheckBoxShowFoldChange,mCheckBoxShowBarOrPieSizeValue,
 						mCheckBoxShowStdDev,mCheckBoxShowConfInterval,mCheckBoxShowValueCount;
-	private JSlider     mSliderCurveLineWidth, mSliderCurveSmoothing;
+	private JTextField  mTextFieldFormula;
+	private JSlider     mSliderCurveLineWidth,mSliderCurveSmoothing;
 	private JComponent	mSelectorPValueColumn,mSelectorPValueRefCategory;
 	private ListCellRenderer mDefaultPValueRefCategoryRenderer;
 	private Dimension   mDefaultPValueRefCategorySize;
@@ -94,12 +98,13 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		int gap = HiDPIHelper.scale(8);
 		double[][] scatterPlotSize = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
 									   {gap, TableLayout.PREFERRED, gap*3, TableLayout.PREFERRED, gap,
+											   TableLayout.PREFERRED, gap,
 											   TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap,
 											   TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
 		JPanel scatterPlotPanel = new JPanel();
 		scatterPlotPanel.setLayout(new TableLayout(scatterPlotSize));
 
-		scatterPlotPanel.add(new JLabel("Show Correlation Coefficient:"), "1,1");
+		scatterPlotPanel.add(new JLabel("Show Correlation Coefficient:", JLabel.RIGHT), "1,1");
 
 		mComboBoxCorrelationType = new JComboBox();
 		mComboBoxCorrelationType.addItem("<none>");
@@ -108,32 +113,43 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		mComboBoxCorrelationType.addActionListener(this);
 		scatterPlotPanel.add(mComboBoxCorrelationType, "3,1");
 
-		scatterPlotPanel.add(new JLabel("Show Fitted Curve:"), "1,3");
-		mComboBoxLineMode = new JComboBox(JVisualization2D.CURVE_MODE_TEXT);
-		mComboBoxLineMode.addActionListener(this);
-		scatterPlotPanel.add(mComboBoxLineMode, "3,3");
+		scatterPlotPanel.add(new JLabel("Display Line/Curve:", JLabel.RIGHT), "1,3");
+		mComboBoxCurveMode = new JComboBox(JVisualization2D.CURVE_MODE_TEXT);
+		mComboBoxCurveMode.addActionListener(this);
+		scatterPlotPanel.add(mComboBoxCurveMode, "3,3");
+
+		scatterPlotPanel.add(new JLabel("Formula: f(x)=", JLabel.RIGHT), "1,5");
+		mTextFieldFormula = new JTextField();
+		mTextFieldFormula.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				super.keyReleased(e);
+				update(false);
+				}
+			});
+		scatterPlotPanel.add(mTextFieldFormula, "3,5");
 
 		mCheckBoxScatterStdDev = new JCheckBox("Display Standard Deviation");
         mCheckBoxScatterStdDev.setEnabled(false);
 		mCheckBoxScatterStdDev.addActionListener(this);
-		scatterPlotPanel.add(mCheckBoxScatterStdDev, "3,5");
+		scatterPlotPanel.add(mCheckBoxScatterStdDev, "3,7");
 
 		mCheckBoxMultipleCurves = new JCheckBox("Split By Color-Category");
 		mCheckBoxMultipleCurves.setEnabled(false);
 		mCheckBoxMultipleCurves.addActionListener(this);
-		scatterPlotPanel.add(mCheckBoxMultipleCurves, "3,7");
+		scatterPlotPanel.add(mCheckBoxMultipleCurves, "3,9");
 
 		mSliderCurveSmoothing = new JSlider(JSlider.HORIZONTAL, 0, 100, 50);
 		mSliderCurveSmoothing.setPreferredSize(new Dimension(HiDPIHelper.scale(150), mSliderCurveSmoothing.getPreferredSize().height));
 		mSliderCurveSmoothing.addChangeListener(this);
-		scatterPlotPanel.add(new JLabel("Smoothing grade:", JLabel.RIGHT), "1,9");
-		scatterPlotPanel.add(mSliderCurveSmoothing, "3,9");
+		scatterPlotPanel.add(new JLabel("Smoothing grade:", JLabel.RIGHT), "1,11");
+		scatterPlotPanel.add(mSliderCurveSmoothing, "3,11");
 
 		mSliderCurveLineWidth = new JSlider(JSlider.HORIZONTAL, 0, 100, 20);
 		mSliderCurveLineWidth.setPreferredSize(new Dimension(HiDPIHelper.scale(150), mSliderCurveLineWidth.getPreferredSize().height));
 		mSliderCurveLineWidth.addChangeListener(this);
-		scatterPlotPanel.add(new JLabel("Curve Line width:", JLabel.RIGHT), "1,11");
-		scatterPlotPanel.add(mSliderCurveLineWidth, "3,11");
+		scatterPlotPanel.add(new JLabel("Curve Line width:", JLabel.RIGHT), "1,13");
+		scatterPlotPanel.add(mSliderCurveLineWidth, "3,13");
 
 		tabbedPane.add(scatterPlotPanel, "Scatter Plot");
 
@@ -260,10 +276,11 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		if (mComboBoxCorrelationType.getSelectedIndex() != 0)
 			configuration.setProperty(PROPERTY_CORRELATION_TYPE, CorrelationCalculator.TYPE_NAME[mComboBoxCorrelationType.getSelectedIndex()-1]);
 
-		if (mComboBoxLineMode.getSelectedIndex() != 0) {
-			configuration.setProperty(PROPERTY_MEAN_LINE_TYPE, JVisualization2D.CURVE_MODE_CODE[mComboBoxLineMode.getSelectedIndex()]);
+		if (mComboBoxCurveMode.getSelectedIndex() != 0) {
+			configuration.setProperty(PROPERTY_CURVE_TYPE, JVisualization2D.CURVE_MODE_CODE[mComboBoxCurveMode.getSelectedIndex()]);
 			configuration.setProperty(PROPERTY_SHOW_STDDEV_AREA, mCheckBoxScatterStdDev.isSelected() ? "true" : "false");
 			configuration.setProperty(PROPERTY_SPLIT_BY_CATEGORY, mCheckBoxMultipleCurves.isSelected() ? "true" : "false");
+			configuration.setProperty(PROPERTY_CURVE_FORMULA, mTextFieldFormula.getText());
 			}
 
 		configuration.setProperty(PROPERTY_BOXPLOT_SHOW_STDDEV, mCheckBoxShowStdDev.isSelected() ? "true" : "false");
@@ -302,10 +319,11 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 	public void setDialogToConfiguration(Properties configuration) {
 		mComboBoxCorrelationType.setSelectedIndex(1+findListIndex(configuration.getProperty(PROPERTY_CORRELATION_TYPE),
 																  CorrelationCalculator.TYPE_NAME, -1));
-		mComboBoxLineMode.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_MEAN_LINE_TYPE),
+		mComboBoxCurveMode.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_CURVE_TYPE),
 														 JVisualization2D.CURVE_MODE_CODE, 0));
 		mCheckBoxScatterStdDev.setSelected("true".equals(configuration.getProperty(PROPERTY_SHOW_STDDEV_AREA)));
 		mCheckBoxMultipleCurves.setSelected("true".equals(configuration.getProperty(PROPERTY_SPLIT_BY_CATEGORY)));
+		mTextFieldFormula.setText(configuration.getProperty(PROPERTY_CURVE_FORMULA));
 
 		mCheckBoxShowStdDev.setSelected("true".equals(configuration.getProperty(PROPERTY_BOXPLOT_SHOW_STDDEV)));
 		String value = configuration.getProperty(PROPERTY_CURVE_SMOOTHING);
@@ -343,9 +361,10 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 	@Override
 	public void setDialogToDefault() {
 		mComboBoxCorrelationType.setSelectedIndex(0);
-		mComboBoxLineMode.setSelectedIndex(0);
+		mComboBoxCurveMode.setSelectedIndex(0);
 		mCheckBoxShowBarOrPieSizeValue.setSelected(false);
 		mCheckBoxShowStdDev.setSelected(false);
+		mTextFieldFormula.setText("");
 		mSliderCurveSmoothing.setValue(50);
 		mSliderCurveLineWidth.setValue(20);
 		mCheckBoxShowConfInterval.setSelected(false);
@@ -371,11 +390,14 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		if (correlationType != -1)
 			configuration.setProperty(PROPERTY_CORRELATION_TYPE, CorrelationCalculator.TYPE_NAME[correlationType]);
 
-		configuration.setProperty(PROPERTY_MEAN_LINE_TYPE, JVisualization2D.CURVE_MODE_CODE[v2d.getCurveMode()]);
+		configuration.setProperty(PROPERTY_CURVE_TYPE, JVisualization2D.CURVE_MODE_CODE[v2d.getCurveMode()]);
 		configuration.setProperty(PROPERTY_SHOW_STDDEV_AREA, v2d.isShowStandardDeviationArea() ? "true" : "false");
 		configuration.setProperty(PROPERTY_SPLIT_BY_CATEGORY, v2d.isCurveSplitByCategory() ? "true" : "false");
 		configuration.setProperty(PROPERTY_CURVE_LINE_WIDTH, DoubleFormat.toString(v2d.getCurveLineWidth()));
 		configuration.setProperty(PROPERTY_CURVE_SMOOTHING, DoubleFormat.toString(v2d.getCurveSmoothing()));
+		String expression = v2d.getCurveExpression();
+		if (expression != null)
+			configuration.setProperty(PROPERTY_CURVE_FORMULA, expression);
 
 		configuration.setProperty(PROPERTY_SHOW_BAR_OR_PIE_SIZE_VALUE, v2d.isShowBarOrPieSizeValue() ? "true" : "false");
 		configuration.setProperty(PROPERTY_BOXPLOT_SHOW_STDDEV, v2d.isShowStandardDeviation() ? "true" : "false");
@@ -412,9 +434,11 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		JVisualization2D visualization = (JVisualization2D)((VisualizationPanel2D)view).getVisualization();
 		visualization.setShownCorrelationType(findListIndex(configuration.getProperty(PROPERTY_CORRELATION_TYPE),
 															 CorrelationCalculator.TYPE_NAME, -1));
-		visualization.setCurveMode(findListIndex(configuration.getProperty(PROPERTY_MEAN_LINE_TYPE), JVisualization2D.CURVE_MODE_CODE, 0),
-									"true".equals(configuration.getProperty(PROPERTY_SHOW_STDDEV_AREA)),
-									"true".equals(configuration.getProperty(PROPERTY_SPLIT_BY_CATEGORY)));
+		int mode = findListIndex(configuration.getProperty(PROPERTY_CURVE_TYPE), JVisualization2D.CURVE_MODE_CODE, 0);
+		boolean stdDev = "true".equals(configuration.getProperty(PROPERTY_SHOW_STDDEV_AREA));
+		boolean split = "true".equals(configuration.getProperty(PROPERTY_SPLIT_BY_CATEGORY)) && mode != JVisualization2D.cCurveModeExpression;
+		visualization.setCurveMode(mode, stdDev, split);
+		visualization.setCurveExpression(configuration.getProperty(PROPERTY_CURVE_FORMULA));
 		String value = configuration.getProperty(PROPERTY_CURVE_LINE_WIDTH);
 		if (value != null)
 			visualization.setCurveLineWidth(Float.parseFloat(value));
@@ -434,9 +458,12 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 
 	@Override
 	public void enableItems() {
-		mCheckBoxScatterStdDev.setEnabled(mComboBoxLineMode.getSelectedIndex() != 0);
-		mCheckBoxMultipleCurves.setEnabled(mComboBoxLineMode.getSelectedIndex() != 0);
-		mSliderCurveSmoothing.setEnabled(mComboBoxLineMode.getSelectedIndex() == JVisualization2D.cCurveModeSmooth);
+		int curveMode = mComboBoxCurveMode.getSelectedIndex();
+		mCheckBoxScatterStdDev.setEnabled(curveMode != 0);
+		mCheckBoxMultipleCurves.setEnabled(curveMode != 0);
+		mSliderCurveSmoothing.setEnabled(curveMode == JVisualization2D.cCurveModeSmooth);
+		mCheckBoxMultipleCurves.setEnabled(curveMode != JVisualization2D.cCurveModeExpression);
+		mTextFieldFormula.setEnabled(curveMode == JVisualization2D.cCurveModeExpression);
 
 		boolean isBoxPlot = (!hasInteractiveView() || getInteractiveVisualization().getChartType() == JVisualization.cChartTypeBoxPlot);
 		if (isBoxPlot) {
@@ -454,7 +481,6 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// update dynamic menus
 	    if (e.getSource() == mSelectorPValueColumn) {
 	    	((JComboBox)mSelectorPValueRefCategory).removeActionListener(this);
 	    	String pValueColumn = (String)((JComboBox)mSelectorPValueColumn).getSelectedItem();

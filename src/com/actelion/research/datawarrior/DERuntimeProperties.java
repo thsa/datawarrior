@@ -163,6 +163,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cCurveMode = "meanLineMode";
 	private static final String cCurveStdDev = "meanLineStdDev";
 	private static final String cCurveSplitByCategory = "splitCurveByCategory";
+	private static final String cCurveExpression = "curveExpression";
 	private static final String cCurveLineWidth = "curveLineWidth";
 	private static final String cCurveSmoothing = "curveSmoothing";
 	private static final String cShowBarOrPieSizeValue = "showBarOrPieSizeValue";
@@ -957,7 +958,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 					value = getProperty(cCurveLineWidth+viewName);
 					float curveLineWidth = (value == null) ? JVisualization2D.DEFAULT_CURVE_LINE_WIDTH : Float.parseFloat(value);
 					((JVisualization2D)visualization).setCurveLineWidth(curveLineWidth);
-
+					value = getProperty(cCurveExpression+viewName);
+					if (value != null)
+						((JVisualization2D)visualization).setCurveExpression(value);
 					value = getProperty(cCurveSmoothing+viewName);
 					if (value != null)
 						((JVisualization2D)visualization).setCurveSmoothing(Float.parseFloat(value));
@@ -1581,6 +1584,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 								setProperty(cCurveSplitByCategory+viewName, "true");
 							float curveLineWidth = ((JVisualization2D)visualization).getCurveLineWidth();
 							setProperty(cCurveLineWidth+viewName, ""+curveLineWidth);
+							if (curveMode == JVisualization2D.cCurveModeExpression)
+								setProperty(cCurveExpression+viewName, ((JVisualization2D)visualization).getCurveExpression());
 							if (curveMode == JVisualization2D.cCurveModeSmooth)
 								setProperty(cCurveSmoothing+viewName, ""+((JVisualization2D)visualization).getCurveSmoothing());
 							}

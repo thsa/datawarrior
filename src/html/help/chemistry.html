@@ -556,29 +556,36 @@ in reality one would often skip the very first compounds of the diverse selectio
 <h3><a name="ClusterCompounds"></a>Clustering Compounds</h3>
 <p>Clustering is an old cheminformatics technique for subdividing a typically large
 compound collection into small groups of similar compounds. Clustering was used in
-the old days, when computational resources were expensive, to precompute similarity
-relationships between compounds. Cluster membership could be stored easily in databases
-to be quickly retrieved later, whenever the need arose to locate similar structures
-to any given structure, e.g. after a high-throughput screening. The inherent problem
+the old days to precompute similarity relationships between compounds, when computational
+resources were expensive and the calculation of compound similarities time-consuming.
+Cluster membership could be easily stored in databases to be quickly retrieved later,
+whenever the need arose to locate similar structures to any given structure,
+e.g. after a high-throughput screening. The inherent problem
 of clustering is that cluster borders are arbitrary and may separate very similar
-compounds into different clusters. Therefore, the retrieval of all cluster co-member
-of a given compound does not necessarily result in the most similar compounds.</p>
+compounds into different clusters. Therefore, a list of all cluster co-members
+of a given compound has some overlap with, but differs from the set of its most similar compounds.</p>
 
-<p>The cluster algorithm implemented in <i>DataWarrior</i> is simple, reproducible,
-but computationally demanding and, therefore, best used if the dataset doesn't
-contain far beyond 10000 compounds. First the complete similarity matrix is calculated,
-which can be done with any descriptor. Then, in a stepwise process the most similar
-compounds or clusters are merged to form a new cluster, whose similarity to the
-remaining compounds and clusters is re-calculated as a weighted mean from its members.
-The merging process continues until a stop criterion is met. Stop criteria can be
-defined in the cluster dialog.</p>
+<p>The cluster algorithm implemented in <i>DataWarrior</i> uses a hierarchical, bottom-up
+approach. This simple algorithm gives perfect and reproducible results,
+but is computationally demanding and, therefore, best used if the dataset doesn't
+contain far beyond 10000 compounds.</p>
+<p>The algorithm works as follows: First the complete similarity matrix triangle
+over all n compounds is calculated using a descriptor of choice.
+Then, the most similar compounds are joined into the first cluster. The similarity
+matrix is updated by removing all similarity values related to these two compounds
+and replacing them by a new set of similarities between luster center and any other compound.
+The new values are calculated as mean of the two original similarity values.
+Step by step the process continues by joining the most similar compound/cluster pair
+and merging the corresponding similarity values as a weighted mean based on the number
+of cluster members. The merging process continues until a stop criterion is met.
+Two possible stop criteria can be defined in the cluster dialog.</p>
 
 <p align="center"><img src="help/img/chem/clusterDialog.jpeg"></p>
 
-<p>The clustering process may be defined to stop when the cluster count reaches
-a desired number or when the similarity needed to join two clusters falls below
-a definable limit. If both criteria are defined, then the clustering stops if any
-of both criteria are met.</p>
+<p>The clustering process can be configured to stop when the cluster count went down to
+reaches a predefined number or when the similarity needed to join two clusters falls below
+a definable limit. If both criteria are defined, then the clustering stops once any
+of the two criteria are met.</p>
 <br>
 
 <h3><a name="MolecularProperties"></a>Calculating Molecular Properties</h3>

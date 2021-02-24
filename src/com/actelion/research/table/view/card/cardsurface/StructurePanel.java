@@ -6,6 +6,7 @@ import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.table.CompoundTableColorHandler;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.table.view.VisualizationColor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -69,6 +70,12 @@ public class StructurePanel extends AbstractCardSurfacePanel {
 
         if(mol!=null) {
             Depictor2D depictor = new Depictor2D(mol);
+
+            //Color fg = conf.getColorHandler().getVisualizationColor(columns[0],CompoundTableColorHandler.FOREGROUND).getColorForForeground(rec);
+            Color fg = Color.black;
+            Color bg = conf.getColorHandler().getVisualizationColor(columns[0],CompoundTableColorHandler.BACKGROUND).getColorForBackground(rec);
+            depictor.setForegroundColor(fg,bg);
+            //depictor.setOverruleColor(fg,bg);
             depictor.validateView(g, new Rectangle2D.Double(2, 2, w-4, h-4), AbstractDepictor.cModeInflateToMaxAVBL);
             depictor.paint(g);
         }

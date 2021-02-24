@@ -71,10 +71,19 @@ public class StructurePanel extends AbstractCardSurfacePanel {
         if(mol!=null) {
             Depictor2D depictor = new Depictor2D(mol);
 
-            //Color fg = conf.getColorHandler().getVisualizationColor(columns[0],CompoundTableColorHandler.FOREGROUND).getColorForForeground(rec);
-            Color fg = Color.black;
-            Color bg = conf.getColorHandler().getVisualizationColor(columns[0],CompoundTableColorHandler.BACKGROUND).getColorForBackground(rec);
-            depictor.setForegroundColor(fg,bg);
+
+            if (!conf.getColorHandler().hasColorAssigned(columns[0], CompoundTableColorHandler.FOREGROUND)) {
+                Color fg = Color.black;
+                Color bg = conf.getColorHandler().getVisualizationColor(columns[0], CompoundTableColorHandler.BACKGROUND).getColorForBackground(rec);
+                depictor.setForegroundColor(fg, bg);
+            }
+            else {
+                Color fg = conf.getColorHandler().getVisualizationColor(columns[0],CompoundTableColorHandler.FOREGROUND).getColorForForeground(rec);
+                Color bg = conf.getColorHandler().getVisualizationColor(columns[0], CompoundTableColorHandler.BACKGROUND).getColorForBackground(rec);
+                depictor.setForegroundColor(fg, bg);
+                depictor.setOverruleColor(fg,bg);
+            }
+
             //depictor.setOverruleColor(fg,bg);
             depictor.validateView(g, new Rectangle2D.Double(2, 2, w-4, h-4), AbstractDepictor.cModeInflateToMaxAVBL);
             depictor.paint(g);

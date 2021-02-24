@@ -4,10 +4,7 @@ import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.CompoundTableColorHandler;
 import com.actelion.research.table.DetailPopupProvider;
 import com.actelion.research.table.model.*;
-import com.actelion.research.table.view.card.CardElement;
-import com.actelion.research.table.view.card.CardPaneModel;
-import com.actelion.research.table.view.card.JCardPane;
-import com.actelion.research.table.view.card.JFastCardPane;
+import com.actelion.research.table.view.card.*;
 import com.actelion.research.table.view.card.animators.PathAnimator;
 import com.actelion.research.table.view.card.cardsurface.CardElementLayoutLogic;
 import com.actelion.research.table.view.card.cardsurface.gui.JCardWizard2;
@@ -822,7 +819,8 @@ public class JCardView extends JPanel implements CompoundTableView, HighlightLis
 
     @Override
     public void colorChanged(VisualizationColor source) {
-        // @TODO implement..
+		this.getCardPane().reinitAllCards();
+		this.getCardPane().repaint();
     }
 
 

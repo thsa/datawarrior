@@ -108,7 +108,7 @@ public class DETaskConfigureCard extends DETaskAbstractSetViewOptions {
 
     @Override
     public void applyConfiguration(CompoundTableView view, Properties configuration, boolean isAdjusting) {
-        if (!(view instanceof JCardPane))
+        if (!(view instanceof JCardView))
             return;
 
         JCardPane cardPane = ((JCardView)view).getCardPane();

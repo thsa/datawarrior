@@ -3,6 +3,8 @@ package com.actelion.research.table.view.card.cardsurface;
 import com.actelion.research.table.CompoundTableColorHandler;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.table.view.VisualizationColor;
+import com.actelion.research.table.view.VisualizationColorListener;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -158,7 +160,8 @@ public class SingleDataPanel extends AbstractCardSurfacePanel {
         // Color the background:
         //model.get
         if(conf.getColorHandler().hasColorAssigned(columns[0], CompoundTableColorHandler.BACKGROUND)){
-            Color bgColor = conf.getColorHandler().getVisualizationColor(columns[0],CompoundTableColorHandler.BACKGROUND).getColor(rec);
+            //Color bgColor = conf.getColorHandler().getVisualizationColor(columns[0],CompoundTableColorHandler.BACKGROUND).getColor(rec);
+            Color bgColor = conf.getColorHandler().getVisualizationColor(columns[0],CompoundTableColorHandler.BACKGROUND).getColorForBackground(rec);
             g.setColor( bgColor );
             g.fillRect( 0,0,w,h );
         }

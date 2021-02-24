@@ -39,7 +39,7 @@ public class StructurePanel extends AbstractCardSurfacePanel {
 
         // Color the background:
         if(conf.getColorHandler().hasColorAssigned(columns[0], CompoundTableColorHandler.BACKGROUND)){
-            Color bgColor = conf.getColorHandler().getVisualizationColor(columns[0],CompoundTableColorHandler.BACKGROUND).getColor(rec);
+            Color bgColor = conf.getColorHandler().getVisualizationColor(columns[0],CompoundTableColorHandler.BACKGROUND).getColorForBackground(rec);
             g.setColor( bgColor );
             g.fillRect( 0,0,w,h );
         }

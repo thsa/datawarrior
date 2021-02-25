@@ -154,7 +154,7 @@ public class DETaskNewFormView extends DETaskAbstractNewView {
 
 		int formColumnCount = -1;   // automatic
 		try {
-			Integer.parseInt(configuration.getProperty(PROPERTY_FORM_COLUMN_COUNT));
+			formColumnCount = Integer.parseInt(configuration.getProperty(PROPERTY_FORM_COLUMN_COUNT));
 			}
 		catch (NumberFormatException nfe) {}
 

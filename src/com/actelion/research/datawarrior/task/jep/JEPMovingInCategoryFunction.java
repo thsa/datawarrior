@@ -29,21 +29,23 @@ import java.util.TreeMap;
 /**
  * An example custom function class for JEP.
  */
-public class JEPMovingAverageInCategoryFunction extends PostfixMathCommand {
-	private boolean CALCULATE_EDGE_VALUES = true;
-
+public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 	private DETaskAddCalculatedValues mParentTask;
 	private CompoundTableModel mTableModel;
 	private TreeMap<Long,double[]> mResultMap;
+	private boolean mIsAverage,mCalculateEdgeValues;
 
 	/**
 	 * Constructor
 	 */
-	public JEPMovingAverageInCategoryFunction(CompoundTableModel tableModel, DETaskAddCalculatedValues parentTask) {
+	public JEPMovingInCategoryFunction(CompoundTableModel tableModel, DETaskAddCalculatedValues parentTask,
+	                                   boolean isAverage, boolean calculateEdgeValues) {
 		super();
 		mParentTask = parentTask;
 		mTableModel = tableModel;
 		numberOfParameters = 4;
+		mIsAverage = isAverage;
+		mCalculateEdgeValues = calculateEdgeValues;
 		}
 
 	private double getResult(int valueColumn, int categoryColumn, int n1, int n2) {
@@ -67,7 +69,7 @@ public class JEPMovingAverageInCategoryFunction extends PostfixMathCommand {
 				window.addValue(value, row, result);
 				}
 
-			if (CALCULATE_EDGE_VALUES)
+			if (mCalculateEdgeValues)
 				for (MovingWindow window:categoryValueMap.values())
 					window.processTailValues(result);
 
@@ -110,7 +112,7 @@ public class JEPMovingAverageInCategoryFunction extends PostfixMathCommand {
 		if (categoryColumn == -1)
 			throw new ParseException("Column '"+param1+"' not found.");
 
-		if (!mTableModel.isColumnTypeCategory(categoryColumn))
+		if (!mTableModel.isColumnTypeCategory(categoryColumn) && !mTableModel.isEqualValueColumn(categoryColumn))
 			throw new ParseException("Column '"+param1+"' does not contain category values.");
 
 		if (mTableModel.isMultiEntryColumn(categoryColumn))
@@ -149,7 +151,7 @@ public class JEPMovingAverageInCategoryFunction extends PostfixMathCommand {
 				int centerIndex = cyclicIndex(valueCount - n2 - 1);
 
 				if (valueCount < value.length)
-					result[rowIndex[centerIndex]] = CALCULATE_EDGE_VALUES ? getAverage(0, valueCount) : Double.NaN;
+					result[rowIndex[centerIndex]] = mCalculateEdgeValues ? getAverage(0, valueCount) : Double.NaN;
 				else
 					result[rowIndex[centerIndex]] = getAverage(0, value.length);
 				}
@@ -160,7 +162,7 @@ public class JEPMovingAverageInCategoryFunction extends PostfixMathCommand {
 				int centerIndex = cyclicIndex(valueIndex);
 				int i1 = cyclicIndex(Math.max(0, valueIndex-n1));
 				int i2 = cyclicIndex(valueCount);
-				result[rowIndex[centerIndex]] = CALCULATE_EDGE_VALUES ? getAverage(i1, i2) : Double.NaN;
+				result[rowIndex[centerIndex]] = mCalculateEdgeValues ? getAverage(i1, i2) : Double.NaN;
 				}
 			}
 
@@ -183,7 +185,7 @@ public class JEPMovingAverageInCategoryFunction extends PostfixMathCommand {
 					count++;
 					}
 				}
-			return sum / count;
+			return mIsAverage ? sum / count : sum;
 			}
 
 		private int cyclicIndex(int index) {

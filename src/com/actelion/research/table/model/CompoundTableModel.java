@@ -5894,7 +5894,7 @@ class IDCodeComparator implements Comparator<CompoundRecord> {
 class EntryAnalysis {
 	// The first modifier of any type is the default one if multiple modifiers
 	// of the same type are merged, e.g. for mean generation.
-	private static final String[][] cModifier = {{"<=", "<"}, {">=", ">", "H"}};
+	private static final String[][] cModifier = {{"<=", "<", "0-"}, {">=", ">", "H"}};
 
 	protected static final int cModifierTypeNone = -1;
 	protected static final int cModifierTypeSmaller = 0;

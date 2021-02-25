@@ -466,43 +466,77 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			}
 
 		// If some columns contain R-groups, then merge the R-groups into any molecule, which has a respective Rn substituent!
-		// Mark R-groups that have been merge one or more times. All other R-groups have to be added as unconnected molecules later.
-		// We don't resolve multiple layers of R-grouping, e.g. R1 contains R2 and R2 contains R1.
+		// Mark R-groups that have been merged one or multiple times. All other R-groups will be added as unconnected molecules later.
+		// We don't resolve multiple layers of R-grouping, e.g. R1 contains R2 and R2 contains R1. However, an R-group may contain
+		// additional connection points, which link back to the core atom (atomicNo==0 and custom labels '1','2',...
 		for (int i=0; i<sourceColumn.length; i++) {
 			if (mol[i] != null) {
 				int originalAtomCount = mol[i].getAllAtoms();
 				boolean needsDeletion = false;
 				boolean needsArrangement = false;
 				for (int atom1=0; atom1<originalAtomCount; atom1++) {
-					int atomicNo = mol[i].getAtomicNo(atom1);
+					int atomicNo1 = mol[i].getAtomicNo(atom1);
 					mol[i].setAtomMarker(atom1, true);  // marker to keep this atom's coordinates
 					// The Rn atom should exactly have one neighbour, but mol may have been edited by an evil user
-					if (atomicNo >= 129 && atomicNo <= 144 && mol[i].getConnAtoms(atom1) >= 1) {
+					if (atomicNo1 >= 129 && atomicNo1 <= 144 && mol[i].getConnAtoms(atom1) >= 1) {
 						int coreAtom = mol[i].getConnAtom(atom1, 0);
-						int rGroupNo = (atomicNo >= 142) ? atomicNo - 141 : atomicNo - 125;
-						if (rGroupIndex[rGroupNo] != -1 && rGroupIndex[rGroupNo] != i) {
-							if (rGroup[rGroupIndex[rGroupNo]] == null) {
+						int rGroupNo1 = (atomicNo1 >= 142) ? atomicNo1 - 141 : atomicNo1 - 125;
+						if (rGroupIndex[rGroupNo1] != -1 && rGroupIndex[rGroupNo1] != i) {
+							if (rGroup[rGroupIndex[rGroupNo1]] == null) {
 								mol[i].markAtomForDeletion(atom1);
 								needsDeletion = true;
 								}
 							else {
 								int atomStart = mol[i].getAllAtoms();
 								int bondStart = mol[i].getAllBonds();
-								mol[i].addMolecule(rGroup[rGroupIndex[rGroupNo]]);
-								wasAdded[rGroupIndex[rGroupNo]] = true;
+								mol[i].addMolecule(rGroup[rGroupIndex[rGroupNo1]]);
+								wasAdded[rGroupIndex[rGroupNo1]] = true;
 								needsArrangement = true;
 								for (int atom2=atomStart; atom2<mol[i].getAllAtoms(); atom2++) {
 									if (mol[i].getAtomicNo(atom2) == 0) {
-										for (int bond2=bondStart; bond2<mol[i].getAllBonds(); bond2++) {
-											for (int j=0; j<2; j++) {
-												if (mol[i].getBondAtom(j, bond2) == atom2) {
-													mol[i].setBondAtom(j, bond2, coreAtom);
+										if (mol[i].getAtomCustomLabel(atom2) == null) {
+											// Primary attachment points are atomicNo==0 with no custom label.
+											for (int bond2=bondStart; bond2<mol[i].getAllBonds(); bond2++) {
+												for (int j=0; j<2; j++) {
+													if (mol[i].getBondAtom(j, bond2) == atom2) {
+														mol[i].setBondAtom(j, bond2, coreAtom);
+														}
 													}
 												}
+											mol[i].markAtomForDeletion(atom2);
+											mol[i].markAtomForDeletion(atom1);
+											needsDeletion = true;
 											}
-										mol[i].markAtomForDeletion(atom1);
-										mol[i].markAtomForDeletion(atom2);
-										needsDeletion = true;
+										else {
+											// Atoms with atomicNo==0 and customs labels '1','2',etc encode links back to core,
+											// when R-groups have multiple attachments to the core fragment.
+											try {
+												int backLinkRGroupIndex = Integer.parseInt(mol[i].getAtomCustomLabel(atom2));
+												if (backLinkRGroupIndex >= 1 && backLinkRGroupIndex <= 16) {
+													for (int atom3=0; atom3<atomStart; atom3++) {
+														int atomicNo3 = mol[i].getAtomicNo(atom3);
+														if (atomicNo3 >= 129 && atomicNo3 <= 144 && mol[i].getConnAtoms(atom3) >= 1) {
+															int rGroupNo3 = (atomicNo3 >= 142) ? atomicNo3 - 141 : atomicNo3 - 125;
+															if (rGroupNo3 == backLinkRGroupIndex) {
+																for (int bond2=bondStart; bond2<mol[i].getAllBonds(); bond2++) {
+																	for (int j=0; j<2; j++) {
+																		if (mol[i].getBondAtom(j, bond2) == atom2) {
+																			mol[i].setBondAtom(j, bond2, mol[i].getConnAtom(atom3, 0));
+																			}
+																		}
+																	}
+																mol[i].markAtomForDeletion(atom2);
+																mol[i].markAtomForDeletion(atom3);
+																needsDeletion = true;
+																wasAdded[rGroupIndex[rGroupNo3]] = true;
+																break;
+																}
+															}
+														}
+													}
+												}
+											catch (NumberFormatException nfe) {}
+											}
 										}
 									}
 								}

@@ -965,12 +965,14 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		for (int i=0; i<idcodeColumn.length; i++) {
 			for (int row=0; !hasCoords[i] && row<mFieldData.length; row++) {
 				byte[] bytes = (byte[])mFieldData[row][idcodeColumn[i]];
-				for (int j=0; j<bytes.length; j++) {
-					if (bytes[j] == ' ' && bytes.length > j+1) {
-						hasCoords[i] = true;
-						newColumnCount++;
-						is3D[i] = new IDCodeParser().coordinatesAre3D(bytes, bytes, 0, j+1);
-						break;
+				if (bytes != null) {
+					for (int j=0; j<bytes.length; j++) {
+						if (bytes[j] == ' ' && bytes.length > j+1) {
+							hasCoords[i] = true;
+							newColumnCount++;
+							is3D[i] = new IDCodeParser().coordinatesAre3D(bytes, bytes, 0, j+1);
+							break;
+							}
 						}
 					}
 				}
@@ -1006,10 +1008,12 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					if (hasCoords[i]) {
 						byte[] bytes = (byte[])newFieldData[newColumnIndex];
 						int index = -1;
-						for (int j=0; j<bytes.length; j++) {
-							if (bytes[j] == ' ' && bytes.length > j+1) {
-								index = j;
-								break;
+						if (bytes != null) {
+							for (int j=0; j<bytes.length; j++) {
+								if (bytes[j] == ' ' && bytes.length > j+1) {
+									index = j;
+									break;
+									}
 								}
 							}
 						if (index != -1) {

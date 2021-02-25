@@ -22,9 +22,9 @@ import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.task.*;
 import com.actelion.research.datawarrior.task.DEMacro.Task;
 import com.actelion.research.datawarrior.task.view.ListTransferHandler;
+import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.hidpi.HiDPIIconButton;
-import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableListEvent;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -40,8 +40,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.TreeSet;
@@ -205,6 +203,22 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 					}
 				}
 			});
+
+		// If the drop target is constantly active, then drag&drop of the docking framework
+		// is not working over the macro-JList, because drag events are consumed.
+		// Therefore we enable the droptarget just for 5 seconds from starting the drag.
+		mList.getDropTarget().setActive(false);
+		mTree.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				mList.getDropTarget().setActive(true);
+				new Thread(() -> {
+					try { Thread.sleep(5000); } catch (InterruptedException ie) {}
+					SwingUtilities.invokeLater(() -> mList.getDropTarget().setActive(false));
+					}).start();
+				}
+			});
+
 		JScrollPane sp = new JScrollPane();
 		sp.setBorder(BorderFactory.createEmptyBorder());
 		sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -242,6 +256,10 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		setContinuousLayout(true);
 
 		enableItems();
+		}
+
+	public void setDropTargetActive(boolean b) {
+		mList.getDropTarget().setActive(b);
 		}
 
 	@Override

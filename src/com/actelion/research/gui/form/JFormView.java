@@ -407,6 +407,9 @@ public class JFormView extends JPanel implements FormObjectListener,Printable {
 			return totalHeight;
 
 		int formHeight = Math.max(1, 1+(totalHeight-1)/formColumnCount);
+		for (int i=0; i<mComponentList.size(); i++)
+			if (formHeight < formObjectHeight[i])
+				formHeight = formObjectHeight[i];
 
 		while (true) {
 			int column = 0;

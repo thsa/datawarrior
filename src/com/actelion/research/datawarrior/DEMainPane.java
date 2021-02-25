@@ -59,6 +59,14 @@ public class DEMainPane extends JDockingPanel
 	public static final Dimension MINIMUM_SIZE = new Dimension(128, 128);
 	public static final Dimension MINIMUM_VIEW_SIZE = new Dimension(64, 64);
 
+	private static final String COMMAND_NEW_2D_VIEW = "new2D_";
+	private static final String COMMAND_NEW_3D_VIEW = "new3D_";
+	private static final String COMMAND_NEW_STRUCTURE_GRID = "newSG_";
+	private static final String COMMAND_NEW_FORM_VIEW = "newFV_";
+	private static final String COMMAND_NEW_CARDS_VIEW = "newCV_";
+	private static final String COMMAND_NEW_EXPLANATION_VIEW = "newEV_";
+	private static final String COMMAND_NEW_MACRO_EDITOR = "newME_";
+
 	private static final String COMMAND_DUPLICATE = "dup_";
 	private static final String COMMAND_RENAME = "rename_";
 	private static final String COMMAND_COPY_VIEW = "copyView_";
@@ -280,20 +288,20 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		//	  addPopupItem(popup, "New Table-View", "newTable_"+title);
 
 		if (!isMaximized()) {
-			addMenuItem(popup, "New 2D-View", "new2D");
-			addMenuItem(popup, "New 3D-View", "new3D");
+			addMenuItem(popup, "New 2D-View", COMMAND_NEW_2D_VIEW +title);
+			addMenuItem(popup, "New 3D-View", COMMAND_NEW_3D_VIEW +title);
 			if (DataWarrior.USE_CARDS_VIEW)
-				addMenuItem(popup, "New Cards View", "newCards");
-			addMenuItem(popup, "New Form View", "newForm");
+				addMenuItem(popup, "New Cards View", COMMAND_NEW_CARDS_VIEW +title);
+			addMenuItem(popup, "New Form View", COMMAND_NEW_FORM_VIEW+title);
 			for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 				if (mTableModel.isColumnTypeStructure(column)) {
-					addMenuItem(popup, "New Structure View", "newSGrid");
+					addMenuItem(popup, "New Structure View", COMMAND_NEW_STRUCTURE_GRID +title);
 					break;
 					}
 				}
-		   	addMenuItem(popup, "New Explanation View", "newExplanation");
+		   	addMenuItem(popup, "New Explanation View", COMMAND_NEW_EXPLANATION_VIEW +title);
 		   	if (mAppViewFactory != null && !hasMacroEditorView())
-		   		addMenuItem(popup, "New Macro Editor", "newMacro");
+		   		addMenuItem(popup, "New Macro Editor", COMMAND_NEW_MACRO_EDITOR+title);
 
 			popup.addSeparator();
 
@@ -361,31 +369,31 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		else if (command.startsWith(COMMAND_COPY_STATISTICS)) {
 			new DETaskCopyStatisticalValues(mParentFrame, this, view).defineAndRun();
 			}
-		else if (command.equals("new2D")) {
-			new DETaskNew2DView(mParentFrame, this, getSelectedDockable().getTitle()).defineAndRun();
+		else if (command.startsWith(COMMAND_NEW_2D_VIEW)) {
+			new DETaskNew2DView(mParentFrame, this, viewName).defineAndRun();
 			}
-		else if (command.equals("new3D")) {
-			new DETaskNew3DView(mParentFrame, this, getSelectedDockable().getTitle()).defineAndRun();
+		else if (command.startsWith(COMMAND_NEW_3D_VIEW)) {
+			new DETaskNew3DView(mParentFrame, this, viewName).defineAndRun();
 			}
-		else if (command.equals("newSGrid")) {
+		else if (command.startsWith(COMMAND_NEW_STRUCTURE_GRID)) {
 			int column = selectStructureColumn();
 			if (column != -1)
-				new DETaskNewStructureView(mParentFrame, this, getSelectedDockable().getTitle(), column).defineAndRun();
+				new DETaskNewStructureView(mParentFrame, this, viewName, column).defineAndRun();
 			}
-		else if (command.equals("newCards")) {
+		else if (command.startsWith(COMMAND_NEW_CARDS_VIEW)) {
 			if (mTableModel.getTotalRowCount() <= 10000)
-				new DETaskNewCardsView(mParentFrame, this, getSelectedDockable().getTitle()).defineAndRun();
+				new DETaskNewCardsView(mParentFrame, this, viewName).defineAndRun();
 			else
 				JOptionPane.showMessageDialog(mParentFrame, "Cards-Views cannot be created for more that 10000 rows.");
 			}
-		else if (command.equals("newForm")) {
-			new DETaskNewFormView(mParentFrame, this, getSelectedDockable().getTitle()).defineAndRun();
+		else if (command.startsWith(COMMAND_NEW_FORM_VIEW)) {
+			new DETaskNewFormView(mParentFrame, this, viewName).defineAndRun();
 			}
-		else if (command.equals("newExplanation")) {
-			new DETaskNewTextView(mParentFrame, this, getSelectedDockable().getTitle()).defineAndRun();
+		else if (command.startsWith(COMMAND_NEW_EXPLANATION_VIEW)) {
+			new DETaskNewTextView(mParentFrame, this, viewName).defineAndRun();
 			}
-		else if (command.equals("newMacro")) {
-			new DETaskNewMacroEditor(mParentFrame, this, getSelectedDockable().getTitle()).defineAndRun();
+		else if (command.startsWith(COMMAND_NEW_MACRO_EDITOR)) {
+			new DETaskNewMacroEditor(mParentFrame, this, viewName).defineAndRun();
 			}
 		}
 

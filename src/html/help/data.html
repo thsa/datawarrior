@@ -617,6 +617,10 @@ The expression syntax, all operators and available functions are explained below
     <td><font face="sans-serif"><small>cumulativeSumInCategory(category-column, value-column)</small></font></td>
   </tr>
   <tr bgcolor="#ffffff">
+    <td><font face="sans-serif"><small>Moving sum in category</small></font></td>
+    <td><font face="sans-serif"><small>movingSumInCategory(category-column, value-column, n1, n2)</small></font></td>
+  </tr>
+  <tr bgcolor="#ffffff">
     <td><font face="sans-serif"><small>Moving average in category</small></font></td>
     <td><font face="sans-serif"><small>movingAverageInCategory(category-column, value-column, n1, n2)</small></font></td>
   </tr>
@@ -674,15 +678,20 @@ The expression syntax, all operators and available functions are explained below
   as absolute difference or as percentage relative to the previous value. The <b>cumulativeSum()</b> function
   calculates the total sum of this value and all previous values. All three functions depend on the table sort
   order.</p>
-<p>The <b>increaseInCategory(), percentIncreaseInCategory(), cumulativeSumInCategory()</b>, and
+<p>The <b>increaseInCategory(), percentIncreaseInCategory(), cumulativeSumInCategory(), movingSumInCategory()</b>, and
   <b>movingAverageInCategory()</b> functions all calculate a value from multiple rows, which belong to the same
   specified category. They all depend on the table's current sort order. <b>increaseInCategory()</b>
   calculates the absolute increase of the current row's value in regard to the value of the closest row
   in the table above, which belongs to the same category.
   <b>percentIncreaseInCategory()</b> gives you the relative increase in percent. <b>cumulativeSumInCategory()</b>
-  calculates the sum of all previous values plus the current row's value within the same category.
-  <b>movingAverageInCategory()</b> calculates an average from the row's value, <i>n1</i> values above,
-  and <i>n2</i> below in the table, which belong to the same category.</p>
+  calculates the sum of all previous values plus the current row's value within the same category.</p>
+<p><b>movingAverageInCategory()</b> calculates an average from the row's value, <i>n1</i> previous and
+  and <i>n2</i> following values in the table that belong to the same category. If the table contains less
+  than n1 previous rows or less than n2 following rows matching the same category, then an average value in
+  calculated anyway from the available rows only.</p>
+<p>Similarly, the <b>movingSumInCategory()</b> calculates the value sum from the row's value, the <i>n1</i> previous
+  and the <i>n2</i> following values that belong to the same category. If the table contains less than n1 previous rows
+  or less than n2 following rows matching the same category, then NaN is returned.</p>
 <p>The <b>categoryFirst()</b> function returns the first value within a given value-column that belongs to
   a specified category. Thus, the result depends on the current order of table rows.
   <br>Example: If a table contains stock prices from different companies and different dates, then in order to

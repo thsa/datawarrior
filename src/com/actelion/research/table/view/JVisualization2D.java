@@ -3481,8 +3481,10 @@ public class JVisualization2D extends JVisualization {
 				if (hv == mHVCount-1) {
 					String formula = "f(x)="+mCurveExpression;
 					int textWidth = mG.getFontMetrics().stringWidth(formula);
-					drawString(formula, baseGraphRect.x+baseGraphRect.width+dx-textWidth,
-							baseGraphRect.y+baseGraphRect.height+dy-mG.getFontMetrics().getDescent());
+					int y = baseGraphRect.y+baseGraphRect.height+dy-mG.getFontMetrics().getDescent();
+					if (mShownCorrelationType != CorrelationCalculator.TYPE_NONE)
+						y -= mG.getFont().getSize();
+					drawString(formula, baseGraphRect.x+baseGraphRect.width+dx-textWidth, y);
 					}
 				}
 			}
@@ -3669,7 +3671,7 @@ public class JVisualization2D extends JVisualization {
 			String s = "r="+DoubleFormat.toString(r, 3)
 					 + " ("+CorrelationCalculator.TYPE_NAME[mShownCorrelationType]+")";
 			mG.drawString(s, baseGraphRect.x+baseGraphRect.width-mG.getFontMetrics().stringWidth(s),
-							 baseGraphRect.y+baseGraphRect.height-scaledFontHeight/2);
+							 baseGraphRect.y+baseGraphRect.height-mG.getFontMetrics().getDescent());
 			mCorrelationCoefficient[0] = r;
 			}
 		else {
@@ -3718,7 +3720,7 @@ public class JVisualization2D extends JVisualization {
 					String s = "r="+DoubleFormat.toString(r, 3)
 							 + " ("+CorrelationCalculator.TYPE_NAME[mShownCorrelationType]+")";
 					mG.drawString(s, hOffset+baseGraphRect.x+baseGraphRect.width-mG.getFontMetrics().stringWidth(s),
-									 vOffset+baseGraphRect.y+baseGraphRect.height-scaledFontHeight/2);
+									 vOffset+baseGraphRect.y+baseGraphRect.height-mG.getFontMetrics().getDescent());
 					mCorrelationCoefficient[hv] = r;
 					}
 				}

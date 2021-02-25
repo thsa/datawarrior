@@ -52,6 +52,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 	private static final String PSEUDO_FUNCTION_ASK_NUMBER = "askNumber(";
 
 	private static final String PREPROCESS_FUNCTION_VALUE_COUNT = "valueCount";
+	private static final String PREPROCESS_FUNCTION_STDDEV = "valueStdDev";
 
 	private static final String IS_VISIBLE_ROW = "isVisibleRow";
 	private static final String IS_SELECTED_ROW = "isSelectedRow";
@@ -121,7 +122,8 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 		parser.addFunction("categorySum", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_SUM, this));
 		parser.addFunction("categoryMean", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_MEAN, this));
 		parser.addFunction("categoryMedian", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_MEDIAN, this));
-		parser.addFunction("movingAverageInCategory", new JEPMovingAverageInCategoryFunction(mTableModel, this));
+		parser.addFunction("movingAverageInCategory", new JEPMovingInCategoryFunction(mTableModel, this, true, true));
+		parser.addFunction("movingSumInCategory", new JEPMovingInCategoryFunction(mTableModel, this, false, false));
 		parser.addFunction("refvalue", new JEPRefValueOfCategoryFunction(this, mTableModel));
 		parser.addFunction("year", new JEPValueOfDateFunction(Calendar.YEAR, -1));  // no correction
 		parser.addFunction("yearISO", new JEPValueOfDateFunction(Calendar.YEAR, 0));
@@ -293,6 +295,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 
 		mPreprocessVariables = null;
 		formula = resolvePreprocessFunctions(formula, PREPROCESS_FUNCTION_VALUE_COUNT, isValidation);
+		formula = resolvePreprocessFunctions(formula, PREPROCESS_FUNCTION_STDDEV, isValidation);
 		return formula;
 		}
 
@@ -501,10 +504,14 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 		}
 
 	private boolean parseFormula(JEP parser, String formula) {
-		if (mPreprocessVariables != null)
-			for (String varName:mPreprocessVariables)
+		if (mPreprocessVariables != null) {
+			for (String varName:mPreprocessVariables) {
 				if (varName.startsWith(PREPROCESS_FUNCTION_VALUE_COUNT))
 					parser.addVariable(varName, 1);
+				if (varName.startsWith(PREPROCESS_FUNCTION_STDDEV))
+					parser.addVariable(varName, 0);
+				}
+			}
 		Iterator<String> keyIterator = mRunTimeColumnMap.keySet().iterator();
 		while (keyIterator.hasNext()) {
 			String varName = keyIterator.next();
@@ -566,6 +573,16 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 						int count = record.getData(column) == null ? 0
 							: mTableModel.separateEntries(mTableModel.encodeData(record, column)).length;
 						mParser.addVariable(varName, count);
+						}
+					if (varName.startsWith(PREPROCESS_FUNCTION_STDDEV)) {
+						int column = Integer.parseInt(varName.substring(PREPROCESS_FUNCTION_STDDEV.length()));
+						String[] entry = record.getData(column) == null ? new String[0]
+								: mTableModel.separateEntries(mTableModel.encodeData(record, column));
+						double stdDev = Double.NaN;
+						if (entry.length >= 2) {
+							// TODO get individual values from table model and calculate stddev
+							}
+						mParser.addVariable(varName, stdDev);
 						}
 					}
 				}

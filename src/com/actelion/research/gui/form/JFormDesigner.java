@@ -918,7 +918,6 @@ public class JFormDesigner extends JComponent implements ActionListener,MouseLis
 	class FormItem {
 		String	key,title,type;
 		int		col1,col2,row1,row2;
-		boolean	isSelected;
 
 		public FormItem(String key, String title, String type, int col1, int col2, int row1, int row2) {
 			this.key = key;

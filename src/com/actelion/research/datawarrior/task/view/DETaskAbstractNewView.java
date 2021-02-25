@@ -131,7 +131,7 @@ for (Dockable d:mMainPane.getDockables())
 	@Override
 	public void setDialogConfigurationToDefault() {
 		mTextFieldViewName.setText("Untitled "+getDefaultViewName());
-		mComboBoxView.setSelectedItem(mMainPane.getSelectedViewTitle());
+		mComboBoxView.setSelectedItem(mWhereViewName != null ? mWhereViewName : mMainPane.getSelectedViewTitle());
 		mTextFieldSplitting.setText("0.5");
 	}
 

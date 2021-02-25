@@ -259,7 +259,8 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 	public void setDialogToDefault() {
 		mComboBoxScaleMode.setSelectedIndex(0);
 		mComboBoxGridMode.setSelectedIndex(0);
-		mComboBoxCrossHairMode.setSelectedIndex(0);
+		if (mComboBoxCrossHairMode != null)
+			mComboBoxCrossHairMode.setSelectedIndex(0);
 		mSliderScaleFontSize.setValue(50);
 		mCheckBoxHideLegend.setSelected(false);
 		mCheckBoxDynamicScale.setSelected(true);
@@ -302,7 +303,8 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		int gridMode = findListIndex(configuration.getProperty(PROPERTY_HIDE_GRID), JVisualization.GRID_MODE_CODE, 0);
 		mComboBoxGridMode.setSelectedIndex(gridMode<mComboBoxGridMode.getItemCount() ? gridMode : 0);
 		int crossHairMode = findListIndex(configuration.getProperty(PROPERTY_CROSSHAIR_MODE), JVisualization2D.CROSSHAIR_MODE_CODE, 0);
-		mComboBoxCrossHairMode.setSelectedIndex(crossHairMode<mComboBoxCrossHairMode.getItemCount() ? crossHairMode : 0);
+		if (mComboBoxCrossHairMode != null)
+			mComboBoxCrossHairMode.setSelectedIndex(crossHairMode<mComboBoxCrossHairMode.getItemCount() ? crossHairMode : 0);
 		mSliderScaleFontSize.setValue(50+(int)(50.0*Math.log(fontSize)));
 		mCheckBoxHideLegend.setSelected("true".equals(configuration.getProperty(PROPERTY_HIDE_LEGEND)));
 		mCheckBoxDynamicScale.setSelected(!"false".equals(configuration.getProperty(PROPERTY_DYNAMIC_SCALE)));
@@ -351,7 +353,8 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		configuration.setProperty(PROPERTY_FONT_SIZE, ""+size);
 		configuration.setProperty(PROPERTY_HIDE_SCALE, JVisualization.SCALE_MODE_CODE[mComboBoxScaleMode.getSelectedIndex()]);
 		configuration.setProperty(PROPERTY_HIDE_GRID, JVisualization.GRID_MODE_CODE[mComboBoxGridMode.getSelectedIndex()]);
-		configuration.setProperty(PROPERTY_CROSSHAIR_MODE, JVisualization2D.CROSSHAIR_MODE_CODE[mComboBoxCrossHairMode.getSelectedIndex()]);
+		if (mComboBoxCrossHairMode != null)
+			configuration.setProperty(PROPERTY_CROSSHAIR_MODE, JVisualization2D.CROSSHAIR_MODE_CODE[mComboBoxCrossHairMode.getSelectedIndex()]);
 		configuration.setProperty(PROPERTY_HIDE_LEGEND, mCheckBoxHideLegend.isSelected() ? "true" : "false");
 		configuration.setProperty(PROPERTY_DYNAMIC_SCALE, mCheckBoxDynamicScale.isSelected() ? "true" : "false");
 		if (mCheckBoxShowArrowTips != null)

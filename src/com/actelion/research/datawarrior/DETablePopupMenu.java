@@ -403,11 +403,11 @@ public class DETablePopupMenu extends JPopupMenu implements ActionListener {
             }
         else if (e.getActionCommand().equals(HIDE_VALUE_COUNT)) {
 			new DETaskSetNumericalColumnDisplayMode(mParentFrame, mTableModel, mColumn, -1,
-					mTableModel.isColumnSummaryCountHidden(mColumn) ? 1 : 0, -1, -1, -1).defineAndRun();
+					mTableModel.isColumnSummaryCountHidden(mColumn) ? 0 : 1, -1, -1, -1).defineAndRun();
 			}
         else if (e.getActionCommand().equals(SHOW_STD_DEVIATION)) {
 			new DETaskSetNumericalColumnDisplayMode(mParentFrame, mTableModel, mColumn, -1, -1,
-					mTableModel.isColumnStdDeviationShown(mColumn) ? 0 : 1, -1, -1).defineAndRun();
+					mTableModel.isColumnStdDeviationShown(mColumn) ? 1 : 0, -1, -1).defineAndRun();
 			}
         else if (e.getActionCommand().equals(SHOW_ROUNDED_VALUES)) {
             int oldDigits = mTableModel.getColumnSignificantDigits(mColumn);

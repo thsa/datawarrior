@@ -81,8 +81,9 @@ public class CompoundTableModel extends AbstractTableModel
 								mDirtyCompoundFlags;
 	private int					mLastSortColumn,mParseDoubleValueCount,
 								mAllColumns,mNonExcludedRecords,mExclusionTag;
+	private double              mParseDoubleStdDev;
 	private volatile int[]		mDisplayableColumnToColumn,mColumnToDisplayableColumn;
-	private String				mParseDoubleModifier,mParseDoubleStdDev;
+	private String				mParseDoubleModifier;
 	private CompoundTableColumnInfo[] mColumnInfo;
 	private volatile Thread     mSMPThread;
 	private volatile float[]	mSimilarityListSMP,mSimilarityList2SMP;
@@ -386,7 +387,7 @@ public class CompoundTableModel extends AbstractTableModel
 							: DoubleFormat.toString(value, mColumnInfo[column].significantDigits);
 	
 					try {   // this is to generate modifier and value count
-						tryParseDouble(encodeData(record, column), column);
+						tryParseDouble(record, column, mColumnInfo[column].summaryMode, mColumnInfo[column].stdDeviationShown);
 						} catch (NumberFormatException nfe) {}
 
 					return mColumnInfo[column].summaryCountHidden ? mParseDoubleModifier+numPart
@@ -435,7 +436,8 @@ public class CompoundTableModel extends AbstractTableModel
 	private String getSummaryModeString(int column, int valueCount) {
 		switch (mColumnInfo[column].summaryMode) {
 		case cSummaryModeMean:
-			String end = mColumnInfo[column].stdDeviationShown ? ", stdDev="+mParseDoubleStdDev+")" : ")";
+			String stdDev = DoubleFormat.toString(mParseDoubleStdDev);
+			String end = mColumnInfo[column].stdDeviationShown ? ", stdDev="+stdDev+")" : ")";
 			return " (mean, n="+valueCount+end;
 		case cSummaryModeMedian:
 			return " (median, n="+valueCount+")";
@@ -449,6 +451,20 @@ public class CompoundTableModel extends AbstractTableModel
 			return "";
 			}
 		}
+
+	/**
+	 * @return the value count used by the most recent call of tryParseDouble()
+	 */
+	public int getParseDoubleValueCount() {
+		return mParseDoubleValueCount;
+		}
+
+	/**
+	 * @return the standard deviation value that was calculated by the most recent call of tryParseDouble()
+	 */
+	public double getParseDoubleStdDev() {
+		return mParseDoubleStdDev;
+	}
 
 	/**
 	 * Returns a summarized numerical value reflecting one or more entries of the cell.
@@ -4679,7 +4695,7 @@ public class CompoundTableModel extends AbstractTableModel
 		boolean found = false;
 		for (int row=mRecord.length-1; row>=firstRow || (!found && row>=0); row--) {
 			try {
-				float value = tryParseDouble(encodeData(mRecord[row], column), column);
+				float value = tryParseDouble(mRecord[row], column, mColumnInfo[column].summaryMode, mColumnInfo[column].stdDeviationShown);
 				if (!Float.isNaN(value)) {
 					if (getExplicitDataType(column) == cDataTypeInteger)
 						value = Math.round(value);
@@ -4744,12 +4760,15 @@ public class CompoundTableModel extends AbstractTableModel
 	 * on the logarithmic values.
 	 * If no exception is thrown, mModifier contains the modifier, which
 	 * is even meaningful, when multiple values were merged.
-	 * @param valueString
+	 * @param record
 	 * @param column to check for mean/median/viewMode settings
+	 * @param summaryMode
+	 * @param calcStdDev
 	 * @return float value or NaN
 	 * @throws NumberFormatException
 	 */
-	private float tryParseDouble(String valueString, int column) throws NumberFormatException {
+	public float tryParseDouble(CompoundRecord record, int column, int summaryMode, boolean calcStdDev) throws NumberFormatException {
+		String valueString = encodeData(record, column);
 		boolean logarithmic = mColumnInfo[column].logarithmicViewMode;
 
 		String[] entry = separateEntries(valueString);
@@ -4757,8 +4776,8 @@ public class CompoundTableModel extends AbstractTableModel
 		float valueWithoutModifierSum = 0.0f;
 		float[] valueWithModifier = null;
 		float[] valueWithoutModifier = null;
-		boolean calculateStdDev = (mColumnInfo[column].summaryMode == cSummaryModeMean && mColumnInfo[column].stdDeviationShown);
-		if (mColumnInfo[column].summaryMode == cSummaryModeMedian || calculateStdDev) {
+		boolean calculateStdDev = (summaryMode == cSummaryModeMean && calcStdDev);
+		if (summaryMode == cSummaryModeMedian || calculateStdDev) {
 			valueWithModifier = new float[entry.length];
 			valueWithoutModifier = new float[entry.length];
 			}
@@ -4766,7 +4785,7 @@ public class CompoundTableModel extends AbstractTableModel
 		int valueWithoutModifierCount = 0;
 		int summaryModifierType = EntryAnalysis.cModifierTypeNone;
 		mParseDoubleModifier = "";
-		mParseDoubleStdDev = "";
+		mParseDoubleStdDev = Double.NaN;
 		mParseDoubleValueCount = 0;
 		for (int i=0; i<entry.length; i++) {
 			EntryAnalysis analysis = new EntryAnalysis(entry[i]);
@@ -4775,8 +4794,8 @@ public class CompoundTableModel extends AbstractTableModel
 				if (hasModifier) {
 					mColumnInfo[column].hasModifiers = true;
 					if (!mColumnInfo[column].excludeModifierValues) {
-						if (mColumnInfo[column].summaryMode != cSummaryModeMinimum
-						 && mColumnInfo[column].summaryMode != cSummaryModeMaximum) {
+						if (summaryMode != cSummaryModeMinimum
+						 && summaryMode != cSummaryModeMaximum) {
 							if (summaryModifierType == EntryAnalysis.cModifierTypeNone)
 								summaryModifierType = analysis.getModifierType();
 							else if (summaryModifierType != analysis.getModifierType()) {
@@ -4810,7 +4829,7 @@ public class CompoundTableModel extends AbstractTableModel
 						v = (float)Math.log10(v);
 						}
 	
-					switch (mColumnInfo[column].summaryMode) {
+					switch (summaryMode) {
 					case cSummaryModeMinimum:
 						if (valueWithModifierCount == 0 || v < valueWithModifierSum) {
 							valueWithModifierSum = v;
@@ -4857,18 +4876,18 @@ public class CompoundTableModel extends AbstractTableModel
 		if (valueWithModifierCount + valueWithoutModifierCount == 0)
 			return Float.NaN;
 
-		if (mColumnInfo[column].summaryMode == cSummaryModeMinimum
-		 || mColumnInfo[column].summaryMode == cSummaryModeMaximum) {
+		if (summaryMode == cSummaryModeMinimum
+		 || summaryMode == cSummaryModeMaximum) {
 			mParseDoubleValueCount = valueWithModifierCount;
 			return valueWithModifierSum;
 			}
 
-		if (mColumnInfo[column].summaryMode == cSummaryModeSum) {
+		if (summaryMode == cSummaryModeSum) {
 			mParseDoubleValueCount = valueWithModifierCount + valueWithoutModifierCount;
 			return valueWithModifierSum + valueWithoutModifierSum;
 			}
 
-		if (mColumnInfo[column].summaryMode == cSummaryModeMedian) {
+		if (summaryMode == cSummaryModeMedian) {
 			if (valueWithoutModifierCount != 0) {
 				Arrays.sort(valueWithoutModifier, 0, valueWithoutModifierCount);
 				valueWithoutModifierSum = ((valueWithoutModifierCount & 1) != 0) ?
@@ -4951,20 +4970,20 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	private void calculateStandardDeviation(float[] value1, float[] value2, int count1, int count2, float mean) {
-		float stdDev = 0f;
-//		float errorMargin = 0f;
+		double stdDev = 0f;
+//		double errorMargin = 0f;
 
 		for (int i=0; i<count1; i++) {
-			float d = value1[i] - mean;
+			double d = value1[i] - mean;
 			stdDev += d*d;
 			}
 		for (int i=0; i<count2; i++) {
-			float d = value2[i] - mean;
+			double d = value2[i] - mean;
 			stdDev += d*d;
 		    }
 
-		mParseDoubleStdDev = DoubleFormat.toString(Math.sqrt(stdDev / (count1+count2)));
-//		errorMargin = 1.96f * stdDev / (float)Math.sqrt(count);
+		mParseDoubleStdDev = Math.sqrt(stdDev / (count1+count2));
+//		errorMargin = 1.96 * stdDev / Math.sqrt(count);
 		}
 
 	/**

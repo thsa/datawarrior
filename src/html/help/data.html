@@ -581,8 +581,16 @@ The expression syntax, all operators and available functions are explained below
     <td><font face="sans-serif"><small>numvalue(column-name, row)</small></font></td>
   </tr>
   <tr bgcolor="#ffffff">
-    <td><font face="sans-serif"><small>Number of values in cell</small></font></td>
-    <td><font face="sans-serif"><small>valueCount(column-value)</small></font></td>
+    <td><font face="sans-serif"><small>Number of cell values including empty ones</small></font></td>
+    <td><font face="sans-serif"><small>valueCount(column-var)</small></font></td>
+  </tr>
+  <tr bgcolor="#ffffff">
+    <td><font face="sans-serif"><small>Number of non empty cell values</small></font></td>
+    <td><font face="sans-serif"><small>nonEmptyValueCount(column-var)</small></font></td>
+  </tr>
+  <tr bgcolor="#ffffff">
+    <td><font face="sans-serif"><small>Standard deviation of cell values from mean</small></font></td>
+    <td><font face="sans-serif"><small>valueStdDev(column-var)</small></font></td>
   </tr>
   <tr bgcolor="#ffffff">
     <td><font face="sans-serif"><small>Frequency of occurance</small></font></td>
@@ -663,9 +671,12 @@ The expression syntax, all operators and available functions are explained below
   for the first row of the table.</p>
 <p>The <b>numvalue()</b> function returns the numerical content of a cell defined by its column name and
   its row index starting from 1 for the first row in the table.</p>
-<p>The <b>valueCount()</b> function just counts the number of entries in a particular cell, no matter
-  whether these are separated by '; ' or whether they are in separate lines. The function takes any
-  variable name that referrs to a data column.</p>
+<p>The <b>valueCount()</b> function counts the number of entries in a particular cell, no matter
+  whether these are separated by '; ' or whether they are in separate lines. Empty values are included.
+  The function takes any variable name that refers to a displayable table column.</p>
+<p>The <b>nonEmptyValueCount()</b> function works like valueCount(), but does not include empty values.</p>
+<p>The <b>valueStdDev()</b> function calculates the standard deviation of all value within one cell in regard
+  to their mean value.</p>
 <p>The <b>frequency()</b> function counts how many rows of the entire table contain the given value
   in the specified value-column. When using this function, then typically, but not necessarily, <i>value</i>
   is a column variable, while <i>value-column</i> is the name of the same column, e.g. 'frequency(AnimalKind,

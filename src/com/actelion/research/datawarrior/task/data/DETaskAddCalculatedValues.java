@@ -51,7 +51,8 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 	private static final String PSEUDO_FUNCTION_ASK_STRING = "askString(";
 	private static final String PSEUDO_FUNCTION_ASK_NUMBER = "askNumber(";
 
-	private static final String PREPROCESS_FUNCTION_VALUE_COUNT = "valueCount";
+	private static final String PREPROCESS_FUNCTION_TOTAL_VALUE_COUNT = "valueCount";
+	private static final String PREPROCESS_FUNCTION_NON_EMPTY_VALUE_COUNT = "nonEmptyValueCount";
 	private static final String PREPROCESS_FUNCTION_STDDEV = "valueStdDev";
 
 	private static final String IS_VISIBLE_ROW = "isVisibleRow";
@@ -294,7 +295,8 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 		formula = resolvePseudoFunctions(formula, PSEUDO_FUNCTION_ASK_NUMBER, isValidation);
 
 		mPreprocessVariables = null;
-		formula = resolvePreprocessFunctions(formula, PREPROCESS_FUNCTION_VALUE_COUNT, isValidation);
+		formula = resolvePreprocessFunctions(formula, PREPROCESS_FUNCTION_TOTAL_VALUE_COUNT, isValidation);
+		formula = resolvePreprocessFunctions(formula, PREPROCESS_FUNCTION_NON_EMPTY_VALUE_COUNT, isValidation);
 		formula = resolvePreprocessFunctions(formula, PREPROCESS_FUNCTION_STDDEV, isValidation);
 		return formula;
 		}
@@ -357,7 +359,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 			String resolvedValue = "1";	// default for validation: number or string
 			if (!isValidation) {
 				Integer column = mRunTimeColumnMap.get(formula.substring(index2, index3).trim());
-				if (column == null)
+				if (column == null || column < 0 || !mTableModel.isColumnDisplayable(column))
 					return formula;    // we didn't find the column; let the parser create a syntax error
 
 				resolvedValue = functionName.concat(column.toString());
@@ -506,7 +508,9 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 	private boolean parseFormula(JEP parser, String formula) {
 		if (mPreprocessVariables != null) {
 			for (String varName:mPreprocessVariables) {
-				if (varName.startsWith(PREPROCESS_FUNCTION_VALUE_COUNT))
+				if (varName.startsWith(PREPROCESS_FUNCTION_TOTAL_VALUE_COUNT))
+					parser.addVariable(varName, 1);
+				if (varName.startsWith(PREPROCESS_FUNCTION_NON_EMPTY_VALUE_COUNT))
 					parser.addVariable(varName, 1);
 				if (varName.startsWith(PREPROCESS_FUNCTION_STDDEV))
 					parser.addVariable(varName, 0);
@@ -568,19 +572,31 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 			CompoundRecord record = mTableModel.getTotalRecord(mCurrentRow);
 			if (mPreprocessVariables != null) {
 				for (String varName:mPreprocessVariables) {
-					if (varName.startsWith(PREPROCESS_FUNCTION_VALUE_COUNT)) {
-						int column = Integer.parseInt(varName.substring(PREPROCESS_FUNCTION_VALUE_COUNT.length()));
+					if (varName.startsWith(PREPROCESS_FUNCTION_TOTAL_VALUE_COUNT)) {
+						int column = Integer.parseInt(varName.substring(PREPROCESS_FUNCTION_TOTAL_VALUE_COUNT.length()));
 						int count = record.getData(column) == null ? 0
 							: mTableModel.separateEntries(mTableModel.encodeData(record, column)).length;
 						mParser.addVariable(varName, count);
 						}
+					if (varName.startsWith(PREPROCESS_FUNCTION_NON_EMPTY_VALUE_COUNT)) {
+						int column = Integer.parseInt(varName.substring(PREPROCESS_FUNCTION_NON_EMPTY_VALUE_COUNT.length()));
+						int count = 0;
+						try {
+							mTableModel.tryParseDouble(record, column, CompoundTableConstants.cSummaryModeMean, true);
+							count = mTableModel.getParseDoubleValueCount();
+							}
+						catch (NumberFormatException nfe) {}
+						mParser.addVariable(varName, count);
+						}
 					if (varName.startsWith(PREPROCESS_FUNCTION_STDDEV)) {
 						int column = Integer.parseInt(varName.substring(PREPROCESS_FUNCTION_STDDEV.length()));
-						String[] entry = record.getData(column) == null ? new String[0]
-								: mTableModel.separateEntries(mTableModel.encodeData(record, column));
 						double stdDev = Double.NaN;
-						if (entry.length >= 2) {
-							// TODO get individual values from table model and calculate stddev
+						if (mTableModel.isColumnTypeDouble(column)) {
+							try {
+								mTableModel.tryParseDouble(record, column, CompoundTableConstants.cSummaryModeMean, true);
+								stdDev = mTableModel.getParseDoubleStdDev();
+								}
+							catch (NumberFormatException nfe) {}
 							}
 						mParser.addVariable(varName, stdDev);
 						}

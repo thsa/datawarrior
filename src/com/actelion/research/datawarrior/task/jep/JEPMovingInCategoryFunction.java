@@ -171,18 +171,24 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 			int count = 0;
 			if (i1 < i2) {
 				for (int i=i1; i<i2; i++) {
-					sum += value[i];
-					count++;
+					if (!Double.isNaN(value[i])) {
+						sum += value[i];
+						count++;
+						}
 					}
 				}
 			else {
 				for (int i=0; i<i2; i++) {
-					sum += value[i];
-					count++;
+					if (!Double.isNaN(value[i])) {
+						sum += value[i];
+						count++;
+						}
 					}
 				for (int i=i1; i<value.length; i++) {
-					sum += value[i];
-					count++;
+					if (!Double.isNaN(value[i])) {
+						sum += value[i];
+						count++;
+						}
 					}
 				}
 			return mIsAverage ? sum / count : sum;

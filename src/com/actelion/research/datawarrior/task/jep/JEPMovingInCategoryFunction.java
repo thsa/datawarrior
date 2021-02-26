@@ -191,7 +191,7 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 						}
 					}
 				}
-			return mIsAverage ? sum / count : sum;
+			return count == 0 ? Double.NaN : mIsAverage ? sum / count : sum;
 			}
 
 		private int cyclicIndex(int index) {

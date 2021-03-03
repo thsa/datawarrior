@@ -122,7 +122,7 @@ public class ConformerFitnessOption extends FitnessOption {
 			for (int i=0; i<mRefConformer.length; i++) {
 				StereoMolecule refMol = mRefConformer[i];
 				Object d1 = dh.createDescriptorSingleConf(refMol);
-				Object d2 = dh.createDescriptorSingleConf(mol);
+				Object d2 = dh.createDescriptor(mol);
 				float similarity = dh.getSimilarity(d2, d1);
 				if (bestFit < similarity) {
 					bestFit = similarity;

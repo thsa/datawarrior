@@ -287,7 +287,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			mOffImageValid = false;
 
 		if (!mOffImageValid) {
-			mFontHeight = (int)(mRelativeFontSize * retinaFactor * Math.sqrt(panelSize.width*panelSize.height) / 50f);
+			mFontHeight = calculateFontSize(panelSize.width, panelSize.height, 1f, retinaFactor, false);
 
 			Image image = paintAllOnImage(g, renderSize, antialiasing, null);
 			g.drawImage(image, 0, 0, panelSize.width, panelSize.height, this);
@@ -331,11 +331,11 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 
 	@Override
 	public synchronized void paintHighResolution(Graphics2D g, Rectangle bounds, float fontScaling, boolean transparentBG, boolean isPrinting) {
-			// font sizes are optimized for screen resolution are need to be scaled by fontScaling
+			// font sizes are optimized for screen resolution and need to be scaled by fontScaling
 		mIsHighResolution = true;
 		mCoordinatesValid = false;
 
-		mFontHeight = (int)(mRelativeFontSize * bounds.width / 60f);
+		mFontHeight = calculateFontSize(bounds.width, bounds.height, fontScaling, 1f, false);
 
 		boolean antialiasing = true;
 		mContentScaling = (antialiasing) ? 2 : 1;
@@ -356,11 +356,11 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		// JMol has a problem with transparent BG and antializing: see Swing3D.allocateImage()
 		// Therefore transparent backgrounds are not supported in 3D-View.
 
-		// font sizes are optimized for screen resolution are need to be scaled by fontScaling
+		// font sizes are optimized for screen resolution and need to be scaled by fontScaling
 		mCoordinatesValid = false;
 
 		// font size limitations used to cause different view layouts when resizing a view, TLS 20-Dez-2013
-		mFontHeight = (int)(mRelativeFontSize * bounds.width / 60f);
+		mFontHeight = calculateFontSize(bounds.width, bounds.height, fontScaling, 1f, false);
 
 		boolean antialiasing = true;
 		mContentScaling = (antialiasing) ? 2 : 1;

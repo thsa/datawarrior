@@ -310,7 +310,7 @@ public class JVisualization2D extends JVisualization {
 		
 					mCorrelationCoefficient = null;
 
-					mFontHeight = (int)(mRelativeFontSize * Math.sqrt(bounds.width*bounds.height) / 50f);
+					mFontHeight = calculateFontSize(bounds.width, bounds.height, 1f, retinaFactor, true);
 
 					mG = mOffG;
 
@@ -397,7 +397,7 @@ public class JVisualization2D extends JVisualization {
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 //		g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);	no sub-pixel accuracy looks cleaner
 
-		mFontHeight = (int)(mRelativeFontSize * Math.sqrt(bounds.width*bounds.height) / 60f);
+		mFontHeight = calculateFontSize(bounds.width, bounds.height, fontScaling, 1f, false);
 
 		mG = g;
 

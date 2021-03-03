@@ -1722,6 +1722,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				String displayName = actionCommand.substring(LOOK_AND_FEEL.length());
 				mApplication.updateLookAndFeel(mApplication.getLookAndFeel(displayName));
 				DEHelpFrame.updateLookAndFeel();
+				FXHelpFrame.updateLookAndFeel();
 				}
 			else if (source == jMenuHelpAutomaticUpdateCheck) {
 				Preferences prefs = DataWarrior.getPreferences();

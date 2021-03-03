@@ -707,7 +707,7 @@ of Robust Organic Synthesis Reactions for In Silico Molecule Design.; <i>J Chem 
 structures with a molecular weight in the drug-like range is about 10<sup>60</sup>.
 It will never be possible to compute all these structures to search them for the one
 with the most promising property profile for a particular purpose. Nevertheless,
-fishing for unknown promising structures in this vast compound space may be successful
+fishing for yet unknown promising structures in this vast compound space may be successful
 if the approach is right. It may then lead to completely new ideas or starting points, which
 would not be possible with the traditional structurally constrained virtual screening
 of existing or virtual combinatorial libraries.</p>
@@ -717,17 +717,14 @@ they aim for suggesting entirely new molecules, which are supposedly active on a
 <span class="keyword">DataWarrior</span> uses an <span class="keyword">evolutionary algorithm</span>
 for this purpose, which somewhat mimicks nature's evolution of plants and animals. The algorithm starts
 with a small initial set of molecules called the <span class="keyword">first generation</span>.
-From any of these molecules it creates multiple derived, new, but similar molecules by applying a
-small random structure modification. All derived structures together form the first offspring generation,
-which is much larger that its parent one. In detail the algorithm uses structure
-modifications like single atom replacements, atom insertions, bond order changes, substituent migrations,
-ring aromatisations, etc. These modifications are selected randomly from a large list of possible changes.</p>
-
-<p>However, the probability values for this random selection and, therefore, the likelyhood that a certain
-modification is selected, also depends on another factor. When the list of all modifications is built,
-then the change is evaluated in regard to as how much it increases or decreases the structure's
-<i>drug-likeness</i> (or optionally <i>natural-product-likeness</i>). Modifications that increase the
-<i>drug-likeness</i> are assigned a higher probability than mutations that decrease it.
+From any of these molecules it then creates multiple derived, new, but similar molecules by applying a
+small random structural modification. All derived structures together form the first offspring generation,
+which is much larger that its parent one. The kind of modifications applied are single atom replacements,
+atom insertions, bond order changes, substituent migrations, ring aromatisations, stereo center inversions,
+etc. Whenever <span class="keyword">DataWarrior</span> needs to create derived structures from a parent one,
+it first compiles a list of all possible modifications. Each modification is then evaluated in regard to as
+how much it increases or decreases the structure's <i>drug-likeness</i> (or optionally <i>natural-product-likeness</i>).
+Modifications that increase the <i>drug-likeness</i> are assigned a higher probability than mutations that decrease it.
 Changes, which would create high ring strains are removed from the list. These modulation of modification
 propabilities ensures that the algorithm stays in the chemical space of drug-like (or natural-product-like)
 compounds.</p>
@@ -739,9 +736,8 @@ Typically, after a few hundred molecule generations <span class="keyword">DataWa
 has arrived at structures that optimally match the defined fitness criteria.</p>
 
 <p>You may define multiple fitness criteria in the <i>Evolutionaly Library Dialog</i>. Criteria may
-be weighted to make them more or less important than others. Together all defined criterial build the
+be weighted to make them more important or less important than others. Together all defined criteria form the
 desired compound property profile.
-
 For simple properties one may define an optimal
 numerical range. One may also require compounds to be similar or dissimilar to
 a definable set of compounds using any descriptor. All individual fitness criteria

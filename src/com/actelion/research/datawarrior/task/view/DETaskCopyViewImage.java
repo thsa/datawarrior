@@ -483,8 +483,14 @@ public class DETaskCopyViewImage extends AbstractViewTask implements ActionListe
 
 	private void setImageSizeTextFieldsToDefault() {
 		JComponent viewComponent = mCheckBoxAllViews.isSelected() ? mMainPane : getViewComponent(getInteractiveView());
-		mTextFieldWidth.setText(""+(mCurrentResolutionFactor*(viewComponent == null ? 640 : viewComponent.getWidth())));
-		mTextFieldHeight.setText(""+(mCurrentResolutionFactor*(viewComponent == null ? 640 : viewComponent.getHeight())));
+		int width = 640;
+		int height = 640;
+		if (viewComponent != null) {
+			width = Math.round(viewComponent.getWidth() / HiDPIHelper.getUIScaleFactor());
+			height = Math.round(viewComponent.getHeight() / HiDPIHelper.getUIScaleFactor());
+			}
+		mTextFieldWidth.setText(Integer.toString(Math.round(mCurrentResolutionFactor*width)));
+		mTextFieldHeight.setText(Integer.toString(Math.round(mCurrentResolutionFactor*height)));
 		}
 
 	@Override

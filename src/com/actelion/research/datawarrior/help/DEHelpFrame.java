@@ -387,7 +387,7 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 	 * converts all to lower case, and returns the cleaned test as byte[].
 	 * This allows for more efficient caching than using normal UTF16 Strings.
 	 */
-	private byte[] getHTMLBytes(String path) {
+	public static byte[] getHTMLBytes(String path) {
 		InputStream is = TorsionDB.class.getResourceAsStream(path);
 		if (is == null)
 			return null;
@@ -436,7 +436,7 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 	 * @param index
 	 * @return
 	 */
-	private boolean isOpenTag(byte[] bytes, int index) {
+	private static boolean isOpenTag(byte[] bytes, int index) {
 		if (bytes.length - index < 3)
 			return false;
 		byte next = bytes[index+1];

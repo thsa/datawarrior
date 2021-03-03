@@ -865,7 +865,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 								if (activityColumn == -1)
 									vpanel2.getVisualization().getMarkerColor().setColorRange(similarityColorMin, 1f);
 								vpanel2.getVisualization().setAffectGlobalExclusion(false);
-								vpanel2.getVisualization().setFontSize(2.5f, false);
+								vpanel2.getVisualization().setFontSize(2.5f, JVisualization.cFontSizeModeRelative, false);
 								vpanel2.getVisualization().setConnectionColumns(referencingColumn, -1);
 								vpanel2.getVisualization().setConnectionLineWidth(2f, false);
 								vpanel2.getVisualization().setTreeViewMode(JVisualization.cTreeViewModeRadial, 5, false, false, false);

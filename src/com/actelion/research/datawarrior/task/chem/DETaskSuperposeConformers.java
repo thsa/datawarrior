@@ -87,7 +87,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 
 		configuration.setProperty(PROPERTY_CONFORMERS, sb.toString());
 		return configuration;
-	}
+		}
 
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
@@ -142,6 +142,17 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 
 			conformerColumn += COLUMNS_PER_CONFORMER;
 			}
+		}
+
+	@Override
+	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
+		String conformers = configuration.getProperty(PROPERTY_CONFORMERS, "");
+		if (conformers.length() == 0) {
+			showErrorMessage("No query conformers defined.");
+			return false;
+			}
+
+		return super.isConfigurationValid(configuration, isLive);
 		}
 
 	@Override

@@ -529,7 +529,7 @@ public class DETaskArrangeGraphNodes extends ConfigurableTask implements ActionL
 						if (strengthColumn != -1)
 							vpanel2.getVisualization().getMarkerColor().setColorRange(0.5f, 1f);
 						vpanel2.getVisualization().setAffectGlobalExclusion(false);
-						vpanel2.getVisualization().setFontSize(2.5f, false);
+						vpanel2.getVisualization().setFontSize(2.5f, JVisualization.cFontSizeModeRelative, false);
 						vpanel2.getVisualization().setConnectionColumns(referencingColumn, -1);
 						vpanel2.getVisualization().setConnectionLineWidth(2f, false);
 						vpanel2.getVisualization().setTreeViewMode(JVisualization.cTreeViewModeLeftRoot, 5, false, false, false);

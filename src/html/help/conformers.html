@@ -242,25 +242,26 @@ catena-Poly[[(2,2'-dimethyl-4,4'-bi-1,3-thiazole-N,N')cadmium]-di-bromido]</i></
 
 <p>If the binding conformer of a protein's ligand is known or at least suspected, then this
 is often used to search compound collections for similar conformers regarding shape and
-pharmacophore features. In <span class="keyword">DataWarrior</span> you can perform such
-a virtual screening in two steps: First you <a href="help/conformers.html#Generate">create
-multiple conformers</a> from the molecules to be screened.
-Then you try superposing these conformers with the binding conformer of a known ligand.
+pharmacophore features. With <span class="keyword">DataWarrior</span> you can perform such
+a virtual screening in two steps: First you <a href="help/conformers.html#Generate">generate
+conformers</a> from any of the molecules to be screened.
+Then you try superposing these conformers onto the query conformer and assign a score to each
+molecule representing the best conformer's degree of shape and pharmacophore feature overlap.
 For this purpose <span class="keyword">DataWarrior</span> uses an algorithm called
 <a href="help/phesa.html">PheSA (Pharmacophore enhanced shape alignment)</a>, which uses
 Gaussian functions to calculate and optimize the shared volume of two molecules' conformers
 while considering pharmacophore feature overlay at the same time.</p>
 
-<p>If your dataset contains 3D-atom coordinates, then you may open the dialog to configure
-the superpositioning with <span class="menu">Superpose Conformers...</span> from the
-<span class="menu">Chemistry</span> menu. A simple dialog opens, where you may select the
-column that contains the conformers. Typically there is only one structure column with one
-3D-atom coordinates column, thus, nothing to select from. In addition to the conformer column
-you need to specify the 3D-molecule, which shall be PheSA-matched against all conformers.
+<p>If your dataset contains at least one column with one or multiple conformers, then you may
+configure the superpositioning task with <span class="menu">Superpose Conformers...</span> from the
+<span class="menu">Chemistry</span> menu. A simple dialog opens, where you select the
+column containing the conformers. You also need to specify the query conformer, which shall be
+PheSA-matched against all conformers.
 This is done with a right mouse click in the blue initially empty area. A popup menu lets
-you import a molecule from either a molfile, the ligand from a PDB-file or from the PDB-database.
-Alternatively, you can also paste in a structure. If the clipboard contains a molecule with
-2D-atom coordinates, then a low-energy conformer is created on the fly.</p>
+you import a molecule from either a molfile, mol2-file, the ligand from a PDB-file or from the PDB-database.
+Alternatively, you can also paste in a structure. If the clipboard contains a molecule without
+3D-atom coordinates, then a low-energy conformer is created on the fly. Of course, in this case,
+the conformer is not a perfect query, because it is not necessarily close to any binding conformation.</p>
 
 <p align="center"><img src="help/img/conf/superposeDialog.jpeg" width="465" height="318"></p>
 <p><center><i>Dialog configured to superpose all energy-minimized 3D-Structures of a data set
@@ -268,15 +269,16 @@ with a given conformer of the CNS-drug Alpidem.</i></center></p>
 
 <p>After clicking <span class="menu">OK</span>, <span class="keyword">DataWarrior</span> tries
 matching the shape of all conformers of any row with the given target molecule(s).
-As result you will receive an additional column 'PheSA Score'. Values being close to 1.0 indicate
-a very high shape and pharmacophore feature match. A second hidden column 'Best Match' contains
+As result you will receive a new column named 'PheSA Score'. Scores close to 1.0 indicate
+a very high shape and pharmacophore feature match. Lower values represent poorer matches.
+Another new column contains the best matching conformer superposed to the query structure,
+which can only be seen in the <span class="keyword">Detail View</span>, because the
+<span class="keyword">Table View</span> doesn't show conformer columns.</p>
+<p>In fact, there is a second hidden column named 'Best Match', which contains
 the best matching stereo isomer of the input structure. When the input structure doesn't contain
 multiple stereo isomers, then the best matching structure and input structure are always identical.
-Hence, this column usually is of limited use and, therefore, is hidden as default. You may make it
+Hence, this column may be of limited use and, therefore, is hidden per default. You may make it
 visible with a right mouse click on the table header and choosing <span class="menu">Show 'Best Match'</span>.</p>
-<p>Infact, there is another invisible column containing 3D-atom-coordinates of the best matching
-stereo isomer, such that the overlay with the query structure is optimized. The detail area shows
-the best matching conformer together with the superposed query structure.</p>
 
 <p align="center"><img src="help/img/conf/superposeResult.png" width="490" height="223"></p>
 <p><center><i>New columns after superposing; detail area shows two optimally superposed structures.</i></center></p>

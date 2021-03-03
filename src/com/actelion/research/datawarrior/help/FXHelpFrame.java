@@ -19,6 +19,9 @@
 package com.actelion.research.datawarrior.help;
 
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.gui.hidpi.HiDPIIconButton;
+import com.sun.webkit.WebPage;
+import info.clearthought.layout.TableLayout;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
@@ -27,17 +30,53 @@ import javafx.scene.web.WebView;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class FXHelpFrame extends JFrame {
 	private static FXHelpFrame sHelpFrame;
 	private static WebEngine sEngine;
+	private static byte[] sSearchCache;
+	private static String sURL;
+
+	private JTextField  mTextFieldSearch;
+	private JLabel      mLabelMatchCount;
+	private int         mMatchCount,mMatch;
 
 	private FXHelpFrame(Frame parent) {
 		super("DataWarrior Help");
+
+		final int gap = HiDPIHelper.scale(8);
+
+		double[][] size = { {TableLayout.FILL, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED,
+				gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, HiDPIHelper.scale(80), gap },
+				{gap, TableLayout.PREFERRED, gap} };
+		JPanel searchPanel = new JPanel();
+		searchPanel.setLayout(new TableLayout(size));
+		mTextFieldSearch = new JTextField(10);
+		mTextFieldSearch.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyTyped(KeyEvent e) {
+				super.keyTyped(e);
+				SwingUtilities.invokeLater(() -> search());
+				}
+			} );
+		HiDPIIconButton b1 = new HiDPIIconButton("toNext.png", null, "<", 180, "bevel");
+		HiDPIIconButton b2 = new HiDPIIconButton("toNext.png", null, ">", 0, "bevel");
+		b1.addActionListener(e -> previous());
+		b2.addActionListener(e -> next());
+		mLabelMatchCount = new JLabel("", JLabel.RIGHT);
+		searchPanel.add(new JLabel("Find:"), "1,1");
+		searchPanel.add(mTextFieldSearch, "3,1");
+		searchPanel.add(b1, "5,1");
+		searchPanel.add(b2, "7,1");
+		searchPanel.add(mLabelMatchCount, "9,1");
 
 		final JFXPanel fxPanel = new JFXPanel();
 
@@ -53,26 +92,125 @@ public class FXHelpFrame extends JFrame {
 			view.setZoom(HiDPIHelper.getUIScaleFactor());
 			sEngine = view.getEngine();
 			fxPanel.setScene(new Scene(view));
-		});
+			});
 
-		getContentPane().add(fxPanel);
+		JPanel helpPanel = new JPanel();
+		helpPanel.setLayout(new BorderLayout());
+		helpPanel.add(searchPanel, BorderLayout.NORTH);
+		helpPanel.add(fxPanel, BorderLayout.CENTER);
+		getContentPane().add(helpPanel);
 
-		Dimension size = new Dimension(HiDPIHelper.scale(740), HiDPIHelper.scale(740));
+		Dimension fsize = new Dimension(HiDPIHelper.scale(740), HiDPIHelper.scale(740));
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		setPreferredSize(size);
-		setLocation(Math.min(parent.getX()+parent.getWidth()+HiDPIHelper.scale(16), screenSize.width - size.width), parent.getY());
+		setPreferredSize(fsize);
+		setLocation(Math.min(parent.getX()+parent.getWidth()+HiDPIHelper.scale(16), screenSize.width - fsize.width), parent.getY());
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		pack();
-	}
+		}
 
-	public static void showResource(final String resource, final Frame parent) {
+	public static void updateLookAndFeel() {
+		if (sHelpFrame != null) {
+			SwingUtilities.updateComponentTreeUI(sHelpFrame);
+			}
+		}
+
+	public static void showResource(final String url, final Frame parent) {
 		if (sHelpFrame == null) {
 			sHelpFrame = new FXHelpFrame(parent);
 			sHelpFrame.setVisible(true);
+			}
+
+		sSearchCache = null;
+		sURL = url;
+		Platform.runLater(() ->	sEngine.load(createURL(url).toExternalForm()) );
 		}
 
-		Platform.runLater(() ->	sEngine.load(createURL(resource).toExternalForm()) );
-	}
+	/**
+	 * Run a new search after changing the query string
+	 */
+	private void search() {
+		String query = mTextFieldSearch.getText();
+		countMatches(query);
+
+		if (mMatchCount == 0 || query.length() == 0) {
+			mLabelMatchCount.setText("");
+			}
+		else {
+			mMatch = 0;
+			mLabelMatchCount.setText("1 of " + mMatchCount);
+			}
+
+		searchWebkit(query, true);
+		}
+
+	private void next() {
+		if (mMatchCount <= 1 || mMatch == mMatchCount-1)
+			return;
+
+		String query = mTextFieldSearch.getText();
+		mMatch++;
+		mLabelMatchCount.setText((mMatch+1)+" of "+mMatchCount);
+		searchWebkit(query, true);
+		}
+
+	private void previous() {
+		if (mMatchCount <= 1 || mMatch == 0)
+			return;
+
+		String query = mTextFieldSearch.getText();
+		mMatch--;
+		mLabelMatchCount.setText((mMatch+1)+" of "+mMatchCount);
+		searchWebkit(query, false);
+		}
+
+	private void searchWebkit(String query, boolean forward) {
+		Platform.runLater(() -> {
+			try {
+				Field pageField = sEngine.getClass().getDeclaredField("page");
+				pageField.setAccessible(true);
+
+				WebPage page = (com.sun.webkit.WebPage)pageField.get(sEngine);
+				page.find(query, forward, true, false);
+				}
+			catch (Exception e) {}
+			});
+		}
+
+	private void countMatches(String query) {
+		mMatchCount = 0;
+
+		if (query.length() != 0) {
+			if (sSearchCache == null) {
+				int index = sURL.indexOf('#');
+				sSearchCache = DEHelpFrame.getHTMLBytes(index == -1 ? sURL : sURL.substring(0, index));
+				}
+
+			byte[] queryBytes = query.toLowerCase().getBytes(StandardCharsets.UTF_8);
+			mMatchCount = getMatchCount(queryBytes);
+			}
+		}
+
+	private int getMatchCount(byte[] query) {
+		int cl = sSearchCache.length;
+		int ql = query.length;
+		int count = 0;
+		for (int i=0; i<cl-ql+1; i++) {
+			if (sSearchCache[i] == query[0]) {
+				boolean match = true;
+				for (int j=1; j<ql; j++) {
+					if (sSearchCache[i+j] != query[j]) {
+						match = false;
+						break;
+						}
+					}
+				if (match) {
+					count++;
+					i += ql-1;
+					}
+				}
+			}
+		return count;
+		}
 
 /*	private static void addHyperLinkListener() {
 		sEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>() {
@@ -104,20 +242,20 @@ public class FXHelpFrame extends JFrame {
 		if (index != -1) {
 			ref = urlText.substring(index);
 			urlText = urlText.substring(0, index);
-		}
+			}
 		URL theURL = FXHelpFrame.class.getResource(urlText);
 		if (ref != null) {
 			try {
 				theURL = new URL(theURL, ref);
-			}
+				}
 			catch (IOException e) {
 				return null;
+				}
 			}
-		}
 		return theURL;
-	}
+		}
 
 	public static void main(String[] param) {
 		showResource("/html/help/basics.html", new Frame());
 	}
-}
+	}

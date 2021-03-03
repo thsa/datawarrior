@@ -132,6 +132,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cDrawBoxOutline = "drawBoxOutline";
 	private static final String cScatterplotMargin = "scatterplotMargin";
 	private static final String cViewFontSize = "fontSize";
+	private static final String cViewFontSizeMode = "fontSizeMode";
 	private static final String cShapeColumn = "shapeColumn";
 	private static final String cMarkerTransparency = "markertransparency";
 	private static final String cMultiValueMarkerMode = "multiValueMarkerMode";
@@ -550,8 +551,12 @@ public class DERuntimeProperties extends RuntimeProperties {
 				visualization.setScatterPlotMargin(Float.parseFloat(value));
 
 			value = getProperty(cViewFontSize + viewName);
-			if (value != null)
-				visualization.setFontSize(Float.parseFloat(value), false);
+			int fontSizeMode = decodeProperty(cViewFontSizeMode+viewName, JVisualization.FONT_SIZE_MODE_CODE);
+			if (value != null || fontSizeMode != -1) {
+				if (fontSizeMode == -1)
+					fontSizeMode = JVisualization.cFontSizeModeRelative;
+				visualization.setFontSize(Float.parseFloat(value), fontSizeMode, false);
+				}
 
 			value = getProperty(cViewBackground + viewName);
 			if (value != null)
@@ -1290,6 +1295,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 
 					if (visualization.getFontSize() != 1.0)
 						setProperty(cViewFontSize+viewName, ""+visualization.getFontSize());
+
+					if (visualization.getFontSizeMode() != JVisualization.cFontSizeModeRelative)
+						setProperty(cViewFontSizeMode+viewName, JVisualization.FONT_SIZE_MODE_CODE[visualization.getFontSizeMode()]);
 
 					if (!visualization.getViewBackground().equals(Color.WHITE))
 						setProperty(cViewBackground+viewName, ""+visualization.getViewBackground().getRGB());

@@ -66,6 +66,21 @@ public abstract class JVisualization extends JComponent
 	public static final float DEFAULT_LABEL_TRANSPARENCY = 0.25f;
 	protected static final Rectangle2D.Double DEPICTOR_RECT = new Rectangle2D.Double(0, 0, 32000, 32000);
 
+	// For a view width of 460 pixels (no hi-dpi scaling) we assign a default font size of 8 points
+	// multiplied by the actor taken from the font size slider (mReativeFontSize).
+	// In case of absolute font size mode, the font size doesn't change when the view is resized.
+	// In case of relative font size mode, the font scaled proportionally.
+	// In case of adaptive font size mode, the font scaled sub-proportionally.
+	protected static final int cAbsoluteDefaultFontSize = 8; // in case of absolute font sizes, this is the reference
+	private static final float cFontRefenceViewSize = 420f;  // View size that independent of font size mode should have ABSOLUTE_FONT_SIZE * mReativeFontSize
+	private static final float cFontHeightFactor = cAbsoluteDefaultFontSize / cFontRefenceViewSize;
+
+	public static final String[] FONT_SIZE_MODE_TEXT = { "Relative font size:", "Adaptive font size:", "Absolute font size:" };
+	public static final String[] FONT_SIZE_MODE_CODE = { "relative", "adaptive", "absolute" };
+	public static final int cFontSizeModeRelative = 0;
+	public static final int cFontSizeModeAdaptive = 1;
+	public static final int cFontSizeModeAbsolute = 2;
+
 	public static final int cColumnUnassigned = -1;
 	public static final int cConnectionColumnConnectAll = -2;
 	public static final int cConnectionColumnMeanAndMedian = -3;
@@ -196,7 +211,7 @@ public abstract class JVisualization extends JComponent
 									mMouseX1,mMouseY1,mMouseX2,mMouseY2,mDimensions,mConnectionColumn,mConnectionOrderColumn,
 									mChartColumn,mChartMode,mChartType,mPreferredChartType,mPValueColumn,mTreeViewRadius,
 									mFocusList,mCaseSeparationColumn,mCaseSeparationCategoryCount,mScaleMode,mScaleStyle,
-									mUseAsFilterFlagNo,mTreeViewMode,mActiveExclusionFlags,mHVCount,mHVExclusionTag,
+									mUseAsFilterFlagNo,mTreeViewMode,mActiveExclusionFlags,mHVCount,mHVExclusionTag,mFontSizeMode,
 									mVisibleCategoryExclusionTag,mMarkerJitteringAxes,mGridMode, mLocalExclusionList,
 									mOnePerCategoryLabelCategoryColumn,mOnePerCategoryLabelValueColumn,mOnePerCategoryLabelMode;
 	protected String				mPValueRefCategory,mWarningMessage;
@@ -266,6 +281,7 @@ public abstract class JVisualization extends JComponent
 		}
 
 	protected void initialize() {
+		mFontSizeMode = cFontSizeModeRelative;
 		mRelativeFontSize = 1.0f;
 		mRelativeMarkerSize = 1.0f;
 		mMarkerSizeInversion = false;
@@ -1667,17 +1683,49 @@ public abstract class JVisualization extends JComponent
 			}
 		}
 
+	public int getFontSizeMode() {
+		return mFontSizeMode;
+		}
+
 	/**
 	 * This is the user defined relative font size factor applied to marker and scale labels.
 	 * Note: Marker labels are also affected by setMarkerLabelSize().
 	 * @param size
 	 * @param isAdjusting
 	 */
-	public void setFontSize(float size, boolean isAdjusting) {
-		if (mRelativeFontSize != size) {
+	public void setFontSize(float size, int mode, boolean isAdjusting) {
+		if (mRelativeFontSize != size || mFontSizeMode != mode) {
 			mRelativeFontSize = size;
+			mFontSizeMode = mode;
 			invalidateOffImage(true);
 			}
+		}
+
+	/**
+	 *
+	 * @param width
+	 * @param height
+	 * @param dpiFactor for printing in higher resolution (dpi/75)
+	 * @param retinaFactor
+	 * @return
+	 */
+	protected int calculateFontSize(int width, int height, float dpiFactor, float retinaFactor, boolean isScreen) {
+		float fontSize = mRelativeFontSize * cAbsoluteDefaultFontSize;
+
+		if (mFontSizeMode == cFontSizeModeAbsolute) {
+			fontSize *= dpiFactor * retinaFactor;
+			}
+		else {
+			float relativeViewSize = (float)Math.sqrt(width * height)
+					/ (dpiFactor * (isScreen ? HiDPIHelper.scale(cFontRefenceViewSize) : cFontRefenceViewSize));
+
+			if (mFontSizeMode == cFontSizeModeRelative)
+				fontSize *= dpiFactor * relativeViewSize;
+			else    // adaptive
+				fontSize *= dpiFactor * (float)Math.sqrt(relativeViewSize);
+			}
+
+		return isScreen ? HiDPIHelper.scale(fontSize) : Math.round(fontSize);
 		}
 
 	/**

@@ -635,8 +635,7 @@ public abstract class JFilterPanel extends JPanel
 		setEnabled(enabled);
 		setInverse(inverse);
 
-		if (settings != null)
-			applyInnerSettings(settings);
+		applyInnerSettings(settings);
 
 		mSuppressErrorMessages = false;
 		mIsUserChange = true;

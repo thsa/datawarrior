@@ -234,40 +234,42 @@ public class JSingleStructureFilterPanel extends JStructureFilterPanel
 
 	@Override
 	public void applyInnerSettings(String settings) {
-		if (settings != null) {
-			String desiredItem = null;
-			if (settings.startsWith(cFilterBySubstructure)) {
-				String idcode = settings.substring(cFilterBySubstructure.length()+1);
-				mStructureView.setIDCode(idcode);
+		String desiredItem;
+		if (settings == null) {
+			mStructureView.setIDCode(null);
+			desiredItem = cItemContains;
+			}
+		else if (settings.startsWith(cFilterBySubstructure)) {
+			String idcode = settings.substring(cFilterBySubstructure.length()+1);
+			mStructureView.setIDCode(idcode);
+			desiredItem = cItemContains;
+			}
+		else {
+			int index1 = settings.indexOf('\t');
+			int index2 = settings.indexOf('\t', index1+1);
+			if (index1 == -1 || index2 == -1) {
+				mStructureView.setIDCode(null);
 				desiredItem = cItemContains;
 				}
 			else {
-				int index1 = settings.indexOf('\t');
-				int index2 = settings.indexOf('\t', index1+1);
-				if (index1 == -1 || index2 == -1) {
-					mStructureView.setIDCode(null);
-					desiredItem = cItemContains;
-					}
-				else {
-					String descriptor = settings.substring(0, index1);
-	
-						// to be compatible with format prior V2.7.0
-					if (descriptor.equals(cFilterBySimilarity))
-						descriptor = DESCRIPTOR_FFP512.shortName;
-	
-					int similarity = Integer.parseInt(settings.substring(index1+1, index2));
-					getSimilaritySlider().setValue(similarity);
-					String idcode = settings.substring(index2+1);
-					mStructureView.setIDCode(idcode);
-					desiredItem = descriptorToItem(descriptor);
-					}
-				}
+				String descriptor = settings.substring(0, index1);
 
-			if (!desiredItem.equals(mComboBox.getSelectedItem()))
-				mComboBox.setSelectedItem(desiredItem);
-			else
-				updateExclusion(false);
+					// to be compatible with format prior V2.7.0
+				if (descriptor.equals(cFilterBySimilarity))
+					descriptor = DESCRIPTOR_FFP512.shortName;
+
+				int similarity = Integer.parseInt(settings.substring(index1+1, index2));
+				getSimilaritySlider().setValue(similarity);
+				String idcode = settings.substring(index2+1);
+				mStructureView.setIDCode(idcode);
+				desiredItem = descriptorToItem(descriptor);
+				}
 			}
+
+		if (!desiredItem.equals(mComboBox.getSelectedItem()))
+			mComboBox.setSelectedItem(desiredItem);
+		else
+			updateExclusion(false);
 		}
 
 	@Override

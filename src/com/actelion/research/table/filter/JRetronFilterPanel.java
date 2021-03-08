@@ -165,10 +165,8 @@ public class JRetronFilterPanel extends JFilterPanel implements DescriptorConsta
 
 	@Override
 	public void applyInnerSettings(String settings) {
-		if (settings != null && settings.length() != 0) {
-			mStructureView.setIDCode(settings);
-			updateExclusion(false);
-			}
+		mStructureView.setIDCode(settings);
+		updateExclusion(false);
 		}
 
 	@Override

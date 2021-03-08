@@ -210,49 +210,52 @@ public class JTextFilterPanel extends JFilterPanel implements ActionListener,Ite
 
 	@Override
 	public void applyInnerSettings(String settings) {
-		if (settings != null) {
-			int index = -1;
-			int type = -1;
-			if (settings.startsWith(cOptionContains)) {
-				index = 0;
-				type = CompoundTableModel.cTextExclusionTypeContains;
-				settings = settings.substring(cOptionContains.length()+1);
-				}
-			else if (settings.startsWith(cOptionStartsWith)) {
-				index = 1;
-				type = CompoundTableModel.cTextExclusionTypeStartsWith;
-				settings = settings.substring(cOptionStartsWith.length()+1);
-				}
-			else if (settings.startsWith(cOptionEndsWith)) {
-				index = 2;
-				type = CompoundTableModel.cTextExclusionTypeEndsWith;
-				settings = settings.substring(cOptionEndsWith.length()+1);
-				}
-			else if (settings.startsWith(cOptionEquals)) {
-				index = 3;
-				type = CompoundTableModel.cTextExclusionTypeEquals;
-				settings = settings.substring(cOptionEquals.length()+1);
-				}
-			else if (settings.startsWith(cOptionRegEx)) {
-				index = 4;
-				type = CompoundTableModel.cTextExclusionTypeRegEx;
-				settings = settings.substring(cOptionRegEx.length()+1);
-				}
-			if (index != -1) {
-				boolean caseSensitive = settings.startsWith(cOptionCaseSensitive);
-				if (caseSensitive)
-					settings = settings.substring(cOptionCaseSensitive.length()+1);
-
-				mTextField.setText(settings);
-				mCheckBoxCase.setSelected(caseSensitive);
-				if (mComboBox.getSelectedIndex() != index)
-					mComboBox.setSelectedIndex(index);
-				else if (isActive())
-					mTableModel.setStringExclusion(mColumnIndex, mExclusionFlag,
-												   settings, type, caseSensitive, isInverse());
-				}
-			mCheckBoxCase.setEnabled(isEnabled() && mComboBox.getSelectedIndex() != cOptionIndexRegEx);
+		int index = -1;
+		int type = -1;
+		if (settings == null) {
+			index = 0;
+			type = CompoundTableModel.cTextExclusionTypeContains;
+			settings = "";
 			}
+		else if (settings.startsWith(cOptionContains)) {
+			index = 0;
+			type = CompoundTableModel.cTextExclusionTypeContains;
+			settings = settings.substring(cOptionContains.length()+1);
+			}
+		else if (settings.startsWith(cOptionStartsWith)) {
+			index = 1;
+			type = CompoundTableModel.cTextExclusionTypeStartsWith;
+			settings = settings.substring(cOptionStartsWith.length()+1);
+			}
+		else if (settings.startsWith(cOptionEndsWith)) {
+			index = 2;
+			type = CompoundTableModel.cTextExclusionTypeEndsWith;
+			settings = settings.substring(cOptionEndsWith.length()+1);
+			}
+		else if (settings.startsWith(cOptionEquals)) {
+			index = 3;
+			type = CompoundTableModel.cTextExclusionTypeEquals;
+			settings = settings.substring(cOptionEquals.length()+1);
+			}
+		else if (settings.startsWith(cOptionRegEx)) {
+			index = 4;
+			type = CompoundTableModel.cTextExclusionTypeRegEx;
+			settings = settings.substring(cOptionRegEx.length()+1);
+			}
+		if (index != -1) {
+			boolean caseSensitive = settings.startsWith(cOptionCaseSensitive);
+			if (caseSensitive)
+				settings = settings.substring(cOptionCaseSensitive.length()+1);
+
+			mTextField.setText(settings);
+			mCheckBoxCase.setSelected(caseSensitive);
+			if (mComboBox.getSelectedIndex() != index)
+				mComboBox.setSelectedIndex(index);
+			else if (isActive())
+				mTableModel.setStringExclusion(mColumnIndex, mExclusionFlag,
+											   settings, type, caseSensitive, isInverse());
+			}
+		mCheckBoxCase.setEnabled(isEnabled() && mComboBox.getSelectedIndex() != cOptionIndexRegEx);
 		}
 
 	@Override

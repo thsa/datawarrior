@@ -190,29 +190,27 @@ public class JMultiStructureFilterPanel extends JStructureFilterPanel
 
 	@Override
 	public void applyInnerSettings(String settings) {
-		if (settings != null) {
-			String desiredItem = null;
-			if (mIsSSS) {
-				populateStructures(settings);
-				desiredItem = cItemContains;
-				}
-			else {
-				int index1 = settings.indexOf('\t');
-				int index2 = settings.indexOf('\t', index1+1);
-				String descriptor = settings.substring(0, index1);
-
-				int similarity = Integer.parseInt(settings.substring(index1+1, index2));
-				getSimilaritySlider().setValue(similarity);
-
-				populateStructures(settings.substring(index2+1));
-				desiredItem = descriptorToItem(descriptor);
-				}
-
-			if (!desiredItem.equals(mComboBox.getSelectedItem()))
-				mComboBox.setSelectedItem(desiredItem);
-			else
-				updateExclusion(false);
+		String desiredItem;
+		if (settings == null || mIsSSS) {
+			populateStructures(settings);
+			desiredItem = cItemContains;
 			}
+		else {
+			int index1 = settings.indexOf('\t');
+			int index2 = settings.indexOf('\t', index1+1);
+			String descriptor = settings.substring(0, index1);
+
+			int similarity = Integer.parseInt(settings.substring(index1+1, index2));
+			getSimilaritySlider().setValue(similarity);
+
+			populateStructures(settings.substring(index2+1));
+			desiredItem = descriptorToItem(descriptor);
+			}
+
+		if (!desiredItem.equals(mComboBox.getSelectedItem()))
+			mComboBox.setSelectedItem(desiredItem);
+		else
+			updateExclusion(false);
 		}
 
 	public CompoundCollectionPane<String> getCompoundCollectionPane() {
@@ -224,14 +222,14 @@ public class JMultiStructureFilterPanel extends JStructureFilterPanel
 	 * @param idcodeList TAB-delimited idcode list
 	 */
 	private void populateStructures(String idcodeList) {
-		if (idcodeList.length() != 0) {
-			CompoundCollectionModel<String> model = mStructurePane.getModel();
-			model.removeCompoundCollectionListener(this);
+		CompoundCollectionModel<String> model = mStructurePane.getModel();
+		model.removeCompoundCollectionListener(this);
+		if (idcodeList != null && idcodeList.length() != 0) {
 			String[] idcode = idcodeList.split("\\t");
 			for (int i = 0; i < idcode.length; i++)
 				model.addCompound(idcode[i]);
-			model.addCompoundCollectionListener(this);
 			}
+		model.addCompoundCollectionListener(this);
 		}
 
 	@Override

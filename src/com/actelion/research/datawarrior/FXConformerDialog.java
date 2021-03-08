@@ -97,7 +97,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 		mMol = new StereoMolecule(mol);
 		mMol.stripSmallFragments(true);
 
-		mConformationPanel = new JFXConformerPanel(false, true, false);
+		mConformationPanel = new JFXConformerPanel(true, true, false);
 
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,

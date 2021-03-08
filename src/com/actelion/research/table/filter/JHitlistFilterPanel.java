@@ -18,16 +18,12 @@
 
 package com.actelion.research.table.filter;
 
-import java.awt.BorderLayout;
+import com.actelion.research.table.model.*;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
-import com.actelion.research.table.model.*;
-import com.actelion.research.table.model.CompoundTableListHandler;
 
 public class JHitlistFilterPanel extends JFilterPanel implements ActionListener,CompoundTableListListener {
 	private static final long serialVersionUID = 0x20061013;
@@ -110,8 +106,10 @@ public class JHitlistFilterPanel extends JFilterPanel implements ActionListener,
 
 	@Override
 	public void applyInnerSettings(String settings) {
-		if (settings != null
-		 && !CompoundTableListHandler.LISTNAME_NONE.equals(settings)) {		// was this an ancient way of encoding???
+		if (settings == null) {
+			mComboBox.setSelectedIndex(0);
+			}
+		else if (!CompoundTableListHandler.LISTNAME_NONE.equals(settings)) {		// was this an ancient way of encoding???
 			if (LIST_ANY.equals(settings)) {
 				mComboBox.setSelectedIndex(mComboBox.getItemCount()-1);
 				}

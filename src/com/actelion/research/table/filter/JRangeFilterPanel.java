@@ -584,7 +584,17 @@ public class JRangeFilterPanel extends JFilterPanel
 
 	@Override
 	public void applyInnerSettings(String settings) {
-		if (settings != null) {
+		if (settings == null) {
+			if (isActive()) {
+				mPruningBar.setLowValue(mPruningBar.getMinimumValue());
+				mPruningBar.setHighValue(mPruningBar.getMaximumValue());
+				}
+			else {
+				mLabelLow.setText("");
+				mLabelHigh.setText("");
+				}
+			}
+		else {
 			int index = settings.indexOf('\t');
 			if (index != -1) {
 				if (isActive()) {

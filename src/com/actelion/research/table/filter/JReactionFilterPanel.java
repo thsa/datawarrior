@@ -595,39 +595,43 @@ public class JReactionFilterPanel extends JFilterPanel implements ChangeListener
 
 	@Override
 	public void applyInnerSettings(String settings) {
-		if (settings != null) {
-			String desiredItem = null;
-			if (settings.startsWith(cFilterBySubstructure)) {
-				String rxncode = settings.substring(cFilterBySubstructure.length()+1);
-				mReaction = ReactionEncoder.decode(rxncode, ENCODING_MODE, null);
-				mReactionView.setContent(mReaction);
+		String desiredItem;
+		if (settings == null) {
+			mReaction.clear();
+			mReaction.setFragment(true);
+			mReactionView.setContent(mReaction);
+			desiredItem = cItemContains;
+			}
+		else if (settings.startsWith(cFilterBySubstructure)) {
+			String rxncode = settings.substring(cFilterBySubstructure.length()+1);
+			mReaction = ReactionEncoder.decode(rxncode, ENCODING_MODE, null);
+			mReactionView.setContent(mReaction);
+			desiredItem = cItemContains;
+			}
+		else {
+			int index1 = settings.indexOf('\t');
+			int index2 = settings.indexOf('\t', index1+1);
+			int index3 = settings.indexOf('\t', index2+1);
+			if (index1 == -1 || index2 == -1) {
+				mReactionView.setContent((Reaction)null);
 				desiredItem = cItemContains;
 				}
 			else {
-				int index1 = settings.indexOf('\t');
-				int index2 = settings.indexOf('\t', index1+1);
-				int index3 = settings.indexOf('\t', index2+1);
-				if (index1 == -1 || index2 == -1) {
-					mReactionView.setContent((Reaction)null);
-					desiredItem = cItemContains;
-					}
-				else {
-					String descriptor = settings.substring(0, index1);
+				String descriptor = settings.substring(0, index1);
 
-					int reactionCenterSimilarity = Integer.parseInt(settings.substring(index1+1, index2));
-					int peripherySimilarity = Integer.parseInt(settings.substring(index2+1, index3));
-					mSliderRectionCenter.setValue(reactionCenterSimilarity);
-					mSliderPeriphery.setValue(peripherySimilarity);
-					mReaction = ReactionEncoder.decode(settings.substring(index3+1), ENCODING_MODE, null);
-					mReactionView.setContent(mReaction);
-					desiredItem = descriptorToItem(descriptor);
-					}
+				int reactionCenterSimilarity = Integer.parseInt(settings.substring(index1+1, index2));
+				int peripherySimilarity = Integer.parseInt(settings.substring(index2+1, index3));
+				mSliderRectionCenter.setValue(reactionCenterSimilarity);
+				mSliderPeriphery.setValue(peripherySimilarity);
+				mReaction = ReactionEncoder.decode(settings.substring(index3+1), ENCODING_MODE, null);
+				mReactionView.setContent(mReaction);
+				desiredItem = descriptorToItem(descriptor);
 				}
-
-			if (!desiredItem.equals(mComboBox.getSelectedItem()))
-				mComboBox.setSelectedItem(desiredItem);
-			else
-				updateExclusion(false);
 			}
+
+		if (!desiredItem.equals(mComboBox.getSelectedItem()))
+			mComboBox.setSelectedItem(desiredItem);
+		else
+			updateExclusion(false);
 		}
 	}

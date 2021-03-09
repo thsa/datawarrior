@@ -65,8 +65,6 @@ public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implemen
 	private int								mCoordinateColumn,mFFPColumn,mScaffoldMode,mIDCodeErrors;
 	private byte[][]                        mScaffoldAtoms;
 	private StringBuilder                   mScaffoldColorBuilder;
-//	private SSSearcher						mSearcher;
-//	private SSSearcherWithIndex				mSearcherWithIndex;
 	private StereoMolecule					mScaffoldContainer;
 
 	public DETaskAdd2DCoordinates(DEFrame parent) {
@@ -224,7 +222,7 @@ public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implemen
 
 		String scaffolds = configuration.getProperty(PROPERTY_SCAFFOLD_LIST, "");
 		if (scaffolds.length() != 0) {
-			mExplicitScaffoldList = new ArrayList<InventorTemplate>();
+			mExplicitScaffoldList = new ArrayList<>();
 			SSSearcherWithIndex ffpCreator = new SSSearcherWithIndex();
 			String[] idcodeList = scaffolds.split("\\t");
 			for (int i=0; i<idcodeList.length; i++) {

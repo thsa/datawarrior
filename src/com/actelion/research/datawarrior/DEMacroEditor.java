@@ -189,11 +189,17 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 				if (e.isPopupTrigger()) {
 					showPopupMenu(e.getX(), e.getY(), mList.locationToIndex(e.getPoint()));
 					}
+				else {
+					allowDropOnListForTenSeconds();
+					}
 				}
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (e.isPopupTrigger()) {
 					showPopupMenu(e.getX(), e.getY(), mList.locationToIndex(e.getPoint()));
+					}
+				else {
+					mList.getDropTarget().setActive(false);
 					}
 				}
 			@Override
@@ -211,11 +217,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		mTree.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				mList.getDropTarget().setActive(true);
-				new Thread(() -> {
-					try { Thread.sleep(5000); } catch (InterruptedException ie) {}
-					SwingUtilities.invokeLater(() -> mList.getDropTarget().setActive(false));
-					}).start();
+				allowDropOnListForTenSeconds();
 				}
 			});
 
@@ -258,8 +260,12 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		enableItems();
 		}
 
-	public void setDropTargetActive(boolean b) {
-		mList.getDropTarget().setActive(b);
+	private void allowDropOnListForTenSeconds() {
+		mList.getDropTarget().setActive(true);
+		new Thread(() -> {
+			try { Thread.sleep(10000); } catch (InterruptedException ie) {}
+			SwingUtilities.invokeLater(() -> mList.getDropTarget().setActive(false));
+			} ).start();
 		}
 
 	@Override

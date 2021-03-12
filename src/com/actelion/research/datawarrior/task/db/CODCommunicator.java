@@ -26,8 +26,8 @@ import java.util.TreeMap;
 
 public class CODCommunicator extends ClientCommunicator implements CODServerConstants {
 //	private static final String SERVER_URL = "http://localhost:8086";
-	private static final String sURL_1 = "http://cod.openmolecules.org";
-	private static final String sURL_2 = "http://46.4.119.202:8086";
+	private static final String sURL_1 = "https://cod.openmolecules.org";
+	private static final String sURL_2 = "http://87.102.212.253:8086";
 	private static String sPrimaryURL = sURL_1;
 	private static String sSecondaryURL = sURL_2;
 	private static boolean sUseSecondaryServer = false;

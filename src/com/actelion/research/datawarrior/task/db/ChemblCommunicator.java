@@ -26,8 +26,8 @@ import java.util.TreeMap;
 
 public class ChemblCommunicator extends ClientCommunicator implements ChemblServerConstants {
 //	public static final String sURL_1 = "http://localhost:8083";			// this only used by the client
-	private static final String sURL_1 = "http://chembl.openmolecules.org";
-	private static final String sURL_2 = "http://46.4.119.202:8083";
+	private static final String sURL_1 = "https://chembl.openmolecules.org";
+	private static final String sURL_2 = "http://87.102.212.253:8083";
 	private static String sPrimaryURL = sURL_1;
 	private static String sSecondaryURL = sURL_2;
 	private static boolean sUseSecondaryServer = false;

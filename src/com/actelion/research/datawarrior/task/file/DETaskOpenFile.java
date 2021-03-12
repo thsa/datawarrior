@@ -26,6 +26,7 @@ import com.actelion.research.datawarrior.task.DEMacro;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.table.CompoundTableLoader;
+import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
 import java.io.File;
@@ -35,7 +36,10 @@ import java.util.Properties;
 public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	public static final String TASK_NAME = "Open File";
 
+	private static final String PROPERTY_ASSUME_CHIRAL = "assumeChiral";
+
     private DataWarrior mApplication;
+    private JCheckBox mCheckBoxAssumeChiralTrue;
 
     public DETaskOpenFile(DataWarrior application) {
 		super(application, "Open DataWarrior-, SD- or Text-File",
@@ -55,6 +59,37 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 		}
 
 	@Override
+	public JPanel createInnerDialogContent() {
+		JPanel p = new JPanel();
+		double[][] size = { {TableLayout.PREFERRED}, {TableLayout.PREFERRED, 8} };
+		p.setLayout(new TableLayout(size));
+
+		mCheckBoxAssumeChiralTrue = new JCheckBox("For V2000 SD-files assume molecules to be pure enantiomers");
+		p.add(mCheckBoxAssumeChiralTrue, "0,0");
+
+		return p;
+		}
+
+	@Override
+	public Properties getDialogConfiguration() {
+		Properties configuration = super.getDialogConfiguration();
+		configuration.setProperty(PROPERTY_ASSUME_CHIRAL, mCheckBoxAssumeChiralTrue.isSelected() ? "true" : "false");
+		return configuration;
+        }
+
+	@Override
+	public void setDialogConfiguration(Properties configuration) {
+		super.setDialogConfiguration(configuration);
+		mCheckBoxAssumeChiralTrue.setSelected("true".equals(configuration.getProperty(PROPERTY_ASSUME_CHIRAL)));
+		}
+
+	@Override
+	public void setDialogConfigurationToDefault() {
+    	super.setDialogConfigurationToDefault();
+		mCheckBoxAssumeChiralTrue.setSelected(false);
+		}
+
+	@Override
 	public DEFrame openFile(File file, Properties configuration) {
 		final int filetype = FileHelper.getFileType(file.getName());
 		final DEFrame emptyFrame = mApplication.getEmptyFrame(file.getName());
@@ -68,6 +103,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 			};
 		loader.addDataDependentPropertyReader(CustomLabelPositionWriter.PROPERTY_NAME, new CustomLabelPositionReader(emptyFrame));
 		loader.addDataDependentPropertyReader(CardViewPositionWriter.PROPERTY_NAME, new CardViewPositionReader(emptyFrame));
+		loader.setAssumeChiralFlag("true".equals(configuration.getProperty(PROPERTY_ASSUME_CHIRAL)));
 		loader.readFile(file, new DERuntimeProperties(emptyFrame.getMainFrame()), filetype);
 		return emptyFrame;
 		}

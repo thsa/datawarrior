@@ -9,8 +9,8 @@ public class N2SCommunicator extends ClientCommunicator implements N2SServerCons
 //	public static final String sURL_1 = "http://chasl-cloudp02.idorsia.com:8082";
 //	public static final String sURL_1 = "http://chalus-smicro2.idorsia.com:8082";
 
-	private static final String sURL_1 = "http://46.4.119.202:8082";
-	private static final String sURL_2 = "http://n2s.openmolecules.org";
+	private static final String sURL_1 = "https://n2s.openmolecules.org";
+	private static final String sURL_2 = "http://87.102.212.253:8082";
 	private static String sPrimaryURL = sURL_1;
 	private static String sSecondaryURL = sURL_2;
 	private static boolean sUseSecondaryServer = false;

@@ -35,8 +35,8 @@ import java.net.*;
 import java.util.prefs.Preferences;
 
 public class DEVersionChecker extends JDialog implements ActionListener {
-	private static final String URL1 = "http://dwversion.openmolecules.org";
-	private static final String URL2 = "http://46.4.119.202:8084";
+	private static final String URL1 = "https://dwversion.openmolecules.org";
+	private static final String URL2 = "http://87.102.212.253:8084";
 
 	private static final long serialVersionUID = 20140209;
 	private static final String DATAWARRIOR_VERSION = "v05.02.01";	// format v00.00.00[_beta]

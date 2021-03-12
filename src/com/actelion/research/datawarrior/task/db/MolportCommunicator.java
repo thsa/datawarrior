@@ -24,8 +24,8 @@ import org.openmolecules.comm.ClientCommunicator;
 import java.util.TreeMap;
 
 public class MolportCommunicator extends ClientCommunicator {
-	private static final String sURL_1 = "http://bb.openmolecules.org";
-	private static final String sURL_2 = "http://46.4.119.202:8087";
+	private static final String sURL_1 = "https://bb.openmolecules.org";
+	private static final String sURL_2 = "http://87.102.212.253:8087";
 //	private static String sURL_1 = "http://loft9086.serverprofi24.eu:8087";
 	private static String sPrimaryURL = sURL_1;
 	private static String sSecondaryURL = sURL_2;

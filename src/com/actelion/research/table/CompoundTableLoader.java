@@ -44,6 +44,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CompoundTableLoader implements CompoundTableConstants,Runnable {
@@ -132,7 +133,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private volatile int		mDataType,mAction;
 	private volatile TreeMap<String,DataDependentPropertyReader> mDataDependentPropertyReaderMap;
 	private int					mOldVersionIDCodeColumn,mOldVersionCoordinateColumn,mOldVersionCoordinate3DColumn;
-	private boolean				mWithHeaderLine,mAppendRest,mCoordsMayBe3D,mIsGooglePatentsFile;
+	private boolean				mWithHeaderLine,mAppendRest,mCoordsMayBe3D,mIsGooglePatentsFile,
+								mMolnameFound,mMolnameIsDifferentFromFirstField,mAssumeChiralFlag;
 	private volatile boolean	mOwnsProgressController;
 	private volatile char		mComma;
 	private String				mNewWindowTitle,mVersion;
@@ -141,7 +143,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private Object[][]			mFieldData;
 	private volatile Thread		mThread;
 	private byte[]				mSelectionData;
-	private int					mAppendDatasetColumn,mFirstNewColumn,mSelectionRowCount, mSelectionOffset;
+	private int					mAppendDatasetColumn,mFirstNewColumn,mSelectionRowCount,mSelectionOffset,mErrorCount;
 	private int[]				mAppendDestColumn,mMergeDestColumn,mMergeMode;
 	private int[][]				mSelectionDestRowMap;
 	private String				mAppendDatasetNameExisting,mAppendDatasetNameNew;
@@ -198,7 +200,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		catch (Exception e) {
 			mTableModel.unlock();
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(mParentFrame, e.toString());
+			showMessageOnEDT(e.toString(), "Paste Error", JOptionPane.WARNING_MESSAGE);
 			}
 		}
 
@@ -213,7 +215,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			}
 		catch (IOException e) {
 			mTableModel.unlock();
-			JOptionPane.showMessageDialog(mParentFrame, "IO-Exception during file retrieval.");
+			showMessageOnEDT("IO-Exception during file retrieval.", "Retrieval Error", JOptionPane.WARNING_MESSAGE);
 			return;
 			}
 		mDataType = FileHelper.cFileTypeDataWarrior;
@@ -245,12 +247,12 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			}
 		catch (FileNotFoundException e) {
 			mTableModel.unlock();
-			JOptionPane.showMessageDialog(mParentFrame, "File not found.");
+			showMessageOnEDT("File not found.", "Error", JOptionPane.WARNING_MESSAGE);
 			return;
 			}
 		catch (UnsupportedEncodingException e) {
 			mTableModel.unlock();
-			JOptionPane.showMessageDialog(mParentFrame, "Unsupported encoding.");
+			showMessageOnEDT("Unsupported encoding.", "File Format Error", JOptionPane.WARNING_MESSAGE);
 			return;
 			}
 		}
@@ -628,7 +630,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		catch (IOException e) {}
 
 		if (mWithHeaderLine && header == null) {
-			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mParentFrame, "No header line found.") );
+			showMessageOnEDT("No header line found.", "File Format Error", JOptionPane.WARNING_MESSAGE);
 			return false;
 			}
 
@@ -636,7 +638,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			for (String key:mColumnProperties.keySet()) {
 				if (key.endsWith("\tspecialType") && mColumnProperties.get(key).equals("Catalysts")
 				 || key.endsWith("\treactionPart") && mColumnProperties.get(key).equals("catalysts")) {
-					SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mParentFrame, "Outdated reaction file format. Please download update from 'openmolecules.org'.") );
+					showMessageOnEDT("Outdated reaction file format. Please download update from 'openmolecules.org'.", "File Outdated", JOptionPane.WARNING_MESSAGE);
 					return false;
 					}
 				}
@@ -738,18 +740,10 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				vlineCount++;
 			}
 
-		if (vlineCount != 0 && commaCount == 0) {
-			try {
-				SwingUtilities.invokeAndWait(() -> {
-					int answer = JOptionPane.showConfirmDialog(mParentFrame,
-							"Your file seems to contain '|' separators instead of commas.\nDo you want to separate content using '|' characters?", "Warning",
-							JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-					if (answer == JOptionPane.YES_OPTION)
-						mComma = '|';
-					});
-				}
-			catch (Exception e) {}
-			}
+		if (vlineCount != 0 && commaCount == 0 && askOnEDT(
+			"Your file seems to contain '|' separators instead of commas.\nDo you want to separate content using '|' characters?",
+			"Warning", JOptionPane.WARNING_MESSAGE))
+			mComma = '|';
 		}
 
 	/**
@@ -1586,14 +1580,85 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				}
 			}
 
-		sdParser = new SDFileParser(mFile, fieldNames);
+		// In a first run we check, whether all molfiles are V2000 without chiral flag == 0 despite some
+		// molfiles having defined stereo centers. If found then we may process the file a second time
+		// assuming that molecules with defined stereo centers are meant to be enantiomerically pure.
+		if (processSDFile(fieldNames, structureIDColumn, fieldDataList, mAssumeChiralFlag)
+		 && askOnEDT("Erroneously, some programs store pure enantiomers as racemates when exporting to an SD-file.\n"
+						+ "All molecules in this SD-file are marked as racemate and some molecules contain stereo centers.\n"
+						+ "Do you want DataWarrior to interpret those stereo centers as absolute? If you answer YES, then\n"
+						+ "molecules with defined stereo conters will be assumed to be pure enantiomers rather then racemates.", "Warning",
+				JOptionPane.WARNING_MESSAGE)) {
+			fieldDataList.clear();
+			processSDFile(fieldNames, structureIDColumn, fieldDataList, true);
+			}
+
+		addColumnProperty("Structure", cColumnPropertySpecialType, cColumnTypeIDCode);
+		addColumnProperty(cColumnType2DCoordinates, cColumnPropertySpecialType, cColumnType2DCoordinates);
+		addColumnProperty(cColumnType2DCoordinates, cColumnPropertyParentColumn, "Structure");
+
+		mFieldData = fieldDataList.toArray(new Object[0][]);
+
+		if (structureIDColumn != -1) {
+			addColumnProperty("Structure", cColumnPropertyRelatedIdentifierColumn, mFieldNames[structureIDColumn]);
+			}
+		else if (mMolnameFound) {
+			addColumnProperty("Structure", cColumnPropertyRelatedIdentifierColumn, mFieldNames[2]);
+			}
+		else {
+			mFieldNames[2] = "Structure No";
+			for (int row=0; row<mFieldData.length; row++)
+				mFieldData[row][2] = (""+(row+1)).getBytes();
+			}
+
+		// if the molname column is redundant, then delete it
+		if (structureIDColumn != -1 && (!mMolnameFound || !mMolnameIsDifferentFromFirstField)) {
+			for (int column=3; column<mFieldNames.length; column++)
+				mFieldNames[column-1] = mFieldNames[column];
+			mFieldNames = Arrays.copyOf(mFieldNames, mFieldNames.length-1);
+
+			for (int row=0; row<mFieldData.length; row++) {
+				for (int column=3; column<mFieldData[row].length; column++)
+					mFieldData[row][column-1] = mFieldData[row][column];
+				mFieldData[row] = Arrays.copyOf(mFieldData[row], mFieldData[row].length-1);
+				}
+			}
+
+		if (mErrorCount > 0) {
+			final String message = ""+mErrorCount+" compound structures could not be generated because of molfile parsing errors.";
+			showMessageOnEDT(message, "Import Errors", JOptionPane.WARNING_MESSAGE);
+			}
+
+		handlePotentially3DCoordinates();
+
+		addDefaultLookupColumnProperties();
+
+		return true;
+		}
+
+	/**
+	 * @param fieldNames
+	 * @param structureIDColumn
+	 * @param fieldDataList
+	 * @param assumeChiralTrue
+	 * @return true if no V3000 molfiles found, not set chiral flag found, but molecules with explicit stereo centers found
+	 */
+	private boolean processSDFile(String[] fieldNames, int structureIDColumn, ArrayList<Object[]> fieldDataList, boolean assumeChiralTrue) {
+		SDFileParser sdParser = new SDFileParser(mFile, fieldNames);
 		MolfileParser mfParser = new MolfileParser();
+		mfParser.setAssumeChiralTrue(assumeChiralTrue);
 		StereoMolecule mol = new StereoMolecule();
 		int recordNo = 0;
-		int errors = 0;
-		boolean molnameFound = false;
-		boolean molnameIsDifferentFromFirstField = false;
+		mErrorCount = 0;
+		mMolnameFound = false;
+		mMolnameIsDifferentFromFirstField = false;
 		int recordCount = sdParser.getRowCount();
+
+		// If we find V2000 molfiles only of which none have a set chiral flag and if some molecules
+		// have stereo centers, then the creating software may have errorneously not set the chiral flag.
+		// We need to ask the user for an optional correction.
+		boolean chiralFlagOrV3000Found = false;
+		boolean stereoCentersFound = false;
 
 		mProgressController.startProgress("Processing Records...", 0, (recordCount != -1) ? recordCount : 0);
 
@@ -1617,7 +1682,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				// exclude manually CCDC entries with atoms that are in multiple locations.
 				if (comment.contains("From CSD data") && !comment.contains("No disordered atoms"))
 					throw new Exception("CSD molecule with ambivalent atom location.");
-					
+
 				mfParser.parse(mol, molfile);
 				if (mol.getAllAtoms() != 0) {
 					mol.normalizeAmbiguousBonds();
@@ -1628,82 +1693,32 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					byte[] coords = getBytes(canonizer.getEncodedCoordinates());
 					fieldData[0] = idcode;
 					fieldData[1] = coords;
-					}
+
+					if (mfParser.isChiralFlagSet() || mfParser.isV3000())
+						chiralFlagOrV3000Found = true;
+					if (!chiralFlagOrV3000Found && mol.getStereoCenterCount() != 0)
+						stereoCentersFound = true;
 				}
+			}
 			catch (Exception e) {
-				errors++;
-				}
+				mErrorCount++;
+			}
 
 			if (molname.length() != 0) {
-				molnameFound = true;
+				mMolnameFound = true;
 				fieldData[2] = getBytes(molname);
 				if (structureIDColumn != -1 && !molname.equals(removeTabs(sdParser.getFieldData(structureIDColumn - 3))))
-					molnameIsDifferentFromFirstField = true;
-				}
+					mMolnameIsDifferentFromFirstField = true;
+			}
 
-			for (int i=0; i<fieldCount; i++)
+			for (int i=0; i<fieldNames.length; i++)
 				fieldData[3+i] = getBytes(removeTabs(sdParser.getFieldData(i)));
-
-		  /* IDCode conversion validation code
-			if (mIDCode[recordNo] != null) {
-				StereoMolecule testMol = new IDCodeParser().getCompactMolecule(mIDCode[recordNo], mCoordinates[recordNo]);
-				Canonizer testCanonizer = new Canonizer(testMol);
-				String testIDCode = testCanonizer.getIDCode();
-				if (!testIDCode.equals(new String(mIDCode[recordNo]))) {
-					new IDCodeParser().printContent(mIDCode[recordNo], null);
-					new IDCodeParser().printContent(testIDCode.getBytes(), null);
-					}
-				else {
-					recordNo--;
-					}
-				}
-		   */
 
 			fieldDataList.add(fieldData);
 			recordNo++;
 			}
 
-		addColumnProperty("Structure", cColumnPropertySpecialType, cColumnTypeIDCode);
-		addColumnProperty(cColumnType2DCoordinates, cColumnPropertySpecialType, cColumnType2DCoordinates);
-		addColumnProperty(cColumnType2DCoordinates, cColumnPropertyParentColumn, "Structure");
-
-		mFieldData = fieldDataList.toArray(new Object[0][]);
-
-		if (structureIDColumn != -1) {
-			addColumnProperty("Structure", cColumnPropertyRelatedIdentifierColumn, mFieldNames[structureIDColumn]);
-			}
-		else if (molnameFound) {
-			addColumnProperty("Structure", cColumnPropertyRelatedIdentifierColumn, mFieldNames[2]);
-			}
-		else {
-			mFieldNames[2] = "Structure No";
-			for (int row=0; row<mFieldData.length; row++)
-				mFieldData[row][2] = (""+(row+1)).getBytes();
-			}
-
-		// if the molname column is redundant, then delete it
-		if (structureIDColumn != -1 && (!molnameFound || !molnameIsDifferentFromFirstField)) {
-			for (int column=3; column<mFieldNames.length; column++)
-				mFieldNames[column-1] = mFieldNames[column];
-			mFieldNames = Arrays.copyOf(mFieldNames, mFieldNames.length-1);
-
-			for (int row=0; row<mFieldData.length; row++) {
-				for (int column=3; column<mFieldData[row].length; column++)
-					mFieldData[row][column-1] = mFieldData[row][column];
-				mFieldData[row] = Arrays.copyOf(mFieldData[row], mFieldData[row].length-1);
-				}
-			}
-
-		if (errors > 0) {
-			final String message = ""+errors+" compound structures could not be generated because of molfile parsing errors.";
-			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mParentFrame, message) );
-			}
-
-		handlePotentially3DCoordinates();
-
-		addDefaultLookupColumnProperties();
-
-		return true;
+		return !assumeChiralTrue && !chiralFlagOrV3000Found && stereoCentersFound;
 		}
 
 	private boolean readRDFile() {
@@ -1832,7 +1847,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 
 		if (errors > 0) {
 			final String message = ""+errors+" compound structures could not be generated because of molfile parsing errors.";
-			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mParentFrame, message) );
+			showMessageOnEDT(message, "Import Errors", JOptionPane.WARNING_MESSAGE);
 			}
 
 		if (!isReactions) {
@@ -1841,10 +1856,62 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			}
 
 		return true;
-	}
+		}
 
 	private String removeTabs(String s) {
 		return (s == null) ? null : s.trim().replace('\t', ' ');
+		}
+
+	private void handleMissingChiralFlag() {
+		if (!askOnEDT("Erroneously, some programs store pure enantiomers as racemates when exporting to an SD-file.\n"
+			+ "All molecules in this SD-file are marked as racemate and some molecules contain stereo centers.\n"
+			+ "Do you want DataWarrior to interpret those stereo centers as absolute?", "Warning",
+			JOptionPane.WARNING_MESSAGE))
+			return;
+
+		StereoMolecule mol = new StereoMolecule();
+		for (Object[] row:mFieldData) {
+			if (row[0] != null) {
+				new IDCodeParser().parse(mol, (byte[])row[0], (byte[])row[1]);
+				if (mol.getAllAtoms() != 0) {
+					mol.ensureHelperArrays(Molecule.cHelperCIP);
+					int scCount = 0;
+					for (int atom=0; atom<mol.getAtoms(); atom++) {
+						if (mol.getAtomESRType(atom) == Molecule.cESRTypeAnd) {
+							mol.setAtomESR(atom, Molecule.cESRTypeAbs, -1);
+							scCount++;
+							}
+						}
+					if (scCount != 0) {
+						Canonizer canonizer = new Canonizer(mol);
+						row[0] = canonizer.getIDCode().getBytes();
+						if (row[1] != null)
+							row[1] = canonizer.getIDCode().getBytes();
+						}
+					}
+				}
+			}
+		}
+
+	private void showMessageOnEDT(String message, String title, int type) {
+		if (SwingUtilities.isEventDispatchThread())
+			JOptionPane.showMessageDialog(mParentFrame, message, title, type);
+		else
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mParentFrame, message, title, type) );
+		}
+
+	private boolean askOnEDT(String message, String title, int type) {
+		if (SwingUtilities.isEventDispatchThread())
+			return JOptionPane.showConfirmDialog(mParentFrame, message, title, JOptionPane.YES_NO_OPTION, type) == JOptionPane.YES_OPTION;
+
+		AtomicBoolean answer = new AtomicBoolean();
+		try {
+			SwingUtilities.invokeAndWait(() -> {
+				answer.set(JOptionPane.showConfirmDialog(mParentFrame, message, title,	JOptionPane.YES_NO_OPTION, type) == JOptionPane.YES_OPTION);
+				} );
+			}
+		catch (Exception e) {}
+		return answer.get();
 		}
 
 	/**
@@ -2053,8 +2120,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				}
 			}
 		catch (OutOfMemoryError err) {
-			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mParentFrame,
-					"Out of memory. Launch this application with Java option -Xms???m or -Xmx???m.") );
+			showMessageOnEDT("Out of memory. Launch this application with Java option -Xms???m or -Xmx???m.", "Memory Error", JOptionPane.WARNING_MESSAGE);
 			clearBufferedData();
 			return false;
 			}
@@ -2649,6 +2715,10 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					}
 				}
 			}
+		}
+
+	public void setAssumeChiralFlag(boolean b) {
+		mAssumeChiralFlag = b;
 		}
 
 	private void setListFlags(int flagNo, byte[] data, int rowCount, int offset, int[][] destRowMap) {

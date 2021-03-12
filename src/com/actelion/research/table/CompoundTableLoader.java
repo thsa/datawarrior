@@ -547,9 +547,12 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				if (extensionHandler != null) {
 					String name = extensionHandler.extractExtensionName(theLine);
 					if (name != null) {
-						if (mExtensionMap == null)
-							mExtensionMap = new TreeMap<>();
-						mExtensionMap.put(name, extensionHandler.readData(name, theReader));
+						Object data = extensionHandler.readData(name, theReader);
+						if (data != null) {
+							if (mExtensionMap == null)
+								mExtensionMap = new TreeMap<>();
+							mExtensionMap.put(name, data);
+							}
 						continue;
 						}
 					}

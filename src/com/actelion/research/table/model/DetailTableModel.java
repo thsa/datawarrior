@@ -18,16 +18,12 @@
 
 package com.actelion.research.table.model;
 
-import com.actelion.research.chem.IDCodeParser;
-import com.actelion.research.chem.reaction.ReactionEncoder;
-import com.actelion.research.table.CompoundTableChemistryCellRenderer;
-
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
 public class DetailTableModel extends DefaultTableModel
-            implements CompoundTableListener,TableModelListener {
+            implements CompoundTableListener,HighlightListener,TableModelListener {
     private static final long serialVersionUID = 0x20060929;
 
     private static final String[] cColumnName = {"Column Name", "Value"};
@@ -39,7 +35,8 @@ public class DetailTableModel extends DefaultTableModel
     public DetailTableModel(CompoundTableModel parentModel) {
 		super(cColumnName, 0);
 		mParentModel = parentModel;
-        parentModel.addTableModelListener(this);
+        parentModel.addHighlightListener(this);
+	    parentModel.addTableModelListener(this);
 		parentModel.addCompoundTableListener(this);
 		initialize();
 		}
@@ -90,6 +87,7 @@ public class DetailTableModel extends DefaultTableModel
 		return false;
 		}
 
+	@Override
     public void tableChanged(TableModelEvent e) {
         if (e.getFirstRow() == TableModelEvent.HEADER_ROW) {
             initialize();
@@ -97,6 +95,7 @@ public class DetailTableModel extends DefaultTableModel
             }
         }
 
+	@Override
     public void compoundTableChanged(CompoundTableEvent e) {
 		if (e.getType() == CompoundTableEvent.cAddColumns
 		 || e.getType() == CompoundTableEvent.cRemoveColumns) {
@@ -116,7 +115,8 @@ public class DetailTableModel extends DefaultTableModel
 			}
 		}
 
-	public void detailChanged(CompoundRecord record) {
+	@Override
+	public void highlightChanged(CompoundRecord record) {
 		mParentRecord = record;
 		for (int row=0; row<getRowCount(); row++)
 			setValueAt(getSecondColumnValue(record, row), row, 1);

@@ -296,8 +296,6 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 
 			for (DetailViewInfo viewInfo : mDetailViewList)
 				updateDetailView(viewInfo);
-
-			mDetailModel.detailChanged(record);
 		}
 	}
 

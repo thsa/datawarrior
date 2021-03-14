@@ -528,7 +528,8 @@ public class DETaskMergeColumns extends ConfigurableTask {
 																mol[i].markAtomForDeletion(atom2);
 																mol[i].markAtomForDeletion(atom3);
 																needsDeletion = true;
-																wasAdded[rGroupIndex[rGroupNo3]] = true;
+																if (rGroupIndex[rGroupNo3] != -1)
+																	wasAdded[rGroupIndex[rGroupNo3]] = true;
 																break;
 																}
 															}

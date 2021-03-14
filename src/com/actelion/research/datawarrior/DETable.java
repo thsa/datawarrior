@@ -1364,7 +1364,7 @@ class DEColumnProperty {
 	public DEColumnProperty(String columnName, TableColumn column, boolean isSelected) {
 		this.columnName = columnName;
 		cellRenderer = column.getCellRenderer();
-		width = column.getWidth();
+		width = column.getPreferredWidth();
 		this.isSelected = isSelected;
 		}
 

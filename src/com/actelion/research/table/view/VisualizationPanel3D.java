@@ -18,14 +18,10 @@
 
 package com.actelion.research.table.view;
 
-import java.awt.Frame;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-
 import com.actelion.research.table.model.CompoundListSelectionModel;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.config.VPanel3DConfiguration;
+
+import java.awt.*;
 
 public class VisualizationPanel3D extends VisualizationPanel implements RotationListener {
     private static final long serialVersionUID = 0x20060904;
@@ -78,6 +74,6 @@ public class VisualizationPanel3D extends VisualizationPanel implements Rotation
 				}
 			}
 		if (zoom)
-			setZoom(low, high, false);
+			setZoom(low, high, false, false);
 		}
 	}

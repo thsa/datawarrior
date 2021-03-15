@@ -47,7 +47,8 @@ public abstract class VisualizationPanel extends JPanel
 	private int					mFirstChoiceColumns,mSecondChoiceColumns,mAutoZoomColumn;
 	private int[]				mQualifyingColumn;
 	private float               mAutoZoomFactor;
-	private boolean				mDisableEvents,mIsProgrammaticChange;
+	private float[][]           mPruningBarCache;
+	private boolean				mDisableEvents,mIsProgrammaticChange,mIsAutozoomed;
 	private VisualizationPanel	mMasterPanel;
 	private Point				mPopupLocation;
 	private ArrayList<VisualizationPanel> mSynchronizationChildList;
@@ -64,6 +65,7 @@ public abstract class VisualizationPanel extends JPanel
 		mMasterPanel = this;
 		mAutoZoomFactor = 0f;
 		mAutoZoomColumn = -1;
+		mIsAutozoomed = false;
 		addMouseWheelListener(this);
 		}
 
@@ -172,10 +174,13 @@ public abstract class VisualizationPanel extends JPanel
 		add(mVisualization, BorderLayout.CENTER);
 
 		mPruningBar = new JPruningBar[mDimensions];
+		mPruningBarCache = new float[2][mDimensions];
 		mComboBoxColumn = new JComboBox[mDimensions];
 		for (int axis=0; axis<mDimensions; axis++) {
 			mPruningBar[axis] = new JPruningBar(0.0f, 1.0f, true, axis, true);
 			mPruningBar[axis].addPruningBarListener(this);
+			mPruningBarCache[0][axis] = 0f;
+			mPruningBarCache[1][axis] = 1f;
 			}
 
 		for (int axis=0; axis<mDimensions; axis++) {
@@ -380,7 +385,14 @@ public abstract class VisualizationPanel extends JPanel
 	 * @param high
 	 * @param isAdjusting
 	 */
-	public void setZoom(float[] low, float[] high, boolean isAdjusting) {
+	public void setZoom(float[] low, float[] high, boolean isAdjusting, boolean isAutoZoom) {
+		if (!isAutoZoom) {
+			for (int i=0; i<mDimensions; i++) {
+				mPruningBarCache[0][i] = low[i];
+				mPruningBarCache[1][i] = high[i];
+				}
+			}
+
 		int dimensions = Math.min(low.length, mDimensions);
 		for (int i=0; i<dimensions; i++)
 			getActingPruningBar(i).setLowAndHigh(low[i], high[i], true);
@@ -391,6 +403,22 @@ public abstract class VisualizationPanel extends JPanel
 
 		if (!isAdjusting)
 			fireVisualizationChanged(VisualizationEvent.TYPE.AXIS);
+		}
+
+	public float getCachedPruningBarLow(int axis) {
+		return mPruningBarCache[0][axis];
+		}
+
+	public float getCachedPruningBarHigh(int axis) {
+		return mPruningBarCache[1][axis];
+		}
+
+	public void setCachedPruningBarLow(int axis, float low) {
+		mPruningBarCache[0][axis] = low;
+		}
+
+	public void setCachedPruningBarHigh(int axis, float high) {
+		mPruningBarCache[1][axis] = high;
 		}
 
 	public int getAutoZoomColumn() {
@@ -412,13 +440,16 @@ public abstract class VisualizationPanel extends JPanel
 		}
 
 	private void doAutoZoom() {
+		if (mMasterPanel != this)
+			return;
+
 		float[] low = new float[mDimensions];
 		float[] high = new float[mDimensions];
 		CompoundRecord ref = mTableModel.getActiveRow();
 		if (ref == null || mAutoZoomFactor == 0f) {
 			for (int i=0; i<mDimensions; i++) {
-				low[i] = 0f;
-				high[i] = 1f;
+				low[i] = mPruningBarCache[0][i];
+				high[i] = mPruningBarCache[1][i];
 				}
 			}
 		else {
@@ -463,6 +494,7 @@ public abstract class VisualizationPanel extends JPanel
 					}
 				}
 			}
+
 		animateAutoZoom(low, high);
 		}
 
@@ -477,7 +509,7 @@ public abstract class VisualizationPanel extends JPanel
 			maxInc = Math.max(maxInc, Math.abs(highInc[i]));
 			}
 		if (mTableModel.getRowCount() > ZOOM_ANIMATION_LIMIT) {
-			setZoom(endLow, endHigh, false);
+			setZoom(endLow, endHigh, false, true);
 			}
 		else {
 			new Thread(() -> {
@@ -491,11 +523,11 @@ public abstract class VisualizationPanel extends JPanel
 						frameLow[i] = endLow[i] - factor * lowInc[i];
 						frameHigh[i] = endHigh[i] - factor * highInc[i];
 						}
-					SwingUtilities.invokeLater(() -> setZoom(frameLow, frameHigh, true) );
+					SwingUtilities.invokeLater(() -> setZoom(frameLow, frameHigh, true, true) );
 					try { Thread.sleep(ZOOM_ANIMATION_FRAME_MILLIS); } catch (Exception e) {}
 					currentMillis = System.currentTimeMillis();
 					}
-				SwingUtilities.invokeLater(() -> setZoom(endLow, endHigh, false));
+				SwingUtilities.invokeLater(() -> setZoom(endLow, endHigh, false, true));
 				} ).start();
 			}
 		}
@@ -520,6 +552,9 @@ public abstract class VisualizationPanel extends JPanel
 				return;
 				}
 			}
+
+		mPruningBarCache[0][e.getID()] = mPruningBar[e.getID()].getLowValue();
+		mPruningBarCache[1][e.getID()] = mPruningBar[e.getID()].getHighValue();
 
 		for (VisualizationPanel child:getSynchronizationChildList())
 			child.getVisualization().updateVisibleRange(e.getID(), e.getLowValue(), e.getHighValue(), e.isAdjusting());
@@ -775,15 +810,10 @@ public abstract class VisualizationPanel extends JPanel
 			}
 		else {
 			try {
-				SwingUtilities.invokeAndWait(new Runnable() {
-					@Override
-					public void run() {
-						mComboBoxColumn[axis].setSelectedIndex(index);
-					}
-				});
-			}
+				SwingUtilities.invokeAndWait(() -> mComboBoxColumn[axis].setSelectedIndex(index) );
+				}
 			catch (Exception e) {}
-		}
+			}
 		mIsProgrammaticChange = false;
 		}
 
@@ -934,6 +964,8 @@ public abstract class VisualizationPanel extends JPanel
 	 */
 	private void initializePruningBar(int axis, int column) {
 		mPruningBar[axis].setMinAndMax(0.0f, 1.0f);
+		mPruningBarCache[0][axis] = 0f;
+		mPruningBarCache[1][axis] = 1f;
 		if (column == JVisualization.cColumnUnassigned) {
 			mPruningBar[axis].setUseRedColor(false);
 			}

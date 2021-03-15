@@ -94,7 +94,7 @@ public class VisualizationPanel2D extends VisualizationPanel {
 						low[1] = mY1 + dy;
 						high[0] = mX2 + dx;
 						high[1] = mY2 + dy;
-						setZoom(low, high, true);
+						setZoom(low, high, true, false);
 						}
 					}
 				}
@@ -129,7 +129,7 @@ public class VisualizationPanel2D extends VisualizationPanel {
 	    		zoom = true;
     			}
     		if (zoom)
-    			setZoom(low, high, false);
+    			setZoom(low, high, false, false);
     		}
     	}
 	}

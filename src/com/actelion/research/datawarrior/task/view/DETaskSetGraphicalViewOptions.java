@@ -295,7 +295,7 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		mComboBoxExclusionList.setSelectedIndex(0);
 
 		mCheckBoxAutoZoom.setSelected(false);
-		mTextFieldAutoZoomFactor.setText("5.0");
+		mTextFieldAutoZoomFactor.setText("2.0");
 		mComboBoxAutoZoomColumn.setSelectedItem(ITEM_AUTO_ZOOM_NONE);
 		}
 
@@ -347,7 +347,7 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 
 		String azf = configuration.getProperty(PROPERTY_AUTO_ZOOM_FACTOR, "");
 		mCheckBoxAutoZoom.setSelected(azf.length() != 0);
-		mTextFieldAutoZoomFactor.setText(azf.length() == 0 ? "0.2" : azf);
+		mTextFieldAutoZoomFactor.setText(azf.length() == 0 ? "2.0" : azf);
 		String azc = configuration.getProperty(PROPERTY_AUTO_ZOOM_COLUMN, "");
 		mComboBoxAutoZoomColumn.setSelectedItem(azc.length() == 0 ? ITEM_AUTO_ZOOM_NONE
 				: isInteractive() ? getTableModel().getColumnTitle(getTableModel().findColumn(azc)) : azc);

@@ -213,7 +213,7 @@ public class DETaskAssignOrZoomAxes extends DETaskAbstractSetViewOptions {
 				try {
 					SwingUtilities.invokeAndWait(new Runnable() {
 			            public void run() {
-			            	vp.setZoom(low, high, true);
+			            	vp.setZoom(low, high, true, false);
 			            	}
 						} );
 					}
@@ -225,7 +225,7 @@ public class DETaskAssignOrZoomAxes extends DETaskAbstractSetViewOptions {
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
 	            public void run() {
-	    			vp.setZoom(l2, h2, false);
+	    			vp.setZoom(l2, h2, false, false);
 	            	}
 				} );
 			}

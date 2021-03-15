@@ -81,6 +81,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cAxisColumn = "axisColumn";
 	private static final String cAxisMin = "axisMin";
 	private static final String cAxisMax = "axisMax";
+	private static final String cCachedAxisMin = "cachedAxisMin";
+	private static final String cCachedAxisMax = "cachedAxisMax";
 	private static final String cAxisLow = "axisLow";	// used to set the visible range the old way (before 20-Feb-2017)
 	private static final String cAxisHigh = "axisHigh";	// used to set the visible range the old way (before 20-Feb-2017)
 	private static final String cJittering = "jittering";
@@ -543,6 +545,17 @@ public class DERuntimeProperties extends RuntimeProperties {
 
 					if (!Float.isNaN(low) || !Float.isNaN(high))
 						vpanel.setVisibleRange(j, low, high);
+
+					// setting cached visible min and max in case of autozooming
+					key = cCachedAxisMin + viewName + "_" + j;
+					value = getProperty(key);
+					if (value != null)
+						vpanel.setCachedPruningBarLow(j, Float.parseFloat(value));
+
+					key = cCachedAxisMax + viewName + "_" + j;
+					value = getProperty(key);
+					if (value != null)
+						vpanel.setCachedPruningBarHigh(j, Float.parseFloat(value));
 					}
 				}
 
@@ -1280,6 +1293,12 @@ public class DERuntimeProperties extends RuntimeProperties {
 							if (pbar.getHighValue() != pbar.getMaximumValue()) {
 								key = cAxisMax + viewName + "_" + j;
 								setProperty(key, ""+visualization.getVisibleMax(j));
+								}
+							if (vpanel.getAutoZoomFactor() != 0f) {
+								key = cCachedAxisMin + viewName + "_" + j;
+								setProperty(key, ""+vpanel.getCachedPruningBarLow(j));
+								key = cCachedAxisMax + viewName + "_" + j;
+								setProperty(key, ""+vpanel.getCachedPruningBarHigh(j));
 								}
 							}
 

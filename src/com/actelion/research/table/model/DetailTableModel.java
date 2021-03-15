@@ -103,13 +103,13 @@ public class DetailTableModel extends DefaultTableModel
 			}
 		else if (e.getType() == CompoundTableEvent.cChangeColumnData) {
             int column = e.getColumn();
-            int row = mParentModel.convertToDisplayableColumnIndex(column);
+			int row = mColumnToDetailRow[column];
 			if (row != -1 && row < getRowCount())
 	    		setValueAt(getSecondColumnValue(mParentRecord, row), row, 1);
 			}
 		else if (e.getType() == CompoundTableEvent.cChangeColumnName) {
             int column = e.getColumn();
-            int row = mParentModel.convertToDisplayableColumnIndex(column);
+			int row = mColumnToDetailRow[column];
 			if (row != -1 && mParentRecord != null)
 			    setValueAt(mParentModel.getColumnTitle(column), row, 0);
 			}

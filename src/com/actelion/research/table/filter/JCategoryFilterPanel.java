@@ -53,7 +53,7 @@ public class JCategoryFilterPanel extends JFilterPanel
 	 * @param tableModel
 	 */
 	public JCategoryFilterPanel(CompoundTableModel tableModel) {
-		this(tableModel, 0, -1);
+		this(tableModel, -1, -1);
 		}
 
 	public JCategoryFilterPanel(CompoundTableModel tableModel, int columnIndex, int exclusionFlag) {

@@ -53,7 +53,7 @@ public class JRangeFilterPanel extends JFilterPanel
 	 * @param tableModel
 	 */
 	public JRangeFilterPanel(CompoundTableModel tableModel) {
-		this(tableModel, 0, -1);
+		this(tableModel, -1, -1);
 		}
 
 	public JRangeFilterPanel(CompoundTableModel tableModel, int column, int exclusionFlag) {
@@ -402,8 +402,10 @@ public class JRangeFilterPanel extends JFilterPanel
 		try { high = Float.parseFloat(mLabelHigh.getText()); } catch (NumberFormatException nfe) {}
 		JTextField source = (JTextField)e.getSource();
 		String text = source.getText();
+		float value = (source == mLabelLow) ? low : high;
 		boolean isError = (text.length() != 0
-						&& (Float.isNaN((source == mLabelLow) ? low : high)
+						&& (Float.isNaN(value)
+//						 || (mTableModel.isLogarithmicViewMode(mColumnIndex) && value <= 0) is not live
 						 || (!Float.isNaN(low) && !Float.isNaN(high) && low >= high)));
 		source.setBackground(isError ? Color.RED : UIManager.getColor("TextField.background"));
 		}
@@ -602,35 +604,17 @@ public class JRangeFilterPanel extends JFilterPanel
 						float low = Float.parseFloat(settings.substring(0, index));
 						float high = Float.parseFloat(settings.substring(index+1));
 						if (mTableModel.isLogarithmicViewMode(getColumnIndex())) {
-							if (low > 0
-							 && high > 0) {
-								// min and max are the logarithmic values
-								float min = mTableModel.getMinimumValue(getColumnIndex());
-								float max = mTableModel.getMaximumValue(getColumnIndex());
-								float logLow = (float)Math.log10(low);
-								float logHigh = (float)Math.log10(high);
-								if ((logLow >= min && logLow <= max)
-								 || (logHigh >= min && logHigh <= max)) {
-									mPruningBar.setLowValue(logLow);
-									mPruningBar.setHighValue(logHigh);
-									}
-
-								// Before 15-Jul-2015 we have stored the logarithmic values.
-								// Therefore, we need to do some plausibility checking, whether
-								// low and high are already logarithmic.
-								else if (high < 10) {
-									mPruningBar.setLowValue(low);
-									mPruningBar.setHighValue(high);
-									}
-								}
-
-							// Before 15-Jul-2015 we have stored the logarithmic values.
-							// Logarithmic columns can only contain positive values. If
-							// low or high is negative, we must have logarithmic values.
-							else {
-								mPruningBar.setLowValue(low);
-								mPruningBar.setHighValue(high);
-								}
+							// min and max are the logarithmic values
+							float min = mTableModel.getMinimumValue(getColumnIndex());
+							float max = mTableModel.getMaximumValue(getColumnIndex());
+							float logLow = (float)Math.log10(low);
+							float logHigh = (float)Math.log10(high);
+							if (Float.isNaN(logLow) || logLow < min)
+								logLow = min;
+							if (Float.isNaN(logHigh) || logHigh > max)
+								logHigh = max;
+							mPruningBar.setLowValue(logLow);
+							mPruningBar.setHighValue(logHigh);
 							}
 						else {	// not log mode
 							mPruningBar.setLowValue(low);

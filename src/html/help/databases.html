@@ -35,6 +35,58 @@ Within the local file every compound has a link back into the corresponding
 </p>
 <br>
 
+<h3><a name="GooglePatents"></a>Google Patents</h3>
+<p>
+At the time of this writing Google had compiled, translated and indexed more than
+120 million patent publications from 22 patent offices around the world including the
+USA, Europe, Japan, China, South Korea, WIPO, Russia, etc. During this process
+chemical structures are extracted and added to the index to allow for structure
+searching. <span class="keyword">DataWarrior</span> provides an easy interface to
+access that wealth of information. In <span class="keyword">DataWarrior</span>
+<span class="keyword">Google Patents</span> can be searched using keywords,
+by meta data like assignee, inventor, or date, and of course, combined with
+a chemical structure query.</p>
+<p>Exact structure searches in <span class="keyword">Google Patents</span>
+or <span class="keyword">Google Scholar</span> can be launched from any compound
+within any DataWarrior view with a right mouse click and choosing
+<span class="menu">Search Structure in Google Patents (or Scholar)</span>. For more
+flexibility select <span class="menu">Search Google Patents...</span> from the
+<span class="menu">Database</span> menu, which opens the following dialog.</p>
+
+<p align="center"><img src="help/img/database/patentDialog.png" width="335" height="365"></p>
+<p><center><i>Google Patents search for strawberry aroma with given substructure.</i></center></p>
+
+<p><b>Query Structure:</b>If your patent search shall be restricted to patents containing
+a specific, similar, or a super-structure, then you need to draw, paste, or drop the
+query structure into this field. Note that for sub-structure searches (super-structure)
+<span class="keyword">DataWarrior</span> does not allow to specify query features.</p>
+
+<p><b>Search Type:</b>Here you may choose from these structure search modes: exact,
+similar, and super-structure, which often is called sub-structure search.</p>
+
+<p><b>Keywords:</b>In this field you may specify one or more keywords that have to be found
+in the patent text. Each word automatically includes plurals and close synonyms. If you
+provide multiple words, they are logically <span class="keyword">AND</span> connected.
+You may form logical expressions using the keywords <span class="keyword">AND</span> and
+<span class="keyword">OR</span>, e.g. "(safety belt) OR B60R22/00". In addition you
+  may specify proximity operators as <span class="keyword">NEAR</span>,
+<span class="keyword">ADJ</span>, and <span class="keyword">SAME</span>,
+e.g. "(safety ADJ/5 belt) NEAR/10 (baby OR child) SAME vehicle". Proximity operators,
+however, only have an influence on the ranking of patents, but not on whether a patents
+is returned as a result.</p>
+<p>More information about using keywords or meta data is available on Google's
+<a href="https://support.google.com/faqs/answer/7049475">About Google Patent Searches</a>
+page.</p>
+
+<p align="center"><img src="help/img/database/patentResults.png" width="680" height="149"></p>
+<p><center><i>Results of Google Patents search with links to original patents.</i></center></p>
+
+<p>If a patent search is successful, then a list of matching patents is returned to
+<span class="keyword">DataWarrior</span>. In addition to the patent ID, its title,
+assignee, inventor, and some dates it contains a link into the original patent as well
+as links to supportive drawings and other information, if available.</p>
+<br>
+
 <h3><a name="Chembl"></a>The ChEMBL Activity Database</h3>
 
 <p>The ChEMBL database is one of the most widely used compound activity databases available.

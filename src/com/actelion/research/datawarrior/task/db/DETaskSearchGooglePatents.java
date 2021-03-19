@@ -18,10 +18,7 @@
 
 package com.actelion.research.datawarrior.task.db;
 
-import com.actelion.research.chem.Canonizer;
-import com.actelion.research.chem.IDCodeParser;
-import com.actelion.research.chem.IsomericSmilesCreator;
-import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.chem.*;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEPruningPanel;
 import com.actelion.research.datawarrior.DERuntimeProperties;
@@ -40,6 +37,8 @@ import org.pushingpixels.substance.internal.utils.border.SubstanceTextComponentB
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -52,7 +51,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 
-public class DETaskSearchGooglePatents extends ConfigurableTask /*implements ActionListener*/ {
+public class DETaskSearchGooglePatents extends ConfigurableTask implements ActionListener {
 	public static final String TASK_NAME = "Search Google Patents";
 
 
@@ -100,9 +99,9 @@ public class DETaskSearchGooglePatents extends ConfigurableTask /*implements Act
 	private static final String[] LITIGATION_CODE = {"ANY", "NO", "YES" };
 
 	private DataWarrior mApplication;
-	private DEFrame     mTargetFrame;
+	private DEFrame mTargetFrame;
 	private JEditableStructureView mStructureView;
-	private JComboBox   mComboBoxSearchType,mComboBoxDateType,mComboBoxType,mComboBoxStatus,mComboBoxLitigation;
+	private JComboBox mComboBoxSearchType,mComboBoxDateType,mComboBoxType,mComboBoxStatus,mComboBoxLitigation;
 	private JTextField  mTextFieldKeywords,mTextFieldAssignee,mTextFieldInventor,mTextFieldAfter,mTextFieldBefore;
 	private JCheckBox   mCheckBoxWithConcepts;
 
@@ -153,7 +152,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask /*implements Act
 
 		content.add(new JLabel("Search Type:", JLabel.RIGHT), "1,7");
 		mComboBoxSearchType = new JComboBox(SEARCH_TYPE_TEXT);
-//		mComboBoxSearchType.addActionListener(this);
+		mComboBoxSearchType.addActionListener(this);
 		content.add(mComboBoxSearchType, "3,7");
 
 		content.add(new JLabel("Keywords:", JLabel.RIGHT), "1,9");
@@ -198,12 +197,12 @@ public class DETaskSearchGooglePatents extends ConfigurableTask /*implements Act
 		return content;
 		}
 
-/*	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == mComboBoxSearchType) {
-			boolean isSSS = (mComboBoxSearchType.getSelectedIndex()] == SEARCH_TYPE_SSS);
-			boolean isSim = (SEARCH_TYPE[mComboBoxSearchType.getSelectedIndex()] == SEARCH_TYPE_SIMILARITY);
+			boolean isSSS = (mComboBoxSearchType.getSelectedIndex() == SEARCH_TYPE_SSS);
+			mStructureView.setDisplayMode(isSSS ? AbstractDepictor.cDModeNoImplicitHydrogen : 0);
 			}
-		}*/
+		}
 
 	@Override
 	public Properties getDialogConfiguration() {
@@ -466,7 +465,6 @@ public class DETaskSearchGooglePatents extends ConfigurableTask /*implements Act
 
 			URLConnection con = new URL(url).openConnection();
 			con.setRequestProperty("User-Agent", "DataWarrior");
-//			con.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)");
 			con.setRequestProperty("Content-Type", "text/plain");
 
 			InputStream is = con.getInputStream();

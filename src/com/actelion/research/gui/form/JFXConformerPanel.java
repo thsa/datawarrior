@@ -41,7 +41,7 @@ public class JFXConformerPanel extends JFXPanel {
 
 			if (withSidePanel) {
 				V3DSceneWithSidePane sceneWithSidePanel = new V3DSceneWithSidePane(width, height, settings);
-				sceneWithSidePanel.getMoleculePanel().initialize(false);
+//				sceneWithSidePanel.getMoleculePanel().initialize(false);
 				mScene = sceneWithSidePanel.getScene3D();
 				mScene.setIndividualRotationModus(synchronousRotation);
 				scene = new Scene(sceneWithSidePanel, width, height, true, SceneAntialiasing.BALANCED);

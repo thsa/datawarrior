@@ -294,6 +294,7 @@ public class CompoundTableModel extends AbstractTableModel
 		TableModelEvent tme = new TableModelEvent(this, TableModelEvent.HEADER_ROW);
 		fireEventsNow(cte, tme);
 		unlock();
+		updateDescriptors();
 		}
 
 	private void createDisplayableColumnMap() {
@@ -1853,10 +1854,10 @@ public class CompoundTableModel extends AbstractTableModel
 	 */
 	public int addDescriptorColumn(int parent, String shortName, String reactionPart) {
 		int column = allocateDescriptorColumn(parent, shortName, reactionPart);
-		updateDescriptors();
 		createDisplayableColumnMap();
 		mAllColumns = mColumnInfo.length;
 		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cAddColumns, column), null);
+		updateDescriptors();
 		return column;
 		}
 
@@ -2080,6 +2081,7 @@ public class CompoundTableModel extends AbstractTableModel
 		compileVisibleRecords();
 		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cAddRows, -1, firstRow),
 					  new TableModelEvent(this, firstRow, mNonExcludedRecords-1, TableModelEvent.ALL_COLUMNS, TableModelEvent.INSERT));
+		updateDescriptors();
 		}
 
 	/**
@@ -2106,11 +2108,12 @@ public class CompoundTableModel extends AbstractTableModel
 			if (isColumnTypeStructure(column))
 				checkIDCodeVersion(column, 0, listener);
 			}
-		updateDescriptors();
 		createDisplayableColumnMap();
 		mAllColumns = mColumnInfo.length;
 		TableModelEvent tme = new TableModelEvent(this, TableModelEvent.HEADER_ROW, TableModelEvent.HEADER_ROW, 0, TableModelEvent.INSERT);
 		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cAddColumns, firstNewColumn), tme);
+
+		updateDescriptors();
 
 		// if we add atom coordinates to an existing structure column, fire a column changed on the structure column
 		for (int column = firstNewColumn; column< mAllColumns; column++) {
@@ -4089,8 +4092,6 @@ public class CompoundTableModel extends AbstractTableModel
 
 		mRecords = mRecord.length;
 		mAllColumns = mColumnInfo.length;
-
-		updateDescriptors();
 		}
 
 	private void checkIDCodeVersion(int idcodeColumn, int firstRow, ProgressListener listener) {

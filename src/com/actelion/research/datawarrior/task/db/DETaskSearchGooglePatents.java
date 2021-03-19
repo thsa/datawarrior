@@ -122,7 +122,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 
 	@Override
 	public String getHelpURL() {
-		return null; // "/html/help/databases.html#GooglePatents";
+		return "/html/help/databases.html#GooglePatents";
 	}
 
 	@Override

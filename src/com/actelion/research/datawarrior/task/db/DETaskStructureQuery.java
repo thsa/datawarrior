@@ -386,7 +386,8 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 	            mStructureView.getMolecule().setFragment(isSSS);
 	            mStructureView.structureChanged();
             	}
-            if (mComboBoxQuerySource.getSelectedIndex()==QUERY_SOURCE_SELECTED) {
+            if (mComboBoxQuerySource != null
+		     && mComboBoxQuerySource.getSelectedIndex()==QUERY_SOURCE_SELECTED) {
             	if (isSSS && !mAreSubStructuresSelected) {
 					mDisableEvents = true;
 					mComboBoxQuerySource.setSelectedIndex(QUERY_SOURCE_DRAWN);

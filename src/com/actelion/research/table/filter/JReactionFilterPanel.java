@@ -439,8 +439,11 @@ public class JReactionFilterPanel extends JFilterPanel implements ChangeListener
 					mTableModel.setSubReactionExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getReactions(), isInverse());
 					}
 				else {
-					showProgressBarWithUpdates(concurrentIndex, rowCount, "Searching reactions...");
-					new Thread(() -> mTableModel.setSubReactionExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getReactions(), isInverse())).start();
+					showProgressBar(concurrentIndex, rowCount, "Searching reactions...");
+					new Thread(() -> {
+						mTableModel.setSubReactionExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getReactions(), isInverse());
+						hideProgressBar();
+						} ).start();
 					}
 				}
 			else {

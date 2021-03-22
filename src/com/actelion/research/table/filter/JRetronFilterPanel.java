@@ -205,8 +205,11 @@ public class JRetronFilterPanel extends JFilterPanel implements DescriptorConsta
 				mTableModel.setRetronExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, mStructureView.getMolecule(), isInverse());
 				}
 			else {
-				showProgressBarWithUpdates(concurrentIndex, mTableModel.getTotalRowCount(), "Matching retrons...");
-				new Thread(() -> mTableModel.setRetronExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, mStructureView.getMolecule(), isInverse())).start();
+				showProgressBar(concurrentIndex, mTableModel.getTotalRowCount(), "Matching retrons...");
+				new Thread(() -> {
+					mTableModel.setRetronExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, mStructureView.getMolecule(), isInverse());
+					hideProgressBar();
+					}).start();
 				}
 
 			if (isUserChange)

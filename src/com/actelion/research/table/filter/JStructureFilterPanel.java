@@ -270,12 +270,15 @@ public abstract class JStructureFilterPanel extends JFilterPanel
 				AtomicInteger concurrentIndex = new AtomicInteger();
 				int rowCount = getStructureCount() * mTableModel.getTotalRowCount();
 
-				if (rowCount < MIN_ROWS_TO_SHOW_PROGRESS) {
+				if (rowCount < MIN_ROWS_TO_SHOW_PROGRESS && !isPotentiallyLengthyQuery()) {
 					mTableModel.setSubStructureExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getStructures(), mReactionPart, isInverse());
 					}
 				else {
-					showProgressBarWithUpdates(concurrentIndex, rowCount, "Searching structures...");
-					new Thread(() -> mTableModel.setSubStructureExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getStructures(), mReactionPart, isInverse()) ).start();
+					showProgressBar(concurrentIndex, rowCount, "Searching structures...");
+					new Thread(() -> {
+						mTableModel.setSubStructureExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getStructures(), mReactionPart, isInverse());
+						hideProgressBar();
+						} ).start();
 					}
 				}
 			else {
@@ -310,6 +313,21 @@ public abstract class JStructureFilterPanel extends JFilterPanel
 
 		if (isUserChange)
 			fireFilterChanged(FilterEvent.FILTER_UPDATED, false);
+		}
+
+	private boolean isPotentiallyLengthyQuery() {
+		for (int i=0; i<getStructureCount(); i++) {
+			StereoMolecule mol = getStructure(i);
+			int bridgeCount = 0;
+			for (int bond=0; bond<mol.getAllBonds(); bond++)
+				if (mol.isBondBridge(bond))
+					bridgeCount++;
+
+			if (bridgeCount > 1)
+				return true;
+			}
+
+		return false;
 		}
 
 	protected float[] createSimilarityList(StereoMolecule mol, int descriptorColumn) {

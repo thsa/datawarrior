@@ -436,27 +436,31 @@ public abstract class JFilterPanel extends JPanel
 			}).start();
 		}*/
 
-	protected void showProgressBarWithUpdates(final AtomicInteger concurrentIndex, final int maxIndexValue, String progressText) {
+	protected void showProgressBar(final AtomicInteger concurrentIndex, final int maxIndexValue, String progressText) {
+		int threadCount = Runtime.getRuntime().availableProcessors();
 		mColumnNameLabel.setVisible(false);
 		mProgressPanel.setVisible(true);
 		mProgressPanel.startProgress(progressText, 0, maxIndexValue);
 		new Thread(() -> {
-			int index = concurrentIndex.get();
-			while (index >= 0) {
+			int index;
+			do {
 				try {
 					Thread.sleep(100);
-					index = concurrentIndex.get();
+					index = Math.min(maxIndexValue, Math.max(0, concurrentIndex.get() + threadCount));
 					mProgressPanel.updateProgress(maxIndexValue - index);
 					}
 				catch (InterruptedException ie) {
-					index = -1;
+					index = 0;
 					}
-				}
-			SwingUtilities.invokeLater(() -> {
-				mProgressPanel.setVisible(false);
-				mColumnNameLabel.setVisible(true);
-				});
+				} while (index > 0);
 			}).start();
+		}
+
+	protected void hideProgressBar() {
+		SwingUtilities.invokeLater(() -> {
+			mProgressPanel.setVisible(false);
+			mColumnNameLabel.setVisible(true);
+			});
 		}
 
 	private void showOptionDialog(JPanel content) {

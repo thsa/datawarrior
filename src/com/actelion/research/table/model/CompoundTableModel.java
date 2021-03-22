@@ -94,6 +94,7 @@ public class CompoundTableModel extends AbstractTableModel
 	private volatile int		mSMPSimilarityErrors;
 	private volatile AtomicBoolean mLock;
 	private volatile ConcurrentHashMap<String,float[]> mFlexophoreSimilarityListCache;	// TODO prevent this to grow to much
+	private volatile ConcurrentHashMap<Integer,ArrayList<Object>> mStoppableSearcherMap;	// flagNo->SSSearcherList to notify that search is stopped
 
 	/**
 	 * This is the single point of assigning DescriptorHandlers to shortNames and, thus, defines
@@ -117,9 +118,10 @@ public class CompoundTableModel extends AbstractTableModel
 
 
 	public CompoundTableModel() {
-		mProgressListener = new ArrayList<ProgressListener>();
-		mCompoundTableListener = new ArrayList<CompoundTableListener>();
-		mHighlightListener = new ArrayList<HighlightListener>();
+		mProgressListener = new ArrayList<>();
+		mCompoundTableListener = new ArrayList<>();
+		mHighlightListener = new ArrayList<>();
+		mStoppableSearcherMap = new ConcurrentHashMap<>();
 		mLastSortColumn = -1;
 		mLock = new AtomicBoolean(false);
 		}
@@ -2956,6 +2958,7 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	public void clearRowFlag(int flagNo) {
+		stopExclusionThreads(flagNo);
 		long mask = convertRowFlagToMask(flagNo);
 		if ((mDirtyCompoundFlags & mask) != 0) {
 			for (int row=0; row<mRecords; row++)
@@ -3242,6 +3245,18 @@ public class CompoundTableModel extends AbstractTableModel
 			}
 		}
 
+	public void stopExclusionThreads(int flagNo) {
+		ArrayList<Object> sssList = mStoppableSearcherMap.get(flagNo);
+		if (sssList != null) {
+			for (Object searcher : sssList) {
+				if (searcher instanceof SSSearcherWithIndex)
+					((SSSearcherWithIndex)searcher).stop();
+				else if (searcher instanceof SRSearcher)
+					((SRSearcher)searcher).stop();
+				}
+			}
+		}
+
 	/**
 	 * Sets the substructure exclusion flags in parallel threads on all available cores.
 	 * @param exclusionFlagNo no of allocated filter flag
@@ -3267,13 +3282,18 @@ public class CompoundTableModel extends AbstractTableModel
 		for (int row=0; row<mRecord.length; row++)
 			mRecord[row].mFlags |= mask;
 
+		ArrayList<Object> sssList = new ArrayList<>();
+		mStoppableSearcherMap.put(exclusionFlagNo, sssList);
+
 		Thread[] worker = new Thread[threadCount];
 		for (int i=0; i<threadCount; i++) {
 			worker[i] = new Thread("Retron-Matcher "+(i+1)) {
 				public void run() {
 					SSSearcherWithIndex reactantSearcher = new SSSearcherWithIndex();
+					sssList.add(reactantSearcher);
 					reactantSearcher.setFragment(retron, (long[])null);
 					SSSearcherWithIndex productSearcher = new SSSearcherWithIndex();
+					sssList.add(productSearcher);
 					productSearcher.setFragment(retron, (long[])null);
 					int recordIndex = rowIndex.decrementAndGet();
 					while (recordIndex >= 0) {
@@ -3320,6 +3340,8 @@ public class CompoundTableModel extends AbstractTableModel
 
 		for (Thread t:worker)
 			try { t.join(); } catch (InterruptedException e) {}
+
+		mStoppableSearcherMap.remove(exclusionFlagNo);
 
 		// optionally invert flag
 		if (inverse)
@@ -3389,11 +3411,16 @@ public class CompoundTableModel extends AbstractTableModel
 		for (int row=0; row<mRecord.length; row++)
 			mRecord[row].mFlags |= mask;
 
+		ArrayList<Object> sssList = new ArrayList<>();
+		mStoppableSearcherMap.put(exclusionFlagNo, sssList);
+
 		Thread[] worker = new Thread[threadCount];
 		for (int i=0; i<threadCount; i++) {
 			worker[i] = new Thread("SRS-Matcher "+(i+1)) {
 				public void run() {
 					SRSearcher searcher = new SRSearcher();
+					sssList.add(searcher);
+
 					int combinedIndex = rowAndFragmentIndex.decrementAndGet();
 					int queryIndex = -1;
 					while (combinedIndex >= 0) {
@@ -3427,6 +3454,8 @@ public class CompoundTableModel extends AbstractTableModel
 
 		for (Thread t:worker)
 			try { t.join(); } catch (InterruptedException e) {}
+
+		mStoppableSearcherMap.remove(exclusionFlagNo);
 
 		// optionally invert flag
 		if (inverse)
@@ -3469,11 +3498,15 @@ public class CompoundTableModel extends AbstractTableModel
 		for (int row=0; row<mRecord.length; row++)
 			mRecord[row].mFlags |= mask;
 
+		ArrayList<Object> sssList = new ArrayList<>();
+		mStoppableSearcherMap.put(exclusionFlagNo, sssList);
+
 		Thread[] worker = new Thread[threadCount];
 		for (int i=0; i<threadCount; i++) {
 			worker[i] = new Thread("SSS-Matcher "+(i+1)) {
 				public void run() {
 					SSSearcherWithIndex searcherWithIndex = new SSSearcherWithIndex();
+					sssList.add(searcherWithIndex);
 
 					int combinedIndex = rowAndFragmentIndex.decrementAndGet();
 					int fragmentIndex = -1;
@@ -3516,6 +3549,8 @@ public class CompoundTableModel extends AbstractTableModel
 
 		for (Thread t:worker)
 			try { t.join(); } catch (InterruptedException e) {}
+
+		mStoppableSearcherMap.remove(exclusionFlagNo);
 
 		// optionally invert flag
 		if (inverse)

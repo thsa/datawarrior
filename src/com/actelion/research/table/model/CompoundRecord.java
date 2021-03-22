@@ -157,7 +157,7 @@ public class CompoundRecord {
 			mDetailReference[column] = detailReferences;
 		}
 
-    public void allocateColumn() {
+	public void allocateColumn() {
         if (mData == null)
             mData = new Object[1];
         else {

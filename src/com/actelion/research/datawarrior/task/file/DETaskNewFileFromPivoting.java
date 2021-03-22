@@ -350,6 +350,7 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
 			categoryCount *= mSourceTableModel.getCategoryCount(splitColumn[i]);
 
 		TreeMap<byte[][],byte[][]> newRowMap = new TreeMap<byte[][],byte[][]>(new ByteArrayArrayComparator());
+		TreeMap<byte[][],String[][][]> newDetailMap = new TreeMap<byte[][],String[][][]>(new ByteArrayArrayComparator());
 
         for (int row=0; row<mSourceTableModel.getTotalRowCount(); row++) {
         	CompoundRecord record = mSourceTableModel.getTotalRecord(row);
@@ -373,9 +374,20 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
     								+ mSourceTableModel.getCategoryIndex(splitColumn[i], record);
 
         	for (int i=0; i<dataColumn.length; i++) {
-        		int column = groupColumn.length + i*categoryCount + category;
-        		newRecord[column] = append(newRecord[column], (byte[])record.getData(dataColumn[i]));
-        		}
+        		int targetColumn = groupColumn.length + i*categoryCount + category;
+        		newRecord[targetColumn] = append(newRecord[targetColumn], (byte[])record.getData(dataColumn[i]));
+
+		        String[][] sourceDetailRefs = record.getDetailReferences(dataColumn[i]);
+				if (sourceDetailRefs != null) {
+					targetColumn -= groupColumn.length;
+					String[][][] targetDetailRefs = newDetailMap.get(key);
+					if (targetDetailRefs == null) {
+						targetDetailRefs = new String[categoryCount*dataColumn.length][][];
+						newDetailMap.put(key, targetDetailRefs);
+						}
+					targetDetailRefs[targetColumn] = append(targetDetailRefs[targetColumn], sourceDetailRefs);
+					}
+		        }
         	}
 
         // determine, which target columns are really populated with some data (category and data columns)
@@ -384,6 +396,10 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
         	for (int i=0; i<newRecord.length; i++)
         		if (newRecord[i] != null)
         			isUsedTargetColumn[i] = true;
+		for (String[][][] detailRefs:newDetailMap.values())
+			for (int i=0; i<detailRefs.length; i++)
+				if (detailRefs[i] != null)
+					isUsedTargetColumn[groupColumn.length+i] = true;
 
         // create map to translate target column index to a used target column index
         int usedTargetColumnCount = 0;
@@ -448,6 +464,11 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
         			targetTableModel.setTotalDataAt(value[i], row, usedTargetColumn[i]);
         		}
 
+        	String[][][] detailRefs = newDetailMap.get(key);
+        	for (int i=0; i<detailRefs.length; i++)
+		        if (isUsedTargetColumn[groupColumn.length+i])
+			        targetTableModel.getTotalRecord(row).setDetailReferences(usedTargetColumn[groupColumn.length+i], detailRefs[i]);
+
         	row++;
         	}
 
@@ -463,6 +484,10 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
         			mSourceTableModel.copyColumnProperties(dataColumn[i], usedTargetColumn[column], targetTableModel, false);
         		}
         	}
+
+		HashMap<String,byte[]> sourceDetailMap = mSourceTableModel.getDetailHandler().getEmbeddedDetailMap();
+        for (String key:sourceDetailMap.keySet())
+			targetTableModel.getDetailHandler().setEmbeddedDetail(key, sourceDetailMap.get(key).clone());
 
         targetTableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, getProgressController());
 
@@ -501,6 +526,35 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
 		for (byte b:b2)
 			b3[i++] = b;
 		return b3;
+		}
+
+	private String[][] append(String[][] oldDetailRefs, String[][] newDetailRefs) {
+		if (oldDetailRefs == null)
+			return newDetailRefs;
+
+		int oldLen = oldDetailRefs.length;
+		int newLen = newDetailRefs.length;
+		if (newLen > oldLen) {
+			String[][] old = oldDetailRefs;
+			oldDetailRefs = new String[newLen][];
+			for (int i = 0; i<oldLen; i++)
+				oldDetailRefs[i] = old[i];
+			}
+
+		for (int i=0; i<newLen; i++) {
+			if (oldDetailRefs[i] == null) {
+				oldDetailRefs[i] = newDetailRefs[i];
+				}
+			else {
+				String[] oldRef = oldDetailRefs[i];
+				oldDetailRefs[i] = new String[oldRef.length + newDetailRefs[i].length];
+				for (int j=0; j<oldRef.length; j++)
+					oldDetailRefs[i][j] = oldRef[j];
+				for (int j=0; j<newDetailRefs[i].length; j++)
+					oldDetailRefs[i][oldRef.length+j] = newDetailRefs[i][j];
+				}
+			}
+		return oldDetailRefs;
 		}
 
 	@Override

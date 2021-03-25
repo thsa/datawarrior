@@ -2390,9 +2390,12 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					columnName[newColumns++] = mFieldNames[i];
 
 			int destinationColumn = mTableModel.addNewColumns(columnName);
-			for (int i=0; i<mMergeDestColumn.length; i++)
-				if (mMergeDestColumn[i] == NEW_COLUMN)
+			for (int i=0; i<mMergeDestColumn.length; i++) {
+				if (mMergeDestColumn[i] == NEW_COLUMN) {
 					mMergeDestColumn[i] = destinationColumn++;
+					mMergeMode[i] = MERGE_MODE_REPLACE;
+					}
+				}
 			}
 
 		int mergedColumns = 0;

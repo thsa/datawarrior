@@ -69,8 +69,8 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure implemen
 	private static final int TORSION_SOURCE_6_STEPS = 1;
 	private static final int DEFAULT_TORSION_SOURCE = TORSION_SOURCE_CRYSTAL_DATA;
 
-	private static final String[] MINIMIZE_TEXT = { "MMFF94s+ forcefield", "MMFF94s forcefield", "Idorsia forcefield", "Don't minimize" };
-	private static final String[] MINIMIZE_CODE = { "mmff94+", "mmff94", "actelion", "none" };
+	private static final String[] MINIMIZE_TEXT = { "MMFF94s+ forcefield", "MMFF94s forcefield", "Don't minimize" };
+	private static final String[] MINIMIZE_CODE = { "mmff94+", "mmff94", "none" };
 	private static final String[] MINIMIZE_TITLE = { "mmff94s+", "mmff94s", "not minimized" };
 	private static final int MINIMIZE_MMFF94sPlus = 0;
 	private static final int MINIMIZE_MMFF94s = 1;

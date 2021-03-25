@@ -23,6 +23,7 @@ import com.actelion.research.chem.coords.CoordinateInventor;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.DETable;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.JEditableStructureView;
 import com.actelion.research.table.model.CompoundRecord;
@@ -499,14 +500,25 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 
 	@Override
 	public void setDialogConfigurationToDefault() {
-		if (mComboBoxColumn.getItemCount() != 0)
-			mComboBoxColumn.setSelectedIndex(0);
+		int selectedColumn = -1;
+		if (isInteractive()) {
+			DETable table = mParentFrame.getMainFrame().getMainPane().getTable();
+			if (table.getSelectedColumnCount() == 1 && table.getSelectedRow() != -1)
+				selectedColumn = table.convertTotalColumnIndexFromView(table.getSelectedColumn());
+			}
+
+		if (mComboBoxColumn.getItemCount() != 0) {
+			if (selectedColumn == -1)
+				mComboBoxColumn.setSelectedIndex(0);
+			else
+				mComboBoxColumn.setSelectedItem(mTableModel.getColumnTitle(selectedColumn));
+			}
 
 		mTextFieldWhat.setText("");
 		mTextFieldWith.setText("");
 		mCheckBoxCaseSensitive.setSelected(false);
 		mComboBoxWhat.setSelectedIndex(WHAT_THIS);
-		mComboBoxMode.setSelectedIndex(cModeAllRows);
+		mComboBoxMode.setSelectedIndex(selectedColumn == -1 ? cModeAllRows : cModeSelectedOnly);
 
 		enableWhatFields();
 		}

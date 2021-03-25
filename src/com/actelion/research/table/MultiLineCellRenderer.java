@@ -152,9 +152,10 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 			}    // some unicode chars create exceptions with setText() and then with paintComponent()
 
 	    if (mIsURL) {
-		    setForeground(Color.BLUE);
+	    	Color color = LookAndFeelHelper.isDarkLookAndFeel() ? Color.CYAN : Color.BLUE;
+		    setForeground(color);
 		    try {
-			    getHighlighter().addHighlight(0, ((String)value).length(), new UnderlinePainter(row));
+			    getHighlighter().addHighlight(0, ((String)value).length(), new UnderlinePainter(row, color));
 			    }
 		    catch (Exception e) {}
 	        }
@@ -169,8 +170,8 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 		private ArrayList<int[]> mEntryIndexList;
 		private int mEntryUnderMouse,mRow;
 
-		public UnderlinePainter(int row) {
-			super(Color.BLUE);
+		public UnderlinePainter(int row, Color color) {
+			super(color);
 			mEntryUnderMouse = -1;
 			mRow = row;
 			}
@@ -229,7 +230,7 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 		public void paintLayerSection(Graphics g, int offs0, int offs1, Shape bounds, JTextComponent c, View view) {
 			Rectangle r = getDrawingArea(offs0, offs1, bounds, view);
 			if (r != null) {
-				g.setColor(Color.BLUE);
+				g.setColor(getColor());
 
 				int linewidth = Math.max(1, Math.round(HiDPIHelper.getUIScaleFactor() * c.getFont().getSize() / 12));
 				g.fillRect(r.x, r.y+r.height-linewidth, r.width, linewidth);

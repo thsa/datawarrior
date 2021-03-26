@@ -956,7 +956,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 				value = MolecularShapeCalculator.assessShape(mol);
 				break;
 			case GLOBULARITY:
-				value = GlobularityCalculator.assessGlobularity(mol, 128);
+				value = GlobularityCalculator.assessGlobularity(mol, 32);
 				break;
 			case FLEXIBILITY:
 				value = ((MolecularFlexibilityCalculator)mPredictor[PREDICTOR_FLEXIBILITY]).calculateMolecularFlexibility(mol);

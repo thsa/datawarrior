@@ -465,9 +465,10 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
         		}
 
         	String[][][] detailRefs = newDetailMap.get(key);
-        	for (int i=0; i<detailRefs.length; i++)
-		        if (isUsedTargetColumn[groupColumn.length+i])
-			        targetTableModel.getTotalRecord(row).setDetailReferences(usedTargetColumn[groupColumn.length+i], detailRefs[i]);
+        	if (detailRefs != null)
+	            for (int i=0; i<detailRefs.length; i++)
+			        if (isUsedTargetColumn[groupColumn.length+i])
+				        targetTableModel.getTotalRecord(row).setDetailReferences(usedTargetColumn[groupColumn.length+i], detailRefs[i]);
 
         	row++;
         	}
@@ -486,8 +487,9 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
         	}
 
 		HashMap<String,byte[]> sourceDetailMap = mSourceTableModel.getDetailHandler().getEmbeddedDetailMap();
-        for (String key:sourceDetailMap.keySet())
-			targetTableModel.getDetailHandler().setEmbeddedDetail(key, sourceDetailMap.get(key).clone());
+        if (sourceDetailMap != null)
+	        for (String key:sourceDetailMap.keySet())
+				targetTableModel.getDetailHandler().setEmbeddedDetail(key, sourceDetailMap.get(key).clone());
 
         targetTableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, getProgressController());
 

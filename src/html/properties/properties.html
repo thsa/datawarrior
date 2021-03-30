@@ -187,7 +187,7 @@ based on a list of about 5300 distinct substructure fragments with associated
 druglikeness scores. The druglikeness is calculated with the following
 equation summing up score values of those fragments that are present in
 the molecule under investigation:</p>
-<p><center><img SRC="dlFormula.png"></center></p>
+<p><center><img src="dlFormula.png"></center></p>
 <p>The fragmentlist was created by shreddering 3300 traded drugs as well
 as 15000 commercially available chemicals (Fluka) yielding a complete list
 of all available fragments. As a restriction the shredder considered only
@@ -205,7 +205,7 @@ was determined as the logarithm of the quotent of frequencies in traded
 drugs versus Fluka chemicals.</p>
 <table>
 <tr>
-<td><img SRC="DLDis.png"></td>
+<td><img src="DLDis.png"></td>
 <td>The diagrams shows the distribution of druglikeness values calculated
 from 15000 Fluka compounds and from 3300 traded drugs. It shows that about
 80% of the drugs have a positive druglikeness similarity whereas the big majority
@@ -297,6 +297,57 @@ peak are close to 0.0.</p>
 
 <p>Finally, from the number of all molecule bonds, the number of rotatabale bonds, their specific flexibility values,
 and their geometry weighting factor an overall molecular flexibility value is calculated.</p>
+
+<br>
+
+<p><h3><a name="globularity"></a>Molecular Shape and Globularity</h3></p>
+<p>The globularity of a compound is a value that describes how well the molecule's three dimensional shape
+resembles a sphere, but there are multiple ways to calculate globularity values and globularity values taken
+from different tools using different methods don't necessarily correlate well.
+Nevertheless, globularity values play an important part in property in molecular property prediction.
+For instance, low molecular globularity seems to be a precondition for compounds to traverse the outer
+membrane of Gram-negative bacteria.
+(doi:10.1038/nature22308; M F Richter, B S Drown, A P Riley, A Garcia, T Shirai, R L Svec, P J Hergenrother;
+<i>Predictive compound accumulation rules yield a broad-spectrum antibiotic</i>; <b>545</b> (2017), 299).</p>
+
+<p>DataWarrior uses three different methods to produce a value that somehow describes the molecular shape
+of a molecule:</p>
+
+<p><b>Molecular Shape Index:</b> This method works on the 2-dimensional non-hydrogen atom and bond graph of the molecule.
+It determines those two atoms with the highest topological distance. These are those two atom, whose shortest
+connecting chain is longer (or equal) than that of any other atom pair in the molecule. The the number of atoms
+in that chain id divided by the number of atoms in the molecule. Thus, values of 1.0 represent perfect chains
+and the smaller the value the more rings and bridges are in the molecule.</p>
+
+<p><b>Globularity SVD:</b> This method works on the 3-dimensional atom coordinates of multiple conformers of
+the given molecule. For every conformer it starts with a singular value decomposition of all atoms in three
+dimensions. From that it takes those three orthogonal axes in space, which have the largest, the second largest,
+and the smallest variance of atom positions. Then the smallest rectangular box is determines that fits the
+conformer and whose edges are parallel to the three axes. The globularity value is then calculated as ratio
+from the smallest and the largest edge size of the box. This way values range from close to 1.0 for spherical
+molecules to 0.0 for perfectly flat or linear molecules. If the dataset contains 3-dimensional atom coordinates,
+then the first column with conformers is used to calculate the value. Otherwise, DataWarrior generates up to 16
+non minimized conformers on the fly using random torsion strategy with low energy bias. The final globularity
+value is an average from the individual ones calculated from every conformer.</p>
+
+<p><b>Globularity Vol:</b> This method also works on the 3-dimensional atom coordinates of multiple conformers.
+For every conformer DataWarrior generates a solvent excluded surface (Conolly surface) with Van-der-Waals radii
+using a probe of 1.4 Angstroms. It then calculates the surface area A1 and the total volume it includes.
+Then the surface area A2 of that perfect sphere is calculated, which exactly matches the molecule's volume.
+The globularity value is then calculated as ratio from A2 and A1.
+Real life values calculated by this method range from close to 1.0 for spherical molecules to about 0.7 for
+linear molecules with irregular shapes. As with the previous methos, conformers are used from the dataset, if available.
+Otherwise, DataWarrior generates up to 16 non minimized conformers on the fly using random torsion strategy with low
+energy bias. The final globularity value is an average from the individual ones calculated from every conformer.</p>
+
+<p>Note that these three methods differ substancially in their results. The following three conformers of
+the same molecule illustrate why. The SVD based method considers them being sphere-like, while the surface based
+method assigns a rather low globularity. The conformer picture reveals the reason: While the molecule's sizes
+in all three dimensions are very similar, the molecular surface is much higher than that of a sphere with
+the same volume.</p>
+
+<p align="center"><img src="globularity.jpeg" width="600" height="204"></p>
+<p><center><i>Conformers with high SVD-based and low volume-based globularity.</i></center></p>
 
 <br>
 

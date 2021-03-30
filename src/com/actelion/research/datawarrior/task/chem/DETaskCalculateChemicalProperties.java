@@ -19,18 +19,25 @@
 package com.actelion.research.datawarrior.task.chem;
 
 import com.actelion.research.chem.*;
+import com.actelion.research.chem.conf.Conformer;
+import com.actelion.research.chem.conf.ConformerSet;
+import com.actelion.research.chem.conf.ConformerSetGenerator;
 import com.actelion.research.chem.conf.MolecularFlexibilityCalculator;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
+import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.prediction.*;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETableView;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.CompoundTableColorHandler;
+import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
+import org.openmolecules.chem.conf.gen.ConformerGenerator;
+import org.openmolecules.mesh.SurfaceAreaAndVolumeCalculator;
 
 import javax.swing.*;
 import java.awt.*;
@@ -69,7 +76,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final int PREDICTOR_FLAG_NASTY_FUNCTIONS	= (1 << PREDICTOR_NASTY_FUNCTIONS);
 	private static final int PREDICTOR_FLAG_FLEXIBILITY		= (1 << PREDICTOR_FLEXIBILITY);
 
-	private static final int PROPERTY_COUNT = 64;
+	private static final int PROPERTY_COUNT = 65;
 
 	private static final int TOTAL_WEIGHT = 0;
 	private static final int FRAGMENT_WEIGHT = 1;
@@ -95,67 +102,70 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final int IRRITANT = 19;
 	private static final int NASTY_FUNCTIONS = 20;
 	private static final int SHAPE = 21;
-	private static final int GLOBULARITY = 22;
-	private static final int FLEXIBILITY = 23;
-	private static final int COMPLEXITY = 24;
+	private static final int FLEXIBILITY = 22;
+	private static final int COMPLEXITY = 23;
 
-	private static final int FRAGMENTS = 25;
-	private static final int HEAVY_ATOMS = 26;
-	private static final int NONCARBON_ATOMS = 27;
-	private static final int METAL_ATOMS = 28;
-	private static final int NEGATIVE_ATOMS = 29;
-	private static final int STEREOCENTERS = 30;
-	private static final int ROTATABLE_BONDS = 31;
-	private static final int RING_CLOSURES = 32;
-	private static final int AROMATIC_ATOMS = 33;
-	private static final int SP3_ATOMS = 34;
-	private static final int SYMMETRIC_ATOMS = 35;
+	private static final int FRAGMENTS = 24;
+	private static final int HEAVY_ATOMS = 25;
+	private static final int NONCARBON_ATOMS = 26;
+	private static final int METAL_ATOMS = 27;
+	private static final int NEGATIVE_ATOMS = 28;
+	private static final int STEREOCENTERS = 29;
+	private static final int ROTATABLE_BONDS = 30;
+	private static final int RING_CLOSURES = 31;
+	private static final int AROMATIC_ATOMS = 32;
+	private static final int SP3_ATOMS = 33;
+	private static final int SYMMETRIC_ATOMS = 34;
 
-	private static final int SMALL_RINGS = 36;
-	private static final int SMALL_CARBO_RINGS = 37;
-	private static final int SMALL_HETERO_RINGS = 38;
-	private static final int SATURATED_RINGS = 39;
-	private static final int NON_AROMATIC_RINGS = 40;
-	private static final int AROMATIC_RINGS = 41;
-	private static final int CARBO_SATURATED_RINGS = 42;
-	private static final int CARBO_NON_AROMATIC_RINGS = 43;
-	private static final int CARBO_AROMATIC_RINGS = 44;
-	private static final int HETERO_SATURATED_RINGS = 45;
-	private static final int HETERO_NON_AROMATIC_RINGS = 46;
-	private static final int HETERO_AROMATIC_RINGS = 47;
+	private static final int SMALL_RINGS = 35;
+	private static final int SMALL_CARBO_RINGS = 36;
+	private static final int SMALL_HETERO_RINGS = 37;
+	private static final int SATURATED_RINGS = 38;
+	private static final int NON_AROMATIC_RINGS = 39;
+	private static final int AROMATIC_RINGS = 40;
+	private static final int CARBO_SATURATED_RINGS = 41;
+	private static final int CARBO_NON_AROMATIC_RINGS = 42;
+	private static final int CARBO_AROMATIC_RINGS = 43;
+	private static final int HETERO_SATURATED_RINGS = 44;
+	private static final int HETERO_NON_AROMATIC_RINGS = 45;
+	private static final int HETERO_AROMATIC_RINGS = 46;
 
-	private static final int ALL_AMIDES = 48;
-	private static final int ALL_AMINES = 49;
-	private static final int ALKYL_AMINES = 50;
-	private static final int ARYL_AMINES = 51;
-	private static final int AROMATIC_NITROGEN = 52;
-	private static final int BASIC_NITROGEN = 53;
-	private static final int ACIDIC_OXYGEN = 54;
-	private static final int STEREO_CONFIGURATION = 55;
+	private static final int ALL_AMIDES = 47;
+	private static final int ALL_AMINES = 48;
+	private static final int ALKYL_AMINES = 49;
+	private static final int ARYL_AMINES = 50;
+	private static final int AROMATIC_NITROGEN = 51;
+	private static final int BASIC_NITROGEN = 52;
+	private static final int ACIDIC_OXYGEN = 53;
+	private static final int STEREO_CONFIGURATION = 54;
 
-	private static final int ACIDIC_PKA = 56;
-	private static final int BASIC_PKA = 57;
-	private static final int FRACTION_IA = 58;
-	private static final int FRACTION_IB = 59;
-	private static final int FRACTION_ZI = 60;
-	private static final int FRACTION_CHARGED = 61;
-	private static final int FRACTION_UNCHARGED = 62;
-	private static final int CHARGE74 = 63;
+	private static final int ACIDIC_PKA = 55;
+	private static final int BASIC_PKA = 56;
+	private static final int FRACTION_IA = 57;
+	private static final int FRACTION_IB = 58;
+	private static final int FRACTION_ZI = 59;
+	private static final int FRACTION_CHARGED = 60;
+	private static final int FRACTION_UNCHARGED = 61;
+	private static final int CHARGE74 = 62;
+
+	private static final int GLOBULARITY_SVD = 63;
+	private static final int GLOBULARITY_VOL = 64;
 
 	private static final Color[] TOX_COLOR_LIST = { Color.RED, Color.YELLOW, Color.GREEN };
 
 	private static final String[] PROPERTY_CODE = { "totalWeight", "fragmentWeight", "fragmentAbsWeight", "logP", "logS", "logD",
 													"acceptors", "donors", "sasa", "rpsa", "tpsa", "druglikeness", "permeability",
 													"le", /*"se",*/ "lle", "lelp", "mutagenic", "tumorigenic", "reproEffective", "irritant", "nasty",
-													"shape", "globularity", "flexibility", "complexity", "fragments", "heavyAtoms", "nonCHAtoms", "metalAtoms", "negAtoms",
+													"shape", "flexibility", "complexity", "fragments", "heavyAtoms", "nonCHAtoms", "metalAtoms", "negAtoms",
 													"stereoCenters", "rotBonds", "closures", "aromAtoms", "sp3Atoms", "symmetricAtoms",
 													"rings", "carbo", "heteroRings", "satRings", "nonAromRings", "aromRings", "carboSatRings", "carboNonAromRings", "carboAromRings",
 													"heteroSatRings", "heteroNonAromRings", "heteroAromRings",
 													"amides", "amines", "alkylAmines", "arylAmines", "aromN", "basicN", "acidicO", "stereoConfiguration",
-													"acidicPKA", "basicPKA", "acidicFI", "basicFI", "zwitterFI", "chargedF", "unchargedF", "charge74"};
+													"acidicPKA", "basicPKA", "acidicFI", "basicFI", "zwitterFI", "chargedF", "unchargedF", "charge74",
+													"globularity", "globularity2" };
 
-	private static final String[] TAB_GROUP = { "Druglikeness", "LE, Tox, Shape", "Atom Counts", "Ring Counts", "Functional Groups", "Ionization" };
-	private static final String[][] TAB_HEADER = {null, {null, "Ki or IC50 in nmol/l"}, null, null, null, null};
+	private static final String[] TAB_GROUP = { "Druglikeness", "LE, Tox, Shape", "Atom Counts", "Ring Counts", "Functional Groups", "Ionization", "3D" };
+	private static final String[][] TAB_HEADER = {null, {null, "Ki or IC50 in nmol/l"}, null, null, null, null, null};
 
 	private DEFrame						mParentFrame;
 	private CompoundTableModel			mTableModel;
@@ -480,7 +490,6 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		addProperty(IRRITANT, 1, "Irritant", "Irritant", null, null, PREDICTOR_FLAG_TOXICITY);
 		addProperty(NASTY_FUNCTIONS, 1, "Nasty Functions", "Nasty Functions", null, DescriptorConstants.DESCRIPTOR_FFP512.shortName, PREDICTOR_FLAG_NASTY_FUNCTIONS);
 		addProperty(SHAPE, 1, "Shape Index", "Molecular Shape Index (spherical < 0.5 < linear; 2D-graph based method)");
-		addProperty(GLOBULARITY, 1, "Globularity", "Molecular Globularity (flat < 0.5 < spherical); mean from conformers");
 		addProperty(FLEXIBILITY, 1, "Molecular Flexibility", "Molecular Flexibility (low < 0.5 < high)", null, null, PREDICTOR_FLAG_FLEXIBILITY);
 		addProperty(COMPLEXITY, 1, "Molecular Complexity", "Molecular Complexity (low < 0.5 < high)");
 
@@ -527,6 +536,9 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		addProperty(FRACTION_CHARGED, 5, "Fraction Charged", "Fraction Charged (based on ChemAxon pKa)", null, null, PREDICTOR_FLAG_PKA);
 		addProperty(FRACTION_UNCHARGED, 5, "Fraction Uncharged", "Fraction Uncharged (based on ChemAxon pKa)", null, null, PREDICTOR_FLAG_PKA);
 		addProperty(CHARGE74, 5, "Charge (pH 7.4)", "Charge at pH=7.4 (based on ChemAxon pKa)", null, null, PREDICTOR_FLAG_PKA);
+
+		addProperty(GLOBULARITY_SVD, 6, "Globularity SVD", "Globularity (flat/linear < 0.5 < spherical) using singular value decomposition of 3D-atom coordinates");
+		addProperty(GLOBULARITY_VOL, 6, "Globularity Vol", "Globularity (non-spherical < 0.9 < spherical) from molecule volume and surface (VDW-radii, 1.4 A probe)");
 
 		addBackgroundColor(MUTAGENIC, VisualizationColor.cColorListModeCategories, TOX_COLOR_LIST);
 		addBackgroundColor(TUMORIGENIC, VisualizationColor.cColorListModeCategories, TOX_COLOR_LIST);
@@ -703,36 +715,16 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		}
 
 	private void processRow(int row, int firstNewColumn, StereoMolecule containerMol) throws Exception {
-		StereoMolecule mol = mTableModel.getChemicalStructure(mTableModel.getTotalRecord(row), mIDCodeColumn, CompoundTableModel.ATOM_COLOR_MODE_NONE, containerMol);
-		if (mol == null)
-			return;
-
-		TreeMap<Integer, Double> cache = new TreeMap<>();
-
-		chemaxon.struc.Molecule camol = null;
-		if (mol.getAllAtoms() != 0) {
-			for (DEPropertyOrder order:mPropertyOrderList) {
-				if (order.property.type == TOTAL_WEIGHT)
-					cache.put(TOTAL_WEIGHT, new MolecularFormula(mol).getRelativeWeight());
-				else if (order.property.type == FRAGMENTS) {
-					int[] fNo = new int[mol.getAllAtoms()];
-					cache.put(FRAGMENTS, (double)mol.getFragmentNumbers(fNo, false, true));
-					}
-				}
-
-			mol.stripSmallFragments(true);
-			if (mPredictor[PREDICTOR_PKA] != null)
-				camol = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).convert(mol);
-			}
+		RowInfo rowInfo = new RowInfo(row, containerMol);
 
 		int currentColumn = firstNewColumn;
 		for (DEPropertyOrder order:mPropertyOrderList) {
-			if (mol.getAllAtoms() == 0) {
-				mTableModel.setTotalValueAt("", row, currentColumn);
+			if (rowInfo.hasMolecule()) {
+				String value = predict(row, order.property.type, order.dependentColumn, rowInfo);
+				mTableModel.setTotalValueAt(value, row, currentColumn);
 				}
 			else {
-				String value = predict(row, order.property.type, order.dependentColumn, mol, camol, cache);
-				mTableModel.setTotalValueAt(value, row, currentColumn);
+				mTableModel.setTotalValueAt("", row, currentColumn);
 				}
 			currentColumn++;
 			}
@@ -745,27 +737,24 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	 * @param row
 	 * @param propertyType
 	 * @param dependentColumn
-	 * @param mol
-	 * @param camol
-	 * @param cache
+	 * @param rowInfo
 	 * @return
 	 */
-	private String predict(int row, int propertyType, int dependentColumn, StereoMolecule mol,
-						   chemaxon.struc.Molecule camol, TreeMap<Integer, Double> cache) {
+	private String predict(int row, int propertyType, int dependentColumn, RowInfo rowInfo) {
 
 		// nasty functions have no numerical value
 		if (propertyType == NASTY_FUNCTIONS)
-			return ((NastyFunctionDetector)mPredictor[PREDICTOR_NASTY_FUNCTIONS]).getNastyFunctionString(mol,
+			return ((NastyFunctionDetector)mPredictor[PREDICTOR_NASTY_FUNCTIONS]).getNastyFunctionString(rowInfo.mol,
 				(long[])mTableModel.getTotalRecord(row).getData(mFragFpColumn));
 
-		Double numValue = cache.get(propertyType);
+		Double numValue = rowInfo.cache.get(propertyType);
 		double value = Double.NaN;
 		if (numValue != null) {
 			value = numValue.doubleValue();
 			}
 		else {
 			try {
-				value = predictNumerical(row, propertyType, dependentColumn, mol, camol, cache);
+				value = predictNumerical(row, propertyType, dependentColumn, rowInfo);
 				}
 			catch (Exception e) {
 				return e.getMessage();
@@ -802,7 +791,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 			case ACIDIC_OXYGEN:
 				return Integer.toString((int)value);
 			case STEREO_CONFIGURATION:
-				return mol.getChiralText();
+				return rowInfo.mol.getChiralText();
 			case MUTAGENIC:
 			case TUMORIGENIC:
 			case REPRODUCTIVE_EFECTIVE:
@@ -823,16 +812,17 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	 * @param row
 	 * @param propertyType
 	 * @param dependentColumn
-	 * @param mol
-	 * @param camol
-	 * @param cache
+	 * @param rowInfo
 	 * @return
 	 */
-	private double predictNumerical(int row, int propertyType, int dependentColumn, StereoMolecule mol,
-						   chemaxon.struc.Molecule camol, TreeMap<Integer, Double> cache) throws Exception {
-		Double cachedValue = cache.get(propertyType);
+	private double predictNumerical(int row, int propertyType, int dependentColumn, RowInfo rowInfo) throws Exception {
+		Double cachedValue = rowInfo.cache.get(propertyType);
 		if (cachedValue != null)
 			return cachedValue;
+
+		StereoMolecule mol = rowInfo.mol;
+		chemaxon.struc.Molecule camol = rowInfo.camol;
+		TreeMap<Integer, Double> cache = rowInfo.cache;
 
 		double value = Double.NaN;
 		double logP,fia,fib;
@@ -854,13 +844,13 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 				value = ((SolubilityPredictor)mPredictor[PREDICTOR_LOGS]).assessSolubility(mol);
 				break;
 			case LOGD:
-				if (camol == null)
+				if (rowInfo.camol == null)
 					throw new Exception("molecule conversion error");
 
 				final double LOGD_PH = 7.4f;
-				logP = predictNumerical(row, LOGP, dependentColumn, mol, camol, cache);
-				double aPKa = predictNumerical(row, ACIDIC_PKA, dependentColumn, mol, camol, cache);
-				double bPKa = predictNumerical(row, BASIC_PKA, dependentColumn, mol, camol, cache);
+				logP = predictNumerical(row, LOGP, dependentColumn, rowInfo);
+				double aPKa = predictNumerical(row, ACIDIC_PKA, dependentColumn, rowInfo);
+				double bPKa = predictNumerical(row, BASIC_PKA, dependentColumn, rowInfo);
 				value = (Double.isNaN(aPKa) && Double.isNaN(bPKa)) ? logP
 						: Double.isNaN(aPKa) ? logP - Math.log10(1.0 + Math.pow(10, bPKa-LOGD_PH))
 						: Double.isNaN(bPKa) ? logP - Math.log10(1.0 + Math.pow(10, LOGD_PH-aPKa))
@@ -955,8 +945,28 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 			case SHAPE:
 				value = MolecularShapeCalculator.assessShape(mol);
 				break;
-			case GLOBULARITY:
-				value = GlobularityCalculator.assessGlobularity(mol, 32);
+			case GLOBULARITY_SVD:
+				value = GlobularityCalculator.assessGlobularity(rowInfo.getConformerSet());
+				break;
+			case GLOBULARITY_VOL:
+				ConformerSet cs = rowInfo.conformerSet;
+				if (cs == null || cs.size() == 0) {
+					value = Double.NaN;
+					}
+				else {
+					double globularity = 0.0;
+					for (Conformer conf:cs) {
+						conf.copyTo(conf.getMolecule());
+						SurfaceAreaAndVolumeCalculator calculator = new SurfaceAreaAndVolumeCalculator(conf.getMolecule(), SurfaceAreaAndVolumeCalculator.MODE_AREA_AND_VOLUME);
+						float volume = calculator.getVolume();
+						float area = calculator.getArea();
+						double r = Math.pow(volume / (1.333 * Math.PI), 0.333333);
+						float idealArea = (float)(4*Math.PI*r*r);
+						globularity += idealArea / area;
+						}
+
+					value = globularity / cs.size();
+					}
 				break;
 			case FLEXIBILITY:
 				value = ((MolecularFlexibilityCalculator)mPredictor[PREDICTOR_FLEXIBILITY]).calculateMolecularFlexibility(mol);
@@ -1290,29 +1300,29 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 				value = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).getMostBasicPKas(camol)[0];
 				break;
 			case FRACTION_IA:
-				double acidicpKa = predictNumerical(row, ACIDIC_PKA, dependentColumn, mol, camol, cache);
+				double acidicpKa = predictNumerical(row, ACIDIC_PKA, dependentColumn, rowInfo);
 				value = Double.isNaN(acidicpKa) ? 0.0 : Math.pow(10, 7.4-acidicpKa)/(1.0+Math.pow(10, 7.4-acidicpKa));
 				break;
 			case FRACTION_IB:
-				double basicpKa = predictNumerical(row, BASIC_PKA, dependentColumn, mol, camol, cache);
+				double basicpKa = predictNumerical(row, BASIC_PKA, dependentColumn, rowInfo);
 				value = Double.isNaN(basicpKa) ? 0.0 : Math.pow(10, basicpKa-7.4)/(1.0+Math.pow(10, basicpKa-7.4));
 				break;
 			case FRACTION_ZI:
-				fia = predictNumerical(row, FRACTION_IA, dependentColumn, mol, camol, cache);
-				fib = predictNumerical(row, FRACTION_IB, dependentColumn, mol, camol, cache);
+				fia = predictNumerical(row, FRACTION_IA, dependentColumn, rowInfo);
+				fib = predictNumerical(row, FRACTION_IB, dependentColumn, rowInfo);
 				if (!Double.isNaN(fia) && !Double.isNaN(fib))
 					value = fia * fib;
 				break;
 			case FRACTION_CHARGED:
-				double fuc = predictNumerical(row, FRACTION_UNCHARGED, dependentColumn, mol, camol, cache);
+				double fuc = predictNumerical(row, FRACTION_UNCHARGED, dependentColumn, rowInfo);
 				if (!Double.isNaN(fuc))
 					value = 1.0 - fuc;
 				break;
 			case FRACTION_UNCHARGED:
-				fia = predictNumerical(row, FRACTION_IA, dependentColumn, mol, camol, cache);
+				fia = predictNumerical(row, FRACTION_IA, dependentColumn, rowInfo);
 				if (Double.isNaN(fia))
 					fia = 0.0;
-				fib = predictNumerical(row, FRACTION_IB, dependentColumn, mol, camol, cache);
+				fib = predictNumerical(row, FRACTION_IB, dependentColumn, rowInfo);
 				if (Double.isNaN(fib))
 					fib = 0.0;
 				value = (1.0-fia)*(1.0-fib);
@@ -1332,13 +1342,13 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 					}
 				break;
 			case PERMEABILITY:
-				double mw = predictNumerical(row, FRAGMENT_WEIGHT, dependentColumn, mol, camol, cache);
-				double donors = predictNumerical(row, DONORS, dependentColumn, mol, camol, cache);
-				double rotBonds = predictNumerical(row, ROTATABLE_BONDS, dependentColumn, mol, camol, cache);
-				logP = predictNumerical(row, LOGP, dependentColumn, mol, camol, cache);
-				double tpsa = predictNumerical(row, TPSA, dependentColumn, mol, camol, cache);
-				double charge = predictNumerical(row, CHARGE74, dependentColumn, mol, camol, cache);
-				double fc = predictNumerical(row, FRACTION_CHARGED, dependentColumn, mol, camol, cache);
+				double mw = predictNumerical(row, FRAGMENT_WEIGHT, dependentColumn, rowInfo);
+				double donors = predictNumerical(row, DONORS, dependentColumn, rowInfo);
+				double rotBonds = predictNumerical(row, ROTATABLE_BONDS, dependentColumn, rowInfo);
+				logP = predictNumerical(row, LOGP, dependentColumn, rowInfo);
+				double tpsa = predictNumerical(row, TPSA, dependentColumn, rowInfo);
+				double charge = predictNumerical(row, CHARGE74, dependentColumn, rowInfo);
+				double fc = predictNumerical(row, FRACTION_CHARGED, dependentColumn, rowInfo);
 				if (!Double.isNaN(mw) && !Double.isNaN(donors) && !Double.isNaN(rotBonds) && !Double.isNaN(logP)
 						&& !Double.isNaN(tpsa) && !Double.isNaN(charge) && !Double.isNaN(fc))
 					value = Math.pow(10, 1.0 - 0.0038*tpsa + 0.0009*mw - 0.092*donors - 0.019*rotBonds - 0.11*fc + 0.0061*charge + 0.075*logP);
@@ -1457,6 +1467,58 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 					((JCheckBox)e.getSource()).setSelected(false);
 					}
 				}
+			}
+		}
+
+	private class RowInfo {
+		public StereoMolecule mol;
+		public chemaxon.struc.Molecule camol;
+		public TreeMap<Integer, Double> cache;
+		private int row;
+		private ConformerSet conformerSet;
+
+		public RowInfo(int row, StereoMolecule containerMol) {
+			this.row = row;
+			mol = mTableModel.getChemicalStructure(mTableModel.getTotalRecord(row), mIDCodeColumn, CompoundTableModel.ATOM_COLOR_MODE_NONE, containerMol);
+			if (mol != null) {
+				cache = new TreeMap<>();
+				camol = null;
+				if (mol.getAllAtoms() != 0) {
+					for (DEPropertyOrder order:mPropertyOrderList) {
+						if (order.property.type == TOTAL_WEIGHT)
+							cache.put(TOTAL_WEIGHT, new MolecularFormula(mol).getRelativeWeight());
+						else if (order.property.type == FRAGMENTS) {
+							int[] fNo = new int[mol.getAllAtoms()];
+							cache.put(FRAGMENTS, (double)mol.getFragmentNumbers(fNo, false, true));
+							}
+						}
+
+					mol.stripSmallFragments(true);
+					if (mPredictor[PREDICTOR_PKA] != null)
+						camol = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).convert(mol);
+					}
+				}
+			}
+
+		public boolean hasMolecule() {
+			return mol != null && mol.getAllAtoms() != 0;
+			}
+
+		public ConformerSet getConformerSet() {
+			if (conformerSet == null) {
+				int confColumn = mTableModel.getChildColumn(mIDCodeColumn, CompoundTableConstants.cColumnType3DCoordinates);
+				if (confColumn != -1) {
+					CompoundRecord record = mTableModel.getRecord(row);
+					byte[] idcode = (byte[])record.getData(mIDCodeColumn);
+					byte[] coords = (byte[])record.getData(confColumn);
+					conformerSet = new ConformerSet(idcode, coords);
+					}
+				else {
+					conformerSet = new ConformerSetGenerator(16, ConformerGenerator.STRATEGY_LIKELY_RANDOM, false, 0).generateConformerSet(mol);
+					}
+				}
+
+			return conformerSet;
 			}
 		}
 	}

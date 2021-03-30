@@ -22,7 +22,10 @@ import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.DescriptorHelper;
 import com.actelion.research.chem.descriptor.DescriptorInfo;
 import com.actelion.research.chem.io.CompoundTableConstants;
-import com.actelion.research.datawarrior.action.*;
+import com.actelion.research.datawarrior.action.DECorrelationDialog;
+import com.actelion.research.datawarrior.action.DEFileLoader;
+import com.actelion.research.datawarrior.action.DEInteractiveSARDialog;
+import com.actelion.research.datawarrior.action.DEMarkushDialog;
 import com.actelion.research.datawarrior.help.DEHelpFrame;
 import com.actelion.research.datawarrior.help.FXHelpFrame;
 import com.actelion.research.datawarrior.task.*;
@@ -56,6 +59,8 @@ import org.openmolecules.datawarrior.plugin.IPluginTask;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.event.*;
 import java.awt.print.*;
 import java.io.File;
@@ -1453,7 +1458,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuEditCopy)
 				new DETaskCopyViewContent(mParentFrame).defineAndRun();
 			else if (source == jMenuEditPaste)
-				new DETaskPaste(mParentFrame, mApplication, DETaskPaste.HEADER_ANALYZE).defineAndRun();
+				pasteDataOrMacro();
 			else if (source == jMenuEditPasteWithHeader)
 				new DETaskPaste(mParentFrame, mApplication, DETaskPaste.HEADER_WITH).defineAndRun();
 			else if (source == jMenuEditPasteWithoutHeader)
@@ -1742,6 +1747,21 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		catch (OutOfMemoryError ex) {
 			JOptionPane.showMessageDialog(mParentFrame, ex);
 			}
+		}
+
+	private void pasteDataOrMacro() {
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		if (!clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor))
+			return;
+
+		try {
+			String s = (String)clipboard.getData(DataFlavor.stringFlavor);
+			if (s.startsWith(DEMacro.MACRO_START))
+				new DETaskPasteMacro(mApplication).defineAndRun();
+			else
+				new DETaskPaste(mParentFrame, mApplication, DETaskPaste.HEADER_ANALYZE).defineAndRun();
+			}
+		catch (Exception e) {}
 		}
 
 	private boolean isDescriptorCreation(String actionCommand) {

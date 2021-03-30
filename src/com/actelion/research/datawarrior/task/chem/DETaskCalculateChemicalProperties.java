@@ -76,7 +76,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final int PREDICTOR_FLAG_NASTY_FUNCTIONS	= (1 << PREDICTOR_NASTY_FUNCTIONS);
 	private static final int PREDICTOR_FLAG_FLEXIBILITY		= (1 << PREDICTOR_FLEXIBILITY);
 
-	private static final int PROPERTY_COUNT = 65;
+	private static final int PROPERTY_COUNT = 67;
 
 	private static final int TOTAL_WEIGHT = 0;
 	private static final int FRAGMENT_WEIGHT = 1;
@@ -150,6 +150,8 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 
 	private static final int GLOBULARITY_SVD = 63;
 	private static final int GLOBULARITY_VOL = 64;
+	private static final int SURFACE_3D = 65;
+	private static final int VOLUME_3D = 66;
 
 	private static final Color[] TOX_COLOR_LIST = { Color.RED, Color.YELLOW, Color.GREEN };
 
@@ -162,7 +164,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 													"heteroSatRings", "heteroNonAromRings", "heteroAromRings",
 													"amides", "amines", "alkylAmines", "arylAmines", "aromN", "basicN", "acidicO", "stereoConfiguration",
 													"acidicPKA", "basicPKA", "acidicFI", "basicFI", "zwitterFI", "chargedF", "unchargedF", "charge74",
-													"globularity", "globularity2" };
+													"globularity", "globularity2", "surface3d", "volume3d" };
 
 	private static final String[] TAB_GROUP = { "Druglikeness", "LE, Tox, Shape", "Atom Counts", "Ring Counts", "Functional Groups", "Ionization", "3D" };
 	private static final String[][] TAB_HEADER = {null, {null, "Ki or IC50 in nmol/l"}, null, null, null, null, null};
@@ -539,6 +541,8 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 
 		addProperty(GLOBULARITY_SVD, 6, "Globularity SVD", "Globularity (flat/linear < 0.5 < spherical) using singular value decomposition of 3D-atom coordinates");
 		addProperty(GLOBULARITY_VOL, 6, "Globularity Vol", "Globularity (non-spherical < 0.9 < spherical) from molecule volume and surface (VDW-radii, 1.4 A probe)");
+		addProperty(SURFACE_3D, 6, "VDW-Surface", "Solvent excluded surface area (Van der Waals surface) using VDW-radii and 1.4 A probe");
+		addProperty(VOLUME_3D, 6, "VDW-Volume", "Molecule volume inside solvent excluded surface using VDW-radii and 1.4 A probe");
 
 		addBackgroundColor(MUTAGENIC, VisualizationColor.cColorListModeCategories, TOX_COLOR_LIST);
 		addBackgroundColor(TUMORIGENIC, VisualizationColor.cColorListModeCategories, TOX_COLOR_LIST);
@@ -823,6 +827,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		StereoMolecule mol = rowInfo.mol;
 		chemaxon.struc.Molecule camol = rowInfo.camol;
 		TreeMap<Integer, Double> cache = rowInfo.cache;
+		ConformerSet cs;
 
 		double value = Double.NaN;
 		double logP,fia,fib;
@@ -944,29 +949,6 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 						break;*/
 			case SHAPE:
 				value = MolecularShapeCalculator.assessShape(mol);
-				break;
-			case GLOBULARITY_SVD:
-				value = GlobularityCalculator.assessGlobularity(rowInfo.getConformerSet());
-				break;
-			case GLOBULARITY_VOL:
-				ConformerSet cs = rowInfo.conformerSet;
-				if (cs == null || cs.size() == 0) {
-					value = Double.NaN;
-					}
-				else {
-					double globularity = 0.0;
-					for (Conformer conf:cs) {
-						conf.copyTo(conf.getMolecule());
-						SurfaceAreaAndVolumeCalculator calculator = new SurfaceAreaAndVolumeCalculator(conf.getMolecule(), SurfaceAreaAndVolumeCalculator.MODE_AREA_AND_VOLUME);
-						float volume = calculator.getVolume();
-						float area = calculator.getArea();
-						double r = Math.pow(volume / (1.333 * Math.PI), 0.333333);
-						float idealArea = (float)(4*Math.PI*r*r);
-						globularity += idealArea / area;
-						}
-
-					value = globularity / cs.size();
-					}
 				break;
 			case FLEXIBILITY:
 				value = ((MolecularFlexibilityCalculator)mPredictor[PREDICTOR_FLEXIBILITY]).calculateMolecularFlexibility(mol);
@@ -1352,6 +1334,61 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 				if (!Double.isNaN(mw) && !Double.isNaN(donors) && !Double.isNaN(rotBonds) && !Double.isNaN(logP)
 						&& !Double.isNaN(tpsa) && !Double.isNaN(charge) && !Double.isNaN(fc))
 					value = Math.pow(10, 1.0 - 0.0038*tpsa + 0.0009*mw - 0.092*donors - 0.019*rotBonds - 0.11*fc + 0.0061*charge + 0.075*logP);
+				break;
+			case GLOBULARITY_SVD:
+				value = GlobularityCalculator.assessGlobularity(rowInfo.getConformerSet());
+				break;
+			case GLOBULARITY_VOL:
+				cs = rowInfo.getConformerSet();
+				if (cs == null || cs.size() == 0) {
+					value = Double.NaN;
+				}
+				else {
+					double globularity = 0.0;
+					for (Conformer conf:cs) {
+						conf.copyTo(conf.getMolecule());
+						SurfaceAreaAndVolumeCalculator calculator = new SurfaceAreaAndVolumeCalculator(conf.getMolecule(), SurfaceAreaAndVolumeCalculator.MODE_AREA_AND_VOLUME);
+						float volume = calculator.getVolume();
+						float area = calculator.getArea();
+						double r = Math.pow(volume / (1.333 * Math.PI), 0.333333);
+						float idealArea = (float)(4*Math.PI*r*r);
+						globularity += idealArea / area;
+					}
+
+					value = globularity / cs.size();
+				}
+				break;
+			case SURFACE_3D:
+				cs = rowInfo.getConformerSet();
+				if (cs == null || cs.size() == 0) {
+					value = Double.NaN;
+				}
+				else {
+					double area = 0.0;
+					for (Conformer conf:cs) {
+						conf.copyTo(conf.getMolecule());
+						SurfaceAreaAndVolumeCalculator calculator = new SurfaceAreaAndVolumeCalculator(conf.getMolecule(), SurfaceAreaAndVolumeCalculator.MODE_AREA);
+						area += calculator.getArea();
+					}
+
+					value = area / cs.size();
+				}
+				break;
+			case VOLUME_3D:
+				cs = rowInfo.getConformerSet();
+				if (cs == null || cs.size() == 0) {
+					value = Double.NaN;
+				}
+				else {
+					double volume = 0.0;
+					for (Conformer conf:cs) {
+						conf.copyTo(conf.getMolecule());
+						SurfaceAreaAndVolumeCalculator calculator = new SurfaceAreaAndVolumeCalculator(conf.getMolecule(), SurfaceAreaAndVolumeCalculator.MODE_VOLUME);
+						volume += calculator.getVolume();
+					}
+
+					value = volume / cs.size();
+				}
 				break;
 			}
 

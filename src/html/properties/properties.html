@@ -320,28 +320,30 @@ in that chain id divided by the number of atoms in the molecule. Thus, values of
 and the smaller the value the more rings and bridges are in the molecule.</p>
 
 <p><b>Globularity SVD:</b> This method works on the 3-dimensional atom coordinates of multiple conformers of
-the given molecule. For every conformer it starts with a singular value decomposition of all atoms in three
+the given molecule. If the selected structure column has attached 3-dimensional atom coordinates,
+then these are used to calculate the value. If multiple columns exist, then the first is used.
+If 3D-coordinates cannot be found, DataWarrior generates up to 16 non-minimized conformers on the fly
+using random combinations of low-energy torsion angles.<br>
+For every conformer it starts with a singular value decomposition of all atoms in three
 dimensions. From that it takes those three orthogonal axes in space, which have the largest, the second largest,
 and the smallest variance of atom positions. Then the smallest rectangular box is determines that fits the
 conformer and whose edges are parallel to the three axes. The globularity value is then calculated as ratio
 from the smallest and the largest edge size of the box. This way values range from close to 1.0 for spherical
-molecules to 0.0 for perfectly flat or linear molecules. If the dataset contains 3-dimensional atom coordinates,
-then the first column with conformers is used to calculate the value. Otherwise, DataWarrior generates up to 16
-non minimized conformers on the fly using random torsion strategy with low energy bias. The final globularity
-value is an average from the individual ones calculated from every conformer.</p>
+molecules to 0.0 for perfectly flat or linear molecules. The final globularity value is an average of those
+calculated from the individual conformers.</p>
 
 <p><b>Globularity Vol:</b> This method also works on the 3-dimensional atom coordinates of multiple conformers.
+As with the previous method, these are generated on the fly if the dataset doesn't contain them.
 For every conformer DataWarrior generates a solvent excluded surface (Conolly surface) with Van-der-Waals radii
-using a probe of 1.4 Angstroms. It then calculates the surface area A1 and the total volume it includes.
-Then the surface area A2 of that perfect sphere is calculated, which exactly matches the molecule's volume.
+using a probe of 1.4 Angstroms. From the surface it calculates its exact area A1 and the enclosed volume.
+Then the surface area A2 of a perfect sphere is calculated, which would match the molecule's volume exactly.
 The globularity value is then calculated as ratio from A2 and A1.
-Real life values calculated by this method range from close to 1.0 for spherical molecules to about 0.7 for
-linear molecules with irregular shapes. As with the previous methos, conformers are used from the dataset, if available.
-Otherwise, DataWarrior generates up to 16 non minimized conformers on the fly using random torsion strategy with low
-energy bias. The final globularity value is an average from the individual ones calculated from every conformer.</p>
+Real life values calculated by this method range from close to 1.0 for spherical molecules to about 0.6 for
+linear molecules with irregular shapes. The final globularity value is an average of those calculated from the
+individual conformers.</p>
 
 <p>Note that these three methods differ substancially in their results. The following three conformers of
-the same molecule illustrate why. The SVD based method considers them being sphere-like, while the surface based
+the same molecule illustrate why: The SVD based method considers the molecule being globular, while the surface based
 method assigns a rather low globularity. The conformer picture reveals the reason: While the molecule's sizes
 in all three dimensions are very similar, the molecular surface is much higher than that of a sphere with
 the same volume.</p>

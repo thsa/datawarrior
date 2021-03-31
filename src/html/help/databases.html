@@ -8,7 +8,7 @@
 
 <p>
 <hr align="left" size="2" width="550">
-<h2><a name="Databases"></a>Accessing External Databases</h2>
+<h2><a name="Databases"></a>Accessing External Resources</h2>
 <hr align="left" size="2" width="550">
 </p>
 
@@ -224,7 +224,34 @@ JOIN keyword and after the WHERE keyword some conditions are defined that specif
 automatically recognized by <span class="keyword">DataWarrior</span> and an additional column containing
 the corresponding chemical structures is generated.</p>
 <br>
-<p align="center">Continue with <a href="help/lists.html">Creating and using row lists</a>...</p>
+
+<h3><a name="Synthesis"></a>Synthesis Planning</h3>
+<p>Computational <span class="keyword">Retrosynthetic Synthesis Planning</span> is one of the oldest challenges
+in cheminformatics with early substantial contributions from E. J. Corey, J. B. Hendrickson, and others
+starting already in the 1960s. In the late 1980s multiple large pharmaceutical companies joined forces
+in the CASP project yielding software and thousands of hand-coded transformation rules. Unluckily,
+none of the software solutions from the last century achieved wide usage in the chemistry community.
+For 20 years it was rather silent about computer aided synthesis planning tools until in recent years
+multiple papers triggered a new interest in the field, e.g. by M.H.S. Segler and M.P. Waller, who
+introduced a Montecarlo Tree Search to handle the combinatorial explosion and trained neural networks
+to replace rule based approaches to assess transformation feasibility and functional group compatibility.
+At the same time rule based systems had also made quite some progress, e.g. <span class="keyword">Chematica</span>
+by A. Grzybowsky et al. Currently, multiple commercial software packages offer synthesis planning
+functionality to the chemistry community.</p>
+
+<p><span class="keyword">DataWarrior</span> does not have its own synthesis planning functionality, but
+allows to directly access the free version of <span class="keyword">Spaya</span> using a right mouse click
+and choosing <span class="menu">Suggest Synthesis Route -> of Structure using Spaya.ai</span> from any of the
+<span class="keyword">DataWarrior</span> main views. This opens the <span class="keyword">Spaya.ai</span>
+web size prefilled with your molecule in your preferred web browser. <span class="keyword">Spaya.ai</span>
+requires you to register the first time you access the platform. Later only one click is needed to login again.
+The login is needed to persistently store user setting.</p>
+<p>Some companies run their own internal <span class="keyword">Spaya</span> server. To configure DataWarrior
+to access your own server rather than the public spaya.ai, press <b>CTRL</b> and at the same time the right
+mouse button over a structure. Then choose <span class="menu">Suggest Synthesis Route -> Change Spaya Server URL</span>.
+This opens a dialog to update the server name, which is then stored and used for any further requests.</p>.
 <br>
+
+<p align="center">Continue with <a href="help/lists.html">Creating and using row lists</a>...</p>
 </body>
 </html>

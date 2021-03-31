@@ -615,7 +615,7 @@ Some of these properties and the algorithms used are explained in more detail
 <a href="help/../properties/properties.html">here</a>.</p> 
 <br>
 
-<h3><a name="VirtualLibraries"></a>Enumerating Virtual Libraries</h3>
+<h3><a name="VirtualLibraries"></a>Enumerating Combinatorial Libraries</h3>
 
 <p>DataWarrior can generate all structures of a virtual combinatorial library, given that a
 <span class="keyword">generic reaction</span> is defined and that for every one of its generic reactants
@@ -648,7 +648,7 @@ when the files is re-opened again by <span class="keyword">DataWarrior</span>. S
 <span class="keyword">DataWarrior's</span> query features as <span class="keyword">exclude groups</span>
 are not supported by standard <span class="keyword">RXN</span>-files.</p>
 
-<p align="center"><img width=600 height=430 src="help/img/chem/reactionEditor.jpeg"></p>
+<p align="center"><img width=500 height=378 src="help/img/chem/reactionEditor.png"></p>
 <p align="center"><i>Generic reaction with selected mapping tool and mapping numbers visible.</i></p>
 
 <p>If you decide to draw a new generic reaction yourself, then you may follow these steps:
@@ -663,15 +663,30 @@ is used to discard non-qualifying reactant molecules, when opening a reactant fi
 defined reactant structures help the reactor to identify the correct functional group within a molecule,
 if there are multiple similar groups.
 </li>
-<li>You may save your generic reaction for later re-use.</li>
+<li>You may save your generic reaction for later re-use. Reactions are saved as RXN-file, which
+is a de-facto standard introduced by MDL decades ago, and ensures that other applications can read
+reactions exported by DataWarrior. Since some query features and especially exclude groups are not
+supported by RXN-files, DataWarrior includes its native format in the file, such that theses features
+are not lost, when DataWarrior re-opens its own RXN-files.</li>
 </ul>
 Once the <span class="keyword">generic reaction</span> is defined, click on <span class="menu">Reactants</span>
 to switch from the reaction to the reactant panel.</p>
 
-<p align="center"><img width=600 height=302 src="help/img/chem/reactantDialog.jpeg"></p>
-<p align="center"><i>Imported reactant structures for two generic reactants.</i></p>
+<p align="center"><img width=500 height=276 src="help/img/chem/reactantDialog.png"></p>
+<p align="center"><i>Reactant structures were chosen for first of two generic reactants.</i></p>
 
-<p>You may load reactant structures from a file using the <span class="menu">Open File...</span> button.
+<p>In the reactant panel you need to provide real reactant structures, which are then used to construct
+your products. The easiest way is to let DataWarrior suggest matching structures from the Enamine
+building block database. For that click the <span class="menu">Suggest...</span> button. It opens a dialog
+that lets you specify (in addition to the already defined substructure) a maximum price, a minimum package size,
+the number of wanted reactants, and a strategy to choose reactants, if more reactants match you conditions.</p>
+
+<p align="center"><img src="help/img/chem/suggestReactants.png" width=324 height=174></p>
+<p align="center"><i>Option dialog to suggest matching reactants from the Enamine catalog.</i></p>
+
+If you have your own file of pre-selected matching reactants or just a file containing any available chemicals,
+then you may read all matching structures from that file with a right mouse click into the respective reactant
+area and choosing <span class="menu">Add From File...</span>.
 In this case an automatic sub-structure search ensures that only those molecules are used, which contain
 the defined generic reactant. In addition or alternatively, you may add or change reactant structures
 using drag&drop or copy/paste. A right mouse click within the structure area opens a popup menu that lets

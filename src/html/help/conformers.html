@@ -51,26 +51,32 @@ no matter whether a row contains just one or multiple conformers.</p>
 <p><b>Algorithm:</b> Most of the algorithms, which can be selected here, share the same general procedure
 to generate conformers, a rule based assembly of self organized rigid fragments:<br>
 First <span class="keyword">DataWarrior</span> locates all freely rotatable bonds
-of the molecule, which are not part of a ring. By cutting any of these bonds a set of more or less rigid
+of the molecule, which are not part of a ring. By cutting all of these bonds a set of more or less rigid
 fragments is obtained. For any of these fragments a self organization based algorithm creates one or multiple
 fragment conformers.<br>
-In a second step the local environment of every rotatable bond is used to assign the bond to a specific bond class.
-Using bond classes <span class="keyword">DataWarrior</span> assigns preferred torsion angles to any rotatable bond.
-These are taken from experimental, i.e. crystallographic data. Torsion angle likelyhoods are used in addition, which
-reflect how often a particular torsion angle is found in x-ray data.<br>
-In a third step, the fragments are then assembled using the preferred torsions for every rotatable bond.
-A collision check determines, whether the combination of torsions causes any atom collisions.
-If no collision occurs, the conformer is accepted and a new permutation is chosen. Otherwise,
+In a second step the local neighborhood of every rotatable bond is inspected and used to assign the bond to a
+specific bond class. A bond class is basically defined as a sub-structure with query features that describe all
+neighbor atoms and bonds of the rotatable bond. <span class="keyword">DataWarrior</span> uses a dictionary of
+about 5000 distinct rotatable bond environments, which have been extracted from experimental, i.e. crystallographic
+data. Every one of these rotatable bond classes comes with a list of preferred torsion angles and frequency data
+about how often these torsion angles have been found in the crystallographic database. From the frequency data
+<span class="keyword">DataWarrior</span> derives a likelyhood for any of the torsion angles. Now using bond classes
+<span class="keyword">DataWarrior</span> assigns a set of preferred torsion angles along with their likelyhoods
+to any rotatable bond of the molecule.
+<br>
+In a third step, the fragments are then assembled after choosing one of the preferred torsion angles for every
+rotatable bond. A collision check determines, whether the combination of torsions causes any atom collisions.
+If no collision occurs, the conformer is accepted and a new combination is chosen. Otherwise,
 the algorithm creates a rule about a torsion combination, which leads to a collision. These rules are considered
 when constructing new conformers.<br>
 Potentially, the number of constructable conformers may be very high, depending on the number of rotatable bonds,
-the number of torsions per bond and the number of self-organized fragment conformers. Therefore, a selectable
-algorithm prioritizes how torsion angles are permutated, how atom collisions are handled and to which extend
-likely torsions are preferred:
+the number of torsions per bond and the number of self-organized fragment conformers. Therefore, one of multiple
+strategies must be chosen, which prioritize how torsion angles are permutated, how atom collisions are handled
+and to which extend likely torsions are preferred:
 <ul>
 <li><span class="keyword">Random, low energy bias:</span> This strategy randomly selects for every new conformer
 a new set of torsions and fragments. However, a weighted random method is used giving more likely torsion angles
-and better scoring fragments a higher chance of being selected that the less likely ones. This is a well ballanced
+and better scoring fragments a higher chance of being selected than the less likely ones. This is a well balanced
 strategy leading to diverse low energy conformers.</li>
 <li><span class="keyword">Pure random:</span> The degrees of freedom are selected randomly neglecting any
 likelyhoods. This produces the most diverse conformers, but not necessarily low energy ones.</li>
@@ -80,10 +86,11 @@ atom collisions. Then, for every rotatable bond is determined to which extend it
 contributes to atom collisions. With a weighted random approach one of the rotatable bonds is chosen to be modified
 next, such that the likelyhood for the next conformer is high to escape the collision.</li>
 <li><span class="keyword">Systematic, low energy bias:</span> The starting point for this algorithm is that
-conformer, which uses for any degree of freedom the most likely option, i.e. the torsion angle for every
-rotatable bond and the best scoring fragment conformer where we have multiple choices. For the next conformer
-only that degree of freedom is changed, which goes along with the smallest the drop in overall likelyhood.
-This way, the most likely conformers are produced first, but the initial diversity may not be very high.</li>
+conformer, which uses for any degree of freedom the lowest energy option, i.e. for every rotatable bond the
+lowest energy torsion angle for every fragment conformation choice the best scoring one. For the next conformer
+only that degree of freedom is changed, which causes the smallest overall increase of energy.
+This way, the most likely conformers are produced first, but the initial diversity may be low if only a few
+conformers are generated.</li>
 <li><span class="keyword">Self organized:</span> This algorithm does not use the general procedure described above.
 It applies a self organization approach to the entire molecule. For that all atoms are initialized with random
 coordinates. The a list of constraints is determined as follows: Distance constrainst define preferred distances
@@ -123,7 +130,8 @@ automatically pooled into one row and aligned on the most central rigid fragment
 <p><b>Write into file:</b> When this option is selected, generated conformers are exported into a compound file
 rather than added to the current dataset.</p>
 <p><b>File type:</b> The most widely supported format is probably the SD-file version 2, while the most compact file
-format is certainly a native DataWarrior file.</p>
+format is certainly a native DataWarrior file. Note that in addition to DataWarrior itself also LigandScout from
+Inte:ligand is able to read single and multiple conformers from native DataWarrior files.</p>
 <p><b>Pool conformers of same compound:</b> If conformers are saved as a native DataWarrior file, then this option
 allows storing all conformers of one compound into the same target row. Within DataWarrior such a
 conformer set will then be displayed in the detail view as a conformer ensemble that is automatically superposed

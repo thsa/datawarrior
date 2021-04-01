@@ -57,16 +57,16 @@ column, which receives the original column names and serves to assign rows to or
 
 <h3><i><a name="MergeColumns"></a>Merging Columns</i></h3>
 <p>
-  This rather simple functionality merges the content of multiple columns into a new one.
-  This may be useful, if multiple columns contain similar data, which shall be used together
-  in views, filters or further calculations. When merging, individual values from different
-  source columns are separated properly that <span class="keyword">DataWarrior</span> perceives
-  them still as multiple values. With <span class="menu">Show Multiple Values As...</span>
+  This rather simple functionality merges cell content from multiple columns into a new one.
+  This may be useful, if multiple columns contain data of the same kind, which shall be used together
+  in views, filters or further calculations. After merging into one column, the values from different
+  source columns are still separated properly, such that <span class="keyword">DataWarrior</span> still
+  perceives them as multiple values. With <span class="menu">Show Multiple Values As...</span>
   from the column title popup menu one may choose to display mean, median, or other display modes.</p>
-<p>This rather simple functionality gets interesting when chemical structures get involved, especially
-  after a R-group deconvolution (SAR Analysis). In this case chemical structures are not only merged
-  into one new structure, they are also rejoined where they contains R-groups that are defined in
-  one of the merged columns. In the following example R2 and R3 are re-joined with the scaffold,
+<p>This rather simple functionality gets interesting when chemical structures are involved, especially
+  after an R-group deconvolution (SAR Analysis). In this case chemical structures are not only merged
+  into one new structure, they are also rejoined where they contained an R-substituent that is defined in
+  one of the columns to be merged. In the following example R2 and R3 are re-joined with the scaffold,
   while R1 is left out and, thus, kept as remaining multiplicity in regard to the new column.</p>
 <p align="center"><img src="help/img/analysis/mergeColumns.jpeg" height="288" width="680"></p>
 <p><center><i>Merge Column dialog and table view with new column after structure merge.</i></center></p>

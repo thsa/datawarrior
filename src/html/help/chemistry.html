@@ -747,36 +747,46 @@ compounds.</p>
 <p>In a next step the algorithm applies customizable fitness criteria to rank the new generation's molecules
 according to these criteria. The highest ranking molecules from this generation are selected to survive
 and form the parent molecules for the next generation.
-Typically, after a few hundred molecule generations <span class="keyword">DataWarrior</span>
+Typically, after about one or a few hundred molecule generations <span class="keyword">DataWarrior</span>
 has arrived at structures that optimally match the defined fitness criteria.</p>
 
-<p>You may define multiple fitness criteria in the <i>Evolutionaly Library Dialog</i>. Criteria may
+<p>Usually, one defines multiple fitness criteria in the <i>Evolutionaly Library Dialog</i>. Criteria may
 be weighted to make them more important or less important than others. Together all defined criteria form the
-desired compound property profile.
-For simple properties one may define an optimal
-numerical range. One may also require compounds to be similar or dissimilar to
-a definable set of compounds using any descriptor. All individual fitness criteria
-can be weighted to make them more or less important than others.</p>
+desired compound property profile. Simple fitness criteria consist of an optimal numerical range
+for a computable compound property. Others require compounds to be similar or dissimilar to
+a definable set of compounds using any descriptor. Most complex and computationally expensive are
+3-dimensional similarity based criteria, because they involve the creation of conformers for every
+evolutionary made candidate. At the same time they are the most applealing fitness options, at least
+if one seeks to find novel ideas to replace a known binding ligand with known 3D-coordinates.</p>
 
-<p align="center"><img src="help/img/chem/fitness.jpeg"></p>
+<p align="center"><img src="help/img/chem/evolibdef.png" width="600" height="604"></p>
+<p align="center"><i>Evolutionary library options and fitness criteria defined to match shape and
+pharmacophoric features of known Ligase inhibitor, while being structurally different from the same inhibitor,
+and having a cLogP value below 4.0.</i></p>
 
-<p>In the fitness example above we look for compounds, whose chemical structure is
-dissimilar to any of three known inhibitors, while at the same time being similar
-to at least one of these inhibitors considering flexophore similarity. In other
-words, we are looking for compounds with a similar target binding behaviour, but
-with a dissimilar chemical structure to the known inhibitors.</p>
+<p>In the fitness example above we look for compounds, whose chemical structure is dissimilar to
+a known Ligase inhiobitor, but nevertheless have at least one low energy conformer that matches in shape and
+position of pharmacophoric features the binding conformer of the Ligase inhibitor. The query
+structure was taken from the 4MUG entry of the PDB database. In this case the first generation consists
+of small druglike random molecules and the type of molecules to create are also defined to be drug-like.
+After defining all criterial and pressing OK, the evolutionary algorithm starts designing molecules.
+A window opens that shows the progress, the structure of the currently mutated parent molecule,
+the molecules in the current generation and the overall best ranking molecule. The frame color
+of these molecules range from red to green and indicate how well the fitness portfolio is already met.
+</p>
 
-<p align="center"><img src="help/img/chem/eLibrary.jpeg"></p>
+<p align="center"><img src="help/img/chem/evolibprogress.png" width="500" height="310"></p>
+<p align="center"><i>Window showing progress and best matching molecules during evolutionary library optimization.</i></p>
 
-<p>The picture above shows the <span class="menu">General</span> panel
-of the dialog after starting the evolutionary process. As starting point the
-structure of LDS has been selected, which is as good as any other starting point.
-The type of compounds being created is set to <span class="menu">natural products</span>.
-We see the structure of the currently mutated parent molecule, the molecules in the
-current generation and the overall best ranking molecule. The background color
-of these molecules reflect how well the fitness portfolio is already met.
-Any time during the evolution process one may click <span class="menu">Stop</span>
-to create a new document with the fittest structures of all generations.</p>
+<p>If defined then the evolution stops automatically once no progress is achieved over some generations,
+or one may click <span class="menu">Stop</span> to hold the process any time manually.
+Then, DataWarrior creates a new window with the best molecules
+from all generations and a view that shows how fitness increased over time. This view also highlights the
+best molecule and its parent molecules over all previous generations back to the first random ancestor.</p>
+
+<p align="center"><img src="help/img/chem/evolibresult.jpeg" width="680" height="232"></p>
+<p align="center"><i>Window showing progress and best matching molecules during evolutionary library optimization.</i></p>
+
 <br>
 
 <h3><a name="RandomMolecules"></a>Generating Random Molecules</h3>

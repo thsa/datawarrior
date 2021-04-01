@@ -134,8 +134,15 @@ public class FitnessEvolutionPanel extends JPanel {
 			if (mMaxFitness[generation] < fitness)
 				mMaxFitness[generation] = fitness;
 			}
-		for (int i=0; i<generations; i++)
-			mAVGFitness[i] /= mCompounds[i];
+		for (int i=0; i<generations; i++) {
+			if (mCompounds[i] == 0) {
+				mMaxFitness[i] = mMaxFitness[i-1];
+				mAVGFitness[i] = mAVGFitness[i-1];
+				}
+			else {
+				mAVGFitness[i] /= mCompounds[i];
+				}
+			}
 
 		repaint();
 		mLock.set(false);

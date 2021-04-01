@@ -20,18 +20,11 @@ package com.actelion.research.datawarrior.task.chem.elib;
 
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Insets;
-import java.awt.RenderingHints;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.geom.Line2D;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.JPanel;
 
 public class FitnessEvolutionPanel extends JPanel {
 	private static final long serialVersionUID = 20140725L;
@@ -50,7 +43,7 @@ public class FitnessEvolutionPanel extends JPanel {
 
 	@Override
 	public void paintComponent(Graphics g) {
-		if (mLock.compareAndSet(false, true))	// skip painting if we are currently updating data
+		if (!mLock.compareAndSet(false, true))	// skip painting if we are currently updating data
 			return;
 
         super.paintComponent(g);
@@ -126,7 +119,7 @@ public class FitnessEvolutionPanel extends JPanel {
 		if (mLock.get() || resultSet == null || generations < 2)
 			return;
 
-		if (mLock.compareAndSet(false, true))	// skip update if we are currently painting
+		if (!mLock.compareAndSet(false, true))	// skip update if we are currently painting
 			return;
 
 		mAVGFitness = new float[generations+1];	// to include first parent generation (index = -1)

@@ -39,7 +39,7 @@ public class DEVersionChecker extends JDialog implements ActionListener {
 	private static final String URL2 = "http://87.102.212.253:8084";
 
 	private static final long serialVersionUID = 20140209;
-	private static final String DATAWARRIOR_VERSION = "v05.02.01";	// format v00.00.00[_beta]
+	private static final String DATAWARRIOR_VERSION = "v05.05.00";	// format v00.00.00[_beta]
 	public static void checkVersion(final Frame parent, final boolean showUpToDateMessage) {
 		new Thread(() -> {
 			Preferences prefs = DataWarrior.getPreferences();

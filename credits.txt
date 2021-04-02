@@ -1,0 +1,11 @@
+Isabelle Giraud: Many Ideas, Quality Control, Coaching
+Kirill Grouchnikov: Substance Look&Feel
+Robert Hanson: JMol Graphics Engine
+Leif Jonsson: t-SNE
+Modest von Korff: Flexophore, Machine Learning
+Christopher Kulla: Sunflow Raytracer
+Thomas Liphardt: Cards View
+Christian Rufener: Windows Integration
+Paolo Tosco, Daniel Bergmann: MMFF94 for Java
+Joel Wahl: MMFF94+, PheSA, Docking
+

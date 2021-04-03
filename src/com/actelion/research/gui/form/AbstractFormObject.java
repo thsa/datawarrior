@@ -133,7 +133,8 @@ public abstract class AbstractFormObject {
 	 */
 	public void setEditable(boolean b) {
 		mComponent.setBackground(UIManager.getColor(b ? "TextArea.background" : "TextArea.inactiveBackground"));
-		mComponent.getDropTarget().setActive(b);
+		if (mComponent.getDropTarget() != null)
+			mComponent.getDropTarget().setActive(b);
 		if (mBorder != null)
 			mBorder.setEditMode(b);
 		}

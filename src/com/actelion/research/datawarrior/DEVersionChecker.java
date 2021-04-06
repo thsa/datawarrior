@@ -18,6 +18,7 @@
 
 package com.actelion.research.datawarrior;
 
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.util.BrowserControl;
 import info.clearthought.layout.TableLayout;
 import org.openmolecules.comm.ServerErrorException;
@@ -40,6 +41,7 @@ public class DEVersionChecker extends JDialog implements ActionListener {
 
 	private static final long serialVersionUID = 20140209;
 	private static final String DATAWARRIOR_VERSION = "v05.05.00";	// format v00.00.00[_beta]
+
 	public static void checkVersion(final Frame parent, final boolean showUpToDateMessage) {
 		new Thread(() -> {
 			Preferences prefs = DataWarrior.getPreferences();
@@ -72,9 +74,11 @@ public class DEVersionChecker extends JDialog implements ActionListener {
 									sb.append("\n").append(line);
 									line = reader.readLine();
 									}
-								text = sb.toString();
 
-								new DEVersionChecker(parent, version, updateURL, text).setVisible(true);
+								final String msg = sb.toString();
+
+								SwingUtilities.invokeLater(() ->
+									new DEVersionChecker(parent, version, updateURL, msg).setVisible(true) );
 								}
 							}
 						}
@@ -138,7 +142,8 @@ public class DEVersionChecker extends JDialog implements ActionListener {
 		ep.setContentType("text/plain");
 		ep.setText(text);
 		JScrollPane sp = new JScrollPane(ep, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		sp.setPreferredSize(new Dimension(480, 240));
+		sp.setPreferredSize(new Dimension(HiDPIHelper.scale(540), HiDPIHelper.scale(240)));
+		SwingUtilities.invokeLater(() -> sp.getVerticalScrollBar().setValue(sp.getVerticalScrollBar().getMinimum()));
 
 		getContentPane().add(sp, "1,5");
 

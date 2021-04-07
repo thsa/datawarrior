@@ -33,7 +33,7 @@ mssql-jdbc-7.2.2.jre8
 
 mysql-connector-java-8.0.19.jar
 
-opsin-2.4.0-excludingInChI-jar-with-dependencies.jar from https://bitbucket.org/dan2097/opsin/downloads/
+opsin-2.5.0-excludingInChI-jar-with-dependencies.jar from https://github.com/dan2097/opsin/releases/tag/2.5.0
 
 postgresql-42.2.6.jar
 

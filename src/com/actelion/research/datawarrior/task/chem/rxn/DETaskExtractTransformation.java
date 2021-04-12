@@ -18,18 +18,17 @@
 
 package com.actelion.research.datawarrior.task.chem.rxn;
 
-import java.util.Arrays;
-import java.util.Properties;
-
-import com.actelion.research.chem.*;
-import com.actelion.research.chem.descriptor.*;
+import com.actelion.research.chem.Molecule;
+import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.chem.reaction.ReactionEncoder;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.chem.DETaskAbstractFromReaction;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
+import java.util.Properties;
 
 public class DETaskExtractTransformation extends DETaskAbstractFromReaction {
 	public static final String TASK_NAME = "Extract Reaction Transformation";
@@ -39,7 +38,7 @@ public class DETaskExtractTransformation extends DETaskAbstractFromReaction {
 	private static final String[] DETAIL_CODE = { "oneShell", "oneShellEx", "twoShells", "twoShellsEx" };
 	private static final int DETAIL_DEFAULT = 1;
 
-	private JComboBox mCheckBoxDetail;
+	private JComboBox mComboBoxDetail;
 	private int mDetail;
 
 	public DETaskExtractTransformation(DEFrame parent) {
@@ -65,21 +64,22 @@ public class DETaskExtractTransformation extends DETaskAbstractFromReaction {
 
 	@Override
 	public JPanel getExtendedDialogContent() {
-		double[][] size = { {TableLayout.PREFERRED, 8, TableLayout.PREFERRED}, {TableLayout.PREFERRED} };
+		int gap = HiDPIHelper.scale(8);
+		double[][] size = { {TableLayout.PREFERRED, gap, TableLayout.PREFERRED}, {TableLayout.PREFERRED} };
 
-		mCheckBoxDetail = new JComboBox(DETAIL_TEXT);
+		mComboBoxDetail = new JComboBox(DETAIL_TEXT);
 
 		JPanel ep = new JPanel();
 		ep.setLayout(new TableLayout(size));
 		ep.add(new JLabel("Extend reaction center by:"), "0,0");
-		ep.add(mCheckBoxDetail, "2,0");
+		ep.add(mComboBoxDetail, "2,0");
 		return ep;
 	}
 
 	@Override
 	public Properties getDialogConfiguration() {
 		Properties configuration = super.getDialogConfiguration();
-		configuration.setProperty(PROPERTY_DETAIL, DETAIL_CODE[mCheckBoxDetail.getSelectedIndex()]);
+		configuration.setProperty(PROPERTY_DETAIL, DETAIL_CODE[mComboBoxDetail.getSelectedIndex()]);
 		return configuration;
 		}
 
@@ -87,13 +87,13 @@ public class DETaskExtractTransformation extends DETaskAbstractFromReaction {
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
 		int index = findListIndex(configuration.getProperty(PROPERTY_DETAIL), DETAIL_CODE, DETAIL_DEFAULT);
-		mCheckBoxDetail.setSelectedIndex(index);
+		mComboBoxDetail.setSelectedIndex(index);
 		}
 
 	@Override
 	public void setDialogConfigurationToDefault() {
 		super.setDialogConfigurationToDefault();
-		mCheckBoxDetail.setSelectedIndex(DETAIL_DEFAULT);
+		mComboBoxDetail.setSelectedIndex(DETAIL_DEFAULT);
 		}
 
 	@Override

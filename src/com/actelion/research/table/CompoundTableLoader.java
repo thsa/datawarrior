@@ -1037,17 +1037,9 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private void insertChemistryFromSmiles(StereoMolecule mol, int smilesColumn, boolean isReaction) {
 		int columnCount = mFieldNames.length;
 
-		final String[] reactionColumnName = { "Reaction", "RxnMapping", "RxnCoords", "Catalysts", "ReactionFP", "ReactantFFP", "ProductFFP", "RxnCatFragFp", "RxnCatOrgFunc" };
+		final String[] reactionColumnName = { "Reaction", "RxnMapping", "RxnCoords", "ReactionFP", "ReactantFFP", "ProductFFP", "Catalysts", "RxnCatFragFp", "RxnCatOrgFunc" };
 		final String[] moleculeColumnName = { "Structure of "+mFieldNames[smilesColumn], "SmilesFragFp" };
 		String[] newColumnName = isReaction ? reactionColumnName : moleculeColumnName;
-
-		String[] newFieldNames = new String[columnCount+newColumnName.length];
-		for (int i=0; i<columnCount; i++)
-			newFieldNames[i < smilesColumn ? i : i+newColumnName.length] = mFieldNames[i];
-		for (int i=0; i<newColumnName.length; i++)
-			newFieldNames[smilesColumn+i] = ensureUniqueness(newColumnName[i], mFieldNames);
-
-		mFieldNames = newFieldNames;
 
 		for (int row=0; row<mFieldData.length; row++) {
 			Object[] newFieldData = new Object[columnCount+newColumnName.length];
@@ -1062,31 +1054,66 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			insertChemistryFromSmiles(mol, smilesColumn, smilesColumn+newColumnName.length, isReaction);
 
 		if (isReaction) {
-			String catalystColumnName = newFieldNames[smilesColumn+3];
+			boolean catalystsFound = false;
+			for (int row=0; row<mFieldData.length; row++) {
+				if (mFieldData[row][smilesColumn+6] != null) {
+					catalystsFound = true;
+					break;
+					}
+				}
+			boolean mappingFound = false;
+			for (int row=0; row<mFieldData.length; row++) {
+				if (mFieldData[row][smilesColumn+1] != null) {
+					catalystsFound = true;
+					break;
+				}
+			}
+			if (!catalystsFound) {
+				newColumnName = Arrays.copyOf(reactionColumnName, reactionColumnName.length-3);
+				for (int row=0; row<mFieldData.length; row++) {
+					Object[] newFieldData = new Object[columnCount+newColumnName.length];
+					for (int i=0; i<newFieldData.length; i++)
+						newFieldData[i] = mFieldData[row][i < smilesColumn+newColumnName.length ? i : i+3];
+					mFieldData[row] = newFieldData;
+					}
+				}
+			}
+
+		String[] newFieldNames = new String[columnCount+newColumnName.length];
+		for (int i=0; i<columnCount; i++)
+			newFieldNames[i < smilesColumn ? i : i+newColumnName.length] = mFieldNames[i];
+		for (int i=0; i<newColumnName.length; i++)
+			newFieldNames[smilesColumn+i] = ensureUniqueness(newColumnName[i], mFieldNames);
+		mFieldNames = newFieldNames;
+
+		if (isReaction) {
 			addColumnProperty(newFieldNames[smilesColumn], cColumnPropertySpecialType, cColumnTypeRXNCode);
-			addColumnProperty(newFieldNames[smilesColumn], cColumnPropertyRelatedCatalystColumn, catalystColumnName);
 			addColumnProperty(newFieldNames[smilesColumn+1], cColumnPropertySpecialType, cColumnTypeReactionMapping);
 			addColumnProperty(newFieldNames[smilesColumn+1], cColumnPropertyParentColumn, newFieldNames[smilesColumn]);
 			addColumnProperty(newFieldNames[smilesColumn+2], cColumnPropertySpecialType, cColumnType2DCoordinates);
 			addColumnProperty(newFieldNames[smilesColumn+2], cColumnPropertyParentColumn, newFieldNames[smilesColumn]);
-			addColumnProperty(newFieldNames[smilesColumn+3], cColumnPropertySpecialType, cColumnTypeIDCode);
-			addColumnProperty(newFieldNames[smilesColumn+4], cColumnPropertySpecialType, DescriptorConstants.DESCRIPTOR_ReactionFP.shortName);
-			addColumnProperty(newFieldNames[smilesColumn+4], cColumnPropertyDescriptorVersion, DescriptorConstants.DESCRIPTOR_ReactionFP.version);
+			addColumnProperty(newFieldNames[smilesColumn+3], cColumnPropertySpecialType, DescriptorConstants.DESCRIPTOR_ReactionFP.shortName);
+			addColumnProperty(newFieldNames[smilesColumn+3], cColumnPropertyDescriptorVersion, DescriptorConstants.DESCRIPTOR_ReactionFP.version);
+			addColumnProperty(newFieldNames[smilesColumn+3], cColumnPropertyParentColumn, newFieldNames[smilesColumn]);
+			addColumnProperty(newFieldNames[smilesColumn+4], cColumnPropertySpecialType, DescriptorConstants.DESCRIPTOR_FFP512.shortName);
+			addColumnProperty(newFieldNames[smilesColumn+4], cColumnPropertyDescriptorVersion, DescriptorConstants.DESCRIPTOR_FFP512.version);
+			addColumnProperty(newFieldNames[smilesColumn+4], cColumnPropertyReactionPart, cReactionPartReactants);
 			addColumnProperty(newFieldNames[smilesColumn+4], cColumnPropertyParentColumn, newFieldNames[smilesColumn]);
 			addColumnProperty(newFieldNames[smilesColumn+5], cColumnPropertySpecialType, DescriptorConstants.DESCRIPTOR_FFP512.shortName);
 			addColumnProperty(newFieldNames[smilesColumn+5], cColumnPropertyDescriptorVersion, DescriptorConstants.DESCRIPTOR_FFP512.version);
-			addColumnProperty(newFieldNames[smilesColumn+5], cColumnPropertyReactionPart, cReactionPartReactants);
+			addColumnProperty(newFieldNames[smilesColumn+5], cColumnPropertyReactionPart, cReactionPartProducts);
 			addColumnProperty(newFieldNames[smilesColumn+5], cColumnPropertyParentColumn, newFieldNames[smilesColumn]);
-			addColumnProperty(newFieldNames[smilesColumn+6], cColumnPropertySpecialType, DescriptorConstants.DESCRIPTOR_FFP512.shortName);
-			addColumnProperty(newFieldNames[smilesColumn+6], cColumnPropertyDescriptorVersion, DescriptorConstants.DESCRIPTOR_FFP512.version);
-			addColumnProperty(newFieldNames[smilesColumn+6], cColumnPropertyReactionPart, cReactionPartProducts);
-			addColumnProperty(newFieldNames[smilesColumn+6], cColumnPropertyParentColumn, newFieldNames[smilesColumn]);
-			addColumnProperty(newFieldNames[smilesColumn+7], cColumnPropertySpecialType, DescriptorConstants.DESCRIPTOR_FFP512.shortName);
-			addColumnProperty(newFieldNames[smilesColumn+7], cColumnPropertyDescriptorVersion, DescriptorConstants.DESCRIPTOR_FFP512.version);
-			addColumnProperty(newFieldNames[smilesColumn+7], cColumnPropertyParentColumn, catalystColumnName);
-			addColumnProperty(newFieldNames[smilesColumn+8], cColumnPropertySpecialType, DescriptorConstants.DESCRIPTOR_OrganicFunctionalGroups.shortName);
-			addColumnProperty(newFieldNames[smilesColumn+8], cColumnPropertyDescriptorVersion, DescriptorConstants.DESCRIPTOR_OrganicFunctionalGroups.version);
-			addColumnProperty(newFieldNames[smilesColumn+8], cColumnPropertyParentColumn, catalystColumnName);
+			if (newColumnName.length == reactionColumnName.length) {
+				String catalystColumnName = newFieldNames[smilesColumn+6];
+				addColumnProperty(newFieldNames[smilesColumn], cColumnPropertyRelatedCatalystColumn, catalystColumnName);
+				addColumnProperty(newFieldNames[smilesColumn+6], cColumnPropertySpecialType, cColumnTypeIDCode);
+				addColumnProperty(newFieldNames[smilesColumn+7], cColumnPropertySpecialType, DescriptorConstants.DESCRIPTOR_FFP512.shortName);
+				addColumnProperty(newFieldNames[smilesColumn+7], cColumnPropertyDescriptorVersion, DescriptorConstants.DESCRIPTOR_FFP512.version);
+				addColumnProperty(newFieldNames[smilesColumn+7], cColumnPropertyParentColumn, catalystColumnName);
+				addColumnProperty(newFieldNames[smilesColumn+8], cColumnPropertySpecialType, DescriptorConstants.DESCRIPTOR_OrganicFunctionalGroups.shortName);
+				addColumnProperty(newFieldNames[smilesColumn+8], cColumnPropertyDescriptorVersion, DescriptorConstants.DESCRIPTOR_OrganicFunctionalGroups.version);
+				addColumnProperty(newFieldNames[smilesColumn+8], cColumnPropertyParentColumn, catalystColumnName);
+				}
 			}
 		else {
 			addColumnProperty(newFieldNames[smilesColumn], cColumnPropertySpecialType, cColumnTypeIDCode);
@@ -1203,7 +1230,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				if (rxnData[2] != null && rxnData[2].length() != 0)
 					mFieldData[row][reactionColumn+2] = rxnData[2].getBytes();
 				if (rxnData[4] != null && rxnData[4].length() != 0)
-					mFieldData[row][reactionColumn+3] = rxnData[4].getBytes();
+					mFieldData[row][reactionColumn+6] = rxnData[4].getBytes();
 				}
 			}
 		}

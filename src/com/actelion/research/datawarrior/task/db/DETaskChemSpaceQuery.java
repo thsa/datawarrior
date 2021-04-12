@@ -276,6 +276,14 @@ public class DETaskChemSpaceQuery extends DETaskStructureQuery {
 		JSONObject result = null;
 		try {
 			BufferedReader reader = new BufferedReader(getSearchResultReader(url, smiles));
+
+/*			System.out.println(url);    // print the result rather than process it
+			String line = reader.readLine();
+			while (line != null) {
+				System.out.println(line);
+				line = reader.readLine();
+				}   */
+
 			result = new JSONObject(new JSONTokener(reader));
 			Integer count = (Integer)result.get("count");
 			if (count != null && count != 0) {

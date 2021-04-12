@@ -18,10 +18,10 @@
 
 package com.actelion.research.datawarrior;
 
-import com.actelion.research.chem.coords.CoordinateInventor;
 import com.actelion.research.chem.Molecule;
 import com.actelion.research.chem.SSSearcher;
 import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.chem.coords.CoordinateInventor;
 import com.actelion.research.chem.mcs.MCS;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.table.model.CompoundRecord;
@@ -56,6 +56,9 @@ public class DECompoundTableModel extends CompoundTableModel {
 			switch (hiliteMode) {
 				case cReactionHiliteModeReactionCenter:
 					colorizeReactionCenterAtoms(rxn);
+					break;
+				case cReactionHiliteModeMapping:
+					colorizeReactionMapping(rxn);
 					break;
 				}
 			}
@@ -415,6 +418,21 @@ public class DECompoundTableModel extends CompoundTableModel {
 				rxn.getReactionCenterAtoms(m, usedMapNos, isRC, null);
 				for (int atom=0; atom<mol.getAllAtoms(); atom++)
 					mol.setAtomColor(atom, isRC[atom] ? Molecule.cAtomColorRed : Molecule.cAtomColorNone);
+				}
+			}
+		}
+
+	private void colorizeReactionMapping(Reaction rxn) {
+		int maxMapNo = rxn.getHighestMapNo();
+		if (maxMapNo != 0) {
+//			Color[] color =VisualizationColor.createDiverseColorList(maxMapNo-1);
+			for (int m=0; m<rxn.getMolecules(); m++) {
+				StereoMolecule mol = rxn.getMolecule(m);
+				for (int atom=0; atom<mol.getAllAtoms(); atom++) {
+					int mapNo = mol.getAtomMapNo(atom);
+					if (mapNo != 0)
+						mol.setAtomColor(atom, mol.isAutoMappedAtom(atom) ? Molecule.cAtomColorGreen : Molecule.cAtomColorRed);
+					}
 				}
 			}
 		}

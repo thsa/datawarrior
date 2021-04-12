@@ -55,7 +55,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 	protected static final int DESCRIPTOR_ANY = 3;
 	protected static final int DESCRIPTOR_3D_COORDINATES = 4;
 
-	private static final String PROPERTY_CHEMISTRY_COLUMN = "structureColumn";
+	public static final String PROPERTY_CHEMISTRY_COLUMN = "structureColumn";
 	private static final String PROPERTY_DESCRIPTOR = "descriptor";
 	private static final String PROPERTY_COORDS3D_COLUMN = "coords3D";
 	private static final String PROPERTY_NEW_COLUMN_NAME = "columnName";
@@ -300,7 +300,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		if (isLive) {
-			int idcodeColumn = selectChemistryColumn(configuration);
+			int idcodeColumn = getChemistryColumn(configuration);
 			if (idcodeColumn == -1) {
 				showErrorMessage(getTypeName() + " column not found.");
 				return false;
@@ -423,7 +423,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 
 	@Override
 	public void runTask(Properties configuration) {
-		mChemistryColumn = selectChemistryColumn(configuration);
+		mChemistryColumn = getChemistryColumn(configuration);
 		mChildColumn = (mChildColumnClass == DESCRIPTOR_NONE) ? -1
 					 : (mChildColumnClass == DESCRIPTOR_3D_COORDINATES) ? mTableModel.findColumn(configuration.getProperty(PROPERTY_COORDS3D_COLUMN))
 					 : mTableModel.getChildColumn(mChemistryColumn, configuration.getProperty(PROPERTY_DESCRIPTOR));
@@ -593,7 +593,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 				null : mTableModel.getTotalRecord(row).getData(mChildColumn);
 		}
 
-	private int selectChemistryColumn(Properties configuration) {
+	public int getChemistryColumn(Properties configuration) {
 		int[] chemistryColumn = getCompatibleChemistryColumnList();
 		if (chemistryColumn.length == 1)
 			return chemistryColumn[0];	// there is no choice
@@ -604,7 +604,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 		return -1;
 		}
 
-	private int[] getCompatibleChemistryColumnList() {
+	public int[] getCompatibleChemistryColumnList() {
 		int[] chemistryColumn = null;
 
 		int[] idcodeColumn = mTableModel.getSpecialColumnList(getColumnType());

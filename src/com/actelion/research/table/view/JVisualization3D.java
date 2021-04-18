@@ -2342,6 +2342,9 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		}
 
 	private void drawConnectionLine(VisualizationPoint p1, VisualizationPoint p2, float intensity, boolean showArrow) {
+		if (isConnectionLineSuppressed(p1, p2))
+			return;
+
 		int focusFlagNo = (mFocusList == FocusableView.cFocusNone) ? -1
 						: (mFocusList == FocusableView.cFocusOnSelection) ? CompoundRecord.cFlagSelected
 						: mTableModel.getListHandler().getListFlagNo(mFocusList);

@@ -53,6 +53,12 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
     private static final String PROPERTY_LINE_WIDTH = "lineWidth";
     private static final float DEFAULT_LINE_WIDTH = 1.0f;
 
+	private static final String PROPERTY_LIST_MODE = "listMode";
+	private static final String PROPERTY_LIST1 = "list1";
+	private static final String PROPERTY_LIST2 = "list2";
+	private static final String TEXT_ANY = "<no or any list>";
+	private static final String CODE_ANY = "<any>";
+
 	private static final String PROPERTY_INVERT_ARROWS = "invertArrows";
     private static final String PROPERTY_TREE_VIEW = "treeView";
     private static final String PROPERTY_SHOW_ALL = "showAll";
@@ -60,7 +66,7 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 	private static final String PROPERTY_INVERT_TREE = "invert";
 
 	JSlider             mSliderLineWidth,mSliderRadius;
-	JComboBox			mComboBox1,mComboBox2,mComboBox3;
+	JComboBox			mComboBox1,mComboBox2,mComboBox3,mComboBoxHide,mComboBoxList1,mComboBoxList2;
 	JCheckBox			mCheckBoxInvertArrows,mCheckBoxShowAll,mCheckBoxIsDynamic,mCheckBoxInvertTree;
 	JLabel				mLabelLevels,mLabelRadius;
 
@@ -93,7 +99,8 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap },
     						{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2,
-								TableLayout.PREFERRED, gap*3, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/4,
+								TableLayout.PREFERRED, gap*3, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2,
+							    TableLayout.PREFERRED, gap*3, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/4,
 								TableLayout.PREFERRED, gap/4, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap } };
 		JPanel cp = new JPanel();
 		cp.setLayout(new TableLayout(size));
@@ -145,22 +152,50 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		mCheckBoxInvertArrows.addActionListener(this);
 		cp.add(mCheckBoxInvertArrows, "1,7,5,7");
 
+		mComboBoxHide = new JComboBox(JVisualization.cConnectionListModeText);
+		mComboBoxHide.addItemListener(this);
+		cp.add(mComboBoxHide, "1,9");
+		cp.add(new JLabel("connection lines if they connect"), "3,9,5,9");
+
+		mComboBoxList1 = new JComboBox();
+		for (int i = 0; i<getTableModel().getListHandler().getListCount(); i++)
+			mComboBoxList1.addItem(getTableModel().getListHandler().getListName(i));
+		mComboBoxList1.setEditable(!hasInteractiveView());
+		mComboBoxList1.addItemListener(this);
+		cp.add(new JLabel("a member of row list", JLabel.RIGHT), "1,11");
+		cp.add(mComboBoxList1, "3,11,5,11");
+
+		mComboBoxList2 = new JComboBox();
+		mComboBoxList2.addItem(TEXT_ANY);
+		for (int i = 0; i<getTableModel().getListHandler().getListCount(); i++)
+			mComboBoxList2.addItem(getTableModel().getListHandler().getListName(i));
+		mComboBoxList2.setEditable(!hasInteractiveView());
+		mComboBoxList2.addItemListener(this);
+		cp.add(new JLabel("with a member of", JLabel.RIGHT), "1,13");
+		cp.add(mComboBoxList2, "3,13,5,13");
+
+		if (hasInteractiveView() && getTableModel().getListHandler().getListCount() == 0) {
+			mComboBoxHide.setEnabled(false);
+			mComboBoxList1.setEnabled(false);
+			mComboBoxList2.setEnabled(false);
+			}
+
 		mComboBox3 = new JComboBox(JVisualization.TREE_VIEW_MODE_NAME);
     	mComboBox3.addItemListener(this);
 		cp.add(new JLabel("Detail tree mode: "), "1,9");
-		cp.add(mComboBox3, "3,9,5,9");
+		cp.add(mComboBox3, "3,15,5,15");
 
 		mCheckBoxShowAll = new JCheckBox("Show all markers if no tree root (reference row) is chosen");
 		mCheckBoxShowAll.addActionListener(this);
-		cp.add(mCheckBoxShowAll, "1,11,5,11");
+		cp.add(mCheckBoxShowAll, "1,17,5,17");
 
 		mCheckBoxIsDynamic = new JCheckBox("If nodes get invisible, re-arrange and remove sub-branches");
 		mCheckBoxIsDynamic.addActionListener(this);
-		cp.add(mCheckBoxIsDynamic, "1,13,5,13");
+		cp.add(mCheckBoxIsDynamic, "1,19,5,19");
 
 		mCheckBoxInvertTree = new JCheckBox("Invert tree direction (directed graphs only)");
 		mCheckBoxInvertTree.addActionListener(this);
-		cp.add(mCheckBoxInvertTree, "1,15,5,15");
+		cp.add(mCheckBoxInvertTree, "1,21,5,21");
 
 		mSliderRadius = new JSlider(JSlider.HORIZONTAL, 0, 20, DEFAULT_RADIUS);
 //		mSliderRadius.setMinorTickSpacing(1);
@@ -168,11 +203,11 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		mSliderRadius.setPreferredSize(new Dimension(HiDPIHelper.scale(100), mSliderRadius.getPreferredSize().height));
 		mSliderRadius.addChangeListener(this);
 		mLabelLevels = new JLabel("Detail tree layers:");
-		cp.add(mLabelLevels, "1,17");
-		cp.add(mSliderRadius, "3,17");
+		cp.add(mLabelLevels, "1,23");
+		cp.add(mSliderRadius, "3,23");
 		mLabelRadius = new JLabel(""+DEFAULT_RADIUS);
 		mLabelRadius.setPreferredSize(new Dimension(HiDPIHelper.scale(32), mLabelRadius.getPreferredSize().height));
-		cp.add(mLabelRadius, "5,17");
+		cp.add(mLabelRadius, "5,23");
 
 		return cp;
 	    }
@@ -190,6 +225,7 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		mSliderRadius.setValue(DEFAULT_RADIUS);
 		mCheckBoxInvertArrows.setSelected(false);
 		mSliderLineWidth.setValue((int)(50.0*Math.sqrt(DEFAULT_LINE_WIDTH)));
+		mComboBoxHide.setSelectedIndex(0);
 		mCheckBoxShowAll.setSelected(true);
 		mCheckBoxIsDynamic.setSelected(false);
 		mCheckBoxInvertTree.setSelected(false);
@@ -215,6 +251,16 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		else {
 			int column = getTableModel().findColumn(order);
 			mComboBox2.setSelectedItem(!hasInteractiveView() && column == -1 ? order : getTableModel().getColumnTitle(column));
+			}
+
+		if (mComboBoxHide.isEnabled()) {
+			int mode = findListIndex(configuration.getProperty(PROPERTY_LIST_MODE), JVisualization.cConnectionListModeCode, 0);
+			mComboBoxHide.setSelectedIndex(mode);
+			if (mode != 0) {
+				mComboBoxList1.setSelectedItem(configuration.getProperty(PROPERTY_LIST1, ""));
+				String list2Name = configuration.getProperty(PROPERTY_LIST2, CODE_ANY);
+				mComboBoxList2.setSelectedItem(CODE_ANY.equals(list2Name) ? TEXT_ANY : list2Name);
+				}
 			}
 
 		mComboBox3.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_TREE_VIEW),
@@ -258,6 +304,14 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		else
 			configuration.setProperty(PROPERTY_ORDER, getTableModel().getColumnTitleNoAlias(order));
 
+		if (mComboBoxHide.isEnabled() && mComboBoxHide.getSelectedIndex() != 0) {
+			configuration.setProperty(PROPERTY_LIST_MODE, JVisualization.cConnectionListModeCode[mComboBoxHide.getSelectedIndex()]);
+			if (mComboBoxList1.getItemCount() != 0)
+				configuration.setProperty(PROPERTY_LIST1, (String)mComboBoxList1.getSelectedItem());
+			String list2 = (String)mComboBoxList2.getSelectedItem();
+			configuration.setProperty(PROPERTY_LIST2, TEXT_ANY.equals(list2) ? CODE_ANY : list2);
+			}
+
 		configuration.setProperty(PROPERTY_TREE_VIEW, JVisualization.TREE_VIEW_MODE_CODE[mComboBox3.getSelectedIndex()]);
 
 		configuration.setProperty(PROPERTY_INVERT_ARROWS, mCheckBoxInvertArrows.isSelected() ? "true" : "false");
@@ -287,6 +341,15 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 			configuration.setProperty(PROPERTY_ORDER, PROPERTY_ORDER_CODE_X_AXIS);
 		else
 			configuration.setProperty(PROPERTY_ORDER, getTableModel().getColumnTitleNoAlias(selectedOrderColumn));
+
+		int listMode = visualization.getConnectionLineListMode();
+		if (listMode != 0) {
+			configuration.setProperty(PROPERTY_LIST_MODE, JVisualization.cConnectionListModeCode[listMode]);
+			int list1 = visualization.getConnectionLineList1();
+			configuration.setProperty(PROPERTY_LIST1, getTableModel().getListHandler().getListName(list1));
+			int list2 = visualization.getConnectionLineList2();
+			configuration.setProperty(PROPERTY_LIST2, list2 == -1 ? CODE_ANY : getTableModel().getListHandler().getListName(list2));
+			}
 
 		configuration.setProperty(PROPERTY_TREE_VIEW, JVisualization.TREE_VIEW_MODE_CODE[visualization.getTreeViewMode()]);
 
@@ -339,6 +402,11 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		int orderColumn = orderString.equals(PROPERTY_ORDER_CODE_X_AXIS) ? JVisualization.cColumnUnassigned
 				   : getTableModel().findColumn(orderString);
 
+		int listMode = findListIndex(configuration.getProperty(PROPERTY_LIST_MODE), JVisualization.cConnectionListModeCode, 0);
+		int list1 = (listMode == 0) ? -1 : getTableModel().getListHandler().getListIndex(configuration.getProperty(PROPERTY_LIST1));
+		int list2 = (listMode == 0) ? -1 : getTableModel().getListHandler().getListIndex(configuration.getProperty(PROPERTY_LIST2));
+		visualization.setConnectionLineListMode(listMode, list1, list2);
+
 		int mode = findListIndex(configuration.getProperty(PROPERTY_TREE_VIEW),
 					JVisualization.TREE_VIEW_MODE_CODE, JVisualization.cTreeViewModeNone);
 
@@ -385,6 +453,11 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		mComboBox2.setEnabled(!item.equals(ITEM_CONNECTION_NONE) && !item.equals(ITEM_CONNECTION_CASES) && !isReferencedConnection);
 		mSliderLineWidth.setEnabled(!item.equals(ITEM_CONNECTION_NONE));
 		mComboBox3.setEnabled(!hasInteractiveView() || isReferencedConnection);
+
+		if (mComboBoxHide.isEnabled()) {
+			mComboBoxList1.setEnabled(mComboBoxHide.getSelectedIndex() != 0);
+			mComboBoxList2.setEnabled(mComboBoxHide.getSelectedIndex() != 0);
+			}
 
 		boolean showDetailGraph = ((!hasInteractiveView() || isReferencedConnection)
 								&& mComboBox3.getSelectedIndex() != JVisualization.cTreeViewModeNone);

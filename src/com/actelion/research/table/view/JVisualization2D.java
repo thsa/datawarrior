@@ -1679,6 +1679,9 @@ public class JVisualization2D extends JVisualization {
 	 * @param transparency if 0.0 then the current composite is not touched and the line drawn with the current g2d transparency
 	 */
 	private void drawConnectionLine(VisualizationPoint p1, VisualizationPoint p2, boolean outOfFocus, float transparency, boolean showArrow) {
+		if (isConnectionLineSuppressed(p1, p2))
+			return;
+
 		Color color = ColorHelper.intermediateColor(mMarkerColor.getColorList()[p1.colorIndex],
 													mMarkerColor.getColorList()[p2.colorIndex], 0.5f);
 		if (transparency != 0.0f) {

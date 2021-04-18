@@ -121,6 +121,12 @@ public abstract class JVisualization extends JComponent
 	public static final int cGridModeShowVertical = 2;
 	public static final int cGridModeShowHorizontal = 3;
 
+	public static final String[] cConnectionListModeText = { "Don't suppress", "Only show", "Suppress" };
+	public static final String[] cConnectionListModeCode = { "none", "show", "hide" };
+	public static final int cConnectionListModeNone = 0;
+	public static final int cConnectionListModeShow = 1;
+	public static final int cConnectionListModeHide = 2;
+
 	public static final int cTreeViewModeNone = 0;
 	public static final int cTreeViewModeTopRoot = 1;
 	public static final int cTreeViewModeBottomRoot = 2;
@@ -213,7 +219,8 @@ public abstract class JVisualization extends JComponent
 									mFocusList,mCaseSeparationColumn,mCaseSeparationCategoryCount,mScaleMode,mScaleStyle,
 									mUseAsFilterFlagNo,mTreeViewMode,mActiveExclusionFlags,mHVCount,mHVExclusionTag,mFontSizeMode,
 									mVisibleCategoryExclusionTag,mMarkerJitteringAxes,mGridMode, mLocalExclusionList,
-									mOnePerCategoryLabelCategoryColumn,mOnePerCategoryLabelValueColumn,mOnePerCategoryLabelMode;
+									mOnePerCategoryLabelCategoryColumn,mOnePerCategoryLabelValueColumn,mOnePerCategoryLabelMode,
+									mConnectionLineListMode,mConnectionLineList1,mConnectionLineList2;
 	protected String				mPValueRefCategory,mWarningMessage;
 	protected Random				mRandom;
 	protected StereoMolecule		mLabelMolecule;
@@ -334,6 +341,10 @@ public abstract class JVisualization extends JComponent
 		mUseAsFilterFlagNo = -1;
 		mLocalExclusionList = -1;
 		mScatterPlotMargin = getDefaultScatterplotMargin();
+
+		mConnectionLineListMode = 0;
+		mConnectionLineList1 = -1;
+		mConnectionLineList2 = -1;
 
 		determineChartType();
 		}
@@ -559,6 +570,26 @@ public abstract class JVisualization extends JComponent
 				return (v1 < v2) ? -1 : 1;
 			}
 		return 0;
+		}
+
+	protected boolean isConnectionLineSuppressed(VisualizationPoint p1, VisualizationPoint p2) {
+		if (mConnectionLineListMode == cConnectionListModeNone)
+			return false;
+
+		long flag1 = mTableModel.getListHandler().getListMask(mConnectionLineList1);
+
+		boolean found = false;
+		if (mConnectionLineList2 == -1) {
+			found = ((p1.record.getFlags() & flag1) != 0L
+				  || (p2.record.getFlags() & flag1) != 0L);
+			}
+		else {
+			long flag2 = mTableModel.getListHandler().getListMask(mConnectionLineList2);
+			found = (((p1.record.getFlags() & flag1) != 0L && (p2.record.getFlags() & flag2) != 0L)
+				  || ((p1.record.getFlags() & flag2) != 0L && (p2.record.getFlags() & flag1) != 0L));
+			}
+
+		return found ^ (mConnectionLineListMode != cConnectionListModeHide);
 		}
 
 	protected boolean isConnectionLinePossible(VisualizationPoint p1, VisualizationPoint p2) {
@@ -3743,6 +3774,33 @@ public abstract class JVisualization extends JComponent
 			}
 		}
 
+	public void setConnectionLineListMode(int mode, int list1, int list2) {
+		if (mode == 0) {
+			list1 = -1;
+			list2 = -1;
+			}
+		if (mConnectionLineListMode != mode
+		 || mConnectionLineList1 != list1
+		 || mConnectionLineList2 != list2) {
+			mConnectionLineListMode = mode;
+			mConnectionLineList1 = list1;
+			mConnectionLineList2 = list2;
+			invalidateOffImage(false);
+			}
+		}
+
+	public int getConnectionLineListMode() {
+		return mConnectionLineListMode;
+		}
+
+	public int getConnectionLineList1() {
+		return mConnectionLineList1;
+		}
+
+	public int getConnectionLineList2() {
+		return mConnectionLineList2;
+		}
+
 	public void setConnectionLineWidth(float width, boolean isAdjusting) {
 		width = Math.min(4f, width);
 		if (mRelativeConnectionLineWidth != width) {
@@ -4934,6 +4992,16 @@ public abstract class JVisualization extends JComponent
 				else if (mFocusList > e.getListIndex())
 					mFocusList--;
 				}
+			if (mConnectionLineListMode != 0) {
+				if (mConnectionLineList1 == e.getListIndex())
+					setConnectionLineListMode(0, -1, -1);
+				else if (mConnectionLineList1 > e.getListIndex())
+					mConnectionLineList1--;
+				if (mConnectionLineList2 == e.getListIndex())
+					setConnectionLineListMode(0, -1, -1);
+				else if (mConnectionLineList1 > e.getListIndex())
+					mConnectionLineList1--;
+				}
 			if (mLabelList != cLabelsOnAllRows) {
 				if (mLabelList == e.getListIndex())
 					setMarkerLabelList(cLabelsOnAllRows);
@@ -5010,6 +5078,11 @@ public abstract class JVisualization extends JComponent
 				invalidateOffImage(false);
 				}
 			if (mLabelList == e.getListIndex()) {
+				invalidateOffImage(false);
+				}
+			if (mConnectionLineListMode != 0
+			 && (mConnectionLineList1 == e.getListIndex()
+			  || mConnectionLineList2 == e.getListIndex())) {
 				invalidateOffImage(false);
 				}
 			if (CompoundTableListHandler.isListColumn(mMarkerSizeColumn)) {

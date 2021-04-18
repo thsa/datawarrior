@@ -141,6 +141,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMultiValueMarkerColumns = "multiValueMarkerColumns";
 	private static final String cConnectionColumn1 = "connectionColumn";
 	private static final String cConnectionColumn2 = "connectionOrderColumn";
+	private static final String cConnectionLineListMode = "connectionLineListMode";
+	private static final String cConnectionLineList1 = "connectionLineList1";
+	private static final String cConnectionLineList2 = "connectionLineList2";
 	private static final String cConnectionArrows = "connectionArrows";
 	private static final String cConnectionColumnConnectAll = "<connectAll>";
 	private static final String cConnectionColumnConnectCases = "<connectCases>";
@@ -732,6 +735,14 @@ public class DERuntimeProperties extends RuntimeProperties {
 					value = getProperty(cConnectionLineWidth+viewName);
 					float lineWidth = (value != null) ? Float.parseFloat(value) : 1.0f;
 					visualization.setConnectionLineWidth(lineWidth, false);
+
+					int listMode = decodeProperty(cConnectionLineListMode+viewName, JVisualization.cConnectionListModeCode);
+					if (listMode != -1 && listMode != JVisualization.cConnectionListModeNone) {
+						int list1 = mTableModel.getListHandler().getListIndex(getProperty(cConnectionLineList1+viewName));
+						int list2 = mTableModel.getListHandler().getListIndex(getProperty(cConnectionLineList2+viewName));
+						if (list1 != -1)
+							visualization.setConnectionLineListMode(listMode, list1, list2);
+						}
 
 					int treeViewMode = decodeProperty(cTreeViewMode+viewName, JVisualization.TREE_VIEW_MODE_CODE);
 					if (treeViewMode != -1 && treeViewMode != JVisualization.cTreeViewModeNone) {
@@ -1451,6 +1462,16 @@ public class DERuntimeProperties extends RuntimeProperties {
 						double lineWidth = visualization.getConnectionLineWidth();
 						if (lineWidth != 1.0)
 							setProperty(cConnectionLineWidth+viewName, ""+lineWidth);
+
+						int listMode = visualization.getConnectionLineListMode();
+						if (listMode != JVisualization.cConnectionListModeNone) {
+							int list1 = visualization.getConnectionLineList1();
+							int list2 = visualization.getConnectionLineList2();
+							setProperty(cConnectionLineListMode+viewName, JVisualization.cConnectionListModeCode[listMode]);
+							setProperty(cConnectionLineList1+viewName, mTableModel.getListHandler().getListName(list1));
+							if (list2 != -1)
+								setProperty(cConnectionLineList2+viewName, mTableModel.getListHandler().getListName(list2));
+							}
 
 						if (visualization.getTreeViewMode() != JVisualization.cTreeViewModeNone) {
 							setProperty(cTreeViewMode+viewName, JVisualization.TREE_VIEW_MODE_CODE[visualization.getTreeViewMode()]);

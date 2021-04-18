@@ -1064,7 +1064,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			boolean mappingFound = false;
 			for (int row=0; row<mFieldData.length; row++) {
 				if (mFieldData[row][smilesColumn+1] != null) {
-					catalystsFound = true;
+					mappingFound = true;
 					break;
 				}
 			}
@@ -1077,6 +1077,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					mFieldData[row] = newFieldData;
 					}
 				}
+			newColumnName[0] = newColumnName[0].concat(" of ").concat(mFieldNames[smilesColumn]);
 			}
 
 		String[] newFieldNames = new String[columnCount+newColumnName.length];

@@ -5965,7 +5965,12 @@ class EntryAnalysis {
 		}
 
 	protected EntryAnalysis(String entry) {
-		mIsEmpty = (entry == null || entry.length() == 0);
+		mIsEmpty = (entry == null);
+		if (!mIsEmpty) {
+			entry = entry.trim();
+			if (entry.length() == 0)
+				mIsEmpty = true;
+			}
 		if (!mIsEmpty) {
 			mIsNaN = (entry.equalsIgnoreCase("<LOD")
 				   || entry.equalsIgnoreCase(">LOD")

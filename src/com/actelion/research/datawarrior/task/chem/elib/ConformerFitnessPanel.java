@@ -21,7 +21,6 @@ package com.actelion.research.datawarrior.task.chem.elib;
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.StereoMolecule;
-import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.gui.form.JFXConformerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
@@ -35,8 +34,6 @@ public class ConformerFitnessPanel extends FitnessPanel {
 
 	protected JComboBox mComboBoxDescriptor;
 	protected JFXConformerPanel mConformerPanel;
-	private Frame mParentFrame;
-	private UIDelegateELib mUIDelegate;
 
 	/**
 	 * Creates a new StructureFitnessPanel, which is configured according to the given configuration.
@@ -59,12 +56,7 @@ public class ConformerFitnessPanel extends FitnessPanel {
 	protected ConformerFitnessPanel(Frame owner, UIDelegateELib delegate) {
 		super();
 
-		mParentFrame = owner;
-		mUIDelegate = delegate;
-
-		mComboBoxDescriptor = new JComboBox();
-		mComboBoxDescriptor.addItem(DescriptorConstants.DESCRIPTOR_ShapeAlign.shortName);
-		mComboBoxDescriptor.addItem(DescriptorConstants.DESCRIPTOR_Flexophore.shortName);
+		mComboBoxDescriptor = new JComboBox(ConformerFitnessOption.ALGORITHM_TEXT);
 		mComboBoxDescriptor.setSelectedIndex(0);
 
 		mConformerPanel = new JFXConformerPanel(false, false, true);

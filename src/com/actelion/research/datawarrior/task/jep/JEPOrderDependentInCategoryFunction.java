@@ -18,14 +18,13 @@
 
 package com.actelion.research.datawarrior.task.jep;
 
-import java.util.Stack;
-import java.util.TreeMap;
-
 import com.actelion.research.datawarrior.task.data.DETaskAddCalculatedValues;
+import com.actelion.research.table.model.CompoundTableModel;
 import org.nfunk.jep.ParseException;
 import org.nfunk.jep.function.PostfixMathCommand;
 
-import com.actelion.research.table.model.CompoundTableModel;
+import java.util.Stack;
+import java.util.TreeMap;
 
 /**
  * An example custom function class for JEP.
@@ -78,11 +77,14 @@ public class JEPOrderDependentInCategoryFunction extends PostfixMathCommand {
 				for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
 					String category = mTableModel.getTotalValueAt(row, categoryColumn);
 					double value = mTableModel.getTotalDoubleAt(row, valueColumn);
-					if (Double.isNaN(value))
-						value = 0;
-					Double previousSum = categoryValueMap.get(category);
-					result[row] = (previousSum == null) ? value : previousSum + value;
-					categoryValueMap.put(category, result[row]);
+					if (Double.isNaN(value)) {
+						result[row] = Double.NaN;
+						}
+					else {
+						Double previousSum = categoryValueMap.get(category);
+						result[row] = (previousSum == null) ? value : previousSum + value;
+						categoryValueMap.put(category, result[row]);
+						}
 					}
 				}
 			mResultMap.put(categoryColumn + 0x00010000 * valueColumn, result);

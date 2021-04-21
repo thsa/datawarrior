@@ -163,11 +163,13 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 		}
 
 	public void actionPerformed(ActionEvent e) {
-		if (e.getActionCommand().equals("Cancel")) {
+		if (e.getActionCommand().equals("Cancel") && !mStopProcessing) {
+			mProgressPanel.startProgress("Cleaning Up...", 0, 0);
 			mStopProcessing = true;
 			mKeepData = false;
 			}
-		else if (e.getActionCommand().equals("Stop")) {
+		else if (e.getActionCommand().equals("Stop") && !mStopProcessing) {
+			mProgressPanel.startProgress("Finishing...", 0, 0);
 			mStopProcessing = true;
 			mKeepData = true;
 			}
@@ -279,11 +281,14 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 
 		mCurrentResultID = new AtomicInteger(0);
 
+		mProgressPanel.startProgress("1st generation...", 0, 0);
+
 		// Compile first parent generation including fitness calculation
 		TreeSet<EvolutionResult> parentGenerationResultSet = new TreeSet<>();
 		for (String idcode:configuration.getProperty(PROPERTY_START_SET, "").split("\\t"))
-			parentGenerationResultSet.add(new EvolutionResult(new IDCodeParser(true).getCompactMolecule(idcode),
-					idcode, null, fitnessOption, mCurrentResultID.incrementAndGet()));
+			if (!mStopProcessing)
+				parentGenerationResultSet.add(new EvolutionResult(new IDCodeParser(true).getCompactMolecule(idcode),
+						idcode, null, fitnessOption, mCurrentResultID.incrementAndGet()));
 
 		int offspringCompounds = generationSize / (2*survivalCount);
 		mProgressPanel.startProgress("Evolving...", 0, (generationCount>=Integer.MAX_VALUE-1) ? 0 : generationCount*survivalCount*2);
@@ -319,7 +324,8 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 							MutationQueueEntry entry = mMutationQueue.take();
 							if (entry.isEnd())
 								break;
-							processCandidate(entry, currentGenerationResultSet, moleculeHistory, survivalCount, fitnessOption);
+							if (!mStopProcessing)
+								processCandidate(entry, currentGenerationResultSet, moleculeHistory, survivalCount, fitnessOption);
 							}
 						catch (InterruptedException ie) {
 							break;

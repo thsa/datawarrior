@@ -28,6 +28,7 @@ import com.actelion.research.chem.conf.Conformer;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.DescriptorHandlerFlexophore;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.chem.phesaflex.FlexibleShapeAlignment;
 import com.actelion.research.table.model.CompoundTableModel;
 import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.chem.conf.gen.RigidFragmentCache;
@@ -35,15 +36,20 @@ import org.openmolecules.chem.conf.gen.RigidFragmentCache;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConformerFitnessOption extends FitnessOption {
+	protected static final String[] ALGORITHM_TEXT = { "PheSA", "PheSA-Flex", "Flexophore" };
+	protected static final int ALGO_PHESA = 0;
+	protected static final int ALGO_PHESA_FLEX = 1;
+	protected static final int ALGO_FLEXOPHORE = 2;
+
 	private static final int PHESA_CONFORMER_COUNT = 64;
-	private String mDescriptorShortName;
+	private String mAlgorithm;
 	private StereoMolecule[] mRefConformer;
 	private static ConcurrentHashMap<String,DescriptorHandlerFlexophore> sFlexophoreHandlerMap;
 
 	public ConformerFitnessOption(String params, ProgressListener pl) {
 		String[] param = params.split("\\t");
 		if (param.length >= 3) {
-			mDescriptorShortName = param[0];
+			mAlgorithm = param[0];
 			mSliderValue = Integer.parseInt(param[1]);
 			mRefConformer = new StereoMolecule[(param.length-2)/2];
 			for (int i = 0; i<mRefConformer.length; i++)
@@ -72,7 +78,7 @@ public class ConformerFitnessOption extends FitnessOption {
 
 	@Override
 	public String getName() {
-		return mDescriptorShortName + " similarity";
+		return mAlgorithm + " similarity";
 		}
 
 	@Override
@@ -102,8 +108,7 @@ public class ConformerFitnessOption extends FitnessOption {
 	public float calculateProperty(StereoMolecule mol, String[][] customColumnValueHolder) {
 		mol.ensureHelperArrays(Molecule.cHelperNeighbours);
 
-
-		if (DescriptorConstants.DESCRIPTOR_Flexophore.shortName.equals(mDescriptorShortName)) {
+		if (ALGORITHM_TEXT[ALGO_FLEXOPHORE].equals(mAlgorithm)) {
 			DescriptorHandlerFlexophore dh;
 
 			synchronized (this) {
@@ -112,7 +117,7 @@ public class ConformerFitnessOption extends FitnessOption {
 
 				dh = sFlexophoreHandlerMap.get(Thread.currentThread().getName());
 				if (dh == null) {
-					dh = (DescriptorHandlerFlexophore)CompoundTableModel.getDefaultDescriptorHandler(mDescriptorShortName).getThreadSafeCopy();
+					dh = (DescriptorHandlerFlexophore)CompoundTableModel.getDefaultDescriptorHandler(mAlgorithm).getThreadSafeCopy();
 					sFlexophoreHandlerMap.put(Thread.currentThread().getName(), dh);
 					}
 				}
@@ -137,7 +142,7 @@ public class ConformerFitnessOption extends FitnessOption {
 			return bestFit;
 			}
 
-		if (DescriptorConstants.DESCRIPTOR_ShapeAlign.shortName.equals(mDescriptorShortName)) {
+		if (ALGORITHM_TEXT[ALGO_PHESA].equals(mAlgorithm) || ALGORITHM_TEXT[ALGO_PHESA_FLEX].equals(mAlgorithm)) {
 			int implicitHydrogens = 0;
 			for (int atom=0; atom<mol.getAtoms(); atom++)
 				implicitHydrogens += mol.getImplicitHydrogens(atom);
@@ -154,8 +159,18 @@ public class ConformerFitnessOption extends FitnessOption {
 				for (int i = 0; i<PHESA_CONFORMER_COUNT; i++) {
 					if (generator.getNextConformerAsMolecule(conformer) == null)
 						break;
-
+/*
+Canonizer c = new Canonizer(refMol);
+System.out.println(c.getIDCode()+" "+c.getEncodedCoordinates());
+c = new Canonizer(conformer);
+System.out.println(c.getIDCode()+" "+c.getEncodedCoordinates());
+*/
 					double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol, conformer, 0.5);
+					if (ALGORITHM_TEXT[ALGO_PHESA_FLEX].equals(mAlgorithm)) {
+						FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(refMol, conformer);
+						fit = fsa.align()[0];
+						}
+
 					if (bestFit < fit) {
 						bestFit = fit;
 						bestConformer = new Conformer(conformer);
@@ -185,7 +200,7 @@ public class ConformerFitnessOption extends FitnessOption {
 
 	@Override
 	public boolean hasDeferredColumnValues() {
-		return DescriptorConstants.DESCRIPTOR_Flexophore.shortName.equals(mDescriptorShortName);
+		return DescriptorConstants.DESCRIPTOR_Flexophore.shortName.equals(mAlgorithm);
 		}
 
 	@Override

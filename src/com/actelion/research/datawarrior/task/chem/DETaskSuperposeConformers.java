@@ -7,6 +7,7 @@ import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.alignment3d.PheSAAlignmentOptimizer;
 import com.actelion.research.chem.conf.Conformer;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.chem.phesaflex.FlexibleShapeAlignment;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETable;
 import com.actelion.research.datawarrior.task.chem.elib.ConformerViewController;
@@ -25,12 +26,15 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Superpose Conformers";
 
 	private static final String PROPERTY_CONFORMERS = "conformers";
+	private static final String PROPERTY_FLEXIBLE = "flexible";
 	private static final int COLUMNS_PER_CONFORMER = 3;
 
 	private DETable mTable;
 	protected JFXConformerPanel mConformerPanel;
+	private JCheckBox mCheckBoxFlexible;
 	private String[] mConformerIDCode;
 	private StereoMolecule[] mConformer;
+	private boolean mIsFlexible;
 
 	public DETaskSuperposeConformers(DEFrame parent) {
 		super(parent, DESCRIPTOR_3D_COORDINATES, false, true);
@@ -45,17 +49,21 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 	@Override
 	public JPanel getExtendedDialogContent() {
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED}, {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
+		double[][] size = { {TableLayout.PREFERRED},
+							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
 
 		mConformerPanel = new JFXConformerPanel(false, false, true);
 		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(400), HiDPIHelper.scale(200)));
 		mConformerPanel.setPopupMenuController(new ConformerViewController(getParentFrame(), mConformerPanel));
 
+		mCheckBoxFlexible = new JCheckBox("Use Flexible Alignment");
+
 		JPanel ep = new JPanel();
 		ep.setLayout(new TableLayout(size));
-		ep.add(new JLabel("Use right mouse click for adding 3D-molecule(s) to be superposed:"), "0,1");
-		ep.add(mConformerPanel, "0,3,2,3");
+		ep.add(new JLabel("Use right mouse click for adding 3D-molecule(s) to be superposed:", JLabel.CENTER), "0,1");
+		ep.add(mConformerPanel, "0,3");
+		ep.add(mCheckBoxFlexible, "0,5");
 		return ep;
 	}
 
@@ -86,6 +94,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 			}
 
 		configuration.setProperty(PROPERTY_CONFORMERS, sb.toString());
+		configuration.setProperty(PROPERTY_FLEXIBLE, mCheckBoxFlexible.isSelected() ? "true" : "false");
 		return configuration;
 		}
 
@@ -98,6 +107,8 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 			for (StereoMolecule mol:mols)
 				mConformerPanel.addMolecule(mol, null, null);
 			}
+
+		mCheckBoxFlexible.setSelected("true".equals(configuration.getProperty(PROPERTY_FLEXIBLE)));
 		}
 
 	@Override
@@ -118,6 +129,8 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 				return null;
 			mol[i].ensureHelperArrays(Molecule.cHelperParities);
 			}
+
+		mCheckBoxFlexible.setSelected(false);
 
 		return mol;
 		}
@@ -169,6 +182,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 	@Override
 	protected boolean preprocessRows(Properties configuration) {
 		mConformer = getConformers(configuration);
+		mIsFlexible = "true".equals(configuration.getProperty(PROPERTY_FLEXIBLE));
 		return super.preprocessRows(configuration);
 	}
 
@@ -187,8 +201,11 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 					int coordinateIndex = 0;
 					while (coordinateIndex < coords.length) {
 						new IDCodeParser(false).parse(containerMol, idcode, coords, 0, coordinateIndex);
-
 						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(mConformer[refIndex], containerMol, 0.5);
+						if (mIsFlexible) {
+							FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(mConformer[refIndex], containerMol);
+							fit = fsa.align()[0];
+							}
 						if (bestFit < fit) {
 							bestFit = fit;
 							bestConformer = new Conformer(containerMol);

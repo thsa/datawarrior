@@ -76,9 +76,11 @@ public class JEPOrderDependentFunction extends PostfixMathCommand {
 				for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
 					double value = mTableModel.getTotalDoubleAt(row, valueColumn);
 					if (Double.isNaN(value))
-						value = 0;
-					sum += value;
-					result[row] = sum;
+						result[row] = Double.NaN;
+					else {
+						sum += value;
+						result[row] = sum;
+						}
 					}
 				}
 			mResultMap.put(valueColumn, result);

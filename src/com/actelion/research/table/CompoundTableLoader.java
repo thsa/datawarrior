@@ -955,19 +955,20 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		}
 
 	private void handleOldStyleIDCodes(Integer[] idcodeColumn) {
-		boolean[] hasCoords = new boolean[idcodeColumn.length];
-		boolean[] is3D = new boolean[idcodeColumn.length];
 		int oldColumnCount = mFieldNames.length;
+		boolean[] hasCoords = new boolean[oldColumnCount];
+		boolean[] is3D = new boolean[oldColumnCount];
+
 		int newColumnCount = 0;
 		for (int i=0; i<idcodeColumn.length; i++) {
-			for (int row=0; !hasCoords[i] && row<mFieldData.length; row++) {
+			for (int row=0; !hasCoords[idcodeColumn[i]] && row<mFieldData.length; row++) {
 				byte[] bytes = (byte[])mFieldData[row][idcodeColumn[i]];
 				if (bytes != null) {
 					for (int j=0; j<bytes.length; j++) {
 						if (bytes[j] == ' ' && bytes.length > j+1) {
-							hasCoords[i] = true;
+							hasCoords[idcodeColumn[i]] = true;
 							newColumnCount++;
-							is3D[i] = new IDCodeParser().coordinatesAre3D(bytes, bytes, 0, j+1);
+							is3D[idcodeColumn[i]] = new IDCodeParser().coordinatesAre3D(bytes, bytes, 0, j+1);
 							break;
 							}
 						}

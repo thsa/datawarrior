@@ -45,6 +45,7 @@ import com.actelion.research.datawarrior.task.macro.DETaskCopyMacro;
 import com.actelion.research.datawarrior.task.macro.DETaskExitProgram;
 import com.actelion.research.datawarrior.task.macro.DETaskPasteMacro;
 import com.actelion.research.datawarrior.task.macro.DETaskRunMacro;
+import com.actelion.research.datawarrior.task.table.DETaskPasteIntoTable;
 import com.actelion.research.datawarrior.task.view.DETaskCopyViewImage;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.JScrollableMenu;
@@ -124,7 +125,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuFileAppend,jMenuFileClose,jMenuFileCloseAll,jMenuFileSave,jMenuFileSaveAs,jMenuFileSaveText,
 					  jMenuFileSaveSDF,jMenuFileSaveTemplate,jMenuFileSaveVisibleAs,jMenuFilePageFormat,
 					  jMenuFilePreview,jMenuFilePrint, jMenuFileQuit,jMenuEditCut,jMenuEditCopy,jMenuEditPaste,
-					  jMenuEditPasteWithHeader,jMenuEditPasteWithoutHeader,jMenuEditDelete,
+					  jMenuEditPasteWithHeader,jMenuEditPasteWithoutHeader,jMenuEditDelete,jMenuEditPasteAppend,
 					  jMenuEditSelectAll,jMenuEditSelectRowsRandomly,jMenuEditInvertSelection,jMenuEditSearchAndReplace,jMenuEditDisableFilters,
 					  jMenuEditEnableFilters,jMenuEditResetFilters,jMenuEditRemoveFilters,
 					  jMenuEditNewFilter,jMenuDataRemoveColumns,jMenuDataRemoveSelected,jMenuDataRemoveInvisible,
@@ -525,6 +526,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuEditPasteSpecial = new JMenu();
 		jMenuEditPasteWithHeader = new JMenuItem();
 		jMenuEditPasteWithoutHeader = new JMenuItem();
+		jMenuEditPasteAppend = new JMenuItem();
 		jMenuEditDelete = new JMenuItem();
 		jMenuEditSelectAll = new JMenuItem();
 		jMenuEditSelectRowsRandomly = new JMenuItem();
@@ -546,10 +548,12 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuEditPaste.setAccelerator(KeyStroke.getKeyStroke('V', MENU_MASK));
 		jMenuEditPaste.addActionListener(this);
 		jMenuEditPasteSpecial.setText("Paste Special");
-		jMenuEditPasteWithHeader.setText("Paste With Header Row");
+		jMenuEditPasteWithHeader.setText("New From Data With Header Row");
 		jMenuEditPasteWithHeader.addActionListener(this);
-		jMenuEditPasteWithoutHeader.setText("Paste Without Header Row");
+		jMenuEditPasteWithoutHeader.setText("New From Data Without Header Row");
 		jMenuEditPasteWithoutHeader.addActionListener(this);
+		jMenuEditPasteAppend.setText("Append Data Without Header Row");
+		jMenuEditPasteAppend.addActionListener(this);
 		jMenuEditDelete.setText("Delete");
 		jMenuEditDelete.setEnabled(false);
 		jMenuEditSelectAll.setText("Select All");
@@ -581,6 +585,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuEdit.add(jMenuEditPaste);
 		jMenuEditPasteSpecial.add(jMenuEditPasteWithHeader);
 		jMenuEditPasteSpecial.add(jMenuEditPasteWithoutHeader);
+		jMenuEditPasteSpecial.add(jMenuEditPasteAppend);
 		jMenuEdit.add(jMenuEditPasteSpecial);
 		jMenuEdit.add(jMenuEditDelete);
  		jMenuEdit.addSeparator();
@@ -1463,6 +1468,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskPaste(mParentFrame, mApplication, DETaskPaste.HEADER_WITH).defineAndRun();
 			else if (source == jMenuEditPasteWithoutHeader)
 				new DETaskPaste(mParentFrame, mApplication, DETaskPaste.HEADER_WITHOUT).defineAndRun();
+			else if (source == jMenuEditPasteAppend)
+				new DETaskPasteIntoTable(mParentFrame, DETaskPasteIntoTable.NO_COLUMN, DETaskPasteIntoTable.ROW_APPEND).defineAndRun();
 			else if (source == jMenuEditSelectAll)
 				new DETaskSelectAll(mParentFrame).defineAndRun();
 			else if (source == jMenuEditSelectRowsRandomly)

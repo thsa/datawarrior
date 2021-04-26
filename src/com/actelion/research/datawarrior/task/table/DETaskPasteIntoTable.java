@@ -28,6 +28,8 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 	public static final String TASK_NAME = "Paste Into Table";
 
 	private static final String PROPERTY_FIRST_ROW = "firstRow";
+	private static final String FIRST_ROW_AT_END_CODE = "append";
+	public static final int ROW_APPEND = -2;
 
 	private int mVisibleRow;
 	private JTextField mTextFieldFirstRow;
@@ -50,6 +52,11 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 		super(parent, parent.getTableModel(), false, column);
 		mVisibleRow = visibleRow;
 		mTable = parent.getMainFrame().getMainPane().getTable();
+		}
+
+	@Override
+	public boolean allowColumnNoneItem() {
+		return true;
 		}
 
 	@Override
@@ -92,7 +99,8 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 		if (configuration == null)
 			return null;
 
-		configuration.setProperty(PROPERTY_FIRST_ROW, Integer.toString(mVisibleRow +1));
+		String value = (mVisibleRow == ROW_APPEND) ? FIRST_ROW_AT_END_CODE : Integer.toString(mVisibleRow +1);
+		configuration.setProperty(PROPERTY_FIRST_ROW, value);
 		return configuration;
 		}
 
@@ -121,19 +129,23 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 			return false;
 
 		try {
-			int firstRow = Integer.parseInt(configuration.getProperty(PROPERTY_FIRST_ROW, "1")) - 1;
-			if (firstRow < 0) {
-				showErrorMessage("First row must be 1 or larger");
-				return false;
-				}
-			if (isLive) {
-				if (firstRow >= getTableModel().getRowCount()) {
-					showErrorMessage("First row is larger than visible row count.");
+			String firstRowText = configuration.getProperty(PROPERTY_FIRST_ROW, "1");
+			if (!firstRowText.equals(FIRST_ROW_AT_END_CODE)) {
+				int firstRow = Integer.parseInt(firstRowText) - 1;
+				if (firstRow < 0) {
+					showErrorMessage("First row must be 1 or larger");
 					return false;
 					}
-				if (mTable.convertTotalColumnIndexToView(getColumn(configuration)) == -1) {
-					showErrorMessage("Defined column is not visible.");
-					return false;
+				if (isLive) {
+					if (firstRow >= getTableModel().getRowCount()) {
+						showErrorMessage("First row is larger than visible row count.");
+						return false;
+						}
+					int column = getColumn(configuration);
+					if (column != NO_COLUMN && mTable.convertTotalColumnIndexToView(column) == -1) {
+						showErrorMessage("Defined column is not visible.");
+						return false;
+						}
 					}
 				}
 			}
@@ -147,7 +159,7 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 
 		if (isLive) {
 			int targetColumn = getColumn(configuration);
-			int firstVisColumn = mTable.convertTotalColumnIndexToView(targetColumn);
+			int firstVisColumn = (targetColumn == NO_COLUMN) ? 0 : mTable.convertTotalColumnIndexToView(targetColumn);
 			int lastVisColumn = Math.min(mTable.getColumnCount(), firstVisColumn + mClipboardContent[0].length);
 			for (int visColumn=firstVisColumn; visColumn<lastVisColumn; visColumn++) {
 				String type = getTableModel().getColumnSpecialType(targetColumn);
@@ -197,6 +209,8 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 		catch (UnsupportedFlavorException ufe) {
 			// instead of a unicode String we may have a molecule or reaction
 			int targetColumn = getColumn(configuration);
+			if (targetColumn == NO_COLUMN)
+				targetColumn = mTable.convertTotalColumnIndexFromView(0);
 			String type = getTableModel().getColumnSpecialType(targetColumn);
 			if (type != null) {
 				if (type.equals(CompoundTableConstants.cColumnTypeIDCode)) {
@@ -238,17 +252,19 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 
 	@Override
 	public void runTask(Properties configuration) {
-		int firstColumn = getColumn(configuration);
-		int firstVisColumn = mTable.convertTotalColumnIndexToView(firstColumn);
-		int firstVisRow = Integer.parseInt(configuration.getProperty(PROPERTY_FIRST_ROW, "1")) - 1;
-
 		int clipColumnCount = mClipboardContent[0].length;
 		int clipRowCount = mClipboardContent.length;
 
 		int tableColumnCount = mTable.getColumnCount();
 		int tableRowCount = mTable.getRowCount();
 
-		int newColumnCount = Math.max(0, clipColumnCount - tableColumnCount + mTable.convertTotalColumnIndexToView(firstColumn));
+		int firstColumn = getColumn(configuration);
+		int firstVisColumn = (firstColumn == NO_COLUMN) ? 0 : mTable.convertTotalColumnIndexToView(firstColumn);
+
+		String firstVisRowText = configuration.getProperty(PROPERTY_FIRST_ROW, "1");
+		int firstVisRow = (firstVisRowText == FIRST_ROW_AT_END_CODE) ? tableRowCount : Integer.parseInt(firstVisRowText) - 1;
+
+		int newColumnCount = Math.max(0, clipColumnCount - tableColumnCount + firstVisColumn);
 		int newRowCount = Math.max(0, clipRowCount - tableRowCount + firstVisRow);
 
 		int[] clipToDestColumn = new int[clipColumnCount];
@@ -276,25 +292,29 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 				resolveStructureNamesToIDCodes(clipColumn);
 			}
 
-		// Second, change cells of visible rows and originally existing columns. This may change row visibility.
+		for (int clipColumn=0; clipColumn<clipColumnCount-newColumnCount; clipColumn++)
+			clipToDestColumn[clipColumn] = mTable.convertTotalColumnIndexFromView(firstVisColumn+clipColumn);
+
+			// Second, change cells of visible rows and originally existing columns. This may change row visibility.
 		// Save a list of records to change, because row visibility may change from updated column to column.
-		CompoundRecord[] targetRecord = new CompoundRecord[clipRowCount - newRowCount];
-		for (int i=0; i<targetRecord.length; i++)
-			targetRecord[i] = getTableModel().getRecord(firstVisRow+i);
-		for (int clipColumn=0; clipColumn<clipColumnCount-newColumnCount; clipColumn++) {
-			int destColumn = mTable.convertTotalColumnIndexFromView(firstVisColumn+clipColumn);
-			clipToDestColumn[clipColumn] = destColumn;
-
-			boolean isStructure = CompoundTableConstants.cColumnTypeIDCode.equals(getTableModel().getColumnSpecialType(destColumn));
-			boolean isReaction = CompoundTableConstants.cColumnTypeRXNCode.equals(getTableModel().getColumnSpecialType(destColumn));
-
+		if (clipRowCount > newRowCount) {
+			CompoundRecord[] targetRecord = new CompoundRecord[clipRowCount - newRowCount];
 			for (int i=0; i<targetRecord.length; i++)
-				setValueAndChildValues(mClipboardContent[i][clipColumn], targetRecord[i], destColumn, isStructure, isReaction);
+				targetRecord[i] = getTableModel().getRecord(firstVisRow+i);
+			for (int clipColumn=0; clipColumn<clipColumnCount-newColumnCount; clipColumn++) {
+				int destColumn = clipToDestColumn[clipColumn];
 
-			if (isReaction || isStructure)
-				getTableModel().finalizeChangeChemistryColumn(destColumn, 0, getTableModel().getTotalRowCount(), false);
-			else
-				getTableModel().finalizeChangeAlphaNumericalColumn(destColumn, 0, getTableModel().getTotalRowCount());
+				boolean isStructure = CompoundTableConstants.cColumnTypeIDCode.equals(getTableModel().getColumnSpecialType(destColumn));
+				boolean isReaction = CompoundTableConstants.cColumnTypeRXNCode.equals(getTableModel().getColumnSpecialType(destColumn));
+
+				for (int i=0; i<targetRecord.length; i++)
+					setValueAndChildValues(mClipboardContent[i][clipColumn], targetRecord[i], destColumn, isStructure, isReaction);
+
+				if (isReaction || isStructure)
+					getTableModel().finalizeChangeChemistryColumn(destColumn, 0, getTableModel().getTotalRowCount(), false);
+				else
+					getTableModel().finalizeChangeAlphaNumericalColumn(destColumn, 0, getTableModel().getTotalRowCount());
+				}
 			}
 
 		// Third, add new rows, if necessary, and fill originally existing columns and new columns of them.

@@ -296,23 +296,28 @@ public class JCategoryFilterPanel extends JFilterPanel
 			for (int i=0; i<mCheckBox.length; i++)
 				mCheckBox[i].setSelected(true);
 
-			int index = 0;
-			while (index != -1) {
-				int index2 = settings.indexOf('\t', index);
-				if (index2 == -1) {
-					exclude(settings.substring(index));
-					index = -1;
-					}
-				else {
-					exclude(settings.substring(index, index2));
-					index = index2+1;
+			if (settings != null) {
+				int index = 0;
+				while (index != -1) {
+					int index2 = settings.indexOf('\t', index);
+					if (index2 == -1) {
+						exclude(settings.substring(index));
+						index = -1;
+						}
+					else {
+						exclude(settings.substring(index, index2));
+						index = index2+1;
+						}
 					}
 				}
 
 			updateExclusion(false);
 			}
 		else {
-			mTextArea.setText(settings.replace('\t', '\n'));
+			if (settings == null)
+				innerReset();
+			else
+				mTextArea.setText(settings.replace('\t', '\n'));
 			}
 		}
 

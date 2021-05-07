@@ -18,6 +18,7 @@
 
 package com.actelion.research.datawarrior.task;
 
+import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.DEPruningPanel;
@@ -131,6 +132,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskClusterCompounds.TASK_NAME) ? new DETaskClusterCompounds(frame)
 			 : codeMatches(taskCode, DETaskCODQuery.TASK_NAME) ? new DETaskCODQuery(frame, application)
 			 : codeMatches(taskCode, DETaskCombineTwoRowLists.TASK_NAME) ? new DETaskCombineTwoRowLists(frame)
+			 : codeMatches(taskCode, DETaskCompareReactionMapping.TASK_NAME) ? new DETaskCompareReactionMapping(frame)
 			 : codeMatches(taskCode, DETaskCopyMacro.TASK_NAME) ? new DETaskCopyMacro(frame, null)
 			 : codeMatches(taskCode, DETaskCopyTableCells.TASK_NAME) ? new DETaskCopyTableCells(frame, mainPane.getTableModel(), mainPane.getTable())
 			 : codeMatches(taskCode, DETaskCopyStatisticalValues.TASK_NAME) ? new DETaskCopyStatisticalValues(frame, mainPane, null)
@@ -172,6 +174,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskImportMacro.TASK_NAME) ? new DETaskImportMacro(application)
 			 : codeMatches(taskCode, DETaskInvertSelection.TASK_NAME) ? new DETaskInvertSelection(frame)
 			 : codeMatches(taskCode, DETaskJumpToReferenceRow.TASK_NAME) ? new DETaskJumpToReferenceRow(frame, mainPane)
+			 : codeMatches(taskCode, DETaskMapReactions.TASK_NAME) ? new DETaskMapReactions(frame)
 			 : codeMatches(taskCode, DETaskMergeColumns.TASK_NAME) ? new DETaskMergeColumns(frame)
 			 : codeMatches(taskCode, DETaskMergeFile.TASK_NAME) ? new DETaskMergeFile(frame, false)
 			 : codeMatches(taskCode, DETaskNew2DView.TASK_NAME) ? new DETaskNew2DView(frame, mainPane,null)
@@ -270,6 +273,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskSuperposeConformers.TASK_NAME) ? new DETaskSuperposeConformers(frame)
 			 : codeMatches(taskCode, DETaskSynchronizeView.TASK_NAME) ? new DETaskSynchronizeView(frame, mainPane, null, null)
 			 : codeMatches(taskCode, DETaskRemoveColumnGroup.TASK_NAME) ? new DETaskRemoveColumnGroup(frame, mainPane.getTableView(), mainPane.getTableModel())
+			 : codeMatches(taskCode, DETaskValidateIDCodes.TASK_NAME) ? new DETaskValidateIDCodes(frame, CompoundTableConstants.cColumnTypeIDCode)
 			 : codeMatches(taskCode, DETaskUseAsFilter.TASK_NAME) ? new DETaskUseAsFilter(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskWait.TASK_NAME) ? new DETaskWait(frame)
 			 : createPluginTaskFromCode(frame, taskCode);
@@ -488,6 +492,9 @@ public class StandardTaskFactory {
 			for (IPluginTask pluginTask:pluginTaskList)
 				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, pluginTask.getTaskName()));
 
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETaskValidateIDCodes.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETaskCompareReactionMapping.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETaskMapReactions.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETestCompareDescriptorSimilarityDistribution.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETestExtractPairwiseCompoundSimilarities.TASK_NAME));
 			}

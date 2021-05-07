@@ -140,9 +140,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuChemSuperpose,jMenuChemAddLargestFragment,
 					  jMenuChemAddSubstructureCount,jMenuChemAddStructureFromName,jMenuChemAutomaticSARTable,jMenuChemCoreBasedSARTable,jMenuChemInteractiveSARTable,
 					  jMenuChemAnalyzeScaffolds,jMenuChemAnalyzeCliffs,jMenuChemMatchFile,jMenuChemSelectDiverse,
-					  jMenuChemCluster,jMenuChemExtract3DFragments,
+					  jMenuChemCluster,jMenuChemExtract3DFragments,jMenuChemMapReactions,jMenuChemCompareReactionMapping,
 					  jMenuChemCreateGenericTautomers,jMenuChemCompareDescriptorSimilarityDistribution,jMenuChemGenerateRandomMolecules,
-					  jMenuChemExtractPairwiseCompoundSimilarities,jMenuChemExtractPairwiseStuff,jMenuChemCountAtomTypes,
+					  jMenuChemExtractPairwiseCompoundSimilarities,jMenuChemExtractPairwiseStuff,jMenuChemCountAtomTypes,jMenuChemCheckIDCodes,
 					  jMenuChemRunSurfacePLS,jMenuChemClassifyReactions,jMenuDBWikipedia,jMenuDBReadChEMBL,jMenuDBFindChEMBLActives,
 					  jMenuDBSearchCOD,jMenuDBSearchEnamine,jMenuDBSearchChemSpace,jMenuDBRetrieveDataFromURL,jMenuDBRetrieveSQLData,jMenuDBGooglePatents,
 					  jMenuListCreateSelected,jMenuListCreateVisible,jMenuListCreateHidden,jMenuListCreateClipboard,
@@ -756,6 +756,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemSelectDiverse = new JMenuItem();
 		jMenuChemCluster = new JMenuItem();
 		jMenuChemCreateGenericTautomers = new JMenuItem();
+		jMenuChemCheckIDCodes = new JMenuItem();
+		jMenuChemMapReactions = new JMenuItem();
+		jMenuChemCompareReactionMapping = new JMenuItem();
 		jMenuChemCompareDescriptorSimilarityDistribution = new JMenuItem();
 		jMenuChemExtractPairwiseCompoundSimilarities = new JMenuItem();
 		jMenuChemExtractPairwiseStuff = new JMenuItem();
@@ -831,6 +834,12 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemCluster.addActionListener(this);
 		jMenuChemCreateGenericTautomers.setText("Create Generic Tautomers");
 		jMenuChemCreateGenericTautomers.addActionListener(this);
+		jMenuChemCheckIDCodes.setText("Check IDCode Correctness");
+		jMenuChemCheckIDCodes.addActionListener(this);
+		jMenuChemMapReactions.setText("Map Reactions");
+		jMenuChemMapReactions.addActionListener(this);
+		jMenuChemCompareReactionMapping.setText("Compare Reaction Mapping");
+		jMenuChemCompareReactionMapping.addActionListener(this);
 		jMenuChemCompareDescriptorSimilarityDistribution.setText("Compare Descriptor Similarity Distribution");
 		jMenuChemCompareDescriptorSimilarityDistribution.addActionListener(this);
 		jMenuChemExtractPairwiseCompoundSimilarities.setText("Extract Pairwise Compound Similarities");
@@ -917,6 +926,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChem.add(jMenuChemCluster);
 		if (System.getProperty("development") != null) {
 			jMenuChem.addSeparator();
+			jMenuChem.add(jMenuChemCheckIDCodes);
+			jMenuChem.add(jMenuChemMapReactions);
+			jMenuChem.add(jMenuChemCompareReactionMapping);
 			jMenuChem.add(jMenuChemCompareDescriptorSimilarityDistribution);
 			jMenuChem.add(jMenuChemExtractPairwiseCompoundSimilarities);
 			jMenuChem.add(jMenuChemExtractPairwiseStuff);
@@ -926,7 +938,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			jMenuChem.addSeparator();
 			jMenuChem.add(jMenuChemCreateGenericTautomers);
 			}
-		
+
 		return jMenuChem;
 		}
 
@@ -1231,7 +1243,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		}
 
 	private void menuFilePreview() {
-		
+
 		}
 
 	public void menuFilePrint() {
@@ -1604,6 +1616,12 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskClusterCompounds(mParentFrame).defineAndRun();
 /*		  else if (source == jMenuChemExtractPKATree)
 				new PKATreeExtractor(mParentFrame, new PKADataWarriorAdapter(mTableModel)).extract();	*/
+			else if (source == jMenuChemCheckIDCodes)
+				new DETaskValidateIDCodes(mParentFrame, CompoundTableConstants.cColumnTypeIDCode).defineAndRun();
+			else if (source == jMenuChemMapReactions)
+				new DETaskMapReactions(getParentFrame()).defineAndRun();
+			else if (source == jMenuChemCompareReactionMapping)
+				new DETaskCompareReactionMapping(getParentFrame()).defineAndRun();
 			else if (source == jMenuChemCompareDescriptorSimilarityDistribution)
 				new DETestCompareDescriptorSimilarityDistribution(mParentFrame, mApplication).defineAndRun();
 			else if (source == jMenuChemExtractPairwiseCompoundSimilarities)
@@ -1861,7 +1879,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				idcodeColumn = -1;
 				}
 			}
-		
+
 		return idcodeColumn;
 		}
 

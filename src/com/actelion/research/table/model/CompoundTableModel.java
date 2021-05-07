@@ -88,7 +88,7 @@ public class CompoundTableModel extends AbstractTableModel
 	private volatile Thread     mSMPThread;
 	private volatile float[]	mSimilarityListSMP,mSimilarityList2SMP;
 	private volatile boolean	mSMPProcessWaiting,mSMPStopDescriptorCalculation;
-	private volatile int		mRecords,mExclusionUpdateThreadCount;
+	private volatile int		mRecords;
 	private volatile AtomicInteger mSMPIndex,mSMPThreadIndex,mSimRecordIndex,mSMPDescriptorThreads,mSMPSimilarityThreads;
 	private volatile DescriptorColumnSpec[] mSMPColumnSpec;
 	private volatile int		mSMPSimilarityErrors;

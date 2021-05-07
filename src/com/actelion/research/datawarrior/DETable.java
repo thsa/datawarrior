@@ -635,24 +635,52 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 				lastRow = (rowAtBottom == -1) ? lastRow : Math.min(lastRow, rowAtBottom);
 				}
 
-					// draw red frame of current record
-			if (mCurrentRecord != null) {
-				for (int row=firstRow; row<=lastRow; row++) {
-					if (((CompoundTableModel)getModel()).getRecord(row) == mCurrentRecord) {
-						int tableWidth = getWidth();
-						Rectangle cellRect = getCellRect(row, 0, false);
-						g.setColor(Color.red);
-						g.drawRect(0, cellRect.y-1, tableWidth-1, cellRect.height+1);
-						g.drawRect(1, cellRect.y, tableWidth-3, cellRect.height-1);
-						break;
-						}
-					}
-				}
-
 			int[] firstAndLastColumn = getFirstAndLastColumn();
 
 			for (int column=firstAndLastColumn[0]; column<=firstAndLastColumn[1]; column++) {
 				int modelColumn = convertTotalColumnIndexFromView(column);
+
+				int flagColumn = tableModel.getChildColumn(modelColumn, CompoundTableConstants.cColumnTypeFlagColors);
+				if (flagColumn != -1) {
+					for (int row=firstRow; row<=lastRow; row++) {
+						byte[] bytes = (byte[])tableModel.getTotalRecord(row).getData(flagColumn);
+						if (bytes != null) {
+							try {
+								int flags = Integer.parseInt(new String(bytes));
+								if (flags != 0) {
+									int mask = 1;
+									for (int i=1; i<CompoundTableConstants.cFlagColor.length; i++)
+										mask = (mask << 1) | 1;
+									Color[] color = new Color[Integer.bitCount(flags & mask)];
+									mask = 1;
+									int index = 0;
+									for (int i=0; i<CompoundTableConstants.cFlagColor.length; i++) {
+										if ((flags & mask) != 0)
+											color[index++] = CompoundTableConstants.cFlagColor[i];
+										mask = (mask << 1);
+										}
+									Rectangle cellRect = getCellRect(row, column, true);
+									int[] x = new int[3];
+									int[] y = new int[3];
+									x[0] = cellRect.x + cellRect.width - 1;
+									y[0] = cellRect.y;
+									x[1] = x[0];
+									y[2] = y[0];
+									int maxSize = Math.min(HiDPIHelper.scale(20), Math.min(cellRect.width, cellRect.height));
+									for (int i=color.length; i>0; i--) {
+										int size = (int)Math.round(maxSize * Math.pow((double)i/color.length, 0.7));
+										y[1] = y[0] + size;
+										x[2] = x[0] - size;
+										g.setColor(color[i-1]);
+										g.fillPolygon(x, y, 3);
+										}
+									}
+								}
+							catch (NumberFormatException nfe) {}
+							}
+						}
+					}
+
 				int detailCount = tableModel.getColumnDetailCount(modelColumn);
 				int lookupCount = tableModel.getColumnLookupCount(modelColumn);
 				if (detailCount != 0 || lookupCount != 0) {
@@ -690,6 +718,20 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 							g.setColor(Color.white);
 							g.drawString(detailString, cellRect.x+cellRect.width-(drawWidth+stringWidth)/2, cellRect.y+fontSize);
 							}
+						}
+					}
+				}
+
+			// draw red frame of current record
+			if (mCurrentRecord != null) {
+				for (int row=firstRow; row<=lastRow; row++) {
+					if (((CompoundTableModel)getModel()).getRecord(row) == mCurrentRecord) {
+						int tableWidth = getWidth();
+						Rectangle cellRect = getCellRect(row, 0, false);
+						g.setColor(Color.red);
+						g.drawRect(0, cellRect.y-1, tableWidth-1, cellRect.height+1);
+						g.drawRect(1, cellRect.y, tableWidth-3, cellRect.height-1);
+						break;
 						}
 					}
 				}

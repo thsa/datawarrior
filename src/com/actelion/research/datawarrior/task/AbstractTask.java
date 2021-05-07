@@ -873,7 +873,7 @@ public abstract class AbstractTask implements ProgressController,Runnable {
 	/**
 	 * This shows an interactive message dialog and may be used after
 	 * interactive task execution, if the task finished successfully and
-	 * the user needs to notified. If a task is running within a macro, don't
+	 * the user needs to be notified. If a task is running within a macro, don't
 	 * use this method. If an error occurs, use showErrorMessage().<br>
 	 * This method can be called from any thread.
 	 * @param message

@@ -1310,8 +1310,10 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				  && !mTableModel.isColumnTypeDate(column)
 				  && (CompoundTableConstants.cAllowLogModeForNegativeOrZeroValues
 				   || mTableModel.getMinimumValue(column) > 0))) {
-					JCheckBoxMenuItem item = new StayOpenCheckBoxMenuItem(mTableModel.getColumnTitle(column),
-																   mTableModel.isLogarithmicViewMode(column));
+//					JCheckBoxMenuItem item = new StayOpenCheckBoxMenuItem(mTableModel.getColumnTitle(column),
+//							mTableModel.isLogarithmicViewMode(column));
+					JCheckBoxMenuItem item = new MyCheckBoxMenuItem(mTableModel.getColumnTitle(column),
+							mTableModel.isLogarithmicViewMode(column));
 					if (mTableModel.getMinimumValue(column) <= 0)
 						item.setForeground(Color.red);
 
@@ -2198,14 +2200,43 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			}
 		}
 
-
-
-
-
 	public void enableMacroItems() {
 		boolean isRecording = DEMacroRecorder.getInstance().isRecording();
 		jMenuMacroStartRecording.setEnabled(!isRecording);
 		jMenuMacroStopRecording.setEnabled(isRecording);
 		jMenuMacroContinueRecording.setEnabled(DEMacroRecorder.getInstance().canContinueRecording(mParentFrame));
+		}
+	}
+
+class MyCheckBoxMenuItem extends JCheckBoxMenuItem {
+	private static final long CLOSING_DELAY = 2000;
+	private static long sMostRecentItemChange;
+	private static Thread sClosingThread;
+
+	public MyCheckBoxMenuItem(String title, boolean isSelected) {
+		super(title, isSelected);
+		}
+
+	@Override
+	protected void processMouseEvent(MouseEvent evt) {
+		if (evt.getID() == MouseEvent.MOUSE_RELEASED && contains(evt.getPoint())) {
+			doClick();
+			setArmed(true);
+			sMostRecentItemChange = System.currentTimeMillis();
+			if (sClosingThread == null) {
+				sClosingThread = new Thread(() -> {
+					do {
+						try { Thread.sleep(500); } catch (InterruptedException ie) {}
+						} while (System.currentTimeMillis() - sMostRecentItemChange < CLOSING_DELAY);
+					getParent().setVisible(false);
+					MenuSelectionManager.defaultManager().clearSelectedPath();
+					sClosingThread = null;
+					} );
+				sClosingThread.start();
+				}
+			}
+		else {
+			super.processMouseEvent(evt);
+			}
 		}
 	}

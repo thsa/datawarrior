@@ -93,6 +93,7 @@ public class DEMacro implements CompoundTableConstants {
 		mTaskList = new ArrayList<Task>();
 		mListenerList = new ArrayList<DEMacroListener>();
 		mName = getUniqueName(name, macroList);
+		mIsAutoStarting = sourceMacro.isAutoStarting();
 		if (sourceMacro != null) {
 			for (int i=0; i<sourceMacro.getTaskCount(); i++) {
 				Task sourceTask = sourceMacro.getTask(i);

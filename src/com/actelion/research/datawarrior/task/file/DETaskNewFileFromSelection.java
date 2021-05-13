@@ -141,13 +141,9 @@ public class DETaskNewFileFromSelection extends AbstractTaskWithoutConfiguration
         	}
 
 		HashMap<String,byte[]> detailMap = sourceTableModel.getDetailHandler().getEmbeddedDetailMap();
-		if (detailMap != null) {
-			for (String detailID : detaiIDSet) {
-				byte[] detail = detailMap.get(detailID);
-				if (detaiIDSet != null)
-					targetTableModel.getDetailHandler().setEmbeddedDetail(detailID, detail);
-				}
-			}
+		if (detailMap != null)
+			for (String detailID : detaiIDSet)
+				targetTableModel.getDetailHandler().setEmbeddedDetail(detailID, detailMap.get(detailID));
 
 		String explanation = (String)sourceTableModel.getExtensionData(CompoundTableConstants.cExtensionNameFileExplanation);
 		if (explanation != null)

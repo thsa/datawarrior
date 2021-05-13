@@ -18,18 +18,21 @@
 
 package com.actelion.research.datawarrior.task.file;
 
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.TreeSet;
-
+import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DERuntimeProperties;
 import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.datawarrior.task.DEMacro;
 import com.actelion.research.datawarrior.task.list.DETaskAbstractListTask;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.model.CompoundTableModel;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Properties;
+import java.util.TreeSet;
 
 
 public class DETaskNewFileFromList extends DETaskAbstractListTask {
@@ -143,6 +146,18 @@ public class DETaskNewFileFromList extends DETaskAbstractListTask {
 		if (detailMap != null)
 			for (String detailID:detaiIDSet)
 				targetTableModel.getDetailHandler().setEmbeddedDetail(detailID, detailMap.get(detailID));
+
+		String explanation = (String)sourceTableModel.getExtensionData(CompoundTableConstants.cExtensionNameFileExplanation);
+		if (explanation != null)
+			targetTableModel.setExtensionData(CompoundTableConstants.cExtensionNameFileExplanation, explanation);
+
+		ArrayList<DEMacro> macroList = (ArrayList<DEMacro>) sourceTableModel.getExtensionData(CompoundTableConstants.cExtensionNameMacroList);
+		if (macroList != null && macroList.size() != 0) {
+			ArrayList<DEMacro> copy = new ArrayList<>();
+			for (DEMacro macro:macroList)
+				copy.add(new DEMacro(macro.getName(), copy, macro));
+			targetTableModel.setExtensionData(CompoundTableConstants.cExtensionNameMacroList, copy);
+			}
 
 		rp.setParentPane(mTargetFrame.getMainFrame());
 		rp.apply();

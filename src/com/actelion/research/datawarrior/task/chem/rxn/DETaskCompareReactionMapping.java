@@ -16,13 +16,14 @@
  * @author Thomas Sander
  */
 
-package com.actelion.research.datawarrior.task.chem;
+package com.actelion.research.datawarrior.task.chem.rxn;
 
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.task.chem.DETaskAbstractFromReaction;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -200,21 +201,21 @@ public class DETaskCompareReactionMapping extends DETaskAbstractFromReaction {
 		try { rxn2.validateMapping(); } catch (Exception e) { return "duplicate mapNos in rxn2"; }
 
 		StereoMolecule[] mol1 = new StereoMolecule[rxn1.getMolecules()];
-		Canonizer[] can1 = new Canonizer[rxn1.getMolecules()];
+		int[][] rank1 = new int[rxn1.getMolecules()][];
 		for (int i=0; i<rxn1.getMolecules(); i++) {
 			mol1[i] = rxn1.getMolecule(i);
-			can1[i] = new Canonizer(mol1[i], Canonizer.CREATE_SYMMETRY_RANK);
+			rank1[i] = getSymmetryRanks(mol1[i]);
 			}
 
 		StereoMolecule[] mol2 = new StereoMolecule[rxn2.getMolecules()];
-		Canonizer[] can2 = new Canonizer[rxn2.getMolecules()];
+		int[][] rank2 = new int[rxn2.getMolecules()][];
 		for (int i=0; i<rxn2.getMolecules(); i++) {
 			mol2[i] = rxn2.getMolecule(i);
-			can2[i] = new Canonizer(mol2[i], Canonizer.CREATE_SYMMETRY_RANK);
+			rank2[i] = getSymmetryRanks(mol2[i]);
 			}
 
-		long[] link1 = createSortedAtomLinks(rxn1, can1);
-		long[] link2 = createSortedAtomLinks(rxn2, can2);
+		long[] link1 = createSortedAtomLinks(rxn1, rank1);
+		long[] link2 = createSortedAtomLinks(rxn2, rank2);
 		if (link1.length != link2.length)
 			return "different";
 
@@ -225,7 +226,44 @@ public class DETaskCompareReactionMapping extends DETaskAbstractFromReaction {
 		return "match";
 		}
 
-	private long[] createSortedAtomLinks(Reaction rxn, Canonizer[] can) {
+	private int[] getSymmetryRanks(StereoMolecule mol) {
+		Canonizer canonizer = new Canonizer(mol, Canonizer.CREATE_SYMMETRY_RANK);
+		int[] rank = new int[mol.getAtoms()];
+		for (int i=0; i<rank.length; i++)
+		     rank[i] = canonizer.getSymmetryRank(i);
+
+		// now we merge ranks of equivalent tautomeric oxygens in carboxylates, etc
+		for (int atom=0; atom<mol.getAtoms(); atom++) {
+			if (mol.getAtomPi(atom) != 0) {
+				boolean differentRanksFound = false;
+				int lowRank = Integer.MAX_VALUE;
+				for (int i=0; i<mol.getConnAtoms(atom); i++) {
+					int connAtom = mol.getConnAtom(atom, i);
+					if (mol.getAtomicNo(connAtom) == 8
+					 && mol.getConnAtoms(connAtom) == 1) {
+						if (lowRank == Integer.MAX_VALUE)
+							lowRank = rank[connAtom];
+						else if (lowRank != rank[connAtom]) {
+							differentRanksFound = true;
+							lowRank = Math.min(rank[connAtom], lowRank);
+							}
+						}
+					}
+				if (differentRanksFound) {
+					for (int i=0; i<mol.getConnAtoms(atom); i++) {
+						int connAtom = mol.getConnAtom(atom, i);
+						if (mol.getAtomicNo(connAtom) == 8
+						 && mol.getConnAtoms(connAtom) == 1)
+							rank[connAtom] = lowRank;
+						}
+					}
+				}
+			}
+
+		return rank;
+		}
+
+	private long[] createSortedAtomLinks(Reaction rxn, int[][] rank) {
 		int maxMapNo = 0;  // maximum number of atom links
 		for (int i=0; i<rxn.getMolecules(); i++) {
 			StereoMolecule mol = rxn.getMolecule(i);
@@ -256,8 +294,8 @@ public class DETaskCompareReactionMapping extends DETaskAbstractFromReaction {
 				int mapNo = mol.getAtomMapNo(atom)-1;
 				if (mapNo != -1) {
 					int productIndex = mapNoToProduct[mapNo];
-					int productRank = can[rxn.getReactants()+productIndex].getSymmetryRank(mapNoToPAtom[mapNo]);
-					link[mapNo] = ((long)i << 56) + ((long)can[i].getSymmetryRank(atom) << 32) + (productIndex << 24) + productRank;
+					int productRank = rank[rxn.getReactants()+productIndex][mapNoToPAtom[mapNo]];
+					link[mapNo] = ((long)i << 56) + ((long)rank[i][atom] << 32) + (productIndex << 24) + productRank;
 					}
 				}
 			}

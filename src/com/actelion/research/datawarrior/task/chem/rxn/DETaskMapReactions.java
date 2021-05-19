@@ -16,7 +16,7 @@
  * @author Thomas Sander
  */
 
-package com.actelion.research.datawarrior.task.chem;
+package com.actelion.research.datawarrior.task.chem.rxn;
 
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.CompoundTableConstants;
@@ -24,6 +24,7 @@ import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.chem.reaction.ReactionEncoder;
 import com.actelion.research.chem.reaction.mapping.ChemicalRuleEnhancedReactionMapper;
 import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.task.chem.DETaskAbstractFromReaction;
 import com.actelion.research.util.ByteArrayComparator;
 import info.clearthought.layout.TableLayout;
 
@@ -134,7 +135,6 @@ public class DETaskMapReactions extends DETaskAbstractFromReaction {
 			return;
 
 		rxn.removeAtomMapping(false);
-
 		try {
 			ChemicalRuleEnhancedReactionMapper mapper = new ChemicalRuleEnhancedReactionMapper();
 			mapper.map(rxn);

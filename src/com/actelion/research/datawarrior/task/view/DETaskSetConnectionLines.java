@@ -182,7 +182,7 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 
 		mComboBox3 = new JComboBox(JVisualization.TREE_VIEW_MODE_NAME);
     	mComboBox3.addItemListener(this);
-		cp.add(new JLabel("Detail tree mode: "), "1,9");
+		cp.add(new JLabel("Detail tree mode: "), "1,15");
 		cp.add(mComboBox3, "3,15,5,15");
 
 		mCheckBoxShowAll = new JCheckBox("Show all markers if no tree root (reference row) is chosen");

@@ -90,10 +90,10 @@ public class DEMacro implements CompoundTableConstants {
 	 * @param sourceMacro macro to be cloned
 	 */
 	public DEMacro(String name, ArrayList<DEMacro> macroList, DEMacro sourceMacro) {
-		mTaskList = new ArrayList<Task>();
-		mListenerList = new ArrayList<DEMacroListener>();
+		mTaskList = new ArrayList<>();
+		mListenerList = new ArrayList<>();
 		mName = getUniqueName(name, macroList);
-		mIsAutoStarting = sourceMacro.isAutoStarting();
+		mIsAutoStarting = sourceMacro != null && sourceMacro.isAutoStarting();
 		if (sourceMacro != null) {
 			for (int i=0; i<sourceMacro.getTaskCount(); i++) {
 				Task sourceTask = sourceMacro.getTask(i);
@@ -131,8 +131,8 @@ public class DEMacro implements CompoundTableConstants {
 		}
 
 	public DEMacro(String name, BufferedReader reader) {
-		mTaskList = new ArrayList<Task>();
-		mListenerList = new ArrayList<DEMacroListener>();
+		mTaskList = new ArrayList<>();
+		mListenerList = new ArrayList<>();
 		mName = name;
 		try {
 			readMacro(reader);

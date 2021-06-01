@@ -408,12 +408,10 @@ public class JStructureGrid extends JScrollPane
 
 	public void setColumnCount(int no) {
 		if (mDefinedNoOfColumns != mNoOfColumns) {  // if is maximized and no of column temporarily changed because of that
-			if (mDefinedNoOfColumns != no) {
-				mDefinedNoOfColumns = Math.round((float)mDefinedNoOfColumns * no / mNoOfColumns);
-				mNoOfColumns = no;
-				mRepaintRequested = true;	// to track and abort nested paint() calls
-				mContentPanel.repaint();
-				}
+			mDefinedNoOfColumns = Math.round((float)mDefinedNoOfColumns * no / mNoOfColumns);
+			mNoOfColumns = no;
+			mRepaintRequested = true;	// to track and abort nested paint() calls
+			mContentPanel.repaint();
 			}
 		else if (mDefinedNoOfColumns != no) {    // not maximized
 			mDefinedNoOfColumns = no;

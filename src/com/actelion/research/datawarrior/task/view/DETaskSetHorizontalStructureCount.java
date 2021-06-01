@@ -97,7 +97,7 @@ public class DETaskSetHorizontalStructureCount extends DETaskAbstractSetViewOpti
 	public boolean isViewConfigurationValid(CompoundTableView view, Properties configuration) {
 		if (view != null) {
 			try {
-				int count = Integer.parseInt(configuration.getProperty(PROPERTY_COUNT, DEFAULT_COUNT));
+				Integer.parseInt(configuration.getProperty(PROPERTY_COUNT, DEFAULT_COUNT));
 			} catch (NumberFormatException nfe) {
 				showErrorMessage("Horizontal structure count is not numerical.");
 				return false;

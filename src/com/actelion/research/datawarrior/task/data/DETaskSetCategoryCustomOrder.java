@@ -333,7 +333,10 @@ public class DETaskSetCategoryCustomOrder extends ConfigurableTask implements Ac
 				mComboBoxColumn.setSelectedIndex(0);
 			}
 
-		mCheckBoxUseCustomOrder.setSelected(false);
+		boolean isCustomOrder = isInteractive()
+				&& mDefaultColumn != -1
+				&& (mTableModel.getCategoryCustomOrder(mDefaultColumn) != null);
+		mCheckBoxUseCustomOrder.setSelected(isCustomOrder);
 		updateList(null, false);
 		enableItems();
 		}

@@ -18,8 +18,18 @@
 
 package com.actelion.research.datawarrior.task.data;
 
+import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.task.ConfigurableTask;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.table.BinGenerator;
+import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -31,17 +41,6 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.Properties;
 
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import com.actelion.research.chem.io.CompoundTableConstants;
-import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.task.ConfigurableTask;
-import com.actelion.research.table.BinGenerator;
-import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.util.DoubleFormat;
-
 public class DETaskAddBinsFromNumbers extends ConfigurableTask implements ChangeListener,ItemListener,KeyListener {
 	public static final String TASK_NAME = "Add Bins From Numbers";
 
@@ -49,6 +48,8 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 	private static final String PROPERTY_BIN_START = "binStart";
 	private static final String PROPERTY_BIN_SIZE = "binSize";
 	private static final String PROPERTY_LOGARITHMIC = "logarithmic";
+	private static final String PROPERTY_CUSTOM_VALUES = "customValues";
+	private static final String PROPERTY_CUSTOM_NAMES = "customNames";
 
 	private static final String DAYS = " days";
 
@@ -57,11 +58,12 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 	CompoundTableModel	mTableModel;
 	JComboBox			mComboBoxColumn;
 	JSlider				mSliderBinSize,mSliderBinShift;
-	JTextField			mTextFieldBinSize,mTextFieldBinStart;
-	JCheckBox			mCheckBoxLogarithmic;
+	JTextField			mTextFieldBinSize,mTextFieldBinStart,mTextFieldCustomValues,mTextFieldCustomNames;
+	JCheckBox			mCheckBoxLogarithmic,mCheckBoxUseCustomBins;
 	BinningPreview		mPreview;
-	int					mSliderBinSizeValue,mSliderBinShiftValue;
-	double				mCurrentRange;
+	int					mSliderBinSizeValue,mSliderBinShiftValue,mCustomValueCount;
+	double[]			mCustomValue;
+	String[]            mCustomName;
 
 	/**
 	 * @param parent
@@ -93,11 +95,13 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 
 	@Override
 	public JComponent createDialogContent() {
+		int gap = HiDPIHelper.scale(8);
 		JPanel content = new JPanel();
-		double[][] size = { {8, TableLayout.PREFERRED, 8, TableLayout.FILL, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, TableLayout.FILL, 8},
-							{8, TableLayout.PREFERRED, 8, TableLayout.FILL,
-								TableLayout.PREFERRED, 8, TableLayout.PREFERRED, TableLayout.FILL,
-								TableLayout.PREFERRED, 8, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.FILL} };
+		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.FILL, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL, gap},
+							{gap, TableLayout.PREFERRED, gap, TableLayout.FILL,
+								TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL,
+								TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.FILL,
+							3*gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
 		content.setLayout(new TableLayout(size));
 
 		JPanel cp = new JPanel();
@@ -111,36 +115,59 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 
 		cp.add(new JLabel("Create bins from "));
 		cp.add(mComboBoxColumn);
-		content.add(cp, "1,1,7,1");
+		content.add(cp, "1,1,9,1");
 
 		mTextFieldBinSize = new JTextField(8);
 		mTextFieldBinSize.addKeyListener(this);
 		mTextFieldBinStart = new JTextField(8);
 		mTextFieldBinStart.addKeyListener(this);
-		content.add(new JLabel("Bin Size:", SwingConstants.RIGHT), "4,4");
-		content.add(mTextFieldBinSize, "6,4");
-		content.add(new JLabel("First Bin From:", SwingConstants.RIGHT), "4,8");
-		content.add(mTextFieldBinStart, "6,8");
+		content.add(new JLabel("Bin Size:", SwingConstants.RIGHT), "6,4");
+		content.add(mTextFieldBinSize, "8,4");
+		content.add(new JLabel("First Bin From:", SwingConstants.RIGHT), "6,8");
+		content.add(mTextFieldBinStart, "8,8");
 		mSliderBinSize = new JSlider(JSlider.HORIZONTAL, 0, 256, 128);
 		mSliderBinShift = new JSlider(JSlider.HORIZONTAL, 0, 256, 128);
-		content.add(mSliderBinSize, "3,6,7,6");
-		content.add(mSliderBinShift, "3,10,7,10");
+		content.add(mSliderBinSize, "5,6,9,6");
+		content.add(mSliderBinShift, "5,10,9,10");
 		mCheckBoxLogarithmic = new JCheckBox("Values are logarithms");
 		mCheckBoxLogarithmic.setEnabled(!isInteractive());
-		content.add(mCheckBoxLogarithmic, "3,11,7,11");
+		content.add(mCheckBoxLogarithmic, "5,11,9,11");
 
-		content.add(mPreview = new BinningPreview(mTableModel), "1,3,1,12");
+		content.add(mPreview = new BinningPreview(mTableModel), "1,3,3,12");
 
 		if (isInteractive()) {
 			mSliderBinSize.addChangeListener(this);
 			mSliderBinShift.addChangeListener(this);
 			}
-		else {
-			mSliderBinSize.setEnabled(false);
-			mSliderBinShift.setEnabled(false);
-			}
+
+		mCheckBoxUseCustomBins = new JCheckBox("Use custom bin threshold values");
+		mCheckBoxUseCustomBins.addActionListener(e -> { enableItems(); updatePreview(); } );
+		content.add(mCheckBoxUseCustomBins, "1,14,9,14");
+		mTextFieldCustomValues = new JTextField();
+		mTextFieldCustomValues.addKeyListener(this);
+		mTextFieldCustomNames = new JTextField();
+		mTextFieldCustomNames.addKeyListener(this);
+		content.add(new JLabel("Custom threshold values:", SwingConstants.RIGHT), "1,16");
+		content.add(mTextFieldCustomValues, "3,16,9,16");
+		content.add(new JLabel("Custom bin names:", SwingConstants.RIGHT), "1,18");
+		content.add(mTextFieldCustomNames, "3,18,9,18");
+
+		enableItems();
 
 		return content;
+		}
+
+	private void enableItems() {
+		boolean isCustom = mCheckBoxUseCustomBins.isSelected();
+		mSliderBinSize.setEnabled(!isCustom && isInteractive());
+		mSliderBinShift.setEnabled(!isCustom && isInteractive());
+		mTextFieldBinSize.setEnabled(!isCustom);
+		mTextFieldBinStart.setEnabled(!isCustom);
+		mCheckBoxLogarithmic.setEnabled(!isCustom && !isInteractive());
+		mTextFieldCustomValues.setEnabled(isCustom);
+		mTextFieldCustomNames.setEnabled(isCustom);
+		validateCustomValueField();
+		validateCustomNameField();
 		}
 
 	@Override
@@ -198,9 +225,18 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 			validateBinSizeField();
 			return;
 			}
-
 		if (e.getSource() == mTextFieldBinStart) {
 			validateBinShiftField();
+			return;
+			}
+		if (e.getSource() == mTextFieldCustomValues) {
+			validateCustomValueField();
+			updatePreview();
+			return;
+			}
+		if (e.getSource() == mTextFieldCustomNames) {
+			validateCustomNameField();
+			updatePreview();
 			return;
 			}
 		}
@@ -230,7 +266,7 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 		int selectedColumn = getSelectedColumn();
 		double range = mTableModel.getMaximumValue(selectedColumn)
 					 - mTableModel.getMinimumValue(selectedColumn);
-		double value = (double)(mSliderBinSize.getValue());
+		double value = mSliderBinSize.getValue();
 		double min = range * Math.pow(cMaxNoOfBins, (value-1.0)/256.0 - 1.0);
 		double max = range * Math.pow(cMaxNoOfBins, value/256.0 - 1.0);
 		String text = mTableModel.isColumnTypeDate(selectedColumn) ?
@@ -241,7 +277,7 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 	private void updateFieldBinShiftFromSlider() {
 		int selectedColumn = getSelectedColumn();
 		double binSize = parseBinSizeField();
-		double value = (double)mSliderBinShift.getValue();
+		double value = mSliderBinShift.getValue();
 		double min = binSize * ((value-1.0)/256.0 - 1.0);
 		double max = binSize * (value/256.0 - 1.0);
 		double minValue = mTableModel.getMinimumValue(selectedColumn);
@@ -356,8 +392,73 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 			}
 		}
 
+	private void validateCustomValueField() {
+		if (!mCheckBoxUseCustomBins.isSelected()) {
+			mTextFieldCustomValues.setBackground(UIManager.getColor("TextArea.background"));
+			return;
+			}
+
+		String[] values = mTextFieldCustomValues.getText().split(",");
+		mCustomValue = new double[values.length];
+		for (int i=0; i<values.length; i++) {
+			try {
+				mCustomValue[i] = Double.parseDouble(values[i].trim());
+				if (i != 0 && mCustomValue[i] <= mCustomValue[i-1]) {
+					mCustomValue = null;
+					break;
+					}
+				}
+			catch (NumberFormatException nfe) {
+				mCustomValue = null;
+				break;
+				}
+			}
+
+		if (mCustomValue == null)
+			mTextFieldCustomValues.setBackground(Color.red);
+		else
+			mTextFieldCustomValues.setBackground(UIManager.getColor("TextArea.background"));
+		}
+
+	private void validateCustomNameField() {
+		if (!mCheckBoxUseCustomBins.isSelected()) {
+			mTextFieldCustomNames.setBackground(UIManager.getColor("TextArea.background"));
+			return;
+			}
+
+		boolean errorFound = false;
+		mCustomName = null;
+		String values = mTextFieldCustomNames.getText().trim();
+		if (values.length() != 0) {
+			mCustomName = values.split(",");
+			if (mCustomName.length != mCustomValue.length + 1) {
+				errorFound = true;
+				}
+			else {
+				for (int i=0; i<mCustomName.length; i++) {
+					if (mCustomName[i].trim().length() == 0) {
+						errorFound = true;
+						break;
+						}
+					}
+				}
+			}
+
+		if (errorFound)
+			mTextFieldCustomNames.setBackground(Color.red);
+		else
+			mTextFieldCustomNames.setBackground(UIManager.getColor("TextArea.background"));
+		}
+
 	private void updatePreview() {
-		mPreview.update(getSelectedColumn(),
+		if (mCheckBoxUseCustomBins.isSelected())
+			mPreview.update(getSelectedColumn(),
+					mCustomValue,
+					mCustomName,
+					isInteractive() && mTableModel.isLogarithmicViewMode(getSelectedColumn()),
+					mTableModel.isColumnTypeDate(getSelectedColumn()));
+		else
+			mPreview.update(getSelectedColumn(),
 				parseBinSizeField(),
 				parseBinStartField(),
 				mCheckBoxLogarithmic.isSelected(),
@@ -427,6 +528,12 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 		configuration.put(PROPERTY_BIN_START, Double.toString(parseBinStartField()));
 		configuration.put(PROPERTY_BIN_SIZE, Double.toString(parseBinSizeField()));
 		configuration.put(PROPERTY_LOGARITHMIC, mCheckBoxLogarithmic.isSelected() ? "true" : "false");
+		if (mCheckBoxUseCustomBins.isSelected()) {
+			configuration.setProperty(PROPERTY_CUSTOM_VALUES, mTextFieldCustomValues.getText());
+			String customNames = mTextFieldCustomNames.getText().trim();
+			if (customNames.length() != 0)
+				configuration.setProperty(PROPERTY_CUSTOM_NAMES, customNames);
+			}
 		return configuration;
 		}
 
@@ -456,9 +563,6 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 				else {
 					resetShiftSlider();
 					}
-
-				if (isInteractive())
-					updatePreview();
 				}
 			}
 		boolean isLogarithmic = "true".equals(configuration.getProperty(PROPERTY_LOGARITHMIC));
@@ -468,6 +572,18 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 		else {
 			mCheckBoxLogarithmic.setSelected(isLogarithmic);
 			}
+
+		String customValues = configuration.getProperty(PROPERTY_CUSTOM_VALUES, "");
+		if (customValues.length() != 0) {
+			mTextFieldCustomValues.setText(customValues);
+			mTextFieldCustomNames.setText(configuration.getProperty(PROPERTY_CUSTOM_NAMES, ""));
+			mCheckBoxUseCustomBins.setSelected(true);
+			}
+
+		enableItems();
+
+		if (isInteractive())
+			updatePreview();
 		}
 
 	@Override
@@ -479,14 +595,40 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
-		double binSize;
-		try {
-			binSize = Double.parseDouble(configuration.getProperty(PROPERTY_BIN_SIZE));
-			Double.parseDouble(configuration.getProperty(PROPERTY_BIN_START));
+		String customValues = configuration.getProperty(PROPERTY_CUSTOM_VALUES, "");
+		double binSize = 0;
+		double previousNumValue = -Double.MAX_VALUE;
+		if (customValues.length() != 0) {
+			String[] customValue = customValues.split(",");
+			for (String value:customValue) {
+				try {
+					double numValue = Double.parseDouble(value);
+					if (numValue <= previousNumValue) {
+						showErrorMessage("Custom bin threshold values must be defined in increasing order.");
+						return false;
+						}
+					previousNumValue = numValue;
+					}
+				catch (NumberFormatException nfe) {
+					showErrorMessage("Value '"+value+"' is not numerical.");
+					return false;
+					}
+				}
+			String customNames = configuration.getProperty(PROPERTY_CUSTOM_NAMES, "");
+			if (customNames.length() != 0 && customNames.split(",").length != customValue.length+1) {
+				showErrorMessage("If custom names are defined, then there must be one more name than custom values.");
+				return false;
+				}
 			}
-		catch (NumberFormatException nfe) {
-			showErrorMessage("Bin start or size not properly defined.");
-			return false;
+		else {
+			try {
+				binSize = Double.parseDouble(configuration.getProperty(PROPERTY_BIN_SIZE));
+				Double.parseDouble(configuration.getProperty(PROPERTY_BIN_START));
+				}
+			catch (NumberFormatException nfe) {
+				showErrorMessage("Bin start or size not properly defined.");
+				return false;
+				}
 			}
 
 		if (isLive) {
@@ -499,14 +641,16 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 				showErrorMessage("Column '"+configuration.getProperty(PROPERTY_COLUMN)+"' cannot be used for binning.");
 				return false;
 				}
-			if ((mTableModel.getMaximumValue(column) - mTableModel.getMinimumValue(column)) / binSize > 10f*cMaxNoOfBins) {
-				showErrorMessage("Maximum number of bins exceeded.");
-				return false;
-				}
-			boolean isLogarithmic = "true".equals(configuration.getProperty(PROPERTY_LOGARITHMIC));
-			if (isLogarithmic && !mTableModel.isLogarithmicViewMode(column) && mTableModel.getMinimumValue(column) <= 0.0) {
-				showErrorMessage("Binning on logarithic data cannot be done, because some data is <= 0.");
-				return false;
+			if (customValues.length() == 0) {
+				if ((mTableModel.getMaximumValue(column) - mTableModel.getMinimumValue(column)) / binSize > 10f*cMaxNoOfBins) {
+					showErrorMessage("Maximum number of bins exceeded.");
+					return false;
+					}
+				boolean isLogarithmic = "true".equals(configuration.getProperty(PROPERTY_LOGARITHMIC));
+				if (isLogarithmic && !mTableModel.isLogarithmicViewMode(column) && mTableModel.getMinimumValue(column) <= 0.0) {
+					showErrorMessage("Binning on logarithic data cannot be done, because some data is <= 0.");
+					return false;
+					}
 				}
 			}
 
@@ -517,25 +661,66 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 		int column = mTableModel.findColumn(configuration.getProperty(PROPERTY_COLUMN));
 		boolean isDate = mTableModel.isColumnTypeDate(column);
 
-		String binBase = configuration.getProperty(PROPERTY_BIN_START);
-		String binSize = configuration.getProperty(PROPERTY_BIN_SIZE);
-		boolean isLog = "true".equals(configuration.getProperty(PROPERTY_LOGARITHMIC));
-
-		BinGenerator limits = new BinGenerator(mTableModel, column, new BigDecimal(binBase), new BigDecimal(binSize), isLog, isDate);
+		String customValues = configuration.getProperty(PROPERTY_CUSTOM_VALUES, "");
+		double[] customValue = null;
+		String[] customName = null;
+		if (customValues.length() != 0) {
+			String[] valueString = customValues.split(",");
+			customValue = new double[valueString.length];
+			for (int i=0; i<valueString.length; i++)
+				customValue[i] = Double.parseDouble(valueString[i]);
+			String customNames = configuration.getProperty(PROPERTY_CUSTOM_NAMES, "");
+			if (customNames.length() != 0) {
+				customName = customNames.split(",");
+				}
+			else {
+				customName = new String[customValue.length+1];
+				customName[0] = "x < " + customValue[0];
+				customName[customValue.length] = customValue[customValue.length-1] + " <= x";
+				for (int i=1; i<customValue.length; i++)
+					customName[i] = customValue[i-1] + CompoundTableModel.cRangeSeparation + customValue[i];
+				}
+			}
 
 		String[] columnName = new String[1];
 		columnName[0] = "Binned " + mTableModel.getColumnTitleExtended(column);
 		int newColumn = mTableModel.addNewColumns(columnName);
-		mTableModel.setColumnProperty(newColumn, CompoundTableConstants.cColumnPropertyBinBase, binBase);
-		mTableModel.setColumnProperty(newColumn, CompoundTableConstants.cColumnPropertyBinSize, binSize);
-		mTableModel.setColumnProperty(newColumn, CompoundTableConstants.cColumnPropertyBinIsLog, isLog ? "true" : "false");
-		mTableModel.setColumnProperty(newColumn, CompoundTableConstants.cColumnPropertyBinIsDate, isDate ? "true" : "false");
 
-		for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
-			int index = limits.getIndex(mTableModel.getTotalDoubleAt(row, column));
-			mTableModel.setTotalValueAt(limits.getRangeString(index), row, newColumn);
+		if (customValue != null) {
+			for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
+				int index = customValue.length;
+				double value = mTableModel.getTotalDoubleAt(row, column);
+				if (mTableModel.isLogarithmicViewMode(column))
+					value = Math.pow(10.0, value);
+				for (int i=0; i<customValue.length; i++) {
+					if (value < customValue[i]) {
+						index = i;
+						break;
+						}
+					}
+				mTableModel.setTotalValueAt(customName[index], row, newColumn);
+				}
+			}
+		else {
+			String binBase = configuration.getProperty(PROPERTY_BIN_START);
+			String binSize = configuration.getProperty(PROPERTY_BIN_SIZE);
+			boolean isLog = "true".equals(configuration.getProperty(PROPERTY_LOGARITHMIC));
+
+			mTableModel.setColumnProperty(newColumn, CompoundTableConstants.cColumnPropertyBinSize, binSize);
+			mTableModel.setColumnProperty(newColumn, CompoundTableConstants.cColumnPropertyBinBase, binBase);
+			mTableModel.setColumnProperty(newColumn, CompoundTableConstants.cColumnPropertyBinIsLog, isLog ? "true" : "false");
+			mTableModel.setColumnProperty(newColumn, CompoundTableConstants.cColumnPropertyBinIsDate, isDate ? "true" : "false");
+
+			BinGenerator limits = new BinGenerator(mTableModel, column, new BigDecimal(binBase), new BigDecimal(binSize), isLog, isDate);
+
+			for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
+				int index = limits.getIndex(mTableModel.getTotalDoubleAt(row, column));
+				mTableModel.setTotalValueAt(limits.getRangeString(index), row, newColumn);
+				}
 			}
 
 		mTableModel.finalizeNewColumns(newColumn, null);
+		if (customValue != null)
+			mTableModel.setCategoryCustomOrder(newColumn, customName);
 		}
 	}

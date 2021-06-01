@@ -18,33 +18,31 @@
 
 package com.actelion.research.datawarrior.task.data;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
-import java.math.BigDecimal;
-
-import javax.swing.JPanel;
-
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.BinGenerator;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.util.DoubleFormat;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
+import java.math.BigDecimal;
 
 public class BinningPreview extends JPanel implements MouseMotionListener {
     private static final long serialVersionUID = 0x20120808;
 
     private static final int cPreviewWidth = HiDPIHelper.scale(240);
 	private static final int cPreviewHeight = HiDPIHelper.scale(180);
-	private static final int cBorder = 6;
+	private static final int cBorder = HiDPIHelper.scale(6);
 
 	private CompoundTableModel  mTableModel;
 	private Image               mOffImage;
 	private int[]				mMemberCount;
 	private boolean				mPreviewValid,mOffImageValid,mIsLogarithmic,mIsDate;
 	private BinGenerator		mLimits;
+	private double[]            mCustomBinThreshold;
+	private String[]            mCustomBinName;
 	private int					mColumn,mMaxMemberCount,mMouseX,mMouseY;
 	private double				mBinSize,mBinStart;
 	private String				mMouseText;
@@ -73,23 +71,49 @@ public class BinningPreview extends JPanel implements MouseMotionListener {
 		    }
 
 		if (!mPreviewValid) {
-			if (mColumn != -1 && !Double.isNaN(mBinStart) && !Double.isNaN(mBinSize)) {
-				mLimits = new BinGenerator(mTableModel, mColumn, new BigDecimal(mBinStart),
-						new BigDecimal(mBinSize), mIsLogarithmic, mIsDate);
-				int binCount = mLimits.getBinCount();
-
-				mMemberCount = new int[binCount];
-				for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
-					int index = mLimits.getIndex(mTableModel.getDoubleAt(row, mColumn));
-					if (index != binCount)
-						mMemberCount[index]++;
+			if (mColumn != -1) {
+				if (mCustomBinThreshold != null) {
+					mMemberCount = new int[mCustomBinThreshold.length + 1];
+					for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
+						double value = mTableModel.getDoubleAt(row, mColumn);
+						if (mTableModel.isLogarithmicViewMode(mColumn))
+							value = Math.pow(10.0, value);
+						if (!Double.isNaN(value)) {
+							int index = mCustomBinThreshold.length;
+							for (int i=0; i<mCustomBinThreshold.length; i++) {
+								if (value < mCustomBinThreshold[i]) {
+									index = i;
+									break;
+									}
+								}
+							mMemberCount[index]++;
+							}
+						}
+					mPreviewValid = true;
 					}
-				mMaxMemberCount = 0;
-				for (int i=0; i<binCount; i++)
-					if (mMaxMemberCount < mMemberCount[i])
-						mMaxMemberCount = mMemberCount[i];
+				else {
+					if (!Double.isNaN(mBinStart) && !Double.isNaN(mBinSize)) {
+						mLimits = new BinGenerator(mTableModel, mColumn, new BigDecimal(mBinStart),
+								new BigDecimal(mBinSize), mIsLogarithmic, mIsDate);
+						int binCount = mLimits.getBinCount();
 
-				mPreviewValid = true;
+						mMemberCount = new int[binCount];
+						for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
+							int index = mLimits.getIndex(mTableModel.getDoubleAt(row, mColumn));
+							if (index != binCount)
+								mMemberCount[index]++;
+							}
+
+						mPreviewValid = true;
+						}
+					}
+
+				if (mPreviewValid) {
+					mMaxMemberCount = 0;
+					for (int i=0; i<mMemberCount.length; i++)
+						if (mMaxMemberCount < mMemberCount[i])
+							mMaxMemberCount = mMemberCount[i];
+					}
 				}
 
 			mMouseText = null;
@@ -102,13 +126,13 @@ public class BinningPreview extends JPanel implements MouseMotionListener {
 			offG.fillRect(0, 0, theSize.width, theSize.height);
 
 			if (mPreviewValid && mMaxMemberCount != 0) {
-				int barSpacing = Math.max((int)((cPreviewWidth-cBorder)/mMemberCount.length), 1);
+				int barSpacing = Math.max((cPreviewWidth-cBorder)/mMemberCount.length, 1);
 				int barWidth = Math.max(barSpacing*2/3, 1);
 				offG.setColor(new Color(121, 232, 144));
 				for (int i=0; i<mMemberCount.length; i++) {
 					if (mMemberCount[i] != 0) {
 						int barHeight = (cPreviewHeight - 2 * cBorder) * mMemberCount[i] / mMaxMemberCount;
-						int x = cBorder + i * barSpacing;
+						int x = cBorder + barSpacing/6 + i * barSpacing;
 						int y = cPreviewHeight - cBorder - barHeight;
 						offG.fillRect(x, y, barWidth, barHeight);
 						}
@@ -128,22 +152,31 @@ public class BinningPreview extends JPanel implements MouseMotionListener {
 
 			g.setColor(Color.black);
 			int stringWidth = g.getFontMetrics().stringWidth(mMouseText);
-			g.drawString(mMouseText, (theSize.width-stringWidth)/2, g.getFontMetrics().getHeight());
+			int x = Math.max(cBorder, Math.min(theSize.width-cBorder-stringWidth, mHighlightedRect.x + (mHighlightedRect.width - stringWidth)/2));
+			g.drawString(mMouseText, x, g.getFontMetrics().getHeight());
 			}
 		}
 
-/*	public void update(Graphics g) {
-		paint(g);
-		}*/
+	public void update(int column, double[] customBinThreshold, String[] customBinName, boolean isLogarithmic, boolean isDate) {
+		mColumn = column;
+		mCustomBinThreshold = customBinThreshold == null ? new double[0] : customBinThreshold;
+		mCustomBinName = customBinName;
+		mIsLogarithmic = isLogarithmic;
+		mIsDate = isDate;
+		mPreviewValid = false;
+		repaint();
+		}
 
 	public void update(int column, double binSize, double binStart, boolean isLogarithmic, boolean isDate) {
-		if (mColumn != column || mBinSize != binSize || mBinStart != binStart || mIsLogarithmic != isLogarithmic) {
+		if (mColumn != column || mCustomBinThreshold != null || mBinSize != binSize || mBinStart != binStart || mIsLogarithmic != isLogarithmic) {
 			mColumn = column;
 			mBinSize = binSize;
 			mBinStart = binStart;
 			mIsLogarithmic = isLogarithmic;
 			mIsDate = isDate;
 			mPreviewValid = false;
+			mCustomBinThreshold = null;
+			mCustomBinName = null;
 			repaint();
 			}
 		}
@@ -158,15 +191,15 @@ public class BinningPreview extends JPanel implements MouseMotionListener {
 		mMouseX = e.getX();
 		mMouseY = e.getY();
 		mMouseText = null;
-		int barSpacing = Math.max((int)((cPreviewWidth-cBorder)/mMemberCount.length), 1);
+		int barSpacing = Math.max((cPreviewWidth-cBorder)/mMemberCount.length, 1);
 		int barWidth = Math.max(barSpacing*2/3, 1);
 		for (int i=0; i<mMemberCount.length; i++) {
-			int barHeight = (cPreviewHeight - 2 * cBorder) * mMemberCount[i] / mMaxMemberCount;
-			int x = cBorder + i * barSpacing;
+			int barHeight = (cPreviewHeight - 2*cBorder) * mMemberCount[i] / mMaxMemberCount;
+			int x = cBorder + barSpacing/6 + i*barSpacing;
 			int y = cPreviewHeight - cBorder - barHeight;
 			mHighlightedRect = new Rectangle(x, y, barWidth, barHeight);
 			if (mHighlightedRect.contains(mMouseX, mMouseY)) {
-				mMouseText = mLimits.getRangeString(i);
+				mMouseText = getBinName(i);
 				repaint();
 				return;
 				}			
@@ -174,5 +207,17 @@ public class BinningPreview extends JPanel implements MouseMotionListener {
 
 		if (doRepaint)
 			repaint();
+		}
+
+	private String getBinName(int index) {
+    	if (mCustomBinThreshold == null)
+    		return mLimits.getRangeString(index);
+    	if (mCustomBinName != null)
+    		return mCustomBinName[index];
+    	if (index == 0)
+			return mCustomBinThreshold.length == 0 ? "" : "x < " + DoubleFormat.toString(mCustomBinThreshold[0]);
+    	if (index == mCustomBinThreshold.length)
+			return DoubleFormat.toString(mCustomBinThreshold[mCustomBinThreshold.length-1]) + " <= x";
+		return DoubleFormat.toString(mCustomBinThreshold[index-1]) + CompoundTableModel.cRangeSeparation + DoubleFormat.toString(mCustomBinThreshold[index]);
 		}
 	}

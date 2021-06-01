@@ -19,6 +19,7 @@
 package com.actelion.research.datawarrior.task.chem.clib;
 
 import com.actelion.research.chem.Canonizer;
+import com.actelion.research.chem.SSSearcher;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.SubstructureFilter;
 import com.actelion.research.chem.io.CompoundFileHelper;
@@ -187,7 +188,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener,DrawAreaLis
 		if (mReactantPaneList.size() == reactantCount) {
 			for (int i=0; i<reactantCount; i++) {
 				mReactantView[i].structureChanged(reaction.getReactant(i));
-				mReactantPaneList.get(i).setCompoundFilter(new SubstructureFilter(reaction.getReactant(i)));
+				mReactantPaneList.get(i).setCompoundFilter(new SubstructureFilter(reaction.getReactant(i), SSSearcher.cMatchDBondToDelocalized));
 				}
 			return;
 			}

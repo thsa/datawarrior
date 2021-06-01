@@ -116,7 +116,7 @@ public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements
 				StereoMolecule mol = new IDCodeParser().getCompactMolecule(idcode);
 				if (mol != null) {
 					searcher.setMolecule(mol);
-					if (searcher.isFragmentInMolecule())
+					if (searcher.isFragmentInMolecule(SSSearcher.cMatchDBondToDelocalized))
 						count++;
 				}
 				if (count == 0) {

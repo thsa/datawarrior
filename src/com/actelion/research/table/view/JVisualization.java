@@ -3423,7 +3423,7 @@ public abstract class JVisualization extends JComponent
 		TreeMap<byte[],VisualizationPoint> map = new TreeMap<>(new ByteArrayComparator());
 		for (VisualizationPoint vp:mPoint) {
 			byte[] key = (byte[])vp.record.getData(referencedColumn);
-			if (key.length != 0)
+			if (key != null)
 				map.put(key, vp);
 			}
 

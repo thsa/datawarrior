@@ -61,7 +61,7 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 	JTextField			mTextFieldBinSize,mTextFieldBinStart,mTextFieldCustomValues,mTextFieldCustomNames;
 	JCheckBox			mCheckBoxLogarithmic,mCheckBoxUseCustomBins;
 	BinningPreview		mPreview;
-	int					mSliderBinSizeValue,mSliderBinShiftValue,mCustomValueCount;
+	int					mSliderBinSizeValue,mSliderBinShiftValue;
 	double[]			mCustomValue;
 	String[]            mCustomName;
 

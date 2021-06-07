@@ -18,13 +18,12 @@
 
 package com.actelion.research.datawarrior.task.view;
 
-import java.awt.*;
-import java.awt.event.*;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.table.view.VisualizationColor;
 
 import javax.swing.*;
-
-import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.VisualizationColor;
+import java.awt.*;
+import java.awt.event.*;
 
 
 public class MarkerColorPanel extends JPanel
@@ -35,8 +34,8 @@ public class MarkerColorPanel extends JPanel
 //	private static final Color cShadowColor     = new Color(153, 153, 153);
 	private static final Color cDarkShadowColor = new Color(102, 102, 102);
 
-	private static final int cBorder = 8;
-	private static final int cSpacing = 4;
+	private static final int cBorder = HiDPIHelper.scale(8);
+	private static final int cSpacing = cBorder/2;
 
 	private static final int cColorWedgeButton = 2;
 	private static final int cDefaultCategoryColorCount = 8;
@@ -49,17 +48,16 @@ public class MarkerColorPanel extends JPanel
 	private Rectangle[]         mRect;
 	private ActionListener		mListener;
 
-	public MarkerColorPanel(Frame owner,
-							CompoundTableModel tableModel,
-							ActionListener listener,
-							boolean isBackgroundColor) {
+	public MarkerColorPanel(Frame owner, ActionListener listener) {
 		mOwner = owner;
 		mListener = listener;
 
- 		setSize(new Dimension(236, 36));
-        setMinimumSize(new Dimension(236, 36));
-        setPreferredSize(new Dimension(236, 36));
-        setMaximumSize(new Dimension(236, 36));
+		int width = HiDPIHelper.scale(236);
+		int height = HiDPIHelper.scale(32);
+ 		setSize(new Dimension(width, height));
+        setMinimumSize(new Dimension(width, height));
+        setPreferredSize(new Dimension(width, height));
+        setMaximumSize(new Dimension(width, height));
         setOpaque(true);
 
 		mLastColorListMode = VisualizationColor.cColorListModeHSBLong;

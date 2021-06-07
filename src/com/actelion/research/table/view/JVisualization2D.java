@@ -4200,9 +4200,26 @@ public class JVisualization2D extends JVisualization {
 		else if (mTableModel.isDescriptorColumn(mBackgroundColor.getColorColumn()))
 			setBackgroundSimilarityColors();
 		else if (mBackgroundColor.getColorListMode() == VisualizationColor.cColorListModeCategories) {
-			for (int i=0; i<mDataPoints; i++)
-				((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = VisualizationColor.cSpecialColorCount
-						+ mTableModel.getCategoryIndex(mBackgroundColor.getColorColumn(), mPoint[i].record);
+			float[] thresholds = mBackgroundColor.getColorThresholds();
+			if (thresholds != null) {
+				for (int i=0; i<mDataPoints; i++) {
+					double value = mPoint[i].record.getDouble(mBackgroundColor.getColorColumn());
+					if (mTableModel.isLogarithmicViewMode(mBackgroundColor.getColorColumn()))
+						value = Math.pow(10, value);
+					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = (short)(VisualizationColor.cSpecialColorCount+thresholds.length);
+					for (int j=0; j<thresholds.length; j++) {
+						if (value<thresholds[j]) {
+							((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = (short)(VisualizationColor.cSpecialColorCount + j);
+							break;
+							}
+						}
+					}
+				}
+			else {
+				for (int i=0; i<mDataPoints; i++)
+					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = VisualizationColor.cSpecialColorCount
+							+ mTableModel.getCategoryIndex(mBackgroundColor.getColorColumn(), mPoint[i].record);
+				}
 			}
 		else if (mTableModel.isColumnTypeDouble(mBackgroundColor.getColorColumn())) {
 			float min = Float.isNaN(mBackgroundColor.getColorMin()) ?
@@ -4250,6 +4267,16 @@ public class JVisualization2D extends JVisualization {
 										mActivePoint.record, mPoint[i].record, mBackgroundColor.getColorColumn());
 				if (Float.isNaN(similarity))
 					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = VisualizationColor.cMissingDataColorIndex;
+				else if (mBackgroundColor.getColorThresholds() != null) {
+					float[] thresholds = mBackgroundColor.getColorThresholds();
+					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = (short)(VisualizationColor.cSpecialColorCount + thresholds.length);
+					for (int j=0; j<thresholds.length; j++) {
+						if (similarity<thresholds[j]) {
+							((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = (short)(VisualizationColor.cSpecialColorCount + j);
+							break;
+							}
+						}
+					}
 				else
 					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = (int)(0.5 + VisualizationColor.cSpecialColorCount
 						+ (float)(mBackgroundColor.getColorList().length - VisualizationColor.cSpecialColorCount - 1)

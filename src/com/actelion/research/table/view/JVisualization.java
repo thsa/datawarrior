@@ -1247,9 +1247,26 @@ public abstract class JVisualization extends JComponent
 			setSimilarityColors(-1);
 			}
 		else if (mMarkerColor.getColorListMode() == VisualizationColor.cColorListModeCategories) {
-			for (int i=0; i<mDataPoints; i++)
-				mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount
-					+ mTableModel.getCategoryIndex(mMarkerColor.getColorColumn(), mPoint[i].record));
+			float[] thresholds = mMarkerColor.getColorThresholds();
+			if (thresholds != null) {
+				for (int i=0; i<mDataPoints; i++) {
+					double value = mPoint[i].record.getDouble(mMarkerColor.getColorColumn());
+					if (mTableModel.isLogarithmicViewMode(mMarkerColor.getColorColumn()))
+						value = Math.pow(10, value);
+					mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount+thresholds.length);
+					for (int j=0; j<thresholds.length; j++) {
+						if (value<thresholds[j]) {
+							mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount + j);
+							break;
+							}
+						}
+					}
+				}
+			else {
+				for (int i=0; i<mDataPoints; i++)
+					mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount
+							+ mTableModel.getCategoryIndex(mMarkerColor.getColorColumn(), mPoint[i].record));
+				}
 			}
 		else if (mTableModel.isColumnTypeDouble(mMarkerColor.getColorColumn())) {
 			float min = Float.isNaN(mMarkerColor.getColorMin()) ?
@@ -1409,6 +1426,17 @@ public abstract class JVisualization extends JComponent
 									  : mTableModel.getDescriptorSimilarity(mActivePoint.record, mPoint[i].record, column);
 					if (Float.isNaN(similarity))
 						mPoint[i].colorIndex = VisualizationColor.cMissingDataColorIndex;
+					else if (mMarkerColor.getColorThresholds() != null) {
+						float[] thresholds = mMarkerColor.getColorThresholds();
+						mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount + thresholds.length);
+						for (int j=0; j<thresholds.length; j++) {
+							if (similarity<thresholds[j]) {
+								mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount + j);
+								break;
+								}
+							}
+						}
+
 					else if (similarity <= min)
 						mPoint[i].colorIndex = (short)VisualizationColor.cSpecialColorCount;
 					else if (similarity >= max)

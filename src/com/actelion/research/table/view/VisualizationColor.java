@@ -21,6 +21,7 @@ package com.actelion.research.table.view;
 import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.table.model.*;
 import com.actelion.research.util.ColorHelper;
+import com.actelion.research.util.DoubleFormat;
 
 import java.awt.*;
 import java.util.TreeMap;
@@ -57,9 +58,10 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 
 	private CompoundTableModel	mTableModel;
 	private VisualizationColorListener mColorListener;
-	private Color[]	 mColorList;
-	private float		mColorMin,mColorMax;
-	private int			mColorColumn,mColorListMode;
+	private Color[] mColorList;
+	private float	mColorMin,mColorMax;
+	private float[] mColorThresholds;
+	private int		mColorColumn,mColorListMode;
 	private TreeMap<String,Color> mCategoryColorMap;
 
 	public static Color[] createColorWedge(Color c1, Color c2, int mode, Color[] colorList) {
@@ -117,6 +119,33 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		return Color.getHSBColor(sHSBBuffer[0], sHSBBuffer[1]/6, min+sHSBBuffer[2]*(max-min));
 		}
 
+	public static float[] parseCustomThresholds(String thresholdString, CompoundTableModel tableModel, int column) {
+		if (thresholdString == null || thresholdString.length() == 0)
+			return null;
+
+		boolean isLogarithmic = (column == -1) ? false : tableModel.isLogarithmicViewMode(column);
+		String[] values = thresholdString.split(",");
+		float[] thresholds = new float[values.length];
+		for (int i=0; i<values.length; i++) {
+			try {
+				thresholds[i] = Float.parseFloat(values[i].trim());
+				if (i != 0 && thresholds[i] <= thresholds[i-1]) {
+					thresholds = null;
+					break;
+					}
+				if (isLogarithmic && thresholds[i] <= 0) {
+					thresholds = null;
+					break;
+					}
+				}
+			catch (NumberFormatException nfe) {
+				thresholds = null;
+				break;
+				}
+			}
+		return thresholds;
+		}
+
 	/**
 	 * Creates a VisualizationColor with unassigned column.
 	 * The listener is not informed about this initial setting.
@@ -152,6 +181,7 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		mColorListMode = cColorListModeHSBLong;
 		
 		mCategoryColorMap = null;
+		mColorThresholds = null;
 
 		if (fireChange)
 			mColorListener.colorChanged(this);
@@ -393,6 +423,7 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 	public int getColorListSizeWithoutDefaults() {
 		// Determine the count of used colors; the size of mColorList may be larger and only partially used
 		return (mColorListMode != cColorListModeCategories) ? mColorList.length - cSpecialColorCount
+				: mColorThresholds != null ? mColorThresholds.length + 1
 				: (CompoundTableListHandler.isListColumn(mColorColumn)) ? 2
 				: mTableModel.getCategoryCount(mColorColumn);
 		}
@@ -419,8 +450,18 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 			}
 		if (mTableModel.isDescriptorColumn(mColorColumn))
 			return getSimilarityColorIndex(record);
-		if (mColorListMode == cColorListModeCategories)
+		if (mColorListMode == cColorListModeCategories) {
+			if (mColorThresholds != null) {
+				double value = record.getDouble(mColorColumn);
+				if (mTableModel.isLogarithmicViewMode(mColorColumn))
+					value = Math.pow(10, value);
+				for (int i=0; i<mColorThresholds.length; i++)
+					if (value < mColorThresholds[i])
+						return cSpecialColorCount+i;
+				return cSpecialColorCount+mColorThresholds.length;
+				}
 			return cSpecialColorCount + mTableModel.getCategoryIndex(mColorColumn, record);
+			}
 		if (mTableModel.isColumnTypeDouble(mColorColumn)) {
 			float min = Float.isNaN(mColorMin) ?
 									mTableModel.getMinimumValue(mColorColumn)
@@ -435,8 +476,8 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 
 			//	1. colorMin is explicitly set; max is real max, but lower than min
 			// or 2. colorMax is explicitly set; min is real min, but larger than max
-			// first case is OK, second needs adaption below to be handled as indented
-			if (min >= max)  
+			// first case is OK, second needs adaption below to be handled as intended
+			if (min >= max)
 				if (!Float.isNaN(mColorMax))
 					min = Float.MIN_VALUE;
 
@@ -459,6 +500,17 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		if (currentRecord == null)
 			return cDefaultDataColorIndex;
 
+		float similarity = mTableModel.getDescriptorSimilarity(currentRecord, record, mColorColumn);
+		if (Float.isNaN(similarity))
+			return cMissingDataColorIndex;
+
+		if (mColorThresholds != null) {
+			for (int i=0; i<mColorThresholds.length; i++)
+				if (similarity < mColorThresholds[i])
+					return cSpecialColorCount + i;
+			return cSpecialColorCount + mColorThresholds.length;
+			}
+
 		float min = Float.isNaN(mColorMin) ? 0.0f : mColorMin;
 		float max = Float.isNaN(mColorMax) ? 1.0f : mColorMax;
 		if (min >= max) {
@@ -466,9 +518,6 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 			max = 1.0f;
 			}
 
-		float similarity = mTableModel.getDescriptorSimilarity(currentRecord, record, mColorColumn);
-		if (Float.isNaN(similarity))
-			return cMissingDataColorIndex;
 		if (similarity <= min)
 			return cSpecialColorCount;
 		if (similarity >= max)
@@ -476,6 +525,32 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		return (int)(0.5f + cSpecialColorCount
 					+ (float)(mColorList.length - cSpecialColorCount - 1)
 					* (similarity - min) / (max - min));
+		}
+
+	public float[] getColorThresholds() {
+		return mColorThresholds;
+		}
+
+	public String getColorThresholdString() {
+		if (mColorThresholds == null)
+			return null;
+
+		StringBuilder sb = new StringBuilder();
+		for (float v:mColorThresholds) {
+			if (sb.length() != 0)
+				sb.append(",");
+			sb.append(DoubleFormat.toString(v));
+			}
+		return sb.toString();
+		}
+
+	public String[] createCustomThresholdCategoryNames() {
+		String[] categoryName = new String[mColorThresholds.length+1];
+		categoryName[0] = "<"+ DoubleFormat.toString(mColorThresholds[0]);
+		categoryName[mColorThresholds.length] = ">=" + DoubleFormat.toString(mColorThresholds[mColorThresholds.length-1]);
+		for (int i=1; i<mColorThresholds.length; i++)
+			categoryName[i] = DoubleFormat.toString(mColorThresholds[i-1]) + "-" + DoubleFormat.toString(mColorThresholds[i]);
+		return categoryName;
 		}
 
 	/**
@@ -556,20 +631,45 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 	 * @param mode one of the cColorListMode??? options
 	 */
 	public void setColor(int column, Color[] colorList, int mode) {
+		setColor(column, colorList, mode, null);
+		}
+
+	/**
+	 * (Re-)defines reference column and/or the color list mode and/or one or more colors of the list.
+	 * @param column existing column, cColumnUnassigned, or pseudo column referring to a hitlist
+	 * @param colorList user defined color list (color wedge or category colors) without special colors
+	 * @param mode one of the cColorListMode??? options
+	 * @param thresholds null or custom thresholds for numerical columns
+	 */
+	public void setColor(int column, Color[] colorList, int mode, float[] thresholds) {
+		if (thresholds != null
+		 && column >= 0
+		 && mTableModel.isLogarithmicViewMode(column)) {
+			for (float t:thresholds) {
+				if (t <= 0f) {
+					thresholds = null;
+					mode = cColorListModeHSBLong;
+					break;
+					}
+				}
+			}
+
 		if (CompoundTableListHandler.isListColumn(column)) {
 			mode = cColorListModeCategories;
 			}
 		else if (mTableModel.isDescriptorColumn(column)) {
-			if (mode == cColorListModeCategories)
+			if (mode == cColorListModeCategories && thresholds == null)
 				mode = cColorListModeHSBLong;
 			}
 		else {
 			if (!((mTableModel.isColumnTypeCategory(column)
 				&& mTableModel.getCategoryCount(column) <= VisualizationColor.cMaxColorCategories)
-				 || mTableModel.isColumnTypeDouble(column))) {
+			   || mTableModel.isColumnTypeDouble(column))) {
 				column = JVisualization.cColumnUnassigned;
+				thresholds = null;
 				}
 			else if (mode == cColorListModeCategories
+				  && thresholds == null
 				  && !mTableModel.isColumnTypeCategory(column)) {
 				mode = cColorListModeHSBLong;
 				}
@@ -586,6 +686,24 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 					break;
 					}
 				}
+
+			if (thresholds != null) {
+				if (mColorThresholds == null || mColorThresholds.length != thresholds.length) {
+					isDifferent = true;
+					}
+				else {
+					for (int i=0; i<thresholds.length; i++) {
+						if (mColorThresholds[i] != thresholds[i]) {
+							isDifferent = true;
+							break;
+							}
+						}
+					}
+				}
+			else if (mColorThresholds != null) {
+				isDifferent = true;
+				}
+
 			if (!isDifferent)
 				return;
 			}
@@ -593,11 +711,11 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		if (mColorColumn != column && mColorListMode == cColorListModeCategories)
 			mCategoryColorMap = null;
 
-		if (!CompoundTableListHandler.isListColumn(column)
-		 && mode == cColorListModeCategories
-		 && mTableModel.isColumnTypeCategory(column)
-		 && mTableModel.getCategoryCount(column) > colorList.length)
-			colorList = extendCategoryColorList(column, colorList);
+		if (mode == cColorListModeCategories) {
+			int categoryCount = (thresholds != null) ? thresholds.length + 1 : mTableModel.getCategoryCount(column);
+			if (categoryCount>colorList.length)
+				colorList = extendCategoryColorList(colorList, categoryCount);
+			}
 
 		if (column != mColorColumn) {
 			mColorMin = Float.NaN;
@@ -606,10 +724,11 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 
 		mColorColumn = column;
 		mColorListMode = mode;
+		mColorThresholds = thresholds;
 		setColorList(colorList);
 
 		if (mode == cColorListModeCategories
-		 && mTableModel.isColumnTypeCategory(column)
+		 && thresholds == null
 		 && !CompoundTableListHandler.isListColumn(column))
 			createCategoryColorMap(colorList);
 
@@ -632,8 +751,8 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 	 * For category columns that contain more categories than a color list has colors,
 	 * this method extends a color list to be used for the category column.
 	 */
-	private Color[] extendCategoryColorList(int column, Color[] shortColorList) {
-		Color[] colorList = createDefaultCategoryColorList(column);
+	private Color[] extendCategoryColorList(Color[] shortColorList, int newCategoryCount) {
+		Color[] colorList = createDiverseColorList(newCategoryCount);
 		for (int i=0; i<shortColorList.length; i++) {
 			Color origColor = colorList[i];
    			colorList[i] = shortColorList[i];

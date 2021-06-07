@@ -113,6 +113,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMissingColor = "missingColor";
 	private static final String cColorMin = "colorMin";
 	private static final String cColorMax = "colorMax";
+	private static final String cColorThresholds = "colorThresholds";
 	private static final String cColorListMode = "colorListMode";
 	private static final String cBackgroundColorColumn = "backgroundColorColumn";
 	private static final String cBackgroundColorCount = "backgroundColorCount";
@@ -123,6 +124,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cBackgroundColorRecords = "backgroundColorRecords";
 	private static final String cBackgroundColorMin = "backgroundColorMin";
 	private static final String cBackgroundColorMax = "backgroundColorMax";
+	private static final String cBackgroundColorThresholds = "backgroundColorThresholds";
 	private static final String cBackgroundImage = "backgroundImage";
 	private static final String cSuppressGrid = "suppressGrid";
 	private static final String cSuppressLegend = "suppressLegend";
@@ -930,7 +932,10 @@ public class DERuntimeProperties extends RuntimeProperties {
 								colorList = VisualizationColor.createColorWedge(color1, color2, colorListMode, null);
 								}
 
-							((JVisualization2D)visualization).getBackgroundColor().setColor(column, colorList, colorListMode);
+							float[] thresholds = VisualizationColor.parseCustomThresholds(
+									getProperty(cBackgroundColorThresholds+viewName), mTableModel, column);
+
+							((JVisualization2D)visualization).getBackgroundColor().setColor(column, colorList, colorListMode, thresholds);
 
 							value = getProperty(cBackgroundColorRecords);
 							if (value != null) {
@@ -1159,8 +1164,11 @@ public class DERuntimeProperties extends RuntimeProperties {
 						Color color2 = Color.decode(getProperty(cColor + vColorName + "_1"));
 						colorList = VisualizationColor.createColorWedge(color1, color2, colorListMode, null);
 						}
-	
-					vColor.setColor(column, colorList, colorListMode);
+
+					float[] thresholds = VisualizationColor.parseCustomThresholds(
+							getProperty(cColorThresholds+vColorName), mTableModel, column);
+
+					vColor.setColor(column, colorList, colorListMode, thresholds);
 	
 					value = getProperty(cColorMin + vColorName);
 					float min = (value == null) ? Float.NaN : Float.parseFloat(value);
@@ -1617,6 +1625,10 @@ public class DERuntimeProperties extends RuntimeProperties {
 								setProperty(cBackgroundColorMin+viewName, ""+((JVisualization2D)visualization).getBackgroundColor().getColorMin());
 							if (!Double.isNaN(((JVisualization2D)visualization).getBackgroundColor().getColorMax()))
 								setProperty(cBackgroundColorMax+viewName, ""+((JVisualization2D)visualization).getBackgroundColor().getColorMax());
+
+							String thresholds = ((JVisualization2D)visualization).getBackgroundColor().getColorThresholdString();
+							if (thresholds != null)
+								setProperty(cBackgroundColorThresholds+viewName, thresholds);
 							}
 
 						byte[] backgroundImageData = ((JVisualization2D)visualization).getBackgroundImageData();
@@ -1748,6 +1760,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 				setProperty(cColorMin+vColorName, ""+vColor.getColorMin());
 			if (!Double.isNaN(vColor.getColorMax()))
 				setProperty(cColorMax+vColorName, ""+vColor.getColorMax());
+			String thresholds = vColor.getColorThresholdString();
+			if (thresholds != null)
+				setProperty(cColorThresholds+vColorName, thresholds);
 			}
 		}
 

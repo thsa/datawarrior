@@ -90,8 +90,9 @@ public class DETaskSetMarkerBackgroundColor extends DETaskAbstractSetColor {
 		p.add(new JLabel("Consider:"), "1,3");
 		p.add(mComboBoxConsider, "3,3");
 
-		double size[][] = { {4, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 4},
-				 			{4, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 4} };
+		int gap = HiDPIHelper.scale(4);
+		double size[][] = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
+				 			{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		JPanel sliderpanel = new JPanel();
 		sliderpanel.setLayout(new TableLayout(size));
 		mSliderRadius = new JSlider(0, 20, 10);
@@ -114,7 +115,7 @@ public class DETaskSetMarkerBackgroundColor extends DETaskAbstractSetColor {
 		sliderpanel.add(new JLabel("Fading:"), "3,1");
 		sliderpanel.add(mSliderFading, "3,3");
 
-		p.add(sliderpanel, "1,11,3,11");
+		p.add(sliderpanel, "1,13,3,13");
 		return p;
 		}
 

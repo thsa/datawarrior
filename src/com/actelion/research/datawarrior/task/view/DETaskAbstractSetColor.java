@@ -42,16 +42,18 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 	private static final String PROPERTY_COLOR_LIST = "colorList";
 	private static final String PROPERTY_MINIMUM = "min";
 	private static final String PROPERTY_MAXIMUM = "max";
+	private static final String PROPERTY_THRESHOLDS = "thresholds";
 
 	private static final String COLOR_DELIMITER = ";";
 
 	private static final int DEFAULT_CATEGORY_COUNT = 12;
 
 	private MarkerColorPanel	mColorPanel;
-	private JComboBox mComboBoxColorByColumn;
+	private JComboBox           mComboBoxColorByColumn;
 	private JCheckBox			mCheckBoxByCategories;
-	private JTextField			mTextFieldMin,mTextFieldMax;
+	private JTextField			mTextFieldMin,mTextFieldMax,mTextFieldThresholds;
 	private String				mDialogTitle;
+	private float[]             mColorThresholds;
 
 	public DETaskAbstractSetColor(Frame owner,
 								DEMainPane mainPane,
@@ -87,9 +89,10 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 	public JComponent createViewOptionContent() {
 		int gap = HiDPIHelper.scale(8);
 		double size[][] = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap},
-				 			{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap,
-								TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap,
-								TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+							{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap,
+								TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap,
+								TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap,
+								TableLayout.PREFERRED, gap} };
 
 		JPanel p = new JPanel();
 		p.setLayout(new TableLayout(size));
@@ -98,10 +101,10 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 		p.add(new JLabel("Color by:"), "1,1");
 		p.add(mComboBoxColorByColumn, "3,1");
 
-		mColorPanel = new MarkerColorPanel(getParentFrame(), getTableModel(), this, false);
+		mColorPanel = new MarkerColorPanel(getParentFrame(), this);
 		p.add(mColorPanel, "1,5,3,5");
 
-		mCheckBoxByCategories = new JCheckBox("Color by categories");
+		mCheckBoxByCategories = new JCheckBox("Color by numerical categories");
 		mCheckBoxByCategories.setHorizontalAlignment(SwingConstants.CENTER);
 		mCheckBoxByCategories.addActionListener(this);
 		p.add(mCheckBoxByCategories, "1,7,3,7");
@@ -111,11 +114,17 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 		mTextFieldMax = new JTextField(4);
 		mTextFieldMax.addKeyListener(this);
 		JPanel rangepanel = new JPanel();
-		rangepanel.add(new JLabel("Set color range from"));
+		rangepanel.add(new JLabel("from"));
 		rangepanel.add(mTextFieldMin);
 		rangepanel.add(new JLabel("to"));
 		rangepanel.add(mTextFieldMax);
-		p.add(rangepanel, "1,9,3,9");
+		p.add(new JLabel("Custom range:"), "1,9");
+		p.add(rangepanel, "3,9");
+
+		mTextFieldThresholds = new JTextField();
+		mTextFieldThresholds.addKeyListener(this);
+		p.add(new JLabel("Custom thresholds:"), "1,11");
+		p.add(mTextFieldThresholds, "3,11");
 
 		mComboBoxColorByColumn.addItem(getTableModel().getColumnTitleExtended(-1));
 		for (int i=0; i<getTableModel().getTotalColumnCount(); i++) {
@@ -143,6 +152,7 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == mCheckBoxByCategories) {
+			validateCustomValues();
 			updateColorPanel();
 			}
 
@@ -151,18 +161,22 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 
 	/**
 	 * Based on the combobox setting (column) and the checkbox setting (categories of numerical)
-	 * it updates the colorpanel to show the correct number of categories or the numerical color button.
+	 * and potentially defined custom thresholds this method updates the colorpanel
+	 * to either show the correct number of categories or the numerical color button.
 	 */
 	protected void updateColorPanel() {
 		int column = getTableModel().findColumn((String) mComboBoxColorByColumn.getSelectedItem());
-		int categoryCount = !mCheckBoxByCategories.isSelected() ? -1 : (column == -1) ? DEFAULT_CATEGORY_COUNT : getTableModel().getCategoryCount(column);
+		int categoryCount = !mCheckBoxByCategories.isSelected() ?
+				  (mColorThresholds == null ? -1 : mColorThresholds.length+1)
+				: (column == -1) ? DEFAULT_CATEGORY_COUNT : getTableModel().getCategoryCount(column);
 		mColorPanel.updateColorListMode(categoryCount);
 		}
 
 	@Override
 	public void itemStateChanged(ItemEvent e) {
 		if (e.getSource() == mComboBoxColorByColumn && e.getStateChange() == ItemEvent.SELECTED) {
-			int column = getTableModel().findColumn((String) mComboBoxColorByColumn.getSelectedItem());
+			mColorThresholds = null;
+			int column = getTableModel().findColumn((String)mComboBoxColorByColumn.getSelectedItem());
 			updateCheckbox(column);
 
 			// if the user changed to flexophore coloring, he may cancel the similarity calculation
@@ -174,6 +188,7 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 
 			mTextFieldMin.setText("");
 			mTextFieldMax.setText("");
+			mTextFieldThresholds.setText("");
 			}
 
 		super.itemStateChanged(e);
@@ -200,66 +215,115 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 				selected = true;
 				}
 			}
-		boolean changed = (mCheckBoxByCategories.isSelected() != selected);
 		mCheckBoxByCategories.setEnabled(enabled);
 		mCheckBoxByCategories.setSelected(selected);
-		if (changed
-		 || (selected && mColorPanel.getCategoryCount() != getTableModel().getCategoryCount(column)))
-			updateColorPanel();
+		updateColorPanel();
 		}
 
-	@Override public void keyPressed(KeyEvent arg0) {}
-	@Override public void keyTyped(KeyEvent arg0) {}
-	@Override public void keyReleased(KeyEvent arg0) {
-		updateColorRange();
+	@Override public void keyPressed(KeyEvent e) {}
+	@Override public void keyTyped(KeyEvent e) {}
+	@Override public void keyReleased(KeyEvent e) {
+		validateCustomValues();
 		}
 
-	private void updateColorRange() {
+	private void validateCustomValues() {
+		validateCustomThresholds();
+
 		float min = Float.NaN;
 		float max = Float.NaN;
-		int column = getTableModel().findColumn((String) mComboBoxColorByColumn.getSelectedItem());
-		boolean isLogarithmic = (column == -1) ? false : getTableModel().isLogarithmicViewMode(column);
-		try {
-			if (mTextFieldMin.getText().length() != 0)
-				min = Float.parseFloat(mTextFieldMin.getText());
-			mTextFieldMin.setBackground(UIManager.getColor("TextArea.background"));
+
+		if (mColorThresholds != null) {
+			// if custom threshold are valid, then refuse any range setting
+			mTextFieldMin.setBackground(mTextFieldMin.getText().length() != 0 ? Color.red : UIManager.getColor("TextArea.background"));
+			mTextFieldMax.setBackground(mTextFieldMax.getText().length() != 0 ? Color.red : UIManager.getColor("TextArea.background"));
 			}
-		catch (NumberFormatException nfe) {
-			mTextFieldMin.setBackground(Color.red);
+		else {
+			int column = getTableModel().findColumn((String) mComboBoxColorByColumn.getSelectedItem());
+			boolean isLogarithmic = (column == -1) ? false : getTableModel().isLogarithmicViewMode(column);
+			try {
+				if (mTextFieldMin.getText().length() != 0)
+					min = Float.parseFloat(mTextFieldMin.getText());
+				mTextFieldMin.setBackground(UIManager.getColor("TextArea.background"));
+				}
+			catch (NumberFormatException nfe) {
+				mTextFieldMin.setBackground(Color.red);
+				}
+			try {
+				if (mTextFieldMax.getText().length() != 0)
+					max = Float.parseFloat(mTextFieldMax.getText());
+				mTextFieldMax.setBackground(UIManager.getColor("TextArea.background"));
+				}
+			catch (NumberFormatException nfe) {
+				mTextFieldMax.setBackground(Color.red);
+				}
+			if (min >= max) {
+				min = Float.NaN;
+				max = Float.NaN;
+				mTextFieldMin.setBackground(Color.red);
+				mTextFieldMax.setBackground(Color.red);
+				}
+			else if (column != -1 && isLogarithmic && min <= 0) {
+				min = Float.NaN;
+				mTextFieldMin.setBackground(Color.red);
+				}
+			else if (column != -1 && isLogarithmic && max <= 0) {
+				max = Float.NaN;
+				mTextFieldMax.setBackground(Color.red);
+				}
 			}
-		try {
-			if (mTextFieldMax.getText().length() != 0)
-				max = Float.parseFloat(mTextFieldMax.getText());
-			mTextFieldMax.setBackground(UIManager.getColor("TextArea.background"));
-			}
-		catch (NumberFormatException nfe) {
-			mTextFieldMax.setBackground(Color.red);
-			}
-		if (min >= max) {
-			mTextFieldMin.setBackground(Color.red);
-			mTextFieldMax.setBackground(Color.red);
-			}
-		else if (column != -1 && isLogarithmic && min <= 0) {
-			mTextFieldMin.setBackground(Color.red);
-			}
-		else if (column != -1 && isLogarithmic && max <= 0) {
-			mTextFieldMax.setBackground(Color.red);
-			}
-		else if (hasInteractiveView()) {
+
+		if (hasInteractiveView())
 			getVisualizationColor(getInteractiveView()).setColorRange(min, max);
+		}
+
+	private void validateCustomThresholds() {
+		float[] thresholds = null;
+		if (mTextFieldThresholds.getText().length() == 0) {
+			mTextFieldThresholds.setBackground(UIManager.getColor("TextArea.background"));
+			}
+		else {
+			int column = getTableModel().findColumn((String) mComboBoxColorByColumn.getSelectedItem());
+			thresholds = VisualizationColor.parseCustomThresholds(mTextFieldThresholds.getText(), getTableModel(), column);
+			if (thresholds == null)
+				mTextFieldThresholds.setBackground(Color.red);
+			else
+				mTextFieldThresholds.setBackground(UIManager.getColor("TextArea.background"));
+			}
+
+		boolean thresholdChanged = (thresholds != null) ^ (mColorThresholds != null);
+		if (!thresholdChanged && thresholds != null && mColorThresholds != null) {
+			if (thresholds.length != mColorThresholds.length) {
+				thresholdChanged = true;
+				}
+			else {
+				for (int i=0; i<thresholds.length; i++) {
+					if (thresholds[i] != mColorThresholds[i]) {
+						thresholdChanged = true;
+						break;
+						}
+					}
+				}
+			}
+		mColorThresholds = thresholds;
+		updateColorPanel();
+		if (thresholdChanged) {
+			updateColorPanel();
+			if (hasInteractiveView())
+				update(false);
 			}
 		}
 
 	@Override
 	public void enableItems() {
 		int column = getTableModel().findColumn((String) mComboBoxColorByColumn.getSelectedItem());
-		boolean enabled = !hasInteractiveView()
-				|| (column != JVisualization.cColumnUnassigned
-				 && !mCheckBoxByCategories.isSelected()
-				 && !getTableModel().isColumnTypeDate(column)
-				 && !getTableModel().isColumnTypeRangeCategory(column));
+		boolean enabled = !mCheckBoxByCategories.isSelected()
+				&& (!hasInteractiveView()
+				 || (column != JVisualization.cColumnUnassigned
+				  && !getTableModel().isColumnTypeDate(column)
+				  && !getTableModel().isColumnTypeRangeCategory(column)));
 		mTextFieldMin.setEnabled(enabled);
 		mTextFieldMax.setEnabled(enabled);
+		mTextFieldThresholds.setEnabled(enabled);
 		}
 
 	@Override
@@ -280,15 +344,19 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 		updateCheckbox(column);
 
 		int mode = findListIndex(configuration.getProperty(PROPERTY_MODE), VisualizationColor.COLOR_LIST_MODE_CODE, VisualizationColor.cColorListModeHSBLong);
-		mCheckBoxByCategories.setSelected(mode == VisualizationColor.cColorListModeCategories);
+		if (mode == VisualizationColor.cColorListModeCategories && !getTableModel().isColumnTypeCategory(column))
+			mode = VisualizationColor.cColorListModeHSBLong;
+		String thresholds = configuration.getProperty(PROPERTY_THRESHOLDS, "");
+		mCheckBoxByCategories.setSelected(mode == VisualizationColor.cColorListModeCategories && thresholds.length() == 0);
 
 		Color[] colorList = decodeColorList(configuration, mode);
-		int categoryCount = (mode == VisualizationColor.cColorListModeCategories && getTableModel().isColumnTypeCategory(column)) ?
-				getTableModel().getCategoryCount(column) : -1;
+		int categoryCount = (thresholds.length() != 0) ? thresholds.split(",").length+1
+			: (mode == VisualizationColor.cColorListModeCategories) ? getTableModel().getCategoryCount(column) : -1;
 		mColorPanel.setColor(colorList, mode, categoryCount);
 
 		mTextFieldMin.setText(configuration.getProperty(PROPERTY_MINIMUM, ""));
 		mTextFieldMax.setText(configuration.getProperty(PROPERTY_MAXIMUM, ""));
+		mTextFieldThresholds.setText(thresholds);
 		}
 
 	@Override
@@ -300,6 +368,8 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 			try { configuration.setProperty(PROPERTY_MINIMUM, ""+Float.parseFloat(mTextFieldMin.getText())); } catch (NumberFormatException nfe) {}
 		if (mTextFieldMax.isEnabled() && mTextFieldMax.getText().length() != 0)
 			try { configuration.setProperty(PROPERTY_MAXIMUM, ""+Float.parseFloat(mTextFieldMax.getText())); } catch (NumberFormatException nfe) {}
+		if (mTextFieldThresholds.isEnabled() && mTextFieldThresholds.getText().length() != 0 && mColorThresholds != null)
+			configuration.setProperty(PROPERTY_THRESHOLDS, mTextFieldThresholds.getText());
 		}
 
 	@Override
@@ -313,6 +383,9 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 			configuration.setProperty(PROPERTY_MINIMUM, ""+vc.getColorMin());
 		if (!Float.isNaN(vc.getColorMax()))
 			configuration.setProperty(PROPERTY_MAXIMUM, ""+vc.getColorMax());
+		String thresholds = vc.getColorThresholdString();
+		if (thresholds != null)
+			configuration.setProperty(PROPERTY_THRESHOLDS, thresholds);
 		}
 
 	private String encodeColorList(Color[] colorList, int colorListMode) {
@@ -353,7 +426,8 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 			String mode = configuration.getProperty(PROPERTY_MODE);
 			if (VisualizationColor.COLOR_LIST_MODE_CODE[VisualizationColor.cColorListModeCategories].equals(mode)) {
 				if (!CompoundTableListHandler.isListColumn(column)
-				 && !view.getTableModel().isColumnTypeCategory(column)) {
+				 && !view.getTableModel().isColumnTypeCategory(column)
+				 && configuration.getProperty(PROPERTY_THRESHOLDS, "").length() == 0) {
 					showErrorMessage("Column '"+columnName+"' does not contain categories.");
 					return false;
 					}
@@ -384,10 +458,24 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 			int mode = findListIndex(configuration.getProperty(PROPERTY_MODE), VisualizationColor.COLOR_LIST_MODE_CODE, VisualizationColor.cColorListModeHSBLong);
 			Color[] colorList = decodeColorList(configuration, mode);
 
-			vc.setColor(column, colorList, mode);
+			float[] threshold = null;
+			String value = configuration.getProperty(PROPERTY_THRESHOLDS, "");
+			if (value.length() != 0) {
+				String[] thresholds = value.split(",");
+				threshold = new float[thresholds.length];
+				try {
+					for (int i=0; i<thresholds.length; i++)
+						threshold[i] = Float.parseFloat(thresholds[i]);
+					}
+				catch (NumberFormatException nfe) {
+					threshold = null;
+					}
+				}
+
+			vc.setColor(column, colorList, mode, threshold);
 
 			float min = Float.NaN;
-			String value = configuration.getProperty(PROPERTY_MINIMUM);
+			value = configuration.getProperty(PROPERTY_MINIMUM);
 			if (value != null)
 				try { min = Float.parseFloat(value); } catch (NumberFormatException nfe) {}
 			float max = Float.NaN;

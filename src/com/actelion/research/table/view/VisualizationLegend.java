@@ -445,7 +445,11 @@ public class VisualizationLegend {
 		case cLegendTypeColorCategory:
 		case cLegendTypeShapeCategory:
 		case cLegendTypeBackgroundColorCategory:
-			if (CompoundTableListHandler.isListColumn(mColumn)) {
+			if (mType != cLegendTypeShapeCategory
+			 && mVisualizationColor.getColorThresholds() != null) {
+				mCategoryList = mVisualizationColor.createCustomThresholdCategoryNames();
+				}
+			else if (CompoundTableListHandler.isListColumn(mColumn)) {
 				mCategoryList = new String[2];
 				mCategoryList[0] = "yes";
 				mCategoryList[1] = "no";

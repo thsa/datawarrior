@@ -187,7 +187,7 @@ public abstract class JVisualization extends JComponent
 	private static final long RIGHT_MOUSE_POPUP_DELAY = 800;
 
 	protected CompoundTableModel	mTableModel;
-	protected float[]				mAxisVisMin,mAxisVisMax;
+	protected float[]				mAxisVisMin,mAxisVisMax,mPruningBarLow,mPruningBarHigh;
 	protected float[][]				mAxisSimilarity;
 	protected int[]					mAxisIndex,mLabelColumn,mSplittingColumn;
 	protected boolean[]				mIsCategoryAxis;
@@ -230,7 +230,7 @@ public abstract class JVisualization extends JComponent
 	private Thread					mPopupThread;
 	private CompoundListSelectionModel mSelectionModel;
 	private int						mDragMode,mLocalExclusionFlagNo,mPreviousLocalExclusionFlagNo;
-	private float[]					mPruningBarLow,mPruningBarHigh,mSimilarityMarkerSize;
+	private float[]					mSimilarityMarkerSize;
 	private int[]					mCombinedCategoryCount,mFullCombinedCategoryCount;
 	private Color					mViewBackground,mTitleBackground;
 	private volatile boolean		mApplyLocalExclusionScheduled;

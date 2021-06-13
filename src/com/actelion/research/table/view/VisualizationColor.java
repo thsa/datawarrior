@@ -328,8 +328,9 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		if (e.getType() == CompoundTableEvent.cChangeColumnData) {
 			int column = e.getColumn();
 			if (mColorColumn == column) {
-				if (mColorListMode == cColorListModeCategories) {
-					if (!mTableModel.isColumnTypeCategory(mColorColumn)
+				if (mColorListMode == cColorListModeCategories
+				 && mColorThresholds == null) {
+					if (!(mTableModel.isColumnTypeCategory(mColorColumn) || mColorThresholds != null)
 					 || mTableModel.getCategoryCount(column) > cMaxColorCategories) {
 						initialize();
 						}
@@ -354,7 +355,8 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 			  || e.getType() == CompoundTableEvent.cDeleteRows) {
 			if (mColorColumn != JVisualization.cColumnUnassigned
 			 && !CompoundTableListHandler.isListColumn(mColorColumn)) {
-				if (mColorListMode == VisualizationColor.cColorListModeCategories) {
+				if (mColorListMode == VisualizationColor.cColorListModeCategories
+				 && mColorThresholds == null) {
 					if (mTableModel.isColumnTypeCategory(mColorColumn)) {	// if still multiple categories
 						setColorList(createUpdatedCategoryColorList());
 						mColorListener.colorChanged(this);
@@ -728,7 +730,6 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		setColorList(colorList);
 
 		if (mode == cColorListModeCategories
-		 && thresholds == null
 		 && !CompoundTableListHandler.isListColumn(column))
 			createCategoryColorMap(colorList);
 
@@ -775,6 +776,7 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		Color[] newColor = createDefaultCategoryColorList(mColorColumn);
 
 		Color[] colorList = new Color[category.length];
+
 		for (int i=0; i<colorList.length; i++) {
 			colorList[i] = mCategoryColorMap.get(category[i]);
 			if (colorList[i] != null) {

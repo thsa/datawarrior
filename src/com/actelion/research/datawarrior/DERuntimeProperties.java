@@ -955,13 +955,13 @@ public class DERuntimeProperties extends RuntimeProperties {
 
 							value = getProperty(cBackgroundColorRadius+viewName);
 							if (value != null) {
-								int radius = Integer.parseInt(value);
+								float radius = Float.parseFloat(value);
 								((JVisualization2D)visualization).setBackgroundColorRadius(radius);
 								}
 
 							value = getProperty(cBackgroundColorFading+viewName);
 							if (value != null) {
-								int fading = Integer.parseInt(value);
+								float fading = Float.parseFloat(value);
 								((JVisualization2D)visualization).setBackgroundColorFading(fading);
 								}
 
@@ -1618,8 +1618,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 										 : (hitlist == JVisualization2D.BACKGROUND_ALL_RECORDS) ? "allRecords"
 										 : "fromHitlist\t" + mTableModel.getListHandler().getListName(hitlist);
 							setProperty(cBackgroundColorRecords, value);
-							setProperty(cBackgroundColorRadius+viewName, ""+((JVisualization2D)visualization).getBackgroundColorRadius());
-							setProperty(cBackgroundColorFading+viewName, ""+((JVisualization2D)visualization).getBackgroundColorFading());
+							setProperty(cBackgroundColorRadius+viewName, DoubleFormat.toString(((JVisualization2D)visualization).getBackgroundColorRadius()));
+							setProperty(cBackgroundColorFading+viewName, DoubleFormat.toString(((JVisualization2D)visualization).getBackgroundColorFading()));
 
 							if (!Double.isNaN(((JVisualization2D)visualization).getBackgroundColor().getColorMin()))
 								setProperty(cBackgroundColorMin+viewName, ""+((JVisualization2D)visualization).getBackgroundColor().getColorMin());

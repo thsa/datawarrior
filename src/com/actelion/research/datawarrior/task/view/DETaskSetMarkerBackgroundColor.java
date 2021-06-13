@@ -22,6 +22,7 @@ import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.view.*;
+import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -39,6 +40,12 @@ public class DETaskSetMarkerBackgroundColor extends DETaskAbstractSetColor {
 
 	private static final String ITEM_VISIBLE_ROWS = "Visible Rows";
 	private static final String ITEM_ALL_ROWS = "All Rows";
+
+	private static final int SLIDER_MAX = 100;
+	private static final double VALUE_MAX = 20.0;  // must stay 20 to keep it compatible with views
+	private static final int SLIDER_TICK_S_SPACING = 5;
+	private static final int SLIDER_TICK_L_SPACING = 25;
+	private static final double SLIDER_SENSITIVITY = 1.5;
 
     private JSlider		mSliderRadius,mSliderFading;
     private JComboBox	mComboBoxConsider;
@@ -91,26 +98,24 @@ public class DETaskSetMarkerBackgroundColor extends DETaskAbstractSetColor {
 		p.add(mComboBoxConsider, "3,3");
 
 		int gap = HiDPIHelper.scale(4);
-		double size[][] = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
+		double size[][] = { {TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL},
 				 			{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		JPanel sliderpanel = new JPanel();
 		sliderpanel.setLayout(new TableLayout(size));
-		mSliderRadius = new JSlider(0, 20, 10);
+		mSliderRadius = new JSlider(0, SLIDER_MAX, SLIDER_MAX/2);
 		mSliderRadius.addChangeListener(this);
-		mSliderRadius.setMinorTickSpacing(1);
-		mSliderRadius.setMajorTickSpacing(5);
+		mSliderRadius.setMinorTickSpacing(SLIDER_TICK_S_SPACING);
+		mSliderRadius.setMajorTickSpacing(SLIDER_TICK_L_SPACING);
 		mSliderRadius.setPaintTicks(true);
-		mSliderRadius.setPaintLabels(true);
 		mSliderRadius.setPreferredSize(new Dimension(HiDPIHelper.scale(160), HiDPIHelper.scale(42)));
 		sliderpanel.add(new JLabel("Radius:"), "1,1");
 		sliderpanel.add(mSliderRadius, "1,3");
 
-		mSliderFading = new JSlider(0, 20, 10);
+		mSliderFading = new JSlider(0, SLIDER_MAX, SLIDER_MAX/2);
 		mSliderFading.addChangeListener(this);
-		mSliderFading.setMinorTickSpacing(1);
-		mSliderFading.setMajorTickSpacing(5);
+		mSliderFading.setMinorTickSpacing(SLIDER_TICK_S_SPACING);
+		mSliderFading.setMajorTickSpacing(SLIDER_TICK_L_SPACING);
 		mSliderFading.setPaintTicks(true);
-		mSliderFading.setPaintLabels(true);
 		mSliderFading.setPreferredSize(new Dimension(HiDPIHelper.scale(160), HiDPIHelper.scale(42)));
 		sliderpanel.add(new JLabel("Fading:"), "3,1");
 		sliderpanel.add(mSliderFading, "3,3");
@@ -145,19 +150,19 @@ public class DETaskSetMarkerBackgroundColor extends DETaskAbstractSetColor {
 			mComboBoxConsider.setSelectedItem(!hasInteractiveView() && pseudoColumn == -1 ? consider : getTableModel().getColumnTitleExtended(pseudoColumn));
 			}
 
-		int radius = 10;
+		double radius = VALUE_MAX/2;
 		try {
-			radius = Integer.parseInt(configuration.getProperty(PROPERTY_RADIUS, "10"));
+			radius = Double.parseDouble(configuration.getProperty(PROPERTY_RADIUS, ""));
 			}
 		catch (NumberFormatException nfe) {}
-		mSliderRadius.setValue(radius);
+		mSliderRadius.setValue(radiusValueToSlider(radius));
 
-		int fading = 10;
+		double fading = VALUE_MAX/2;
 		try {
-			fading = Integer.parseInt(configuration.getProperty(PROPERTY_FADING, "10"));
+			fading = Double.parseDouble(configuration.getProperty(PROPERTY_FADING, ""));
 			}
 		catch (NumberFormatException nfe) {}
-		mSliderFading.setValue(20-fading);
+		mSliderFading.setValue(fadingValueToSlider(VALUE_MAX-fading));
 		}
 
 	@Override
@@ -169,8 +174,24 @@ public class DETaskSetMarkerBackgroundColor extends DETaskAbstractSetColor {
 			configuration.setProperty(PROPERTY_CONSIDER, PROPERTY_CONSIDER_ALL);
 		else
 			configuration.setProperty(PROPERTY_CONSIDER, getTableModel().getColumnTitleNoAlias((String)mComboBoxConsider.getSelectedItem()));
-		configuration.setProperty(PROPERTY_RADIUS, ""+(mSliderRadius.getValue()));
-		configuration.setProperty(PROPERTY_FADING, ""+(20-mSliderFading.getValue()));
+		configuration.setProperty(PROPERTY_RADIUS, DoubleFormat.toString(radiusSliderToValue(mSliderRadius.getValue())));
+		configuration.setProperty(PROPERTY_FADING, DoubleFormat.toString(fadingSliderToValue(SLIDER_MAX-mSliderFading.getValue())));
+		}
+
+	private double radiusSliderToValue(int sliderValue) {
+		return VALUE_MAX * Math.pow((double)sliderValue / SLIDER_MAX, SLIDER_SENSITIVITY);
+		}
+
+	private int radiusValueToSlider(double value) {
+		return (int)Math.round(SLIDER_MAX * Math.pow(value / VALUE_MAX, 1.0 / SLIDER_SENSITIVITY));
+		}
+
+	private double fadingSliderToValue(int sliderValue) {
+		return VALUE_MAX * sliderValue / SLIDER_MAX;
+		}
+
+	private int fadingValueToSlider(double value) {
+		return (int)Math.round(SLIDER_MAX * value / VALUE_MAX);
 		}
 
 	@Override
@@ -184,8 +205,8 @@ public class DETaskSetMarkerBackgroundColor extends DETaskAbstractSetColor {
 			configuration.setProperty(PROPERTY_CONSIDER, PROPERTY_CONSIDER_ALL);
 		else
 			configuration.setProperty(PROPERTY_CONSIDER, getTableModel().getColumnTitleNoAlias(CompoundTableListHandler.getColumnFromList(hitlist)));
-		configuration.setProperty(PROPERTY_RADIUS, ""+visualization.getBackgroundColorRadius());
-		configuration.setProperty(PROPERTY_FADING, ""+visualization.getBackgroundColorFading());
+		configuration.setProperty(PROPERTY_RADIUS, DoubleFormat.toString(visualization.getBackgroundColorRadius()));
+		configuration.setProperty(PROPERTY_FADING, DoubleFormat.toString(visualization.getBackgroundColorFading()));
 		}
 
 	@Override
@@ -222,12 +243,12 @@ public class DETaskSetMarkerBackgroundColor extends DETaskAbstractSetColor {
 			v2D.setBackgroundColorConsidered(CompoundTableListHandler.convertToListIndex(getTableModel().findColumn(consider)));
 
 		try {
-			v2D.setBackgroundColorRadius(Math.max(1, Integer.parseInt(configuration.getProperty(PROPERTY_RADIUS, "10"))));
+			v2D.setBackgroundColorRadius(Float.parseFloat(configuration.getProperty(PROPERTY_RADIUS, "")));
 			}
 		catch (NumberFormatException nfe) {}
 
 		try {
-			v2D.setBackgroundColorFading(Math.max(1, Integer.parseInt(configuration.getProperty(PROPERTY_FADING, "10"))));
+			v2D.setBackgroundColorFading(Float.parseFloat(configuration.getProperty(PROPERTY_FADING, "")));
 			}
 		catch (NumberFormatException nfe) {}
 		}

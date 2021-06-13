@@ -41,6 +41,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.awt.image.VolatileImage;
 import java.awt.print.PageFormat;
 import java.io.*;
@@ -157,9 +158,10 @@ public class JVisualization2D extends JVisualization {
 	private Composite		mLabelBackgroundComposite;
 	private Stroke          mThinLineStroke,mNormalLineStroke,mFatLineStroke,mVeryFatLineStroke,mConnectionStroke;
 	private float[]			mCorrelationCoefficient;
-	private float			mFontScaling,mMarkerTransparency,mCurveLineWidth,mCurveSmoothing;
+	private float			mBackgroundColorRadius,mBackgroundColorFading,mFontScaling,mMarkerTransparency,
+							mCurveLineWidth,mCurveSmoothing;
 	private int				mBorder,mCurveInfo,mBackgroundHCount,mBackgroundVCount,mCrossHairMode,
-							mBackgroundColorRadius,mBackgroundColorFading,mBackgroundColorConsidered,
+							mBackgroundColorConsidered,
 							mConnectionFromIndex1,mConnectionFromIndex2,mShownCorrelationType,mMultiValueMarkerMode;
 	private long			mPreviousPaintEnd,mPreviousFullDetailPaintMillis,mMostRecentRepaintMillis;
 	private boolean			mBackgroundValid,mIsHighResolution,mScaleTitleCentered,
@@ -174,6 +176,7 @@ public class JVisualization2D extends JVisualization {
 	private Depictor2D[][]	mScaleDepictor,mSplittingDepictor;
 	private VolatileImage	mOffImage;
 	private BufferedImage   mBackgroundImage;		// primary data
+	private BufferedImage[] mMarkerBackgroundImage;
 	private byte[]			mBackgroundImageData;	// cached if delivered or constructed from mBackgroundImage if needed
 //	private byte[]			mSVGBackgroundData;		// alternative to mBackgroundImage
 	private Graphics2D		mOffG;
@@ -273,8 +276,10 @@ public class JVisualization2D extends JVisualization {
 			mCoordinatesValid = false;
 			}
 
-		if (!mCoordinatesValid)
+		if (!mCoordinatesValid) {
+			mBackgroundValid = false;
 			mOffImageValid = false;
+			}
 
 		if (!mOffImageValid) {
 			do  {
@@ -877,7 +882,7 @@ public class JVisualization2D extends JVisualization {
 				mBackgroundValid = false;
 
 			if (!mBackgroundValid)
-				calculateBackground(graphRect, transparentBG);
+				calculateBackground(graphRect);
 			}
 
 		if (mShowNaNValues)
@@ -4093,11 +4098,11 @@ public class JVisualization2D extends JVisualization {
 		return mBackgroundColorConsidered;
 		}
 
-	public int getBackgroundColorRadius() {
+	public float getBackgroundColorRadius() {
 		return mBackgroundColorRadius;
 		}
 
-	public int getBackgroundColorFading() {
+	public float getBackgroundColorFading() {
 		return mBackgroundColorFading;
 		}
 
@@ -4109,7 +4114,7 @@ public class JVisualization2D extends JVisualization {
 			}
 		}
 
-	public void setBackgroundColorRadius(int radius) {
+	public void setBackgroundColorRadius(float radius) {
 		if (mBackgroundColorRadius != radius) {
 			mBackgroundColorRadius = radius;
 			mBackgroundValid = false;
@@ -4117,7 +4122,7 @@ public class JVisualization2D extends JVisualization {
 			}
 		}
 
-	public void setBackgroundColorFading(int fading) {
+	public void setBackgroundColorFading(float fading) {
 		if (mBackgroundColorFading != fading) {
 			mBackgroundColorFading = fading;
 			mBackgroundValid = false;
@@ -5159,88 +5164,92 @@ public class JVisualization2D extends JVisualization {
 
 	/**
 	 * Calculates the background color array for all split views.
-	 * @param graphBounds used in case of tree view only
+	 * @param graphBounds
 	 */
-	private void calculateBackground(Rectangle graphBounds, boolean transparentBG) {
-		int backgroundSize = (int)(480.0 - 120.0 * Math.log(mBackgroundColorRadius));
-		int backgroundColorRadius = 2*mBackgroundColorRadius;
-		if (mIsHighResolution) {
-			backgroundSize *= 2;
-			backgroundColorRadius *= 2;
+	private void calculateBackground(Rectangle graphBounds) {
+		float visFactorX = mPruningBarHigh[0] - mPruningBarLow[0];
+		float visFactorY = mPruningBarHigh[1] - mPruningBarLow[1];
+
+		if (visFactorX == 0 || visFactorY == 0) {
+			mBackgroundValid = true;
+			mMarkerBackgroundImage = null;
+			return;
 			}
+
+		int pixelPerColor = (int)(1+mBackgroundColorRadius/4) * (mIsHighResolution? 1 : !renderFaster() ? 2 : 4);
+
+		// The background grid has one value every n pixel starting with pixel 0 and last value after last pixel
+		int visBGWidth = (graphBounds.width+2*pixelPerColor-1) / pixelPerColor;
+		int visBGHeight = (graphBounds.height+2*pixelPerColor-1) / pixelPerColor;
+		float rawRadius = mBackgroundColorRadius * (float)Math.sqrt(graphBounds.width * graphBounds.height) / (100 * pixelPerColor);
+
+		// effective radius in background grid space
+		int bgRadiusX = Math.round(rawRadius / visFactorX);
+		int bgRadiusY = Math.round(rawRadius / visFactorY);
+
+		boolean xIsCyclic = mAxisIndex[0] != cColumnUnassigned && (mTableModel.getColumnProperty(mAxisIndex[0],
+				CompoundTableModel.cColumnPropertyCyclicDataMax) != null);
+		boolean yIsCyclic = mAxisIndex[1] != cColumnUnassigned && (mTableModel.getColumnProperty(mAxisIndex[1],
+				CompoundTableModel.cColumnPropertyCyclicDataMax) != null);
+
+		boolean considerVisibleRecords = (mBackgroundColorConsidered == BACKGROUND_VISIBLE_RECORDS) || (mTreeNodeList != null);
+		boolean considerAllRecords = (mBackgroundColorConsidered == BACKGROUND_ALL_RECORDS && !considerVisibleRecords);
+
+		// In case of zoomed-in state, these are the invisible (bacause zoomed-out) margins in background grid space
+		int bgZoomX0 = mPruningBarLow[0] == 0 ? 0 : Math.round(mPruningBarLow[0] * graphBounds.width / (visFactorX * pixelPerColor));
+		int bgZoomX1 = mPruningBarHigh[0] == 1 ? 0 : Math.round((1f-mPruningBarHigh[0]) * graphBounds.width / (visFactorX * pixelPerColor));
+		int bgZoomY0 = mPruningBarLow[1] == 0 ? 0 : Math.round(mPruningBarLow[1] * graphBounds.height / (visFactorY * pixelPerColor));
+		int bgZoomY1 = mPruningBarHigh[1] == 1 ? 0 : Math.round((1f-mPruningBarHigh[1]) * graphBounds.height / (visFactorY * pixelPerColor));
+
+		// If we zoomed-out width is larger than the influence radius, then the effectively needed margin
+		// to be calculated and then propargated to the visible background is only as large as the radius.
+		// In case of cyclic data we need the margin always to be as wide as the influence radius.
+		int bgMarginX0 = xIsCyclic ? bgRadiusX : considerVisibleRecords ? 0 : Math.min(bgZoomX0, bgRadiusX);
+		int bgMarginX1 = xIsCyclic ? bgRadiusX : considerVisibleRecords ? 0 : Math.min(bgZoomX1, bgRadiusX);
+		int bgMarginY0 = yIsCyclic ? bgRadiusY : considerVisibleRecords ? 0 : Math.min(bgZoomY0, bgRadiusY);
+		int bgMarginY1 = yIsCyclic ? bgRadiusY : considerVisibleRecords ? 0 : Math.min(bgZoomY1, bgRadiusY);
 
 		if (mSplitter == null) {
 			mBackgroundHCount = 1;
 			mBackgroundVCount = 1;
 			}
 		else {
-			backgroundSize *= 2;
-			backgroundColorRadius *= 2;
 			mBackgroundHCount = mSplitter.getHCount();
 			mBackgroundVCount = mSplitter.getVCount();
 			}
-		int backgroundWidth = backgroundSize / mBackgroundHCount;
-		int backgroundHeight = backgroundSize / mBackgroundVCount;
 
-			// add all points' RGB color components to respective grid cells
-			// consider all points that are less than backgroundColorRadius away from visible area
-		float[][][] backgroundR = new float[mHVCount][backgroundWidth][backgroundHeight];
-		float[][][] backgroundG = new float[mHVCount][backgroundWidth][backgroundHeight];
-		float[][][] backgroundB = new float[mHVCount][backgroundWidth][backgroundHeight];
-		float[][][] backgroundC = new float[mHVCount][backgroundWidth][backgroundHeight];
+		int bgWidth = visBGWidth + bgMarginX0 + bgMarginX1;
+		int bgHeight = visBGHeight + bgMarginY0 + bgMarginY1;
+		int bgFullDataXRange = Math.round((float)graphBounds.width / (visFactorX * pixelPerColor));
+		int bgFullDataYRange = Math.round((float)graphBounds.height / (visFactorY * pixelPerColor));
 
-		float xMin,xMax,yMin,yMax;
+		// add all points' RGB color components to respective grid cells
+		// consider all points that are less than backgroundColorRadius away from visible area
+		float[][][] backgroundR = new float[mHVCount][bgWidth][bgHeight];
+		float[][][] backgroundG = new float[mHVCount][bgWidth][bgHeight];
+		float[][][] backgroundB = new float[mHVCount][bgWidth][bgHeight];
+		float[][][] backgroundC = new float[mHVCount][bgWidth][bgHeight];
+
+		float dataLowX,dataHighX,dataLowY,dataHighY;    // data limits of visible area
 		if (mTreeNodeList != null) {
-			xMin = graphBounds.x;
-			yMin = graphBounds.y + graphBounds.height;
-			xMax = graphBounds.x + graphBounds.width;
-			yMax = graphBounds.y;
+			dataLowX = graphBounds.x;
+			dataLowY = graphBounds.y + graphBounds.height;
+			dataHighX = graphBounds.x + graphBounds.width;
+			dataHighY = graphBounds.y;
 			}
 		else {
-			if (mAxisIndex[0] == cColumnUnassigned) {
-				xMin = mAxisVisMin[0];
-				xMax = mAxisVisMax[0];
-				}
-			else if (mIsCategoryAxis[0]) {
-				xMin = -0.5f;
-				xMax = -0.5f + mTableModel.getCategoryCount(mAxisIndex[0]);
-				}
-			else {
-				float[] minAndMax = getDataMinAndMax(0);
-				xMin = minAndMax[0];
-				xMax = minAndMax[1];
-//				xMin = mTableModel.getMinimumValue(mAxisIndex[0]);
-//				xMax = mTableModel.getMaximumValue(mAxisIndex[0]);
-				}
-	
-			if (mAxisIndex[1] == cColumnUnassigned) {
-				yMin = mAxisVisMin[1];
-				yMax = mAxisVisMax[1];
-				}
-			else if (mIsCategoryAxis[1]) {
-				yMin = -0.5f;
-				yMax = -0.5f + mTableModel.getCategoryCount(mAxisIndex[1]);
-				}
-			else {
-				float[] minAndMax = getDataMinAndMax(1);
-				yMin = minAndMax[0];
-				yMax = minAndMax[1];
-//				yMin = mTableModel.getMinimumValue(mAxisIndex[1]);
-//				yMax = mTableModel.getMaximumValue(mAxisIndex[1]);
-				}
+			dataLowX = mAxisVisMin[0];
+			dataHighX = mAxisVisMax[0];
+			dataLowY = mAxisVisMin[1];
+			dataHighY = mAxisVisMax[1];
 			}
 
-		Color neutralColor = transparentBG ? Color.BLACK : getViewBackground();
-		int neutralR = neutralColor.getRed();
-		int neutralG = neutralColor.getGreen();
-		int neutralB = neutralColor.getBlue();
-
-		float rangeX = xMax - xMin;
-		float rangeY = yMax - yMin;
-		boolean considerVisibleRecords = (mBackgroundColorConsidered == BACKGROUND_VISIBLE_RECORDS) || (mTreeNodeList != null);
-		boolean considerAllRecords = (mBackgroundColorConsidered == BACKGROUND_ALL_RECORDS && !considerVisibleRecords);
+		float pixelFactor = 1f / pixelPerColor;
+		float pixelOffset = pixelFactor / 2f;
+		float visDataRangeX = dataHighX - dataLowX;
+		float visDataRangeY = dataHighY - dataLowY;
 		int listFlagNo = (considerVisibleRecords || considerAllRecords) ? -1
-						: mTableModel.getListHandler().getListFlagNo(mBackgroundColorConsidered);
+				: mTableModel.getListHandler().getListFlagNo(mBackgroundColorConsidered);
 		for (int i=0; i<mDataPoints; i++) {
 			if (considerAllRecords
 			 || (considerVisibleRecords && isVisibleExcludeNaN(mPoint[i]))
@@ -5252,124 +5261,216 @@ public class JVisualization2D extends JVisualization {
 					valueY = mPoint[i].screenY;
 					}
 				else {
-					valueX = (mAxisIndex[0] == cColumnUnassigned) ? (xMin + xMax) / 2 : getAxisValue(mPoint[i].record, 0);
-					valueY = (mAxisIndex[1] == cColumnUnassigned) ? (yMin + yMax) / 2 : getAxisValue(mPoint[i].record, 1);
+					valueX = (mAxisIndex[0] == cColumnUnassigned) ? (dataLowX + dataHighX) / 2 : getAxisValue(mPoint[i].record, 0);
+					valueY = (mAxisIndex[1] == cColumnUnassigned) ? (dataLowY + dataHighY) / 2 : getAxisValue(mPoint[i].record, 1);
 					}
-							  
+
 				if (Float.isNaN(valueX) || Float.isNaN(valueY))
 					continue;
 
-				int x = Math.min(backgroundWidth-1, (int)(backgroundWidth * (valueX - xMin) / rangeX));
-				int y = Math.min(backgroundHeight-1, (int)(backgroundHeight * (valueY - yMin) / rangeY));
+				// 0-based coordinates of VP in graphRect (in case of zoomed-in state these may be outside of graphRect)
+				int grx = Math.round(graphBounds.width * (valueX - dataLowX) / visDataRangeX);
+				int gry = Math.round(graphBounds.height * (valueY - dataLowY) / visDataRangeY);
 
-				Color c = mBackgroundColor.getColorList()[((VisualizationPoint2D)mPoint[i]).backgroundColorIndex];
-				backgroundR[mPoint[i].hvIndex][x][y] += c.getRed() - neutralR;
-				backgroundG[mPoint[i].hvIndex][x][y] += c.getGreen() - neutralG;
-				backgroundB[mPoint[i].hvIndex][x][y] += c.getBlue() - neutralB;
-				backgroundC[mPoint[i].hvIndex][x][y] += 1.0;	// simply counts individual colors added
+				// 0-based coordinates of closest top-left background grid point of VP.
+				// If bgx (and bgy) are in the range between 0->bgWidth, then the VP has influence on the
+				// background coloring of parts of the visible area.
+				int bgx = bgMarginX0 + grx / pixelPerColor;
+				int bgy = bgMarginY0 + gry / pixelPerColor;
+
+				if (xIsCyclic) {
+					if (bgx<0)
+						bgx += bgFullDataXRange;
+					else if (bgx >= bgWidth)
+						bgx -= bgFullDataXRange;
+					}
+				if (yIsCyclic) {
+					if (bgy<0)
+						bgy += bgFullDataYRange;
+					else if (bgy >= bgWidth)
+						bgy -= bgFullDataYRange;
+					}
+
+				if (bgx >= 0 && bgx+1 < bgWidth && bgy >= 0 && bgy+1 < bgHeight) {
+						// influence factors on the four closest grid points
+					float xf1 = pixelOffset + pixelFactor * (grx < 0 ? pixelPerColor - 1 + grx % pixelPerColor : grx % pixelPerColor);
+					float yf1 = pixelOffset + pixelFactor * (gry < 0 ? pixelPerColor - 1 + gry % pixelPerColor : gry % pixelPerColor);
+					float xf0 = 1f - xf1;
+					float yf0 = 1f - yf1;
+
+					Color c = mBackgroundColor.getColorList()[((VisualizationPoint2D)mPoint[i]).backgroundColorIndex];
+
+					// the data point contributes to the four corners of the pixel square depending on its exact location
+					float f = xf0 * yf0;
+					backgroundR[mPoint[i].hvIndex][bgx][bgy] += f * c.getRed();
+					backgroundG[mPoint[i].hvIndex][bgx][bgy] += f * c.getGreen();
+					backgroundB[mPoint[i].hvIndex][bgx][bgy] += f * c.getBlue();
+					backgroundC[mPoint[i].hvIndex][bgx][bgy] += f;
+
+					f = xf1 * yf0;
+					backgroundR[mPoint[i].hvIndex][bgx+1][bgy] += f * c.getRed();
+					backgroundG[mPoint[i].hvIndex][bgx+1][bgy] += f * c.getGreen();
+					backgroundB[mPoint[i].hvIndex][bgx+1][bgy] += f * c.getBlue();
+					backgroundC[mPoint[i].hvIndex][bgx+1][bgy] += f;
+
+					f = xf0 * yf1;
+					backgroundR[mPoint[i].hvIndex][bgx][bgy+1] += f * c.getRed();
+					backgroundG[mPoint[i].hvIndex][bgx][bgy+1] += f * c.getGreen();
+					backgroundB[mPoint[i].hvIndex][bgx][bgy+1] += f * c.getBlue();
+					backgroundC[mPoint[i].hvIndex][bgx][bgy+1] += f;
+
+					f = xf1 * yf1;
+					backgroundR[mPoint[i].hvIndex][bgx+1][bgy+1] += f * c.getRed();
+					backgroundG[mPoint[i].hvIndex][bgx+1][bgy+1] += f * c.getGreen();
+					backgroundB[mPoint[i].hvIndex][bgx+1][bgy+1] += f * c.getBlue();
+					backgroundC[mPoint[i].hvIndex][bgx+1][bgy+1] += f;
+					}
 				}
 			}
 
-			// propagate colors to grid neighbourhood via cosine function
-		float[][] influence = new float[backgroundColorRadius][backgroundColorRadius];
-		for (int x=0; x<backgroundColorRadius; x++) {
-			for (int y=0; y<backgroundColorRadius; y++) {
-				float distance = (float)Math.sqrt(x*x + y*y);
-				if (distance < backgroundColorRadius)
-					influence[x][y] = (float)(0.5 + Math.cos(Math.PI*distance/(float)backgroundColorRadius) / 2.0);
+		// Create helper array with influence factors to be applied
+		float[][] influence = new float[bgRadiusX][bgRadiusY];
+		for (int x=0; x<bgRadiusX; x++) {
+			float dx = (0.5f + x) / bgRadiusX;
+			for (int y=0; y<bgRadiusY; y++) {
+				float dy = (0.5f + y) / bgRadiusY;
+				float distance = (float)Math.sqrt(dx*dx + dy*dy);
+				if (distance <= 1f)
+					influence[x][y] = (float)(0.5 + Math.cos(Math.PI*distance) / 2.0);
 				}
 			}
-		float[][][] smoothR = new float[mHVCount][backgroundWidth][backgroundHeight];
-		float[][][] smoothG = new float[mHVCount][backgroundWidth][backgroundHeight];
-		float[][][] smoothB = new float[mHVCount][backgroundWidth][backgroundHeight];
-		float[][][] smoothC = new float[mHVCount][backgroundWidth][backgroundHeight];
-		boolean xIsCyclic = (mAxisIndex[0] == cColumnUnassigned) ? false
-									: (mTableModel.getColumnProperty(mAxisIndex[0],
-										CompoundTableModel.cColumnPropertyCyclicDataMax) != null);
-		boolean yIsCyclic = (mAxisIndex[1] == cColumnUnassigned) ? false
-									: (mTableModel.getColumnProperty(mAxisIndex[1],
-										CompoundTableModel.cColumnPropertyCyclicDataMax) != null);
-		for (int x=0; x<backgroundWidth; x++) {
-			int xmin = x-backgroundColorRadius+1;
-			if (xmin < 0 && !xIsCyclic)
+
+		float[][][] smoothR = new float[mHVCount][visBGWidth][visBGHeight];
+		float[][][] smoothG = new float[mHVCount][visBGWidth][visBGHeight];
+		float[][][] smoothB = new float[mHVCount][visBGWidth][visBGHeight];
+		float[][][] smoothC = new float[mHVCount][visBGWidth][visBGHeight];
+
+		int marginX = bgZoomX0 + bgZoomX1;
+		int marginY = bgZoomY0 + bgZoomY1;
+
+		for (int x=0; x<bgWidth; x++) {
+			int xmin = x-bgRadiusX+1-bgMarginX0;
+			if (xmin < 0 && (!xIsCyclic || xmin >= -marginX))
 				xmin = 0;
-			int xmax = x+backgroundColorRadius-1;
-			if (xmax >= backgroundWidth && !xIsCyclic)
-				xmax = backgroundWidth-1;
+			int xmax = x+bgRadiusX-1-bgMarginX0;
+			if (xmax >= visBGWidth && (!xIsCyclic || xmax - visBGWidth < marginX))
+				xmax = visBGWidth-1;
 
-			for (int y=0; y<backgroundHeight; y++) {
-				int ymin = y-backgroundColorRadius+1;
-				if (ymin < 0 && !yIsCyclic)
+			for (int y=0; y<bgHeight; y++) {
+				int ymin = y-bgRadiusY+1-bgMarginY0;
+				if (ymin < 0 && (!yIsCyclic || ymin >= -marginY))
 					ymin = 0;
-				int ymax = y+backgroundColorRadius-1;
-				if (ymax >= backgroundHeight && !yIsCyclic)
-					ymax = backgroundHeight-1;
-	
+				int ymax = y+bgRadiusY-1-bgMarginY0;
+				if (ymax >= visBGHeight && (!yIsCyclic || ymax - visBGHeight < marginY))
+					ymax = visBGHeight-1;
+
 				for (int hv=0; hv<mHVCount; hv++) {
-					if (backgroundC[hv][x][y] > (float)0.0) {
+					if (backgroundC[hv][x][y] > 0f) {
 						for (int ix=xmin; ix<=xmax; ix++) {
-							int dx = Math.abs(x-ix);
-	
+							if ((ix < 0 && ix >= -marginX) || (ix >= visBGWidth && ix < visBGWidth + marginX))
+								continue;
+
+							int dx = Math.abs(x-ix-bgMarginX0);
+
 							int destX = ix;
 							if (destX < 0)
-								destX += backgroundWidth;
-							else if (destX >= backgroundWidth)
-								destX -= backgroundWidth;
-	
+								destX += visBGWidth + marginX;
+							else if (destX >= visBGWidth)
+								destX -= visBGWidth + marginX;
+
 							for (int iy=ymin; iy<=ymax; iy++) {
-								int dy = Math.abs(y-iy);
-	
+								if ((iy < 0 && iy >= -marginY) || (iy >= visBGHeight && iy < visBGHeight + marginY))
+									continue;
+
+								int dy = Math.abs(y-iy-bgMarginY0);
+
 								int destY = iy;
 								if (destY < 0)
-									destY += backgroundHeight;
-								else if (destY >= backgroundHeight)
-									destY -= backgroundHeight;
-	
-								if (influence[dx][dy] > (float)0.0) {
+									destY += visBGHeight + marginY;
+								else if (destY >= visBGHeight)
+									destY -= visBGHeight + marginY;
+
+try {
+								if (influence[dx][dy] > 0f) {
 									smoothR[hv][destX][destY] += influence[dx][dy] * backgroundR[hv][x][y];
 									smoothG[hv][destX][destY] += influence[dx][dy] * backgroundG[hv][x][y];
 									smoothB[hv][destX][destY] += influence[dx][dy] * backgroundB[hv][x][y];
 									smoothC[hv][destX][destY] += influence[dx][dy] * backgroundC[hv][x][y];
-									}
 								}
-							}
+} catch (Exception e) {
+e.printStackTrace();
+System.out.println("x:" + x + " y:" + y + " destX:" + destX + " destY:" + destY + " dx:" + dx + " dy:" + dy + " bgw:" + visBGWidth + " bgh:" + visBGHeight + " marginX:" + marginX + " marginY:" + marginY);
+}							}
+						}
+					}
+				}
+			}
+		}
+
+		// find highest sum of RGB components
+		float max = (float)0.0;
+		for (int hv=0; hv<mHVCount; hv++)
+			for (int x=0; x<visBGWidth; x++)
+				for (int y=0; y<visBGHeight; y++)
+					if (max < smoothC[hv][x][y])
+						max = smoothC[hv][x][y];
+
+		float fading = (float)Math.exp(Math.log(1.0)-mBackgroundColorFading/20*(Math.log(1.0)-Math.log(0.1)));
+
+		short[][][][] background = new short[4][mHVCount][visBGWidth][visBGHeight]; // A,B,G,R
+		for (int hv=0; hv<mHVCount; hv++) {
+			for (int x=0; x<visBGWidth; x++) {
+				for (int y=0; y<visBGHeight; y++) {
+					if (smoothC[hv][x][y] == 0) {
+						background[0][hv][x][y] = (byte)0;
+						background[1][hv][x][y] = (byte)0;
+						background[2][hv][x][y] = (byte)0;
+						background[3][hv][x][y] = (byte)0;
+						}
+					else {
+						float f = (float)Math.exp(fading*Math.log(smoothC[hv][x][y] / max));
+						background[0][hv][x][y] = (short)(f * 255);
+						background[1][hv][x][y] = (short)(smoothB[hv][x][y] / smoothC[hv][x][y]);
+						background[2][hv][x][y] = (short)(smoothG[hv][x][y] / smoothC[hv][x][y]);
+						background[3][hv][x][y] = (short)(smoothR[hv][x][y] / smoothC[hv][x][y]);
 						}
 					}
 				}
 			}
 
-			// find highest sum of RGB components
-		float max = (float)0.0;
-		for (int hv=0; hv<mHVCount; hv++)
-			for (int x=0; x<backgroundWidth; x++)
-				for (int y=0; y<backgroundHeight; y++)
-					if (max < smoothC[hv][x][y])
-						max = smoothC[hv][x][y];
+		float[][] f = new float[pixelPerColor][pixelPerColor];
+		for (int i=0; i<pixelPerColor; i++)
+			for (int j=0; j<pixelPerColor; j++)
+				f[i][j] = (1f - (pixelOffset + pixelFactor * i)) * (1f - (pixelOffset + pixelFactor * j));
 
-		float fading = (float)Math.exp(Math.log(1.0)-(float)mBackgroundColorFading/20*(Math.log(1.0)-Math.log(0.1)));
-
-		mBackground = new Color[mHVCount][backgroundWidth][backgroundHeight];
+		int d = pixelPerColor - 1;
+		mMarkerBackgroundImage = new BufferedImage[mHVCount];
 		for (int hv=0; hv<mHVCount; hv++) {
-			for (int x=0; x<backgroundWidth; x++) {
-				for (int y=0; y<backgroundHeight; y++) {
-					if (smoothC[hv][x][y] == 0) {
-						mBackground[hv][x][y] = transparentBG ? new Color(1f, 1f, 1f, 0f) : neutralColor;
-						}
-					else {
-						float f = (float)Math.exp(fading*Math.log(smoothC[hv][x][y] / max));
-						if (transparentBG) {
-							mBackground[hv][x][y] = new Color((int) (smoothR[hv][x][y] / smoothC[hv][x][y]),
-									(int) (smoothG[hv][x][y] / smoothC[hv][x][y]),
-									(int) (smoothB[hv][x][y] / smoothC[hv][x][y]),
-									(int) (f * 255));
-							}
-						else {
-							f /= smoothC[hv][x][y];
-							mBackground[hv][x][y] = new Color(neutralR + (int) (f * smoothR[hv][x][y]),
-															  neutralG + (int) (f * smoothG[hv][x][y]),
-															  neutralB + (int) (f * smoothB[hv][x][y]));
-							}
-						}
+			mMarkerBackgroundImage[hv] = new BufferedImage(graphBounds.width, graphBounds.height, BufferedImage.TYPE_4BYTE_ABGR);
+			byte[] data = ((DataBufferByte)mMarkerBackgroundImage[hv].getRaster().getDataBuffer()).getData();
+			int index = 0;
+			for (int y=graphBounds.height-1; y>=0; y--) {
+				int sy = y / pixelPerColor;
+				int iy = y % pixelPerColor;
+				for (int x=0; x<graphBounds.width; x++) {
+					int sx = x / pixelPerColor;
+					int ix = x % pixelPerColor;
+					data[index++] = (byte)(f[iy][ix] * background[0][hv][sx][sy]
+								  + f[iy][d-ix] * background[0][hv][sx+1][sy]
+								  + f[d-iy][ix] * background[0][hv][sx][sy+1]
+								  + f[d-iy][d-ix] * background[0][hv][sx+1][sy+1]);
+					data[index++] = (byte)(f[iy][ix] * background[1][hv][sx][sy]
+								  + f[iy][d-ix] * background[1][hv][sx+1][sy]
+								  + f[d-iy][ix] * background[1][hv][sx][sy+1]
+								  + f[d-iy][d-ix] * background[1][hv][sx+1][sy+1]);
+					data[index++] = (byte)(f[iy][ix] * background[2][hv][sx][sy]
+								  + f[iy][d-ix] * background[2][hv][sx+1][sy]
+								  + f[d-iy][ix] * background[2][hv][sx][sy+1]
+								  + f[d-iy][d-ix] * background[2][hv][sx+1][sy+1]);
+					data[index++] = (byte)(f[iy][ix] * background[3][hv][sx][sy]
+								  + f[iy][d-ix] * background[3][hv][sx+1][sy]
+								  + f[d-iy][ix] * background[3][hv][sx][sy+1]
+								  + f[d-iy][d-ix] * background[3][hv][sx+1][sy+1]);
 					}
 				}
 			}
@@ -5380,54 +5481,6 @@ public class JVisualization2D extends JVisualization {
 	private void drawBackground(Graphics2D g, Rectangle graphRect, int hvIndex) {
 		ViewPort port = new ViewPort();
 
-		if (hasColorBackground()) {
-			int backgroundWidth = mBackground[0].length;
-			int backgroundHeight = mBackground[0][0].length;
-	
-			int[] x = new int[backgroundWidth+1];
-			int[] y = new int[backgroundHeight+1];
-	
-			float factorX = (float)graphRect.width/port.getVisRangle(0);
-			float factorY = (float)graphRect.height/port.getVisRangle(1);
-	
-			int minxi = 0;
-			int maxxi = backgroundWidth;
-			int minyi = 0;
-			int maxyi = backgroundHeight;
-			for (int i=0; i<=backgroundWidth; i++) {
-				float axisX = port.min[0]+i*port.getRange(0)/backgroundWidth;
-				x[i] = graphRect.x + (int)(factorX*(axisX-port.visMin[0]));
-				if (x[i] <= graphRect.x) {
-					x[i] = graphRect.x;
-					minxi = i;
-					}
-				if (x[i] >= graphRect.x+graphRect.width) {
-					x[i] = graphRect.x+graphRect.width;
-					maxxi = i;
-					break;
-					}
-				}
-			for (int i=0; i<=backgroundHeight; i++) {
-	 			float axisY = port.min[1]+i*port.getRange(1)/backgroundHeight;
-				y[i] = graphRect.y+graphRect.height - (int)(factorY*(axisY-port.visMin[1]));
-				if (y[i] >= graphRect.y+graphRect.height) {
-					y[i] = graphRect.y+graphRect.height;
-					minyi = i;
-					}
-				if (y[i] <= graphRect.y) {
-					y[i] = graphRect.y;
-					maxyi = i;
-					break;
-					}
-				}
-			for (int xi=minxi; xi<maxxi; xi++) {
-				for (int yi=minyi; yi<maxyi; yi++) {
-					g.setColor(mBackground[hvIndex][xi][yi]);
-					g.fillRect(x[xi], y[yi+1], x[xi+1]-x[xi], y[yi]-y[yi+1]);
-					}
-				}
-			}
-
 		if (mBackgroundImage != null) {
 			int sx1 = Math.round((float)mBackgroundImage.getWidth()*(port.visMin[0]-port.min[0])/port.getRange(0));
 			int sx2 = Math.round((float)mBackgroundImage.getWidth()*(port.visMax[0]-port.min[0])/port.getRange(0));
@@ -5435,8 +5488,20 @@ public class JVisualization2D extends JVisualization {
 			int sy2 = Math.round((float)mBackgroundImage.getHeight()*(port.max[1]-port.visMin[1])/port.getRange(1));
 			if (sx1 < sx2 && sy1 < sy2)
 				g.drawImage(mBackgroundImage, graphRect.x, graphRect.y,
-											  graphRect.x+graphRect.width, graphRect.y+graphRect.height,
-											  sx1, sy1, sx2, sy2, null);
+						graphRect.x+graphRect.width, graphRect.y+graphRect.height,
+						sx1, sy1, sx2, sy2, null);
+			}
+
+		if (mMarkerBackgroundImage != null && mMarkerBackgroundImage[hvIndex] != null) {
+//			int sx1 = Math.round((float)mMarkerBackgroundImage[hvIndex].getWidth()*(port.visMin[0]-port.min[0])/port.getRange(0));
+//			int sx2 = Math.round((float)mMarkerBackgroundImage[hvIndex].getWidth()*(port.visMax[0]-port.min[0])/port.getRange(0));
+//			int sy1 = Math.round((float)mMarkerBackgroundImage[hvIndex].getHeight()*(port.max[1]-port.visMax[1])/port.getRange(1));
+//			int sy2 = Math.round((float)mMarkerBackgroundImage[hvIndex].getHeight()*(port.max[1]-port.visMin[1])/port.getRange(1));
+//			if (sx1 < sx2 && sy1 < sy2)
+//				g.drawImage(mMarkerBackgroundImage[hvIndex], graphRect.x, graphRect.y,
+//						graphRect.x+graphRect.width, graphRect.y+graphRect.height,
+//						sx1, sy1, sx2, sy2, null);
+			g.drawImage(mMarkerBackgroundImage[hvIndex], graphRect.x, graphRect.y, null);
 			}
 		}
 
@@ -6233,8 +6298,6 @@ public class JVisualization2D extends JVisualization {
 					float[] minAndMax = getDataMinAndMax(i);
 					min[i] = minAndMax[0];
 					max[i] = minAndMax[1];
-//					min[i] = mTableModel.getMinimumValue(column);
-//					max[i] = mTableModel.getMaximumValue(column);
 					}
 				visMin[i] = mAxisVisMin[i];
 				visMax[i] = mAxisVisMax[i];

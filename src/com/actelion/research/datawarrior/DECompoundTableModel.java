@@ -249,16 +249,18 @@ public class DECompoundTableModel extends CompoundTableModel {
 					}
 		    	}
 		    int maxFragmentIndex = (colorInfo.bestMatch != null) ? colorInfo.bestMatch[record.getID()] : 0;
-			searcher.setMol(fragment[maxFragmentIndex], mol);
-			searcher.findFragmentInMolecule(SSSearcher.cCountModeOverlapping, SSSearcher.cDefaultMatchMode);
-			ArrayList<int[]> matchList = searcher.getMatchList();
-			if (matchList != null) {
-                for (int[] matching:matchList)
-					for (int k=0; k<matching.length; k++)
-						if (matching[k] != -1
-						 && mol.getAtomColor(matching[k]) == Molecule.cAtomColorNone)
-							mol.setAtomColor(matching[k], Molecule.cAtomColorDarkRed);
-				}
+		    if (maxFragmentIndex != -1) {
+				searcher.setMol(fragment[maxFragmentIndex], mol);
+				searcher.findFragmentInMolecule(SSSearcher.cCountModeOverlapping, SSSearcher.cDefaultMatchMode);
+				ArrayList<int[]> matchList = searcher.getMatchList();
+				if (matchList != null) {
+	                for (int[] matching:matchList)
+						for (int k=0; k<matching.length; k++)
+							if (matching[k] != -1
+							 && mol.getAtomColor(matching[k]) == Molecule.cAtomColorNone)
+								mol.setAtomColor(matching[k], Molecule.cAtomColorDarkRed);
+					}
+			    }
             }
 
 		if (colorInfo != null

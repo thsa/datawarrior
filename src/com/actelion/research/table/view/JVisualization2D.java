@@ -5337,6 +5337,7 @@ public class JVisualization2D extends JVisualization {
 				float distance = (float)Math.sqrt(dx*dx + dy*dy);
 				if (distance <= 1f)
 					influence[x][y] = (float)(0.5 + Math.cos(Math.PI*distance) / 2.0);
+//					influence[x][y] = 1f - distance;
 				}
 			}
 
@@ -5390,22 +5391,18 @@ public class JVisualization2D extends JVisualization {
 								else if (destY >= visBGHeight)
 									destY -= visBGHeight + marginY;
 
-try {
 								if (influence[dx][dy] > 0f) {
 									smoothR[hv][destX][destY] += influence[dx][dy] * backgroundR[hv][x][y];
 									smoothG[hv][destX][destY] += influence[dx][dy] * backgroundG[hv][x][y];
 									smoothB[hv][destX][destY] += influence[dx][dy] * backgroundB[hv][x][y];
 									smoothC[hv][destX][destY] += influence[dx][dy] * backgroundC[hv][x][y];
+									}
 								}
-} catch (Exception e) {
-e.printStackTrace();
-System.out.println("x:" + x + " y:" + y + " destX:" + destX + " destY:" + destY + " dx:" + dx + " dy:" + dy + " bgw:" + visBGWidth + " bgh:" + visBGHeight + " marginX:" + marginX + " marginY:" + marginY);
-}							}
+							}
 						}
 					}
 				}
 			}
-		}
 
 		// find highest sum of RGB components
 		float max = (float)0.0;
@@ -5493,14 +5490,6 @@ System.out.println("x:" + x + " y:" + y + " destX:" + destX + " destY:" + destY 
 			}
 
 		if (mMarkerBackgroundImage != null && mMarkerBackgroundImage[hvIndex] != null) {
-//			int sx1 = Math.round((float)mMarkerBackgroundImage[hvIndex].getWidth()*(port.visMin[0]-port.min[0])/port.getRange(0));
-//			int sx2 = Math.round((float)mMarkerBackgroundImage[hvIndex].getWidth()*(port.visMax[0]-port.min[0])/port.getRange(0));
-//			int sy1 = Math.round((float)mMarkerBackgroundImage[hvIndex].getHeight()*(port.max[1]-port.visMax[1])/port.getRange(1));
-//			int sy2 = Math.round((float)mMarkerBackgroundImage[hvIndex].getHeight()*(port.max[1]-port.visMin[1])/port.getRange(1));
-//			if (sx1 < sx2 && sy1 < sy2)
-//				g.drawImage(mMarkerBackgroundImage[hvIndex], graphRect.x, graphRect.y,
-//						graphRect.x+graphRect.width, graphRect.y+graphRect.height,
-//						sx1, sy1, sx2, sy2, null);
 			g.drawImage(mMarkerBackgroundImage[hvIndex], graphRect.x, graphRect.y, null);
 			}
 		}

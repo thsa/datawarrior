@@ -3353,10 +3353,13 @@ public class CompoundTableModel extends AbstractTableModel
 			updateVisibleRecords(false);
 			}
 		else  {
-			SwingUtilities.invokeLater(() -> {
-				mDirtyCompoundFlags |= mask;
-				updateVisibleRecords(false);
-				});
+			try {
+				SwingUtilities.invokeAndWait(() -> {
+					mDirtyCompoundFlags |= mask;
+					updateVisibleRecords(false);
+					});
+				}
+			catch (Exception ie) {}
 			}
 		}
 
@@ -3467,10 +3470,13 @@ public class CompoundTableModel extends AbstractTableModel
 			updateVisibleRecords(false);
 			}
 		else  {
-			SwingUtilities.invokeLater(() -> {
-				mDirtyCompoundFlags |= mask;
-				updateVisibleRecords(false);
-				});
+			try {
+				SwingUtilities.invokeAndWait(() -> {
+					mDirtyCompoundFlags |= mask;
+					updateVisibleRecords(false);
+					});
+				}
+			catch (Exception ie) {}
 			}
 		}
 
@@ -3562,10 +3568,13 @@ public class CompoundTableModel extends AbstractTableModel
 			updateVisibleRecords(false);
 			}
 		else  {
-			SwingUtilities.invokeLater(() -> {
-				mDirtyCompoundFlags |= mask;
-				updateVisibleRecords(false);
-				});
+			try {
+				SwingUtilities.invokeAndWait(() -> {
+					mDirtyCompoundFlags |= mask;
+					updateVisibleRecords(false);
+					});
+				}
+			catch (Exception ie) {}
 			}
 		}
 

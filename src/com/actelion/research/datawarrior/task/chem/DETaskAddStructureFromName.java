@@ -159,7 +159,6 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 				if (mol.getAllAtoms() != 0) {
 					try {
 						new CoordinateInventor().invent(mol);
-						mol.setFragment(false);
 						mol.normalizeAmbiguousBonds();
 						mol.canonizeCharge(true);
 						Canonizer canonizer = new Canonizer(mol);

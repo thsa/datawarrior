@@ -123,8 +123,9 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 		parser.addFunction("categorySum", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_SUM, this));
 		parser.addFunction("categoryMean", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_MEAN, this));
 		parser.addFunction("categoryMedian", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_MEDIAN, this));
-		parser.addFunction("movingAverageInCategory", new JEPMovingInCategoryFunction(mTableModel, this, true, true));
-		parser.addFunction("movingSumInCategory", new JEPMovingInCategoryFunction(mTableModel, this, false, false));
+		parser.addFunction("previousInCategory", new JEPMovingInCategoryFunction(mTableModel, this, JEPMovingInCategoryFunction.PREVIOUS, false));
+		parser.addFunction("movingAverageInCategory", new JEPMovingInCategoryFunction(mTableModel, this, JEPMovingInCategoryFunction.MOVING_AVERAGE, true));
+		parser.addFunction("movingSumInCategory", new JEPMovingInCategoryFunction(mTableModel, this, JEPMovingInCategoryFunction.MOVING_SUM, false));
 		parser.addFunction("refvalue", new JEPRefValueOfCategoryFunction(this, mTableModel));
 		parser.addFunction("year", new JEPValueOfDateFunction(Calendar.YEAR, -1));  // no correction
 		parser.addFunction("yearISO", new JEPValueOfDateFunction(Calendar.YEAR, 0));

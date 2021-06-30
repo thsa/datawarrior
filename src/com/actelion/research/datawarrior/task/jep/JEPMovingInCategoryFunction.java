@@ -30,21 +30,26 @@ import java.util.TreeMap;
  * An example custom function class for JEP.
  */
 public class JEPMovingInCategoryFunction extends PostfixMathCommand {
+	public static final int PREVIOUS = 0;
+	public static final int MOVING_AVERAGE = 1;
+	public static final int MOVING_SUM = 2;
+
 	private DETaskAddCalculatedValues mParentTask;
 	private CompoundTableModel mTableModel;
 	private TreeMap<Long,double[]> mResultMap;
-	private boolean mIsAverage,mCalculateEdgeValues;
+	private int mMode;
+	private boolean mCalculateEdgeValues;
 
 	/**
 	 * Constructor
 	 */
 	public JEPMovingInCategoryFunction(CompoundTableModel tableModel, DETaskAddCalculatedValues parentTask,
-	                                   boolean isAverage, boolean calculateEdgeValues) {
+	                                   int mode, boolean calculateEdgeValues) {
 		super();
 		mParentTask = parentTask;
 		mTableModel = tableModel;
-		numberOfParameters = 4;
-		mIsAverage = isAverage;
+		numberOfParameters = (mode == PREVIOUS) ? 3 : 4;
+		mMode = mode;
 		mCalculateEdgeValues = calculateEdgeValues;
 		}
 
@@ -90,7 +95,7 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 		checkStack(inStack);
 
 		// get the parameter from the stack
-		Object param4 = inStack.pop();
+		Object param4 = (mMode == PREVIOUS) ? null : inStack.pop();
 		Object param3 = inStack.pop();
 		Object param2 = inStack.pop();
 		Object param1 = inStack.pop();
@@ -101,7 +106,7 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 			throw new ParseException("2nd parameter type is not 'String'");
 		if (!(param3 instanceof Double))
 			throw new ParseException("3rd parameter type is not numerical");
-		if (!(param4 instanceof Double))
+		if (mMode != PREVIOUS && !(param4 instanceof Double))
 			throw new ParseException("4th parameter type is not numerical");
 
 		int valueColumn = mTableModel.findColumn((String)param2);
@@ -122,7 +127,7 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 			throw new ParseException("Column '"+param2+"' does not contain numerical values.");
 
 		int n1 = (int)Math.round((Double)param3);
-		int n2 = (int)Math.round((Double)param4);
+		int n2 = (mMode == PREVIOUS) ? 0 : (int)Math.round((Double)param4);
 		if (n1 < 0 || n2 < 0 || n1 + n2 == 0 || n1 + n2 > 255)
 			throw new ParseException("Either of both, n1 and n2, must be positive integer values. n1+n2 must be smaller than 255.");
 
@@ -147,13 +152,24 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 			valueCount++;
 			cacheIndex = cyclicIndex(valueCount);
 
-			if (valueCount > n2) {
-				int centerIndex = cyclicIndex(valueCount - n2 - 1);
+			if (mMode == PREVIOUS) {
+				if (valueCount > n1) {
+					int previousIndex = cyclicIndex(valueCount - n1 - 1);
+					result[row] = value[previousIndex];
+					}
+				else {
+					result[row] = Double.NaN;
+					}
+				}
+			else {
+				if (valueCount > n2) {
+					int centerIndex = cyclicIndex(valueCount - n2 - 1);
 
-				if (valueCount < value.length)
-					result[rowIndex[centerIndex]] = mCalculateEdgeValues ? getAverage(0, valueCount) : Double.NaN;
-				else
-					result[rowIndex[centerIndex]] = getAverage(0, value.length);
+					if (valueCount < value.length)
+						result[rowIndex[centerIndex]] = mCalculateEdgeValues ? getAverageOrSum(0, valueCount) : Double.NaN;
+					else
+						result[rowIndex[centerIndex]] = getAverageOrSum(0, value.length);
+					}
 				}
 			}
 
@@ -162,11 +178,11 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 				int centerIndex = cyclicIndex(valueIndex);
 				int i1 = cyclicIndex(Math.max(0, valueIndex-n1));
 				int i2 = cyclicIndex(valueCount);
-				result[rowIndex[centerIndex]] = mCalculateEdgeValues ? getAverage(i1, i2) : Double.NaN;
+				result[rowIndex[centerIndex]] = mCalculateEdgeValues ? getAverageOrSum(i1, i2) : Double.NaN;
 				}
 			}
 
-		private double getAverage(int i1, int i2) {
+		private double getAverageOrSum(int i1, int i2) {
 			double sum = 0;
 			int count = 0;
 			if (i1 < i2) {
@@ -191,7 +207,7 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 						}
 					}
 				}
-			return count == 0 ? Double.NaN : mIsAverage ? sum / count : sum;
+			return count == 0 ? Double.NaN : mMode == MOVING_AVERAGE ? sum / count : sum;
 			}
 
 		private int cyclicIndex(int index) {

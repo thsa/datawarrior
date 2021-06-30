@@ -601,6 +601,10 @@ The expression syntax, all operators and available functions are explained below
     <td><font face="sans-serif"><small>frequencyInCategory(category-column, value-column)</small></font></td>
   </tr>
   <tr bgcolor="#ffffff">
+    <td><font face="sans-serif"><small>Previous value in category</small></font></td>
+    <td><font face="sans-serif"><small>previousInCategory(category-column, value-column, n)</small></font></td>
+  </tr>
+  <tr bgcolor="#ffffff">
     <td><font face="sans-serif"><small>Absolute value increase from previous row</small></font></td>
     <td><font face="sans-serif"><small>increase(value-column)</small></font></td>
   </tr>
@@ -685,6 +689,9 @@ The expression syntax, all operators and available functions are explained below
   it considers the row's category membership. It counts, how many table rows contain the given value in the
   value-column and belong at the same time to the specified category, i.e. have the given category value in
   the category-column.</p>
+<p>The <b>previousInCategory()</b> function locates the n-th row above the currently processed row, while only
+  considering rows that belong to the same category. Then it returns the value column's value of that row.
+  The function returns NaN, if less than n rows exist above the currently processed row.</p>
 <p>The <b>increase()</b> and <b>percentIncrease()</b> functions calculate the value increase from the previous row,
   as absolute difference or as percentage relative to the previous value. The <b>cumulativeSum()</b> function
   calculates the total sum of this value and all previous values. All three functions depend on the table sort

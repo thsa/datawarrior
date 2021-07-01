@@ -32,7 +32,7 @@ import java.util.TreeMap;
 public class JEPPreviousInCategoryFunction extends PostfixMathCommand {
 	private DETaskAddCalculatedValues mParentTask;
 	private CompoundTableModel mTableModel;
-	private TreeMap<Long,byte[][]> mResultMap;
+	private TreeMap<Long,Object[]> mResultMap;
 
 	/**
 	 * Constructor
@@ -44,19 +44,26 @@ public class JEPPreviousInCategoryFunction extends PostfixMathCommand {
 		numberOfParameters = 3;
 		}
 
-	private byte[] getResult(int valueColumn, int categoryColumn, int n) {
+	private Object getResult(int valueColumn, int categoryColumn, int n) {
 		if (mResultMap == null)
 			mResultMap = new TreeMap<>();
 
 		// just in case we have multiple movingAverageInCategory() functions in one equation, we need to distinguish
 		long key = ((long)categoryColumn << 40) + ((long)valueColumn << 16) + n;
-		byte[][] result = mResultMap.get(key);
+		Object[] result = mResultMap.get(key);
 		if (result == null) {
-			result = new byte[mTableModel.getTotalRowCount()][];
+			result = new Object[mTableModel.getTotalRowCount()];
 			TreeMap<String,MovingWindow> categoryValueMap = new TreeMap<>();
 			for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
 				String category = mTableModel.getTotalValueAt(row, categoryColumn);
-				byte[] value = (byte[])mTableModel.getTotalRecord(row).getData(valueColumn);
+				Object value;
+				if (mTableModel.isColumnTypeDouble(valueColumn)) {
+					float v = mTableModel.getTotalRecord(row).getDouble(valueColumn);
+					value = new Double(mTableModel.isLogarithmicViewMode(valueColumn) ? Math.pow(10, v) : v);
+					}
+				else {
+					value = mTableModel.getTotalRecord(row).getData(valueColumn);
+					}
 				MovingWindow window = categoryValueMap.get(category);
 				if (window == null) {
 					window = new MovingWindow(n);
@@ -111,21 +118,25 @@ public class JEPPreviousInCategoryFunction extends PostfixMathCommand {
 		if (n<=0 || n>255)
 			throw new ParseException("n must be a positive integer value smaller than 256.");
 
-		inStack.push(new String(getResult(valueColumn, categoryColumn, n)));
+		Object result = getResult(valueColumn, categoryColumn, n);
+		if (mTableModel.isColumnTypeDouble(valueColumn))
+			inStack.push(result == null ? Double.NaN : result);
+		else
+			inStack.push(result == null ? "" : new String((byte[])result));
 		}
 
 	private class MovingWindow {
-		public byte[][] value;	// cyclic cache of row values
+		public Object[] value;	// cyclic cache of row values
 		public int[] rowIndex;	// associated cyclic cache of originating row indexes
 		public int cacheIndex,valueCount,n;
 
 		public MovingWindow(int n) {
-			value = new byte[n+1][];
+			value = new Object[n+1];
 			rowIndex = new int[n+1];
 			this.n = n;
 			}
 
-		public void addValue(byte[] newValue, int row, byte[][] result) {
+		public void addValue(Object newValue, int row, Object[] result) {
 			value[cacheIndex] = newValue;
 			rowIndex[cacheIndex] = row;
 			valueCount++;
@@ -133,7 +144,7 @@ public class JEPPreviousInCategoryFunction extends PostfixMathCommand {
 
 			if (valueCount > n) {
 				int previousIndex = cyclicIndex(valueCount - n - 1);
-				result[row] = value[previousIndex].clone();
+				result[row] = value[previousIndex];
 				}
 			else {
 				result[row] = null;

@@ -123,7 +123,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 		parser.addFunction("categorySum", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_SUM, this));
 		parser.addFunction("categoryMean", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_MEAN, this));
 		parser.addFunction("categoryMedian", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_MEDIAN, this));
-		parser.addFunction("previousInCategory", new JEPMovingInCategoryFunction(mTableModel, this, JEPMovingInCategoryFunction.PREVIOUS, false));
+		parser.addFunction("previousInCategory", new JEPPreviousInCategoryFunction(mTableModel, this));
 		parser.addFunction("movingAverageInCategory", new JEPMovingInCategoryFunction(mTableModel, this, JEPMovingInCategoryFunction.MOVING_AVERAGE, true));
 		parser.addFunction("movingSumInCategory", new JEPMovingInCategoryFunction(mTableModel, this, JEPMovingInCategoryFunction.MOVING_SUM, false));
 		parser.addFunction("refvalue", new JEPRefValueOfCategoryFunction(this, mTableModel));

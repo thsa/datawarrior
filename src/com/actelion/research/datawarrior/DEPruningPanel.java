@@ -192,7 +192,7 @@ public class DEPruningPanel extends JScrollPane
 		int flag = mTableModel.getUnusedRowFlag(true);
 
 		if (flag == -1)
-			throw new FilterException("Maximum number of open filters reached.");
+			throw new FilterException("Cannot create filter because maximum number if filters/lists is reached.\nRemove row lists or other filters to allow for new filters.");
 
 		return flag;
     	}

@@ -29,54 +29,41 @@ import java.util.TreeMap;
 /**
  * An example custom function class for JEP.
  */
-public class JEPMovingInCategoryFunction extends PostfixMathCommand {
-	public static final int MOVING_AVERAGE = 1;
-	public static final int MOVING_SUM = 2;
-
+public class JEPPreviousInCategoryFunction extends PostfixMathCommand {
 	private DETaskAddCalculatedValues mParentTask;
 	private CompoundTableModel mTableModel;
-	private TreeMap<Long,double[]> mResultMap;
-	private int mMode;
-	private boolean mCalculateEdgeValues,mIsLogarithmic;
+	private TreeMap<Long,byte[][]> mResultMap;
 
 	/**
 	 * Constructor
 	 */
-	public JEPMovingInCategoryFunction(CompoundTableModel tableModel, DETaskAddCalculatedValues parentTask,
-	                                   int mode, boolean calculateEdgeValues) {
+	public JEPPreviousInCategoryFunction(CompoundTableModel tableModel, DETaskAddCalculatedValues parentTask) {
 		super();
 		mParentTask = parentTask;
 		mTableModel = tableModel;
-		numberOfParameters = 4;
-		mMode = mode;
-		mCalculateEdgeValues = calculateEdgeValues;
+		numberOfParameters = 3;
 		}
 
-	private double getResult(int valueColumn, int categoryColumn, int n1, int n2) {
+	private byte[] getResult(int valueColumn, int categoryColumn, int n) {
 		if (mResultMap == null)
 			mResultMap = new TreeMap<>();
 
 		// just in case we have multiple movingAverageInCategory() functions in one equation, we need to distinguish
-		long key = ((long)categoryColumn << 40) + ((long)valueColumn << 16) + (n1 << 8) + n2;
-		double[] result = mResultMap.get(key);
+		long key = ((long)categoryColumn << 40) + ((long)valueColumn << 16) + n;
+		byte[][] result = mResultMap.get(key);
 		if (result == null) {
-			result = new double[mTableModel.getTotalRowCount()];
+			result = new byte[mTableModel.getTotalRowCount()][];
 			TreeMap<String,MovingWindow> categoryValueMap = new TreeMap<>();
-			mIsLogarithmic = mTableModel.isLogarithmicViewMode(valueColumn);
 			for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
 				String category = mTableModel.getTotalValueAt(row, categoryColumn);
-				double value = mTableModel.getTotalDoubleAt(row, valueColumn);
+				byte[] value = (byte[])mTableModel.getTotalRecord(row).getData(valueColumn);
 				MovingWindow window = categoryValueMap.get(category);
 				if (window == null) {
-					window = new MovingWindow(n1, n2);
+					window = new MovingWindow(n);
 					categoryValueMap.put(category, window);
 					}
 				window.addValue(value, row, result);
 				}
-
-			if (mCalculateEdgeValues)
-				for (MovingWindow window:categoryValueMap.values())
-					window.processTailValues(result);
 
 			mResultMap.put(key, result);
 			}
@@ -95,7 +82,6 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 		checkStack(inStack);
 
 		// get the parameter from the stack
-		Object param4 = inStack.pop();
 		Object param3 = inStack.pop();
 		Object param2 = inStack.pop();
 		Object param1 = inStack.pop();
@@ -106,8 +92,6 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 			throw new ParseException("2nd parameter type is not 'String'");
 		if (!(param3 instanceof Double))
 			throw new ParseException("3rd parameter type is not numerical");
-		if (!(param4 instanceof Double))
-			throw new ParseException("4th parameter type is not numerical");
 
 		int valueColumn = mTableModel.findColumn((String)param2);
 		if (valueColumn == -1)
@@ -123,93 +107,37 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 		if (mTableModel.isMultiEntryColumn(categoryColumn))
 			throw new ParseException("Some cells of category column '"+param1+"' contain multiple values.");
 
-		if (!mTableModel.isColumnTypeDouble(valueColumn))
-			throw new ParseException("Column '"+param2+"' does not contain numerical values.");
+		int n = (int)Math.round((Double)param3);
+		if (n<=0 || n>255)
+			throw new ParseException("n must be a positive integer value smaller than 256.");
 
-		int n1 = (int)Math.round((Double)param3);
-		int n2 = (int)Math.round((Double)param4);
-		if (n1<0 || n2<0 || n1 + n2 == 0 || n1 + n2>255)
-			throw new ParseException("n1 and n2 must not be negative. n1+n2 must be larger than 0 and smaller than 256.");
-
-		inStack.push(new Double(getResult(valueColumn, categoryColumn, n1, n2)));
+		inStack.push(new String(getResult(valueColumn, categoryColumn, n)));
 		}
 
 	private class MovingWindow {
-		public double[] value;	// cyclic cache of category values
+		public byte[][] value;	// cyclic cache of row values
 		public int[] rowIndex;	// associated cyclic cache of originating row indexes
-		public int cacheIndex,valueCount,n1,n2;
+		public int cacheIndex,valueCount,n;
 
-		public MovingWindow(int n1, int n2) {
-			value = new double[n1+n2+1];
-			rowIndex = new int[n1+n2+1];
-			this.n1 = n1;
-			this.n2 = n2;
+		public MovingWindow(int n) {
+			value = new byte[n+1][];
+			rowIndex = new int[n+1];
+			this.n = n;
 			}
 
-		public void addValue(double newValue, int row, double[] result) {
-			if (mMode == MOVING_SUM && mIsLogarithmic)
-				newValue = Math.pow(10, newValue);
-
+		public void addValue(byte[] newValue, int row, byte[][] result) {
 			value[cacheIndex] = newValue;
 			rowIndex[cacheIndex] = row;
 			valueCount++;
 			cacheIndex = cyclicIndex(valueCount);
 
-			if (valueCount > n2) {
-				int centerIndex = cyclicIndex(valueCount - n2 - 1);
-
-				if (valueCount < value.length)
-					result[rowIndex[centerIndex]] = mCalculateEdgeValues ? getAverageOrSum(0, valueCount) : Double.NaN;
-				else
-					result[rowIndex[centerIndex]] = getAverageOrSum(0, value.length);
-				}
-			}
-
-		public void processTailValues(double[] result) {
-			for (int valueIndex=valueCount-n2; valueIndex<valueCount; valueIndex++) {
-				int centerIndex = cyclicIndex(valueIndex);
-				int i1 = cyclicIndex(Math.max(0, valueIndex-n1));
-				int i2 = cyclicIndex(valueCount);
-				result[rowIndex[centerIndex]] = mCalculateEdgeValues ? getAverageOrSum(i1, i2) : Double.NaN;
-				}
-			}
-
-		private double getAverageOrSum(int i1, int i2) {
-			double sum = 0;
-			int count = 0;
-			if (i1 < i2) {
-				for (int i=i1; i<i2; i++) {
-					if (!Double.isNaN(value[i])) {
-						sum += value[i];
-						count++;
-						}
-					}
+			if (valueCount > n) {
+				int previousIndex = cyclicIndex(valueCount - n - 1);
+				result[row] = value[previousIndex].clone();
 				}
 			else {
-				for (int i=0; i<i2; i++) {
-					if (!Double.isNaN(value[i])) {
-						sum += value[i];
-						count++;
-						}
-					}
-				for (int i=i1; i<value.length; i++) {
-					if (!Double.isNaN(value[i])) {
-						sum += value[i];
-						count++;
-						}
-					}
+				result[row] = null;
 				}
-
-			if (count == 0)
-				return Double.NaN;
-
-			if (mMode == MOVING_AVERAGE) {
-				sum /= count;
-				if (mIsLogarithmic)
-					sum = Math.pow(10, sum);
-				}
-
-			return sum;
 			}
 
 		private int cyclicIndex(int index) {

@@ -118,6 +118,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 		parser.addFunction("frequency", new JEPFrequencyFunction(mTableModel));
 		parser.addFunction("frequencyInCategory", new JEPFrequencyInCategoryFunction(mTableModel, this));
 		parser.addFunction("categoryFirst", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_FIRST, this));
+		parser.addFunction("categoryLast", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_LAST, this));
 		parser.addFunction("categoryMin", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_MIN, this));
 		parser.addFunction("categoryMax", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_MAX, this));
 		parser.addFunction("categorySum", new JEPValueInCategoryFunction(mTableModel, JEPValueInCategoryFunction.TYPE_SUM, this));

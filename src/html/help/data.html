@@ -641,6 +641,10 @@ The expression syntax, all operators and available functions are explained below
     <td><font face="sans-serif"><small>categoryFirst(category-column, value-column)</small></font></td>
   </tr>
   <tr bgcolor="#ffffff">
+    <td><font face="sans-serif"><small>Last value within category</small></font></td>
+    <td><font face="sans-serif"><small>categoryLast(category-column, value-column)</small></font></td>
+  </tr>
+  <tr bgcolor="#ffffff">
     <td><font face="sans-serif"><small>Smallest value in category</small></font></td>
     <td><font face="sans-serif"><small>categoryMin(category-column, value-column)</small></font></td>
   </tr>
@@ -690,7 +694,7 @@ The expression syntax, all operators and available functions are explained below
   value-column and belong at the same time to the specified category, i.e. have the given category value in
   the category-column.</p>
 <p>The <b>previousInCategory()</b> function locates the n-th row above the currently processed row, while only
-  considering rows that belong to the same category. Then it returns the value column's value of that row.
+  considering rows that belong to the same category. Then it returns the specified column's value of that row.
   The function returns NaN, if less than n rows exist above the currently processed row.</p>
 <p>The <b>increase()</b> and <b>percentIncrease()</b> functions calculate the value increase from the previous row,
   as absolute difference or as percentage relative to the previous value. The <b>cumulativeSum()</b> function
@@ -710,8 +714,9 @@ The expression syntax, all operators and available functions are explained below
 <p>Similarly, the <b>movingSumInCategory()</b> calculates the value sum from the row's value, the <i>n1</i> previous
   and the <i>n2</i> following values that belong to the same category. If the table contains less than n1 previous rows
   or less than n2 following rows matching the same category, then NaN is returned.</p>
-<p>The <b>categoryFirst()</b> function returns the first value within a given value-column that belongs to
-  a specified category. Thus, the result depends on the current order of table rows.
+<p>The <b>categoryFirst()</b> and <b>categoryLast()</b> functions return the first (or last) row's value from the given
+  value-column and those rows, which belong to the specified category. Thus, the result depends on the current order
+  of table rows.
   <br>Example: If a table contains stock prices from different companies and different dates, then in order to
   visualize the relative price evolution of the different companies over time, one might sort the table by ascending
   date and then calculate a new column 'Relative price' using the formula 100*price/categoryFirst("Company","Price").

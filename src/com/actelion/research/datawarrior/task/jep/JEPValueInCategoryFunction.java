@@ -38,11 +38,12 @@ public class JEPValueInCategoryFunction extends PostfixMathCommand {
 	public static final int TYPE_MEAN = 4;
 	public static final int TYPE_MEDIAN = 5;
 	public static final int TYPE_SUM = 6;
+	public static final int TYPE_LAST = 7;
 
 	private DETaskAddCalculatedValues mParentTask;
 	private CompoundTableModel mTableModel;
-	private TreeMap<Integer,TreeMap<byte[],Double>> mBytesMaps;
-	private TreeMap<Integer,TreeMap<Double,Double>> mDoubleMaps;
+	private TreeMap<Integer,TreeMap<byte[],Object>> mBytesMaps;
+	private TreeMap<Integer,TreeMap<Double,Object>> mDoubleMaps;
 	private int mType;
 
 	/**
@@ -56,11 +57,11 @@ public class JEPValueInCategoryFunction extends PostfixMathCommand {
 		numberOfParameters = 2;
 		}
 
-	private TreeMap<byte[],Double> createBytesMap(int categoryColumn, int valueColumn) {
+	private TreeMap<byte[],Object> createBytesMap(int categoryColumn, int valueColumn, boolean isNumericalValue) {
 		if (mBytesMaps == null)
 			mBytesMaps = new TreeMap<>();
 
-		TreeMap<byte[],Double> bytesMap = mBytesMaps.get(categoryColumn + 0x00010000 * valueColumn);
+		TreeMap<byte[],Object> bytesMap = mBytesMaps.get(categoryColumn + 0x00010000 * valueColumn);
 		if (bytesMap == null) {
 			bytesMap = new TreeMap<>(new ByteArrayComparator());
 			TreeMap<byte[],Integer> countMap = (mType == TYPE_MEAN || mType == TYPE_MEDIAN) ?
@@ -69,39 +70,46 @@ public class JEPValueInCategoryFunction extends PostfixMathCommand {
 			for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
 				byte[] key = (byte[])mTableModel.getTotalRecord(row).getData(categoryColumn);
 				if (key != null) {
-					double val = mTableModel.getTotalOriginalDoubleAt(row, valueColumn);
-					if (Double.isFinite(val)) {
-						switch (mType) {
-						case TYPE_FIRST:
-							if (!bytesMap.containsKey(key))
-								bytesMap.put(key, (double)mTableModel.getTotalOriginalDoubleAt(row, valueColumn));
-							break;
-						case TYPE_MIN:
-							Double min = bytesMap.get(key);
-							bytesMap.put(key, min == null ? val : Math.min(val, min));
-							break;
-						case TYPE_MAX:
-							Double max = bytesMap.get(key);
-							bytesMap.put(key, max == null ? val : Math.max(val, max));
-							break;
-						case TYPE_SUM:
-						case TYPE_MEAN:
-							Double sum = bytesMap.get(key);
-							bytesMap.put(key, sum == null ? val : sum + val);
-							break;
-							}
+					if (isNumericalValue) {
+						double val = mTableModel.getTotalOriginalDoubleAt(row, valueColumn);
+						if (Double.isFinite(val)) {
+							switch (mType) {
+							case TYPE_FIRST:
+							case TYPE_LAST:
+								if (mType == TYPE_LAST || !bytesMap.containsKey(key))
+									bytesMap.put(key, val);
+								break;
+							case TYPE_MIN:
+								Double min = (Double)bytesMap.get(key);
+								bytesMap.put(key, min == null ? val : Math.min(val, min));
+								break;
+							case TYPE_MAX:
+								Double max = (Double)bytesMap.get(key);
+								bytesMap.put(key, max == null ? val : Math.max(val, max));
+								break;
+							case TYPE_SUM:
+							case TYPE_MEAN:
+								Double sum = (Double)bytesMap.get(key);
+								bytesMap.put(key, sum == null ? val : sum + val);
+								break;
+								}
 
-						if (mType == TYPE_MEAN || mType == TYPE_MEDIAN) {
-							Integer count = countMap.get(key);
-							countMap.put(key, count == null ? 1 : count + 1);
+							if (mType == TYPE_MEAN || mType == TYPE_MEDIAN) {
+								Integer count = countMap.get(key);
+								countMap.put(key, count == null ? 1 : count + 1);
+								}
 							}
+						}
+					else {
+						if (mType == TYPE_LAST || !bytesMap.containsKey(key))
+							bytesMap.put(key, mTableModel.getTotalValueAt(row, valueColumn));
 						}
 					}
 				}
 
 			if (mType == TYPE_MEAN) {
 				for (byte[] key:countMap.keySet())
-					bytesMap.put(key, bytesMap.get(key) / countMap.get(key));
+					bytesMap.put(key, (Double)bytesMap.get(key) / countMap.get(key));
 				}
 			else if (mType == TYPE_MEDIAN) {
 				TreeMap<byte[],double[]> valueMap = new TreeMap<>(new ByteArrayComparator());
@@ -138,11 +146,11 @@ public class JEPValueInCategoryFunction extends PostfixMathCommand {
 		return bytesMap;
 		}
 
-	private TreeMap<Double,Double> createDoubleMap(int categoryColumn, int valueColumn) {
+	private TreeMap<Double,Object> createDoubleMap(int categoryColumn, int valueColumn, boolean isNumericalValue) {
 		if (mDoubleMaps == null)
 			mDoubleMaps = new TreeMap<>();
 
-		TreeMap<Double,Double> doubleMap = mDoubleMaps.get(categoryColumn + 0x00010000 * valueColumn);
+		TreeMap<Double,Object> doubleMap = mDoubleMaps.get(categoryColumn + 0x00010000 * valueColumn);
 		if (doubleMap == null) {
 			doubleMap = new TreeMap<>();
 			TreeMap<Double, Integer> countMap = (mType == TYPE_MEAN || mType == TYPE_MEDIAN) ?
@@ -151,39 +159,46 @@ public class JEPValueInCategoryFunction extends PostfixMathCommand {
 			for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
 				double key = mTableModel.getTotalOriginalDoubleAt(row, categoryColumn);
 				if (!Double.isNaN(key)) {
-					double val = mTableModel.getTotalOriginalDoubleAt(row, valueColumn);
-					if (Double.isFinite(val)) {
-						switch (mType) {
-							case TYPE_FIRST:
-								if (!doubleMap.containsKey(key))
-									doubleMap.put(key, (double)mTableModel.getTotalOriginalDoubleAt(row, valueColumn));
-								break;
-							case TYPE_MIN:
-								Double min = doubleMap.get(key);
-								doubleMap.put(key, min == null ? val : Math.min(val, min));
-								break;
-							case TYPE_MAX:
-								Double max = doubleMap.get(key);
-								doubleMap.put(key, max == null ? val : Math.max(val, max));
-								break;
-							case TYPE_SUM:
-							case TYPE_MEAN:
-								Double sum = doubleMap.get(key);
-								doubleMap.put(key, sum == null ? val : sum + val);
-								break;
-						}
+					if (isNumericalValue) {
+						double val = mTableModel.getTotalOriginalDoubleAt(row, valueColumn);
+						if (Double.isFinite(val)) {
+							switch (mType) {
+								case TYPE_FIRST:
+								case TYPE_LAST:
+									if (mType == TYPE_LAST || !doubleMap.containsKey(key))
+										doubleMap.put(key, (double)mTableModel.getTotalOriginalDoubleAt(row, valueColumn));
+									break;
+								case TYPE_MIN:
+									Double min = (Double)doubleMap.get(key);
+									doubleMap.put(key, min == null ? val : Math.min(val, min));
+									break;
+								case TYPE_MAX:
+									Double max = (Double)doubleMap.get(key);
+									doubleMap.put(key, max == null ? val : Math.max(val, max));
+									break;
+								case TYPE_SUM:
+								case TYPE_MEAN:
+									Double sum = (Double)doubleMap.get(key);
+									doubleMap.put(key, sum == null ? val : sum + val);
+									break;
+								}
 
-						if (mType == TYPE_MEAN || mType == TYPE_MEDIAN) {
-							Integer count = countMap.get(key);
-							countMap.put(key, count == null ? 1 : count + 1);
+							if (mType == TYPE_MEAN || mType == TYPE_MEDIAN) {
+								Integer count = countMap.get(key);
+								countMap.put(key, count == null ? 1 : count + 1);
+								}
+							}
+						}
+					else {
+						if (mType == TYPE_LAST || !doubleMap.containsKey(key))
+							doubleMap.put(key, mTableModel.getTotalValueAt(row, valueColumn));
 						}
 					}
 				}
-			}
 
 			if (mType == TYPE_MEAN) {
 				for (double key:countMap.keySet())
-					doubleMap.put(key, doubleMap.get(key) / countMap.get(key));
+					doubleMap.put(key, (Double)doubleMap.get(key) / countMap.get(key));
 				}
 			else if (mType == TYPE_MEDIAN) {
 				TreeMap<Double,double[]> valueMap = new TreeMap<Double,double[]>();
@@ -257,14 +272,23 @@ public class JEPValueInCategoryFunction extends PostfixMathCommand {
 		int valueColumn = mTableModel.findColumn((String)param2);
 		if (valueColumn == -1)
 			throw new ParseException("Column '"+param2+"' not found.");
-		if (mType == TYPE_SUM && (!mTableModel.isColumnTypeDouble(valueColumn) || mTableModel.isColumnTypeDate(valueColumn)))
+		boolean isNumericalValue = mTableModel.isColumnTypeDouble(valueColumn);
+		if (mType == TYPE_SUM && (!isNumericalValue || mTableModel.isColumnTypeDate(valueColumn)))
 			throw new ParseException("Column '"+param2+"' is not numerical.");
-		if (!mTableModel.isColumnTypeDouble(valueColumn))
+		if (mType != TYPE_FIRST && mType != TYPE_LAST && !isNumericalValue)
 			throw new ParseException("Column '"+param2+"' is not numerical nor date.");
 
-		if (isDoubleCategory)
-			inStack.push(new Double(createDoubleMap(categoryColumn, valueColumn).get(category)));
-		else
-			inStack.push(new Double(createBytesMap(categoryColumn, valueColumn).get(((String)category).getBytes())));
+		if (isDoubleCategory) {
+			if (isNumericalValue)
+				inStack.push(createDoubleMap(categoryColumn, valueColumn, isNumericalValue).get(category));
+			else
+				inStack.push(createDoubleMap(categoryColumn, valueColumn, isNumericalValue).get(category));
+			}
+		else {
+			if (isNumericalValue)
+				inStack.push(createBytesMap(categoryColumn, valueColumn, isNumericalValue).get(((String)category).getBytes()));
+			else
+				inStack.push(createBytesMap(categoryColumn, valueColumn, isNumericalValue).get(((String)category).getBytes()));
+			}
 		}
 	}

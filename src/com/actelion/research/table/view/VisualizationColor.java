@@ -45,7 +45,7 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 	protected static final byte cDefaultDataColorIndex = 0;
 	protected static final byte cMissingDataColorIndex = 1;
 
-	public static final int cMaxColorCategories = 1024;
+	public static final int cMaxColorCategories = 512;
 
 	private static final Color[] cCategoryColor = {		 new Color( 73,   0, 255),
 		new Color(255,   0,  42), new Color(  0, 173, 102), new Color(255, 255,   0),
@@ -226,23 +226,27 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 				colorList[i] = cCategoryColor[i];
 			}
 		else {
-//			if (colorCount <= 16) { TODO
-				int divisor = ((colorCount & 1) == 0) ? colorCount : colorCount+1;
+			int divisor = ((colorCount & 1) == 0) ? colorCount : colorCount+1;
+			final float[] s = { 1.0f, 0.4f, 0.8f, 1.0f, 1.0f, 0.6f, 0.8f, 1.0f };
+			final float[] b = { 0.8f, 1.0f, 1.0f, 0.6f, 0.8f, 1.0f, 1.0f, 0.4f };
+			for (int i=0; i<colorCount; i++) {
+				float hue = (float)i/(float)divisor;
+				colorList[i] = new Color(Color.HSBtoRGB(hue, s[i&7], b[i&7]));
+				}
+			if (colorCount > 16) {
+				// if we have many colors, we redistrubute such that category neighbour get substancially different colors
+				final int WIDTH = 12;
+				Color[] oldColorList = colorList;
+				colorList = new Color[colorCount];
+				int index = 0;
+				int x = 0;
 				for (int i=0; i<colorCount; i++) {
-					boolean enlighten = ((i & 3) == 1);
-					boolean darken = ((i & 3) == 3);
-					float hue = (float)i/(float)divisor;
-					colorList[i] = new Color(Color.HSBtoRGB(hue,
-													enlighten ? (float)0.3 : (float)1.0,
-													darken ? (float)0.6 : (float)1.0));
+					colorList[index] = oldColorList[i];
+					index += WIDTH;
+					if (index >= colorCount)
+						index = ++x;
 					}
-//				}
-//			else {
-//				int rounds = 1 + colorCount / 12;
-//				int colorsPerRound = (colorCount + rounds - 1) / rounds;
-//
-//
-//				}
+				}
 			}
 		return colorList;
 		}

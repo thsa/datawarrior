@@ -607,6 +607,8 @@ public class JVisualization2D extends JVisualization {
 
 		// bounds of first split (or total unsplit) graph area. This excluded scales, NaN area, border, etc.
 		Rectangle baseGraphRect = getGraphBounds(baseBounds);
+		if (baseGraphRect.width <= 0 || baseGraphRect.height <= 0)
+			return;
 
 		// We may need to enlarge the visible scale range to create space for statistics labels
 		if (hasFreshCoords)
@@ -738,9 +740,6 @@ public class JVisualization2D extends JVisualization {
 			mSplitter = null;
 			paintGraph(baseGraphRect, 0, transparentBG);
 			}
-
-		if (baseGraphRect.width <= 0 || baseGraphRect.height <= 0)
-			return;
 
 		switch (mChartType) {
 		case cChartTypeBars:

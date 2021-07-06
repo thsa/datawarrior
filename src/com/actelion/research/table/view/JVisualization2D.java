@@ -5183,8 +5183,8 @@ public class JVisualization2D extends JVisualization {
 		float rawRadius = mBackgroundColorRadius * (float)Math.sqrt(graphBounds.width * graphBounds.height) / (100 * pixelPerColor);
 
 		// effective radius in background grid space
-		int bgRadiusX = Math.round(rawRadius / visFactorX);
-		int bgRadiusY = Math.round(rawRadius / visFactorY);
+		int bgRadiusX = Math.max(1, Math.round(rawRadius / visFactorX));
+		int bgRadiusY = Math.max(1, Math.round(rawRadius / visFactorY));
 
 		boolean xIsCyclic = mAxisIndex[0] != cColumnUnassigned && (mTableModel.getColumnProperty(mAxisIndex[0],
 				CompoundTableModel.cColumnPropertyCyclicDataMax) != null);
@@ -5249,6 +5249,7 @@ public class JVisualization2D extends JVisualization {
 		float visDataRangeY = dataHighY - dataLowY;
 		int listFlagNo = (considerVisibleRecords || considerAllRecords) ? -1
 				: mTableModel.getListHandler().getListFlagNo(mBackgroundColorConsidered);
+
 		for (int i=0; i<mDataPoints; i++) {
 			if (considerAllRecords
 			 || (considerVisibleRecords && isVisibleExcludeNaN(mPoint[i]))

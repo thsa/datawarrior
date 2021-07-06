@@ -227,7 +227,10 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 		}
 
 	private void validateCustomValues() {
-		validateCustomThresholds();
+		if (validateCustomThresholds()) {
+			if (hasInteractiveView())
+				update(false);
+			}
 
 		float min = Float.NaN;
 		float max = Float.NaN;
@@ -276,7 +279,7 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 			getVisualizationColor(getInteractiveView()).setColorRange(min, max);
 		}
 
-	private void validateCustomThresholds() {
+	private boolean validateCustomThresholds() {
 		float[] thresholds = null;
 		if (mTextFieldThresholds.getText().length() == 0) {
 			mTextFieldThresholds.setBackground(UIManager.getColor("TextArea.background"));
@@ -306,11 +309,8 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 			}
 		mColorThresholds = thresholds;
 		updateColorPanel();
-		if (thresholdChanged) {
-			updateColorPanel();
-			if (hasInteractiveView())
-				update(false);
-			}
+
+		return thresholdChanged;
 		}
 
 	@Override
@@ -357,6 +357,7 @@ public abstract class DETaskAbstractSetColor extends DETaskAbstractSetViewOption
 		mTextFieldMin.setText(configuration.getProperty(PROPERTY_MINIMUM, ""));
 		mTextFieldMax.setText(configuration.getProperty(PROPERTY_MAXIMUM, ""));
 		mTextFieldThresholds.setText(thresholds);
+		validateCustomThresholds();
 		}
 
 	@Override

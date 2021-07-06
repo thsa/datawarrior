@@ -213,7 +213,7 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		return cMissingDataColor.equals(mColorList[cMissingDataColorIndex]);
 		}
 
-	public Color[] createDefaultCategoryColorList(int column) {
+	private Color[] createDefaultCategoryColorList(int column) {
 		int categories = (CompoundTableListHandler.isListColumn(column)) ?
 							2 : mTableModel.getCategoryCount(column);
 		return createDiverseColorList(categories);
@@ -338,22 +338,31 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		}
 
 	public void compoundTableChanged(CompoundTableEvent e) {
-		if (e.getType() == CompoundTableEvent.cChangeColumnData) {
+		if (e.getType() == CompoundTableEvent.cChangeColumnData
+		 || e.getType() == CompoundTableEvent.cAddRows
+		 || e.getType() == CompoundTableEvent.cDeleteRows) {
 			int column = e.getColumn();
 			if (mColorColumn == column) {
-				if (mColorListMode == cColorListModeCategories
-				 && mColorThresholds == null) {
-					if (!(mTableModel.isColumnTypeCategory(mColorColumn) || mColorThresholds != null)
-					 || mTableModel.getCategoryCount(column) > cMaxColorCategories) {
-						initialize();
+				if (mColorListMode == cColorListModeCategories) {
+					if (mColorThresholds != null) {
+						if (!mTableModel.isColumnTypeDouble(mColorColumn)) {
+							mColorThresholds = null;
+							initialize();
+							}
 						}
 					else {
-						if (mCategoryColorMap != null)
-							setColorList(createUpdatedCategoryColorList());
-						else
-							setColorList(createDefaultCategoryColorList(mColorColumn));
+						if (!mTableModel.isColumnTypeCategory(mColorColumn)
+						 || mTableModel.getCategoryCount(column) > cMaxColorCategories) {
+							initialize();
+							}
+						else {
+							if (mCategoryColorMap != null)
+								setColorList(createUpdatedCategoryColorList());
+							else
+								setColorList(createDefaultCategoryColorList(mColorColumn));
 
-						mColorListener.colorChanged(this);
+							mColorListener.colorChanged(this);
+							}
 						}
 					}
 				else {
@@ -361,25 +370,6 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 						initialize();
 					else
 						mColorListener.colorChanged(this);
-					}
-				}
-			}
-		else if (e.getType() == CompoundTableEvent.cAddRows
-			  || e.getType() == CompoundTableEvent.cDeleteRows) {
-			if (mColorColumn != JVisualization.cColumnUnassigned
-			 && !CompoundTableListHandler.isListColumn(mColorColumn)) {
-				if (mColorListMode == VisualizationColor.cColorListModeCategories
-				 && mColorThresholds == null) {
-					if (mTableModel.isColumnTypeCategory(mColorColumn)) {	// if still multiple categories
-						setColorList(createUpdatedCategoryColorList());
-						mColorListener.colorChanged(this);
-						}
-					else {
-						initialize();
-						}
-					}
-				else {
-					mColorListener.colorChanged(this);
 					}
 				}
 			}
@@ -743,7 +733,8 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		setColorList(colorList);
 
 		if (mode == cColorListModeCategories
-		 && !CompoundTableListHandler.isListColumn(column))
+		 && !CompoundTableListHandler.isListColumn(column)
+		 && thresholds == null)
 			createCategoryColorMap(colorList);
 
 		mColorListener.colorChanged(this);

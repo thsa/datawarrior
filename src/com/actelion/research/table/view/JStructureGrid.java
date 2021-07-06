@@ -19,6 +19,7 @@
 package com.actelion.research.table.view;
 
 import com.actelion.research.chem.*;
+import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.dnd.MoleculeDragAdapter;
@@ -1023,7 +1024,10 @@ public class JStructureGrid extends JScrollPane
 			int coordinateColumn = (mStructureColumn == -1) ? -1
 					: mTableModel.getChildColumn(mStructureColumn, CompoundTableModel.cColumnType2DCoordinates, null);
 
-				// create and add not yet available structure images to imagelist
+			int flagColumn = (mStructureColumn == -1) ? -1
+					: mTableModel.getChildColumn(mStructureColumn, CompoundTableConstants.cColumnTypeFlagColors);
+
+			// create and add not yet available structure images to imagelist
 			if (mSelectionChanged || firstNonVisible - firstVisible > mImageList.size()) {
 				StereoMolecule molContainer = new StereoMolecule();
 				int indexAfterLastImage = mIndexOfFirstImage + mImageList.size();
@@ -1223,6 +1227,21 @@ public class JStructureGrid extends JScrollPane
 		
 									depictor.paint(ig);
 									}
+								}
+							}
+
+						if (flagColumn != -1) {
+							byte[] bytes = (byte[])mTableModel.getRecord(i).getData(flagColumn);
+							if (bytes != null) {
+								try {
+									int flags = Integer.parseInt(new String(bytes));
+									if (flags != 0) {
+										Rectangle bounds = new Rectangle(mCellSize.border, mCellSize.border+mCellSize.topHeight, mCellSize.viewWidth+mCellSize.border,
+												mCellSize.structureHeight-mCellSize.topHeight-mCellSize.bottomHeight);
+										CellDecorationPainter.paintFlagTriangle(ig, flags, bounds);
+										}
+									}
+								catch (NumberFormatException nfe) {}
 								}
 							}
 

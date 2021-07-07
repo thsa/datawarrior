@@ -224,6 +224,7 @@ public class JMultiStructureFilterPanel extends JStructureFilterPanel
 	private void populateStructures(String idcodeList) {
 		CompoundCollectionModel<String> model = mStructurePane.getModel();
 		model.removeCompoundCollectionListener(this);
+		model.clear();
 		if (idcodeList != null && idcodeList.length() != 0) {
 			String[] idcode = idcodeList.split("\\t");
 			for (int i = 0; i < idcode.length; i++)

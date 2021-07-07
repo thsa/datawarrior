@@ -201,15 +201,17 @@ public class JRetronFilterPanel extends JFilterPanel implements DescriptorConsta
 			AtomicInteger concurrentIndex = new AtomicInteger();
 			int rowCount = mTableModel.getTotalRowCount();
 
-			if (rowCount < MIN_ROWS_TO_SHOW_PROGRESS) {
-				mTableModel.setRetronExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, mStructureView.getMolecule(), isInverse());
-				}
-			else {
+			if (SwingUtilities.isEventDispatchThread() && isUserChange && rowCount >= MIN_ROWS_TO_SHOW_PROGRESS) {
 				showProgressBar(concurrentIndex, mTableModel.getTotalRowCount(), "Matching retrons...");
+				// In a macro the thread would cause next macro task to start before exclusion is finished.
+				// This is prevented by 'isUserChange' above!!!
 				new Thread(() -> {
 					mTableModel.setRetronExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, mStructureView.getMolecule(), isInverse());
 					hideProgressBar();
 					}).start();
+				}
+			else {
+				mTableModel.setRetronExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, mStructureView.getMolecule(), isInverse());
 				}
 
 			if (isUserChange)

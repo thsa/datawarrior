@@ -196,15 +196,17 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 
 	@Override
 	public void run() {
-		startProgress("Running Macro...", 0, 0);
-
 		try {
 			mMessageMode = DEFAULT_MESSAGE_MODE;
 			mVariableMap = new ConcurrentHashMap<>();
 			for (int currentTask=0; currentTask<mRunningMacro.getTaskCount(); currentTask++) {
 				if (threadMustDie())
 					break;
-	
+
+				// show position in macro as long as individual tasks don't display their own status
+				startProgress("Running Macro...", 0, mRunningMacro.getTaskCount());
+				updateProgress(currentTask);
+
 				AbstractTask cf = mTaskFactory.createTaskFromCode(mFrontFrame, mRunningMacro.getTaskCode(currentTask));
 				if (cf != null) {
 					if (cf instanceof DETaskGotoLabel) {

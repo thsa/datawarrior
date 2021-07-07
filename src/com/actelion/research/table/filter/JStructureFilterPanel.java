@@ -270,15 +270,18 @@ public abstract class JStructureFilterPanel extends JFilterPanel
 				AtomicInteger concurrentIndex = new AtomicInteger();
 				int rowCount = getStructureCount() * mTableModel.getTotalRowCount();
 
-				if (rowCount < MIN_ROWS_TO_SHOW_PROGRESS && !isPotentiallyLengthyQuery()) {
-					mTableModel.setSubStructureExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getStructures(), mReactionPart, isInverse());
-					}
-				else {
+				if (SwingUtilities.isEventDispatchThread() && isUserChange
+				 && (rowCount >= MIN_ROWS_TO_SHOW_PROGRESS || isPotentiallyLengthyQuery())) {
 					showProgressBar(concurrentIndex, rowCount, "Searching structures...");
+					// In a macro the thread would cause next macro task to start before exclusion is finished.
+					// This is prevented by 'isUserChange' above!!!
 					new Thread(() -> {
 						mTableModel.setSubStructureExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getStructures(), mReactionPart, isInverse());
 						hideProgressBar();
 						} ).start();
+					}
+				else {
+					mTableModel.setSubStructureExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getStructures(), mReactionPart, isInverse());
 					}
 				}
 			else {

@@ -435,15 +435,17 @@ public class JReactionFilterPanel extends JFilterPanel implements ChangeListener
 				AtomicInteger concurrentIndex = new AtomicInteger();
 				int rowCount = mTableModel.getTotalRowCount();
 
-				if (rowCount < MIN_ROWS_TO_SHOW_PROGRESS) {
-					mTableModel.setSubReactionExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getReactions(), isInverse());
-					}
-				else {
+				if (SwingUtilities.isEventDispatchThread() && isUserChange && rowCount >= MIN_ROWS_TO_SHOW_PROGRESS) {
 					showProgressBar(concurrentIndex, rowCount, "Searching reactions...");
+					// In a macro the thread would cause next macro task to start before exclusion is finished.
+					// This is prevented by 'isUserChange' above!!!
 					new Thread(() -> {
 						mTableModel.setSubReactionExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getReactions(), isInverse());
 						hideProgressBar();
 						} ).start();
+					}
+				else {
+					mTableModel.setSubReactionExclusion(concurrentIndex, mExclusionFlag, mColumnIndex, getReactions(), isInverse());
 					}
 				}
 			else {

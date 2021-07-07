@@ -543,7 +543,7 @@ public class JRangeFilterPanel extends JFilterPanel
 			mTableModel.setDoubleExclusion(mColumnIndex, mExclusionFlag, low, high, isInverse(), isAdjusting);
 
 			if (mIsUserChange != oldUserChange)
-				System.out.println("ERROR: need to repaiir user change flag in JRangeFilterPanel!");
+				System.out.println("ERROR: need to repair user change flag in JRangeFilterPanel!");
 
 			if (isUserChange)
 				fireFilterChanged(FilterEvent.FILTER_UPDATED, isAdjusting);

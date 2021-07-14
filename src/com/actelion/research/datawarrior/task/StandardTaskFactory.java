@@ -162,6 +162,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskExitProgram.TASK_NAME) ? new DETaskExitProgram(frame, application)
 			 : codeMatches(taskCode, DETaskExportHitlist.TASK_NAME) ? new DETaskExportHitlist(frame, false)
 			 : codeMatches(taskCode, DETaskExportMacro.TASK_NAME) ? new DETaskExportMacro(frame, null)
+			 : codeMatches(taskCode, DETaskExtendRowSelection.TASK_NAME) ? new DETaskExtendRowSelection(frame, -1)
 			 : codeMatches(taskCode, DETaskExtractCatalysts.TASK_NAME) ? new DETaskExtractCatalysts(frame)
 			 : codeMatches(taskCode, DETaskExtractProducts.TASK_NAME) ? new DETaskExtractProducts(frame)
 			 : codeMatches(taskCode, DETaskExtractReactants.TASK_NAME) ? new DETaskExtractReactants(frame)
@@ -290,7 +291,7 @@ public class StandardTaskFactory {
 
 	public TreeSet<TaskSpecification> getTaskDictionary(DEFrame frame) {
 		if (mTaskDictionary == null) {
-			mTaskDictionary = new TreeSet<TaskSpecification>();
+			mTaskDictionary = new TreeSet<>();
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAdd2DCoordinates.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAdd3DCoordinates.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskAddBinsFromNumbers.TASK_NAME));
@@ -375,6 +376,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskExitProgram.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskExportHitlist.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskExportMacro.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_EDIT, DETaskExtendRowSelection.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskExtractCatalysts.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskExtractProducts.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskExtractReactants.TASK_NAME));

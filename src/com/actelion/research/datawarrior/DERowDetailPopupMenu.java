@@ -24,6 +24,7 @@ import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.datawarrior.chem.InchiCreator;
+import com.actelion.research.datawarrior.task.DETaskExtendRowSelection;
 import com.actelion.research.datawarrior.task.chem.DETaskSortReactionsBySimilarity;
 import com.actelion.research.datawarrior.task.chem.DETaskSortStructuresBySimilarity;
 import com.actelion.research.datawarrior.task.table.DETaskCopyTableCells;
@@ -35,9 +36,7 @@ import com.actelion.research.table.filter.JMultiStructureFilterPanel;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.CompoundTableView;
-import com.actelion.research.table.view.JCardView;
-import com.actelion.research.table.view.JStructureGrid;
+import com.actelion.research.table.view.*;
 import com.actelion.research.table.view.card.CardElement;
 import com.actelion.research.table.view.card.JCardPane;
 import com.actelion.research.table.view.card.positioning.CardNumericalShaper1D;
@@ -98,6 +97,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 	private static final String PASTE_INTO = "pasteInto" + DELIMITER;
 	protected static final String EDIT_VALUE = "edit" + DELIMITER;
 	private static final String SORT = "sort" + DELIMITER;
+	private static final String EXTEND_SELECTION = "extendSelection" + DELIMITER;
 	private static final String ADD_TO_LIST = "add" + DELIMITER;
 	private static final String REMOVE_FROM_LIST = "remove" + DELIMITER;
 	private static final String PATENT_SEARCH = "patentSearch" + DELIMITER;
@@ -314,6 +314,16 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 					}
 				addSeparator();
 				add(sortMenu);
+				}
+
+			if (source instanceof VisualizationPanel && record.isSelected()) {
+				JVisualization visualization = ((VisualizationPanel)source).getVisualization();
+				int connectionColumn = visualization.getConnectionColumn();
+				if (connectionColumn >= 0
+				 && mTableModel.getColumnProperty(connectionColumn, CompoundTableConstants.cColumnPropertyReferencedColumn) != null) {
+					addSeparator();
+					addMenuItem("Extend Selection To All Connected", EXTEND_SELECTION + mTableModel.getColumnTitleNoAlias(connectionColumn));
+					}
 				}
 
 			CompoundTableListHandler hh = mTableModel.getListHandler();
@@ -1016,6 +1026,9 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 			}
 		} else if (actionCommand.startsWith(EDIT_VALUE)) {
 			mMainPane.getTable().editCell(mRecord, mTableModel.findColumn(getCommandColumn(actionCommand)));
+		} else if (actionCommand.startsWith(EXTEND_SELECTION)) {
+			int connectionColumn = mTableModel.findColumn(getCommandColumn(actionCommand));
+			new DETaskExtendRowSelection(getParentFrame(), connectionColumn).defineAndRun();
 		} else if (actionCommand.startsWith(SORT)) {
 			int descriptorColumn = mTableModel.findColumn(getCommandColumn(actionCommand));
 			String reactionPart = getCommandReactionPart(actionCommand);

@@ -126,7 +126,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuFileSaveSDF,jMenuFileSaveTemplate,jMenuFileSaveVisibleAs,jMenuFilePageFormat,
 					  jMenuFilePreview,jMenuFilePrint, jMenuFileQuit,jMenuEditCut,jMenuEditCopy,jMenuEditPaste,
 					  jMenuEditPasteWithHeader,jMenuEditPasteWithoutHeader,jMenuEditDelete,jMenuEditPasteAppend,
-					  jMenuEditSelectAll,jMenuEditSelectRowsRandomly,jMenuEditInvertSelection,jMenuEditSearchAndReplace,jMenuEditDisableFilters,
+					  jMenuEditSelectAll,jMenuEditSelectRowsRandomly,jMenuEditExtendSelection,jMenuEditInvertSelection,jMenuEditSearchAndReplace,jMenuEditDisableFilters,
 					  jMenuEditEnableFilters,jMenuEditResetFilters,jMenuEditRemoveFilters,
 					  jMenuEditNewFilter,jMenuDataRemoveColumns,jMenuDataRemoveSelected,jMenuDataRemoveInvisible,
 					  jMenuDataRemoveDuplicate,jMenuDataRemoveUnique,jMenuDataMergeColumns,jMenuDataMergeDuplicate,jMenuDataSplitRows,
@@ -530,6 +530,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuEditDelete = new JMenuItem();
 		jMenuEditSelectAll = new JMenuItem();
 		jMenuEditSelectRowsRandomly = new JMenuItem();
+		jMenuEditExtendSelection = new JMenuItem();
 		jMenuEditInvertSelection = new JMenuItem();
 		jMenuEditSearchAndReplace = new JMenuItem();
 		jMenuEditDisableFilters = new JMenuItem();
@@ -561,6 +562,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuEditSelectAll.addActionListener(this);
 		jMenuEditSelectRowsRandomly.setText("Select Rows Randomly...");
 		jMenuEditSelectRowsRandomly.addActionListener(this);
+		jMenuEditExtendSelection.setText("Extend Row Selection...");
+		jMenuEditExtendSelection.addActionListener(this);
 		jMenuEditInvertSelection.setText("Invert Row Selection");
 		jMenuEditInvertSelection.addActionListener(this);
 		jMenuEditSearchAndReplace.setText("Find And Replace...");
@@ -591,6 +594,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
  		jMenuEdit.addSeparator();
 		jMenuEdit.add(jMenuEditSelectAll);
 		jMenuEdit.add(jMenuEditSelectRowsRandomly);
+		jMenuEdit.add(jMenuEditExtendSelection);
 		jMenuEdit.add(jMenuEditInvertSelection);
  		jMenuEdit.addSeparator();
  		jMenuEdit.add(jMenuEditSearchAndReplace);
@@ -1488,6 +1492,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskSelectAll(mParentFrame).defineAndRun();
 			else if (source == jMenuEditSelectRowsRandomly)
 				new DETaskSelectRowsRandomly(mParentFrame, mTableModel).defineAndRun();
+			else if (source == jMenuEditExtendSelection)
+				new DETaskExtendRowSelection(mParentFrame, -1, -1).defineAndRun();
 			else if (source == jMenuEditInvertSelection)
 				new DETaskInvertSelection(mParentFrame).defineAndRun();
 			else if (source == jMenuEditSearchAndReplace)

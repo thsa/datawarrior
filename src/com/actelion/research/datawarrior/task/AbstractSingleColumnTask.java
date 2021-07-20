@@ -19,6 +19,7 @@
 package com.actelion.research.datawarrior.task;
 
 import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
@@ -86,8 +87,9 @@ public abstract class AbstractSingleColumnTask extends ConfigurableTask implemen
 
 	@Override
 	public JPanel createDialogContent() {
-		double[][] size = { {8, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, TableLayout.FILL, 8},
-				{8, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 8} };
+		int gap = HiDPIHelper.scale(8);
+		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL, gap},
+				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 

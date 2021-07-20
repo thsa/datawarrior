@@ -27,6 +27,7 @@ import com.actelion.research.chem.name.StructureNameResolver;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.AbstractSingleColumnTask;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
 import uk.ac.cam.ch.wwmm.opsin.NameToStructure;
 
@@ -66,8 +67,9 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 		if (DataWarrior.getApplication().isIdorsia())
 			return null;    // No need to ask, because we use an Idorsia internal service anyway
 
+		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {TableLayout.PREFERRED},
-							{16, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 8} };
+							{gap*2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 

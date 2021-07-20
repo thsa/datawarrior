@@ -162,7 +162,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskExitProgram.TASK_NAME) ? new DETaskExitProgram(frame, application)
 			 : codeMatches(taskCode, DETaskExportHitlist.TASK_NAME) ? new DETaskExportHitlist(frame, false)
 			 : codeMatches(taskCode, DETaskExportMacro.TASK_NAME) ? new DETaskExportMacro(frame, null)
-			 : codeMatches(taskCode, DETaskExtendRowSelection.TASK_NAME) ? new DETaskExtendRowSelection(frame, -1)
+			 : codeMatches(taskCode, DETaskExtendRowSelection.TASK_NAME) ? new DETaskExtendRowSelection(frame, -1, -1)
 			 : codeMatches(taskCode, DETaskExtractCatalysts.TASK_NAME) ? new DETaskExtractCatalysts(frame)
 			 : codeMatches(taskCode, DETaskExtractProducts.TASK_NAME) ? new DETaskExtractProducts(frame)
 			 : codeMatches(taskCode, DETaskExtractReactants.TASK_NAME) ? new DETaskExtractReactants(frame)

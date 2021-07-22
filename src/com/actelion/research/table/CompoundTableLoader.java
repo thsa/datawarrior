@@ -23,6 +23,7 @@ import com.actelion.research.calc.ProgressListener;
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.DescriptorHandler;
+import com.actelion.research.chem.io.CompoundFileHelper;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.io.RDFileParser;
 import com.actelion.research.chem.io.SDFileParser;
@@ -46,6 +47,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.zip.GZIPInputStream;
 
 public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	public static final String DATASET_COLUMN_TITLE = "Dataset Name";
@@ -241,7 +243,12 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	public void readFile(File file, RuntimeProperties properties, int dataType, int action) {
 		mFile = file;
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(mFile), "UTF-8"));
+			InputStream is = new FileInputStream(mFile);
+			if (dataType == CompoundFileHelper.cFileTypeSDGZ) {
+				is = new GZIPInputStream(is);
+				dataType = CompoundFileHelper.cFileTypeSD;
+				}
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 			BOMSkipper.skip(reader);
 			readStream(reader, properties, dataType, action, mFile.getName());
 			}
@@ -253,6 +260,11 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		catch (UnsupportedEncodingException e) {
 			mTableModel.unlock();
 			showMessageOnEDT("Unsupported encoding.", "File Format Error", JOptionPane.WARNING_MESSAGE);
+			return;
+			}
+		catch (IOException e) {
+			mTableModel.unlock();
+			showMessageOnEDT("IO-Exception.", "Error", JOptionPane.WARNING_MESSAGE);
 			return;
 			}
 		}
@@ -1578,6 +1590,24 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		return (s == null || s.length() == 0) ? null : s.getBytes();
 		}
 
+	private boolean initializeReaderFromFile() {
+		boolean isGZipped = CompoundFileHelper.getFileType(mFile.getName()) == CompoundFileHelper.cFileTypeSDGZ;
+		try {
+			mDataReader.close();
+
+			InputStream is = new FileInputStream(mFile);
+			if (isGZipped)
+				is = new GZIPInputStream(is);
+
+			mDataReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+			BOMSkipper.skip(mDataReader);
+			return true;
+			}
+		catch (IOException e) {
+			return false;
+			}
+		}
+
 	private boolean readSDFile() {
 		mProgressController.startProgress("Examining Records...", 0, 0);
 
@@ -1676,7 +1706,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	 * @return true if no V3000 molfiles found, not set chiral flag found, but molecules with explicit stereo centers found
 	 */
 	private boolean processSDFile(String[] fieldNames, int structureIDColumn, ArrayList<Object[]> fieldDataList, boolean assumeChiralTrue) {
-		SDFileParser sdParser = new SDFileParser(mFile, fieldNames);
+		initializeReaderFromFile();
+		SDFileParser sdParser = new SDFileParser(mDataReader, fieldNames);
 		MolfileParser mfParser = new MolfileParser();
 		mfParser.setAssumeChiralTrue(assumeChiralTrue);
 		StereoMolecule mol = new StereoMolecule();

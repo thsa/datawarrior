@@ -42,14 +42,12 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
     private JCheckBox mCheckBoxAssumeChiralTrue;
 
     public DETaskOpenFile(DataWarrior application) {
-		super(application, "Open DataWarrior-, SD- or Text-File",
-				FileHelper.cFileTypeDataWarriorCompatibleData);
+		super(application, "Open DataWarrior-, SD-, gzipped SD- or Text-File", FileHelper.cFileTypeDataWarriorCompatibleData);
 		mApplication = application;
 		}
 
     public DETaskOpenFile(DataWarrior application, String filePath) {
-		super(application, "Open DataWarrior-, SD- or Text-File",
-				FileHelper.cFileTypeDataWarriorCompatibleData, filePath);
+		super(application, "Open DataWarrior-, SD-, gzipped SD-, or Text-File", FileHelper.cFileTypeDataWarriorCompatibleData, filePath);
 		mApplication = application;
 		}
 

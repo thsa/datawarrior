@@ -97,7 +97,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener,DrawAreaLis
 			{ "Pyrazole", "eMPBchLJmOhbLpp_{H dedB@@sirISQPluL`FtMzBbLMCA?n@t`!gKT@ADi\\Yi@`#S\\@ q@Hn@@ saRr`#!R@Jq?kJNt_@ !R_`CW?Gx@uwwW?Gx?_`CW_Wx?hxKB !RGqk~_uMgGvVczkp##" },
 			{ "Reductive amination", "gCh@AGj@vb}ADXhXMjSO?UD gCa@@dsPFtTXhXO}b@!gCh@@eMPD#sp@L SCD sqS`#!R?`BwwXc]h?q| !R?g~w?Xc}h~Q\\ !R@Nq?{@CcH~jB##" },
 			{ "Schotten-Baumann", "gGX@@eRuJAu@~`bIbL@QdxA@ypB@Q\\xA@Hw@\u007F}Lqh gC``@dfZ@pb@!gJY@DDfVhB#sHE@@ soP` soRaP#!R_K]?_kspWU}cIzOBO@ !R_g~w__A}hpk\\ !R_g|woPb}Mwrcnmp##" },
-			{ "Sonogashira", "eM@H~CB` eF@HpXtfIV[b`!gC`@Diz@`#Sx` sIP suXH#!R_?x@?jMl_@ !R@ANcdkp !R_?x@?g?~hvi|##" },
+			{ "Sonogashira", "eM@H~CB` eF@HpXtfIV[b`!gC`@Diz@`#Qv qH qra#!ROwx@_cLb_@ !R@FLsbkp !ROwx@_c}~L{i|##" },
 			{ "Spiro-chromanone", "gOq@@drm[UTA`UcXqhp\\@ deTD@@YIfyqehH@@LDq`!f`i@`@@\\RYeeo]gIF]yhJBbjH@LX^Q`x@#kItMm]C} KVND~h@wMP kUE`eyPtIYqMmi]C}#!Rm?w~_{\\Bm?vw_[\\Bhus\\ !R?g~H?[]}?g~H@k]}bOvH?X`Bh~Rl !R?g~H_[]}?g~H@oy?mwvH_Xa}?g~w@h`Bmwvw_[\\Bhzil##" },
 			{ "Stille", "eF@Hp]QQkHcDk@ eF@HpXtfIV[b`!eF@HpP#QP a` Qd#!R_zNc`kp !R_vrcC@H !R_~pcj`H##" },
 			{ "Sulfonamide", "gJPdEaDPHRZe`MhXphp\\G~p` gGX@@eRuJAu@~`bIbL@QdxA@ypB@Q\\xA@Hw@\u007F}Lqh!gJXhMD@cIHUhB#sBEl@ sHM@@ sa[KP#!R_g}~_?A}mwvcbip !R|Grw_Gy?|Ouw?ZOBo@ !R_`BH_]]}u?rc^op##" },

@@ -152,7 +152,7 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 
 				mol.clear();
 				try {
-					new SmilesParser().parse(mol, smiles);
+					new SmilesParser(SmilesParser.SMARTS_MODE_GUESS, false).parse(mol, smiles);
 					}
 				catch (Exception e) {
 					mol.clear();

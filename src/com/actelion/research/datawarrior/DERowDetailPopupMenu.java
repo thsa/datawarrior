@@ -915,7 +915,6 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 		}
 
 	public void actionPerformed(ActionEvent e) {
-
 		String actionCommand = e.getActionCommand();
 		if (actionCommand.startsWith("TEST")) {
 			test(mTableModel.findColumn(getCommandColumn(actionCommand)));
@@ -970,10 +969,12 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 			if (reaction != null)
 				new ClipboardHandler().copyReaction(reaction);
 		} else if (actionCommand.startsWith(PASTE_STRUCTURE)) {
-			StereoMolecule mol = new ClipboardHandler().pasteMolecule(false);
+			int structureColumn = mTableModel.findColumn(getCommandColumn(actionCommand));
+			String fragmentProperty = mTableModel.getColumnProperty(structureColumn, CompoundTableConstants.cColumnPropertyIsFragment);
+			int smartsMode = "true".equals(fragmentProperty) ? SmilesParser.SMARTS_MODE_IS_SMARTS
+						   : "false".equals(fragmentProperty) ? SmilesParser.SMARTS_MODE_IS_SMILES : SmilesParser.SMARTS_MODE_GUESS;
+			StereoMolecule mol = new ClipboardHandler().pasteMolecule(false, smartsMode);
 			if (mol != null) {
-				int structureColumn = mTableModel.findColumn(getCommandColumn(actionCommand));
-
 				boolean is3D = mol.is3D();
 				int coordsColumn = mTableModel.getChildColumn(structureColumn, is3D ? CompoundTableConstants.cColumnType3DCoordinates : CompoundTableConstants.cColumnType2DCoordinates);
 

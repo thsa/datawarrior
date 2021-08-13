@@ -852,6 +852,32 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 						html.append("<br>"+monoOrBi+"-directionally references '" + refColumnTitle + "'.");
 						}
 
+					if (model.isColumnTypeStructure(column)) {
+						StringBuilder sb = new StringBuilder();
+						for (int i=0; i<model.getTotalColumnCount(); i++) {
+							if (model.isDescriptorColumn(i) && model.getParentColumn(i) == column) {
+								if (sb.length() != 0)
+									sb.append(", ");
+								sb.append(model.getColumnSpecialType(i));
+								}
+							}
+						if (sb.length() != 0)
+							html.append("<br>Attached descriptor columns: "+sb);
+						int coordsColumn = model.getChildColumn(column, CompoundTableConstants.cColumnType2DCoordinates);
+						if (coordsColumn != -1)
+							html.append("<br>Column has an attached 2D-atom-coordinate column.");
+
+						int count = 0;
+						for (int i=0; i<model.getTotalColumnCount(); i++)
+							if (CompoundTableConstants.cColumnType3DCoordinates.equals(model.getColumnSpecialType(i)) && model.getParentColumn(i) == column)
+								count++;
+						if (count != 0)
+							html.append("<br>Column has "+count+" attached 3D-atom-coordinate columns.");
+
+						if ("true".equals(model.getColumnProperty(column, CompoundTableConstants.cColumnPropertyIsFragment)))
+							html.append("<br>Column contains substructure fragments.");
+						}
+
 					html.append("</html>");
 					return html.toString();
 					}

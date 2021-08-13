@@ -288,8 +288,12 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 		// Try, resolving names, if a clipcolumn falls onto a structure column
 		for (int clipColumn=0; clipColumn<clipColumnCount-newColumnCount; clipColumn++) {
 			int destColumn = mTable.convertTotalColumnIndexFromView(firstVisColumn + clipColumn);
-			if (CompoundTableConstants.cColumnTypeIDCode.equals(getTableModel().getColumnSpecialType(destColumn)))
-				resolveStructureNamesToIDCodes(clipColumn);
+			if (CompoundTableConstants.cColumnTypeIDCode.equals(getTableModel().getColumnSpecialType(destColumn))) {
+				String fragmentProperty = getTableModel().getColumnProperty(destColumn, CompoundTableConstants.cColumnPropertyIsFragment);
+				int smartsMode = "true".equals(fragmentProperty) ? SmilesParser.SMARTS_MODE_IS_SMARTS
+							   : "false".equals(fragmentProperty) ? SmilesParser.SMARTS_MODE_IS_SMILES : SmilesParser.SMARTS_MODE_GUESS;
+				resolveStructureNamesToIDCodes(clipColumn, smartsMode);
+				}
 			}
 
 		for (int clipColumn=0; clipColumn<clipColumnCount-newColumnCount; clipColumn++)
@@ -335,7 +339,7 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 			}
 		}
 
-	private void resolveStructureNamesToIDCodes(int clipColumn) {
+	private void resolveStructureNamesToIDCodes(int clipColumn, int smartsMode) {
 		int clipRowCount = mClipboardContent.length;
 		boolean[] needsRemoteResolution = new boolean[clipRowCount];
 		SortedStringList unresolvedNameList = null;
@@ -344,7 +348,7 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 			if (value.length() != 0) {
 				StereoMolecule mol = new StereoMolecule();
 				try {
-					new SmilesParser().parse(mol, value);
+					new SmilesParser(smartsMode, false).parse(mol, value);
 					}
 				catch (Exception e) {
 					mol = null;

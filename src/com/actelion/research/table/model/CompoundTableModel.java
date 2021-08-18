@@ -875,15 +875,15 @@ public class CompoundTableModel extends AbstractTableModel
 	private String decorateWithSummaryMode(String name, int column) {
 		switch (mColumnInfo[column].summaryMode) {
 		case cSummaryModeMean:
-			return "mean of "+name;
+			return name + " [mean]";
 		case cSummaryModeMedian:
-			return "median of "+name;
+			return name + " [median]";
 		case cSummaryModeMinimum:
-			return "min of "+name;
+			return name + " [min]";
 		case cSummaryModeMaximum:
-			return "max of "+name;
+			return name + " [max]";
 		case cSummaryModeSum:
-			return "sum of "+name;
+			return name + " [sum]";
 		default:
 			return name;
 			}

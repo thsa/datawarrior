@@ -224,7 +224,7 @@ public abstract class VisualizationPanel extends JPanel
 			setupColorChoice(mComboBoxColumn[axis], JVisualization.cColumnUnassigned);
 
 			// this causes ItemEvents to be sent
-			setComboBox(axis, mQualifyingColumns);
+			setComboBox(axis, 0);
 			}
 		}
 
@@ -605,9 +605,9 @@ public abstract class VisualizationPanel extends JPanel
 		return mQualifyingColumn[mComboBoxColumn[axis].getSelectedIndex()];
 		}
 
-	public int getQualifyingColumn(int index) {
-		return mQualifyingColumn[index];
-		}
+//	public int getQualifyingColumn(int index) {
+//		return mQualifyingColumn[index];
+//		}
 
 	private int getComboBoxSelectedIndex(int i) {
 		return mComboBoxColumn[i].getSelectedIndex();
@@ -639,7 +639,7 @@ public abstract class VisualizationPanel extends JPanel
 				 && (e.getType() != CompoundTableEvent.cChangeColumnData
 				  || column == e.getColumn())) {
 					boolean found = false;
-					for (int j = 0; j<=mQualifyingColumns; j++) {
+					for (int j=1; j<mQualifyingColumns; j++) {
 						if (selected[axis] == mQualifyingColumn[j]) {
 							mDisableEvents = true;
 							setComboBox(axis, j);
@@ -661,7 +661,7 @@ public abstract class VisualizationPanel extends JPanel
 						}
 					if (!found) {
 						mDisableEvents = true;
-						setComboBox(axis, mQualifyingColumns);
+						setComboBox(axis, 0);
 						mDisableEvents = false;
 						for (VisualizationPanel vp:mSynchronizationChildList)
 							if (axis < vp.getDimensionCount())
@@ -700,7 +700,7 @@ public abstract class VisualizationPanel extends JPanel
 			}
 		else if (e.getType() == CompoundTableEvent.cChangeColumnName) {
 			int column = e.getColumn();
-			for (int i = 0; i<mQualifyingColumns; i++) {
+			for (int i=1; i<mQualifyingColumns; i++) {
 				if (mQualifyingColumn[i] == column) {
 					for (int axis=0; axis<mDimensions; axis++) {
 						((ComboBoxColorItem)mComboBoxColumn[axis].getItemAt(i)).setText(mVisualization.getAxisTitle(column));
@@ -761,7 +761,7 @@ public abstract class VisualizationPanel extends JPanel
 
 	public String getAxisColumnName(int axis) {
 		int index = mComboBoxColumn[axis].getSelectedIndex();
-		if (index == mQualifyingColumns)
+		if (index == 0)
 			return UNASSIGNED_TEXT;
 
 		return mTableModel.getColumnTitleNoAlias(mQualifyingColumn[index]);
@@ -779,11 +779,11 @@ public abstract class VisualizationPanel extends JPanel
 	 * @return true if the column assigned to this axis was changed
 	 */
 	public boolean setAxisColumnName(int axis, String name) {
-		int index = mQualifyingColumns;		// default: unassigned
+		int index = 0;		// default: unassigned
 		if (!name.equals(UNASSIGNED_TEXT)) {
 			int column = mTableModel.findColumn(name);
 			if (column != -1) {
-				for (int i = 0; i<mQualifyingColumns; i++) {
+				for (int i=1; i<mQualifyingColumns; i++) {
 					if (column == mQualifyingColumn[i]) {
 						index = i;
 						break;
@@ -824,7 +824,7 @@ public abstract class VisualizationPanel extends JPanel
 			int column = mQualifyingColumn[mComboBoxColumn[axis].getSelectedIndex()];
 			if (column != JVisualization.cColumnUnassigned) {
 				if (!mTableModel.isColumnDataComplete(column)) {
-					setComboBox(axis, mQualifyingColumns);
+					setComboBox(axis, 0);
 					initializePruningBar(axis, JVisualization.cColumnUnassigned);
 					}
 				else {
@@ -836,12 +836,12 @@ public abstract class VisualizationPanel extends JPanel
 
 	public void setDefaultColumns() {
 		int count = 0;
-		for (int i = 0; i<mQualifyingColumns; i++)
+		for (int i=1; i<mQualifyingColumns; i++)
 			if (mTableModel.isColumnTypeDouble(mQualifyingColumn[i]))
 				count++;
 		NumericalCompoundTableColumn[] numericalColumn = new NumericalCompoundTableColumn[count];
 		count = 0;
-		for (int i = 0; i<mQualifyingColumns; i++)
+		for (int i=1; i<mQualifyingColumns; i++)
 			if (mTableModel.isColumnTypeDouble(mQualifyingColumn[i]))
 				numericalColumn[count++] = new NumericalCompoundTableColumn(mTableModel ,mQualifyingColumn[i]);
 
@@ -883,11 +883,11 @@ public abstract class VisualizationPanel extends JPanel
 				}
 			}
 
-		int nonCorrelationIndex = 0;
+		int nonCorrelationIndex = 1;
 		boolean[] inUse = new boolean[mQualifyingColumns];
 		for (int axis=0; axis<mDimensions; axis++) {
 			if (index[axis] != -1) {
-				for (int j=0; j<mQualifyingColumns; j++) {
+				for (int j=1; j<mQualifyingColumns; j++) {
 					if (numericalColumn[index[axis]].getColumn() == mQualifyingColumn[j]) {
 						setComboBox(axis, j);
 						inUse[j] = true;
@@ -902,19 +902,16 @@ public abstract class VisualizationPanel extends JPanel
 					 || !mTableModel.hasNumericalVariance(mQualifyingColumn[nonCorrelationIndex])))
 					nonCorrelationIndex++;
 
-				setComboBox(axis, (nonCorrelationIndex<mQualifyingColumns) ? nonCorrelationIndex : mQualifyingColumns);
+				setComboBox(axis, (nonCorrelationIndex<mQualifyingColumns) ? nonCorrelationIndex : 0);
 				}
 			}
 		}
 
 	private void setupQualifyingColumns() {
-		Comparator<Integer> comparator = new Comparator<Integer>() {
-			@Override
-			public int compare(Integer o1, Integer o2) {
-				String title1 = mTableModel.getColumnTitle(o1);
-				String title2 = mTableModel.getColumnTitle(o2);
-				return title1.toLowerCase(Locale.ROOT).compareTo(title2.toLowerCase(Locale.ROOT));
-				}
+		Comparator<Integer> comparator = (o1, o2) -> {
+			String title1 = mTableModel.getColumnTitle(o1);
+			String title2 = mTableModel.getColumnTitle(o2);
+			return title1.toLowerCase(Locale.ROOT).compareTo(title2.toLowerCase(Locale.ROOT));
 			};
 
 		ArrayList<Integer> columnList = new ArrayList<>();
@@ -923,8 +920,8 @@ public abstract class VisualizationPanel extends JPanel
 				columnList.add(i);
 
 		mQualifyingColumn = new int[mTableModel.getTotalColumnCount()+1];
-
-		mQualifyingColumns = 0;
+		mQualifyingColumn[0] = JVisualization.cColumnUnassigned;
+		mQualifyingColumns = 1;
 		Integer[] columns = columnList.toArray(new Integer[0]);
 		Arrays.sort(columns, comparator);
 		for (Integer column:columns)
@@ -960,7 +957,8 @@ public abstract class VisualizationPanel extends JPanel
 
 		Color defaultColor = UIManager.getColor("ComboBox.foreground");
 		choice.removeAllItems();
-		for (int j=0; j<mQualifyingColumns; j++) {
+		choice.addItem(new ComboBoxColorItem(UNASSIGNED_TEXT, defaultColor));
+		for (int j=1; j<mQualifyingColumns; j++) {
 			Color color = (mTableModel.isColumnTypeDouble(mQualifyingColumn[j])
 						|| mTableModel.isDescriptorColumn(mQualifyingColumn[j]))
 					   && !mTableModel.isColumnDataComplete(mQualifyingColumn[j]) ? Color.RED
@@ -968,9 +966,8 @@ public abstract class VisualizationPanel extends JPanel
 					(LookAndFeelHelper.isDarkLookAndFeel() ? Color.CYAN : Color.BLUE) : defaultColor;
 			choice.addItem(new ComboBoxColorItem(mVisualization.getAxisTitle(mQualifyingColumn[j]), color));
 			}
-		choice.addItem(new ComboBoxColorItem(UNASSIGNED_TEXT, defaultColor));
 
-		for (int j=0; j<=mQualifyingColumns; j++) {
+		for (int j=1; j<mQualifyingColumns; j++) {
 			if (column == mQualifyingColumn[j]) {
 				choice.setSelectedIndex(j);
 				break;

@@ -18,24 +18,22 @@
 
 package com.actelion.research.datawarrior.task.data;
 
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETable;
+import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.table.model.CompoundRecord;
+import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
-import java.awt.Dimension;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Properties;
-
-import javax.swing.*;
-
-import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.task.ConfigurableTask;
-import com.actelion.research.table.model.CompoundRecord;
-import com.actelion.research.table.model.CompoundTableModel;
 
 public class DETaskDeleteDuplicateRows extends ConfigurableTask implements ActionListener {
 	public static final int MODE_MERGE_EQUIVALENT = 0;
@@ -46,15 +44,16 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 
 	private static final String PROPERTY_COLUMN_LIST = "columnList";
 	private static final String PROPERTY_CASE_SENSITIVE = "caseSensitive";
+	private static final String PROPERTY_ADD_COUNT = "addCount";
 	private static final String CODE_ALL_COLUMNS = "<all>";
+	private static final String COLUMN_NAME_EQUIVALENT_COUNT = "Equivalent Row Count";
 
 	private DETable				mTable;
 	private CompoundTableModel	mTableModel;
 	private JList				mListColumns;
 	private JTextArea			mTextArea;
 	private int					mMode;
-	private JCheckBox			mCheckBoxMergeAll;
-	private JCheckBox			mCheckBoxCaseSensitive;
+	private JCheckBox			mCheckBoxMergeAll,mCheckBoxCaseSensitive,mCheckBoxAddCount;
 
 	public DETaskDeleteDuplicateRows(DEFrame owner, int mode) {
 		super(owner, false);
@@ -66,9 +65,9 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 	@Override
 	public JPanel createDialogContent() {
 		int gap = HiDPIHelper.scale(8);
-		double[] sizeYmerge = {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap};
-		double[] sizeYremove = {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap};
-		double[][] size = { {gap, TableLayout.PREFERRED, gap}, mMode == MODE_MERGE_EQUIVALENT ? sizeYmerge : sizeYremove };
+		double[][] size = { {gap, TableLayout.PREFERRED, gap},
+							{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
+							 gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
@@ -98,10 +97,16 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 		mCheckBoxCaseSensitive = new JCheckBox("Case sensitive");
 		content.add(mCheckBoxCaseSensitive, "1,7");
 
+		if (mMode == MODE_MERGE_EQUIVALENT || mMode == MODE_REMOVE_DUPLICATE) {
+			mCheckBoxAddCount = new JCheckBox("Add new column \""+COLUMN_NAME_EQUIVALENT_COUNT+"\".");
+			mCheckBoxAddCount.addActionListener(this);
+			content.add(mCheckBoxAddCount, "1,9");
+			}
+
 		if (mMode == MODE_MERGE_EQUIVALENT) {
 			mCheckBoxMergeAll = new JCheckBox("Merge all rows");
 			mCheckBoxMergeAll.addActionListener(this);
-			content.add(mCheckBoxMergeAll, "1,9");
+			content.add(mCheckBoxMergeAll, "1,11");
 			}
 
 		return content;
@@ -151,6 +156,8 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 		if (columnNames != null && columnNames.length() != 0)
 			p.setProperty(PROPERTY_COLUMN_LIST, columnNames);
 		p.setProperty(PROPERTY_CASE_SENSITIVE, mCheckBoxCaseSensitive.isSelected() ? "true" : "false");
+		if (mCheckBoxAddCount != null)
+			p.setProperty(PROPERTY_ADD_COUNT, mCheckBoxAddCount.isSelected() ? "true" : "false");
 		return p;
 		}
 
@@ -165,6 +172,8 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 			mTextArea.setText(columnNames.replace('\t', '\n'));
 
 		mCheckBoxCaseSensitive.setSelected(!"false".equals(configuration.getProperty(PROPERTY_CASE_SENSITIVE)));
+		if (mCheckBoxAddCount != null)
+			mCheckBoxAddCount.setSelected("true".equals(configuration.getProperty(PROPERTY_ADD_COUNT)));
 
 		enableItems();
 		}
@@ -177,6 +186,7 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 			mTextArea.setText("");
 
 		mCheckBoxCaseSensitive.setSelected(true);
+		mCheckBoxAddCount.setSelected(false);
 		}
 
 	@Override
@@ -227,6 +237,14 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 		String columnNames = configuration.getProperty(PROPERTY_COLUMN_LIST);
 		int[] columnList = new int[0];
 
+		int countColumn = -1;
+		if ("true".equals(configuration.getProperty(PROPERTY_ADD_COUNT))) {
+			String[] columnName = new String[1];
+			columnName[0] = COLUMN_NAME_EQUIVALENT_COUNT;
+			countColumn = mTableModel.addNewColumns(columnName);
+			mTableModel.finalizeNewColumns(countColumn, this);
+			}
+
 		boolean[] columnMask = new boolean[mTableModel.getTotalColumnCount()];
 		boolean[] columnError = new boolean[mTableModel.getTotalColumnCount()];
 
@@ -251,7 +269,7 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 
 		if (mMode == MODE_REMOVE_UNIQUE) {
 			boolean isFirstInSet = true;
-			for (int row = 0; row < mTableModel.getTotalRowCount(); row++) {
+			for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
 				boolean isLastInSet = (row + 1 == mTableModel.getTotalRowCount() || comparator.compare(record[row], record[row + 1]) != 0);
 
 				if (isFirstInSet && isLastInSet)
@@ -270,6 +288,9 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 					if (firstRow < row - 1)
 						mergeRowContent(record, firstRow, row - 1, columnMask, columnError);
 
+					if (countColumn != -1)
+						record[firstRow].setData(Integer.toString(row-firstRow).getBytes(), countColumn);
+
 					firstRow = row;
 					}
 				row++;
@@ -279,6 +300,7 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 			}
 
 		mTableModel.finalizeDeletion();
+
 		if (mMode == MODE_MERGE_EQUIVALENT) {
 			for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
 				if (!columnMask[column]

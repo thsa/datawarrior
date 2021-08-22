@@ -1856,7 +1856,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 		int[] idcodeColumnList = mTableModel.getSpecialColumnList(CompoundTableModel.cColumnTypeIDCode);
 		if (idcodeColumnList == null) {
-			JOptionPane.showMessageDialog(mParentFrame, "None of your columns contains chemical structures.");
+			JOptionPane.showMessageDialog(mParentFrame, "None of your columns contain chemical structures.");
 			}
 		else if (idcodeColumnList.length == 1) {
 			idcodeColumn = idcodeColumnList[0];

@@ -185,6 +185,7 @@ public abstract class JVisualization extends JComponent
 	private static final byte EXCLUSION_FLAGS_NAN = (byte)(7 * EXCLUSION_FLAG_NAN_0) | EXCLUSION_FLAG_PROPORTIONAL_FRACTION_NAN;
 
 	private static final long RIGHT_MOUSE_POPUP_DELAY = 800;
+	private static final int MAX_TOOLTIP_LENGTH = 24;
 
 	protected CompoundTableModel	mTableModel;
 	protected float[]				mAxisVisMin,mAxisVisMax,mPruningBarLow,mPruningBarHigh;
@@ -4729,13 +4730,13 @@ public abstract class JVisualization extends JComponent
 						value = mTableModel.encodeData(record, idColumn);
 					}
 			   	else {
-			   		value = mTableModel.encodeData(record, column);
+			   		value = mTableModel.getValue(record, column);
 			   		}
 		   		}
 			if (value != null) {
 				sb.append((sb.length() == 0) ? "<html>" : "<br>");
 		   		sb.append(title);
-		   		sb.append(value);
+		   		sb.append(value.length() > MAX_TOOLTIP_LENGTH ? value.substring(0, MAX_TOOLTIP_LENGTH)+"..." : value);
 				}
 			}
 		}

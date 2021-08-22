@@ -19,10 +19,7 @@
 package com.actelion.research.datawarrior.plugin;
 
 import com.actelion.research.calc.ProgressController;
-import com.actelion.research.chem.Canonizer;
-import com.actelion.research.chem.MolfileParser;
-import com.actelion.research.chem.SmilesParser;
-import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.chem.*;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DERuntimeProperties;
@@ -31,6 +28,7 @@ import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
 import org.openmolecules.datawarrior.plugin.IPluginHelper;
 
+import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -38,19 +36,96 @@ import java.io.StringReader;
 public class PluginHelper implements IPluginHelper {
 	private DataWarrior mApplication;
 	private DEFrame mParentFrame;
-	private CompoundTableModel  mTableModel;
+	private CompoundTableModel  mSourceTableModel,mTargetTableModel;
 	private ProgressController  mProgressController;
 	private int[]               mColumnType,mCoordinateColumn;
 	private StereoMolecule      mMol;
 
 	public PluginHelper(DataWarrior application, ProgressController pl) {
 		mApplication = application;
+		mSourceTableModel = application.getActiveFrame().getTableModel();
+		mTargetTableModel = mSourceTableModel;  // unless a new window is created
 		mProgressController = pl;
-		}
+	}
+
+	@Override
+	public int findColumn(String columnTitle) {
+		return mSourceTableModel.findColumn(columnTitle);
+	}
+
+	@Override
+	public int getStructureColumn() {
+		int[] structureColumn = mSourceTableModel.getSpecialColumnList(CompoundTableConstants.cColumnTypeIDCode);
+		if (structureColumn == null)
+			return -1;
+		if (structureColumn.length == 1)
+			return structureColumn[0];
+
+		String[] columnNameList = new String[structureColumn.length];
+		for (int i=0; i<structureColumn.length; i++)
+			columnNameList[i] = mSourceTableModel.getColumnTitle(structureColumn[i]);
+
+		String columnName = (String)JOptionPane.showInputDialog(mParentFrame,
+				"Please select a column with chemical structures!",
+				"Select Structure Column",
+				JOptionPane.QUESTION_MESSAGE,
+				null,
+				columnNameList,
+				columnNameList[0]);
+		return mSourceTableModel.findColumn(columnName);
+	}
+
+	@Override
+	public int getTotalRowCount() {
+		return mSourceTableModel.getTotalRowCount();
+	}
+
+	@Override
+	public String[] getCellData(int row, int column) {
+		return mSourceTableModel.separateEntries(mSourceTableModel.getTotalValueAt(row, column));
+	}
+
+	@Override
+	public String getCellDataAsSmiles(int row, int column) {
+		if (!mSourceTableModel.isColumnTypeStructure(column))
+			return null;
+
+		StereoMolecule mol = mSourceTableModel.getChemicalStructure(mSourceTableModel.getTotalRecord(row), column, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
+		return mol == null || mol.getAllAtoms()==0 ? null : new IsomericSmilesCreator(mol).getSmiles();
+	}
+
+	@Override
+	public String getCellDataAsMolfileV2(int row, int column) {
+		if (!mSourceTableModel.isColumnTypeStructure(column))
+			return null;
+
+		StereoMolecule mol = mSourceTableModel.getChemicalStructure(mSourceTableModel.getTotalRecord(row), column, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
+		return mol == null || mol.getAllAtoms()==0 ? null : new MolfileCreator(mol).getMolfile();
+	}
+
+	@Override
+	public String getCellDataAsMolfileV3(int row, int column) {
+		if (!mSourceTableModel.isColumnTypeStructure(column))
+			return null;
+
+		StereoMolecule mol = mSourceTableModel.getChemicalStructure(mSourceTableModel.getTotalRecord(row), column, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
+		return mol == null || mol.getAllAtoms()==0 ? null : new MolfileV3Creator(mol).getMolfile();
+	}
 
 	public DEFrame getNewFrame() {
 		return mParentFrame;
 		}
+
+	@Override
+	public int initializeNewColumns(String[] columnTitle) {
+		if (mProgressController.threadMustDie())
+			return -1;
+
+		mColumnType = new int[mSourceTableModel.getTotalColumnCount()+columnTitle.length];
+		int firstColumn = mSourceTableModel.addNewColumns(columnTitle);
+		mProgressController.startProgress("Populating table...", 0, 0);
+		return firstColumn;
+	}
 
 	@Override
 	public void initializeData(int columnCount, int rowCount, String newWindowName) {
@@ -58,8 +133,8 @@ public class PluginHelper implements IPluginHelper {
 			return;
 
 		mParentFrame = mApplication.getEmptyFrame(newWindowName);
-		mTableModel = mParentFrame.getTableModel();
-		mTableModel.initializeTable(rowCount, columnCount);
+		mTargetTableModel = mParentFrame.getTableModel();
+		mTargetTableModel.initializeTable(rowCount, columnCount);
 		mColumnType = new int[columnCount];
 		mCoordinateColumn = new int[columnCount];
 		mProgressController.startProgress("Populating table...", 0, rowCount);
@@ -70,7 +145,7 @@ public class PluginHelper implements IPluginHelper {
 		if (mProgressController.threadMustDie())
 			return;
 
-		mTableModel.setColumnName(title, column);
+		mTargetTableModel.setColumnName(title, column);
 	}
 
 	@Override
@@ -84,10 +159,10 @@ public class PluginHelper implements IPluginHelper {
 		 || type == COLUMN_TYPE_STRUCTURE_FROM_IDCODE) {
 			if (mMol == null)
 				mMol = new StereoMolecule();
-			mCoordinateColumn[column] = mTableModel.addNewColumns(1);
-			mTableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertySpecialType,
+			mCoordinateColumn[column] = mTargetTableModel.addNewColumns(1);
+			mTargetTableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertySpecialType,
 					CompoundTableConstants.cColumnTypeIDCode);
-			mTableModel.setColumnProperty(mCoordinateColumn[column], CompoundTableConstants.cColumnPropertySpecialType,
+			mTargetTableModel.setColumnProperty(mCoordinateColumn[column], CompoundTableConstants.cColumnPropertySpecialType,
 					CompoundTableConstants.cColumnType2DCoordinates);
 		}
 	}
@@ -128,9 +203,9 @@ public class PluginHelper implements IPluginHelper {
 			}
 		}
 
-		mTableModel.setTotalValueAt(value, row, column);
+		mTargetTableModel.setTotalValueAt(value, row, column);
 		if (coordinates != null && coordinates.length() != 0)
-			mTableModel.setTotalValueAt(coordinates, row, mCoordinateColumn[column]);
+			mTargetTableModel.setTotalValueAt(coordinates, row, mCoordinateColumn[column]);
 	}
 
 	@Override
@@ -141,21 +216,29 @@ public class PluginHelper implements IPluginHelper {
 		// we need to do this, when all column titles are reliably set
 		for (int column=0; column<mCoordinateColumn.length; column++)
 			if (mCoordinateColumn[column] != 0)
-				mTableModel.setColumnProperty(mCoordinateColumn[column],
+				mTargetTableModel.setColumnProperty(mCoordinateColumn[column],
 						CompoundTableConstants.cColumnPropertyParentColumn,
-						mTableModel.getColumnTitleNoAlias(column));
+						mTargetTableModel.getColumnTitleNoAlias(column));
 
 		if (template == null) {
-			mTableModel.finalizeTable(CompoundTableEvent.cSpecifierDefaultFiltersAndViews, mProgressController);
+			mTargetTableModel.finalizeTable(CompoundTableEvent.cSpecifierDefaultFiltersAndViews, mProgressController);
 			}
 		else {
-			mTableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, mProgressController);
+			mTargetTableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, mProgressController);
 			DERuntimeProperties rtp = new DERuntimeProperties(mParentFrame.getMainFrame());
 			try {
 				rtp.read(new BufferedReader(new StringReader(template)));
 				rtp.apply();
 			} catch (IOException ioe) {}
 		}
+	}
+
+	@Override
+	public void finalizeNewColumns(int firstColumn) {
+		if (mProgressController.threadMustDie())
+			return;
+
+		mTargetTableModel.finalizeNewColumns(firstColumn, mProgressController);
 	}
 
 	@Override

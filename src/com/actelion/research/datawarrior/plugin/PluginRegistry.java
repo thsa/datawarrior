@@ -44,12 +44,10 @@ public class PluginRegistry {
 		mPluginList = new ArrayList<>();
 		File directory = application.resolveResourcePath(DataWarrior.PLUGIN_DIR);
 		if (directory != null) {
-			FileFilter filter = new FileFilter() {
-				public boolean accept(File file) {
-					if (file.isDirectory())
-						return false;
-					return (file.getName().toLowerCase().endsWith(".jar"));
-				}
+			FileFilter filter = file -> {
+				if (file.isDirectory())
+					return false;
+				return (file.getName().toLowerCase().endsWith(".jar"));
 			};
 
 			File[] files = directory.listFiles(filter);

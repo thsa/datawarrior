@@ -76,7 +76,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final int PREDICTOR_FLAG_NASTY_FUNCTIONS	= (1 << PREDICTOR_NASTY_FUNCTIONS);
 	private static final int PREDICTOR_FLAG_FLEXIBILITY		= (1 << PREDICTOR_FLEXIBILITY);
 
-	private static final int PROPERTY_COUNT = 67;
+	private static final int PROPERTY_COUNT = 68;
 
 	private static final int TOTAL_WEIGHT = 0;
 	private static final int FRAGMENT_WEIGHT = 1;
@@ -114,44 +114,45 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final int ROTATABLE_BONDS = 30;
 	private static final int RING_CLOSURES = 31;
 	private static final int AROMATIC_ATOMS = 32;
-	private static final int SP3_ATOMS = 33;
-	private static final int SYMMETRIC_ATOMS = 34;
+	private static final int SP3_CARBON_FRACTION = 33;
+	private static final int SP3_ATOMS = 34;
+	private static final int SYMMETRIC_ATOMS = 35;
 
-	private static final int SMALL_RINGS = 35;
-	private static final int SMALL_CARBO_RINGS = 36;
-	private static final int SMALL_HETERO_RINGS = 37;
-	private static final int SATURATED_RINGS = 38;
-	private static final int NON_AROMATIC_RINGS = 39;
-	private static final int AROMATIC_RINGS = 40;
-	private static final int CARBO_SATURATED_RINGS = 41;
-	private static final int CARBO_NON_AROMATIC_RINGS = 42;
-	private static final int CARBO_AROMATIC_RINGS = 43;
-	private static final int HETERO_SATURATED_RINGS = 44;
-	private static final int HETERO_NON_AROMATIC_RINGS = 45;
-	private static final int HETERO_AROMATIC_RINGS = 46;
+	private static final int SMALL_RINGS = 36;
+	private static final int SMALL_CARBO_RINGS = 37;
+	private static final int SMALL_HETERO_RINGS = 38;
+	private static final int SATURATED_RINGS = 39;
+	private static final int NON_AROMATIC_RINGS = 40;
+	private static final int AROMATIC_RINGS = 41;
+	private static final int CARBO_SATURATED_RINGS = 42;
+	private static final int CARBO_NON_AROMATIC_RINGS = 43;
+	private static final int CARBO_AROMATIC_RINGS = 44;
+	private static final int HETERO_SATURATED_RINGS = 45;
+	private static final int HETERO_NON_AROMATIC_RINGS = 46;
+	private static final int HETERO_AROMATIC_RINGS = 47;
 
-	private static final int ALL_AMIDES = 47;
-	private static final int ALL_AMINES = 48;
-	private static final int ALKYL_AMINES = 49;
-	private static final int ARYL_AMINES = 50;
-	private static final int AROMATIC_NITROGEN = 51;
-	private static final int BASIC_NITROGEN = 52;
-	private static final int ACIDIC_OXYGEN = 53;
-	private static final int STEREO_CONFIGURATION = 54;
+	private static final int ALL_AMIDES = 48;
+	private static final int ALL_AMINES = 49;
+	private static final int ALKYL_AMINES = 50;
+	private static final int ARYL_AMINES = 51;
+	private static final int AROMATIC_NITROGEN = 52;
+	private static final int BASIC_NITROGEN = 53;
+	private static final int ACIDIC_OXYGEN = 54;
+	private static final int STEREO_CONFIGURATION = 55;
 
-	private static final int ACIDIC_PKA = 55;
-	private static final int BASIC_PKA = 56;
-	private static final int FRACTION_IA = 57;
-	private static final int FRACTION_IB = 58;
-	private static final int FRACTION_ZI = 59;
-	private static final int FRACTION_CHARGED = 60;
-	private static final int FRACTION_UNCHARGED = 61;
-	private static final int CHARGE74 = 62;
+	private static final int ACIDIC_PKA = 56;
+	private static final int BASIC_PKA = 57;
+	private static final int FRACTION_IA = 58;
+	private static final int FRACTION_IB = 59;
+	private static final int FRACTION_ZI = 60;
+	private static final int FRACTION_CHARGED = 61;
+	private static final int FRACTION_UNCHARGED = 62;
+	private static final int CHARGE74 = 63;
 
-	private static final int GLOBULARITY_SVD = 63;
-	private static final int GLOBULARITY_VOL = 64;
-	private static final int SURFACE_3D = 65;
-	private static final int VOLUME_3D = 66;
+	private static final int GLOBULARITY_SVD = 64;
+	private static final int GLOBULARITY_VOL = 65;
+	private static final int SURFACE_3D = 66;
+	private static final int VOLUME_3D = 67;
 
 	private static final Color[] TOX_COLOR_LIST = { Color.RED, Color.YELLOW, Color.GREEN };
 
@@ -159,7 +160,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 													"acceptors", "donors", "sasa", "rpsa", "tpsa", "druglikeness", "permeability",
 													"le", /*"se",*/ "lle", "lelp", "mutagenic", "tumorigenic", "reproEffective", "irritant", "nasty",
 													"shape", "flexibility", "complexity", "fragments", "heavyAtoms", "nonCHAtoms", "metalAtoms", "negAtoms",
-													"stereoCenters", "rotBonds", "closures", "aromAtoms", "sp3Atoms", "symmetricAtoms",
+													"stereoCenters", "rotBonds", "closures", "aromAtoms", "sp3CFraction", "sp3Atoms", "symmetricAtoms",
 													"rings", "carbo", "heteroRings", "satRings", "nonAromRings", "aromRings", "carboSatRings", "carboNonAromRings", "carboAromRings",
 													"heteroSatRings", "heteroNonAromRings", "heteroAromRings",
 													"amides", "amines", "alkylAmines", "arylAmines", "aromN", "basicN", "acidicO", "stereoConfiguration",
@@ -504,7 +505,8 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		addProperty(ROTATABLE_BONDS, 2, "Rotatable Bonds", "Rotatable Bond Count");
 		addProperty(RING_CLOSURES, 2, "Rings Closures", "Ring Closure Count");
 		addProperty(AROMATIC_ATOMS, 2, "Aromatic Atoms", "Aromatic Atom Count");
-		addProperty(SP3_ATOMS, 2, "sp3-Atoms", "sp3-Atom Count");
+		addProperty(SP3_CARBON_FRACTION, 2, "sp3-Carbon Fraction", "sp3-Carbon Count / Total Carbon Count");
+		addProperty(SP3_ATOMS, 2, "sp3-Atoms", "sp3-Atom Count (Considering C,N,O,P,S)");
 		addProperty(SYMMETRIC_ATOMS, 2, "Symmetric atoms", "Symmetric Atom Count");
 
 		addProperty(SMALL_RINGS, 3, "Small Rings", "Small Ring Count (all rings up to 7 members)");
@@ -997,6 +999,19 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 				for (int atom=0; atom<mol.getAtoms(); atom++)
 					if (mol.isAromaticAtom(atom))
 						value++;
+				break;
+			case SP3_CARBON_FRACTION:
+				value = 0;
+				int count = 0;
+				mol.ensureHelperArrays(Molecule.cHelperRings);
+				for (int atom=0; atom<mol.getAtoms(); atom++) {
+					if (mol.getAtomicNo(atom) == 6) {
+						count++;
+						if (mol.getAtomPi(atom) == 0 && mol.getAtomCharge(atom) <= 0)
+							value++;
+						}
+					}
+				value /= count;
 				break;
 			case SP3_ATOMS:
 				value = 0;

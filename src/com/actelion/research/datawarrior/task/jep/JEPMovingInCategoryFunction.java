@@ -128,8 +128,8 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 
 		int n1 = (int)Math.round((Double)param3);
 		int n2 = (int)Math.round((Double)param4);
-		if (n1<0 || n2<0 || n1 + n2 == 0 || n1 + n2>255)
-			throw new ParseException("n1 and n2 must not be negative. n1+n2 must be larger than 0 and smaller than 256.");
+		if (n1<0 || n2<0 || n1 + n2 == 0)
+			throw new ParseException("Neither n1 nor n2 must be negative. The sum n1+n2 must be larger than 0.");
 
 		inStack.push(new Double(getResult(valueColumn, categoryColumn, n1, n2)));
 		}

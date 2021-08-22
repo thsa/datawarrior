@@ -186,7 +186,8 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 			mTextArea.setText("");
 
 		mCheckBoxCaseSensitive.setSelected(true);
-		mCheckBoxAddCount.setSelected(false);
+		if (mCheckBoxAddCount != null)
+			mCheckBoxAddCount.setSelected(false);
 		}
 
 	@Override

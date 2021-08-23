@@ -3214,6 +3214,8 @@ public class JVisualization2D extends JVisualization {
 		final int EXPRESSION_CURVE_STEPS = 512; // steps used for full width curve
 
 		if (mCurveExpression == null
+		 || mAxisIndex[0] == -1
+		 || mAxisIndex[1] == -1
 		 || mAxisVisMin[0] == mAxisVisMax[0]
 		 || mAxisVisMin[1] == mAxisVisMax[1])
 			return;

@@ -20,6 +20,7 @@ package com.actelion.research.datawarrior;
 
 import com.actelion.research.chem.Molecule;
 import com.actelion.research.chem.name.StructureNameResolver;
+import com.actelion.research.chem.reaction.mapping.ChemicalRuleEnhancedReactionMapper;
 import com.actelion.research.datawarrior.plugin.PluginRegistry;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.datawarrior.task.DETaskSelectWindow;
@@ -28,6 +29,7 @@ import com.actelion.research.datawarrior.task.file.DETaskOpenFile;
 import com.actelion.research.datawarrior.task.file.DETaskRunMacroFromFile;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.HeaderPaintHelper;
+import com.actelion.research.gui.JDrawArea;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableDetailHandler;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -246,6 +248,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 		ToolTipManager.sharedInstance().setDismissDelay(600000);    // 10 min
 		Molecule.setDefaultAverageBondLength(HiDPIHelper.scale(24));
 		StructureNameResolver.setInstance(new DEStructureNameResolver());
+		JDrawArea.setReactionMapper(new ChemicalRuleEnhancedReactionMapper());
 		}
 
 	public void checkVersion(boolean showUpToDateMessage) {

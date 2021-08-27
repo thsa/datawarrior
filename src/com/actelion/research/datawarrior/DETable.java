@@ -21,6 +21,7 @@ package com.actelion.research.datawarrior;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
+import com.actelion.research.chem.reaction.mapping.ChemicalRuleEnhancedReactionMapper;
 import com.actelion.research.datawarrior.task.table.DETaskJumpToReferenceRow;
 import com.actelion.research.gui.JDrawDialog;
 import com.actelion.research.gui.dnd.MoleculeTransferable;

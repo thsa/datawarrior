@@ -1157,7 +1157,6 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			int index = name.lastIndexOf(' ');
 			if (index == -1) {
 				name = name + " 2";
-				break;
 				}
 			else {
 				try {
@@ -1166,7 +1165,6 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					}
 				catch (NumberFormatException nfe) {
 					name = name + " 2";
-					break;
 					}
 				}
 			}

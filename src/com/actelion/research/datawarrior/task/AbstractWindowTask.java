@@ -55,7 +55,7 @@ public abstract class AbstractWindowTask extends ConfigurableTask {
 		JPanel p = new JPanel();
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap},
-		        			{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
+		        			{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
         p.setLayout(new TableLayout(size));
 
         p.add(new JLabel("Window name:"), "1,1");
@@ -67,7 +67,15 @@ public abstract class AbstractWindowTask extends ConfigurableTask {
 
 		p.add(new JLabel("(keep empty for active window)"), "1,3,3,3");
 
+		JPanel ip = createInnerDialogContent();
+		if (ip != null)
+			p.add(ip, "1,5,3,5");
+
 		return p;
+		}
+
+	public JPanel createInnerDialogContent() {
+		return null;
 		}
 
 	@Override

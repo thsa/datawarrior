@@ -334,6 +334,9 @@ public abstract class DataWarrior implements WindowFocusListener {
 		return mFrameOnFocus;
 		}
 
+	/**
+	 * @param isInteractive
+	 */
 	public void closeApplication(boolean isInteractive) {
 		while (mFrameList.size() != 0) {
 			DEFrame frame = getActiveFrame();
@@ -360,6 +363,22 @@ public abstract class DataWarrior implements WindowFocusListener {
 
 		if (!isMacintosh() && mFrameList.size() == 0)
 			System.exit(0);
+		}
+
+	/**
+	 * If the frame contains unsaved content and saveContent==true then
+	 * the frame's content is saved without user interaction.
+	 * If a file is already assigned to the frame then this file is overwritten.
+	 * Otherwise a new file is saved in the home directory.
+	 * If a macro is recording, then this call does not record any tasks.
+	 * @param frame
+	 * @param saveContent if true, then the window is closed without asking to save
+	 */
+	public void closeFrameSilently(DEFrame frame, boolean saveContent) {
+		if (saveContent)
+			frame.saveSilentlyIfDirty();
+
+		disposeFrame(frame);
 		}
 
 	/**
@@ -390,12 +409,8 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 * If a macro is recording, then this call does not record any tasks.
 	 */
 	public void closeAllFramesSilentlyAndExit(boolean saveContent) {
-		while (mFrameList.size() != 0) {
-			DEFrame frame = getActiveFrame();
-			if (saveContent)
-				frame.saveSilentlyIfDirty();
-			disposeFrame(frame);
-			}
+		while (mFrameList.size() != 0)
+			closeFrameSilently(getActiveFrame(), saveContent);
 
 		System.exit(0);
 		}

@@ -18,15 +18,26 @@
 
 package com.actelion.research.datawarrior.task.file;
 
-import java.awt.Frame;
-import java.util.Properties;
-
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.AbstractWindowTask;
+import info.clearthought.layout.TableLayout;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.Properties;
 
 public class DETaskCloseWindow extends AbstractWindowTask {
 	public static final String TASK_NAME = "Close Window";
+
+	private static final String PROPERTY_SAVE_CHANGES = "saveChanges";
+	private static final String[] MODE_TEXT = { "Ask before closing", "Save without asking", "Close without saving" };
+	private static final String[] MODE_CODE = { "ask", "yes", "no" };
+	private static final int SAVE_CHANGES_ASK = 0;
+	private static final int SAVE_CHANGES_YES = 1;
+	private static final int SAVE_CHANGES_NO = 2;
+
+	private JComboBox mComboBoxMode;
 
 	public DETaskCloseWindow(Frame parent, DataWarrior application, DEFrame window) {
 		super(parent, application, window);
@@ -38,8 +49,45 @@ public class DETaskCloseWindow extends AbstractWindowTask {
 		}
 
 	@Override
+	public JPanel createInnerDialogContent() {
+		double[][] size = { {TableLayout.PREFERRED, 8, TableLayout.PREFERRED}, {TableLayout.PREFERRED} };
+
+		JPanel content = new JPanel();
+		content.setLayout(new TableLayout(size));
+
+		mComboBoxMode = new JComboBox(MODE_TEXT);
+		content.add(new JLabel("Unsaved changes:"), "0,0");
+		content.add(mComboBoxMode, "2,0");
+
+		return content;
+		}
+
+	@Override
+	public Properties getDialogConfiguration() {
+		Properties configuration = super.getDialogConfiguration();
+		configuration.setProperty(PROPERTY_SAVE_CHANGES, MODE_CODE[mComboBoxMode.getSelectedIndex()]);
+		return configuration;
+		}
+
+	@Override
+	public void setDialogConfigurationToDefault() {
+		super.setDialogConfigurationToDefault();
+		mComboBoxMode.setSelectedIndex(SAVE_CHANGES_ASK);
+		}
+
+	@Override
+	public void setDialogConfiguration(Properties configuration) {
+		super.setDialogConfiguration(configuration);
+		mComboBoxMode.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_SAVE_CHANGES), MODE_CODE, SAVE_CHANGES_ASK));
+		}
+
+	@Override
 	public void runTask(Properties configuration) {
-		getApplication().closeFrameSafely(getConfiguredWindow(configuration), isInteractive());
+		int saveChanges = findListIndex(configuration.getProperty(PROPERTY_SAVE_CHANGES), MODE_CODE, SAVE_CHANGES_YES);
+		if (saveChanges != SAVE_CHANGES_ASK)
+			getApplication().closeFrameSilently(getConfiguredWindow(configuration), saveChanges == SAVE_CHANGES_YES);
+		else
+			getApplication().closeFrameSafely(getConfiguredWindow(configuration), isInteractive());
 		}
 
 	@Override

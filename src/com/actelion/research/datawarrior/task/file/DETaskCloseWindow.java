@@ -83,7 +83,7 @@ public class DETaskCloseWindow extends AbstractWindowTask {
 
 	@Override
 	public void runTask(Properties configuration) {
-		int saveChanges = findListIndex(configuration.getProperty(PROPERTY_SAVE_CHANGES), MODE_CODE, SAVE_CHANGES_YES);
+		int saveChanges = findListIndex(configuration.getProperty(PROPERTY_SAVE_CHANGES), MODE_CODE, SAVE_CHANGES_ASK);
 		if (saveChanges != SAVE_CHANGES_ASK)
 			getApplication().closeFrameSilently(getConfiguredWindow(configuration), saveChanges == SAVE_CHANGES_YES);
 		else

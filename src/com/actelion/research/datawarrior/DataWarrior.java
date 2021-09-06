@@ -204,7 +204,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 		mPluginRegistry = new PluginRegistry(this);
 		setInitialLookAndFeel();
 
-		mFrameList = new ArrayList<DEFrame>();
+		mFrameList = new ArrayList<>();
 		createNewFrame(null, false);
 		new DEAboutDialog(mFrameOnFocus, 2000);
 

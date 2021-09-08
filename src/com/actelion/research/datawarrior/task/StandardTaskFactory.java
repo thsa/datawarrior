@@ -220,6 +220,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskSaveTextFileAs.TASK_NAME) ? new DETaskSaveTextFileAs(frame)
 			 : codeMatches(taskCode, DETaskSaveVisibleRowsAs.TASK_NAME) ? new DETaskSaveVisibleRowsAs(frame)
 			 : codeMatches(taskCode, DETaskSearchGooglePatents.TASK_NAME) ? new DETaskSearchGooglePatents(frame, application)
+			 : codeMatches(taskCode, DETaskSearchPatentReactions.TASK_NAME) ? new DETaskSearchPatentReactions(frame, application)
 			 : codeMatches(taskCode, DETaskSelectAll.TASK_NAME) ? new DETaskSelectAll(frame)
 			 : codeMatches(taskCode, DETaskSelectDiverse.TASK_NAME) ? new DETaskSelectDiverse(frame)
 			 : codeMatches(taskCode, DETaskSelectRowsFromList.TASK_NAME) ? new DETaskSelectRowsFromList(frame, -1)
@@ -433,6 +434,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILE, DETaskSaveTextFileAs.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILE, DETaskSaveVisibleRowsAs.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskSearchGooglePatents.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskSearchPatentReactions.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_EDIT, DETaskSelectAll.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskSelectDiverse.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskSelectRowsFromList.TASK_NAME));

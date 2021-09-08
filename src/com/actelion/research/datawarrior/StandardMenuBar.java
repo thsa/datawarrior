@@ -143,7 +143,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuChemCluster,jMenuChemExtract3DFragments,jMenuChemMapReactions,jMenuChemCompareReactionMapping,
 					  jMenuChemCreateGenericTautomers,jMenuChemCompareDescriptorSimilarityDistribution,jMenuChemGenerateRandomMolecules,
 					  jMenuChemExtractPairwiseCompoundSimilarities,jMenuChemExtractPairwiseStuff,jMenuChemCountAtomTypes,jMenuChemCheckIDCodes,
-					  jMenuChemRunSurfacePLS,jMenuChemClassifyReactions,jMenuDBWikipedia,jMenuDBReadChEMBL,jMenuDBFindChEMBLActives,
+					  jMenuChemRunSurfacePLS,jMenuChemClassifyReactions,jMenuDBWikipedia,jMenuDBReadChEMBL,jMenuDBFindChEMBLActives,jMenuDBPatentReactions,
 					  jMenuDBSearchCOD,jMenuDBSearchEnamine,jMenuDBSearchChemSpace,jMenuDBRetrieveDataFromURL,jMenuDBRetrieveSQLData,jMenuDBGooglePatents,
 					  jMenuListCreateSelected,jMenuListCreateVisible,jMenuListCreateHidden,jMenuListCreateClipboard,
 					  jMenuListCreateDuplicate,jMenuListCreateUnique,jMenuListCreateDistinct,
@@ -984,6 +984,11 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuDBGooglePatents.addActionListener(this);
 		jMenuDB.add(jMenuDBGooglePatents);
 
+		jMenuDBPatentReactions = new JMenuItem();
+		jMenuDBPatentReactions.setText("Search US/EU Patent Reactions...");
+		jMenuDBPatentReactions.addActionListener(this);
+		jMenuDB.add(jMenuDBPatentReactions);
+
 		jMenuDB.addSeparator();
 
 		jMenuDBReadChEMBL = new JMenuItem();
@@ -1653,6 +1658,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskRetrieveWikipediaCompounds(mParentFrame, mApplication).defineAndRun();
 			else if (source == jMenuDBGooglePatents)
 				new DETaskSearchGooglePatents(mParentFrame, mApplication).defineAndRun();
+			else if (source == jMenuDBPatentReactions)
+				new DETaskSearchPatentReactions(mParentFrame, mApplication).defineAndRun();
 			else if (source == jMenuDBReadChEMBL)
 				new DETaskChemblQuery(mParentFrame, mApplication).defineAndRun();
 			else if (source == jMenuDBFindChEMBLActives)

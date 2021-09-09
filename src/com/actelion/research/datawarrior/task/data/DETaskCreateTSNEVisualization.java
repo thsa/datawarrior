@@ -18,32 +18,28 @@
 
 package com.actelion.research.datawarrior.task.data;
 
-import com.actelion.research.gui.hidpi.HiDPIHelper;
-import com.jujutsu.tsne.TSneConfiguration;
-import com.jujutsu.tsne.barneshut.BHTSne;
-import com.jujutsu.tsne.barneshut.BarnesHutTSne;
-import com.jujutsu.tsne.barneshut.ParallelBHTsne;
-import com.jujutsu.utils.TSneUtils;
-import info.clearthought.layout.TableLayout;
-
-import java.awt.Color;
-import java.awt.Dimension;
-import java.util.Properties;
-
-import javax.swing.*;
-import javax.swing.text.html.HTMLEditorKit;
-
 import com.actelion.research.chem.descriptor.DescriptorConstants;
+import com.actelion.research.chem.descriptor.DescriptorHandlerReactionFP;
 import com.actelion.research.chem.descriptor.DescriptorHelper;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.table.view.VisualizationPanel3D;
+import com.jujutsu.tsne.TSneConfiguration;
+import com.jujutsu.tsne.barneshut.BarnesHutTSne;
+import com.jujutsu.tsne.barneshut.ParallelBHTsne;
+import com.jujutsu.utils.TSneUtils;
+import info.clearthought.layout.TableLayout;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.Properties;
 
 
 public class DETaskCreateTSNEVisualization extends ConfigurableTask {
@@ -100,6 +96,7 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 		if (mTableModel.isDescriptorColumn(column)) {
 			String shortName = mTableModel.getColumnSpecialType(column);
 			return DescriptorHelper.isBinaryFingerprint(shortName)
+				|| shortName.equals(DescriptorConstants.DESCRIPTOR_ReactionFP.shortName)
 				|| shortName.equals(DescriptorConstants.DESCRIPTOR_SkeletonSpheres.shortName);
 			}
 
@@ -128,10 +125,10 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 	@Override
     public JPanel createDialogContent() {
         JPanel p1 = new JPanel();
-        int space = HiDPIHelper.scale(8);
-        double[][] size = { {space, TableLayout.PREFERRED, space/2, TableLayout.PREFERRED, space/2, TableLayout.PREFERRED, space},
-                            {space, TableLayout.PREFERRED, space, HiDPIHelper.scale(128), space,
-									TableLayout.PREFERRED, space, TableLayout.PREFERRED, space, TableLayout.PREFERRED, space, TableLayout.PREFERRED, space} };
+        int gap = HiDPIHelper.scale(8);
+        double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap},
+                            {gap, TableLayout.PREFERRED, gap, HiDPIHelper.scale(128), gap,
+									TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
         p1.setLayout(new TableLayout(size));
 
 		final String[] optionList = {"2", "3"};
@@ -163,7 +160,7 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 			mTextArea = new JTextArea();
 			scrollPane = new JScrollPane(mTextArea);
 			}
-		scrollPane.setPreferredSize(new Dimension(240,160));
+		scrollPane.setPreferredSize(new Dimension(HiDPIHelper.scale(240),HiDPIHelper.scale(180)));
 		p1.add(parameterLabel, "1,3");
 		p1.add(scrollPane, "3,3,5,3");
 
@@ -332,7 +329,8 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 			for (int i=0; i<column.length; i++) {
 				CompoundRecord record = mTableModel.getTotalRecord(row);
 				if (mTableModel.isDescriptorColumn(column[i])) {
-					if (record.getData(column[i]) == null) {
+					if (record.getData(column[i]) == null
+					 || mTableModel.getDescriptorHandler(column[i]).calculationFailed(record.getData(column[i]))) {
 						isEmpty = true;
 						break;
 						}
@@ -390,7 +388,8 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 		Object[] varyingKey = new Object[descriptorCount];
 		for (int fp=0; fp<descriptorCount; fp++) {
 			startProgress("Analysing '"+mTableModel.getColumnTitle(descriptorColumn[fp])+"'...", 0, 0);
-        	if (mTableModel.getDescriptorHandler(descriptorColumn[fp]).getInfo().isBinary) {
+        	if (mTableModel.getDescriptorHandler(descriptorColumn[fp]).getInfo().isBinary
+	         || DescriptorConstants.DESCRIPTOR_ReactionFP.shortName.equals(mTableModel.getColumnSpecialType(descriptorColumn[fp]))) {
         		if (mTableModel.getTotalRecord(mFullDataRow[0]).getData(descriptorColumn[fp]) instanceof long[]) {
 			        long[] firstIndex = (long[])mTableModel.getTotalRecord(mFullDataRow[0]).getData(descriptorColumn[fp]);
 			        varyingKey[fp] = new long[firstIndex.length];
@@ -575,7 +574,21 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 		int paramIndex = 0;
 
         for (int fp=0; fp<descriptorColumn.length; fp++) {
-        	if (mTableModel.getDescriptorHandler(descriptorColumn[fp]).getInfo().isBinary) {
+	        if (DescriptorConstants.DESCRIPTOR_ReactionFP.shortName.equals(mTableModel.getColumnSpecialType(descriptorColumn[fp]))) {
+		        long[] currentIndex = (long[])mTableModel.getTotalRecord(row).getData(descriptorColumn[fp]);
+		        for (int i=0; i<currentIndex.length; i++) {
+			        boolean isReactionCenter = (i < DescriptorHandlerReactionFP.REACTION_CENTER_LONG_COUNT);
+			        long theBit = 1L;
+			        for (int j=0; j<64; j++) {
+				        if ((((long[])varyingKey[fp])[i] & theBit) != 0) {
+					        rowParameter[paramIndex++] = ((currentIndex[i] & theBit) == 0) ? 0.0
+						: isReactionCenter ? DescriptorHandlerReactionFP.REACTION_CENTER_WEIGHT : DescriptorHandlerReactionFP.PERIPHERY_WEIGHT;
+					        }
+				        theBit <<= 1;
+				        }
+			        }
+		        }
+	        else if (mTableModel.getDescriptorHandler(descriptorColumn[fp]).getInfo().isBinary) {
 		        if (mTableModel.getTotalRecord(row).getData(descriptorColumn[fp]) instanceof long[]) {
 					long[] currentIndex = (long[])mTableModel.getTotalRecord(row).getData(descriptorColumn[fp]);
 					for (int i=0; i<currentIndex.length; i++) {

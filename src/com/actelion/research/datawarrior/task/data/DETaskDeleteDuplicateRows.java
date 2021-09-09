@@ -56,7 +56,7 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 	private JCheckBox			mCheckBoxMergeAll,mCheckBoxCaseSensitive,mCheckBoxAddCount;
 
 	public DETaskDeleteDuplicateRows(DEFrame owner, int mode) {
-		super(owner, false);
+		super(owner, true);
 		mTable = owner.getMainFrame().getMainPane().getTable();
 		mTableModel = owner.getTableModel();
 		mMode = mode;
@@ -258,6 +258,8 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 				}
 			}
 
+		startProgress("Sorting Rows...", 0, 0);
+
 		CompoundRecord[] record = new CompoundRecord[mTableModel.getTotalRowCount()];
 		for (int row=0; row<mTableModel.getTotalRowCount(); row++)
 			record[row] = mTableModel.getTotalRecord(row);
@@ -280,6 +282,9 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 				}
 			}
 		else {
+			if (mMode == MODE_MERGE_EQUIVALENT)
+				startProgress("Merging Row Content...", 0, 0);
+
 			int firstRow = 0;
 			int row = 1;
 			while (row < mTableModel.getTotalRowCount()) {
@@ -296,10 +301,12 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 					}
 				row++;
 				}
-			if (mMode == MODE_MERGE_EQUIVALENT && firstRow < row - 1)
+			if (mMode == MODE_MERGE_EQUIVALENT && firstRow < row - 1) {
 				mergeRowContent(record, firstRow, row - 1, columnMask, columnError);
+				}
 			}
 
+		startProgress("Deleting Rows...", 0, 0);
 		mTableModel.finalizeDeletion();
 
 		if (mMode == MODE_MERGE_EQUIVALENT) {
@@ -328,10 +335,10 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 					}
 				message.setLength(message.length()-2);
 				message.append("!");
-				JOptionPane.showMessageDialog(getParentFrame(),
+				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(getParentFrame(),
 											  message.toString(),
 											  "Some Cells Couldn't Be Merged",
-											  JOptionPane.WARNING_MESSAGE);
+											  JOptionPane.WARNING_MESSAGE) );
 				}
 			}
 		}

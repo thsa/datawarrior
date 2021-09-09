@@ -18,10 +18,23 @@
 
 package com.actelion.research.datawarrior.task.data;
 
+import com.actelion.research.calc.SelfOrganizedMap;
+import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.task.ConfigurableTask;
+import com.actelion.research.datawarrior.task.file.JFilePathLabel;
+import com.actelion.research.gui.FileHelper;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.table.CompoundTableSOM;
+import com.actelion.research.table.MarkerLabelDisplayer;
+import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.table.view.JVisualization;
+import com.actelion.research.table.view.JVisualization2D;
+import com.actelion.research.table.view.VisualizationColor;
+import com.actelion.research.table.view.VisualizationPanel2D;
 import info.clearthought.layout.TableLayout;
 
-import java.awt.Color;
-import java.awt.Dimension;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -29,36 +42,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Properties;
-import java.util.TreeMap;
-
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
-
-import com.actelion.research.calc.SelfOrganizedMap;
-import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.task.ConfigurableTask;
-import com.actelion.research.datawarrior.task.file.JFilePathLabel;
-import com.actelion.research.gui.FileHelper;
-import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.CompoundTableSOM;
-import com.actelion.research.table.MarkerLabelDisplayer;
-import com.actelion.research.table.view.JVisualization;
-import com.actelion.research.table.view.JVisualization2D;
-import com.actelion.research.table.view.VisualizationColor;
-import com.actelion.research.table.view.VisualizationPanel2D;
+import java.util.*;
 
 public class DETaskCalculateSOM extends ConfigurableTask implements ActionListener {
 	public static final String TASK_NAME = "Create Self Organizing Map";
@@ -145,7 +129,7 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
 
 	@Override
 	public JComponent createDialogContent() {
-        mColumnMap = new TreeMap<String,Integer>();
+        mColumnMap = new TreeMap<>();
         for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
             String specialType = mTableModel.getColumnSpecialType(column);
             if (mTableModel.isColumnDataComplete(column)
@@ -155,18 +139,15 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
         	}
 
         String[] columnList = mColumnMap.keySet().toArray(new String[0]);
-        Arrays.sort(columnList, new Comparator<String>() {
-                    public int compare(String s1, String s2) {
-                        return s1.compareToIgnoreCase(s2);
-                        }
-                    } );
+        Arrays.sort(columnList, (s1, s2) -> s1.compareToIgnoreCase(s2));
 
         JPanel optionPanel = new JPanel();
-        double[][] size = { {8, TableLayout.PREFERRED, 16, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 8},
-                            {8, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 8,
-        						TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, 16,
-        						TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 16,
-        						TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 16} };
+        int gap = HiDPIHelper.scale(8);
+        double[][] size = { {gap, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
+                            {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap,
+        						TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, 2*gap,
+        						TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, 2*gap,
+        						TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, 2*gap} };
         optionPanel.setLayout(new TableLayout(size));
 
         mComboBoxMapSize = new JComboBox(MAP_SIZE_OPTIONS);
@@ -190,7 +171,7 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
 			mTextArea = new JTextArea();
 			scrollPane = new JScrollPane(mTextArea);
 			}
-		scrollPane.setPreferredSize(new Dimension(180,120));
+		scrollPane.setPreferredSize(new Dimension(HiDPIHelper.scale(240),HiDPIHelper.scale(120)));
         optionPanel.add(scrollPane, "1,3,1,20");
 
         mCheckboxGrow = new JCheckBox("Grow map during optimization", false);

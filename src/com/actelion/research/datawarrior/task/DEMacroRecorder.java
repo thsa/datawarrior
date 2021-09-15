@@ -270,10 +270,10 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 					}
 				}
 			}
-		catch (final Exception e) {
+		catch (final Throwable e) {
 			e.printStackTrace();
 			SwingUtilities.invokeLater(() ->
-				JOptionPane.showMessageDialog(null, e.toString(), "Unexpected Error", JOptionPane.ERROR_MESSAGE)
+				JOptionPane.showMessageDialog(mFrontFrame, e.toString(), "Unexpected Macro Error", JOptionPane.ERROR_MESSAGE)
 				);
 			}
 

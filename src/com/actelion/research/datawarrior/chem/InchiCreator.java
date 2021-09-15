@@ -1,10 +1,6 @@
 package com.actelion.research.datawarrior.chem;
 
-import com.actelion.research.chem.Molecule;
-import com.actelion.research.chem.StereoMolecule;
-import net.sf.jniinchi.*;
-
-public class InchiCreator {
+public class InchiCreator {/*
 	public static String createStandardInchi(StereoMolecule mol) {
 		if (mol.isFragment())	// no support for substructures
 			return null;
@@ -81,18 +77,18 @@ public class InchiCreator {
 				input.addBond(new JniInchiBond(inchiAtom[atom], stereoHydrogen[atom], INCHI_BOND_TYPE.SINGLE));
 			}
 		}
-/*			for (int bond=0; bond<mol.getBonds(); bond++) {
-				if (mol.getBondParity(bond) != Molecule.cBondParityNone) {
-					for (int i=0; i<2; i++) {
-						int atom = mol.getBondAtom(i, bond);
-						if (mol.getConnAtoms(atom) == 2) {
-							stereoHydrogen[atom] = input.addAtom(new JniInchiAtom(0.0, 0.0, 0.0, "H"));
-							input.addBond(new JniInchiBond(inchiAtom[atom], stereoHydrogen[atom], INCHI_BOND_TYPE.SINGLE));
-						}
-					}
-				}
-			}
-*/
+//			for (int bond=0; bond<mol.getBonds(); bond++) {
+//				if (mol.getBondParity(bond) != Molecule.cBondParityNone) {
+//					for (int i=0; i<2; i++) {
+//						int atom = mol.getBondAtom(i, bond);
+//						if (mol.getConnAtoms(atom) == 2) {
+//							stereoHydrogen[atom] = input.addAtom(new JniInchiAtom(0.0, 0.0, 0.0, "H"));
+//							input.addBond(new JniInchiBond(inchiAtom[atom], stereoHydrogen[atom], INCHI_BOND_TYPE.SINGLE));
+//						}
+//					}
+//				}
+//			}
+
 		for (int atom=0; atom<mol.getAtoms(); atom++) {
 			int implicitHydrogen = mol.getImplicitHydrogens(atom) - (stereoHydrogen[atom] == null ? 0 : 1);
 			if (implicitHydrogen > 0)
@@ -150,5 +146,5 @@ public class InchiCreator {
 		}
 
 		return input;
-	}
+	}*/
 }

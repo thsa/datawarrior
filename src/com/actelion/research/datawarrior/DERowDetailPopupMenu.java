@@ -23,7 +23,7 @@ import com.actelion.research.chem.coords.CoordinateInventor;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
-import com.actelion.research.datawarrior.chem.InchiCreator;
+import com.actelion.research.datawarrior.chem.InchiBuilder;
 import com.actelion.research.datawarrior.task.chem.DETaskSortReactionsBySimilarity;
 import com.actelion.research.datawarrior.task.chem.DETaskSortStructuresBySimilarity;
 import com.actelion.research.datawarrior.task.table.DETaskCopyTableCells;
@@ -35,7 +35,9 @@ import com.actelion.research.table.filter.JMultiStructureFilterPanel;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.*;
+import com.actelion.research.table.view.CompoundTableView;
+import com.actelion.research.table.view.JCardView;
+import com.actelion.research.table.view.JStructureGrid;
 import com.actelion.research.table.view.card.CardElement;
 import com.actelion.research.table.view.card.JCardPane;
 import com.actelion.research.table.view.card.positioning.CardNumericalShaper1D;
@@ -945,9 +947,9 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 				if (actionCommand.startsWith(COPY_SMILES))
 					encodedMol = new IsomericSmilesCreator(mol).getSmiles();
 				else if (actionCommand.startsWith(COPY_INCHI))
-					encodedMol = InchiCreator.createStandardInchi(mol);
+					encodedMol = InchiBuilder.createStandardInchi(mol);
 				else if (actionCommand.startsWith(COPY_INCHI_KEY))
-					encodedMol = InchiCreator.createInchiKey(mol);
+					encodedMol = InchiBuilder.createInchiKey(mol);
 				else if (actionCommand.startsWith(COPY_MOLFILE2))
 					encodedMol = new MolfileCreator(mol).getMolfile();
 				else

@@ -20,7 +20,7 @@ package com.actelion.research.datawarrior.task.chem;
 
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.chem.InchiCreator;
+import com.actelion.research.datawarrior.chem.InchiBuilder;
 
 
 public class DETaskAddInchiKey extends DETaskAbstractFromStructure implements Runnable {
@@ -57,6 +57,6 @@ public class DETaskAddInchiKey extends DETaskAbstractFromStructure implements Ru
 
 	@Override
 	protected String getNewColumnValue(StereoMolecule mol, Object descriptor, int column) {
-		return InchiCreator.createInchiKey(mol);
+		return InchiBuilder.createInchiKey(mol);
 	}
 }

@@ -20,7 +20,7 @@ package com.actelion.research.datawarrior.task.chem;
 
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.chem.InchiCreator;
+import com.actelion.research.datawarrior.chem.InchiBuilder;
 
 
 public class DETaskAddStandardInchi extends DETaskAbstractFromStructure implements Runnable {
@@ -55,8 +55,15 @@ public class DETaskAddStandardInchi extends DETaskAbstractFromStructure implemen
 		return "InChI";
 	}
 
+	// TODO remove this stuff
+//	@Override
+//	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) throws Exception {
+//		String smiles = getTableModel().getTotalValueAt(row, getTableModel().findColumn("obSMILES"));
+//		getTableModel().setTotalValueAt(SmilesToInchi.toInchi(smiles).getInchi(), row, firstNewColumn);
+//		}
+
 	@Override
 	protected String getNewColumnValue(StereoMolecule mol, Object descriptor, int column) {
-		return InchiCreator.createStandardInchi(mol);
+		return InchiBuilder.createStandardInchi(mol);
 	}
 }

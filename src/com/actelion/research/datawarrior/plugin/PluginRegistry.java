@@ -19,17 +19,22 @@
 package com.actelion.research.datawarrior.plugin;
 
 import com.actelion.research.datawarrior.DataWarrior;
+import org.openmolecules.datawarrior.plugin.IPluginInitializer;
 import org.openmolecules.datawarrior.plugin.IPluginTask;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Properties;
 
 public class PluginRegistry {
+	private static final String INITIALIZER_CLASS_NAME = "PluginInitializer";
+	private static final String CONFIG_FILE_NAME = "config.txt";
+	private static final String KEY_CUSTOM_PLUGIN_DIRS = "custom_plugin_dirs";
+
 	private ArrayList<IPluginTask> mPluginList;
 
 	public PluginRegistry(DataWarrior application) {
@@ -42,31 +47,62 @@ public class PluginRegistry {
 
 	private void loadPlugins(DataWarrior application) {
 		mPluginList = new ArrayList<>();
-		File directory = application.resolveResourcePath(DataWarrior.PLUGIN_DIR);
-		if (directory != null) {
-			FileFilter filter = file -> {
-				if (file.isDirectory())
-					return false;
-				return (file.getName().toLowerCase().endsWith(".jar"));
-			};
 
-			File[] files = directory.listFiles(filter);
-			if (files != null && files.length != 0) {
-				for (File file : files) {
+		File rootPluginDir = application.resolveResourcePath(DataWarrior.PLUGIN_DIR);
+
+		Properties config = new Properties();
+
+		File configFile = new File(rootPluginDir+File.separator+CONFIG_FILE_NAME);
+		if (configFile.exists()) {
+			try {
+				config.load(new FileReader(configFile));
+			} catch (IOException ioe) {}
+		}
+
+		// Load plugins from standard plugin directory
+		if (rootPluginDir != null && rootPluginDir.isDirectory())
+			loadPlugins(rootPluginDir, config);
+
+		// Load plugins from defined custom plugin directories
+		String customPaths = config.getProperty(KEY_CUSTOM_PLUGIN_DIRS);
+		if (customPaths != null) {
+			for (String customPath:customPaths.split(",")) {
+				File customPluginDir = new File(application.resolvePathVariables(customPath.trim()));
+				if (customPluginDir.exists() && customPluginDir.isDirectory())
+					loadPlugins(customPluginDir, config);
+			}
+		}
+	}
+
+	private void loadPlugins(File directory, Properties config) {
+		File[] files = directory.listFiles(file -> !file.isDirectory() && file.getName().toLowerCase().endsWith(".jar"));
+		if (files != null && files.length != 0) {
+			Arrays.sort(files, Comparator.comparing(File::getName));
+			for (File file : files) {
+				try {
+					ClassLoader loader = URLClassLoader.newInstance(new URL[] { file.toURI().toURL() }, getClass().getClassLoader());
+
+					// Since Sep2021 plugins may contain an Initializer class. We try to load and run it...
 					try {
-						ClassLoader loader = URLClassLoader.newInstance(new URL[] { file.toURI().toURL() }, getClass().getClassLoader());
-						BufferedReader br = new BufferedReader(new InputStreamReader(loader.getResourceAsStream("tasknames")));
-						String className = br.readLine();
-						while (className != null && className.length() != 0) {
-							Class pluginClass = loader.loadClass(className.trim());
-							mPluginList.add((IPluginTask)pluginClass.newInstance());
-							className = br.readLine();
-							}
-						br.close();
+						Class initializerClass = loader.loadClass(INITIALIZER_CLASS_NAME);
+						IPluginInitializer initializer = (IPluginInitializer)initializerClass.newInstance();
+						initializer.initialize(directory, config);
 					}
 					catch (Exception e) {
-						e.printStackTrace();
+						// no error handling, because it is OK for the class not to be present
 					}
+
+					BufferedReader br = new BufferedReader(new InputStreamReader(loader.getResourceAsStream("tasknames")));
+					String className = br.readLine();
+					while (className != null && className.length() != 0) {
+						Class pluginClass = loader.loadClass(className.trim());
+						mPluginList.add((IPluginTask)pluginClass.newInstance());
+						className = br.readLine();
+					}
+					br.close();
+				}
+				catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		}

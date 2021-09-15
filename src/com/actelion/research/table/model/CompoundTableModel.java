@@ -607,7 +607,7 @@ public class CompoundTableModel extends AbstractTableModel
 				if (mol == null)
 					mol = new StereoMolecule();
 				else
-					mol.deleteMolecule();
+					mol.clear();
 				mol.setFragment(true);
 				return mol;
 				}

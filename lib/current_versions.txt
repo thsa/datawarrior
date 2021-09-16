@@ -11,9 +11,10 @@ commons-math-2.2.jar
 
 jep.jar (JEP Java Expression parser 2.4.1; GPL3)
 
-jni-inchi-0.7-jar-with-dependencies.jar 2010-10-31
-from https://sourceforge.net/projects/jni-inchi/files/latest/download
-Guide: http://jni-inchi.sourceforge.net/guide.html
+jnainchi.jar (Daniel Lowe's JNA wrapper for InChi code 1.0.6 from inchi-trust.org)
+- github.com/dan2097/jna-inchi 16Sep2021
+- beam-core-1.3.4.jar
+- jna-5.9.0.jar
 
 ojdbc8.jar
 Oracle Database 19c (19.7) JDBC Driver (certified for JDK8,9,11)

@@ -55,13 +55,6 @@ public class DETaskAddStandardInchi extends DETaskAbstractFromStructure implemen
 		return "InChI";
 	}
 
-	// TODO remove this stuff
-//	@Override
-//	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) throws Exception {
-//		String smiles = getTableModel().getTotalValueAt(row, getTableModel().findColumn("obSMILES"));
-//		getTableModel().setTotalValueAt(SmilesToInchi.toInchi(smiles).getInchi(), row, firstNewColumn);
-//		}
-
 	@Override
 	protected String getNewColumnValue(StereoMolecule mol, Object descriptor, int column) {
 		return InchiBuilder.createStandardInchi(mol);

@@ -22,7 +22,6 @@ import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.SmilesParser;
 import com.actelion.research.chem.SortedStringList;
 import com.actelion.research.chem.StereoMolecule;
-import com.actelion.research.chem.coords.CoordinateInventor;
 import com.actelion.research.chem.name.StructureNameResolver;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
@@ -150,7 +149,6 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 				if (smiles == null)
 					smiles = name;
 
-				mol.clear();
 				try {
 					new SmilesParser(SmilesParser.SMARTS_MODE_GUESS, false).parse(mol, smiles);
 					}
@@ -160,7 +158,6 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 
 				if (mol.getAllAtoms() != 0) {
 					try {
-						new CoordinateInventor().invent(mol);
 						mol.normalizeAmbiguousBonds();
 						mol.canonizeCharge(true);
 						Canonizer canonizer = new Canonizer(mol);

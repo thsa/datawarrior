@@ -18,11 +18,13 @@
 
 package com.actelion.research.datawarrior;
 
-import com.actelion.research.gui.dock.ShadowBorder;
-import com.actelion.research.table.model.CompoundRecord;
+import com.actelion.research.datawarrior.task.DEMacroRecorder;
+import com.actelion.research.datawarrior.task.view.DETaskChangeDividerLocation;
+import com.actelion.research.gui.dock.*;
 import com.actelion.research.table.DetailPopupProvider;
 import com.actelion.research.table.RuntimePropertyEvent;
 import com.actelion.research.table.RuntimePropertyListener;
+import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.view.CompoundTableView;
 
 import javax.swing.*;
@@ -55,6 +57,11 @@ public class DEParentPane extends JComponent implements DetailPopupProvider  {
 		mTabbedDetailViews = detailPane;
 		mTabbedDetailViews.setBorder(new ShadowBorder(1,1,3,6));
 		mTabbedMainViews = new DEMainPane(mParentFrame, mTableModel, mTabbedDetailViews, statusPanel, this);
+		mTabbedMainViews.addDividerChangeLister((tf) -> {
+			DETaskChangeDividerLocation task = new DETaskChangeDividerLocation(parent,
+					getTitleOfFirstVisibleDockable(tf.getLeftChild()), getTitleOfFirstVisibleDockable(tf.getRightChild()), tf.getDividerLocation());
+			DEMacroRecorder.record(task, task.getPredefinedConfiguration());
+		});
 
 		mPruningPanel = new DEPruningPanel(mParentFrame, this, mTableModel);
 		mPruningPanel.setBorder(new ShadowBorder(4,1,3,6));
@@ -64,7 +71,11 @@ public class DEParentPane extends JComponent implements DetailPopupProvider  {
 		mMainSplitPane.setOneTouchExpandable(true);
 	    mMainSplitPane.setContinuousLayout(true);
 	    mMainSplitPane.setResizeWeight(0.75);
-//		mMainSplitPane.setDividerSize((int)(HiDPIHelper.getUIScaleFactor()*10f));
+	    mMainSplitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, e -> {
+		    DETaskChangeDividerLocation task = new DETaskChangeDividerLocation(parent,
+				    DETaskChangeDividerLocation.VIEW_AREA, DETaskChangeDividerLocation.DETAIL_AREA, getMainSplitting());
+		    DEMacroRecorder.record(task, task.getPredefinedConfiguration());
+	        } );
 
 		mRightSplitPane = new JSplitPane();
 		mRightSplitPane.setBorder(null);
@@ -74,7 +85,11 @@ public class DEParentPane extends JComponent implements DetailPopupProvider  {
 		mRightSplitPane.setOneTouchExpandable(true);
 	    mRightSplitPane.setContinuousLayout(true);
 	    mRightSplitPane.setResizeWeight(0.7);
-//		mRightSplitPane.setDividerSize((int)(HiDPIHelper.getUIScaleFactor()*10f));
+		mRightSplitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, e -> {
+			DETaskChangeDividerLocation task = new DETaskChangeDividerLocation(parent,
+					DETaskChangeDividerLocation.FILTER_AREA, DETaskChangeDividerLocation.DETAIL_AREA, getRightSplitting());
+			DEMacroRecorder.record(task, task.getPredefinedConfiguration());
+			} );
 
 	    add(mMainSplitPane, BorderLayout.CENTER);
 	    mMainSplitPane.add(mTabbedMainViews, JSplitPane.LEFT);
@@ -160,5 +175,14 @@ public class DEParentPane extends JComponent implements DetailPopupProvider  {
 
 	public void setRightSplitting(double l) {
 		mRightSplitPane.setDividerLocation(Math.max(0.0, Math.min(1.0, l)));
+		}
+
+	private String getTitleOfFirstVisibleDockable(TreeElement treeElement) {
+		if (treeElement instanceof TreeFork)
+			return getTitleOfFirstVisibleDockable(((TreeFork)treeElement).getLeftChild());
+
+		Component component = treeElement.getComponent();
+		Dockable dockable = (Dockable)(component instanceof JTabbedPane ? ((JTabbedPane)component).getSelectedComponent() : component);
+		return dockable.getTitle();
 		}
 	}

@@ -47,7 +47,7 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 	private DEMacro				mRecordingMacro;
 
 	/**
-	 * If the macro recorder is currently recording a macro, then this method records a the given task.
+	 * If the macro recorder is currently recording a macro, then this method records the given task.
 	 * This method can savely be called from any thread. It waits until the task is recorded.
 	 * @param task
 	 * @param configuration
@@ -59,12 +59,7 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 				}
 			else {
 				try {
-					SwingUtilities.invokeAndWait(new Runnable() {
-						@Override
-						public void run() {
-							sRecorder.recordTask(task, configuration);
-							}
-						} );
+					SwingUtilities.invokeAndWait(() -> sRecorder.recordTask(task, configuration));
 					}
 				catch (Exception e) {}
 				}

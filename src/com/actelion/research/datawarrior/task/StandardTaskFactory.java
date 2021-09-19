@@ -122,6 +122,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskChangeStructureFilter.TASK_NAME) ? new DETaskChangeStructureFilter(frame, pruningPanel, null)
 			 : codeMatches(taskCode, DETaskChangeSubstructureListFilter.TASK_NAME) ? new DETaskChangeSubstructureListFilter(frame, pruningPanel, null)
 			 : codeMatches(taskCode, DETaskChangeColumnOrder.TASK_NAME) ? new DETaskChangeColumnOrder(frame, mainPane.getTableView())
+			 : codeMatches(taskCode, DETaskChangeDividerLocation.TASK_NAME) ? new DETaskChangeDividerLocation(frame, null, null, 0.5)
 			 : codeMatches(taskCode, DETaskChangeTextFilter.TASK_NAME) ? new DETaskChangeTextFilter(frame, pruningPanel, null)
 			 : codeMatches(taskCode, DETaskChemblQuery.TASK_NAME) ? new DETaskChemblQuery(frame, application)
 			 : codeMatches(taskCode, DETaskChemSpaceQuery.TASK_NAME) ? new DETaskChemSpaceQuery(frame, application)
@@ -330,6 +331,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskCalculateSOM.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskChangeCategoryBrowser.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskChangeCategoryFilter.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskChangeDividerLocation.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskChangeListFilter.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskChangeRangeFilter.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskChangeReactionFilter.TASK_NAME));

@@ -80,7 +80,7 @@ public class InchiBuilder {
 					return output.getMessage();
 					}
 				InchiKeyOutput keyOutput = JnaInchi.inchiToInchiKey(inchi);
-				return (keyOutput.getStatus() == InchiKeyStatus.OK) ? keyOutput.getInchiKey() : null;
+				return (keyOutput.getStatus() == InchiKeyStatus.OK) ? keyOutput.getInchiKey().trim() : null;
 				}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -144,8 +144,7 @@ public class InchiBuilder {
 					for (int i=0; i<4; i++)
 						a[i] = inchiAtom[c[i]];
 
-					InchiStereoParity inchiParity = (parity == Molecule.cAtomParity1) ? InchiStereoParity.EVEN
-												  : (parity == Molecule.cAtomParity2) ? InchiStereoParity.ODD : InchiStereoParity.UNKNOWN;
+					InchiStereoParity inchiParity = (parity == Molecule.cAtomParity1) ? InchiStereoParity.EVEN : InchiStereoParity.ODD;
 					input.addStereo(new InchiStereo(a, inchiAtom[atom], InchiStereoType.Tetrahedral, inchiParity));
 					}
 				}

@@ -54,6 +54,12 @@ public interface IPluginHelper {
 	public int getTotalRowCount();
 
 	/**
+	 * @param visibleOnly if true, then all selected and currently visible rows are returned
+	 * @return row indexes of all (or just currently visible) selected rows
+	 */
+	public int[] getSelectedRows(boolean visibleOnly);
+
+	/**
 	 * Alphanumerical cells may contain multiple values, which are either separated by
 	 * '; ' or in distinct lines. This method creates an array of all individual cell entries.
 	 * Empty cells are returned as an array with size=1 containing one empty String.

@@ -24,6 +24,7 @@ import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DERuntimeProperties;
 import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
 import org.openmolecules.datawarrior.plugin.IPluginHelper;
@@ -35,7 +36,7 @@ import java.io.StringReader;
 
 public class PluginHelper implements IPluginHelper {
 	private DataWarrior mApplication;
-	private DEFrame mParentFrame;
+	private DEFrame mNewFrame;
 	private CompoundTableModel  mSourceTableModel,mTargetTableModel;
 	private ProgressController  mProgressController;
 	private int[]               mColumnType,mCoordinateColumn;
@@ -65,15 +66,57 @@ public class PluginHelper implements IPluginHelper {
 		for (int i=0; i<structureColumn.length; i++)
 			columnNameList[i] = mSourceTableModel.getColumnTitle(structureColumn[i]);
 
-		String columnName = (String)JOptionPane.showInputDialog(mParentFrame,
-				"Please select a column with chemical structures!",
-				"Select Structure Column",
-				JOptionPane.QUESTION_MESSAGE,
-				null,
-				columnNameList,
-				columnNameList[0]);
-		return mSourceTableModel.findColumn(columnName);
-	}
+		try {
+			int[] column = new int[1];
+			column[0] = -1;
+			SwingUtilities.invokeAndWait(() -> {
+				column[0] = mSourceTableModel.findColumn(
+					(String)JOptionPane.showInputDialog(mApplication.getActiveFrame(),
+						"Please select a column with chemical structures!",
+						"Select Structure Column",
+						JOptionPane.QUESTION_MESSAGE,
+						null,
+						columnNameList,
+						columnNameList[0]));
+				});
+			return column[0];
+			}
+		catch (Exception ie) {
+			return -1;
+			}
+		}
+
+	@Override
+	public int[] getSelectedRows(boolean visibleOnly) {
+		int count = 0;
+		for (int row=0; row<mSourceTableModel.getTotalRowCount(); row++) {
+			CompoundRecord record = mSourceTableModel.getTotalRecord(row);
+			if (visibleOnly) {
+				if (mSourceTableModel.isVisibleAndSelected(record))
+					count++;
+				}
+			else {
+				if (mSourceTableModel.isSelected(record))
+					count++;
+				}
+			}
+
+		int[] selectedRow = new int[count];
+		count = 0;
+		for (int row=0; row<mSourceTableModel.getTotalRowCount(); row++) {
+			CompoundRecord record = mSourceTableModel.getTotalRecord(row);
+			if (visibleOnly) {
+				if (mSourceTableModel.isVisibleAndSelected(record))
+					selectedRow[count++] = row;
+			}
+			else {
+				if (mSourceTableModel.isSelected(record))
+					selectedRow[count++] = row;
+				}
+			}
+
+		return selectedRow;
+		}
 
 	@Override
 	public int getTotalRowCount() {
@@ -113,7 +156,7 @@ public class PluginHelper implements IPluginHelper {
 	}
 
 	public DEFrame getNewFrame() {
-		return mParentFrame;
+		return mNewFrame;
 		}
 
 	@Override
@@ -132,8 +175,8 @@ public class PluginHelper implements IPluginHelper {
 		if (mProgressController.threadMustDie())
 			return;
 
-		mParentFrame = mApplication.getEmptyFrame(newWindowName);
-		mTargetTableModel = mParentFrame.getTableModel();
+		mNewFrame = mApplication.getEmptyFrame(newWindowName);
+		mTargetTableModel = mNewFrame.getTableModel();
 		mTargetTableModel.initializeTable(rowCount, columnCount);
 		mColumnType = new int[columnCount];
 		mCoordinateColumn = new int[columnCount];
@@ -225,7 +268,7 @@ public class PluginHelper implements IPluginHelper {
 			}
 		else {
 			mTargetTableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, mProgressController);
-			DERuntimeProperties rtp = new DERuntimeProperties(mParentFrame.getMainFrame());
+			DERuntimeProperties rtp = new DERuntimeProperties(mNewFrame.getMainFrame());
 			try {
 				rtp.read(new BufferedReader(new StringReader(template)));
 				rtp.apply();

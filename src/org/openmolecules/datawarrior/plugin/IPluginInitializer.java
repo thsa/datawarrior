@@ -35,6 +35,7 @@ public interface IPluginInitializer {
 	/**
 	 * This method is called when the plugin is loaded.
 	 * @param pluginDir directory containing the plugin
+	 * @param config the configuration obtained from a config.txt file from the root plugin folder
 	 */
 	void initialize(File pluginDir, Properties config);
 }

@@ -318,7 +318,6 @@ public class JVisualization2D extends JVisualization {
 					mFontHeight = calculateFontSize(bounds.width, bounds.height, 1f, retinaFactor, true);
 
 					mG = mOffG;
-
 					paintContent(bounds, false);
 
 					if (mWarningMessage != null) {
@@ -4979,7 +4978,7 @@ public class JVisualization2D extends JVisualization {
 
 			// With smaller views due to splitting we reduce size less than proportionally,
 			// because individual views are much less crowded and relatively larger markers seem more natural.
-			float splittingFactor = (float)Math.pow(mHVCount, 0.33);
+			float splittingFactor = (float)Math.pow(Math.max(1, mHVCount), 0.33);
 
 			if (mChartType == cChartTypeBoxPlot || mChartType == cChartTypeWhiskerPlot) {
 				float cellWidth = (mIsCategoryAxis[0]) ?

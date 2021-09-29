@@ -211,6 +211,11 @@ public class PluginHelper implements IPluginHelper {
 	}
 
 	@Override
+	public void setColumnProperty(int column, String key, String value) {
+		mTargetTableModel.setColumnProperty(column, key, value);
+		}
+
+	@Override
 	public void setCellData(int column, int row, String value) {
 		if (mProgressController.threadMustDie())
 			return;

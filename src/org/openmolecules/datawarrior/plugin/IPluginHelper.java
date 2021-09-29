@@ -121,11 +121,19 @@ public interface IPluginHelper {
 	void setColumnTitle(int column, String title);
 
 	/**
-	 * Call this for columns that contains chemical structures
+	 * Call this for columns that contain chemical structures
 	 * @param column
 	 * @param type COLUMN_TYPE_...
 	 */
 	void setColumnType(int column, int type);
+
+	/**
+	 * If need to change your column's behaviour, you may supply column properties
+	 * @param column
+	 * @param key
+	 * @param value
+	 */
+	void setColumnProperty(int column, String key, String value);
 
 	/**
 	 * If the column's type is COLUMN_TYPE_STRUCTURE_FROM_SMILES or

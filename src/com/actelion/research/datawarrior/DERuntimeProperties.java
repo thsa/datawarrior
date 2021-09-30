@@ -139,6 +139,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cViewFontSizeMode = "fontSizeMode";
 	private static final String cShapeColumn = "shapeColumn";
 	private static final String cMarkerTransparency = "markertransparency";
+	private static final String cMarkerLabelTransparency = "markerLabelTransparency";
+	private static final String cConnectionLineTransparency = "connectionLineTransparency";
 	private static final String cMultiValueMarkerMode = "multiValueMarkerMode";
 	private static final String cMultiValueMarkerColumns = "multiValueMarkerColumns";
 	private static final String cConnectionColumn1 = "connectionColumn";
@@ -848,7 +850,18 @@ public class DERuntimeProperties extends RuntimeProperties {
 				if (value != null) {
 					try {
 						float transparency = Float.parseFloat(value);
-						((JVisualization2D)visualization).setMarkerTransparency(transparency);
+
+						float transparency1 = transparency;
+						String value1 = getProperty(cMarkerLabelTransparency+viewName);
+						if (value1 != null)
+							try { transparency1 = Float.parseFloat(value1); } catch (NumberFormatException nfe) {}
+
+						float transparency2 = transparency;
+						String value2 = getProperty(cConnectionLineTransparency+viewName);
+						if (value2 != null)
+							try { transparency2 = Float.parseFloat(value2); } catch (NumberFormatException nfe) {}
+
+						((JVisualization2D)visualization).setTransparency(transparency, transparency1, transparency2);
 						}
 					catch (NumberFormatException nfe) {}
 					}
@@ -1565,6 +1578,14 @@ public class DERuntimeProperties extends RuntimeProperties {
 						double transparency = ((JVisualization2D)visualization).getMarkerTransparency();
 						if (transparency != 0.0) {
 							setProperty(cMarkerTransparency+viewName, ""+transparency);
+
+							double transparency1 = ((JVisualization2D)visualization).getMarkerLabelTransparency();
+							if (transparency1 != transparency)
+								setProperty(cMarkerLabelTransparency+viewName, ""+transparency1);
+
+							double transparency2 = ((JVisualization2D)visualization).getConnectionLineTransparency();
+							if (transparency2 != transparency)
+								setProperty(cConnectionLineTransparency+viewName, ""+transparency2);
 							}
 
 						if (((JVisualization2D)visualization).getCrossHairMode() != JVisualization2D.CROSSHAIR_MODE_AUTOMATIC)

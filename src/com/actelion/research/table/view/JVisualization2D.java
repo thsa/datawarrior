@@ -159,7 +159,7 @@ public class JVisualization2D extends JVisualization {
 	private Stroke          mThinLineStroke,mNormalLineStroke,mFatLineStroke,mVeryFatLineStroke,mConnectionStroke;
 	private float[]			mCorrelationCoefficient;
 	private float			mBackgroundColorRadius,mBackgroundColorFading,mFontScaling,mMarkerTransparency,
-							mCurveLineWidth,mCurveSmoothing;
+							mMarkerLabelTransparency,mConnectionLineTransparency,mCurveLineWidth,mCurveSmoothing;
 	private int				mBorder,mCurveInfo,mBackgroundHCount,mBackgroundVCount,mCrossHairMode,
 							mBackgroundColorConsidered,
 							mConnectionFromIndex1,mConnectionFromIndex2,mShownCorrelationType,mMultiValueMarkerMode;
@@ -917,9 +917,10 @@ public class JVisualization2D extends JVisualization {
 		Composite original = null;
 		if (mMarkerTransparency != 0.0) {
 			original = mG.getComposite();
-			Composite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float)(1.0-mMarkerTransparency));
-			mG.setComposite(composite);
+			mG.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float)(1.0 - mMarkerTransparency)));
 			}
+		Composite labelComposite = (mMarkerLabelTransparency == mMarkerTransparency) ? null
+				: AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float)(1.0 - mMarkerLabelTransparency));
 
 		if (mLabelHelper == null && showAnyLabels())
 			mLabelHelper = new LabelHelper(baseBounds, baseGraphRect);
@@ -1005,7 +1006,7 @@ public class JVisualization2D extends JVisualization {
 						}
 
 					if (drawLabels)
-						drawMarkerLabels(mLabelHelper.getLabelInfo(), markerColor, outlineColor, isTreeView);
+						drawMarkerLabels(mLabelHelper.getLabelInfo(), markerColor, outlineColor, isTreeView, labelComposite);
 					}
 
 				if (!drawLabels)
@@ -1025,25 +1026,36 @@ public class JVisualization2D extends JVisualization {
 			}
 		}
 
-	private void drawMarkerLabels(MarkerLabelInfo[] labelInfo, Color markerColor, Color outlineColor, boolean isTreeView) {
+	private void drawMarkerLabels(MarkerLabelInfo[] labelInfo, Color markerColor, Color outlineColor, boolean isTreeView, Composite composite) {
 		if (mMarkerLabelSize != 1.0)
 			setFontHeightAndScaleToSplitView(mMarkerLabelSize * mFontHeight);
 
 		boolean isDarkBackground = (ColorHelper.perceivedBrightness(mLabelBackground) <= 0.5);
 		Color labelColor = mIsMarkerLabelsBlackAndWhite ? getContrastGrey(1f) : isDarkBackground ? markerColor : markerColor.darker();
 
-		if (mLabelColumn[MarkerLabelDisplayer.cMidCenter] != cColumnUnassigned
-				&& (!mLabelsInTreeViewOnly || isTreeView))
-			drawMarkerLabel(labelInfo[MarkerLabelDisplayer.cMidCenter], labelColor, outlineColor);
+		Composite original = null;
+		if (composite != null) {
+			original = mG.getComposite();
+			mG.setComposite(composite);
+			}
 
-		for (int i=0; i<labelInfo.length; i++)
+		if (mLabelColumn[MarkerLabelDisplayer.cMidCenter] != cColumnUnassigned && (!mLabelsInTreeViewOnly || isTreeView)) {
+			drawMarkerLabel(labelInfo[MarkerLabelDisplayer.cMidCenter], labelColor, outlineColor);
+			}
+
+		for (int i=0; i<labelInfo.length; i++) {
 			if (i != MarkerLabelDisplayer.cMidCenter
-					&& mLabelColumn[i] != cColumnUnassigned
-					&& (!mLabelsInTreeViewOnly || isTreeView))
+			 && mLabelColumn[i] != cColumnUnassigned
+			 && (!mLabelsInTreeViewOnly || isTreeView)) {
 				drawMarkerLabel(labelInfo[i], labelColor, outlineColor);
+				}
+			}
 
 		if (mMarkerLabelSize != 1.0)
 			setFontHeightAndScaleToSplitView(mFontHeight);
+
+		if (original != null)
+			mG.setComposite(original);
 		}
 
 	/**
@@ -1542,6 +1554,12 @@ public class JVisualization2D extends JVisualization {
 		int fromIndex1 = mConnectionFromIndex1;
 		int fromIndex2 = mConnectionFromIndex2;
 
+		Composite original = null;
+		if (mConnectionLineTransparency != mMarkerTransparency) {
+			original = mG.getComposite();
+			mG.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f - mConnectionLineTransparency));
+			}
+
 		mG.setStroke(mConnectionStroke);
 
 		while (true) {
@@ -1552,7 +1570,7 @@ public class JVisualization2D extends JVisualization {
 				toIndex1++;
 
 			if (toIndex1 == mConnectionLinePoint.length)
-				return;
+				break;
 
 			int toIndex2 = getNextChangedConnectionLinePointIndex(toIndex1);
 
@@ -1569,6 +1587,9 @@ public class JVisualization2D extends JVisualization {
 			fromIndex1 = toIndex1;
 			fromIndex2 = toIndex2;
 			}
+
+		if (original != null)
+			mG.setComposite(original);
 		}
 
 	private boolean drawReferenceConnectionLines(int referencedColumn) {
@@ -1589,8 +1610,13 @@ public class JVisualization2D extends JVisualization {
 		boolean isRedundant = CompoundTableConstants.cColumnPropertyReferenceTypeRedundant.equals(
 				mTableModel.getColumnProperty(mConnectionColumn, CompoundTableConstants.cColumnPropertyReferenceType));
 
+		Composite original = null;
+		if (mConnectionLineTransparency != mMarkerTransparency || strengthColumn == -1)
+			original = mG.getComposite();
+		if (mConnectionLineTransparency != mMarkerTransparency)
+			mG.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f - mConnectionLineTransparency));
+
 		mG.setStroke(mConnectionStroke);
-		Composite original = (strengthColumn == -1) ? null : mG.getComposite();
 
 		if (mTreeNodeList != null) {
 			for (int layer=1; layer<mTreeNodeList.length; layer++) {
@@ -1604,7 +1630,8 @@ public class JVisualization2D extends JVisualization {
 					  || (inFocus
 						^ (vp1.record.getFlags() & vp2.record.getFlags() & focusMask) == 0))) {
 						if (strength > 0f)
-							drawConnectionLine(vp1, vp2, considerFocus && !inFocus, 1f-strength, !isRedundant);
+							drawConnectionLine(vp1, vp2, considerFocus && !inFocus,
+									(1f-strength) * mConnectionLineTransparency, !isRedundant);
 						}
 					}
 				}
@@ -1649,11 +1676,11 @@ public class JVisualization2D extends JVisualization {
 							 && (!considerFocus
 							  || (inFocus
 							   ^ (vp1.record.getFlags() & vp2.record.getFlags() & focusMask) == 0))) {
-								float transparency = 0.0f;
+								float transparency = mConnectionLineTransparency;
 								if (strength != null) {
 									try {
 										float value = Math.min(max, Math.max(min, mTableModel.tryParseEntry(strength[index++], strengthColumn)));
-										transparency = Float.isNaN(value) ? 1.0f : (float)((max-value) / dif);
+										transparency *= Float.isNaN(value) ? 1.0f : (max-value) / dif;
 										}
 									catch (NumberFormatException nfe) {}
 									}
@@ -1974,15 +2001,27 @@ public class JVisualization2D extends JVisualization {
 			if (mOptimizeLabelPositions)
 				labelHelper.optimizeLabels();
 
+			Composite labelComposite = null;
+			if (mMarkerLabelTransparency != mMarkerTransparency) {
+				if (original == null)
+					original = mG.getComposite();
+
+				labelComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float)(1.0 - mMarkerLabelTransparency));
+				mG.setComposite(labelComposite);
+				}
+
 			for (int i=0; i<mDataPoints; i++) {
 				VisualizationPoint vp = mPoint[i];
 				if (isVisibleInBarsOrPies(vp) && labelHelper.hasLabels(vp)) {
 					Color color = mChartInfo.color[getColorIndex(vp, colorListLength, focusFlagNo)];
 					labelHelper.prepareLabels(vp);
 					labelHelper.drawLabelLines(vp, color);
-					drawMarkerLabels(labelHelper.getLabelInfo(), color, color, false);
+					drawMarkerLabels(labelHelper.getLabelInfo(), color, color, false, labelComposite);
 					}
 				}
+
+			if (labelComposite != null)
+				mG.setComposite(original);
 			}
 		}
 
@@ -4157,13 +4196,27 @@ public class JVisualization2D extends JVisualization {
 		return mMarkerTransparency;
 		}
 
+	public float getMarkerLabelTransparency() {
+		return mMarkerLabelTransparency;
+		}
+
+	public float getConnectionLineTransparency() {
+		return mConnectionLineTransparency;
+		}
+
 	/**
 	 * Changes the marker transparency for non-histogram views
-	 * @param transparency value from 0.0 to 1.0
+	 * @param markerTransparency value from 0.0 to 1.0
+	 * @param labelTransparency value from 0.0 to 1.0
+	 * @param connectionLineTransparency value from 0.0 to 1.0
 	 */
-	public void setMarkerTransparency(float transparency) {
-		if (mMarkerTransparency != transparency) {
-			mMarkerTransparency = transparency;
+	public void setTransparency(float markerTransparency, float labelTransparency, float connectionLineTransparency) {
+		if (mMarkerTransparency != markerTransparency
+		 || mMarkerLabelTransparency != labelTransparency
+		 || mConnectionLineTransparency != connectionLineTransparency) {
+			mMarkerTransparency = markerTransparency;
+			mMarkerLabelTransparency = labelTransparency;
+			mConnectionLineTransparency = connectionLineTransparency;
 			mBackgroundValid = false;
 			invalidateOffImage(false);
 			}

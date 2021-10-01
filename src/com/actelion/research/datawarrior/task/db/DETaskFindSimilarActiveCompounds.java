@@ -139,7 +139,7 @@ public class DETaskFindSimilarActiveCompounds extends DETaskAbstractFromStructur
 		}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) throws Exception {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) throws Exception {
 		byte[] idcode = (byte[])getTableModel().getTotalRecord(row).getData(getChemistryColumn());
 		if (idcode != null) {
 			byte[][][] resultList = mResultMap.get(idcode);

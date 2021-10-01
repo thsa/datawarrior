@@ -200,7 +200,7 @@ public class DETaskValidateIDCodes extends DETaskAbstractFromChemistry implement
 		}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) throws Exception {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) throws Exception {
 		StereoMolecule mol = getChemicalStructure(row, containerMol);
 		if (mol != null && mol.getAllAtoms() != 0) {
 			Canonizer canonizer = new Canonizer(mol);

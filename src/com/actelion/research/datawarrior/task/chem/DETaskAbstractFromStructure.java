@@ -36,7 +36,7 @@ public abstract class DETaskAbstractFromStructure extends DETaskAbstractFromChem
 	 * @param firstNewColumn
 	 */
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) throws Exception {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) throws Exception {
 		assert(firstNewColumn != -1);
 		StereoMolecule mol = getChemicalStructure(row, containerMol);
 		if (mol != null)

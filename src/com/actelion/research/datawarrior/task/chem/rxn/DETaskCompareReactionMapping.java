@@ -169,8 +169,8 @@ public class DETaskCompareReactionMapping extends DETaskAbstractFromReaction {
 		return super.preprocessRows(configuration);
 		}
 
-		@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) {
+	@Override
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		CompoundRecord record = getTableModel().getTotalRecord(row);
 
 		byte[] rxncode1 = (byte[])record.getData(mReactionColumn1);

@@ -310,7 +310,7 @@ public class DETaskAssessPredictionQuality extends DETaskAbstractMachineLearning
 	}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) throws Exception {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) throws Exception {
 		// We interpret the input row index as pointer into the time sorted row index table
 		if (row < getFullDataRowCount()) {
 			int rowInTime = row;

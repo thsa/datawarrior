@@ -607,7 +607,7 @@ try {   // TODO remove
 		}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		if (mScaffold[row][0] != null) {
 			getTableModel().removeChildDescriptorsAndCoordinates(row, mScaffoldColumn);
 			getTableModel().setTotalValueAt(mScaffold[row][0], row, mScaffoldColumn);

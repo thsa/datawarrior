@@ -18,9 +18,10 @@
 
 package com.actelion.research.datawarrior.task.chem;
 
-import java.util.Properties;
-
-import com.actelion.research.chem.*;
+import com.actelion.research.chem.Canonizer;
+import com.actelion.research.chem.IDCodeParser;
+import com.actelion.research.chem.MoleculeNeutralizer;
+import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -28,6 +29,7 @@ import com.actelion.research.table.model.CompoundRecord;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
+import java.util.Properties;
 
 public class DETaskAddLargestFragment extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Add Largest Fragment";
@@ -145,7 +147,7 @@ public class DETaskAddLargestFragment extends DETaskAbstractFromStructure {
     	}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		CompoundRecord record = getTableModel().getTotalRecord(row);
 		byte[] idcode = (byte[])record.getData(getChemistryColumn());
 		if (idcode != null) {

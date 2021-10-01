@@ -18,15 +18,15 @@
 
 package com.actelion.research.datawarrior.task.chem;
 
-import java.util.Properties;
-
-import com.actelion.research.chem.*;
+import com.actelion.research.chem.CanonizerUtil;
+import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
+import java.util.Properties;
 
 public class DETaskAddCanonicalCode extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Add Canonical Code";
@@ -117,7 +117,7 @@ public class DETaskAddCanonicalCode extends DETaskAbstractFromStructure {
     	}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		long hash = 0L;
 		if (mDistinguishStereoIsomers && mDistinguishTautomers && !mLargestFragmentOnly) {
 			String idcode = getTableModel().getTotalValueAt(row, getChemistryColumn());

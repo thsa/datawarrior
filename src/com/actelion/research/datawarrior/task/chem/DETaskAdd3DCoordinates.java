@@ -582,7 +582,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure implemen
 		}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule mol) throws Exception {
+	public void processRow(int row, int firstNewColumn, StereoMolecule mol, int threadIndex) throws Exception {
 		if (mFileType != FILE_TYPE_NONE) {
 			addConformersToQueue(row, mol);
 			}

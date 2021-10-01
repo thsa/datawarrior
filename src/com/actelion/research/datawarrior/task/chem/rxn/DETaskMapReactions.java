@@ -130,7 +130,7 @@ public class DETaskMapReactions extends DETaskAbstractFromReaction {
 	}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		Reaction rxn = getChemicalReaction(row);
 		if (rxn == null)
 			return;

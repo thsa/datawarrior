@@ -18,19 +18,17 @@
 
 package com.actelion.research.datawarrior.task.chem.rxn;
 
-import java.util.Properties;
-
-import com.actelion.research.chem.*;
+import com.actelion.research.chem.Canonizer;
+import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.coords.CoordinateInventor;
-import com.actelion.research.chem.descriptor.*;
-import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.chem.DETaskAbstractFromReaction;
-import com.actelion.research.table.model.CompoundRecord;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
+import java.util.Properties;
 
 public class DETaskExtractCatalysts extends DETaskAbstractFromReaction {
 	public static final String TASK_NAME = "Extract Catalysts";
@@ -111,7 +109,7 @@ public class DETaskExtractCatalysts extends DETaskAbstractFromReaction {
 		}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		Reaction rxn = getChemicalReaction(row);
 		if (rxn != null & rxn.getCatalysts() != 0) {
 			StereoMolecule catalysts = rxn.getCatalyst(0);

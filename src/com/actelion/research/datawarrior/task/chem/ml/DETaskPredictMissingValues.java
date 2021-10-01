@@ -95,7 +95,7 @@ public class DETaskPredictMissingValues extends DETaskAbstractMachineLearning {
 	}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) throws Exception {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) throws Exception {
 		if (Double.isNaN(getTableModel().getTotalRecord(row).getDouble(getValueColumn())) && getDescriptor(row) != null) {
 			double[] x = new double[getVariableCount()];
 			calculateParameterRow(row, x);

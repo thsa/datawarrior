@@ -18,29 +18,20 @@
 
 package com.actelion.research.datawarrior.task.chem;
 
-import com.actelion.research.gui.hidpi.HiDPIHelper;
-import info.clearthought.layout.TableLayout;
-
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Properties;
-import java.util.TreeMap;
-
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import com.actelion.research.chem.Canonizer;
-import com.actelion.research.chem.MolecularFormula;
-import com.actelion.research.chem.Molecule;
-import com.actelion.research.chem.ScaffoldHelper;
-import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.chem.*;
 import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import info.clearthought.layout.TableLayout;
+
+import javax.swing.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Properties;
+import java.util.TreeMap;
 
 
 public class DETaskAutomaticSAR extends DETaskAbstractFromStructure implements Runnable {
@@ -200,7 +191,7 @@ public class DETaskAutomaticSAR extends DETaskAbstractFromStructure implements R
 		}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		StereoMolecule mol = getChemicalStructure(row, containerMol);
 		if (mol != null) {
 			mol.stripSmallFragments();

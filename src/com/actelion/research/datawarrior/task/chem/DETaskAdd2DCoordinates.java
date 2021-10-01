@@ -259,7 +259,7 @@ public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implemen
 		}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		int coordinateColumn = (mCoordinateColumn != -1) ? mCoordinateColumn : firstNewColumn;
 		StereoMolecule mol = getChemicalStructure(row, containerMol);
 		if (mol != null && mol.getAllAtoms() != 0) {

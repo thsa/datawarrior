@@ -35,10 +35,11 @@ public abstract class DETaskAbstractFromReaction extends DETaskAbstractFromChemi
 	 * @param row
 	 * @param containerMol container molecule to be repeatedly used if type is TYPE_STRUCTURE
 	 * @param firstNewColumn
+	 * @param threadIndex
 	 */
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) throws Exception {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) throws Exception {
 		assert(firstNewColumn != -1);
 		Reaction rxn = getChemicalReaction(row);
 		if (rxn != null)

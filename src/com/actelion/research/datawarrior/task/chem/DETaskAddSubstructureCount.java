@@ -18,13 +18,8 @@
 
 package com.actelion.research.datawarrior.task.chem;
 
-import java.awt.*;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
-import com.actelion.research.chem.descriptor.DescriptorHandlerFFP512;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.gui.JEditableStructureView;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -33,6 +28,9 @@ import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
+import java.awt.*;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DETaskAddSubstructureCount extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Add Substructure Count";
@@ -144,7 +142,7 @@ public class DETaskAddSubstructureCount extends DETaskAbstractFromStructure {
 		}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		CompoundRecord record = getTableModel().getTotalRecord(row);
 		StereoMolecule mol = getTableModel().getChemicalStructure(record, getChemistryColumn(), CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
 		if (mol != null) {

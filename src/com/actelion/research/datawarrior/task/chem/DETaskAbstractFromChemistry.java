@@ -474,7 +474,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 				updateProgress(row);
 
 			try {
-				processRow(row, firstNewColumn, containerMol);
+				processRow(row, firstNewColumn, containerMol, 0);
 				}
 			catch (Exception e) {
 				errorCount++;
@@ -499,13 +499,14 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 
 		Thread[] t = new Thread[threadCount];
 		for (int i=0; i<threadCount; i++) {
+			final int treadIndex = i;
 			t[i] = new Thread("Abstract ChemProp Calculator "+(i+1)) {
 				public void run() {
 					StereoMolecule containerMol = new StereoMolecule();
 					int recordIndex = mSMPRecordIndex.decrementAndGet();
 					while (recordIndex >= 0 && !threadMustDie()) {
 						try {
-							processRow(recordIndex, firstNewColumn, containerMol);
+							processRow(recordIndex, firstNewColumn, containerMol, treadIndex);
 							}
 						catch (Exception e) {
 							mSMPErrorCount.incrementAndGet();
@@ -542,7 +543,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 			showMessage(message, WARNING_MESSAGE);
 		}
 
-	public abstract void processRow(int row, int firstNewColumn, StereoMolecule containerMol) throws Exception;
+	public abstract void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) throws Exception;
 
 	public CompoundTableModel getTableModel() {
 		return mTableModel;

@@ -155,6 +155,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskDeleteSelectedRows.TASK_NAME) ? new DETaskDeleteSelectedRows(frame)
 			 : codeMatches(taskCode, DETaskDeselectRowsFromList.TASK_NAME) ? new DETaskDeselectRowsFromList(frame, -1)
 			 : codeMatches(taskCode, DETaskDisableAllFilters.TASK_NAME) ? new DETaskDisableAllFilters(frame)
+			 : codeMatches(taskCode, DETaskDockToProtein.TASK_NAME) ? new DETaskDockToProtein(frame)
 			 : codeMatches(taskCode, DETaskDuplicateColumn.TASK_NAME) ? new DETaskDuplicateColumn(frame, mainPane.getTableModel(), -1)
 			 : codeMatches(taskCode, DETaskDuplicateView.TASK_NAME) ? new DETaskDuplicateView(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskEnableAllFilters.TASK_NAME) ? new DETaskEnableAllFilters(frame)
@@ -371,6 +372,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskDeleteSelectedRows.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskDeselectRowsFromList.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskDisableAllFilters.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskDockToProtein.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskDuplicateColumn.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskDuplicateView.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskEnableAllFilters.TASK_NAME));

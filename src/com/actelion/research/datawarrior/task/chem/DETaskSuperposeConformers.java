@@ -187,7 +187,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 	}
 
 	@Override
-	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol) {
+	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		CompoundRecord record = getTableModel().getTotalRecord(row);
 		byte[] idcode = (byte[])record.getData(getChemistryColumn());
 		if (idcode != null) {

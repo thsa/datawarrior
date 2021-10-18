@@ -814,7 +814,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemCreate3DCoords.addActionListener(this);
 		jMenuChemSuperpose.setText("Superpose Conformers...");
 		jMenuChemSuperpose.addActionListener(this);
-		jMenuChemDock.setText("Dock To Protein...");
+		jMenuChemDock.setText("Dock Structures Into Protein Cavity...");
 		jMenuChemDock.addActionListener(this);
 		jMenuChemExtract3DFragments.setText("Build 3D-Fragment Library...");
 		jMenuChemExtract3DFragments.addActionListener(this);
@@ -1612,7 +1612,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuChemSuperpose)
 				new DETaskSuperposeConformers(mParentFrame).defineAndRun();
 			else if (source == jMenuChemDock)
-				new DETaskDockToProtein(mParentFrame).defineAndRun();
+				new DETaskDockIntoProteinCavity(mParentFrame).defineAndRun();
 			else if (source == jMenuChemExtract3DFragments)
 				new DETaskBuild3DFragmentLibrary(mParentFrame).defineAndRun();
 			else if (source == jMenuChemAutomaticSARTable)

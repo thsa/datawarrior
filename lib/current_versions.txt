@@ -19,14 +19,14 @@ ojdbc8.jar
 Oracle Database 19c (19.7) JDBC Driver (certified for JDK8,9,11)
 
 mmtf.jar (used to retrieve PDB entries in binary mmtf format) contains:
-- jackson-annotations-2.9.5.jar
-- jackson-core-2.9.5.jar
-- jackson-databind-2.9.5.jar
-- jackson-dataformat-msgpack-0.8.9.jar
-- mmtf-api-1.0.7.jar
-- mmtf-codec-1.0.7.jar
-- mmtf-serialization-1.0.7.jar
-- msgpack-core-0.8.9.jar
+- jackson-annotations-2.13.0.jar
+- jackson-core-2.13.0.jar
+- jackson-databind-2.13.0.jar
+- jackson-dataformat-msgpack-0.9.0.jar
+- mmtf-api-1.0.10.jar
+- mmtf-codec-1.0.10.jar
+- mmtf-serialization-1.0.10.jar
+- msgpack-core-0.9.0.jar
   (was shrunk after merging using proguard to remove unused classes and methods in jackson & msgpack)
 
 mssql-jdbc-7.2.2.jre8

@@ -82,7 +82,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 		Properties configuration = super.getDialogConfiguration();
 
 		StringBuilder sb = new StringBuilder();
-		ArrayList<StereoMolecule> moleculeList = mConformerPanel.getConformers();
+		ArrayList<StereoMolecule> moleculeList = mConformerPanel.getMolecules(null);
 		for (StereoMolecule mol:moleculeList) {
 			mol.center();
 			Canonizer canonizer = new Canonizer(mol);

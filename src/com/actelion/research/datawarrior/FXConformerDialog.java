@@ -211,7 +211,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 					}
 
 				if (isPreviousStructure) {  // remove, superpose and add existing conformers
-					ArrayList<StereoMolecule> conformerList = mConformationPanel.getConformers();
+					ArrayList<StereoMolecule> conformerList = mConformationPanel.getMolecules(null);
 					mConformationPanel.clear();
 					mSliderSplitting.setValue(0);
 					mComboBoxSurface.setSelectedIndex(0);
@@ -657,7 +657,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 				: (mPreviousAlgo == SELF_ORGANIZED) ? "Strain"
 				: (mPreviousAlgo == ACTELION3D) ? "" : "Percent Contribution";
 
-		ArrayList<StereoMolecule> conformerList = mConformationPanel.getConformers();
+		ArrayList<StereoMolecule> conformerList = mConformationPanel.getMolecules(null);
 
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file));

@@ -86,7 +86,7 @@ public class ConformerFitnessPanel extends FitnessPanel {
 		StringBuilder sb = new StringBuilder(CONFORMER_OPTION_CODE);
 		sb.append('\t').append(mComboBoxDescriptor.getSelectedItem());
 		sb.append('\t').append(mSlider.getValue());
-		ArrayList<StereoMolecule> moleculeList = mConformerPanel.getConformers();
+		ArrayList<StereoMolecule> moleculeList = mConformerPanel.getMolecules(null);
 		for (StereoMolecule mol:moleculeList) {
 			Canonizer canonizer = new Canonizer(mol);
 			sb.append('\t').append(canonizer.getIDCode());

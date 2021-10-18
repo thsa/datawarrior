@@ -41,13 +41,13 @@ public class JStructure3DFormObject extends AbstractFormObject {
 		}
 
 	public void setReferenceMolecule(StereoMolecule refMol) {
-		((JFXConformerPanel)mComponent).setReferenceMolecule(refMol);
+		((JFXConformerPanel)mComponent).setOverlayMolecule(refMol);
 		mRefMol = refMol;
 		}
 
     @Override
 	public Object getData() {
-		ArrayList<StereoMolecule> molList = ((JFXConformerPanel)mComponent).getConformers();
+		ArrayList<StereoMolecule> molList = ((JFXConformerPanel)mComponent).getMolecules(null);
 		return (molList.isEmpty()) ? null : molList.get(0);
 		}
 

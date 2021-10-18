@@ -218,7 +218,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				view.setBackground(new java.awt.Color(24, 24, 96));
 				String refmol = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);
 				if (refmol != null)
-					view.setReferenceMolecule(new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(refmol));
+					view.setOverlayMolecule(new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(refmol));
 				DetailViewInfo viewInfo = addColumnDetailView(view, mTableModel.getParentColumn(column), column, TYPE_STRUCTURE_3D, mTableModel.getColumnTitle(column));
 				view.setPopupMenuController(new Detail3DViewController(viewInfo));
 				continue;
@@ -375,7 +375,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		if (refMol != null)
 			conformersAdded |= addConformers(refMol, REFERENCE_COLOR, viewInfo);
 
-		if (conformersAdded)
+		if (conformersAdded && ((JFXConformerPanel)viewInfo.view).getOverlayMolecule() == null)
 			((JFXConformerPanel) viewInfo.view).optimizeView();
 	}
 

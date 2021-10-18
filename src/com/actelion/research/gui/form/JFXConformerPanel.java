@@ -19,11 +19,12 @@ import sun.awt.SunToolkit;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class JFXConformerPanel extends JFXPanel {
 	private V3DScene mScene;
-	private StereoMolecule mRefMol;
+	private V3DMolecule mOverlayMol;
 	private V3DPopupMenuController mController;
 
 	public JFXConformerPanel(boolean withSidePanel, boolean synchronousRotation, boolean allowEditing) {
@@ -92,14 +93,25 @@ public class JFXConformerPanel extends JFXPanel {
 		super.processMouseEvent(e);
 	}
 
+	/**
+	 * Removes all except the reference molecule from the scene
+	 */
 	public void clear() {
 		Platform.runLater(() -> {
-			mScene.clearAll(true);
+			List<V3DMolecule> fxmols = mScene.getMolsInScene();
+			for (V3DMolecule fxmol:fxmols) {
+				if (fxmol != mOverlayMol) {
+					mScene.removeMeasurements(fxmol);
+					mScene.delete(fxmol);
+				}
+			}
+
+/*			mScene.clearAll(true);
 			if (mRefMol != null && mRefMol.getAllAtoms() != 0) {
 				V3DMolecule fxmol = new V3DMolecule(mRefMol);
 				fxmol.setColor(Color.LIGHTGRAY);
 				mScene.addMolecule(fxmol);
-			}
+			}*/
 		} );
 	}
 
@@ -151,16 +163,32 @@ public class JFXConformerPanel extends JFXPanel {
 
 	public void setConollySurfaceMode(int mode) {
 		Platform.runLater(() -> {
-			V3DMolGroup molGroup = mScene.getWorld();
 			for (Node node:mScene.getWorld().getAllChildren())
 				if (node instanceof V3DMolecule)
 					((V3DMolecule)node).setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.values()[mode]);
 		} );
 	}
 
-	public void setReferenceMolecule(StereoMolecule refmol) {
-		mRefMol = refmol;
-		}
+	public StereoMolecule getOverlayMolecule() {
+		return mOverlayMol == null ? null : mOverlayMol.getMolecule();
+	}
+
+	public void setOverlayMolecule(StereoMolecule mol) {
+		Platform.runLater(() -> {
+			// if we find connection points, we assume to have a cropped protein
+			boolean isProtein = false;
+			for (int i=0; i<mol.getAllAtoms(); i++) {
+				if (mol.getAtomicNo(i) == 0) {
+					isProtein = true;
+					break;
+				}
+			}
+			mOverlayMol = new V3DMolecule(mol, 0, isProtein ? V3DMolecule.MoleculeRole.MACROMOLECULE : V3DMolecule.MoleculeRole.LIGAND);
+			if (isProtein)
+				mOverlayMol.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.FILLED);
+			mScene.addMolecule(mOverlayMol);
+		} );
+	}
 
 	public void addMolecule(StereoMolecule mol, Color color, Point3D centerOfRotation) {
 		Platform.runLater(() -> {
@@ -173,14 +201,15 @@ public class JFXConformerPanel extends JFXPanel {
 		} );
 	}
 
-	public ArrayList<StereoMolecule> getConformers() {
+	public ArrayList<StereoMolecule> getMolecules(V3DMolecule.MoleculeRole role) {
 		final ArrayList<StereoMolecule> conformerList = new ArrayList<>();
 
 		final CountDownLatch latch = new CountDownLatch(1);
 
 		Platform.runLater(() -> {
 			for (Node node:mScene.getWorld().getChildren())
-				if (node instanceof V3DMolecule)
+				if (node instanceof V3DMolecule
+				 && role == null || ((V3DMolecule)node).getRole() == role)
 					conformerList.add(((V3DMolecule)node).getMolecule());
 			latch.countDown();
 		} );

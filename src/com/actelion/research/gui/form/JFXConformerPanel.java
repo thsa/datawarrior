@@ -240,18 +240,20 @@ public class JFXConformerPanel extends JFXPanel {
 				}
 			}
 
-		boolean[] hasUncroppedNeighbour = new boolean[protein.getAllAtoms()];
+		int[] uncroppedNeighbours = new int[protein.getAllAtoms()];
 		for (int i=0; i<protein.getAllBonds(); i++) {
 			int atom1 = protein.getBondAtom(0, i);
 			int atom2 = protein.getBondAtom(1, i);
-			if (isInCropRadius[atom1] && isInCropRadius[atom2]) {
-				hasUncroppedNeighbour[atom1] = true;
-				hasUncroppedNeighbour[atom2] = true;
-				}
+			if (isInCropRadius[atom1])
+				uncroppedNeighbours[atom2]++;
+			if (isInCropRadius[atom2])
+				uncroppedNeighbours[atom1]++;
 			}
 		for (int i=0; i<protein.getAllAtoms(); i++) {
-			if (isInCropRadius[i] && !hasUncroppedNeighbour[i])
+			if (isInCropRadius[i] && uncroppedNeighbours[i] == 0)
 				isInCropRadius[i] = false;
+			else if (!isInCropRadius[i] && uncroppedNeighbours[i] != 0 && protein.getAllConnAtoms(i) == uncroppedNeighbours[i])
+				isInCropRadius[i] = true;
 			}
 
 		// set atomicNo=0 for outside crop distance atoms, which are connected to inside atoms

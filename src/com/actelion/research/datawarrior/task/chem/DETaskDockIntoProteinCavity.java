@@ -193,8 +193,10 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 					}
 				else {
 					String[] ligandName = new String[ligands.size()];
-					for (int i=0; i<ligands.size(); i++)
-						ligandName[i] = (i+1)+": "+(ligands.get(i).getName() == null ? "Unnamed" : ligands.get(i).getName());
+					for (int i=0; i<ligands.size(); i++) {
+						String formula = new MolecularFormula(ligands.get(i)).getFormula();
+						ligandName[i] = (i + 1) + ": " + formula + "; " + (ligands.get(i).getName() == null ? "Unnamed" : ligands.get(i).getName());
+						}
 					String name = (String)JOptionPane.showInputDialog(mConformerPanel, "Select one of multiple ligands:", "Select Ligand", JOptionPane.QUESTION_MESSAGE, null, ligandName, ligandName[0]);
 					index = Integer.parseInt(name.substring(0, name.indexOf(':')))-1;
 					}
@@ -214,6 +216,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 			final StereoMolecule _ligand = ligand;
 			Platform.runLater(() -> {
 				mConformerPanel.setProteinCavity(_protein, _ligand);
+				mConformerPanel.getV3DScene().addMolecule(new V3DMolecule(_ligand, 0, V3DMolecule.MoleculeRole.LIGAND));
 				});
 			}
 		}

@@ -33,7 +33,7 @@ import java.util.ArrayList;
 public class JStructure3DFormObject extends AbstractFormObject {
 	public static final String FORM_OBJECT_TYPE = "structure3D";
 
-	private StereoMolecule mRefMol;
+	private StereoMolecule mOverlayMol,mCavityMol,mLigandMol;
 
 	public JStructure3DFormObject(String key, String type) {
 		super(key, type);
@@ -42,10 +42,16 @@ public class JStructure3DFormObject extends AbstractFormObject {
 
 	public void setReferenceMolecule(StereoMolecule refMol) {
 		((JFXConformerPanel)mComponent).setOverlayMolecule(refMol);
-		mRefMol = refMol;
+		mOverlayMol = refMol;
 		}
 
-    @Override
+	public void setCavityMolecule(StereoMolecule cavityMol, StereoMolecule ligandMol) {
+		((JFXConformerPanel)mComponent).setProteinCavity(cavityMol, ligandMol);
+		mCavityMol = cavityMol;
+		mLigandMol = ligandMol;
+		}
+
+	@Override
 	public Object getData() {
 		ArrayList<StereoMolecule> molList = ((JFXConformerPanel)mComponent).getMolecules(null);
 		return (molList.isEmpty()) ? null : molList.get(0);
@@ -114,9 +120,11 @@ public class JStructure3DFormObject extends AbstractFormObject {
 		    if (mol != null) {
 				JFXConformerPanel fxp = new JFXConformerPanel(false, (int)(4*r.width), (int)(4*r.height), true, false);
 				fxp.setBackground(Color.WHITE);
-				fxp.addMolecule(mRefMol, javafx.scene.paint.Color.WHITE, null);
-				fxp.addMolecule(mol, null, null);
-				fxp.optimizeView();
+				if (mOverlayMol != null)
+					fxp.setOverlayMolecule(mOverlayMol);
+			    if (mCavityMol != null)
+				    fxp.setProteinCavity(mCavityMol, mLigandMol);
+				fxp.getV3DScene().getWorld().setTransform(((JFXConformerPanel)mComponent).getV3DScene().getWorld().getRotation());
 				WritableImage image = fxp.getContentImage();
 				if (image != null)
 					g2D.drawImage(SwingFXUtils.fromFXImage(image, null), (int)(r.x), (int)(r.y),

@@ -216,9 +216,18 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			if (CompoundTableModel.cColumnType3DCoordinates.equals(specialType)) {
 				final JFXConformerPanel view = new JFXConformerPanel(false, false, false);
 				view.setBackground(new java.awt.Color(24, 24, 96));
-				String refmol = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);
-				if (refmol != null)
-					view.setOverlayMolecule(new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(refmol));
+				String overlay = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);
+				StereoMolecule overlayMol = (overlay == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(overlay);
+				if (overlayMol != null)
+					view.setOverlayMolecule(overlayMol);
+
+				String cavity = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyProteinCavity);
+				StereoMolecule cavityMol = (cavity == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavity);
+				String ligand = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyNaturalLigand);
+				StereoMolecule ligandMol = (ligand == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligand);
+				if (cavityMol != null)
+					view.setProteinCavity(cavityMol, ligandMol);
+
 				DetailViewInfo viewInfo = addColumnDetailView(view, mTableModel.getParentColumn(column), column, TYPE_STRUCTURE_3D, mTableModel.getColumnTitle(column));
 				view.setPopupMenuController(new Detail3DViewController(viewInfo));
 				continue;

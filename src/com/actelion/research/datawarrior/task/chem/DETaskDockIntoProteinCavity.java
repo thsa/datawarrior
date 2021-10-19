@@ -38,7 +38,6 @@ import javafx.scene.control.SeparatorMenuItem;
 import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.fx.viewer3d.V3DMolecule;
 import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
-import org.openmolecules.fx.viewer3d.V3DScene;
 import org.openmolecules.pdb.MMTFParser;
 
 import javax.swing.*;
@@ -60,8 +59,6 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 	private static final String PROPERTY_LIGAND = "ligand";
 	private static final String PROPERTY_CAVITY = "cavity";
 	private static final String PROPERTY_NEUTRALIZE = "neutralize";
-
-	private static final double CROP_DISTANCE = 10.0;
 
 	private JFXConformerPanel mConformerPanel;
 	private JCheckBox mCheckBoxNeutralize;
@@ -151,26 +148,24 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 		try {
 			SwingUtilities.invokeLater(() -> {
 				mPDBCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
-				Platform.runLater(() -> {
-					if (mPDBCode == null || mPDBCode.length() == 0)
-						return;
+				if (mPDBCode == null || mPDBCode.length() == 0)
+					return;
 
-					Molecule3D[] mol = MMTFParser.getStructureFromName(mPDBCode, MMTFParser.MODE_SPLIT_CHAINS);
-					if (mol != null) {
-						ArrayList<Molecule3D> proteins = new ArrayList<>();
-						ArrayList<Molecule3D> ligands = new ArrayList<>();
-						for (int i=0; i<mol.length; i++) {
-							if (mol[i].getAllBonds() != 0) {
-								if (mol[i].getAllAtoms() >= 100)
-									proteins.add(mol[i]);
-								else
-									ligands.add(mol[i]);
-								}
+				Molecule3D[] mol = MMTFParser.getStructureFromName(mPDBCode, MMTFParser.MODE_SPLIT_CHAINS);
+				if (mol != null) {
+					ArrayList<Molecule3D> proteins = new ArrayList<>();
+					ArrayList<Molecule3D> ligands = new ArrayList<>();
+					for (int i=0; i<mol.length; i++) {
+						if (mol[i].getAllBonds() != 0) {
+							if (mol[i].getAllAtoms() >= 100)
+								proteins.add(mol[i]);
+							else
+								ligands.add(mol[i]);
 							}
-
-						addProteinAndLigand(proteins, ligands);
 						}
-					} );
+
+					addProteinAndLigand(proteins, ligands);
+					}
 				} );
 			}
 		catch (Exception ie) {}
@@ -209,19 +204,16 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 			}
 
 		if (protein != null && ligand != null) {
-			StereoMolecule croppedProtein = cropProtein(protein, ligand);
+			Coordinates cog = JFXConformerPanel.calculateCOG(ligand);
+			StereoMolecule croppedProtein = JFXConformerPanel.cropProtein(protein, ligand, cog);
 
-			// TODO create surface
-			Coordinates cog = calculateCOG(ligand);
 			ligand.translate(-cog.x, -cog.y, -cog.z);
 			croppedProtein.translate(-cog.x, -cog.y, -cog.z);
 
 			final StereoMolecule _protein = croppedProtein;
 			final StereoMolecule _ligand = ligand;
 			Platform.runLater(() -> {
-				V3DScene scene = mConformerPanel.getV3DScene();
-				scene.addMolecule(new V3DMolecule(_protein, 0, V3DMolecule.MoleculeRole.MACROMOLECULE));
-				scene.addMolecule(new V3DMolecule(_ligand, 1, V3DMolecule.MoleculeRole.LIGAND));
+				mConformerPanel.setProteinCavity(_protein, _ligand);
 				});
 			}
 		}
@@ -257,16 +249,12 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
 		mCheckBoxNeutralize.setSelected("true".equals(configuration.getProperty(PROPERTY_NEUTRALIZE)));
-		String proteinIDCode = configuration.getProperty(PROPERTY_CAVITY);
-		if (proteinIDCode != null) {
-			StereoMolecule protein = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(proteinIDCode);
-			mConformerPanel.getV3DScene().addMolecule(new V3DMolecule(protein, 0, V3DMolecule.MoleculeRole.MACROMOLECULE));
-			}
+		String cavityIDCode = configuration.getProperty(PROPERTY_CAVITY);
+		StereoMolecule cavity = (cavityIDCode == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavityIDCode);
 		String ligandIDCode = configuration.getProperty(PROPERTY_LIGAND);
-		if (ligandIDCode != null) {
-			StereoMolecule ligand = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
-			mConformerPanel.getV3DScene().addMolecule(new V3DMolecule(ligand, 1, V3DMolecule.MoleculeRole.LIGAND));
-			}
+		StereoMolecule ligand = (ligandIDCode == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
+		if (cavity != null)
+			mConformerPanel.setProteinCavity(cavity, ligand);
 		}
 
 	@Override
@@ -297,72 +285,9 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 		getTableModel().setColumnProperty(firstNewColumn+COORDS_COLUMN,
 				CompoundTableConstants.cColumnPropertyParentColumn, COLUMN_TITLE[POSE_COLUMN]);
 		getTableModel().setColumnProperty(firstNewColumn+COORDS_COLUMN,
-				CompoundTableConstants.cColumnPropertySuperposeMolecule, getTaskConfiguration().getProperty(PROPERTY_CAVITY));
-		}
-
-	private Coordinates calculateCOG(StereoMolecule mol) {
-		Coordinates cog = new Coordinates(mol.getCoordinates(0));
-		for (int i=1; i<mol.getAllAtoms(); i++)
-			cog.add(mol.getCoordinates(i));
-		cog.scale(1.0/mol.getAllAtoms());
-		return cog;
-		}
-
-	private StereoMolecule cropProtein(Molecule3D protein, Molecule3D ligand) {
-		Coordinates ligandCOG = calculateCOG(ligand);
-		double maxDistance = 0;
-		for (int i=0; i<ligand.getAllAtoms(); i++)
-			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getCoordinates(i)));
-
-		// mark all protein atoms within crop distance
-		boolean[] isInCropRadius = new boolean[protein.getAllAtoms()];
-		for (int i=0; i<protein.getAllAtoms(); i++) {
-			Coordinates pc = protein.getCoordinates(i);
-			if (Math.abs(pc.x - ligandCOG.x) < maxDistance + CROP_DISTANCE
-			 && Math.abs(pc.y - ligandCOG.y) < maxDistance + CROP_DISTANCE
-			 && Math.abs(pc.z - ligandCOG.z) < maxDistance + CROP_DISTANCE
-			 && pc.distance(ligandCOG) < maxDistance + CROP_DISTANCE) {
-				for (int j=0; j<ligand.getAllAtoms(); j++) {
-					if (pc.distance(ligand.getCoordinates(j)) < CROP_DISTANCE) {
-						isInCropRadius[i] = true;
-						break;
-						}
-					}
-				}
-			}
-
-		boolean[] hasUncroppedNeighbour = new boolean[protein.getAllAtoms()];
-		for (int i=0; i<protein.getAllBonds(); i++) {
-			int atom1 = protein.getBondAtom(0, i);
-			int atom2 = protein.getBondAtom(1, i);
-			if (isInCropRadius[atom1] && isInCropRadius[atom2]) {
-				hasUncroppedNeighbour[atom1] = true;
-				hasUncroppedNeighbour[atom2] = true;
-				}
-			}
-		for (int i=0; i<protein.getAllAtoms(); i++) {
-			if (isInCropRadius[i] && !hasUncroppedNeighbour[i])
-				isInCropRadius[i] = false;
-			}
-
-		// set atomicNo=0 for outside crop distance atoms, which are connected to inside atoms
-		// and determine for every uncropped atom, whether it has an uncropped neighbour
-		for (int i=0; i<protein.getAllBonds(); i++) {
-			int atom1 = protein.getBondAtom(0, i);
-			int atom2 = protein.getBondAtom(1, i);
-			if (isInCropRadius[atom1] && protein.getAtomicNo(atom1) != 0 && !isInCropRadius[atom2]) {
-				protein.setAtomicNo(atom2, 0);
-				isInCropRadius[atom2] = true;
-				}
-			else if (isInCropRadius[atom2] && protein.getAtomicNo(atom2) != 0 && !isInCropRadius[atom1]) {
-				protein.setAtomicNo(atom1, 0);
-				isInCropRadius[atom1] = true;
-				}
-			}
-
-		StereoMolecule croppedProtein = new StereoMolecule();
-		protein.copyMoleculeByAtoms(croppedProtein, isInCropRadius, false, null);
-		return croppedProtein;
+				CompoundTableConstants.cColumnPropertyProteinCavity, getTaskConfiguration().getProperty(PROPERTY_CAVITY));
+		getTableModel().setColumnProperty(firstNewColumn+COORDS_COLUMN,
+				CompoundTableConstants.cColumnPropertyNaturalLigand, getTaskConfiguration().getProperty(PROPERTY_LIGAND));
 		}
 
 	@Override
@@ -426,6 +351,5 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 			new MoleculeNeutralizer().neutralizeChargedMolecule(mol);
 
 		ConformerGenerator.addHydrogenAtoms(mol);
-//		new ConformerGenerator().getOneConformer()
 		}
 	}

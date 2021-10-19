@@ -1,5 +1,6 @@
 package com.actelion.research.gui.form;
 
+import com.actelion.research.chem.Coordinates;
 import com.actelion.research.chem.StereoMolecule;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -13,6 +14,7 @@ import javafx.scene.paint.Color;
 import org.openmolecules.fx.surface.SurfaceMesh;
 import org.openmolecules.fx.viewer3d.*;
 import org.openmolecules.mesh.MoleculeSurfaceAlgorithm;
+import org.openmolecules.render.MoleculeArchitect;
 import sun.awt.AppContext;
 import sun.awt.SunToolkit;
 
@@ -23,6 +25,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class JFXConformerPanel extends JFXPanel {
+	public static final double CAVITY_CROP_DISTANCE = 10.0;
+
 	private V3DScene mScene;
 	private V3DMolecule mOverlayMol;
 	private V3DPopupMenuController mController;
@@ -173,22 +177,137 @@ public class JFXConformerPanel extends JFXPanel {
 		return mOverlayMol == null ? null : mOverlayMol.getMolecule();
 	}
 
+	/**
+	 * Adds the given small molecule into the scene.
+	 * @param mol
+	 */
 	public void setOverlayMolecule(StereoMolecule mol) {
 		Platform.runLater(() -> {
-			// if we find connection points, we assume to have a cropped protein
-			boolean isProtein = false;
-			for (int i=0; i<mol.getAllAtoms(); i++) {
-				if (mol.getAtomicNo(i) == 0) {
-					isProtein = true;
-					break;
+			mOverlayMol = new V3DMolecule(mol, 0, V3DMolecule.MoleculeRole.LIGAND);
+			mScene.addMolecule(mOverlayMol);
+			} );
+		}
+
+	/**
+	 * Adds the given cropped protein cavity and its surface into the scene. If the natural ligand is given, then
+	 * the ligand atom coordinates are used to determine the cavity surface in the ligand's vicinity.
+	 * @param cavity
+	 * @param ligand
+	 */
+	public void setProteinCavity(StereoMolecule cavity, StereoMolecule ligand) {
+		Platform.runLater(() -> {
+			if (ligand != null)
+				markAtomsInCropDistance(cavity, ligand, calculateCOG(ligand));
+
+			mOverlayMol = new V3DMolecule(cavity, MoleculeArchitect.ConstructionMode.WIRES, 0, V3DMolecule.MoleculeRole.MACROMOLECULE);
+			mOverlayMol.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.FILLED);
+			mOverlayMol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS);
+
+			mScene.addMolecule(mOverlayMol);
+			} );
+		}
+
+	public static Coordinates calculateCOG(StereoMolecule mol) {
+		Coordinates cog = new Coordinates(mol.getCoordinates(0));
+		for (int i=1; i<mol.getAllAtoms(); i++)
+			cog.add(mol.getCoordinates(i));
+		cog.scale(1.0/mol.getAllAtoms());
+		return cog;
+		}
+
+	public static StereoMolecule cropProtein(StereoMolecule protein, StereoMolecule ligand, Coordinates ligandCOG) {
+		double maxDistance = 0;
+		for (int i=0; i<ligand.getAllAtoms(); i++)
+			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getCoordinates(i)));
+
+		double cropDistance = JFXConformerPanel.CAVITY_CROP_DISTANCE;
+		maxDistance += cropDistance;
+
+		// mark all protein atoms within crop distance
+		boolean[] isInCropRadius = new boolean[protein.getAllAtoms()];
+		for (int i=0; i<protein.getAllAtoms(); i++) {
+			Coordinates pc = protein.getCoordinates(i);
+			if (Math.abs(pc.x - ligandCOG.x) < maxDistance
+			 && Math.abs(pc.y - ligandCOG.y) < maxDistance
+			 && Math.abs(pc.z - ligandCOG.z) < maxDistance
+			 && pc.distance(ligandCOG) < maxDistance) {
+				for (int j=0; j<ligand.getAllAtoms(); j++) {
+					if (pc.distance(ligand.getCoordinates(j)) < cropDistance) {
+						isInCropRadius[i] = true;
+						break;
+						}
+					}
 				}
 			}
-			mOverlayMol = new V3DMolecule(mol, 0, isProtein ? V3DMolecule.MoleculeRole.MACROMOLECULE : V3DMolecule.MoleculeRole.LIGAND);
-			if (isProtein)
-				mOverlayMol.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.FILLED);
-			mScene.addMolecule(mOverlayMol);
-		} );
-	}
+
+		boolean[] hasUncroppedNeighbour = new boolean[protein.getAllAtoms()];
+		for (int i=0; i<protein.getAllBonds(); i++) {
+			int atom1 = protein.getBondAtom(0, i);
+			int atom2 = protein.getBondAtom(1, i);
+			if (isInCropRadius[atom1] && isInCropRadius[atom2]) {
+				hasUncroppedNeighbour[atom1] = true;
+				hasUncroppedNeighbour[atom2] = true;
+				}
+			}
+		for (int i=0; i<protein.getAllAtoms(); i++) {
+			if (isInCropRadius[i] && !hasUncroppedNeighbour[i])
+				isInCropRadius[i] = false;
+			}
+
+		// set atomicNo=0 for outside crop distance atoms, which are connected to inside atoms
+		// and determine for every uncropped atom, whether it has an uncropped neighbour
+		for (int i=0; i<protein.getAllBonds(); i++) {
+			int atom1 = protein.getBondAtom(0, i);
+			int atom2 = protein.getBondAtom(1, i);
+			if (isInCropRadius[atom1] && protein.getAtomicNo(atom1) != 0 && !isInCropRadius[atom2]) {
+				protein.setAtomicNo(atom2, 0);
+				isInCropRadius[atom2] = true;
+				}
+			else if (isInCropRadius[atom2] && protein.getAtomicNo(atom2) != 0 && !isInCropRadius[atom1]) {
+				protein.setAtomicNo(atom1, 0);
+				isInCropRadius[atom1] = true;
+				}
+			}
+
+		StereoMolecule croppedProtein = new StereoMolecule();
+		protein.copyMoleculeByAtoms(croppedProtein, isInCropRadius, false, null);
+		return croppedProtein;
+		}
+
+	/**
+	 * If the panel is supposed to show a protein cavity created by cropping a larger protein,
+	 * and if the cavity surface shall be shown in the area of the natural ligand, then this
+	 * method can be used to mark all cavity atoms that shall covered by the surface.
+	 * @param cavity
+	 * @param ligand
+	 */
+	public static void markAtomsInCropDistance(StereoMolecule cavity, StereoMolecule ligand, Coordinates ligandCOG) {
+		double maxDistance = 0;
+		for (int i=0; i<ligand.getAllAtoms(); i++)
+			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getCoordinates(i)));
+
+		double markDistance = JFXConformerPanel.CAVITY_CROP_DISTANCE - 3.2;
+		maxDistance += markDistance;
+
+		for (int i=0; i<cavity.getAllAtoms(); i++)
+			cavity.setAtomMarker(i, true);
+
+		// reset mark for all cavity atoms near any ligand atom
+		for (int i=0; i<cavity.getAllAtoms(); i++) {
+			Coordinates pc = cavity.getCoordinates(i);
+			if (Math.abs(pc.x - ligandCOG.x) < maxDistance
+			 && Math.abs(pc.y - ligandCOG.y) < maxDistance
+			 && Math.abs(pc.z - ligandCOG.z) < maxDistance
+			 && pc.distance(ligandCOG) < maxDistance) {
+				for (int j=0; j<ligand.getAllAtoms(); j++) {
+					if (pc.distance(ligand.getCoordinates(j)) < markDistance) {
+						cavity.setAtomMarker(i, false);
+						break;
+						}
+					}
+				}
+			}
+		}
 
 	public void addMolecule(StereoMolecule mol, Color color, Point3D centerOfRotation) {
 		Platform.runLater(() -> {

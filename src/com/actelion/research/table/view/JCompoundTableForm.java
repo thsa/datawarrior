@@ -19,6 +19,7 @@
 package com.actelion.research.table.view;
 
 import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
+import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.gui.form.*;
 import com.actelion.research.table.CompoundTableColorHandler;
@@ -106,9 +107,17 @@ public class JCompoundTableForm extends JFormView implements CompoundTableColorH
 			if (formObject instanceof JStructure3DFormObject) {
 				int column = mTableModel.findColumn(formObject.getKey());
 				if (column != -1) {
-					String idcode = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);
-					if (idcode != null)
-						((JStructure3DFormObject)formObject).setReferenceMolecule(new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode));
+					String overlayIDCode = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);
+					StereoMolecule overlayMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(overlayIDCode);
+					if (overlayMol != null)
+						((JStructure3DFormObject)formObject).setReferenceMolecule(overlayMol);
+
+					String cavityIDCode = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyProteinCavity);
+					StereoMolecule cavityMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavityIDCode);
+					String ligandIDCode = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyNaturalLigand);
+					StereoMolecule ligandMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
+					if (cavityMol != null)
+						((JStructure3DFormObject)formObject).setCavityMolecule(cavityMol, ligandMol);
 					}
 				}
 			}

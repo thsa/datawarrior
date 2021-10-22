@@ -21,11 +21,12 @@ import sun.awt.SunToolkit;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class JFXConformerPanel extends JFXPanel {
 	public static final double CAVITY_CROP_DISTANCE = 10.0;
+
+	private Color REFERENCE_MOLECULE_COLOR = Color.WHITE;
 
 	private V3DScene mScene;
 	private V3DMolecule mOverlayMol;
@@ -46,7 +47,6 @@ public class JFXConformerPanel extends JFXPanel {
 
 			if (withSidePanel) {
 				V3DSceneWithSidePane sceneWithSidePanel = new V3DSceneWithSidePane(width, height, settings);
-//				sceneWithSidePanel.getMoleculePanel().initialize(false);
 				mScene = sceneWithSidePanel.getScene3D();
 				mScene.setIndividualRotationModus(synchronousRotation);
 				scene = new Scene(sceneWithSidePanel, width, height, true, SceneAntialiasing.BALANCED);
@@ -102,13 +102,9 @@ public class JFXConformerPanel extends JFXPanel {
 	 */
 	public void clear() {
 		Platform.runLater(() -> {
-			List<V3DMolecule> fxmols = mScene.getMolsInScene();
-			for (V3DMolecule fxmol:fxmols) {
-				if (fxmol != mOverlayMol) {
-					mScene.removeMeasurements(fxmol);
+			for (V3DMolecule fxmol:mScene.getMolsInScene())
+				if (fxmol != mOverlayMol)
 					mScene.delete(fxmol);
-				}
-			}
 		} );
 	}
 
@@ -198,6 +194,8 @@ public class JFXConformerPanel extends JFXPanel {
 			mOverlayMol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS);
 
 			mScene.addMolecule(mOverlayMol);
+
+			mOverlayMol.getMolecule().removeAtomMarkers();
 			} );
 		}
 
@@ -315,6 +313,53 @@ public class JFXConformerPanel extends JFXPanel {
 			fxmol.setCenterOfRotation(centerOfRotation);
 			mScene.addMolecule(fxmol);
 		} );
+	}
+
+	/**
+	 * Removes all molecules except the overlay molecule, if it exists.
+	 * Then, adds passed ligand or conformer(s).
+	 * Then, optionally adds reference ligand/conformer.
+	 * Unless there is an overlay molecule, it finally optimizes the view.
+	 */
+	public void updateConformers(StereoMolecule[] conformers, int rowID, StereoMolecule refConformer) {
+		Platform.runLater(() -> {
+			boolean isTorsionStrainVisible = false;
+			for (V3DMolecule fxmol:mScene.getMolsInScene())
+				if (fxmol != mOverlayMol) {
+					isTorsionStrainVisible |= (fxmol.getTorsionStrainVis() != null);
+					mScene.delete(fxmol);
+				}
+
+			if (conformers != null) {
+				if (conformers.length == 1) {
+					addMoleculeDirect(conformers[0], CarbonAtomColorPalette.getColor(rowID), null, isTorsionStrainVisible);
+				}
+				else {
+					Point3D cor = new Point3D(0, 0, 0);
+					for (int i = 0; i < conformers.length; i++) {
+						Color c = Color.hsb(360f * i / conformers.length, 0.75, 0.6);
+						addMoleculeDirect(conformers[i], c, cor, false);
+					}
+				}
+			}
+
+			if (refConformer != null)
+				addMoleculeDirect(refConformer, REFERENCE_MOLECULE_COLOR, null, isTorsionStrainVisible);
+
+			if ((conformers != null || refConformer != null) && mOverlayMol == null)
+				mScene.optimizeView();
+		} );
+	}
+
+	private void addMoleculeDirect(StereoMolecule mol, Color color, Point3D centerOfRotation, boolean isTorsionStrainVisible) {
+		V3DMolecule fxmol = new V3DMolecule(mol);
+		if (color != null)
+			fxmol.setColor(color);
+		fxmol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_INHERIT);
+		fxmol.setCenterOfRotation(centerOfRotation);
+		if (isTorsionStrainVisible)
+		fxmol.addTorsionStrainVisualization();
+		mScene.addMolecule(fxmol);
 	}
 
 	public ArrayList<StereoMolecule> getMolecules(V3DMolecule.MoleculeRole role) {

@@ -32,12 +32,9 @@ import com.actelion.research.table.JDetailTable;
 import com.actelion.research.table.model.*;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.util.ArrayUtils;
-import javafx.geometry.Point3D;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.paint.Color;
-import org.openmolecules.fx.viewer3d.CarbonAtomColorPalette;
 import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
 
 import javax.swing.*;
@@ -57,8 +54,6 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 	private static final String TYPE_ROW_DATA = "Data";
 	private static final String TYPE_IMAGE = "Image";
 	protected static final String TYPE_DETAIL = "Detail";
-
-	private Color REFERENCE_COLOR = Color.WHITE;
 
 	private DEFrame mFrame;
 	private CompoundTableModel mTableModel;
@@ -352,9 +347,6 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 	}
 
 	private void update3DView(DetailViewInfo viewInfo, boolean isSuperpose, boolean isAlign) {
-		JFXConformerPanel conformerPanel = (JFXConformerPanel)viewInfo.view;
-		conformerPanel.clear();
-
 		StereoMolecule[] rowMol = null;
 		if (mCurrentRecord != null)
 			rowMol = getConformers(mCurrentRecord, true, viewInfo);
@@ -363,7 +355,6 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		if (isSuperpose && mTableModel.getActiveRow() != null && mTableModel.getActiveRow() != mCurrentRecord)
 			refMol = getConformers(mTableModel.getActiveRow(), false, viewInfo);
 
-		boolean conformersAdded = false;
 		if (rowMol != null) {
 			StereoMolecule best = null;
 			if (isAlign && refMol != null) {
@@ -379,17 +370,10 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				rowMol = new StereoMolecule[1];
 				rowMol[0] = best;
 			}
-
-			Color color = CarbonAtomColorPalette.getColor(mCurrentRecord.getID());
-			conformersAdded |= addConformers(rowMol, color, viewInfo);
 		}
 
-		// conformer from the reference row
-		if (refMol != null)
-			conformersAdded |= addConformers(refMol, REFERENCE_COLOR, viewInfo);
-
-		if (conformersAdded && conformerPanel.getOverlayMolecule() == null)
-			conformerPanel.optimizeView();
+		((JFXConformerPanel)viewInfo.view).updateConformers(rowMol,
+				mCurrentRecord == null ? -1 : mCurrentRecord.getID(), refMol == null ? null : refMol[0]);
 	}
 
 	private StereoMolecule[] getConformers(CompoundRecord record, boolean allowMultiple, DetailViewInfo viewInfo) {
@@ -413,22 +397,6 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			return mol;
 		}
 		return null;
-	}
-
-	private boolean addConformers(StereoMolecule[] mol, Color color, DetailViewInfo viewInfo) {
-		if (mol == null || mol.length == 0)
-			return false;
-
-		if (mol.length == 1) {
-			((JFXConformerPanel)viewInfo.view).addMolecule(mol[0], color, null);
-		} else {
-			for (int i = 0; i < mol.length; i++) {
-				Point3D cor = new Point3D(0, 0, 0);
-				Color c = (color != null) ? color : Color.hsb(360f * i / mol.length, 0.75, 0.6);
-				((JFXConformerPanel)viewInfo.view).addMolecule(mol[i], c, cor);
-			}
-		}
-		return true;
 	}
 
 	private void setSuperposeMode(DetailViewInfo viewInfo, boolean isSuperpose, boolean isShapeAlign) {

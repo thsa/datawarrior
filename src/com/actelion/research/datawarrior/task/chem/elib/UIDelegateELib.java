@@ -139,6 +139,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		mComboBoxFitnessOption = new JComboBox();
 		mComboBoxFitnessOption.addItem(FitnessPanel.STRUCTURE_OPTION_TEXT);
 		mComboBoxFitnessOption.addItem(FitnessPanel.CONFORMER_OPTION_TEXT);
+		mComboBoxFitnessOption.addItem(FitnessPanel.DOCKING_OPTION_TEXT);
 		for (int i = 0; i< MolecularPropertyHelper.getPropertyCount(); i++)
 			mComboBoxFitnessOption.addItem(MolecularPropertyHelper.getPropertyName(i));
 		mComboBoxFitnessOption.setSelectedIndex(0); // structure option
@@ -215,7 +216,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 			return;
 			}
 		if (e.getActionCommand().equals("addOption")) {
-			int type = mComboBoxFitnessOption.getSelectedIndex() - 2;
+			int type = mComboBoxFitnessOption.getSelectedIndex() - FitnessPanel.SPECIAL_OPTION_COUNT;
 			mFitnessPanel.add(FitnessPanel.createFitnessPanel(mParentFrame, this, type));
 			mFitnessScrollpane.validate();
 			mFitnessScrollpane.repaint();

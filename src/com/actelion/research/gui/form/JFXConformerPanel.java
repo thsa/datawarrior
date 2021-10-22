@@ -109,13 +109,6 @@ public class JFXConformerPanel extends JFXPanel {
 					mScene.delete(fxmol);
 				}
 			}
-
-/*			mScene.clearAll(true);
-			if (mRefMol != null && mRefMol.getAllAtoms() != 0) {
-				V3DMolecule fxmol = new V3DMolecule(mRefMol);
-				fxmol.setColor(Color.LIGHTGRAY);
-				mScene.addMolecule(fxmol);
-			}*/
 		} );
 	}
 
@@ -200,6 +193,7 @@ public class JFXConformerPanel extends JFXPanel {
 				markAtomsInCropDistance(cavity, ligand, calculateCOG(ligand));
 
 			mOverlayMol = new V3DMolecule(cavity, MoleculeArchitect.ConstructionMode.WIRES, 0, V3DMolecule.MoleculeRole.MACROMOLECULE);
+			mOverlayMol.setColor(Color.LIGHTGRAY);
 			mOverlayMol.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.FILLED);
 			mOverlayMol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS);
 
@@ -273,6 +267,7 @@ public class JFXConformerPanel extends JFXPanel {
 
 		StereoMolecule croppedProtein = new StereoMolecule();
 		protein.copyMoleculeByAtoms(croppedProtein, isInCropRadius, false, null);
+		croppedProtein.setFragment(false);
 		return croppedProtein;
 		}
 

@@ -31,6 +31,8 @@ public abstract class FitnessOption {
 		if (index == -1)
 			return null;
 		String optionCode = params.substring(0, index);
+		if (optionCode.equals(FitnessPanel.DOCKING_OPTION_CODE))
+			return new DockingFitnessOption(params.substring(index+1), pl);
 		if (optionCode.equals(FitnessPanel.CONFORMER_OPTION_CODE))
 			return new ConformerFitnessOption(params.substring(index+1), pl);
 		if (optionCode.equals(FitnessPanel.STRUCTURE_OPTION_CODE))
@@ -51,6 +53,8 @@ public abstract class FitnessOption {
 		if (index == -1)
 			return "Fitness option error.";
 		String optionCode = params.substring(0, index);
+		if (optionCode.equals(FitnessPanel.DOCKING_OPTION_CODE))
+			return DockingFitnessOption.getParamError(params.substring(index+1));
 		if (optionCode.equals(FitnessPanel.CONFORMER_OPTION_CODE))
 			return ConformerFitnessOption.getParamError(params.substring(index+1));
 		if (optionCode.equals(FitnessPanel.STRUCTURE_OPTION_CODE))

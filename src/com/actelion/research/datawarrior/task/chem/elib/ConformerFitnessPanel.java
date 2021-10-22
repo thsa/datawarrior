@@ -36,7 +36,7 @@ public class ConformerFitnessPanel extends FitnessPanel {
 	protected JFXConformerPanel mConformerPanel;
 
 	/**
-	 * Creates a new StructureFitnessPanel, which is configured according to the given configuration.
+	 * Creates a new ConformerFitnessPanel, which is configured according to the given configuration.
 	 * @param owner
 	 * @param configuration without leading fitness option type
 	 */

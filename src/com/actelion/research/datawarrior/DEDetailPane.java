@@ -37,6 +37,7 @@ import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.paint.Color;
+import org.openmolecules.fx.viewer3d.CarbonAtomColorPalette;
 import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
 
 import javax.swing.*;
@@ -351,7 +352,8 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 	}
 
 	private void update3DView(DetailViewInfo viewInfo, boolean isSuperpose, boolean isAlign) {
-		((JFXConformerPanel) viewInfo.view).clear();
+		JFXConformerPanel conformerPanel = (JFXConformerPanel)viewInfo.view;
+		conformerPanel.clear();
 
 		StereoMolecule[] rowMol = null;
 		if (mCurrentRecord != null)
@@ -378,14 +380,16 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				rowMol[0] = best;
 			}
 
-			conformersAdded |= addConformers(rowMol, null, viewInfo);
+			Color color = CarbonAtomColorPalette.getColor(mCurrentRecord.getID());
+			conformersAdded |= addConformers(rowMol, color, viewInfo);
 		}
 
+		// conformer from the reference row
 		if (refMol != null)
 			conformersAdded |= addConformers(refMol, REFERENCE_COLOR, viewInfo);
 
-		if (conformersAdded && ((JFXConformerPanel)viewInfo.view).getOverlayMolecule() == null)
-			((JFXConformerPanel) viewInfo.view).optimizeView();
+		if (conformersAdded && conformerPanel.getOverlayMolecule() == null)
+			conformerPanel.optimizeView();
 	}
 
 	private StereoMolecule[] getConformers(CompoundRecord record, boolean allowMultiple, DetailViewInfo viewInfo) {
@@ -416,12 +420,12 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			return false;
 
 		if (mol.length == 1) {
-			((JFXConformerPanel) viewInfo.view).addMolecule(mol[0], color, null);
+			((JFXConformerPanel)viewInfo.view).addMolecule(mol[0], color, null);
 		} else {
 			for (int i = 0; i < mol.length; i++) {
 				Point3D cor = new Point3D(0, 0, 0);
 				Color c = (color != null) ? color : Color.hsb(360f * i / mol.length, 0.75, 0.6);
-				((JFXConformerPanel) viewInfo.view).addMolecule(mol[i], c, cor);
+				((JFXConformerPanel)viewInfo.view).addMolecule(mol[i], c, cor);
 			}
 		}
 		return true;

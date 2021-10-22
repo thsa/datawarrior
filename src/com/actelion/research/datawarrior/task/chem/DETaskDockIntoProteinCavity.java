@@ -18,40 +18,34 @@
 
 package com.actelion.research.datawarrior.task.chem;
 
-import com.actelion.research.chem.*;
+import com.actelion.research.chem.Canonizer;
+import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
+import com.actelion.research.chem.MoleculeNeutralizer;
+import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.conf.AtomAssembler;
 import com.actelion.research.chem.docking.DockingEngine;
 import com.actelion.research.chem.docking.DockingFailedException;
 import com.actelion.research.chem.io.CompoundTableConstants;
-import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
-import com.actelion.research.chem.io.pdb.parser.StructureAssembler;
 import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.gui.FileHelper;
+import com.actelion.research.datawarrior.task.chem.elib.DockingPanelController;
 import com.actelion.research.gui.form.JFXConformerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 import javafx.application.Platform;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.SeparatorMenuItem;
 import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.fx.viewer3d.V3DMolecule;
-import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
-import org.openmolecules.pdb.MMTFParser;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
-public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure implements V3DPopupMenuController {
+public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Dock Into Protein Cavity";
 
-	private static final String[] COLUMN_TITLE = {"Docking Score", "Docking Pose", "poseCoordinates"};
+	private static final String[] COLUMN_TITLE = {"Docking Score", "Docked Structure", "Docking Pose"};
 	private static final int SCORE_COLUMN = 0;
 	private static final int POSE_COLUMN = 1;
 	private static final int COORDS_COLUMN = 2;
@@ -64,7 +58,6 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 	private JCheckBox mCheckBoxNeutralize;
 	private boolean mNeutralizeFragment;
 	private DockingEngine[] mDockingEngine;
-	private volatile String mPDBCode;
 
 	public DETaskDockIntoProteinCavity(DEFrame parent) {
 		super(parent, DESCRIPTOR_NONE, false, true);
@@ -95,7 +88,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 		mConformerPanel = new JFXConformerPanel(false, false, true);
 		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(320), HiDPIHelper.scale(240)));
-		mConformerPanel.setPopupMenuController(this);
+		mConformerPanel.setPopupMenuController(new DockingPanelController(mConformerPanel));
 
 		JPanel ep = new JPanel();
 		ep.setLayout(new TableLayout(size));
@@ -103,122 +96,6 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 		ep.add(new JLabel("Protein cavity with natural ligand"), "0,2");
 		ep.add(mConformerPanel, "0,4");
 		return ep;
-		}
-
-	@Override
-	public void addExternalMenuItems(ContextMenu popup, int type) {
-		if (type == V3DPopupMenuController.TYPE_FILE) {
-			javafx.scene.control.MenuItem itemLoadPDBFile = new javafx.scene.control.MenuItem("Load Protein Cavity From PDB-File...");
-			itemLoadPDBFile.setOnAction(e -> loadFromPDBFile());
-
-			javafx.scene.control.MenuItem itemLoadPDBDB = new javafx.scene.control.MenuItem("Load Protein Cavity From PDB Database...");
-			itemLoadPDBDB.setOnAction(e -> loadFromPDBDatabase());
-
-			popup.getItems().add(itemLoadPDBFile);
-			popup.getItems().add(itemLoadPDBDB);
-			popup.getItems().add(new SeparatorMenuItem());
-			}
-		}
-
-	private void showMessageInEDT(String msg) {
-		SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mConformerPanel, msg) );
-		}
-
-	private void loadFromPDBFile() {
-		SwingUtilities.invokeLater(() -> {
-			File selectedFile = FileHelper.getFile(mConformerPanel, "Choose PDB-File", FileHelper.cFileTypePDB);
-			if (selectedFile != null) {
-				PDBFileParser parser = new PDBFileParser();
-				try {
-					Map<String, List<Molecule3D>> map = parser.parse(selectedFile).extractMols();
-					List<Molecule3D> proteins = map.get(StructureAssembler.PROTEIN_GROUP);
-					List<Molecule3D> ligands = map.get(StructureAssembler.LIGAND_GROUP);
-					addProteinAndLigand(proteins, ligands);
-					}
-				catch (Exception e) {
-					showMessageInEDT(e.getMessage());
-					e.printStackTrace();
-					}
-				}
-			} );
-		}
-
-	private void loadFromPDBDatabase() {
-		mPDBCode = null;
-		try {
-			SwingUtilities.invokeLater(() -> {
-				mPDBCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
-				if (mPDBCode == null || mPDBCode.length() == 0)
-					return;
-
-				Molecule3D[] mol = MMTFParser.getStructureFromName(mPDBCode, MMTFParser.MODE_SPLIT_CHAINS);
-				if (mol != null) {
-					ArrayList<Molecule3D> proteins = new ArrayList<>();
-					ArrayList<Molecule3D> ligands = new ArrayList<>();
-					for (int i=0; i<mol.length; i++) {
-						if (mol[i].getAllBonds() != 0) {
-							if (mol[i].getAllAtoms() >= 100)
-								proteins.add(mol[i]);
-							else
-								ligands.add(mol[i]);
-							}
-						}
-
-					addProteinAndLigand(proteins, ligands);
-					}
-				} );
-			}
-		catch (Exception ie) {}
-		}
-
-	private void addProteinAndLigand(List<Molecule3D> proteins, List<Molecule3D> ligands) {
-		Molecule3D protein = null;
-		Molecule3D ligand = null;
-
-		if (proteins == null || proteins.size() == 0) {
-			JOptionPane.showMessageDialog(mConformerPanel, "No proteins found in file.");
-			}
-		else {
-			protein = proteins.get(0);
-			for (int i=1; i<proteins.size(); i++)
-				protein.addMolecule(proteins.get(i));
-
-			if (ligands == null || ligands.size() == 0) {
-				JOptionPane.showMessageDialog(mConformerPanel, "No ligands found in file.");
-				}
-			else {
-				int index = -1;
-				if (ligands.size() == 1) {
-					index = 0;
-					}
-				else {
-					String[] ligandName = new String[ligands.size()];
-					for (int i=0; i<ligands.size(); i++) {
-						String formula = new MolecularFormula(ligands.get(i)).getFormula();
-						ligandName[i] = (i + 1) + ": " + formula + "; " + (ligands.get(i).getName() == null ? "Unnamed" : ligands.get(i).getName());
-						}
-					String name = (String)JOptionPane.showInputDialog(mConformerPanel, "Select one of multiple ligands:", "Select Ligand", JOptionPane.QUESTION_MESSAGE, null, ligandName, ligandName[0]);
-					index = Integer.parseInt(name.substring(0, name.indexOf(':')))-1;
-					}
-
-				ligand = ligands.get(index);
-				}
-			}
-
-		if (protein != null && ligand != null) {
-			Coordinates cog = JFXConformerPanel.calculateCOG(ligand);
-			StereoMolecule croppedProtein = JFXConformerPanel.cropProtein(protein, ligand, cog);
-
-			ligand.translate(-cog.x, -cog.y, -cog.z);
-			croppedProtein.translate(-cog.x, -cog.y, -cog.z);
-
-			final StereoMolecule _protein = croppedProtein;
-			final StereoMolecule _ligand = ligand;
-			Platform.runLater(() -> {
-				mConformerPanel.setProteinCavity(_protein, _ligand);
-				mConformerPanel.getV3DScene().addMolecule(new V3DMolecule(_ligand, 0, V3DMolecule.MoleculeRole.LIGAND));
-				});
-			}
 		}
 
 	@Override
@@ -256,8 +133,14 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 		StereoMolecule cavity = (cavityIDCode == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavityIDCode);
 		String ligandIDCode = configuration.getProperty(PROPERTY_LIGAND);
 		StereoMolecule ligand = (ligandIDCode == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
-		if (cavity != null)
-			mConformerPanel.setProteinCavity(cavity, ligand);
+		if (cavity != null) {
+			Platform.runLater(() -> {
+				mConformerPanel.setProteinCavity(cavity, ligand);
+				V3DMolecule ligand3D = new V3DMolecule(ligand, 0, V3DMolecule.MoleculeRole.LIGAND);
+				ligand3D.setColor(javafx.scene.paint.Color.CORAL);
+				mConformerPanel.getV3DScene().addMolecule(ligand3D);
+				} );
+			}
 		}
 
 	@Override
@@ -301,10 +184,10 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure imp
 		startProgress("Preparing protein...", 0, 0);
 
 		StereoMolecule protein = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(configuration.getProperty(PROPERTY_CAVITY));
-		System.out.println("added "+new AtomAssembler(protein).addImplicitHydrogens()+" explicit hydrogens to protein");
+		new AtomAssembler(protein).addImplicitHydrogens();
 
 		StereoMolecule ligand = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(configuration.getProperty(PROPERTY_LIGAND));
-		System.out.println("added "+new AtomAssembler(ligand).addImplicitHydrogens()+" explicit hydrogens to ligand");
+		new AtomAssembler(ligand).addImplicitHydrogens();
 
 		int threadCount = Runtime.getRuntime().availableProcessors();
 		mDockingEngine = new DockingEngine[threadCount];

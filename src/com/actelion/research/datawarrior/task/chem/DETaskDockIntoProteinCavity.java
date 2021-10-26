@@ -18,10 +18,7 @@
 
 package com.actelion.research.datawarrior.task.chem;
 
-import com.actelion.research.chem.Canonizer;
-import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
-import com.actelion.research.chem.MoleculeNeutralizer;
-import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.chem.*;
 import com.actelion.research.chem.conf.AtomAssembler;
 import com.actelion.research.chem.docking.DockingEngine;
 import com.actelion.research.chem.docking.DockingFailedException;
@@ -52,11 +49,11 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 
 	private static final String PROPERTY_LIGAND = "ligand";
 	private static final String PROPERTY_CAVITY = "cavity";
-	private static final String PROPERTY_NEUTRALIZE = "neutralize";
+	private static final String PROPERTY_PROTONATE = "protonate";
 
 	private JFXConformerPanel mConformerPanel;
-	private JCheckBox mCheckBoxNeutralize;
-	private boolean mNeutralizeFragment;
+	private JCheckBox mCheckBoxProtonate;
+	private boolean mProtonateFragment;
 	private DockingEngine[] mDockingEngine;
 
 	public DETaskDockIntoProteinCavity(DEFrame parent) {
@@ -83,16 +80,16 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {TableLayout.PREFERRED}, {TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
 
-		mCheckBoxNeutralize = new JCheckBox("Neutralize ligand charges");
+		mCheckBoxProtonate = new JCheckBox("Assign likely protonation states");
 
 		mConformerPanel = new JFXConformerPanel(false, false, true);
+		mConformerPanel.setPopupMenuController(new DockingPanelController(mConformerPanel));
 		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(320), HiDPIHelper.scale(240)));
-		mConformerPanel.setPopupMenuController(new DockingPanelController(mConformerPanel));
 
 		JPanel ep = new JPanel();
 		ep.setLayout(new TableLayout(size));
-		ep.add(mCheckBoxNeutralize, "0,0");
+		ep.add(mCheckBoxProtonate, "0,0");
 		ep.add(new JLabel("Protein cavity with natural ligand"), "0,2");
 		ep.add(mConformerPanel, "0,4");
 		return ep;
@@ -111,7 +108,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 	@Override
 	public Properties getDialogConfiguration() {
 		Properties configuration = super.getDialogConfiguration();
-		configuration.setProperty(PROPERTY_NEUTRALIZE, mCheckBoxNeutralize.isSelected() ? "true" : "false");
+		configuration.setProperty(PROPERTY_PROTONATE, mCheckBoxProtonate.isSelected() ? "true" : "false");
 		List<StereoMolecule> protein = mConformerPanel.getMolecules(V3DMolecule.MoleculeRole.MACROMOLECULE);
 		if (protein.size() == 1) {
 			Canonizer canonizer = new Canonizer(protein.get(0));
@@ -128,7 +125,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
-		mCheckBoxNeutralize.setSelected("true".equals(configuration.getProperty(PROPERTY_NEUTRALIZE)));
+		mCheckBoxProtonate.setSelected("true".equals(configuration.getProperty(PROPERTY_PROTONATE)));
 		String cavityIDCode = configuration.getProperty(PROPERTY_CAVITY);
 		StereoMolecule cavity = (cavityIDCode == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavityIDCode);
 		String ligandIDCode = configuration.getProperty(PROPERTY_LIGAND);
@@ -146,7 +143,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 	@Override
 	public void setDialogConfigurationToDefault() {
 		super.setDialogConfigurationToDefault();
-		mCheckBoxNeutralize.setSelected(true);
+		mCheckBoxProtonate.setSelected(true);
 		}
 
 	@Override
@@ -184,9 +181,11 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 		startProgress("Preparing protein...", 0, 0);
 
 		StereoMolecule protein = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(configuration.getProperty(PROPERTY_CAVITY));
+		assignLikelyProtonationStates(protein);
 		new AtomAssembler(protein).addImplicitHydrogens();
 
 		StereoMolecule ligand = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(configuration.getProperty(PROPERTY_LIGAND));
+		assignLikelyProtonationStates(ligand);
 		new AtomAssembler(ligand).addImplicitHydrogens();
 
 		int threadCount = Runtime.getRuntime().availableProcessors();
@@ -200,7 +199,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 			return false;
 			}
 
-		mNeutralizeFragment = "true".equals(configuration.getProperty(PROPERTY_NEUTRALIZE));
+		mProtonateFragment = "true".equals(configuration.getProperty(PROPERTY_PROTONATE));
 
 		return true;
 		}
@@ -233,9 +232,21 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 
 	private void handleMolecule(StereoMolecule mol) {
 		mol.stripSmallFragments();
-		if (mNeutralizeFragment)
+		if (mProtonateFragment) {
 			new MoleculeNeutralizer().neutralizeChargedMolecule(mol);
+			assignLikelyProtonationStates(mol);
+			}
 
 		ConformerGenerator.addHydrogenAtoms(mol);
+		}
+
+	public static void assignLikelyProtonationStates(StereoMolecule mol) {
+		mol.ensureHelperArrays(Molecule.cHelperRings);
+		for (int atom=0; atom<mol.getAtoms(); atom++) {
+			if (AtomFunctionAnalyzer.isBasicNitrogen(mol, atom))
+				mol.setAtomCharge(atom, +1);
+			else if (AtomFunctionAnalyzer.isAcidicOxygen(mol, atom))
+				mol.setAtomCharge(atom, -1);
+			}
 		}
 	}

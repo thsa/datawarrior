@@ -440,7 +440,7 @@ public class DEMacro implements CompoundTableConstants {
 			int loop = mLoopList.size()-1;
 			Loop currentLoop = mLoopList.get(loop);
 			if (currentTask == currentLoop.lastTask) {
-				currentLoop.setNextFileVariable();
+				currentLoop.increment();
 				int firstTask = currentLoop.firstTask;
 				currentLoop.count--;
 				if (currentLoop.count <= 1)
@@ -482,7 +482,7 @@ public class DEMacro implements CompoundTableConstants {
 		}
 
 	private class Loop {
-		private int firstTask,lastTask,count;
+		private int firstTask,lastTask,count,index;
 		private ArrayList<File> filelist;
 		private ConcurrentHashMap variableMap;
 
@@ -490,17 +490,24 @@ public class DEMacro implements CompoundTableConstants {
 			this.firstTask = firstTask;
 			this.lastTask = lastTask;
 			this.variableMap = variableMap;
+			this.index = 0;
 			if (dirname != null) {
 				this.filelist = FileHelper.getCompatibleFileList(new File(dirname), filetypes);
 				this.count = filelist.size();
-				setNextFileVariable();
 				}
 			else {
 				this.count = count;
 				}
+			increment();
 			}
 
-		public void setNextFileVariable() {
+		public void increment() {
+			variableMap.put("LOOPINDEX", Integer.toString(++index));
+			if (filelist != null)
+				updateFileVariable();
+			}
+
+		private void updateFileVariable() {
 			if (filelist.size() > 0) {
 				File file = filelist.remove(0);
 				variableMap.put("FILENAME", file.getAbsolutePath());

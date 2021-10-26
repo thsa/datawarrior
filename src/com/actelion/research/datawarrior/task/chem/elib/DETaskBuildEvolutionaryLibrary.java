@@ -44,6 +44,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -182,18 +183,16 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
-		String startSet = configuration.getProperty(PROPERTY_START_SET, "");
-		if (startSet.length() == 0) {
-			showErrorMessage("Your first generation does not contain any compounds.");
-			return false;
-			}
-		for (String idcode:startSet.split("\\t")) {
-			try {
-				new IDCodeParser(true).getCompactMolecule(idcode).validate();
-				}
-			catch (Exception e) {
-				showErrorMessage("Some of your first generation compounds are invalid:\n"+e.toString());
-				return false;
+		String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
+		if (startSet.length() != 0) {
+			for (String idcode:startSet.split("\\t")) {
+				try {
+					new IDCodeParser(true).getCompactMolecule(idcode).validate();
+					}
+				catch (Exception e) {
+					showErrorMessage("Some of your first generation compounds are invalid:\n"+e.toString());
+					return false;
+					}
 				}
 			}
 
@@ -279,21 +278,34 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 		for (int i=0; i<fitnessOptionCount; i++)
 			fitnessOption[i] = FitnessOption.createFitnessOption(configuration.getProperty(PROPERTY_FITNESS_PARAM_CONFIG+i), this);
 
+		int kind = findListIndex(configuration.getProperty(PROPERTY_COMPOUND_KIND), COMPOUND_KIND_CODE, 0);
+
 		mCurrentResultID = new AtomicInteger(0);
 
 		mProgressPanel.startProgress("1st generation...", 0, 0);
 
 		// Compile first parent generation including fitness calculation
 		TreeSet<EvolutionResult> parentGenerationResultSet = new TreeSet<>();
-		for (String idcode:configuration.getProperty(PROPERTY_START_SET, "").split("\\t"))
-			if (!mStopProcessing)
-				parentGenerationResultSet.add(new EvolutionResult(new IDCodeParser(true).getCompactMolecule(idcode),
-						idcode, null, fitnessOption, mCurrentResultID.incrementAndGet()));
+		String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
+		if (startSet.length() == 0) {
+			ConcurrentLinkedQueue<StereoMolecule> compounds = new ConcurrentLinkedQueue<>();
+			UIDelegateELib.createRandomStartSet(getProgressController(), 4*survivalCount, kind, compounds);
+			for (StereoMolecule compound:compounds) {
+				if (!mStopProcessing)
+					parentGenerationResultSet.add(new EvolutionResult(compound,
+							new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet()));
+				}
+			}
+		else {
+			for (String idcode : startSet.split("\\t"))
+				if (!mStopProcessing)
+					parentGenerationResultSet.add(new EvolutionResult(new IDCodeParser(true).getCompactMolecule(idcode),
+							idcode, null, fitnessOption, mCurrentResultID.incrementAndGet()));
+			}
 
 		int offspringCompounds = generationSize / (2*survivalCount);
 		mProgressPanel.startProgress("Evolving...", 0, (generationCount>=Integer.MAX_VALUE-1) ? 0 : generationCount*survivalCount*2);
 
-		int kind = findListIndex(configuration.getProperty(PROPERTY_COMPOUND_KIND), COMPOUND_KIND_CODE, 0);
 		Mutator mutator = new Mutator("/resources/"+COMPOUND_KIND_FILE[kind]);
 
 		// Create the result set for all results starting with the start generation.

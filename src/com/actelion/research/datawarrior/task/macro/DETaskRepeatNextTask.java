@@ -46,9 +46,11 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 
 	private static final String ASK_FOR_FILE = "#ask#";
 
-	private static final int TASKS_ONE = 0;
-	private static final int TASKS_ALL = 1;
-	private static final String[] TASKS_ITEM = {"just next task", "all following tasks"};
+	public static final int TASK_COUNT_ONE = 0;
+	public static final int TASK_COUNT_ALL = 1;
+	public static final int TASK_COUNT_TILL_LABEL = 2;
+	private static final String[] TASK_COUNT_CODE = {"false", "true", "label"};
+	private static final String[] TASK_COUNT__ITEM = {"just next task", "all following tasks", "all tasks till next label"};
 
 	private static final int FILETYPE_DATAWARRIOR = 0;
 	private static final int FILETYPE_SD = 1;
@@ -86,19 +88,18 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 
 	@Override
     public JPanel createDialogContent() {
-
         ButtonGroup buttonGroup = new ButtonGroup();
 
         JPanel gp = new JPanel();
         int gap = HiDPIHelper.scale(8);
         double[][] size = { {gap, HiDPIHelper.scale(24), TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, gap},
                             {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED,
-							 gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
+							 gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap} };
         gp.setLayout(new TableLayout(size));
 
 		double[][] size1 = { {TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL}, {TableLayout.PREFERRED} };
 		JPanel tasksPanel = new JPanel(new TableLayout(size1));
-		mComboBoxTasks = new JComboBox(TASKS_ITEM);
+		mComboBoxTasks = new JComboBox(TASK_COUNT__ITEM);
 		tasksPanel.add(new JLabel("Repeat"), "0,0,");
 		tasksPanel.add(mComboBoxTasks, "2,0");
         gp.add(tasksPanel, "1,1,6,1");
@@ -142,6 +143,8 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 		filetypePanel.add(mComboBoxFileType, "2,0");
 		gp.add(filetypePanel, "2,13,6,13");
 
+		gp.add(new JLabel("Variable $LOOPINDEX has values 1,2,3, ...", JLabel.CENTER), "1,15,6,15");
+
 		return gp;
 		}
 
@@ -152,7 +155,7 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
     	if (mRadioButtonCount.isSelected())
     		configuration.setProperty(PROPERTY_COUNT, mTextFieldCount.getText());
 
-   		configuration.setProperty(PROPERTY_ALL_TASKS, mComboBoxTasks.getSelectedIndex() == TASKS_ONE ? "false" : "true");
+   		configuration.setProperty(PROPERTY_ALL_TASKS, TASK_COUNT_CODE[mComboBoxTasks.getSelectedIndex()]);
 
    		if (mRadioButtonFiles.isSelected()) {
 			if (!isInteractive() && mCheckBoxChooseDuringMacro.isSelected()) {
@@ -171,7 +174,7 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 
 	@Override
     public void setDialogConfiguration(Properties configuration) {
-		mComboBoxTasks.setSelectedIndex("true".equals(configuration.getProperty(PROPERTY_ALL_TASKS)) ? TASKS_ALL : TASKS_ONE);
+		mComboBoxTasks.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_ALL_TASKS), TASK_COUNT_CODE, TASK_COUNT_ONE));
 
 		String count = configuration.getProperty(PROPERTY_COUNT, "");
 		int filetype = findListIndex(configuration.getProperty(PROPERTY_FILETYPE, ""), FILETYPE_CODE, -1);
@@ -221,8 +224,8 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 	@Override
     public void setDialogConfigurationToDefault() {
 		mTextFieldCount.setText("10");
-		mRadioButtonForever.setSelected(false);
-		mComboBoxTasks.setSelectedIndex(TASKS_ONE);
+		mRadioButtonForever.setSelected(true);
+		mComboBoxTasks.setSelectedIndex(TASK_COUNT_ONE);
 
 		mFilePathLabel.setPath(null);
 		mCheckBoxChooseDuringMacro.setSelected(true);
@@ -258,8 +261,8 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
     	return Integer.parseInt(configuration.getProperty(PROPERTY_COUNT, "-1"));
         }
 
-    public boolean repeatAllTasks(Properties configuration) {
-    	return "true".equals(configuration.getProperty(PROPERTY_ALL_TASKS));
+    public int getTaskCountMode(Properties configuration) {
+    	return findListIndex(configuration.getProperty(PROPERTY_ALL_TASKS), TASK_COUNT_CODE, TASK_COUNT_ONE);
     	}
 
 	public String getDirectory(Properties configuration) {

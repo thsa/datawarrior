@@ -9,6 +9,7 @@ import com.actelion.research.chem.conf.AtomAssembler;
 import com.actelion.research.chem.docking.DockingEngine;
 import com.actelion.research.chem.docking.DockingFailedException;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.task.chem.DETaskDockIntoProteinCavity;
 import com.actelion.research.table.model.CompoundTableModel;
 import org.openmolecules.chem.conf.gen.ConformerGenerator;
 
@@ -27,6 +28,8 @@ public class DockingFitnessOption extends FitnessOption {
 			mLigandIDCode = param[2];
 			mCavity = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(mCavityIDCode);
 			mLigand = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(mLigandIDCode);
+			DETaskDockIntoProteinCavity.assignLikelyProtonationStates(mCavity);
+			DETaskDockIntoProteinCavity.assignLikelyProtonationStates(mLigand);
 			new AtomAssembler(mCavity).addImplicitHydrogens();
 			new AtomAssembler(mLigand).addImplicitHydrogens();
 		}
@@ -96,7 +99,8 @@ public class DockingFitnessOption extends FitnessOption {
 		}
 
 		StereoMolecule ligand = new StereoMolecule(mol);
-		ConformerGenerator.addHydrogenAtoms(mol);
+		DETaskDockIntoProteinCavity.assignLikelyProtonationStates(ligand);
+		ConformerGenerator.addHydrogenAtoms(ligand);
 
 		DockingEngine.DockingResult dockingResult = null;
 

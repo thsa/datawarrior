@@ -47,9 +47,9 @@ public class DockingFitnessPanel extends FitnessPanel {
 		super();
 
 		mConformerPanel = new JFXConformerPanel(false, false, true);
+		mConformerPanel.setPopupMenuController(new DockingPanelController(mConformerPanel));
 		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(240), HiDPIHelper.scale(180)));
-		mConformerPanel.setPopupMenuController(new DockingPanelController(mConformerPanel));
 
 		int gap = HiDPIHelper.scale(4);
 		double[][] cpsize = {

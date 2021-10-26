@@ -18,6 +18,7 @@
 
 package com.actelion.research.datawarrior.task.chem.elib;
 
+import com.actelion.research.calc.ProgressController;
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.prediction.MolecularPropertyHelper;
 import com.actelion.research.datawarrior.task.AbstractTask;
@@ -42,14 +43,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDelegate {
-
-	private static final String DEFAULT_OPTION = "Default Structures";
-	private static final String RANDOM_OPTION = "Random structures";
-	private static final String FILE_OPTION = "Structure(s) from a file";
-	private static final String CUSTOM_OPTION = "Custom structure(s)";
-	private static final String HITLIST_OPTION = "(s) of list '";
-	private static final String SELECTED_OPTION = "Selected ";
-	private static final String ALL_OPTION = "All ";
+	private static final String[] START_COMPOUND_TEXT = { "Default Structures", "Random structures", "Structure(s) from a file", "Custom structure(s)", "On-the-fly random structures" };
+	private static final int DEFAULT_OPTION = 0;
+	private static final int RANDOM_OPTION = 1;
+	private static final int FILE_OPTION = 2;
+	private static final int CUSTOM_OPTION = 3;
+	private static final int ON_THE_FLY_OPTION = 4;
+	private static final String HITLIST_OPTION_TEXT = "(s) of list '";
+	private static final String SELECTED_OPTION_TEXT = "Selected ";
+	private static final String ALL_OPTION_TEXT = "All ";
 
 	// random molecule generation constants
 	private static final String RANDOM_MOLECULE_SEED = "eM@Hz@";
@@ -95,11 +97,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 
 		p1.add(new JLabel("1st generation:", JLabel.RIGHT), "1,1");
 
-		mComboBoxStartCompounds = new JComboBox();
-		mComboBoxStartCompounds.addItem(DEFAULT_OPTION);
-		mComboBoxStartCompounds.addItem(RANDOM_OPTION);
-		mComboBoxStartCompounds.addItem(CUSTOM_OPTION);
-		mComboBoxStartCompounds.addItem(FILE_OPTION);
+		mComboBoxStartCompounds = new JComboBox(START_COMPOUND_TEXT);
 		addStructureOptions(mComboBoxStartCompounds);
 		mComboBoxStartCompounds.addActionListener(this);
 		p1.add(mComboBoxStartCompounds, "3,1");
@@ -189,26 +187,26 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == mComboBoxStartCompounds) {
-			String startSetOption = (String)mComboBoxStartCompounds.getSelectedItem();
+			int startSetOption = mComboBoxStartCompounds.getSelectedIndex();
 			mFirstGeneration.clear();
-			if (startSetOption.equals(DEFAULT_OPTION)) {
+			if (startSetOption == DEFAULT_OPTION) {
 				for (String idcode:DEFAULT_SET)
 					mFirstGeneration.addCompound(new IDCodeParser(true).getCompactMolecule(idcode));
 				}
-			else if (startSetOption.equals(RANDOM_OPTION)) {
+			else if (startSetOption == RANDOM_OPTION) {
 				int count = 4 * Integer.parseInt((String)mComboBoxSurvivalCount.getSelectedItem());
-				ConcurrentLinkedQueue<StereoMolecule> compounds = createRandomStartSet(count);
+				ConcurrentLinkedQueue<StereoMolecule> compounds = createRandomStartSet(count, mComboBoxCreateLike.getSelectedIndex());
 				while (!compounds.isEmpty())
 					mFirstGeneration.addCompound(compounds.poll());
 				}
-			else if (startSetOption.equals(FILE_OPTION)) {
+			else if (startSetOption == FILE_OPTION) {
 				ArrayList<StereoMolecule> compounds = new FileHelper(mParentFrame).readStructuresFromFile(false);
 				if (compounds != null)
 					for (StereoMolecule mol:compounds)
 						mFirstGeneration.addCompound(mol);
 				}
-			else if (!startSetOption.equals(CUSTOM_OPTION)) {
-				ArrayList<MoleculeWithDescriptor> mwdl = getSelectedMolecules(startSetOption, null);
+			else if (startSetOption != CUSTOM_OPTION && startSetOption != ON_THE_FLY_OPTION) {
+				ArrayList<MoleculeWithDescriptor> mwdl = getSelectedMolecules((String)mComboBoxStartCompounds.getSelectedItem(), null);
 				if (mwdl != null)
 					for (MoleculeWithDescriptor mwd:mwdl)
 						mFirstGeneration.addCompound(mwd.mMol);
@@ -228,15 +226,15 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		int[] column = mTableModel.getSpecialColumnList(CompoundTableModel.cColumnTypeIDCode);
 		if (column != null) {
 			for (int i=0; i<column.length; i++)
-				comboBox.addItem(SELECTED_OPTION + mTableModel.getColumnTitle(column[i]) + "(s)");
+				comboBox.addItem(SELECTED_OPTION_TEXT + mTableModel.getColumnTitle(column[i]) + "(s)");
 			for (int i=0; i<column.length; i++)
-				comboBox.addItem(ALL_OPTION + mTableModel.getColumnTitle(column[i]) + "(s)");
+				comboBox.addItem(ALL_OPTION_TEXT + mTableModel.getColumnTitle(column[i]) + "(s)");
 
 			CompoundTableListHandler hh = mTableModel.getListHandler();
 			for (int i = 0; i<hh.getListCount(); i++) {
 				String hitlistName = hh.getListName(i);
 				for (int j=0; j<column.length; j++)
-					comboBox.addItem(mTableModel.getColumnTitle(column[j])+HITLIST_OPTION+hitlistName+"'");
+					comboBox.addItem(mTableModel.getColumnTitle(column[j])+ HITLIST_OPTION_TEXT +hitlistName+"'");
 				}
 			}
 		}
@@ -244,19 +242,19 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 	protected ArrayList<MoleculeWithDescriptor> getSelectedMolecules(String comboBoxOption, String descriptorType) {
 		int flag = -1;
 		int idcodeColumn = -1;
-		if (comboBoxOption.contains(HITLIST_OPTION)) {
-			int index = comboBoxOption.indexOf(HITLIST_OPTION);
+		if (comboBoxOption.contains(HITLIST_OPTION_TEXT)) {
+			int index = comboBoxOption.indexOf(HITLIST_OPTION_TEXT);
 			idcodeColumn = mTableModel.findColumn(comboBoxOption.substring(0, index));
-			String hitlistName = comboBoxOption.substring(index+HITLIST_OPTION.length(), comboBoxOption.length()-1);
+			String hitlistName = comboBoxOption.substring(index+ HITLIST_OPTION_TEXT.length(), comboBoxOption.length()-1);
 			CompoundTableListHandler hh = mTableModel.getListHandler();
 			flag = hh.getListFlagNo(hh.getListIndex(hitlistName));
 			}
-		else if (comboBoxOption.startsWith(SELECTED_OPTION)) {
-			idcodeColumn = mTableModel.findColumn(comboBoxOption.substring(SELECTED_OPTION.length(), comboBoxOption.length()-3));
+		else if (comboBoxOption.startsWith(SELECTED_OPTION_TEXT)) {
+			idcodeColumn = mTableModel.findColumn(comboBoxOption.substring(SELECTED_OPTION_TEXT.length(), comboBoxOption.length()-3));
 			flag = CompoundRecord.cFlagSelected;
 			}
-		else if (comboBoxOption.startsWith(ALL_OPTION)) {
-			idcodeColumn = mTableModel.findColumn(comboBoxOption.substring(ALL_OPTION.length(), comboBoxOption.length()-3));
+		else if (comboBoxOption.startsWith(ALL_OPTION_TEXT)) {
+			idcodeColumn = mTableModel.findColumn(comboBoxOption.substring(ALL_OPTION_TEXT.length(), comboBoxOption.length()-3));
 			flag = -2;
 			}
 		int descriptorColumn = (descriptorType == null) ? -1 : mTableModel.getChildColumn(idcodeColumn, descriptorType);
@@ -275,68 +273,78 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		return (moleculeList.size() == 0) ? null : moleculeList;
 		}
 
-	private ConcurrentLinkedQueue<StereoMolecule> createRandomStartSet(int molCount) {
-		final int MIN_ATOMS = 12;
-		final int MAX_ATOMS = 18;
-		final ConcurrentLinkedQueue<StereoMolecule> moleculeQueue = new ConcurrentLinkedQueue<>();
-		final AtomicInteger remaining = new AtomicInteger(molCount);
-
-		int kind = mComboBoxCreateLike.getSelectedIndex();
-		final AtomTypeList atomTypeList = createAtomTypeList("/resources/"+TaskConstantsELib.COMPOUND_KIND_FILE[kind]);
-
-		final JProgressDialog pg = new JProgressDialog(mParentFrame);
-		pg.startProgress("Generating random start set...", 0, molCount);
+	/**
+	 * @param molCount
+	 * @param kind
+	 * @return
+	 */
+	private ConcurrentLinkedQueue<StereoMolecule> createRandomStartSet(int molCount, int kind) {
+		ConcurrentLinkedQueue<StereoMolecule> moleculeQueue = new ConcurrentLinkedQueue<>();
+		JProgressDialog pd = new JProgressDialog(mParentFrame);
 
 		new Thread(() -> {
-			int threadCount = Math.min(molCount, Runtime.getRuntime().availableProcessors());
-			Thread[] thread = new Thread[threadCount];
-			for (int i=0; i<threadCount; i++) {
-				thread[i] = new Thread("Molecule Generator "+(i+1)) {
-					public void run() {
-						final Random random = new Random();
-						Mutator mutator = new Mutator(atomTypeList);
-						StereoMolecule mol = new StereoMolecule();
+			createRandomStartSet(pd, molCount, kind, moleculeQueue);
 
-						int m = remaining.decrementAndGet();
-						while (m >= 0 && !pg.threadMustDie()) {
-							pg.updateProgress(molCount - m - 1);
-
-							new IDCodeParser().parse(mol, RANDOM_MOLECULE_SEED);
-
-							double randomValue = random.nextDouble();
-							int targetAtomCount = MIN_ATOMS + (int)Math.round(randomValue * (MAX_ATOMS - MIN_ATOMS));
-
-							for (int i=0; i<MAX_GROW_MUTATIONS && mol.getAllAtoms()<targetAtomCount; i++)
-								if (null == mutator.mutate(mol, Mutator.MUTATION_GROW | Mutator.MUTATION_KEEP_SIZE, false))
-									break;
-
-							for (int i = 0; i< FINAL_KEEP_SIZE_MUTATION_COUNT; i++)
-								if (null == mutator.mutate(mol, Mutator.MUTATION_KEEP_SIZE, false))
-									break;
-
-							moleculeQueue.add(new StereoMolecule(mol));
-							m = remaining.decrementAndGet();
-							}
-						}
-					};
-				}
-
-			for (Thread t:thread)
-				t.start();
-
-			for (Thread t:thread)
-				try { t.join(); } catch (InterruptedException ie) {}
-
-			pg.setVisible(false);
-			pg.dispose();
+			SwingUtilities.invokeLater(() -> {
+				pd.setVisible(false);
+				pd.dispose();
+				} );
 			} ).start();
 
-		pg.setVisible(true);
+		pd.setVisible(true);
 
 		return moleculeQueue;
 		}
 
-	private AtomTypeList createAtomTypeList(String fileName) {
+	protected static void createRandomStartSet(ProgressController pc, int molCount, int kind, ConcurrentLinkedQueue<StereoMolecule> compounds) {
+		final int MIN_ATOMS = 12;
+		final int MAX_ATOMS = 18;
+		final AtomicInteger remaining = new AtomicInteger(molCount);
+
+		pc.startProgress("Generating random start set...", 0, molCount);
+
+		final AtomTypeList atomTypeList = createAtomTypeList("/resources/"+TaskConstantsELib.COMPOUND_KIND_FILE[kind]);
+		int threadCount = Math.min(molCount, Runtime.getRuntime().availableProcessors());
+		Thread[] thread = new Thread[threadCount];
+		for (int i=0; i<threadCount; i++) {
+			thread[i] = new Thread("Molecule Generator "+(i+1)) {
+				public void run() {
+					final Random random = new Random();
+					Mutator mutator = new Mutator(atomTypeList);
+					StereoMolecule mol = new StereoMolecule();
+
+					int m = remaining.decrementAndGet();
+					while (m >= 0 && !pc.threadMustDie()) {
+						pc.updateProgress(molCount - m - 1);
+
+						new IDCodeParser().parse(mol, RANDOM_MOLECULE_SEED);
+
+						double randomValue = random.nextDouble();
+						int targetAtomCount = MIN_ATOMS + (int)Math.round(randomValue * (MAX_ATOMS - MIN_ATOMS));
+
+						for (int i=0; i<MAX_GROW_MUTATIONS && mol.getAllAtoms()<targetAtomCount; i++)
+							if (null == mutator.mutate(mol, Mutator.MUTATION_GROW | Mutator.MUTATION_KEEP_SIZE, false))
+								break;
+
+						for (int i = 0; i< FINAL_KEEP_SIZE_MUTATION_COUNT; i++)
+							if (null == mutator.mutate(mol, Mutator.MUTATION_KEEP_SIZE, false))
+								break;
+
+						compounds.add(new StereoMolecule(mol));
+						m = remaining.decrementAndGet();
+						}
+					}
+				};
+			}
+
+		for (Thread t:thread)
+			t.start();
+
+		for (Thread t:thread)
+			try { t.join(); } catch (InterruptedException ie) {}
+		}
+
+	private static AtomTypeList createAtomTypeList(String fileName) {
 		try {
 			return new AtomTypeList(fileName, AtomTypeCalculator.cPropertiesForMutator);
 		}
@@ -350,13 +358,15 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 	public Properties getDialogConfiguration() {
 		Properties configuration = new Properties();
 
+		configuration.setProperty(PROPERTY_START_SET_OPTION, START_COMPOUND_CODE[mComboBoxStartCompounds.getSelectedIndex()]);
+
 		StringBuilder sb = new StringBuilder();
 		for (int i=0; i<mFirstGeneration.getSize(); i++) {
 			if (sb.length() != 0)
 				sb.append('\t');
 			sb.append(new Canonizer(mFirstGeneration.getMolecule(i), Canonizer.ENCODE_ATOM_SELECTION).getIDCode());
 			}
-		configuration.setProperty(PROPERTY_START_SET, sb.toString());
+		configuration.setProperty(PROPERTY_START_COMPOUNDS, sb.toString());
 
 		configuration.setProperty(PROPERTY_SURVIVAL_COUNT, (String)mComboBoxSurvivalCount.getSelectedItem());
 		configuration.setProperty(PROPERTY_GENERATION_COUNT, (String)mComboBoxGenerations.getSelectedItem());
@@ -376,8 +386,14 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
-		for (String idcode:configuration.getProperty(PROPERTY_START_SET, "").split("\\t"))
-			mFirstGeneration.addCompound(new IDCodeParser(true).getCompactMolecule(idcode));
+		int option = AbstractTask.findListIndex(configuration.getProperty(PROPERTY_START_SET_OPTION), START_COMPOUND_CODE, DEFAULT_OPTION);
+		if (option < mComboBoxStartCompounds.getItemCount())
+			mComboBoxStartCompounds.setSelectedIndex(option);
+
+		String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
+		if (startSet.length() != 0)
+			for (String idcode:configuration.getProperty(PROPERTY_START_COMPOUNDS, "").split("\\t"))
+				mFirstGeneration.addCompound(new IDCodeParser(true).getCompactMolecule(idcode));
 
 		mComboBoxSurvivalCount.setSelectedItem(configuration.getProperty(PROPERTY_SURVIVAL_COUNT, DEFAULT_SURVIVALS));
 		mComboBoxGenerations.setSelectedItem(configuration.getProperty(PROPERTY_GENERATION_COUNT, DEFAULT_GENERATIONS));

@@ -19,6 +19,8 @@
 package com.actelion.research.datawarrior.task.chem.elib;
 
 public interface TaskConstantsELib {
+	public static final String[] START_COMPOUND_CODE = { "default", "random", "file", "custom", "onthefly", "list", "selected", "all" };
+
 	public static final String GENERATIONS_AUTOMATIC = "automatic";
 	public static final String GENERATIONS_UNLIMITED = "unlimited";
 	public static final String DEFAULT_GENERATIONS = GENERATIONS_AUTOMATIC;
@@ -36,7 +38,8 @@ public interface TaskConstantsELib {
 	public static final int COMPOUND_KIND_DRUGS = 0;
 	public static final int COMPOUND_KIND_NATURAL_PRODUCTS = 1;
 
-    public static final String PROPERTY_START_SET = "startSet";
+	public static final String PROPERTY_START_SET_OPTION = "startOption";
+    public static final String PROPERTY_START_COMPOUNDS = "startSet";
     public static final String PROPERTY_SURVIVAL_COUNT = "survivalCount";
 	public static final String PROPERTY_GENERATION_COUNT = "generationCount";
 	public static final String PROPERTY_GENERATION_SIZE = "generationSize";

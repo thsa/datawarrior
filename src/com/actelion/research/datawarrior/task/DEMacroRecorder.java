@@ -215,7 +215,18 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 
 		    		if (cf instanceof DETaskRepeatNextTask && currentTask<mRunningMacro.getTaskCount()-1) {
 		    			Properties config = mRunningMacro.getTaskConfiguration(currentTask);
-					    int lastTask = ((DETaskRepeatNextTask)cf).repeatAllTasks(config) ? mRunningMacro.getTaskCount()-1 : currentTask+1;
+					    int lastTask = currentTask+1;
+					    int taskCountMode = ((DETaskRepeatNextTask)cf).getTaskCountMode(config);
+					    if (taskCountMode == DETaskRepeatNextTask.TASK_COUNT_ALL)
+					    	lastTask =  mRunningMacro.getTaskCount()-1;
+					    else if (taskCountMode == DETaskRepeatNextTask.TASK_COUNT_TILL_LABEL) {
+					    	for (int i=currentTask+1; i<mRunningMacro.getTaskCount(); i++) {
+					    		if (mRunningMacro.getTaskCode(i).equals(StandardTaskFactory.constructTaskCodeFromName(DETaskDefineLabel.TASK_NAME))) {
+								    lastTask = i-1;
+								    break;
+								    }
+							    }
+						    }
 						String directory = ((DETaskRepeatNextTask)cf).getDirectory(config);
 						if (DETaskRepeatNextTask.CANCELLED_DIR.equals(directory)) {
 							currentTask = lastTask;

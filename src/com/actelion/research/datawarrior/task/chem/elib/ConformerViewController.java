@@ -139,33 +139,34 @@ public class ConformerViewController implements V3DPopupMenuController {
 		try {
 			SwingUtilities.invokeLater(() -> {
 				mPDBCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
+				if (mPDBCode == null || mPDBCode.length() == 0)
+					return;
+
+				Molecule3D[] mol = MMTFParser.getStructureFromName(mPDBCode, MMTFParser.MODE_SPLIT_CHAINS);
+				if (mol == null)
+					return;
+
+				MMTFParser.centerMolecules(mol);
+
 				Platform.runLater(() -> {
-					if (mPDBCode == null || mPDBCode.length() == 0)
-						return;
+					V3DScene scene = mConformerPanel.getV3DScene();
 
-					Molecule3D[] mol = MMTFParser.getStructureFromName(mPDBCode, MMTFParser.MODE_SPLIT_CHAINS);
-					if (mol != null) {
-						MMTFParser.centerMolecules(mol);
-
-						V3DScene scene = mConformerPanel.getV3DScene();
-
-						int count = 0;
-						for (int i=0; i<mol.length; i++) {
-							if (mol[i].getAllBonds() != 0 && mol[i].getAllAtoms() < 100) {
-								if (mol.length == 1)
-									mol[0].center();
-								scene.addMolecule(new V3DMolecule(mol[i], MoleculeArchitect.ConstructionMode.BALL_AND_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true));
-								count++;
-								}
+					int count = 0;
+					for (int i=0; i<mol.length; i++) {
+						if (mol[i].getAllBonds() != 0 && mol[i].getAllAtoms() < 100) {
+							if (mol.length == 1)
+								mol[0].center();
+							scene.addMolecule(new V3DMolecule(mol[i], MoleculeArchitect.ConstructionMode.BALL_AND_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true));
+							count++;
 							}
-
-						if (count == 0)
-							showMessageInEDT("No ligand structure found in PDB entry.");
-						else if (count > 1)
-							showMessageInEDT("Multiple ligand structures found.\nRemove all but one for proper results.");
-
-						scene.optimizeView();
 						}
+
+					if (count == 0)
+						showMessageInEDT("No ligand structure found in PDB entry.");
+					else if (count > 1)
+						showMessageInEDT("Multiple ligand structures found.\nRemove all but one for proper results.");
+
+					scene.optimizeView();
 					});
 				});
 			}

@@ -58,19 +58,27 @@ public class DockingFitnessOption extends FitnessOption {
 
 	@Override
 	public int getResultColumnCount() {
-		return super.getResultColumnCount() + 1;
+		return super.getResultColumnCount() + 2;
 	}
 
 	@Override
 	public String getResultColumnName(int i) {
-		return (i < super.getResultColumnCount()) ? super.getResultColumnName(i) : "Docking Pose";
+		int newIDCodeColumn = super.getResultColumnCount();
+		if (i < newIDCodeColumn)
+			return super.getResultColumnName(i);
+
+		return (i == newIDCodeColumn) ? "Docked Protonation State" : "Docking Pose";
 	}
 
 	@Override
 	public void setResultColumnProperties(int i, CompoundTableModel tableModel, int column) {
-		if (i == super.getResultColumnCount()) {
+		int newIDCodeColumn = super.getResultColumnCount();
+		if (i == newIDCodeColumn) {
+			tableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnTypeIDCode);
+			}
+		if (i == newIDCodeColumn+1) {
 			tableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType3DCoordinates);
-			tableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertyParentColumn, tableModel.getColumnTitleNoAlias(0));
+			tableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertyParentColumn, tableModel.getColumnTitleNoAlias(column-1));
 			tableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertyProteinCavity, mCavityIDCode);
 			tableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertyNaturalLigand, mLigandIDCode);
 		}
@@ -115,8 +123,9 @@ public class DockingFitnessOption extends FitnessOption {
 		StereoMolecule pose = dockingResult.getPose();
 
 		Canonizer canonizer = new Canonizer(pose);
-		customColumnValueHolder[0] = new String[1];
-		customColumnValueHolder[0][0] = canonizer.getEncodedCoordinates(true);
+		customColumnValueHolder[0] = new String[2];
+		customColumnValueHolder[0][0] = canonizer.getIDCode();
+		customColumnValueHolder[0][1] = canonizer.getEncodedCoordinates(true);
 
 		return (float)dockingResult.getScore();
 	}

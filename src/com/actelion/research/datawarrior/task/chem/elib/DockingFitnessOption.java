@@ -134,6 +134,6 @@ public class DockingFitnessOption extends FitnessOption {
 	public float evaluateFitness(float propertyValue) {
 		// consider sim**2 to value those changes higher where we already have high similarities
 		// return isSimilar ? propertyValue*propertyValue : 2.0*propertyValue - propertyValue*propertyValue;
-		return 0.25f - propertyValue / 200f;
+		return Math.max(0f, 0.25f - propertyValue / 200f);
 	}
 }

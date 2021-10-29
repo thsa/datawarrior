@@ -6,6 +6,7 @@ import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
 import com.actelion.research.chem.Molecule;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.conf.AtomAssembler;
+import com.actelion.research.chem.conf.MolecularFlexibilityCalculator;
 import com.actelion.research.chem.docking.DockingEngine;
 import com.actelion.research.chem.docking.DockingFailedException;
 import com.actelion.research.chem.io.CompoundTableConstants;
@@ -127,7 +128,9 @@ public class DockingFitnessOption extends FitnessOption {
 		customColumnValueHolder[0][0] = canonizer.getIDCode();
 		customColumnValueHolder[0][1] = canonizer.getEncodedCoordinates(true);
 
-		return (float)dockingResult.getScore();
+		float weightPenalty = 0.5f * (pose.getAtoms() - 32);
+		float flexibilityPenalty = 20f * (new MolecularFlexibilityCalculator().calculateMolecularFlexibility(pose) - 0.3f);
+		return (float)dockingResult.getScore() + weightPenalty + flexibilityPenalty;
 	}
 
 	@Override

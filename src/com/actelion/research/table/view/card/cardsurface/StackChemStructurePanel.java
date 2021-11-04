@@ -1,9 +1,10 @@
 package com.actelion.research.table.view.card.cardsurface;
 
 import com.actelion.research.chem.AbstractDepictor;
-import com.actelion.research.chem.Depictor2D;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.mcs.MCSFunctions;
+import com.actelion.research.gui.generic.GenericDepictor;
+import com.actelion.research.gui.swing.SwingDrawContext;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.card.CardElement;
@@ -11,8 +12,8 @@ import com.actelion.research.table.view.card.CardElement;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -103,9 +104,10 @@ public class StackChemStructurePanel extends AbstractStackSurfacePanel {
         StereoMolecule mol = mcs;
 
         if(mol!=null) {
-            Depictor2D depictor = new Depictor2D(mol);
-            depictor.validateView(g, new Rectangle2D.Double(2, 2, w-4, h-4), AbstractDepictor.cModeInflateToMaxAVBL);
-            depictor.paint(g);
+            GenericDepictor depictor = new GenericDepictor(mol);
+            SwingDrawContext context = new SwingDrawContext((Graphics2D)g);
+            depictor.validateView(context, new Rectangle2D.Double(2, 2, w-4, h-4), AbstractDepictor.cModeInflateToMaxAVBL);
+            depictor.paint(context);
         }
         else{
 

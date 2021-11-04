@@ -21,11 +21,10 @@ package com.actelion.research.datawarrior;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
-import com.actelion.research.chem.reaction.mapping.ChemicalRuleEnhancedReactionMapper;
 import com.actelion.research.datawarrior.task.table.DETaskJumpToReferenceRow;
-import com.actelion.research.gui.JDrawDialog;
 import com.actelion.research.gui.dnd.MoleculeTransferable;
 import com.actelion.research.gui.dnd.ReactionTransferable;
+import com.actelion.research.gui.editor.SwingEditorDialog;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.hidpi.HiDPIIconButton;
 import com.actelion.research.gui.table.JTableWithRowNumbers;
@@ -238,7 +237,8 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			}
 		} else if (columnType.equals(CompoundTableModel.cColumnTypeIDCode)) {
 			StereoMolecule oldMol = tableModel.getChemicalStructure(record, valueColumn, CompoundTableModel.ATOM_COLOR_MODE_EXPLICIT, null);
-			JDrawDialog dialog = new JDrawDialog(mParentFrame, oldMol, "Edit '" + tableModel.getColumnTitle(valueColumn) + "'");
+			SwingEditorDialog dialog = new SwingEditorDialog(mParentFrame, oldMol);
+			dialog.setTitle("Edit '" + tableModel.getColumnTitle(valueColumn) + "'");
 			if (tableModel.getChildColumn(valueColumn, CompoundTableConstants.cColumnTypeAtomColorInfo) != -1)
 				dialog.getDrawArea().setAtomColorSupported(true);
 			dialog.setVisible(true);
@@ -248,7 +248,8 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			}
 		} else if (columnType.equals(CompoundTableModel.cColumnTypeRXNCode)) {
 			Reaction oldRxn = tableModel.getChemicalReaction(record, valueColumn, CompoundTableModel.ATOM_COLOR_MODE_EXPLICIT);
-			JDrawDialog dialog = new JDrawDialog(mParentFrame, oldRxn, "Edit '" + tableModel.getColumnTitle(valueColumn) + "'");
+			SwingEditorDialog dialog = new SwingEditorDialog(mParentFrame, oldRxn);
+			dialog.setTitle("Edit '" + tableModel.getColumnTitle(valueColumn) + "'");
 			dialog.setVisible(true);
 			if (!dialog.isCancelled()) {
 				Reaction newRxn = dialog.getReactionAndDrawings();

@@ -1,12 +1,12 @@
 package com.actelion.research.table.view.card.cardsurface;
 
 import com.actelion.research.chem.AbstractDepictor;
-import com.actelion.research.chem.Depictor2D;
 import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.gui.generic.GenericDepictor;
+import com.actelion.research.gui.swing.SwingDrawContext;
 import com.actelion.research.table.CompoundTableColorHandler;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.VisualizationColor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Properties;
 
 public class StructurePanel extends AbstractCardSurfacePanel {
-
     public final static String NAME = "Structure";
 
     private int mColumn = -1;
@@ -28,15 +27,12 @@ public class StructurePanel extends AbstractCardSurfacePanel {
 
     @Override
     public void drawPanel(Graphics g, CardDrawingConfig conf, CompoundTableModel model, CompoundRecord rec, int columns[], int w, int h) {
-
-
         if(false) {
             g.setColor(Color.orange.darker());
             g.fillRect((int) (0.1 * (double) w), (int) (0.1 * (double) h), (int) (0.8 * (double) w), (int) (0.8 * (double) h));
             g.setColor(Color.BLUE.darker());
             g.drawString("<<!!!TESTRXN!!!>>", (int) (0.1 * w), (int) (0.4 * h));
         }
-
 
         // Color the background:
         if(conf.getColorHandler().hasColorAssigned(columns[0], CompoundTableColorHandler.BACKGROUND)){
@@ -45,14 +41,12 @@ public class StructurePanel extends AbstractCardSurfacePanel {
             g.fillRect( 0,0,w,h );
         }
 
-
         // Draw the structure
         Graphics2D g2 = (Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         //g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-
 
         StereoMolecule molContainer = new StereoMolecule();
         StereoMolecule mol = null;
@@ -69,8 +63,7 @@ public class StructurePanel extends AbstractCardSurfacePanel {
         }
 
         if(mol!=null) {
-            Depictor2D depictor = new Depictor2D(mol);
-
+            GenericDepictor depictor = new GenericDepictor(mol);
 
             if (!conf.getColorHandler().hasColorAssigned(columns[0], CompoundTableColorHandler.FOREGROUND)) {
                 Color fg = Color.black;
@@ -85,8 +78,9 @@ public class StructurePanel extends AbstractCardSurfacePanel {
             }
 
             //depictor.setOverruleColor(fg,bg);
-            depictor.validateView(g, new Rectangle2D.Double(2, 2, w-4, h-4), AbstractDepictor.cModeInflateToMaxAVBL);
-            depictor.paint(g);
+            SwingDrawContext context = new SwingDrawContext((Graphics2D)g);
+            depictor.validateView(context, new Rectangle2D.Double(2, 2, w-4, h-4), AbstractDepictor.cModeInflateToMaxAVBL);
+            depictor.paint(context);
         }
         else{
             int xycnt = 0;
@@ -103,7 +97,6 @@ public class StructurePanel extends AbstractCardSurfacePanel {
                 }
             }
         }
-
 
 //        if (mDisplayMol != null && mDisplayMol.getAllAtoms() != 0) {
 //
@@ -197,6 +190,4 @@ public class StructurePanel extends AbstractCardSurfacePanel {
         plist.add( new StackSurfacePanelAndColumnsAndPosition(scsp,new int[]{columns[0]},relPos,relHeight));
         return plist;
     }
-
-
 }

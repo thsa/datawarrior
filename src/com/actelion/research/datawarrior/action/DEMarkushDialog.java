@@ -19,32 +19,6 @@
 package com.actelion.research.datawarrior.action;
 
 
-import java.awt.BorderLayout;
-import java.awt.Frame;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.TreeSet;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.MarkushStructure;
@@ -52,38 +26,50 @@ import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.FileHelper;
-import com.actelion.research.gui.JDrawArea;
-import com.actelion.research.gui.JDrawPanel;
 import com.actelion.research.gui.JFileChooserOverwrite;
 import com.actelion.research.gui.JProgressDialog;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
+import com.actelion.research.gui.editor.GenericDrawArea;
+import com.actelion.research.gui.editor.SwingEditorPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.gui.swing.SwingKeyHandler;
 import com.actelion.research.io.BOMSkipper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
 
-public class DEMarkushDialog extends JDialog implements ActionListener,KeyListener,Runnable {
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.TreeSet;
+
+public class DEMarkushDialog extends JDialog implements ActionListener,Runnable {
     private static final long serialVersionUID = 0x20080515;
 
     private Frame				mParentFrame;
-	private DataWarrior		mApplication;
+	private DataWarrior		    mApplication;
 	private DEFrame				mTargetFrame;
-	private JDrawPanel			mDrawPanel;
+	private SwingEditorPanel	mDrawPanel;
     private JProgressDialog     mProgressDialog;
     private MarkushStructure    mMarkushStructure;
 
 	public DEMarkushDialog(Frame owner, DataWarrior application) {
 		super(owner, "Enumerate Markush Structure", true);
-		addKeyListener(this);
 
 		mParentFrame = owner;
 		mApplication = application;
 
 		StereoMolecule mol = new StereoMolecule();
 		mol.setFragment(true);
-		mDrawPanel = new JDrawPanel(mol, JDrawArea.MODE_MARKUSH_STRUCTURE);
+		mDrawPanel = new SwingEditorPanel(mol, GenericDrawArea.MODE_MARKUSH_STRUCTURE);
 		mDrawPanel.getDrawArea().setClipboardHandler(new ClipboardHandler());
 		getContentPane().add(mDrawPanel, BorderLayout.CENTER);
+
+		SwingKeyHandler keyHandler = new SwingKeyHandler();
+		addKeyListener(keyHandler);
+		keyHandler.addListener(mDrawPanel.getDrawArea());
 
 		JPanel bp = new JPanel();
 		bp.setBorder(BorderFactory.createEmptyBorder(12, 8, 8, 8));
@@ -246,16 +232,6 @@ e.printStackTrace();
 
         tableModel.finalizeTable(CompoundTableEvent.cSpecifierDefaultFiltersAndViews, mProgressDialog);
         }
-
-	public void keyPressed(KeyEvent e) {
-        mDrawPanel.getDrawArea().keyPressed(e);
-        }
-
-	public void keyReleased(KeyEvent e) {
-        mDrawPanel.getDrawArea().keyReleased(e);
-		}
-
-	public void keyTyped(KeyEvent e) {}
 
 	private void writeFile(Frame parent, File file, MarkushStructure markush) {
 	    try {

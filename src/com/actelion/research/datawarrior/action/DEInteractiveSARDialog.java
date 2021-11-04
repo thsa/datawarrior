@@ -18,24 +18,30 @@
 
 package com.actelion.research.datawarrior.action;
 
+import com.actelion.research.chem.*;
 import com.actelion.research.chem.coords.CoordinateInventor;
+import com.actelion.research.chem.descriptor.DescriptorConstants;
+import com.actelion.research.gui.*;
+import com.actelion.research.gui.editor.DrawAreaEvent;
+import com.actelion.research.gui.editor.DrawAreaListener;
+import com.actelion.research.gui.editor.GenericEditorToolbar;
+import com.actelion.research.gui.editor.SwingEditorArea;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
 import javax.swing.*;
-
-import com.actelion.research.chem.*;
-import com.actelion.research.chem.descriptor.DescriptorConstants;
-import com.actelion.research.gui.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.ArrayList;
 
 
 public class DEInteractiveSARDialog extends JDialog
-                implements ActionListener,DrawAreaListener,ItemListener,Runnable {
+                implements ActionListener, DrawAreaListener,ItemListener,Runnable {
     private static final long serialVersionUID = 0x20090206;
  
     private static final String[] COMPOUND_FILTER_OPTIONS = {
@@ -56,7 +62,7 @@ public class DEInteractiveSARDialog extends JDialog
 	private CompoundCollectionPane<SARSourceRecord> mCompoundPane;
     private CompoundCollectionPane<BuildingBlock> mBuildingBlockPane;
 	private SSSearcherWithIndex mSearcher; // is used for non-event-dispatcher-thread searches
-	private JDrawArea          mDrawArea;
+	private SwingEditorArea mDrawArea;
 	private JButton            mButtonAddBuildingBlock,mButtonAnalyze;
 	private JComboBox          mComboBoxCompoundFilter,mComboBoxABB;
 	private SARStatusPanel     mStatusPanel;
@@ -83,7 +89,7 @@ public class DEInteractiveSARDialog extends JDialog
 		    }
 
 		AbstractBuildingBlock.initializeIDs();
-		mABBList = new ArrayList<AbstractBuildingBlock>();
+		mABBList = new ArrayList<>();
 		mCurrentABB = null;
 
         boolean visibleOnly = false;
@@ -120,10 +126,10 @@ public class DEInteractiveSARDialog extends JDialog
         mStatusPanel = new SARStatusPanel(mSourceRecord);
         mainPanel.add(mStatusPanel, "1,1,1,5");
 
-        mDrawArea = new JDrawArea(new StereoMolecule(), 0);
+        mDrawArea = new SwingEditorArea(new StereoMolecule(), 0);
         mDrawArea.setPreferredSize(new Dimension(HiDPIHelper.scale(400), HiDPIHelper.scale(240)));
-        mDrawArea.toolChanged(JDrawToolbar.cToolLassoPointer);
-        mDrawArea.addDrawAreaListener(this);
+        mDrawArea.getGenericDrawArea().toolChanged(GenericEditorToolbar.cToolLassoPointer);
+        mDrawArea.getGenericDrawArea().addDrawAreaListener(this);
 
         mainPanel.add(mDrawArea, "5,1,9,1");
 
@@ -143,7 +149,7 @@ public class DEInteractiveSARDialog extends JDialog
 
         CompoundCollectionModel<SARSourceRecord> model1 = new DefaultCompoundCollectionModel<SARSourceRecord>() {
             public StereoMolecule getMolecule(int index) {
-                CompoundRecord cr = ((SARSourceRecord)getCompound(index)).getCompoundRecord();
+                CompoundRecord cr = getCompound(index).getCompoundRecord();
                 StereoMolecule mol = mTableModel.getChemicalStructure(cr, mIDCodeColumn, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
                 long[] fragFp = (long[])cr.getData(mFragFpColumn);
                 MoleculeContext context = new MoleculeContext(mol, fragFp);
@@ -160,17 +166,17 @@ public class DEInteractiveSARDialog extends JDialog
 
 		    public void setSelection(int index) {
 		        if (index == -1) {
-		            mDrawArea.setMolecule(new StereoMolecule());
+		            mDrawArea.getGenericDrawArea().setMolecule(new StereoMolecule());
 		            }
 		        else {
 		            // create molecule context with the correct size
-	                CompoundRecord cr = ((SARSourceRecord)getModel().getCompound(index)).getCompoundRecord();
+	                CompoundRecord cr = getModel().getCompound(index).getCompoundRecord();
 	                StereoMolecule mol = mTableModel.getChemicalStructure(cr, mIDCodeColumn, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
 	                long[] fragFp = (long[])cr.getData(mFragFpColumn);
 		            mCurrentMoleculeContext = new MoleculeContext(mol, fragFp);
 		            mCurrentMoleculeContext.matchBuildingBlocks(mABBList);
 		            mCurrentMoleculeContext.colorizeBuildingBlocks();
-		            mDrawArea.setMolecule(mol);
+		            mDrawArea.getGenericDrawArea().setMolecule(mol);
 		            }
 		        }
 		    };
@@ -180,11 +186,11 @@ public class DEInteractiveSARDialog extends JDialog
 
         CompoundCollectionModel<BuildingBlock> model2 = new DefaultCompoundCollectionModel<BuildingBlock>() {
             public StereoMolecule getMolecule(int index) {
-                return ((BuildingBlock)super.getCompound(index)).getMoleculeForEdit();
+                return super.getCompound(index).getMoleculeForEdit();
                 }
 
             public StereoMolecule getMoleculeForDisplay(int index) {
-                return ((BuildingBlock)super.getCompound(index)).getMoleculeForDisplay();
+                return super.getCompound(index).getMoleculeForDisplay();
                 }
 
             public void addMolecule(int index, StereoMolecule mol) {
@@ -289,8 +295,8 @@ public class DEInteractiveSARDialog extends JDialog
                                 // apply currently defined building blocks to current reference molecule
                                 mCurrentMoleculeContext.matchBuildingBlocks(mABBList);
                                 mCurrentMoleculeContext.colorizeBuildingBlocks();
-                                mDrawArea.getMolecule().removeAtomSelection();
-                                mDrawArea.moleculeChanged();
+                                mDrawArea.getGenericDrawArea().getMolecule().removeAtomSelection();
+                                mDrawArea.getGenericDrawArea().moleculeChanged();
                                 mButtonAddBuildingBlock.setEnabled(false);
                                 mButtonAnalyze.setEnabled(true);
 
@@ -382,7 +388,7 @@ public class DEInteractiveSARDialog extends JDialog
         if (e.getType() == DrawAreaEvent.TYPE_SELECTION_CHANGED) {
             int selectedAtomCount = 0;
             boolean selectionModified = false;
-            StereoMolecule mol = mDrawArea.getMolecule();
+            StereoMolecule mol = mDrawArea.getGenericDrawArea().getMolecule();
             for (int atom=0; atom<mol.getAtoms(); atom++) {
                 if (mol.isSelectedAtom(atom)) {
                     if (mCurrentMoleculeContext.isUsedAtom(atom)) {
@@ -485,7 +491,7 @@ public class DEInteractiveSARDialog extends JDialog
         }
 
     private BuildingBlock createAndMatchSelectionAsBB() {
-        StereoMolecule mol = mDrawArea.getMolecule();
+        StereoMolecule mol = mDrawArea.getGenericDrawArea().getMolecule();
         mol.ensureHelperArrays(Molecule.cHelperNeighbours);
 
         int selectedAtomCount = 0;

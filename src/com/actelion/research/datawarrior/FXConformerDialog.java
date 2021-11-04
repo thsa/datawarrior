@@ -27,7 +27,7 @@ import com.actelion.research.chem.conf.TorsionDescriptorHelper;
 import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
 import com.actelion.research.datawarrior.task.chem.DETaskAdd3DCoordinates;
 import com.actelion.research.gui.FileHelper;
-import com.actelion.research.gui.JDrawDialog;
+import com.actelion.research.gui.editor.SwingEditorDialog;
 import com.actelion.research.gui.form.JFXConformerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.util.DoubleFormat;
@@ -186,7 +186,8 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 
 		if (e.getActionCommand().equals("Superpose...")) {
 			String idcode1 = new Canonizer(mMol).getIDCode();
-			JDrawDialog dd = new JDrawDialog((Frame)getOwner(), new StereoMolecule(mMol), "Select Atoms to be Superposed...");
+			SwingEditorDialog dd = new SwingEditorDialog((Frame)getOwner(), new StereoMolecule(mMol));
+			dd.setTitle("Select Atoms to be Superposed...");
 			dd.setVisible(true);
 
 			if (!dd.isCancelled()) {

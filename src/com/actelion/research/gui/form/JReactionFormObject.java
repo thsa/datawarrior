@@ -23,6 +23,8 @@ import com.actelion.research.chem.ExtendedDepictor;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.chem.reaction.ReactionEncoder;
 import com.actelion.research.gui.JEditableChemistryView;
+import com.actelion.research.gui.generic.GenericDrawContext;
+import com.actelion.research.gui.swing.SwingDrawContext;
 
 import javax.swing.border.Border;
 import java.awt.*;
@@ -80,9 +82,10 @@ public class JReactionFormObject extends AbstractFormObject {
 				rxn = ReactionEncoder.decode((String)data, true);
 
 			if (rxn != null) {
-				ExtendedDepictor d = new ExtendedDepictor(rxn, null, rxn.isReactionLayoutRequired(), true);
-				d.validateView(g2D, r, AbstractDepictor.cModeInflateToMaxAVBL);
-				d.paint(g2D);
+				ExtendedDepictor d = new ExtendedDepictor(rxn, null, rxn.isReactionLayoutRequired());
+				GenericDrawContext context = new SwingDrawContext(g2D);
+				d.validateView(context, r, AbstractDepictor.cModeInflateToMaxAVBL);
+				d.paint(context);
 				}
 			}
 		}

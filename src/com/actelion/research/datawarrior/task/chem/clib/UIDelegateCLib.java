@@ -30,6 +30,10 @@ import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.TaskUIDelegate;
 import com.actelion.research.gui.*;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
+import com.actelion.research.gui.editor.DrawAreaEvent;
+import com.actelion.research.gui.editor.DrawAreaListener;
+import com.actelion.research.gui.editor.GenericDrawArea;
+import com.actelion.research.gui.editor.SwingEditorPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
 
@@ -46,7 +50,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Properties;
 
-public class UIDelegateCLib implements ActionListener,ChangeListener,DrawAreaListener,ItemListener,TaskConstantsCLib,TaskUIDelegate {
+public class UIDelegateCLib implements ActionListener,ChangeListener, DrawAreaListener,ItemListener,TaskConstantsCLib,TaskUIDelegate {
 	private static final int EDITOR_HEIGHT = 360;
 
 	private static final String COMMAND_RETRIEVE = "retrieve";
@@ -114,7 +118,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener,DrawAreaLis
 		};
 
 	private Component	mParent;
-	private JDrawPanel	mDrawPanel;
+	private SwingEditorPanel	mDrawPanel;
 	private JPanel		mReactantPanel;
 	private JComboBox	mComboBoxMode,mComboBoxReaction;
 	private ArrayList<CompoundCollectionPane<String[]>> mReactantPaneList;
@@ -140,7 +144,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener,DrawAreaLis
 
 		StereoMolecule mol = new StereoMolecule();
 		mol.setFragment(true);
-		mDrawPanel = new JDrawPanel(mol, true);
+		mDrawPanel = new SwingEditorPanel(mol, GenericDrawArea.MODE_REACTION);
 		mDrawPanel.getDrawArea().setClipboardHandler(new ClipboardHandler());
 		mDrawPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(800), HiDPIHelper.scale(EDITOR_HEIGHT)));
 		mDrawPanel.getDrawArea().addDrawAreaListener(this);

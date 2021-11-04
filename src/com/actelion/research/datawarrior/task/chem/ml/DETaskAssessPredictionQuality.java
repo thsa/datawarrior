@@ -326,8 +326,8 @@ public class DETaskAssessPredictionQuality extends DETaskAbstractMachineLearning
 				if (getDescriptor(row) != null) {
 					double[][] x = new double[1][getVariableCount()];
 					calculateParameterRow(row, x[0]);
-					Matrix y = mTimeFractionMethod[timeFractionIndex].calculateYHat(new Matrix(x));
-					double value = isValueLogarithmic() ? Math.pow(10.0, y.get(0,0)) : y.get(0,0);
+					double y = mTimeFractionMethod[timeFractionIndex].calculateYHat(x[0]);
+					double value = isValueLogarithmic() ? Math.pow(10.0, y) : y;
 					getTableModel().setTotalValueAt(DoubleFormat.toString(value), row, firstNewColumn+1);
 				}
 			}

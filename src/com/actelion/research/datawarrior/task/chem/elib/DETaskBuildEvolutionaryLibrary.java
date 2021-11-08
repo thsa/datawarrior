@@ -61,8 +61,9 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 	private JDialog				mControllingDialog;
 	private DEFrame				mTargetFrame;
 	private JStructureView[]	mCompoundView;
+	private ShadowBorder[]      mCompoundViewBorder;
 	private JLabel[]			mFitnessLabel;
-	private JLabel				mLabelGeneration;
+	private JLabel				mLabelGeneration,mLabelRun;
 	private JProgressPanel		mProgressPanel;
 	private FitnessEvolutionPanel mFitnessEvolutionPanel;
 	private volatile boolean	mKeepData,mStopProcessing;
@@ -111,12 +112,14 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 		p2.add(new JLabel("Best Molecule"), "7,1");
 		p2.add(new JLabel("Best molecules of current generation"), "1,6,7,6");
 		mCompoundView = new JStructureView[6];
+		mCompoundViewBorder = new ShadowBorder[6];
 		mFitnessLabel = new JLabel[6];
 		for (int i=0; i<6; i++) {
+			mCompoundViewBorder[i] = new ShadowBorder();
 			mCompoundView[i] = new JStructureView(DnDConstants.ACTION_COPY_OR_MOVE, DnDConstants.ACTION_NONE);
-			mCompoundView[i].setBorder(new ShadowBorder());
+			mCompoundView[i].setBorder(mCompoundViewBorder[i]);
 			mCompoundView[i].setOpaque(true);
-			mCompoundView[i].setDisplayMode(Depictor.cDModeSuppressChiralText);
+			mCompoundView[i].setDisplayMode(AbstractDepictor.cDModeSuppressChiralText);
 			mFitnessLabel[i] = new JLabel("Fitness:");
 			if (i == 0) {
 				p2.add(mCompoundView[i], "1,3");
@@ -132,7 +135,10 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 				}
 			}
 		mLabelGeneration = new JLabel();
-		p2.add(mLabelGeneration, "3,1,5,1");
+		p2.add(mLabelGeneration, "3,1");
+
+		mLabelRun = new JLabel();
+		p2.add(mLabelRun, "5,1");
 
 		mFitnessEvolutionPanel = new FitnessEvolutionPanel();
 		p2.add(mFitnessEvolutionPanel, "3,3,5,3");
@@ -142,9 +148,11 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 		bp.setLayout(new BorderLayout());
 		JPanel ibp = new JPanel();
 		ibp.setLayout(new GridLayout(1, 2, scaled8, 0));
-		JButton buttonCancel = new JButton("Cancel");
-		buttonCancel.addActionListener(this);
-		ibp.add(buttonCancel);
+		if (isInteractive()) { // if in macro, we always take the data generated so far
+			JButton buttonCancel = new JButton("Cancel");
+			buttonCancel.addActionListener(this);
+			ibp.add(buttonCancel);
+			}
 		JButton buttonStop = new JButton("Stop");
 		buttonStop.addActionListener(this);
 		ibp.add(buttonStop);
@@ -197,6 +205,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 			}
 
 		try {
+			Integer.parseInt(configuration.getProperty(PROPERTY_RUN_COUNT, DEFAULT_RUNS));
 			int survivalCount = Integer.parseInt(configuration.getProperty(PROPERTY_SURVIVAL_COUNT, DEFAULT_SURVIVALS));
 			int generationSize = Integer.parseInt(configuration.getProperty(PROPERTY_GENERATION_SIZE, DEFAULT_COMPOUNDS));
 			String generations = configuration.getProperty(PROPERTY_GENERATION_COUNT, DEFAULT_GENERATIONS);
@@ -217,7 +226,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 				}
 			}
 		catch (NumberFormatException nfe) {
-			showErrorMessage("Survival count, generation count or generation size are not numeric.");
+			showErrorMessage("Survival count, generation count, generation size, or run count are not numeric.");
 			return false;
 			}
 
@@ -279,176 +288,180 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 			fitnessOption[i] = FitnessOption.createFitnessOption(configuration.getProperty(PROPERTY_FITNESS_PARAM_CONFIG+i), this);
 
 		int kind = findListIndex(configuration.getProperty(PROPERTY_COMPOUND_KIND), COMPOUND_KIND_CODE, 0);
+		int runCount = Integer.parseInt(configuration.getProperty(PROPERTY_RUN_COUNT, DEFAULT_RUNS));
 
 		mCurrentResultID = new AtomicInteger(0);
 
 		mProgressPanel.startProgress("1st generation...", 0, 0);
 
-		// Compile first parent generation including fitness calculation
-		TreeSet<EvolutionResult> parentGenerationResultSet = new TreeSet<>();
-		String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
-		if (startSet.length() == 0) {
-			ConcurrentLinkedQueue<StereoMolecule> compounds = new ConcurrentLinkedQueue<>();
-			UIDelegateELib.createRandomStartSet(getProgressController(), 4*survivalCount, kind, compounds);
-			for (StereoMolecule compound:compounds) {
-				if (!mStopProcessing)
-					parentGenerationResultSet.add(new EvolutionResult(compound,
-							new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet()));
-				}
-			}
-		else {
-			for (String idcode : startSet.split("\\t"))
-				if (!mStopProcessing)
-					parentGenerationResultSet.add(new EvolutionResult(new IDCodeParser(true).getCompactMolecule(idcode),
-							idcode, null, fitnessOption, mCurrentResultID.incrementAndGet()));
-			}
-
-		int offspringCompounds = generationSize / (2*survivalCount);
-		mProgressPanel.startProgress("Evolving...", 0, (generationCount>=Integer.MAX_VALUE-1) ? 0 : generationCount*survivalCount*2);
+		// Create the result set for all results starting with the start generation.
+		final TreeSet<EvolutionResult>[] completeResultSet = new TreeSet[runCount];
 
 		Mutator mutator = new Mutator("/resources/"+COMPOUND_KIND_FILE[kind]);
 
-		// Create the result set for all results starting with the start generation.
-		final TreeSet<EvolutionResult> completeResultSet = new TreeSet<>(parentGenerationResultSet);
-
-		mBestFitness = new AtomicFloat(0f);
 		mKeepData = true;	// default if is not cancelled
 
-								// In automatic mode stop if no improvement over AUTOMATIC_HISTORIC_GENERATIONS generations
-		float[] bestHistoricFitness = (generationCount == Integer.MAX_VALUE-1) ? new float[AUTOMATIC_HISTORIC_GENERATIONS] : null;
+		for (int run=0; run<runCount; run++) {
+			if (runCount > 1)
+				mLabelRun.setText("Run: "+(run+1));
 
-		ConcurrentSkipListSet<String> moleculeHistory = new ConcurrentSkipListSet<>();
+			ConcurrentSkipListSet<String> moleculeHistory = new ConcurrentSkipListSet<>();
 
-		for (int generation=0; (generation<generationCount) && !mStopProcessing; generation++) {
-			mLabelGeneration.setText("Generation: "+(generation+1));
+			completeResultSet[run] = new TreeSet<>();
 
-			// use all survived molecules from recent generation as parent structures
-			ConcurrentSkipListSet<EvolutionResult> currentGenerationResultSet = new ConcurrentSkipListSet<>();
-
-			Thread[] mutationThread;
-			int threadCount = Runtime.getRuntime().availableProcessors();
-			mMutationQueue = new ArrayBlockingQueue<>(10 * threadCount);
-			mutationThread = new Thread[threadCount];
-			for (int i = 0; i<threadCount; i++) {
-				mutationThread[i] = new Thread(() -> {
-					while (true) {
-						try {
-							MutationQueueEntry entry = mMutationQueue.take();
-							if (entry.isEnd())
-								break;
-							if (!mStopProcessing)
-								processCandidate(entry, currentGenerationResultSet, moleculeHistory, survivalCount, fitnessOption);
-							}
-						catch (InterruptedException ie) {
-							break;
-							}
-						}
-					});
-				mutationThread[i].setPriority(Thread.MIN_PRIORITY);
-				mutationThread[i].setName(THREAD_NAME_PREFIX + i);
-				mutationThread[i].start();
+			// Compile first parent generation including fitness calculation
+			TreeSet<EvolutionResult> parentGeneration = new TreeSet<>();
+			String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
+			if (startSet.length() == 0) {
+				ConcurrentLinkedQueue<StereoMolecule> compounds = new ConcurrentLinkedQueue<>();
+				UIDelegateELib.createRandomStartSet(mProgressPanel, 4*survivalCount, kind, compounds);
+				for (StereoMolecule compound:compounds) {
+					if (!mStopProcessing)
+						parentGeneration.add(new EvolutionResult(compound,
+								new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+					}
+				}
+			else {
+				for (String idcode : startSet.split("\\t"))
+					if (!mStopProcessing)
+						parentGeneration.add(new EvolutionResult(new IDCodeParser(true).getCompactMolecule(idcode),
+								idcode, null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
 				}
 
-			int parentIndex = 0;
-			for (EvolutionResult parentResult: parentGenerationResultSet) {
-				if (mStopProcessing)
-					break;
+			int childCompoundCount = generationSize / (2*survivalCount);
+			mProgressPanel.startProgress("Evolving...", 0, (generationCount>=Integer.MAX_VALUE-1) ? 0 : generationCount*survivalCount*2);
 
-				parentResult.ensureCoordinates();
-				mCompoundView[0].structureChanged(parentResult.getMolecule());
-				mFitnessLabel[0].setText("Fitness: "+(float)((int)(100000*parentResult.getOverallFitness()))/100000);
+			// Create the result set for all results starting with the start generation.
+			completeResultSet[run].addAll(parentGeneration);
 
-				if (parentResult.getMutationList() == null)
-					parentResult.setMutationList(mutator.generateMutationList(parentResult.getMolecule(), Mutator.MUTATION_ANY, false));
+			mBestFitness = new AtomicFloat(0f);
 
-				generateNextGenerationCompounds(offspringCompounds, parentResult, mutator);
+			float bestFitness = 0;
+			float bestFitnessGeneration = -1;
 
-				if ((generationCount<Integer.MAX_VALUE-1))
-					mProgressPanel.updateProgress(survivalCount*generation + parentIndex);
+			for (int generation=0; (generation<generationCount) && !mStopProcessing; generation++) {
+				mLabelGeneration.setText("Generation: "+(generation+1));
 
-				parentIndex++;
-				}
+				// use all survived molecules from recent generation as parent structures
+				ConcurrentSkipListSet<EvolutionResult> currentGeneration = new ConcurrentSkipListSet<>();
 
-			// Generate fitness limits for up to survivalCount structures
-			// from older generations.
-			float[] fitnessLimit = new float[survivalCount];
-			parentIndex = 0;
-			for (EvolutionResult parentResult: parentGenerationResultSet) {
-				if (parentIndex == survivalCount)
-					break;
-				fitnessLimit[parentIndex++] = parentResult.getOverallFitness();
-				}
+				// Create and start threads processing new entries from mMutationQueue and creating current generation results
+				Thread[] mutationThread = launchMutationConsumers(currentGeneration, moleculeHistory, survivalCount, fitnessOption, run);
 
-			// now also process previous best ranking molecules as parent structures
-			if (generation != 0) {
-				int resultIndex = 0;
-				for (EvolutionResult parentResult:completeResultSet) {
-					if (mStopProcessing
-					 || resultIndex == survivalCount)
-						break;
-
-					if (parentResult.getMutationList().size() == 0)
-						continue;
-					if (parentResult.getOverallFitness() < fitnessLimit[resultIndex])
+				int parentIndex = 0;
+				for (EvolutionResult parentResult:parentGeneration) {
+					if (mStopProcessing)
 						break;
 
 					parentResult.ensureCoordinates();
 					mCompoundView[0].structureChanged(parentResult.getMolecule());
 					mFitnessLabel[0].setText("Fitness: "+(float)((int)(100000*parentResult.getOverallFitness()))/100000);
 
-					generateNextGenerationCompounds(offspringCompounds, parentResult, mutator);
+					if (parentResult.getMutationList() == null)
+						parentResult.setMutationList(mutator.generateMutationList(parentResult.getMolecule(), Mutator.MUTATION_ANY, false));
+
+					// Create mutated compound and add them into mMutationQueue
+					generateNextGenerationCompounds(childCompoundCount, parentResult, mutator);
 
 					if ((generationCount<Integer.MAX_VALUE-1))
-						mProgressPanel.updateProgress(survivalCount*generation*2+survivalCount+resultIndex);
+						mProgressPanel.updateProgress(survivalCount*generation + parentIndex);
 
-					resultIndex++;
+					parentIndex++;
 					}
-				}
 
-			for (int i=0; i<threadCount; i++)
-				try { mMutationQueue.put(MutationQueueEntry.END_ENTRY); } catch (InterruptedException e) {}
-			for (Thread thread : mutationThread)
-				try { thread.join(); } catch (InterruptedException e) {}
-
-			if (currentGenerationResultSet.size() == 0) {
-				if (isInteractive()) {
-					try {
-						SwingUtilities.invokeAndWait(() ->
-							JOptionPane.showMessageDialog(mParentFrame, "No valid molecules could be made in most recent generation")
-							);
-						} catch (Exception e) {}
+				// Generate fitness limits for up to survivalCount structures from older generations.
+				float[] fitnessLimit = new float[survivalCount];
+				parentIndex = 0;
+				for (EvolutionResult parentResult: parentGeneration) {
+					if (parentIndex == survivalCount)
+						break;
+					fitnessLimit[parentIndex++] = parentResult.getOverallFitness();
 					}
-				break;
-				}
 
-			int resultNo = 0;
-			parentGenerationResultSet.clear();
-			for (EvolutionResult r:currentGenerationResultSet) {
-				r.setChildIndex(resultNo++);
-				completeResultSet.add(r);
-				parentGenerationResultSet.add(r);
-				}
+				// now also process previous best ranking molecules as parent structures
+				if (generation != 0) {
+					int resultIndex = 0;
+					for (EvolutionResult parentResult:completeResultSet[run]) {
+						if (mStopProcessing
+						 || resultIndex == survivalCount
+						 || parentResult.getOverallFitness() < fitnessLimit[resultIndex])
+							break;
 
-			mFitnessEvolutionPanel.updateEvolution(generation+1, completeResultSet);
+						if (parentResult.getMutationList().size() == 0)
+							continue;
 
-			if (generation > AUTOMATIC_HISTORIC_GENERATIONS
-			 && bestHistoricFitness != null) {
-				int index = generation % AUTOMATIC_HISTORIC_GENERATIONS;
-				if (mBestFitness.floatValue() <= bestHistoricFitness[index])
+						parentResult.ensureCoordinates();
+						mCompoundView[0].structureChanged(parentResult.getMolecule());
+						mFitnessLabel[0].setText("Fitness: "+(float)((int)(100000*parentResult.getOverallFitness()))/100000);
+
+						// Create mutated compound and add them into mMutationQueue
+						generateNextGenerationCompounds(childCompoundCount, parentResult, mutator);
+
+						if ((generationCount<Integer.MAX_VALUE-1))
+							mProgressPanel.updateProgress(survivalCount*generation*2+survivalCount+resultIndex);
+
+						resultIndex++;
+						}
+					}
+
+				for (int i=0; i<mutationThread.length; i++)
+					try { mMutationQueue.put(MutationQueueEntry.END_ENTRY); } catch (InterruptedException e) {}
+				for (Thread thread : mutationThread)
+					try { thread.join(); } catch (InterruptedException e) {}
+
+				if (currentGeneration.size() == 0) {
+					if (isInteractive()) {
+						try {
+							SwingUtilities.invokeAndWait(() ->
+								JOptionPane.showMessageDialog(mParentFrame, "No valid molecules could be made in most recent generation")
+								);
+							} catch (Exception e) {}
+						}
 					break;
+					}
 
-				bestHistoricFitness[index] = mBestFitness.floatValue();
+				int resultNo = 0;
+				parentGeneration.clear();
+				for (EvolutionResult r:currentGeneration) {
+					r.setChildIndex(resultNo++);
+					completeResultSet[run].add(r);
+					parentGeneration.add(r);
+					}
+
+				mFitnessEvolutionPanel.updateEvolution(run, generation, currentGeneration);
+
+				// In automatic mode stop if no improvement over AUTOMATIC_HISTORIC_GENERATIONS generations
+				if (generationCount == Integer.MAX_VALUE-1) {
+					if (bestFitness < mBestFitness.floatValue()) {
+						bestFitness = mBestFitness.floatValue();
+						bestFitnessGeneration = generation;
+						}
+					else if (generation >= bestFitnessGeneration + AUTOMATIC_HISTORIC_GENERATIONS) {
+						break;
+						}
+					}
 				}
 			}
 
-		EvolutionResult[] result = completeResultSet.toArray(new EvolutionResult[0]);
+		if (!mKeepData) {
+			try {
+				SwingUtilities.invokeAndWait(() -> {
+					mControllingDialog.setVisible(false);
+					mControllingDialog.dispose();
+				} );
+			} catch (Exception e) {}
+		}
+		else {
+			for (int run=1; run<runCount; run++)
+				completeResultSet[0].addAll(completeResultSet[run]);
 
-		if (mKeepData) {
+			EvolutionResult[] result = completeResultSet[0].toArray(new EvolutionResult[0]);
+
 			for (int foi=0; foi<fitnessOption.length; foi++) {
 				FitnessOption fo = fitnessOption[foi];
 				if (fo.hasDeferredColumnValues()) {
 					AtomicInteger resultIndex = new AtomicInteger(0);
-					mProgressPanel.startProgress("Calculating "+fo.getName()+" columns values...", 0, completeResultSet.size());
+					mProgressPanel.startProgress("Calculating "+fo.getName()+" columns values...", 0, result.length);
 					int threadCount = Runtime.getRuntime().availableProcessors();
 					Thread[] thread = new Thread[threadCount];
 					final int _foi = foi;
@@ -468,19 +481,50 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 						try { thread[i].join(); } catch (InterruptedException e) {}
 					}
 				}
+
+			try {
+				SwingUtilities.invokeAndWait(() -> {
+					mControllingDialog.setVisible(false);
+					mControllingDialog.dispose();
+
+					if (mKeepData) {
+						mTargetFrame = mApplication.getEmptyFrame("Evolutionary Library");
+						createDocument(result, fitnessOption, runCount != 1, runCount);
+						}
+					} );
+				} catch (Exception e) {}
 			}
+		}
 
-		try {
-			SwingUtilities.invokeAndWait(() -> {
-				mControllingDialog.setVisible(false);
-				mControllingDialog.dispose();
-
-				if (!isInteractive() || mKeepData) {
-					mTargetFrame = mApplication.getEmptyFrame("Evolutionary Library");
-					createDocument(result, fitnessOption);
+	private Thread[] launchMutationConsumers(ConcurrentSkipListSet<EvolutionResult> currentGeneration,
+										 ConcurrentSkipListSet<String> moleculeHistory,
+										 int survivalCount,
+										 FitnessOption[] fitnessOption,
+										 int run) {
+		Thread[] mutationThread;
+		int threadCount = Runtime.getRuntime().availableProcessors();
+		mMutationQueue = new ArrayBlockingQueue<>(10 * threadCount);
+		mutationThread = new Thread[threadCount];
+		for (int i = 0; i<threadCount; i++) {
+			mutationThread[i] = new Thread(() -> {
+				while (true) {
+					try {
+						MutationQueueEntry entry = mMutationQueue.take();
+						if (entry.isEnd())
+							break;
+						if (!mStopProcessing)
+							processCandidate(entry, currentGeneration, moleculeHistory, survivalCount, fitnessOption, run);
 					}
-				} );
-			} catch (Exception e) {}
+					catch (InterruptedException ie) {
+						break;
+					}
+				}
+			});
+			mutationThread[i].setPriority(Thread.MIN_PRIORITY);
+			mutationThread[i].setName(THREAD_NAME_PREFIX + i);
+			mutationThread[i].start();
+			}
+		return mutationThread;
 		}
 
 	private void generateNextGenerationCompounds(int offspringCompounds, final EvolutionResult parentResult, final Mutator mutator) {
@@ -499,14 +543,15 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 	                              ConcurrentSkipListSet<EvolutionResult> currentGeneration,
 	                              ConcurrentSkipListSet<String> moleculeHistory,
 	                              int survivalCount,
-	                              FitnessOption[] fitnessOption) {
+	                              FitnessOption[] fitnessOption,
+	                              int run) {
 
 		String idcode = new Canonizer(candidate.mol).getIDCode();
 
 		if (!moleculeHistory.add(idcode))
 			return;
 
-		EvolutionResult result = new EvolutionResult(candidate.mol, idcode, candidate.parentResult, fitnessOption, mCurrentResultID.incrementAndGet());
+		EvolutionResult result = new EvolutionResult(candidate.mol, idcode, candidate.parentResult, fitnessOption, mCurrentResultID.incrementAndGet(), run);
 		currentGeneration.add(result);
 		if (currentGeneration.size() > survivalCount)
 			currentGeneration.remove(currentGeneration.last());
@@ -518,7 +563,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 				final int _index = index;
 				SwingUtilities.invokeLater(() -> {
 					mCompoundView[_index].structureChanged(null);
-					mCompoundView[_index].setBackground(new Color(Color.HSBtoRGB(0.0f, 0.0f, 0.9f)));
+					mCompoundViewBorder[_index].setColor(null);
 					mFitnessLabel[_index].setText("Fitness:");
 					} );
 				}
@@ -532,7 +577,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 					final int _index = index;
 					SwingUtilities.invokeLater(() -> {
 						mCompoundView[_index].structureChanged(r.getMolecule());
-						mCompoundView[_index].setBackground(new Color(Color.HSBtoRGB((float)(r.getOverallFitness()/3.0), 0.8f, 0.9f)));
+						mCompoundViewBorder[_index].setColor(createColorFromFitness(r.getOverallFitness()));
 						mFitnessLabel[_index].setText("Fitness: "+(float)((int)(100000*r.getOverallFitness()))/100000);
 						} );
 					}
@@ -545,19 +590,26 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 			if (oldBestFitness < result.getOverallFitness() && mBestFitness.compareAndSet(oldBestFitness, newBestFitness)) {
 				SwingUtilities.invokeLater(() -> {
 					mCompoundView[1].structureChanged(result.getMolecule());
-					mCompoundView[1].setBackground(new Color(Color.HSBtoRGB((float) (newBestFitness / 3.0), 0.8f, 0.9f)));
+					mCompoundViewBorder[1].setColor(createColorFromFitness(newBestFitness));
 					mFitnessLabel[1].setText("Fitness: " + (float) ((int) (100000 * newBestFitness)) / 100000);
 					} );
 				}
 			}
 		}
 
-	private void createDocument(EvolutionResult[] result, FitnessOption[] fitnessOption) {
+	private Color createColorFromFitness(float fitness) {
+		fitness = Math.max(0f, 2f*fitness-1f);  // we assign red->green to 0.5->1.0; in addition we distort to enlarge the upper part of the range
+		return new Color(Color.HSBtoRGB((fitness*fitness/3f), 0.8f, 0.6f));
+		}
+
+	private void createDocument(EvolutionResult[] result, FitnessOption[] fitnessOption, boolean hasMultipleRuns, int runCount) {
 		Arrays.sort(result, (r1, r2) -> (r1.getID() == r2.getID()) ? 0 : (r1.getID() < r2.getID()) ? -1 : 1);
 
 		ArrayList<String> columnNameList = new ArrayList<>();
 		columnNameList.add("ID");
 		columnNameList.add("Parent ID");
+		if (hasMultipleRuns)
+			columnNameList.add("Run");
 		columnNameList.add("Generation");
 		columnNameList.add("Parent Generation");
 		columnNameList.add("Child No");
@@ -589,18 +641,19 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 				fo.setResultColumnProperties(i, tableModel, column++);
 
 		int row = 0;
-		float maxFitness = 0;
-		EvolutionResult bestResult = null;
+		float[] maxFitness = new float[runCount];
+		EvolutionResult[] bestResult = new EvolutionResult[runCount];
 		for (EvolutionResult r:result) {
-			if (maxFitness < r.getOverallFitness()) {
-				maxFitness = r.getOverallFitness();
-				bestResult = r;
+			if (maxFitness[r.getRun()] < r.getOverallFitness()) {
+				maxFitness[r.getRun()] = r.getOverallFitness();
+				bestResult[r.getRun()] = r;
 				}
 
 			tableModel.setTotalValueAt(r.getIDCode(), row, 0);
 			column = 2;
 			tableModel.setTotalValueAt(""+r.getID(), row, column++);
 			tableModel.setTotalValueAt(""+r.getParentID(), row, column++);
+			tableModel.setTotalValueAt(""+(1+r.getRun()), row, column++);
 			tableModel.setTotalValueAt(""+(1+r.getGeneration()), row, column++);
 			tableModel.setTotalValueAt(""+(1+r.getParentGeneration()), row, column++);
 			tableModel.setTotalValueAt(""+(1+r.getChildIndex()), row, column++);
@@ -613,25 +666,29 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 
 		tableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, mProgressPanel);
 
-		setRuntimeSettings(createHitlist(result, bestResult));
+		setRuntimeSettings(createHitlist(result, bestResult), hasMultipleRuns);
 		}
 
-	private int createHitlist(EvolutionResult[] result, EvolutionResult bestResult) {
+	private int createHitlist(EvolutionResult[] result, EvolutionResult[] bestResult) {
 		CompoundTableModel tableModel = mTargetFrame.getTableModel();
 		CompoundTableListHandler hitlistHandler = tableModel.getListHandler();
 		String name = hitlistHandler.createList("Direct Route", -1, CompoundTableListHandler.EMPTY_LIST, -1, null, false);
 		int hitlistFlagNo = hitlistHandler.getListFlagNo(name);
-		int wantedID = bestResult.getID();
-		for (int row=result.length-1; row>=0; row--) {
-			if (wantedID == result[row].getID()) {
-				wantedID = result[row].getParentID();
-				hitlistHandler.addRecordSilent(tableModel.getTotalRecord(row), hitlistFlagNo);
+		for (EvolutionResult bestResultOfRun:bestResult) {
+			if (bestResultOfRun != null) {
+				int wantedID = bestResultOfRun.getID();
+				for (int row=result.length-1; row>=0; row--) {
+					if (wantedID == result[row].getID()) {
+						wantedID = result[row].getParentID();
+						hitlistHandler.addRecordSilent(tableModel.getTotalRecord(row), hitlistFlagNo);
+						}
+					}
 				}
 			}
 		return hitlistHandler.getListIndex(name);
 		}
 
-	private void setRuntimeSettings(final int hitlist) {
+	private void setRuntimeSettings(final int hitlist, final boolean splitByRun) {
 		SwingUtilities.invokeLater(() -> {
 			mTargetFrame.getMainFrame().getMainPane().addStructureView("Structure", null, 0);
 
@@ -649,6 +706,8 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 			visualization.getMarkerColor().setColor(CompoundTableListHandler.getColumnFromList(hitlist));
 			visualization.setFocusList(hitlist);
 			visualization.setViewBackground(new Color(VIEW_BACKGROUND));
+			if (splitByRun)
+				visualization.setSplittingColumns(mTargetFrame.getTableModel().findColumn("Run"), -1, 1f, false);
 			} );
 		}
 	}

@@ -101,7 +101,9 @@ public class DockingFitnessOption extends FitnessOption {
 					dockingEngine = new DockingEngine(mCavity, mLigand);
 				}
 				catch (DockingFailedException dfe) {
+					System.out.println(dfe.getMessage());
 					dfe.printStackTrace();
+					return Float.NaN;
 				}
 				sDockingEngineMap.put(Thread.currentThread().getName(), dockingEngine);
 			}
@@ -119,6 +121,7 @@ public class DockingFitnessOption extends FitnessOption {
 		catch (DockingFailedException dfe) {
 			System.out.println(dfe.getMessage());
 			dfe.printStackTrace();
+			return Float.NaN;
 		}
 
 		StereoMolecule pose = dockingResult.getPose();

@@ -32,6 +32,9 @@ public interface TaskConstantsELib {
 	public static final String DEFAULT_SURVIVALS = "8";
 	public static final String[] SURVIVAL_OPTIONS = {"1", "2", "4", "8", "16", "32", "64", "128", "256"};
 
+	public static final String DEFAULT_RUNS = "1";
+	public static final String[] RUN_OPTIONS = {"1", "2", "4", "8", "16", "32", "64"};
+
 	public static final String[] COMPOUND_KIND_TEXT = {"Approved drugs", "Natural products"};
 	public static final String[] COMPOUND_KIND_CODE = {"drugs", "naturalProducts"};
 	public static final String[] COMPOUND_KIND_FILE = {"drugbank_nosugar.typ", "derep.typ"};
@@ -46,5 +49,6 @@ public interface TaskConstantsELib {
     public static final String PROPERTY_COMPOUND_KIND = "kind";
     public static final String PROPERTY_FITNESS_PARAM_COUNT = "paramCount";
     public static final String PROPERTY_FITNESS_PARAM_CONFIG = "paramConfig";
+	public static final String PROPERTY_RUN_COUNT = "runs";
 
 }

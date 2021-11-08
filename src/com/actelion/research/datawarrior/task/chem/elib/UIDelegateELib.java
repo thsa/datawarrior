@@ -43,7 +43,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDelegate {
-	private static final String[] START_COMPOUND_TEXT = { "Default Structures", "Random structures", "Structure(s) from a file", "Custom structure(s)", "On-the-fly random structures" };
+	private static final String[] START_COMPOUND_TEXT = { "Default Structures", "Random structures", "Structure(s) from a file", "Custom structure(s)", "Random structures generated on-the-fly" };
 	private static final int DEFAULT_OPTION = 0;
 	private static final int RANDOM_OPTION = 1;
 	private static final int FILE_OPTION = 2;
@@ -71,7 +71,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 
 	private Frame				mParentFrame;
 	private CompoundTableModel	mTableModel;
-	private JComboBox			mComboBoxStartCompounds,mComboBoxGenerations,mComboBoxCompounds,
+	private JComboBox			mComboBoxStartCompounds,mComboBoxGenerations,mComboBoxCompounds,mComboBoxRuns,
 								mComboBoxSurvivalCount,mComboBoxCreateLike,mComboBoxFitnessOption;
 	private JPanel				mFitnessPanel;
 	private JScrollPane			mFitnessScrollpane;
@@ -129,8 +129,13 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		mComboBoxCreateLike = new JComboBox(COMPOUND_KIND_TEXT);
 		p1.add(mComboBoxCreateLike, "7,5");
 
+		p1.add(new JLabel("Total run count:"), "5,9");
+		mComboBoxRuns = new JComboBox(RUN_OPTIONS);
+		mComboBoxRuns.setEditable(true);
+		p1.add(mComboBoxRuns, "7,9");
+
 		p1.add(new JLabel("Fitness Criteria"), "1,11");
-		JButton bAdd = new JButton("Add Criterion");
+		JButton bAdd = new JButton("Add Criterion ->");
 		bAdd.setActionCommand("addOption");
 		bAdd.addActionListener(this);
 		p1.add(bAdd, "5,11");
@@ -178,7 +183,6 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		mFitnessScrollpane = new JScrollPane(mFitnessPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		mFitnessScrollpane.setMinimumSize(fitnessPanelSize);
 		mFitnessScrollpane.setPreferredSize(fitnessPanelSize);
-//		mFitnessScrollpane.setBorder(BorderFactory.createEmptyBorder());
 		p1.add(mFitnessScrollpane, "1,13,7,13");
 
 		return p1;
@@ -211,6 +215,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 					for (MoleculeWithDescriptor mwd:mwdl)
 						mFirstGeneration.addCompound(mwd.mMol);
 				}
+			mFirstGenerationPane.setEnabled(startSetOption != ON_THE_FLY_OPTION);
 			return;
 			}
 		if (e.getActionCommand().equals("addOption")) {
@@ -371,6 +376,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		configuration.setProperty(PROPERTY_SURVIVAL_COUNT, (String)mComboBoxSurvivalCount.getSelectedItem());
 		configuration.setProperty(PROPERTY_GENERATION_COUNT, (String)mComboBoxGenerations.getSelectedItem());
 		configuration.setProperty(PROPERTY_GENERATION_SIZE, (String)mComboBoxCompounds.getSelectedItem());
+		configuration.setProperty(PROPERTY_RUN_COUNT, (String)mComboBoxRuns.getSelectedItem());
 
 		configuration.setProperty(PROPERTY_COMPOUND_KIND, COMPOUND_KIND_CODE[mComboBoxCreateLike.getSelectedIndex()]);
 
@@ -389,6 +395,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		int option = AbstractTask.findListIndex(configuration.getProperty(PROPERTY_START_SET_OPTION), START_COMPOUND_CODE, DEFAULT_OPTION);
 		if (option < mComboBoxStartCompounds.getItemCount())
 			mComboBoxStartCompounds.setSelectedIndex(option);
+		mFirstGenerationPane.setEnabled(option != ON_THE_FLY_OPTION);
 
 		String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
 		if (startSet.length() != 0)
@@ -398,6 +405,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		mComboBoxSurvivalCount.setSelectedItem(configuration.getProperty(PROPERTY_SURVIVAL_COUNT, DEFAULT_SURVIVALS));
 		mComboBoxGenerations.setSelectedItem(configuration.getProperty(PROPERTY_GENERATION_COUNT, DEFAULT_GENERATIONS));
 		mComboBoxCompounds.setSelectedItem(configuration.getProperty(PROPERTY_GENERATION_SIZE, DEFAULT_COMPOUNDS));
+		mComboBoxRuns.setSelectedItem(configuration.getProperty(PROPERTY_RUN_COUNT, DEFAULT_RUNS));
 
 		mComboBoxCreateLike.setSelectedIndex(AbstractTask.findListIndex(configuration.getProperty(PROPERTY_COMPOUND_KIND), COMPOUND_KIND_CODE, 0));
 
@@ -417,6 +425,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		mComboBoxSurvivalCount.setSelectedItem(DEFAULT_SURVIVALS);
 		mComboBoxGenerations.setSelectedItem(DEFAULT_GENERATIONS);
 		mComboBoxCompounds.setSelectedItem(DEFAULT_COMPOUNDS);
+		mComboBoxRuns.setSelectedItem(DEFAULT_RUNS);
 
 		mComboBoxCreateLike.setSelectedIndex(0);
 		}

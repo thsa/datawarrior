@@ -31,7 +31,7 @@ public class EvolutionResult implements Comparable<EvolutionResult> {
 	private StereoMolecule mMol;
 	private String mIDCode;
 	private ArrayList<Mutation> mMutationList;
-	private int mGeneration,mParentGeneration,mID,mParentID,mChildIndex;
+	private int mGeneration,mParentGeneration,mID,mParentID,mChildIndex,mRun;
 	private float[] mProperty,mFitness;
 	private String[][] mCustomColumnValue;
 	private float mOverallFitness;
@@ -46,10 +46,11 @@ public class EvolutionResult implements Comparable<EvolutionResult> {
 	 * @param idcode
 	 */
 	public EvolutionResult(StereoMolecule mol, String idcode, EvolutionResult parent,
-						   FitnessOption[] fitnessOptionList, int id) {
+						   FitnessOption[] fitnessOptionList, int id, int run) {
 		mMol = mol;
 		mIDCode = idcode;
 		mID = id;
+		mRun = run;
 		mFitnessOptionList = fitnessOptionList;
 		if (parent != null) {
 			mParentID = parent.mID;
@@ -95,6 +96,10 @@ public class EvolutionResult implements Comparable<EvolutionResult> {
 	public int getID() {
 		return mID;
 		}
+
+	public int getRun() {
+		return mRun;
+	}
 
 	public String getIDCode() {
 		return mIDCode;
@@ -184,9 +189,12 @@ public class EvolutionResult implements Comparable<EvolutionResult> {
 	/**
 	 * Considers EvolutionResults with lower fitness as larger
 	 * that TreeSets contain high fitness results first.
+	 * As first priority put the latest run results at the top.
 	 */
 	public int compareTo(EvolutionResult o) {
-		return (mOverallFitness < o.mOverallFitness) ? 1
+		return (mRun < o.mRun) ? 1
+			 : (mRun > o.mRun) ? -1
+			 : (mOverallFitness < o.mOverallFitness) ? 1
 			 : (mOverallFitness > o.mOverallFitness) ? -1
 			 : mIDCode.compareTo(o.mIDCode);
 		}

@@ -18,26 +18,28 @@
 
 package com.actelion.research.datawarrior.task.chem.elib;
 
+import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.util.ColorHelper;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Line2D;
-import java.util.TreeSet;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FitnessEvolutionPanel extends JPanel {
 	private static final long serialVersionUID = 20140725L;
 
-	private static float sBorder = HiDPIHelper.scale(2);
+	private static int sMinDisplayedGenerations = 32;
 
-	private volatile float[] mAVGFitness;
-	private volatile float[] mMaxFitness;
-	private volatile int[] mCompounds;
+	private ArrayList<ArrayList<Fitness>> mFinessList;
 	private volatile AtomicBoolean mLock;
 
 	public FitnessEvolutionPanel() {
 		super();
+		mFinessList = new ArrayList<>();
 		mLock = new AtomicBoolean(false);
 		}
 
@@ -48,13 +50,16 @@ public class FitnessEvolutionPanel extends JPanel {
 
         super.paintComponent(g);
 
-        if (mCompounds != null) {
+        if (mFinessList.size() != 0) {
 			Dimension theSize = getSize();
 			Insets insets = getInsets();
-			theSize.width -= insets.left + insets.right + 2 * sBorder;
-			theSize.height -= insets.top + insets.bottom + 2 * sBorder;
+	        int border = Math.round(HiDPIHelper.scale(2));
+	        int textAreaHeight = Math.round(HiDPIHelper.scale(32));    // three text lines a 14 pixel
+			Rectangle r = new Rectangle(border + insets.left, border + insets.top + textAreaHeight,
+					theSize.width - insets.left - insets.right - 2*border,
+					theSize.height - insets.top - insets.bottom - textAreaHeight - 2*border);
 
-			if (theSize.width <= 0 || theSize.height <= 0)
+			if (r.width <= 0 || r.height <= 0)
 				return;
 
 			Graphics2D g2 = (Graphics2D) g;
@@ -71,80 +76,126 @@ public class FitnessEvolutionPanel extends JPanel {
 
 			g2.setFont(g2.getFont().deriveFont(0, scaled12));
 
-			float x0 = insets.left + sBorder;
-			float x1 = x0 + theSize.width - HiDPIHelper.scale(140);
-			float y0 = insets.top + sBorder;
-			float y1 = y0 + theSize.height;
-			float usedHeight = theSize.height - HiDPIHelper.scale(32);    // three text lines a 14 pixel
+			float xm = r.x + r.width/2;
 
-			g2.drawString("Fitness Evolution", x0, y0 + scaled12);
-			g2.drawString("generation average", x1, y0 + scaled12);
-			g2.drawString("generation maximum", x1, y0 + scaled12 + scaled14);
+			g2.drawString("Fitness Evolution", r.x, r.y - textAreaHeight + scaled12);
+			g2.drawString("generation average", xm, r.y - textAreaHeight + scaled12);
+			g2.drawString("generation maximum", xm, r.y - textAreaHeight + scaled12 + scaled14);
 
-			g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+	        g2.setStroke(new BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+	        g2.setFont(g2.getFont().deriveFont(0, scaled8));
+	        g2.setColor(Color.GRAY);
+			drawHLine(g2, r, 0.75f);
+	        drawHLine(g2, r, 0.5f);
+	        drawHLine(g2, r, 0.25f);
 
-			g2.setColor(Color.LIGHT_GRAY);
-			g2.draw(new Line2D.Float(x0, y1 - usedHeight, x0 + theSize.width, y1 - usedHeight));
-			g2.draw(new Line2D.Float(x0, y1, x0 + theSize.width, y1));
+	        int displayedGenerations = getDisplayedGenerations();
 
-			g2.setColor(new Color(128, 0, 0));
-			g2.draw(new Line2D.Float(x1 - scaled24, scaled8, x1 - scaled4, scaled8));
-			drawCurve(g2, theSize, insets, mAVGFitness, usedHeight);
+	        // from a user perspecive generations start with 1, thus G9 is perceived as G10
+	        for (int generation=9; generation<displayedGenerations; generation+=10)
+		        drawVLine(g2, r, generation, (generation+1) % 50 == 0, displayedGenerations);
 
-			g2.setColor(new Color(0, 128, 0));
-			g2.draw(new Line2D.Float(x1 - scaled24, scaled22, x1 - scaled4, scaled22));
-			drawCurve(g2, theSize, insets, mMaxFitness, usedHeight);
+	        g2.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+	        g2.setColor(LookAndFeelHelper.isDarkLookAndFeel() ? Color.LIGHT_GRAY : Color.DARK_GRAY);
+	        g2.draw(new Line2D.Float(r.x, r.y, r.x+r.width, r.y));
+	        g2.draw(new Line2D.Float(r.x, r.y+r.height, r.x+r.width, r.y+r.height));
+
+	        Color avgColor = new Color(224, 0, 0);
+	        Color maxColor = new Color(0, 192, 0);
+	        Color avgFadedColor = ColorHelper.intermediateColor(getBackground(), avgColor, 0.3f);
+	        Color maxFadedColor = ColorHelper.intermediateColor(getBackground(), maxColor, 0.3f);
+
+	        g2.setColor(avgColor);
+	        g2.draw(new Line2D.Float(xm - scaled24, scaled8, xm - scaled4, scaled8));
+	        g2.setColor(maxColor);
+	        g2.draw(new Line2D.Float(xm - scaled24, scaled22, xm - scaled4, scaled22));
+
+	        for (int i=0; i<mFinessList.size(); i++) {
+	        	boolean isCurrentRun = (i == mFinessList.size()-1);
+		        boolean isPreviousRun = (i == mFinessList.size()-2);
+
+		        if (isCurrentRun || isPreviousRun) {
+			        g2.setColor(isCurrentRun ? avgColor : avgFadedColor);
+			        drawCurve(g2, r, mFinessList.get(i), displayedGenerations, false);
+		            }
+
+		        g2.setColor(isCurrentRun ? maxColor : isPreviousRun ? maxFadedColor : Color.GRAY);
+		        drawCurve(g2, r, mFinessList.get(i), displayedGenerations, true);
+		        }
 			}
 
 		mLock.set(false);
 		}
 
-	private void drawCurve(Graphics2D g2, Dimension theSize, Insets insets, float[] fitness, float usedHeight) {
-        float xOffset = (float)theSize.width / (mCompounds.length-2);
+	private int getDisplayedGenerations() {
+		int displayedGenerations = sMinDisplayedGenerations;
+		for (ArrayList<Fitness> fitnessList:mFinessList) {
+			int neededGenerations = fitnessList.get(fitnessList.size()-1).generation + 1;
+			if (displayedGenerations < neededGenerations)
+				displayedGenerations = neededGenerations;
+			}
+		return displayedGenerations;
+		}
 
-        float x1 = insets.left + sBorder;
-        float y1 = insets.top + sBorder + theSize.height - fitness[0] * usedHeight;
-        for (int i=1; i<mCompounds.length-1; i++) {
-        	float x2 = x1 + xOffset;
-            float y2 = insets.top + sBorder + theSize.height - fitness[i] * usedHeight;
+	private void drawHLine(Graphics2D g2, Rectangle r, float value) {
+		float y = r.y + r.height - value*value*r.height;
+		g2.drawString(Float.toString(value), r.x, y-2);
+		g2.draw(new Line2D.Float(r.x, y, r.x+r.width, y));
+		}
 
-            g2.draw(new Line2D.Float(x1, y1, x2, y2));
+	private void drawVLine(Graphics2D g2, Rectangle r, int generation, boolean isBold, int displayedGenerations) {
+		g2.setColor(!isBold ? Color.GRAY : LookAndFeelHelper.isDarkLookAndFeel() ? Color.LIGHT_GRAY : Color.DARK_GRAY);
+		float x = r.x + generation * r.width / (displayedGenerations-1);
+		g2.draw(new Line2D.Float(x, r.y, x, r.y+r.height));
+		}
 
-        	x1 = x2;
-        	y1 = y2;
+	private void drawCurve(Graphics2D g2, Rectangle r, ArrayList<Fitness> fitnessList, int displayedGenerations, boolean isMax) {
+        float dx = (float)r.width / (displayedGenerations-1);
+
+        float lx = -1f;
+        float ly = -1f;
+        for (Fitness fitness:fitnessList) {
+        	float f = isMax ? fitness.maximum : fitness.average;
+        	float x = r.x + dx * fitness.generation;
+            float y = r.y + r.height - f*f * r.height;
+
+            if (lx != -1f)
+	            g2.draw(new Line2D.Float(lx, ly, x, y));
+
+        	lx = x;
+        	ly = y;
         	}
 		}
 
-	public void updateEvolution(int generations, TreeSet<EvolutionResult> resultSet) {
-		if (mLock.get() || resultSet == null || generations < 2)
+	public void updateEvolution(int run, int generation, ConcurrentSkipListSet<EvolutionResult> generationResults) {
+		if (mLock.get() || generationResults.size() == 0 || generation < 1)
 			return;
 
 		if (!mLock.compareAndSet(false, true))	// skip update if we are currently painting
 			return;
 
-		mAVGFitness = new float[generations+1];	// to include first parent generation (index = -1)
-		mMaxFitness = new float[generations+1];
-		mCompounds = new int[generations+1];
+		if (run == mFinessList.size()) {
+			ArrayList<Fitness>fitnesses = new ArrayList<>();
+			mFinessList.add(fitnesses);
+			}
 
-		for (EvolutionResult r:resultSet) {
-			int generation = r.getGeneration()+1;	// first parent generation is actually -1
-			mCompounds[generation]++;
-			float fitness = r.getOverallFitness();
-			mAVGFitness[generation] += fitness;
-			if (mMaxFitness[generation] < fitness)
-				mMaxFitness[generation] = fitness;
-			}
-		for (int i=0; i<generations; i++) {
-			if (mCompounds[i] == 0) {
-				mMaxFitness[i] = mMaxFitness[i-1];
-				mAVGFitness[i] = mAVGFitness[i-1];
-				}
-			else {
-				mAVGFitness[i] /= mCompounds[i];
-				}
-			}
+		mFinessList.get(run).add(new Fitness(generation, generationResults));
 
 		repaint();
 		mLock.set(false);
+		}
+
+	private class Fitness {
+		float average,maximum;
+		int generation;
+
+		public Fitness(int generation, ConcurrentSkipListSet<EvolutionResult> generationResults) {
+			for (EvolutionResult r:generationResults) {
+				maximum = Math.max(maximum, r.getOverallFitness());
+				average += r.getOverallFitness();
+				}
+			average /= generationResults.size();
+			this.generation = generation;
+			}
 		}
 	}

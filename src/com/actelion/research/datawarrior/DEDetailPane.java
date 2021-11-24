@@ -410,6 +410,10 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		});
 	}
 
+	private void setShowInteractions(DetailViewInfo viewInfo, boolean showInteractions) {
+		((JFXConformerPanel)viewInfo.view).getV3DScene().getInteractionHandler().toggleVisibility();
+	}
+
 	class Detail3DViewController implements V3DPopupMenuController {
 		public DetailViewInfo viewInfo;
 
@@ -434,6 +438,15 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 
 				popup.getItems().add(itemSuperpose);
 				popup.getItems().add(itemAlignShape);
+
+				boolean hasCavity = mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyProteinCavity) != null;
+				boolean hasLigand = mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyNaturalLigand) != null;
+				boolean isShowInteractions = (hasCavity && hasLigand && ((JFXConformerPanel)viewInfo.view).getV3DScene().getInteractionHandler().isVisible());
+				javafx.scene.control.CheckMenuItem itemShowInteractions = new CheckMenuItem("Show Interactions");
+				itemShowInteractions.setSelected(isShowInteractions);
+				itemShowInteractions.setDisable(!hasCavity || !hasLigand);
+				itemShowInteractions.setOnAction(e -> setShowInteractions(viewInfo, !isShowInteractions));
+
 				popup.getItems().add(new SeparatorMenuItem());
 			}
 		}

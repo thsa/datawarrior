@@ -653,7 +653,8 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 			column = 2;
 			tableModel.setTotalValueAt(""+r.getID(), row, column++);
 			tableModel.setTotalValueAt(""+r.getParentID(), row, column++);
-			tableModel.setTotalValueAt(""+(1+r.getRun()), row, column++);
+			if (hasMultipleRuns)
+				tableModel.setTotalValueAt(""+(1+r.getRun()), row, column++);
 			tableModel.setTotalValueAt(""+(1+r.getGeneration()), row, column++);
 			tableModel.setTotalValueAt(""+(1+r.getParentGeneration()), row, column++);
 			tableModel.setTotalValueAt(""+(1+r.getChildIndex()), row, column++);

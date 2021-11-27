@@ -1,6 +1,7 @@
 package com.actelion.research.gui.form;
 
 import com.actelion.research.chem.Coordinates;
+import com.actelion.research.chem.Molecule;
 import com.actelion.research.chem.StereoMolecule;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -29,7 +30,7 @@ public class JFXConformerPanel extends JFXPanel {
 	private Color REFERENCE_MOLECULE_COLOR = Color.WHITE;
 
 	private V3DScene mScene;
-	private V3DMolecule mOverlayMol;
+	private V3DMolecule mCavityMol,mOverlayMol;
 	private V3DPopupMenuController mController;
 
 	public JFXConformerPanel(boolean withSidePanel, boolean synchronousRotation, boolean allowEditing) {
@@ -103,7 +104,8 @@ public class JFXConformerPanel extends JFXPanel {
 	public void clear() {
 		Platform.runLater(() -> {
 			for (V3DMolecule fxmol:mScene.getMolsInScene())
-				if (fxmol != mOverlayMol)
+				if (fxmol != mOverlayMol
+				 && fxmol != mCavityMol)
 					mScene.delete(fxmol);
 		} );
 	}
@@ -172,8 +174,13 @@ public class JFXConformerPanel extends JFXPanel {
 	 */
 	public void setOverlayMolecule(StereoMolecule mol) {
 		Platform.runLater(() -> {
-			mOverlayMol = new V3DMolecule(mol, 0, V3DMolecule.MoleculeRole.LIGAND);
-			mScene.addMolecule(mOverlayMol);
+			if (mol != null) {
+				mOverlayMol = new V3DMolecule(mol, 0, V3DMolecule.MoleculeRole.LIGAND);
+				mScene.addMolecule(mOverlayMol);
+				}
+			else if (mOverlayMol != null) {
+				mScene.delete(mOverlayMol);
+				}
 			} );
 		}
 
@@ -188,14 +195,14 @@ public class JFXConformerPanel extends JFXPanel {
 			if (ligand != null)
 				markAtomsInCropDistance(cavity, ligand, calculateCOG(ligand));
 
-			mOverlayMol = new V3DMolecule(cavity, MoleculeArchitect.ConstructionMode.WIRES, 0, V3DMolecule.MoleculeRole.MACROMOLECULE);
-			mOverlayMol.setColor(Color.LIGHTGRAY);
-			mOverlayMol.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.FILLED);
-			mOverlayMol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS);
+			mCavityMol = new V3DMolecule(cavity, MoleculeArchitect.ConstructionMode.WIRES, 0, V3DMolecule.MoleculeRole.MACROMOLECULE);
+			mCavityMol.setColor(Color.LIGHTGRAY);
+			mCavityMol.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.FILLED);
+			mCavityMol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS);
 
-			mScene.addMolecule(mOverlayMol);
+			mScene.addMolecule(mCavityMol);
 
-			mOverlayMol.getMolecule().removeAtomMarkers();
+			mCavityMol.getMolecule().removeAtomMarkers();
 			} );
 		}
 
@@ -208,6 +215,8 @@ public class JFXConformerPanel extends JFXPanel {
 		}
 
 	public static StereoMolecule cropProtein(StereoMolecule protein, StereoMolecule ligand, Coordinates ligandCOG) {
+		protein.ensureHelperArrays(Molecule.cHelperNeighbours);
+
 		double maxDistance = 0;
 		for (int i=0; i<ligand.getAllAtoms(); i++)
 			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getCoordinates(i)));
@@ -316,7 +325,7 @@ public class JFXConformerPanel extends JFXPanel {
 	}
 
 	/**
-	 * Removes all molecules except the overlay molecule, if it exists.
+	 * Removes all molecules except the cavity and overlay molecules, if they exists.
 	 * Then, adds passed ligand or conformer(s).
 	 * Then, optionally adds reference ligand/conformer.
 	 * Unless there is an overlay molecule, it finally optimizes the view.
@@ -325,7 +334,8 @@ public class JFXConformerPanel extends JFXPanel {
 		Platform.runLater(() -> {
 			boolean isTorsionStrainVisible = false;
 			for (V3DMolecule fxmol:mScene.getMolsInScene())
-				if (fxmol != mOverlayMol) {
+				if (fxmol != mOverlayMol
+				 && fxmol != mCavityMol) {
 					isTorsionStrainVisible |= (fxmol.getTorsionStrainVis() != null);
 					mScene.delete(fxmol);
 				}
@@ -346,7 +356,7 @@ public class JFXConformerPanel extends JFXPanel {
 			if (refConformer != null)
 				addMoleculeDirect(refConformer, REFERENCE_MOLECULE_COLOR, null, isTorsionStrainVisible);
 
-			if ((conformers != null || refConformer != null) && mOverlayMol == null)
+			if ((conformers != null || refConformer != null) && mOverlayMol == null && mCavityMol == null)
 				mScene.optimizeView();
 		} );
 	}

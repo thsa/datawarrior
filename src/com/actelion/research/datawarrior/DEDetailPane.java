@@ -219,10 +219,13 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 
 				String cavity = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyProteinCavity);
 				StereoMolecule cavityMol = (cavity == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavity);
-				String ligand = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyNaturalLigand);
+				boolean showLigand = !"false".equals(mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyShowNaturalLigand));
+				String ligand = showLigand ? mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyNaturalLigand) : null;
 				StereoMolecule ligandMol = (ligand == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligand);
 				if (cavityMol != null)
 					view.setProteinCavity(cavityMol, ligandMol);
+				if (ligandMol != null)
+					view.setOverlayMolecule(ligandMol);
 
 				DetailViewInfo viewInfo = addColumnDetailView(view, mTableModel.getParentColumn(column), column, TYPE_STRUCTURE_3D, mTableModel.getColumnTitle(column));
 				view.setPopupMenuController(new Detail3DViewController(viewInfo));
@@ -399,8 +402,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		return null;
 	}
 
-	private void setSuperposeMode(DetailViewInfo viewInfo, boolean isSuperpose, boolean isShapeAlign) {
-		System.out.println("setSuperposeMode(isSuperpose:" + isSuperpose + ", isShapeAlign:" + isShapeAlign + ")");
+	private void setSuperposeMode(DetailViewInfo viewInfo, boolean isSuperpose, boolean isShapeAlign, boolean isShowNaturalLigand) {
 		SwingUtilities.invokeLater(() -> {
 			HashMap<String, String> map = new HashMap<>();
 			map.put(CompoundTableConstants.cColumnPropertySuperpose, isSuperpose ? CompoundTableConstants.cSuperposeValueReferenceRow : null);
@@ -410,8 +412,19 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		});
 	}
 
+	private void setShowNaturalLigand(DetailViewInfo viewInfo, boolean isShowNaturalLigand) {
+		String ligand = isShowNaturalLigand ? mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyNaturalLigand) : null;
+		StereoMolecule ligandMol = (ligand == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligand);
+		((JFXConformerPanel)viewInfo.view).setOverlayMolecule(ligandMol);
+		SwingUtilities.invokeLater(() -> {
+			HashMap<String, String> map = new HashMap<>();
+			map.put(CompoundTableConstants.cColumnPropertyShowNaturalLigand, isShowNaturalLigand ? null : "false");
+			new DETaskSetColumnProperties(mFrame, viewInfo.detail, map, false).defineAndRun();
+		});
+	}
+
 	private void setShowInteractions(DetailViewInfo viewInfo, boolean showInteractions) {
-		((JFXConformerPanel)viewInfo.view).getV3DScene().getInteractionHandler().toggleVisibility();
+		((JFXConformerPanel)viewInfo.view).getV3DScene().setShowInteractions(showInteractions);
 	}
 
 	class Detail3DViewController implements V3DPopupMenuController {
@@ -424,28 +437,41 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		@Override
 		public void addExternalMenuItems(ContextMenu popup, int type) {
 			if (type == V3DPopupMenuController.TYPE_VIEW) {
+				boolean hasCavity = mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyProteinCavity) != null;
+				boolean hasLigand = mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyNaturalLigand) != null;
+				boolean isShowLigand = !"false".equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyShowNaturalLigand));
 				boolean isSuperpose = CompoundTableConstants.cSuperposeValueReferenceRow.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperpose));
 				boolean isShapeAlign = CompoundTableConstants.cSuperposeAlignValueShape.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperposeAlign));
 
-				javafx.scene.control.CheckMenuItem itemSuperpose = new CheckMenuItem("Superpose Reference Row");
+				if (hasLigand) {
+					javafx.scene.control.CheckMenuItem itemShowLigand = new CheckMenuItem("Show Natural Ligand");
+					itemShowLigand.setSelected(isShowLigand);
+					itemShowLigand.setOnAction(e -> setShowNaturalLigand(viewInfo, !isShowLigand));
+					popup.getItems().add(itemShowLigand);
+				}
+
+				javafx.scene.control.CheckMenuItem itemSuperpose = new CheckMenuItem("Show Reference Row Structure");
 				itemSuperpose.setSelected(isSuperpose);
-				itemSuperpose.setOnAction(e -> setSuperposeMode(viewInfo, !isSuperpose, isShapeAlign));
-
-				javafx.scene.control.CheckMenuItem itemAlignShape = new CheckMenuItem("Align Shapes");
-				itemAlignShape.setSelected(isShapeAlign);
-				itemAlignShape.setDisable(!isSuperpose);
-				itemAlignShape.setOnAction(e -> setSuperposeMode(viewInfo, isSuperpose, !isShapeAlign));
-
+				itemSuperpose.setOnAction(e -> setSuperposeMode(viewInfo, !isSuperpose, isShapeAlign, isShowLigand));
 				popup.getItems().add(itemSuperpose);
-				popup.getItems().add(itemAlignShape);
 
-				boolean hasCavity = mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyProteinCavity) != null;
-				boolean hasLigand = mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyNaturalLigand) != null;
-				boolean isShowInteractions = (hasCavity && hasLigand && ((JFXConformerPanel)viewInfo.view).getV3DScene().getInteractionHandler().isVisible());
-				javafx.scene.control.CheckMenuItem itemShowInteractions = new CheckMenuItem("Show Interactions");
-				itemShowInteractions.setSelected(isShowInteractions);
-				itemShowInteractions.setDisable(!hasCavity || !hasLigand);
-				itemShowInteractions.setOnAction(e -> setShowInteractions(viewInfo, !isShowInteractions));
+				if (!hasCavity && isSuperpose) {
+					// don't allow shape alignment if we show a protein cavity
+					javafx.scene.control.CheckMenuItem itemAlignShape = new CheckMenuItem("Align Shown Structures");
+					itemAlignShape.setSelected(isShapeAlign);
+					itemAlignShape.setDisable(!isSuperpose);
+					itemAlignShape.setOnAction(e -> setSuperposeMode(viewInfo, isSuperpose, !isShapeAlign, isShowLigand));
+					popup.getItems().add(itemAlignShape);
+				}
+
+				if (hasCavity) {
+					boolean isShowInteractions = (hasCavity && hasLigand && ((JFXConformerPanel)viewInfo.view).getV3DScene().isShowInteractions());
+					javafx.scene.control.CheckMenuItem itemShowInteractions = new CheckMenuItem("Show Interactions");
+					itemShowInteractions.setSelected(isShowInteractions);
+					itemShowInteractions.setDisable(!hasCavity || !hasLigand);
+					itemShowInteractions.setOnAction(e -> setShowInteractions(viewInfo, !isShowInteractions));
+					popup.getItems().add(itemShowInteractions);
+				}
 
 				popup.getItems().add(new SeparatorMenuItem());
 			}

@@ -173,9 +173,11 @@ public class DockingPanelController implements V3DPopupMenuController {
 			new AtomAssembler(_cavity).addImplicitHydrogens();
 
 			Platform.runLater(() -> {
-				mConformerPanel.getV3DScene().clearAll();
+				V3DScene scene = mConformerPanel.getV3DScene();
+				scene.clearAll();
 				mConformerPanel.setProteinCavity(_cavity, _ligand);
-				mConformerPanel.getV3DScene().addMolecule(new V3DMolecule(_ligand, 0, V3DMolecule.MoleculeRole.LIGAND));
+				scene.addMolecule(new V3DMolecule(_ligand, 0, V3DMolecule.MoleculeRole.LIGAND));
+				scene.optimizeView();
 			});
 		}
 		// if we have only the protein, we don't add hydrogen, but surface and just add the protein to the scene

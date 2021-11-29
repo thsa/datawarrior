@@ -292,7 +292,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 	}
 
 	protected DetailViewInfo addColumnDetailView(JComponent view, int column, int detail, String type, String title) {
-		boolean split3DFragments = "true".equals(mTableModel.getColumnProperty(column, CompoundTableModel.cColumnProperty3DFragmentSplit));
+		boolean split3DFragments = "true".equals(mTableModel.getColumnProperty(detail, CompoundTableModel.cColumnProperty3DFragmentSplit));
 		DetailViewInfo viewInfo = new DetailViewInfo(view, column, detail, type, split3DFragments);
 		mDetailViewList.add(viewInfo);
 		add(view, title);

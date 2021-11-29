@@ -292,7 +292,8 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 	}
 
 	protected DetailViewInfo addColumnDetailView(JComponent view, int column, int detail, String type, String title) {
-		DetailViewInfo viewInfo = new DetailViewInfo(view, column, detail, type);
+		boolean split3DFragments = "true".equals(mTableModel.getColumnProperty(column, CompoundTableModel.cColumnProperty3DFragmentSplit));
+		DetailViewInfo viewInfo = new DetailViewInfo(view, column, detail, type, split3DFragments);
 		mDetailViewList.add(viewInfo);
 		add(view, title);
 		return viewInfo;
@@ -375,29 +376,35 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			}
 		}
 
-		((JFXConformerPanel)viewInfo.view).updateConformers(rowMol,
-				mCurrentRecord == null ? -1 : mCurrentRecord.getID(), refMol == null ? null : refMol[0]);
+		JFXConformerPanel view = (JFXConformerPanel)viewInfo.view;
+		int rowID = (mCurrentRecord == null || isSuperpose || view.getOverlayMolecule() != null) ? -1 : mCurrentRecord.getID();
+		view.updateConformers(rowMol, rowID, refMol == null ? null : refMol[0]);
 	}
 
 	private StereoMolecule[] getConformers(CompoundRecord record, boolean allowMultiple, DetailViewInfo viewInfo) {
 		byte[] idcode = (byte[]) record.getData(viewInfo.column);
 		byte[] coords = (byte[]) record.getData(viewInfo.detail);
 		if (idcode != null && coords != null) {
-			int count = 1;
-			int index = ArrayUtils.indexOf(coords, (byte) 32);
-			if (index != -1 && allowMultiple) {
-				count++;
-				for (int i = index + 1; i < coords.length; i++)
-					if (coords[i] == (byte) 32)
-						count++;
-				index = -1;
+			if (viewInfo.split3DFragments) {
+				return new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode, coords).getFragments();
 			}
-			StereoMolecule[] mol = new StereoMolecule[count];
-			for (int i = 0; i < count; i++) {
-				mol[i] = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode, coords, 0, index + 1);
-				index = ArrayUtils.indexOf(coords, (byte) 32, index + 1);
+			else {
+				int count = 1;
+				int index = ArrayUtils.indexOf(coords, (byte) 32);
+				if (index != -1 && allowMultiple) {
+					count++;
+					for (int i = index + 1; i < coords.length; i++)
+						if (coords[i] == (byte) 32)
+							count++;
+					index = -1;
+				}
+				StereoMolecule[] mol = new StereoMolecule[count];
+				for (int i = 0; i < count; i++) {
+					mol[i] = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode, coords, 0, index + 1);
+					index = ArrayUtils.indexOf(coords, (byte) 32, index + 1);
+				}
+				return mol;
 			}
-			return mol;
 		}
 		return null;
 	}
@@ -482,12 +489,14 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		public JComponent view;
 		public int column, detail;
 		public String type;
+		public boolean split3DFragments;
 
-		public DetailViewInfo(JComponent view, int column, int detail, String type) {
+		public DetailViewInfo(JComponent view, int column, int detail, String type, boolean split3DFragments) {
 			this.view = view;
 			this.column = column;   // is idcode column in case of STRUCTURE(_3D)
 			this.detail = detail;   // is coordinate column in case of STRUCTURE(_3D)
 			this.type = type;
+			this.split3DFragments = split3DFragments;
 		}
 	}
 }

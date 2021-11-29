@@ -27,7 +27,9 @@ import java.util.concurrent.CountDownLatch;
 public class JFXConformerPanel extends JFXPanel {
 	public static final double CAVITY_CROP_DISTANCE = 10.0;
 
-	private Color REFERENCE_MOLECULE_COLOR = Color.WHITE;
+	private Color REFERENCE_MOLECULE_COLOR = Color.INDIANRED;
+	private Color OVERLAY_MOLECULE_COLOR = Color.LIGHTGRAY;
+	private Color SINGLE_CONFORMER_COLOR = Color.GRAY.darker(); // for some reason, DARKGREY is lighter than GREY
 
 	private V3DScene mScene;
 	private V3DMolecule mCavityMol,mOverlayMol;
@@ -176,6 +178,7 @@ public class JFXConformerPanel extends JFXPanel {
 		Platform.runLater(() -> {
 			if (mol != null) {
 				mOverlayMol = new V3DMolecule(mol, 0, V3DMolecule.MoleculeRole.LIGAND);
+				mOverlayMol.setColor(OVERLAY_MOLECULE_COLOR);
 				mScene.addMolecule(mOverlayMol);
 				}
 			else if (mOverlayMol != null) {
@@ -314,21 +317,29 @@ public class JFXConformerPanel extends JFXPanel {
 		}
 
 	public void addMolecule(StereoMolecule mol, Color color, Point3D centerOfRotation) {
-		Platform.runLater(() -> {
-			V3DMolecule fxmol = new V3DMolecule(mol);
-			if (color != null)
-				fxmol.setColor(color);
-			fxmol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_INHERIT);
-			fxmol.setCenterOfRotation(centerOfRotation);
-			mScene.addMolecule(fxmol);
-		} );
-	}
+		Platform.runLater(() -> addMoleculeNow(mol, color, centerOfRotation, false) );
+		}
+
+	private void addMoleculeNow(StereoMolecule mol, Color color, Point3D centerOfRotation, boolean showTorsionStrain) {
+		V3DMolecule fxmol = new V3DMolecule(mol);
+		fxmol.setColor(color == null ? SINGLE_CONFORMER_COLOR : color);
+		fxmol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_INHERIT);
+		fxmol.setCenterOfRotation(centerOfRotation);
+		if (showTorsionStrain)
+			fxmol.addTorsionStrainVisualization();
+		mScene.addMolecule(fxmol);
+		}
 
 	/**
 	 * Removes all molecules except the cavity and overlay molecules, if they exists.
-	 * Then, adds passed ligand or conformer(s).
-	 * Then, optionally adds reference ligand/conformer.
-	 * Unless there is an overlay molecule, it finally optimizes the view.
+	 * A cavity, natural ligand or PheSA query conformer, which need to be shown statically,
+	 * are not touched by this update, if they are defined with setProteinCavity() or setOverlayMolecule().
+	 * Then, adds the passed conformer(s) or docked ligand.
+	 * Then, optionally adds the reference conformer.
+	 * Unless there is a protein cavity or an overlay molecule, it finally optimizes the view.
+	 * @param conformers multiple or one conformer, which may also be a ligand structure
+	 * @param rowID is used for reproducible color assignment if there is one conformer only; use -1 for atomicNo based colors
+	 * @param refConformer optional second conformer or ligand structure for comparison (not the natural ligand or PheSA query)
 	 */
 	public void updateConformers(StereoMolecule[] conformers, int rowID, StereoMolecule refConformer) {
 		Platform.runLater(() -> {
@@ -342,34 +353,23 @@ public class JFXConformerPanel extends JFXPanel {
 
 			if (conformers != null) {
 				if (conformers.length == 1) {
-					addMoleculeDirect(conformers[0], CarbonAtomColorPalette.getColor(rowID), null, isTorsionStrainVisible);
+					addMoleculeNow(conformers[0], CarbonAtomColorPalette.getColor(rowID), null, isTorsionStrainVisible);
 				}
 				else {
 					Point3D cor = new Point3D(0, 0, 0);
 					for (int i = 0; i < conformers.length; i++) {
 						Color c = Color.hsb(360f * i / conformers.length, 0.75, 0.6);
-						addMoleculeDirect(conformers[i], c, cor, false);
+						addMoleculeNow(conformers[i], c, cor, false);
 					}
 				}
 			}
 
 			if (refConformer != null)
-				addMoleculeDirect(refConformer, REFERENCE_MOLECULE_COLOR, null, isTorsionStrainVisible);
+				addMoleculeNow(refConformer, REFERENCE_MOLECULE_COLOR, null, isTorsionStrainVisible);
 
 			if ((conformers != null || refConformer != null) && mOverlayMol == null && mCavityMol == null)
 				mScene.optimizeView();
 		} );
-	}
-
-	private void addMoleculeDirect(StereoMolecule mol, Color color, Point3D centerOfRotation, boolean isTorsionStrainVisible) {
-		V3DMolecule fxmol = new V3DMolecule(mol);
-		if (color != null)
-			fxmol.setColor(color);
-		fxmol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_INHERIT);
-		fxmol.setCenterOfRotation(centerOfRotation);
-		if (isTorsionStrainVisible)
-		fxmol.addTorsionStrainVisualization();
-		mScene.addMolecule(fxmol);
 	}
 
 	public ArrayList<StereoMolecule> getMolecules(V3DMolecule.MoleculeRole role) {

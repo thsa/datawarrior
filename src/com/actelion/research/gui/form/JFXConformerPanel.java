@@ -160,7 +160,7 @@ public class JFXConformerPanel extends JFXPanel {
 
 	public void setConollySurfaceMode(int mode) {
 		Platform.runLater(() -> {
-			for (Node node:mScene.getWorld().getAllChildren())
+			for (Node node:mScene.getWorld().getAllAttachedMolGroups())
 				if (node instanceof V3DMolecule)
 					((V3DMolecule)node).setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.values()[mode]);
 		} );

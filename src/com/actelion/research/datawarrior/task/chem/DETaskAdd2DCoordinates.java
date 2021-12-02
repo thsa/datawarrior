@@ -228,12 +228,12 @@ public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implemen
 			for (int i=0; i<idcodeList.length; i++) {
 				StereoMolecule scaffold = new IDCodeParser().getCompactMolecule(idcodeList[i]);
 				long[] ffp = ffpCreator.createLongIndex(scaffold);
-				mExplicitScaffoldList.add(new InventorTemplate(scaffold, ffp));
+				mExplicitScaffoldList.add(new InventorTemplate(scaffold, ffp, true));
 				}
 			}
 
 		if ("true".equals(configuration.getProperty(PROPERTY_AUTOMATIC))) {
-			mImplicitScaffoldMap = new TreeMap<String,StereoMolecule>();
+			mImplicitScaffoldMap = new TreeMap<>();
 			mScaffoldContainer = new StereoMolecule();
 			mScaffoldMode = findListIndex(configuration.getProperty(PROPERTY_SCAFFOLD_MODE), SCAFFOLD_CODE, SCAFFOLD_CENTRAL_RING);
 			}
@@ -308,7 +308,7 @@ public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implemen
 								else {
 									mScaffoldColorBuilder.append(',');
 									}
-								mScaffoldColorBuilder.append(Integer.toString(atom));
+								mScaffoldColorBuilder.append(atom);
 								}
 							}
 						mScaffoldAtoms[row] = mScaffoldColorBuilder.toString().getBytes();
@@ -369,7 +369,6 @@ public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implemen
 			if (!found) {
 				mol.ensureHelperArrays(Molecule.cHelperParities);
 				new CoordinateInventor().invent(mol);
-//				mol.setStereoBondsFromParity(); not needed anymore
 				}
 
 			Canonizer canonizer = new Canonizer(mol);
@@ -408,14 +407,13 @@ public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implemen
 			mol.setAtomMarker(scaffoldAtomToAtom[atom], true);
 			}
 		new CoordinateInventor(CoordinateInventor.MODE_PREFER_MARKED_ATOM_COORDS).invent(mol);
-//		mol.setStereoBondsFromParity(); not needed anymore
 
 		if (mScaffoldAtoms != null) {
 			mScaffoldColorBuilder.setLength(0);
 			mScaffoldColorBuilder.append(SCAFFOLD_COLOR);
 			for (int i=0; i<scaffoldAtomToAtom.length; i++) {
 				mScaffoldColorBuilder.append(i==0 ? ':' : ',');
-				mScaffoldColorBuilder.append(Integer.toString(scaffoldAtomToAtom[i]));
+				mScaffoldColorBuilder.append(scaffoldAtomToAtom[i]);
 				}
 			mScaffoldAtoms[row] = mScaffoldColorBuilder.toString().getBytes();
 			}

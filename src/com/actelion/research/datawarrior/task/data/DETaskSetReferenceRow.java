@@ -18,19 +18,15 @@
 
 package com.actelion.research.datawarrior.task.data;
 
-import info.clearthought.layout.TableLayout;
-
-import java.util.Properties;
-import java.util.Random;
-
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.model.CompoundTableModel;
+import info.clearthought.layout.TableLayout;
+
+import javax.swing.*;
+import java.util.Properties;
+import java.util.Random;
 
 
 public class DETaskSetReferenceRow extends ConfigurableTask implements Runnable {
@@ -164,8 +160,9 @@ public class DETaskSetReferenceRow extends ConfigurableTask implements Runnable 
 						} while (newRow == oldRow || (mTableModel.getRecord(newRow).getFlags() & mask) == 0);
 					}
 				else {	// WHICH_NEXT
+					newRow = oldRow;
 					do {
-						newRow = (oldRow+1 == mTableModel.getTotalRowCount()) ? 0 : oldRow+1;
+						newRow = (newRow+1 == mTableModel.getTotalRowCount()) ? 0 : newRow+1;
 						} while ((mTableModel.getRecord(newRow).getFlags() & mask) == 0);
 					}
 				}

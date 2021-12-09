@@ -227,6 +227,7 @@ public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implemen
 			String[] idcodeList = scaffolds.split("\\t");
 			for (int i=0; i<idcodeList.length; i++) {
 				StereoMolecule scaffold = new IDCodeParser().getCompactMolecule(idcodeList[i]);
+				ensureMatchEZParityQueryFeatures(scaffold);
 				long[] ffp = ffpCreator.createLongIndex(scaffold);
 				mExplicitScaffoldList.add(new InventorTemplate(scaffold, ffp, true));
 				}
@@ -240,14 +241,6 @@ public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implemen
 
 		if (mExplicitScaffoldList != null || mScaffoldContainer != null) {
 			mFFPColumn = getTableModel().getChildColumn(idcodeColumn, DescriptorConstants.DESCRIPTOR_FFP512.shortName);
-/*			if (mFFPColumn == -1) {
-				mSearcher = new SSSearcher();
-				}
-			else if (mExplicitScaffoldList != null) {
-				mSearcherWithIndex = new SSSearcherWithIndex();
-				for (ExplicitScaffold s:mExplicitScaffoldList)
-					s.calculateFFP();
-				}*/
 			}
 
 		if ("true".equals(configuration.getProperty(PROPERTY_COLORIZE_SCAFFOLDS))) {
@@ -256,6 +249,14 @@ public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implemen
 			}
 
 		return true;
+		}
+
+	private void ensureMatchEZParityQueryFeatures(StereoMolecule scaffold) {
+		scaffold.ensureHelperArrays(Molecule.cHelperParities);
+		for (int bond=0; bond<scaffold.getBonds(); bond++)
+			if (scaffold.getBondParity(bond) == Molecule.cBondParityEor1
+			 || scaffold.getBondParity(bond) == Molecule.cBondParityZor2)
+				scaffold.setBondQueryFeature(bond, Molecule.cBondQFMatchStereo, true);
 		}
 
 	@Override

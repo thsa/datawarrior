@@ -2650,7 +2650,7 @@ public class CompoundTableModel extends AbstractTableModel
 	 * modifiers as (<,>=,?), NaN or empty values and date values.
 	 * If column < 0, then false is returned.
 	 * @param column
-	 * @return
+	 * @return whther the column contains numerical or date values
 	 */
 	public boolean isColumnTypeDouble(int column) {
 		return (column >= 0) && (mColumnInfo[column].type & cColumnTypeDouble) != 0;

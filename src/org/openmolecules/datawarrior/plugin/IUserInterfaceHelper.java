@@ -18,6 +18,8 @@
 
 package org.openmolecules.datawarrior.plugin;
 
+import javax.swing.*;
+
 /**
  * IUserInterfaceHelper is a class passed to the IPluginTask.createDialogContent() method.
  * It allows to create and embed DataWarrior specific GUI components into the query dialog,
@@ -25,6 +27,14 @@ package org.openmolecules.datawarrior.plugin;
  * that can be created and used.
  */
 public interface IUserInterfaceHelper {
+	int COLUMN_TYPE_STRUCTURE = 1;
+	int COLUMN_TYPE_REACTION = 2;
+	int COLUMN_TYPE_NUMERICAL = 4;
+	int COLUMN_TYPE_DATE = 8;
+	int COLUMN_TYPE_CATEGORIES = 16;
+	int COLUMN_TYPE_TEXT = 32;
+	int COLUMN_TYPE_ANY = 63;
+
 	/**
 	 * For HiDPI monitors the user may have set a scaling factor in the operating system
 	 * (e.g. ControlPanel in Windows). In DataWarrior standard user interface elements as
@@ -51,4 +61,13 @@ public interface IUserInterfaceHelper {
 	 * @return
 	 */
 	public IChemistryPanel getChemicalEditor();
+
+	/**
+	 * Creates and return a JComboBox prefilled with all columns of the current fron window
+	 * that match the specified column type. If the method during macro definition, then the
+	 * JComboBox is editable to allow free text column name specification.
+	 * @param columnType one or more of the COLUMN_TYPE_xxx flags
+	 * @return
+	 */
+	public JComboBox<String> getComboBoxForColumnSelection(int columnType);
 }

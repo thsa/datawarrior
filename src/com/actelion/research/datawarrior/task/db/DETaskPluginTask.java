@@ -77,7 +77,7 @@ public class DETaskPluginTask extends ConfigurableTask {
 
 	@Override
 	public JComponent createDialogContent() {
-		return mDelegate.createDialogContent(new PluginGUIHelper());
+		return mDelegate.createDialogContent(new PluginGUIHelper(mApplication.getActiveFrame(), isInteractive()));
 		}
 
 	@Override

@@ -324,6 +324,13 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 					}
 				}
 			}
+
+			mol.ensureHelperArrays(Molecule.cHelperRings);
+			int[] atomBackground = new int[mol.getAtoms()];
+			for (int atom=0; atom<mol.getAtoms(); atom++)
+				atomBackground[atom] = mol.isAromaticAtom(atom) ? 0xFFFFFFFF : 0xFF8080FF;
+			((JStructureView) viewInfo.view).setAtomHighlightColors(atomBackground);
+
 			((JStructureView) viewInfo.view).structureChanged(mol, displayMol);
 		}
 		if (viewInfo.type.equals(TYPE_REACTION)) {

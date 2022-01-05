@@ -18,16 +18,18 @@
 
 package org.openmolecules.datawarrior.plugin;
 
+import java.util.HashMap;
+
 /**
  * This is a callback interface of an object passed to a PluginTask's run() method
  * providing methods for plugin actions, e.g. to open a new DataWarrior window
  * and to populate the table model with data from a remote database.
  */
 public interface IPluginHelper {
-	public int COLUMN_TYPE_ALPHANUMERICAL = 0;   // this is the default
-	public int COLUMN_TYPE_STRUCTURE_FROM_SMILES = 1;
-	public int COLUMN_TYPE_STRUCTURE_FROM_MOLFILE = 2;
-	public int COLUMN_TYPE_STRUCTURE_FROM_IDCODE = 3;
+	int COLUMN_TYPE_ALPHANUMERICAL = 0;   // this is the default
+	int COLUMN_TYPE_STRUCTURE_FROM_SMILES = 1;
+	int COLUMN_TYPE_STRUCTURE_FROM_MOLFILE = 2;
+	int COLUMN_TYPE_STRUCTURE_FROM_IDCODE = 3;
 
 	/**
 	 * Call this to get the column index of a structure column of the current front window.
@@ -38,7 +40,7 @@ public interface IPluginHelper {
 	 * property calculations.
 	 * @return valid structure column index or -1
 	 */
-	public int getStructureColumn();
+	int getStructureColumn();
 
 	/**
 	 * If you know a column's title, use this method to get the column's index.
@@ -46,18 +48,29 @@ public interface IPluginHelper {
 	 * to retrieve related information from a database.
 	 * @return column index or -1 if a column with the given name was not found
 	 */
-	public int findColumn(String columnTitle);
+	int findColumn(String columnTitle);
+
+	/**
+	 * @param column
+	 * @return all column properties of the specified column
+	 */
+	HashMap<String, String> getColumnProperties(int column);
+
+	/**
+	 * @return total column count of DataWarrior's current front window
+	 */
+	int getTotalColumnCount();
 
 	/**
 	 * @return total row count of DataWarrior's current front window
 	 */
-	public int getTotalRowCount();
+	int getTotalRowCount();
 
 	/**
 	 * @param visibleOnly if true, then all selected and currently visible rows are returned
 	 * @return row indexes of all (or just currently visible) selected rows
 	 */
-	public int[] getSelectedRows(boolean visibleOnly);
+	int[] getSelectedRows(boolean visibleOnly);
 
 	/**
 	 * Alphanumerical cells may contain multiple values, which are either separated by
@@ -67,7 +80,7 @@ public interface IPluginHelper {
 	 * @param column total column index, which includes invisible columns
 	 * @return array of separated cell entries of active DataWarrior window
 	 */
-	public String[] getCellData(int row, int column);
+	String[] getCellData(int row, int column);
 
 	/**
 	 * Assuming that the given column contains chemical structures, the cell's structure
@@ -76,7 +89,7 @@ public interface IPluginHelper {
 	 * @param column
 	 * @return valid molfile V2 or null, if the cell is empty
 	 */
-	public String getCellDataAsMolfileV2(int row, int column);
+	String getCellDataAsMolfileV2(int row, int column);
 
 	/**
 	 * Assuming that the given column contains chemical structures, the cell's structure
@@ -85,7 +98,7 @@ public interface IPluginHelper {
 	 * @param column
 	 * @return valid molfile V3 or null, if the cell is empty
 	 */
-	public String getCellDataAsMolfileV3(int row, int column);
+	String getCellDataAsMolfileV3(int row, int column);
 
 	/**
 	 * Assuming that the given column contains chemical structures, the cell's structure
@@ -94,7 +107,7 @@ public interface IPluginHelper {
 	 * @param column
 	 * @return valid SMILES or null, if the cell is empty
 	 */
-	public String getCellDataAsSmiles(int row, int column);
+	String getCellDataAsSmiles(int row, int column);
 
 	/**
 	 * Call this if you need to append one or more new columns to DataWarrior's active window.
@@ -102,7 +115,7 @@ public interface IPluginHelper {
 	 * @param columnTitle
 	 * @return column index of the first of the new columns; -1 task was cancelled
 	 */
-	public int initializeNewColumns(String[] columnTitle);
+	int initializeNewColumns(String[] columnTitle);
 
 	/**
 	 * Call this if you need a new window to be populated with your data.
@@ -163,7 +176,13 @@ public interface IPluginHelper {
 	 * setting supplying the content for the new column's cells.
 	 * @param firstColumn
 	 */
-	public void finalizeNewColumns(int firstColumn);
+	void finalizeNewColumns(int firstColumn);
+
+	/**
+	 * Runs the given macro in text form on the current front window.
+	 * @param macro
+	 */
+	void runMacro(String macro);
 
 	/**
 	 * If errors happen during the execution of the task (e.g. database is down)

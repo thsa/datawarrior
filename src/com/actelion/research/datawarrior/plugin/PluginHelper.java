@@ -24,6 +24,8 @@ import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DERuntimeProperties;
 import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.datawarrior.task.DEMacro;
+import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -33,6 +35,7 @@ import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.HashMap;
 
 public class PluginHelper implements IPluginHelper {
 	private DataWarrior mApplication;
@@ -121,6 +124,16 @@ public class PluginHelper implements IPluginHelper {
 	@Override
 	public int getTotalRowCount() {
 		return mSourceTableModel.getTotalRowCount();
+	}
+
+	@Override
+	public HashMap<String, String> getColumnProperties(int column) {
+		return mSourceTableModel.getColumnProperties(column);
+	}
+
+	@Override
+	public int getTotalColumnCount() {
+		return mSourceTableModel.getTotalColumnCount();
 	}
 
 	@Override
@@ -287,6 +300,18 @@ public class PluginHelper implements IPluginHelper {
 			return;
 
 		mTargetTableModel.finalizeNewColumns(firstColumn, mProgressController);
+	}
+
+	@Override
+	public void runMacro(String macro) {
+		if (macro.startsWith(DEMacro.MACRO_START)) {
+			try {
+				BufferedReader reader = new BufferedReader(new StringReader(macro));
+				DEMacroRecorder.getInstance().runMacro(new DEMacro(reader, null),
+						mNewFrame != null ? mNewFrame : mApplication.getActiveFrame());
+			}
+			catch (IOException ioe) {}
+		}
 	}
 
 	@Override

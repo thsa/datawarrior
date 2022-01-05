@@ -26,6 +26,7 @@ import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.Properties;
 
@@ -35,13 +36,14 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 	private static final String PROPERTY_SD_VERSION = "version";
 	private static final String PROPERTY_STRUCTURE_COLUMN = "structureColumn";
 	private static final String PROPERTY_NAME_COLUMN = "idColumn";
-	private static final String PROPERTY_COORDINATE_MODE = "coordinates";
+	private static final String PROPERTY_COORDINATE_MODE = "coordinates";   // may also contain a 3D-coords column name
 	private static final String[] SD_VERSION_OPTIONS = { "Version 2", "Version 3" };
 	private static final String[] SD_VERSION_CODE = { "v2", "v3" };
 	private static final String[] COMPOUND_NAME_OPTIONS = { "<Use row number>", "<Automatic>" };
 	private static final String[] COMPOUND_NAME_CODE = { "<rowNo>", "<idColumn>" };
-	private static final String[] COORDINATE_OPTIONS = { "2D", "3D if available" };
+	private static final String[] COORDINATE_OPTIONS = { "2D", "3D (1st of multiple)" };
 	private static final String[] COORDINATE_CODE = { "2D", "prefer3D" };
+	private static final int INDEX_PREFER_2D = 0;
 	private static final int INDEX_PREFER_3D = 1;
 	private static final int INDEX_VERSION_3 = 1;
 	private static final String OPTION_NO_STRUCTURE = "<none>";
@@ -115,14 +117,16 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 				mComboBoxStructureColumn.addItem(getTableModel().getColumnTitle(column));
 		mComboBoxStructureColumn.addItem(OPTION_NO_STRUCTURE);
 		mComboBoxStructureColumn.setEditable(!isInteractive());
+		mComboBoxStructureColumn.addActionListener(this);
 		p.add(mComboBoxStructureColumn, "3,1");
-		
+
 		p.add(new JLabel("SD-file version:"), "1,3");
 		mComboBoxVersion = new JComboBox(SD_VERSION_OPTIONS);
 		p.add(mComboBoxVersion, "3,3");
 
 		p.add(new JLabel("Atom coordinates:"), "1,5");
 		mComboBoxCoordinateMode = new JComboBox(COORDINATE_OPTIONS);
+		mComboBoxCoordinateMode.setEditable(!isInteractive());
 		p.add(mComboBoxCoordinateMode, "3,5");
 
 		p.add(new JLabel("Compound name column:"), "1,7");
@@ -137,7 +141,15 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 		return p;
 		}
 
-/*	private void enableCoordinateMenu() {
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == mComboBoxStructureColumn)
+			update3DCoordinateOptions();
+		else
+			super.actionPerformed(e);
+		}
+
+	/*	private void enableCoordinateMenu() {
 	    for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 	        String specialType = mTableModel.getColumnSpecialType(column);
 	        if (specialType != null
@@ -160,12 +172,25 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 	        }
 		}*/
 
+	private void update3DCoordinateOptions() {
+		mComboBoxCoordinateMode.removeAllItems();
+		for (String item:COORDINATE_OPTIONS)
+			mComboBoxCoordinateMode.addItem(item);
+
+		int structureColumn = getTableModel().findColumn((String)mComboBoxStructureColumn.getSelectedItem());
+		int[] coordinateColumn = getTableModel().getSpecialColumnList(CompoundTableConstants.cColumnType3DCoordinates);
+		for (int column:coordinateColumn)
+			if (getTableModel().getParentColumn(column) == structureColumn)
+				mComboBoxCoordinateMode.addItem(getTableModel().getColumnTitle(column));
+		}
+
 	@Override
 	public void setDialogConfigurationToDefault() {
 		if (!isInteractive())
 			super.setDialogConfigurationToDefault();
 		mComboBoxStructureColumn.setSelectedIndex(0);
 		mComboBoxVersion.setSelectedIndex(1);
+		update3DCoordinateOptions();
 		mComboBoxCoordinateMode.setSelectedIndex(0);
 
 		int compoundOption = COMPOUND_NAME_OPTION_ROW_NUMBER;
@@ -183,10 +208,17 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 			super.setDialogConfiguration(configuration);
 		mComboBoxStructureColumn.setSelectedItem(configuration.getProperty(PROPERTY_STRUCTURE_COLUMN, (String)mComboBoxStructureColumn.getItemAt(0)));
 		mComboBoxVersion.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_SD_VERSION), SD_VERSION_CODE, 1));
-		mComboBoxCoordinateMode.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_COORDINATE_MODE), COORDINATE_CODE, 1));
+
+		update3DCoordinateOptions();
+		String coordsCode = configuration.getProperty(PROPERTY_COORDINATE_MODE, COORDINATE_CODE[INDEX_PREFER_2D]);
+		int index = findListIndex(coordsCode, COORDINATE_CODE, -1);
+		if (index == -1)
+			mComboBoxCoordinateMode.setSelectedItem(coordsCode);
+		else
+			mComboBoxCoordinateMode.setSelectedIndex(index);
 
 		String nameCode = configuration.getProperty(PROPERTY_NAME_COLUMN, COMPOUND_NAME_CODE[COMPOUND_NAME_OPTION_COLUMN_PROPERTY]);
-		int index = findListIndex(nameCode, COMPOUND_NAME_CODE, -1);
+		index = findListIndex(nameCode, COMPOUND_NAME_CODE, -1);
 		if (index == -1)
 			mComboBoxCompoundName.setSelectedItem(nameCode);
 		else
@@ -198,8 +230,10 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 		Properties configuration = isInteractive() ? mPredefinedConfiguration : super.getDialogConfiguration();
 		configuration.setProperty(PROPERTY_STRUCTURE_COLUMN, (String)mComboBoxStructureColumn.getSelectedItem());
 		configuration.setProperty(PROPERTY_SD_VERSION, SD_VERSION_CODE[mComboBoxVersion.getSelectedIndex()]);
-		configuration.setProperty(PROPERTY_COORDINATE_MODE, COORDINATE_CODE[mComboBoxCoordinateMode.getSelectedIndex()]);
-		int index = mComboBoxCompoundName.getSelectedIndex();
+		int index = mComboBoxCoordinateMode.getSelectedIndex();
+		configuration.setProperty(PROPERTY_COORDINATE_MODE, index < COORDINATE_CODE.length ?
+				COORDINATE_CODE[index] : getTableModel().getColumnTitleNoAlias((String)mComboBoxCoordinateMode.getSelectedItem()));
+		index = mComboBoxCompoundName.getSelectedIndex();
 		configuration.setProperty(PROPERTY_NAME_COLUMN, index < COMPOUND_NAME_CODE.length ?
 				COMPOUND_NAME_CODE[index] : getTableModel().getColumnTitleNoAlias((String)mComboBoxCompoundName.getSelectedItem()));
 		return configuration;
@@ -237,7 +271,9 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 	public void saveFile(File file, Properties configuration) {
 		String structureTitle = configuration.getProperty(PROPERTY_STRUCTURE_COLUMN, OPTION_NO_STRUCTURE);
 		int structureColumn = structureTitle.equals(OPTION_NO_STRUCTURE) ? -1 : getTableModel().findColumn(structureTitle);
-		boolean prefer3D = COORDINATE_CODE[INDEX_PREFER_3D].equals(configuration.getProperty(PROPERTY_COORDINATE_MODE));
+		String coordinateMode = configuration.getProperty(PROPERTY_COORDINATE_MODE);
+		boolean prefer2D = COORDINATE_CODE[INDEX_PREFER_2D].equals(coordinateMode);
+		boolean prefer3D = COORDINATE_CODE[INDEX_PREFER_3D].equals(coordinateMode);
 		boolean version3 = SD_VERSION_CODE[INDEX_VERSION_3].equals(configuration.getProperty(PROPERTY_SD_VERSION));
 		int fileType = version3 ? CompoundFileHelper.cFileTypeSDV3 : CompoundFileHelper.cFileTypeSDV2;
 
@@ -249,6 +285,31 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 
 		CompoundTableModel tableModel = ((DEFrame)getParentFrame()).getMainFrame().getTableModel();
 		JTable table = ((DEFrame)getParentFrame()).getMainFrame().getMainPane().getTable();
-		new CompoundTableSaver(getParentFrame(), tableModel, table).saveSDFile(file,  fileType, structureColumn, nameColumn, prefer3D);
+
+		int coordsColumn = -1;
+		if (structureColumn != -1) {
+			if (nameColumn == CompoundTableSaver.ID_USE_PROPERTY)
+				nameColumn = tableModel.findColumn(tableModel.getColumnProperty(structureColumn, CompoundTableModel.cColumnPropertyRelatedIdentifierColumn));
+			if (prefer2D || prefer3D) {
+				for (int column=0; column<tableModel.getTotalColumnCount(); column++) {
+					String specialType = tableModel.getColumnSpecialType(column);
+					if (specialType != null && tableModel.getParentColumn(column) == structureColumn) {
+						if (prefer2D && specialType.equals(CompoundTableModel.cColumnType2DCoordinates)) {
+							coordsColumn = column;
+							break;
+							}
+						if (prefer3D && specialType.equals(CompoundTableModel.cColumnType3DCoordinates)) {
+							coordsColumn = column;
+							break;
+							}
+						}
+					}
+				}
+			else {
+				coordsColumn = tableModel.findColumn(coordinateMode);
+				}
+			}
+
+		new CompoundTableSaver(getParentFrame(), tableModel, table).saveSDFile(file,  fileType, structureColumn, nameColumn, coordsColumn);
 		}
 	}

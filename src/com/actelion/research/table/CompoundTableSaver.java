@@ -52,8 +52,8 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 	private File				mFile;
 	private Writer				mDataWriter;
 	private int					mDataType,mSDColumnStructure,mSDColumnIdentifier,
-								mSDColumn2DCoordinates,mSDColumn3DCoordinates;
-	private boolean				mVisibleOnly,mToClipboard,mEmbedDetails,mPrefer3D,mSkipHeader;
+								mSDColumnCoordinates;
+	private boolean				mVisibleOnly,mToClipboard,mEmbedDetails,mSkipHeader;
 	private RuntimeProperties	mRuntimeProperties;
 	private ArrayList<DataDependentPropertyWriter> mDataDependentPropertyWriterList;
 
@@ -124,9 +124,9 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 	 * @param fileType CompoundFileHelper.cFileTypeSDV3 or CompoundFileHelper.cFileTypeSDV2
 	 * @param structureColumn column containing the idcode encoded structure
 	 * @param idColumn column containing compound identifiers or ID_USE_PROPERTY or ID_BUILD_ONE
-	 * @param prefer3DCoords if true and if a column with 3D-coordinates exists, then these are used
+	 * @param coordsColumn if -1, then 2D-coords are generated on the fly
 	 */
-	public void saveSDFile(File file, int fileType, int structureColumn, int idColumn, boolean prefer3DCoords) {
+	public void saveSDFile(File file, int fileType, int structureColumn, int idColumn, int coordsColumn) {
 		mRuntimeProperties = null;
 		mDataType = fileType;
 		mFile = file;
@@ -135,25 +135,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 
 		mSDColumnStructure = structureColumn;
 		mSDColumnIdentifier = idColumn;
-		mSDColumn2DCoordinates = -1;
-		mSDColumn3DCoordinates = -1;
-
-		if (mSDColumnStructure != -1) {
-			if (mSDColumnIdentifier == ID_USE_PROPERTY)
-				mSDColumnIdentifier = mTableModel.findColumn(mTableModel.getColumnProperty(mSDColumnStructure, CompoundTableModel.cColumnPropertyRelatedIdentifierColumn));
-			for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
-				String specialType = mTableModel.getColumnSpecialType(column);
-				if (specialType != null
-				 && mTableModel.getParentColumn(column) == mSDColumnStructure) {
-					if (specialType.equals(CompoundTableModel.cColumnType2DCoordinates))
-						mSDColumn2DCoordinates = column;
-					else if (specialType.equals(CompoundTableModel.cColumnType3DCoordinates))
-						mSDColumn3DCoordinates = column;
-					}
-				}
-			}
-
-		mPrefer3D = prefer3DCoords && (mSDColumn3DCoordinates != -1);
+		mSDColumnCoordinates = coordsColumn;
 
 		saveFile();
 		}
@@ -609,7 +591,8 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 
 	private void writeSDData() throws IOException {
 		synchronized(mDataWriter) {
-			boolean writeMultipleConformers = mPrefer3D && hasMultiConformerRows();
+			boolean is3D = CompoundTableConstants.cColumnType3DCoordinates.equals(mTableModel.getColumnSpecialType(mSDColumnCoordinates));
+			boolean writeMultipleConformers = is3D && hasMultiConformerRows();
 
 			BufferedWriter theWriter = new BufferedWriter(mDataWriter);
 
@@ -618,8 +601,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 
 			StereoMolecule mol = new StereoMolecule();
 
-			IDCodeParser parser2D = new IDCodeParser(true);
-			IDCodeParser parser3D = new IDCodeParser(false);
+			IDCodeParser parser = new IDCodeParser(!is3D);
 
 			for (int row=0; row<mTableModel.getTotalRowCount(); row++) {			
 				if (mProgressDialog != null)
@@ -637,20 +619,19 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 					CompoundRecord record = mTableModel.getTotalRecord(row);
 					if (mSDColumnStructure != -1) {
 						byte[] idcode = (byte[])record.getData(mSDColumnStructure);
-						byte[] coords2D = (byte[])record.getData(mSDColumn2DCoordinates);
-						byte[] coords3D = (byte[])record.getData(mSDColumn3DCoordinates);
+						byte[] coords = (byte[])record.getData(mSDColumnCoordinates);
 
 						if (idcode != null) {
-							if (coords3D != null && mPrefer3D) {
-								parser3D.parse(mol, idcode, coords3D, 0, coordsIndex+1);
+							if (is3D) {
+								parser.parse(mol, idcode, coords, 0, coordsIndex+1);
 								if (writeMultipleConformers) {
 									conformerNo++;
-									coordsIndex = ArrayUtils.indexOf(coords3D, (byte)' ', coordsIndex+1);
+									coordsIndex = ArrayUtils.indexOf(coords, (byte)' ', coordsIndex+1);
 									nextRecordAvailable = (coordsIndex != -1);
 									}
 								}
 							else {
-								parser2D.parse(mol, idcode, coords2D);
+								parser.parse(mol, idcode, coords);
 								}
 
 							if (mSDColumnIdentifier != -1) {
@@ -662,7 +643,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 								}
 							}
 						else {
-							mol.deleteMolecule();
+							mol.clear();
 							}
 						}
 
@@ -721,12 +702,10 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 		}
 
 	private boolean hasMultiConformerRows() {
-		if (mSDColumn3DCoordinates != -1) {
-			for (int row=0; row<mTableModel.getTotalRowCount() && row<MULTI_CONFORMER_ROWS_TO_CHECK; row++) {
-				byte[] coords = (byte[])mTableModel.getTotalRecord(row).getData(mSDColumn3DCoordinates);
-				if (coords != null && ArrayUtils.indexOf(coords, (byte)' ') != -1)
-					return true;
-				}
+		for (int row=0; row<mTableModel.getTotalRowCount() && row<MULTI_CONFORMER_ROWS_TO_CHECK; row++) {
+			byte[] coords = (byte[])mTableModel.getTotalRecord(row).getData(mSDColumnCoordinates);
+			if (coords != null && ArrayUtils.indexOf(coords, (byte)' ') != -1)
+				return true;
 			}
 		return false;
 		}

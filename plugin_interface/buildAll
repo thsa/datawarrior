@@ -1,0 +1,11 @@
+javac -Xlint:unchecked PluginInitializer.java
+javac -Xlint:unchecked ExamplePluginTask1.java
+javac -Xlint:unchecked ExamplePluginTask2.java
+javac -Xlint:unchecked ExamplePluginTask3.java
+# If your plugin uses classes being part of DataWarrior, then don't include them in the plugin!
+# Under runtime conditions the plugin has full access to all classes included in datawarrior.jar.
+# Just include datawarrior.jar in the classpath, when building the plugin, e.g.:
+# javac -Xlint:unchecked -sourcepath . -classpath datawarrior.jar:. ExamplePluginTask3.java
+jar -cvf examplePlugin.jar tasknames PluginInitializer.class ExamplePluginTask1.class ExamplePluginTask2.class ExamplePluginTask3.class
+rm *.class
+rm org/openmolecules/datawarrior/plugin/*.class

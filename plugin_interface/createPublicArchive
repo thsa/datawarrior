@@ -1,0 +1,7 @@
+mkdir org
+mkdir org/openmolecules
+mkdir org/openmolecules/datawarrior
+cp -r ../src/org/openmolecules/datawarrior/plugin org/openmolecules/datawarrior/
+./buildAll
+jar -cvf datawarriorPluginSDK.zip tasknames PluginInitializer.java ExamplePluginTask1.java ExamplePluginTask2.java ExamplePluginTask3.java org buildAll readme.txt examplePlugin.jar
+rm -rf org

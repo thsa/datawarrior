@@ -321,15 +321,16 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 							|| new IDCodeParser().getAtomCount(idcode, 0) <= CompoundTableChemistryCellRenderer.ON_THE_FLY_COORD_MAX_ATOMS) {
 						mol = mTableModel.getChemicalStructure(mCurrentRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
 						displayMol = mTableModel.getChemicalStructure(mCurrentRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_ALL, null);
+
+/** test				mol.ensureHelperArrays(Molecule.cHelperRings);
+						int[] atomBackground = new int[mol.getAtoms()];
+						for (int atom=0; atom<mol.getAtoms(); atom++)
+							atomBackground[atom] = mol.isAromaticAtom(atom) ? 0xFFFFFFFF : 0xFF8080FF;
+						((JStructureView) viewInfo.view).setAtomHighlightColors(atomBackground);
+ */
 					}
 				}
 			}
-
-			mol.ensureHelperArrays(Molecule.cHelperRings);
-			int[] atomBackground = new int[mol.getAtoms()];
-			for (int atom=0; atom<mol.getAtoms(); atom++)
-				atomBackground[atom] = mol.isAromaticAtom(atom) ? 0xFFFFFFFF : 0xFF8080FF;
-			((JStructureView) viewInfo.view).setAtomHighlightColors(atomBackground);
 
 			((JStructureView) viewInfo.view).structureChanged(mol, displayMol);
 		}

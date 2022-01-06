@@ -56,6 +56,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 	private boolean				mVisibleOnly,mToClipboard,mEmbedDetails,mSkipHeader;
 	private RuntimeProperties	mRuntimeProperties;
 	private ArrayList<DataDependentPropertyWriter> mDataDependentPropertyWriterList;
+	private StereoMolecule[]    mSDReferenceMolecules;
 
 	public CompoundTableSaver(Frame parent, CompoundTableModel tableModel, JTable table) {
 		mTableModel = tableModel;
@@ -125,8 +126,9 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 	 * @param structureColumn column containing the idcode encoded structure
 	 * @param idColumn column containing compound identifiers or ID_USE_PROPERTY or ID_BUILD_ONE
 	 * @param coordsColumn if -1, then 2D-coords are generated on the fly
+	 * @param refMol null or one or some reference molecules to be written on top of the SD-file
 	 */
-	public void saveSDFile(File file, int fileType, int structureColumn, int idColumn, int coordsColumn) {
+	public void saveSDFile(File file, int fileType, int structureColumn, int idColumn, int coordsColumn, StereoMolecule[] refMol) {
 		mRuntimeProperties = null;
 		mDataType = fileType;
 		mFile = file;
@@ -136,6 +138,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 		mSDColumnStructure = structureColumn;
 		mSDColumnIdentifier = idColumn;
 		mSDColumnCoordinates = coordsColumn;
+		mSDReferenceMolecules = refMol;
 
 		saveFile();
 		}
@@ -598,6 +601,18 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 
 			if (mProgressDialog != null)
 				mProgressDialog.startProgress("Saving Records...", 0, mTableModel.getTotalRowCount());
+
+			if (mSDReferenceMolecules != null) {
+				for (StereoMolecule mol:mSDReferenceMolecules) {
+					if (mDataType == FileHelper.cFileTypeSDV3)
+						new MolfileV3Creator(mol).writeMolfile(theWriter);
+					else
+						new MolfileCreator(mol).writeMolfile(theWriter);
+
+					theWriter.write("$$$$");
+					theWriter.newLine();
+					}
+				}
 
 			StereoMolecule mol = new StereoMolecule();
 

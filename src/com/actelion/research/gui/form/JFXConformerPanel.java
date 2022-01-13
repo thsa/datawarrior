@@ -23,6 +23,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.FutureTask;
 
 public class JFXConformerPanel extends JFXPanel {
 	public static final double CAVITY_CROP_DISTANCE = 10.0;
@@ -34,6 +35,7 @@ public class JFXConformerPanel extends JFXPanel {
 	private V3DScene mScene;
 	private V3DMolecule mCavityMol,mOverlayMol;
 	private V3DPopupMenuController mController;
+	private FutureTask<Object> mConstructionTask;
 
 	public JFXConformerPanel(boolean withSidePanel, boolean synchronousRotation, boolean allowEditing) {
 		this(withSidePanel, 512, 384, synchronousRotation, allowEditing);
@@ -41,7 +43,7 @@ public class JFXConformerPanel extends JFXPanel {
 
 	public JFXConformerPanel(boolean withSidePanel, int width, int height, boolean synchronousRotation, boolean allowEditing) {
 		super();
-		Platform.runLater(() -> {
+		mConstructionTask = new FutureTask<>(() -> {
 			Scene scene;
 
 			EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
@@ -67,7 +69,18 @@ public class JFXConformerPanel extends JFXPanel {
 			mScene.heightProperty().bind(scene.heightProperty());
 			mScene.setPopupMenuController(mController);
 			setScene(scene);
-		} );
+		}, null );
+		Platform.runLater(mConstructionTask);
+	}
+
+	/**
+	 * This waits for the constructor's with runLater() deferred initialization to complete
+	 */
+	public void waitForCompleteConstruction() {
+		if (mConstructionTask != null) {
+			try { mConstructionTask.get(); } catch (Exception ie) {}
+			mConstructionTask = null;
+		}
 	}
 
 	public V3DScene getV3DScene() {

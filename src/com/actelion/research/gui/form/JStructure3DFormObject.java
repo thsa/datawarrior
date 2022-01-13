@@ -22,13 +22,17 @@ import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.util.ArrayUtils;
+import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Point3D;
+import javafx.scene.Node;
 import javafx.scene.image.WritableImage;
+import org.openmolecules.fx.viewer3d.V3DMolecule;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 
 public class JStructure3DFormObject extends AbstractFormObject {
 	public static final String FORM_OBJECT_TYPE = "structure3D";
@@ -119,11 +123,24 @@ public class JStructure3DFormObject extends AbstractFormObject {
 
 		    if (mol != null) {
 				JFXConformerPanel fxp = new JFXConformerPanel(false, (int)(4*r.width), (int)(4*r.height), true, false);
+			    fxp.waitForCompleteConstruction();
 				fxp.setBackground(Color.WHITE);
 				if (mOverlayMol != null)
 					fxp.setOverlayMolecule(mOverlayMol);
 			    if (mCavityMol != null)
 				    fxp.setProteinCavity(mCavityMol, mLigandMol);
+
+			    final CountDownLatch latch = new CountDownLatch(1);
+			    Platform.runLater(() -> {
+				    for (Node node:((JFXConformerPanel)mComponent).getV3DScene().getWorld().getChildren())
+					    if (node instanceof V3DMolecule)
+					    	fxp.addMolecule(((V3DMolecule)node).getMolecule(), null, null);
+				    fxp.optimizeView();
+				    latch.countDown();
+			    } );
+			    try { latch.await(); } catch (InterruptedException ie) {}
+
+
 				fxp.getV3DScene().getWorld().setTransform(((JFXConformerPanel)mComponent).getV3DScene().getWorld().getRotation());
 				WritableImage image = fxp.getContentImage();
 				if (image != null)

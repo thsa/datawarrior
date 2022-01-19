@@ -165,7 +165,7 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 					if (structureColumn != -1) {
 						for (int column=0; column<getTableModel().getTotalColumnCount(); column++) {
 							String specialType = getTableModel().getColumnSpecialType(column);
-							if (specialType.equals(CompoundTableModel.cColumnType3DCoordinates)
+							if (CompoundTableModel.cColumnType3DCoordinates.equals(specialType)
 							 && getTableModel().getParentColumn(column) == structureColumn) {
 								column3D = column;
 								break;
@@ -222,9 +222,10 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 
 		int structureColumn = getTableModel().findColumn((String)mComboBoxStructureColumn.getSelectedItem());
 		int[] coordinateColumn = getTableModel().getSpecialColumnList(CompoundTableConstants.cColumnType3DCoordinates);
-		for (int column:coordinateColumn)
-			if (getTableModel().getParentColumn(column) == structureColumn)
-				mComboBoxCoordinateMode.addItem(getTableModel().getColumnTitle(column));
+		if (coordinateColumn != null)
+			for (int column:coordinateColumn)
+				if (getTableModel().getParentColumn(column) == structureColumn)
+					mComboBoxCoordinateMode.addItem(getTableModel().getColumnTitle(column));
 		}
 
 	@Override

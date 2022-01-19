@@ -23,8 +23,8 @@ import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.DEPruningPanel;
 import com.actelion.research.datawarrior.DataWarrior;
-import com.actelion.research.datawarrior.task.chem.DETaskCreateGenericTautomer;
 import com.actelion.research.datawarrior.help.DETaskSetExplanationHTML;
+import com.actelion.research.datawarrior.plugin.PluginSpec;
 import com.actelion.research.datawarrior.task.chem.*;
 import com.actelion.research.datawarrior.task.chem.clib.DETaskEnumerateCombinatorialLibrary;
 import com.actelion.research.datawarrior.task.chem.elib.DETaskBuildEvolutionaryLibrary;
@@ -284,10 +284,10 @@ public class StandardTaskFactory {
 		}
 
 	private AbstractTask createPluginTaskFromCode(DEFrame frame, String taskCode) {
-		ArrayList<IPluginTask> pluginTaskList = frame.getApplication().getPluginRegistry().getPluginTasks();
-		for (IPluginTask pluginTask:pluginTaskList)
-			if (taskCode.equals(pluginTask.getTaskCode()))
-				return new DETaskPluginTask(frame, pluginTask);
+		ArrayList<PluginSpec> pluginList = frame.getApplication().getPluginRegistry().getPlugins();
+		for (PluginSpec plugin:pluginList)
+			if (taskCode.equals(plugin.getTaskCode()))
+				return new DETaskPluginTask(frame, plugin.getTask());
 
 		return null;
 		}
@@ -496,8 +496,8 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskUseAsFilter.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskWait.TASK_NAME));
 
-			ArrayList<IPluginTask> pluginTaskList = frame.getApplication().getPluginRegistry().getPluginTasks();
-			for (IPluginTask pluginTask:pluginTaskList)
+			ArrayList<PluginSpec> pluginList = frame.getApplication().getPluginRegistry().getPlugins();
+			for (PluginSpec pluginTask:pluginList)
 				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, pluginTask.getTaskName()));
 
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETaskValidateIDCodes.TASK_NAME));
@@ -521,10 +521,10 @@ public class StandardTaskFactory {
 	 * @return unique task name
 	 */
 	public String getTaskCodeFromName(String taskName) {
-		ArrayList<IPluginTask> pluginTaskList = mApplication.getPluginRegistry().getPluginTasks();
-		for (IPluginTask pluginTask:pluginTaskList)
-			if (taskName.equals(pluginTask.getTaskName()))
-				return pluginTask.getTaskCode();
+		ArrayList<PluginSpec> pluginList = mApplication.getPluginRegistry().getPlugins();
+		for (PluginSpec plugin:pluginList)
+			if (taskName.equals(plugin.getTaskName()))
+				return plugin.getTaskCode();
 
 		return constructTaskCodeFromName(taskName);
 		}

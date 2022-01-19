@@ -306,6 +306,12 @@ public abstract class JStructureFilterPanel extends JFilterPanel
 					setEnabled(false);	// treat this as user change, since the user actively cancelled
 					}
 				else {
+					// If we use a flexophore, we have to tell the table model, because it tracks most recent flexophores
+					// for atom contribution coloring.
+					if (DESCRIPTOR_Flexophore.shortName.equals(mTableModel.getColumnSpecialType(descriptorColumn))
+					 && getStructureCount() == 1)
+						mTableModel.setMostRecentExclusionFlexophore(getStructure(0), mExclusionFlag, descriptorColumn);
+
 					mTableModel.setStructureSimilarityExclusion(mExclusionFlag,
 							mDescriptorColumn[mComboBox.getSelectedIndex()], getStructures(), mSimilarity,
 							(float)mSimilaritySlider.getValue() / (float)100.0, isInverse(),

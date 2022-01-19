@@ -23,6 +23,7 @@ import com.actelion.research.calc.ProgressListener;
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.coords.CoordinateInventor;
 import com.actelion.research.chem.descriptor.*;
+import com.actelion.research.chem.descriptor.flexophore.MolDistHist;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.chem.reaction.ReactionEncoder;
@@ -95,6 +96,8 @@ public class CompoundTableModel extends AbstractTableModel
 	private volatile AtomicBoolean mLock;
 	private volatile ConcurrentHashMap<String,float[]> mFlexophoreSimilarityListCache;	// TODO prevent this to grow to much
 	private volatile ConcurrentHashMap<Integer,ArrayList<Object>> mStoppableSearcherMap;	// flagNo->SSSearcherList to notify that search is stopped
+	private volatile MolDistHist mMostRecentExclusionFlexophore;
+	private volatile int mMostRecentExclusionFlexophoreFlagNo,mMostRecentExclusionFlexophoreColumn;
 
 	/**
 	 * This is the single point of assigning DescriptorHandlers to shortNames and, thus, defines
@@ -245,6 +248,8 @@ public class CompoundTableModel extends AbstractTableModel
 			mDetailHandler.clearDetailData();
 
 		mFlexophoreSimilarityListCache = null;
+		mMostRecentExclusionFlexophoreFlagNo = -1;
+		mMostRecentExclusionFlexophoreColumn = -1;
 
 		if (fireEvents)
 			fireEventsNow(new CompoundTableEvent(this,
@@ -2959,6 +2964,13 @@ public class CompoundTableModel extends AbstractTableModel
 
 	public void clearRowFlag(int flagNo) {
 		stopExclusionThreads(flagNo);
+
+		if (mMostRecentExclusionFlexophoreFlagNo == flagNo) {
+			mMostRecentExclusionFlexophoreFlagNo = -1;
+			mMostRecentExclusionFlexophoreColumn = -1;
+			mMostRecentExclusionFlexophore = null;
+			}
+
 		long mask = convertRowFlagToMask(flagNo);
 		if ((mDirtyCompoundFlags & mask) != 0) {
 			for (int row=0; row<mRecords; row++)
@@ -3655,8 +3667,7 @@ public class CompoundTableModel extends AbstractTableModel
 												boolean inverse, boolean isAdjusting) {
 		long mask = convertRowFlagToMask(exclusionFlagNo);
 		for (int row=0; row<mRecords; row++) {
-			Object descriptor = mRecord[row].getData(descriptorColumn);
-			if (descriptor == null) {
+			if (mRecord[row].getData(descriptorColumn) == null) {
 				if (inverse)
 					mRecord[row].mFlags &= ~mask;
 				else
@@ -3783,6 +3794,29 @@ public class CompoundTableModel extends AbstractTableModel
 		for (int row=0; row<mRecords; row++)
 			if ((mRecord[row].mFlags & mAllocatedExclusionFlags) != 0)
 				mRecord[row].mFlags &= ~CompoundRecord.cFlagMaskSelected;
+		}
+
+	/**
+	 * The CompoundTableModel caches Flexophore descriptors used to exclude dissimilar rows.
+	 * In order to allow displaying atom contributions to Flexophore similarity (i.e. the best
+	 * matching flexophore graph) in DataWarrior the flexophore descriptor (MolDistHist) keeps
+	 * track of the original atoms that make up a Flexophore node. Thus, by finding the best match
+	 * between two Flexophores, one can link node similarity values back the original atoms.
+	 * @return most recently used Flexophore that is still actively filtering.
+	 */
+	public MolDistHist getMostRecentExclusionFlexophore(int column) {
+		return (mMostRecentExclusionFlexophoreColumn == column) ? mMostRecentExclusionFlexophore : null;
+		}
+
+	/**
+	 * @param mol used to retrieve the proper flexophore from the cache
+	 * @param flagNo
+	 * @param column
+	 */
+	public void setMostRecentExclusionFlexophore(StereoMolecule mol, int flagNo, int column) {
+		mMostRecentExclusionFlexophore = (MolDistHist)mColumnInfo[column].getCachedDescriptor(mol);
+		mMostRecentExclusionFlexophoreFlagNo = flagNo;
+		mMostRecentExclusionFlexophoreColumn = column;
 		}
 
 	public float[] createStructureSimilarityList(Object chemObject, Object refDescriptor, int descriptorColumn) {
@@ -5728,7 +5762,7 @@ class CompoundTableColumnInfo {
 
 		String key = new Canonizer((StereoMolecule)chemObject).getIDCode();
 		if (descriptorCache == null)
-			descriptorCache = new TreeMap<String,DescriptorCacheEntry>();
+			descriptorCache = new TreeMap<>();
 		DescriptorCacheEntry entry = descriptorCache.get(key);
 		if (entry == null) {
 			entry = new DescriptorCacheEntry(descriptorHandler.createDescriptor(chemObject));
@@ -5758,6 +5792,8 @@ class CompoundTableColumnInfo {
 				descriptorHandler = CompoundTableModel.getDefaultDescriptorHandler(value);
 				if (descriptorHandler == null)
 					properties.remove(key);
+				else if (descriptorHandler instanceof DescriptorHandlerFlexophore)
+					((DescriptorHandlerFlexophore)descriptorHandler).setIncludeNodeAtoms(true);
 				}
 			else {
 				descriptorHandler = null;

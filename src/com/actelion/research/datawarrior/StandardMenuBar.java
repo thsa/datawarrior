@@ -28,6 +28,7 @@ import com.actelion.research.datawarrior.action.DEInteractiveSARDialog;
 import com.actelion.research.datawarrior.action.DEMarkushDialog;
 import com.actelion.research.datawarrior.help.DEHelpFrame;
 import com.actelion.research.datawarrior.help.FXHelpFrame;
+import com.actelion.research.datawarrior.plugin.PluginSpec;
 import com.actelion.research.datawarrior.task.*;
 import com.actelion.research.datawarrior.task.chem.*;
 import com.actelion.research.datawarrior.task.chem.clib.DETaskEnumerateCombinatorialLibrary;
@@ -56,7 +57,6 @@ import com.actelion.research.util.BrowserControl;
 import com.actelion.research.util.ColorHelper;
 import com.actelion.research.util.Platform;
 import info.clearthought.layout.TableLayout;
-import org.openmolecules.datawarrior.plugin.IPluginTask;
 
 import javax.swing.*;
 import java.awt.*;
@@ -80,6 +80,16 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	static final long serialVersionUID = 0x20060728;
 
 	public static final boolean SUPPRESS_CHEMISTRY = false;
+
+	private static final String MENU_NAME_FILE = "File";
+	private static final String MENU_NAME_EDIT = "Edit";
+	private static final String MENU_NAME_DATA = "Data";
+	private static final String MENU_NAME_CHEMISTRY = "Chemistry";
+	private static final String MENU_NAME_DATABASE = "Database";
+	private static final String MENU_NAME_LIST = "List";
+	private static final String MENU_NAME_MACRO = "Macro";
+	private static final String MENU_NAME_HELP = "Help";
+	private static final String DEFAULT_PLUGIN_MENU = MENU_NAME_DATABASE;
 
 	public static final String USER_MACRO_DIR = "$HOME/datawarrior/macro";
 
@@ -463,7 +473,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 		JMenu jMenuFile = new JMenu();
 		jMenuFile.setMnemonic(KeyEvent.VK_F);
-		jMenuFile.setText("File");
+		jMenuFile.setText(MENU_NAME_FILE);
 		jMenuFile.add(jMenuFileNew);
 		jMenuFileNewFrom.add(jMenuFileNewFromVisible);
 		jMenuFileNewFrom.add(jMenuFileNewFromSelection);
@@ -509,6 +519,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuFile.add(jMenuFilePageFormat);
 //		jMenuFile.add(jMenuFilePreview);
 		jMenuFile.add(jMenuFilePrint);
+
+		addPluginItems(jMenuFile);
+
 		if (!mApplication.isMacintosh()) {
 			jMenuFile.addSeparator();
 			jMenuFile.add(jMenuFileQuit);
@@ -582,7 +595,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 		JMenu jMenuEdit = new JMenu();
 		jMenuEdit.setMnemonic(KeyEvent.VK_E);
-		jMenuEdit.setText("Edit");
+		jMenuEdit.setText(MENU_NAME_EDIT);
 		jMenuEdit.add(jMenuEditCut);
 		jMenuEdit.add(jMenuEditCopy);
 		jMenuEdit.add(jMenuEditPaste);
@@ -604,6 +617,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
  		jMenuEdit.add(jMenuEditEnableFilters);
  		jMenuEdit.add(jMenuEditResetFilters);
 		jMenuEdit.add(jMenuEditRemoveFilters);
+
+		addPluginItems(jMenuEdit);
+
  		return jMenuEdit;
 		}
 
@@ -686,7 +702,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 		JMenu jMenuData = new JMenu();
 		jMenuData.setMnemonic(KeyEvent.VK_D);
-		jMenuData.setText("Data");
+		jMenuData.setText(MENU_NAME_DATA);
 		jMenuData.add(jMenuDataRemoveColumns);
 		jMenuData.add(jMenuDataRemoveRows);
 		jMenuDataRemoveRows.add(jMenuDataRemoveSelected);
@@ -720,6 +736,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuData.add(jMenuDataViewLogarithmic);
 		jMenuData.addSeparator();
 		jMenuData.add(jMenuDataCorrelationMatrix);
+
+		addPluginItems(jMenuData);
+
 		return jMenuData;
 		}
 
@@ -862,7 +881,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 		JMenu jMenuChem = new JMenu();
 		jMenuChem.setMnemonic(KeyEvent.VK_C);
-		jMenuChem.setText("Chemistry");
+		jMenuChem.setText(MENU_NAME_CHEMISTRY);
 
 		JMenu jMenuChemFromStructure = new JMenu();
 		jMenuChemFromStructure.setText("From Chemical Structure");
@@ -877,6 +896,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemFromStructure.add(jMenuChemAddLargestFragment);
 		jMenuChemFromStructure.add(jMenuChemAddSubstructureCount);
 		addIdorsiaChemistryMenuOptions(jMenuChemFromStructure);
+		addPluginItems(jMenuChemFromStructure);
 
 		JMenu jMenuChemFromReaction = new JMenu("From Chemical Reaction");
 		jMenuChemFromReaction.add(jMenuChemAddReactionDescriptor);
@@ -894,6 +914,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemFromReaction.add(jMenuChemExtractProducts);
 		jMenuChemFromReaction.add(jMenuChemExtractTransformation);
 		jMenuChemFromReaction.add(jMenuChemClassifyReactions);
+		addPluginItems(jMenuChemFromReaction);
 
 		jMenuChem.add(jMenuChemFromStructure);
 		jMenuChem.add(jMenuChemFromReaction);
@@ -932,6 +953,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChem.addSeparator();
 		jMenuChem.add(jMenuChemSelectDiverse);
 		jMenuChem.add(jMenuChemCluster);
+
+		addPluginItems(jMenuChem);
+
 		if (System.getProperty("development") != null) {
 			jMenuChem.addSeparator();
 			jMenuChem.add(jMenuChemCheckIDCodes);
@@ -974,7 +998,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	protected JMenu buildDatabaseMenu() {
 		JMenu jMenuDB = new JMenu();
 		jMenuDB.setMnemonic(KeyEvent.VK_B);
-		jMenuDB.setText("Database");
+		jMenuDB.setText(MENU_NAME_DATABASE);
 
 		jMenuDBWikipedia = new JMenuItem();
 		jMenuDBWikipedia.setText("Retrieve Wikipedia Molecules");
@@ -1106,7 +1130,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuListCreate.add(jMenuListCreateMerge);
 		JMenu jMenuList = new JMenu();
 		jMenuList.setMnemonic(KeyEvent.VK_L);
-		jMenuList.setText("List");
+		jMenuList.setText(MENU_NAME_LIST);
 		jMenuList.add(jMenuListCreate);
  		jMenuList.addSeparator();
  		jMenuList.add(jMenuListAddSelectedTo);
@@ -1123,6 +1147,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuList.addSeparator();
 		jMenuList.add(jMenuListImport);
 		jMenuList.add(jMenuListExport);
+
+		addPluginItems(jMenuList);
+
 		return jMenuList;
 		}
 
@@ -1154,7 +1181,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		addMacroFileItemsLater(jMenuMacroRun);
 		JMenu jMenuMacro = new JMenu();
 		jMenuMacro.setMnemonic(KeyEvent.VK_M);
-		jMenuMacro.setText("Macro");
+		jMenuMacro.setText(MENU_NAME_MACRO);
 		jMenuMacro.add(jMenuMacroImport);
 		jMenuMacro.add(jMenuMacroExport);
  		jMenuMacro.addSeparator();
@@ -1166,6 +1193,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuMacro.add(jMenuMacroStopRecording);
  		jMenuMacro.addSeparator();
 		jMenuMacro.add(jMenuMacroRun);
+
+		addPluginItems(jMenuMacro);
+
 		enableMacroItems();
 		return jMenuMacro;
 		}
@@ -1191,7 +1221,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			jMenuHelpAbout.setText("About...");
 			jMenuHelpAbout.addActionListener(this);
 			}
-		jMenuHelpHelp.setText("Help...");
+		jMenuHelpHelp.setText(MENU_NAME_HELP);
 		jMenuHelpHelp.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
 		jMenuHelpHelp.addActionListener(this);
 		jMenuHelpShortcuts.setText("Shortcuts...");
@@ -2054,16 +2084,23 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	}
 
 	private void addPluginItems(JMenu parentMenu) {
-		ArrayList<IPluginTask> pluginList = mApplication.getPluginRegistry().getPluginTasks();
+		ArrayList<PluginSpec> pluginList = mApplication.getPluginRegistry().getPlugins();
 		if (pluginList == null || pluginList.size() == 0)
 			return;
 
-		parentMenu.addSeparator();
+		boolean isSeparated = false;
 
-		for (final IPluginTask pluginTask:pluginList) {
-			JMenuItem item = new JMenuItem(pluginTask.getTaskName()+"...");
-			item.addActionListener(e -> new DETaskPluginTask(mParentFrame, pluginTask).defineAndRun());
-			parentMenu.add(item);
+		for (final PluginSpec plugin:pluginList) {
+			String targetMenuName = plugin.getMenuName() == null ? DEFAULT_PLUGIN_MENU : plugin.getMenuName();
+			if (parentMenu.getText().equalsIgnoreCase(targetMenuName)) {
+				if (!isSeparated) {
+					parentMenu.addSeparator();
+					isSeparated = true;
+					}
+				JMenuItem item = new JMenuItem(plugin.getTaskName() + "...");
+				item.addActionListener(e -> new DETaskPluginTask(mParentFrame, plugin.getTask()).defineAndRun());
+				parentMenu.add(item);
+				}
 			}
 		}
 

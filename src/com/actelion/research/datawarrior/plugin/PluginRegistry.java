@@ -25,23 +25,20 @@ import org.openmolecules.datawarrior.plugin.IPluginTask;
 import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Properties;
+import java.util.*;
 
 public class PluginRegistry {
 	private static final String INITIALIZER_CLASS_NAME = "PluginInitializer";
 	private static final String CONFIG_FILE_NAME = "config.txt";
 	private static final String KEY_CUSTOM_PLUGIN_DIRS = "custom_plugin_dirs";
 
-	private ArrayList<IPluginTask> mPluginList;
+	private ArrayList<PluginSpec> mPluginList;
 
 	public PluginRegistry(DataWarrior application) {
 		loadPlugins(application);
 	}
 
-	public ArrayList<IPluginTask> getPluginTasks() {
+	public ArrayList<PluginSpec> getPlugins() {
 		return mPluginList;
 	}
 
@@ -93,11 +90,15 @@ public class PluginRegistry {
 					}
 
 					BufferedReader br = new BufferedReader(new InputStreamReader(loader.getResourceAsStream("tasknames")));
-					String className = br.readLine();
-					while (className != null && className.length() != 0) {
-						Class pluginClass = loader.loadClass(className.trim());
-						mPluginList.add((IPluginTask)pluginClass.newInstance());
-						className = br.readLine();
+					String line = br.readLine();
+					while (line != null && line.length() != 0) {
+						String[] lineEntry = line.split(","); // we may have one or two items per line: <className>[,menuName]
+						if (lineEntry != null && lineEntry.length != 0) {
+							Class pluginClass = loader.loadClass(lineEntry[0].trim());
+							String menuName = (lineEntry.length == 1 || lineEntry[1].length() == 0) ? null : lineEntry[1].trim();
+							mPluginList.add(new PluginSpec((IPluginTask)pluginClass.newInstance(), menuName));
+							line = br.readLine();
+						}
 					}
 					br.close();
 				}

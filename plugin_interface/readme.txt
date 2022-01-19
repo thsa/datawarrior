@@ -32,12 +32,15 @@ When DataWarrior (4.5.3 or higher) is launched, it processes all '*.jar' files o
 in alphabetical order in the following way:
 - If the plugin contains an PluginInitializer class, then the class is loaded and its initialize()
   method is called.
-- Plugins are supposed to contain a file called 'tasknames' on the top level. DataWarrior tries
-  to open this file and extracts class names from it (full path name, one per line).
+- Plugins are supposed to contain a file called 'tasknames' on the top level. It should contain the name(s)
+  of one of more classes providing supplementary task functionality (full class name with package hierarchy,
+  one class per line). DataWarrior tries to open this file and extracts the class name(s) from it.
+  Optionally, a line may also contain, comma separated, the menu name where the task's menu item should be
+  shown. If no menu name is specified, then the task's menu item will be shown in the 'Database' menu.
 - These classes are assumed to implement the interface org.openmolecules.datawarrior.plugin.IPluginTask,
   which defines methods to name the task, to show a configuration dialog and to execute the task.
 - DataWarrior tries to instantiate each task class and, if successful, adds a menu item for every task
-  to the 'Database' menu.
+  to the 'Database' menu unless another menu is specified.
 - When such a task's menu item is later selected by the user, the task is asked to show its configuration dialog.
 - When the user clicks 'OK' in the dialog, the task is asked to extract the dialog settings as key-value pairs.
 - Then, the task is asked to check, whether the configuration, i.e. the key-value pairs, is valid.
@@ -89,6 +92,7 @@ In a dialog, the user may decide which of the properties to calculate. Then, the
 respective number of new columns. In a loop over all rows, the plugin then gets the chemical structures from
 the currently open DataWarrior table, calculates the chosen properties, and writes them into the new columns.
 Finally, DataWarrior analyses all new columns and creates new default filters for them.
+The menu item that triggers the plugin is in the 'Chemistry->From Chemical Structure' sub-menu.
 
 
 PluginInitializer Example

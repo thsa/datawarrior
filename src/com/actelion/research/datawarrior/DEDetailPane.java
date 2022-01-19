@@ -20,6 +20,13 @@ package com.actelion.research.datawarrior;
 
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.alignment3d.PheSAAlignmentOptimizer;
+import com.actelion.research.chem.descriptor.DescriptorConstants;
+import com.actelion.research.chem.descriptor.DescriptorHandlerFlexophore;
+import com.actelion.research.chem.descriptor.flexophore.ModelSolutionSimilarity;
+import com.actelion.research.chem.descriptor.flexophore.MolDistHist;
+import com.actelion.research.chem.descriptor.flexophore.MolDistHistViz;
+import com.actelion.research.chem.descriptor.flexophore.PPNodeViz;
+import com.actelion.research.chem.descriptor.flexophore.completegraphmatcher.ObjectiveBlurFlexophoreHardMatchUncovered;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.datawarrior.task.table.DETaskSetColumnProperties;
@@ -308,6 +315,98 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		}
 	}
 
+// TODO remove
+	private float[][] getFlexophoreAtomContributions(StereoMolecule mol, StereoMolecule ref) {
+		DescriptorHandlerFlexophore dhFlexophore = new DescriptorHandlerFlexophore();
+
+		ObjectiveBlurFlexophoreHardMatchUncovered objectiveBlurFlexophoreHardMatchUncovered = dhFlexophore.getObjectiveCompleteGraph();
+
+		MolDistHistViz mdhvMol = dhFlexophore.createVisualDescriptor(mol);
+
+//		System.out.println("Num pp nodes mol " + mdhvMol.getNumPPNodes());
+
+		MolDistHistViz mdhvRef = dhFlexophore.createVisualDescriptor(ref);
+//		System.out.println("Num pp nodes ref " + mdhvRef.getNumPPNodes());
+
+//		System.out.println(mdhvMol.toString());
+//		System.out.println(mdhvRef.toString());
+
+		ModelSolutionSimilarity modelSolutionSimilarity = dhFlexophore.getBestMatch(mdhvMol, mdhvRef);
+		if (modelSolutionSimilarity == null)
+			return null;
+
+		int heap = modelSolutionSimilarity.getSizeHeap();
+
+		// System.out.println(Formatter.format3(sim) + "\t" + Formatter.format3(simDH));
+		// System.out.println(Formatter.format3(sim) +"\t"+ Formatter.format3(simNormalized));
+
+		objectiveBlurFlexophoreHardMatchUncovered.setBase(mdhvMol);
+		objectiveBlurFlexophoreHardMatchUncovered.setQuery(mdhvRef);
+
+		float[][] atomContribution = new float[2][mol.getAllAtoms()];
+
+		for (int i=0; i<heap; i++) {
+			int indexRef = modelSolutionSimilarity.getIndexQueryFromHeap(i);
+			int indexMol = modelSolutionSimilarity.getIndexBaseFromHeap(i);
+
+			PPNodeViz ppvMol = mdhvMol.getNode(indexMol);
+			int [] arrAtomIndexMol = ArrayUtils.toIntArray(ppvMol.getListIndexOriginalAtoms());
+
+			PPNodeViz ppvRef = mdhvRef.getNode(indexRef);
+			int [] arrAtomIndexRef = ArrayUtils.toIntArray(ppvRef.getListIndexOriginalAtoms());
+
+//			System.out.println(ppvMol.toString());
+//			System.out.println(ppvRef.toString());
+			// System.out.println(Formatter.format3((double)ppv.getSimilarityMappingNodes()) + "\t" + Formatter.format3((double)ppvQuery.getSimilarityMappingNodes()));
+
+			float simHistogram = objectiveBlurFlexophoreHardMatchUncovered.getSimilarityHistogramsForNode(modelSolutionSimilarity, i);
+
+//			System.out.println("Node similarity " + Formatter.format3((double)modelSolutionSimilarity.getSimilarityNode(indexRef)) + ", histogram similarity " + Formatter.format3((double)simHistogram) + ".");
+
+			for (int atom:arrAtomIndexMol) {
+				atomContribution[0][atom] = modelSolutionSimilarity.getSimilarityNode(indexRef);
+				atomContribution[1][atom] = simHistogram;
+				}
+
+//			System.out.println();
+			}
+
+//		System.out.println("Un-normalized similarity " + Formatter.format3(modelSolutionSimilarity.getSimilarity()));
+		return atomContribution;
+		}
+
+// TODO uncomment
+/*	private float[][] getFlexophoreAtomContributions(MolDistHist mdhMol, MolDistHist mdhRef, int molAtomCount) {
+		DescriptorHandlerFlexophore dhFlexophore = new DescriptorHandlerFlexophore();
+
+		ObjectiveBlurFlexophoreHardMatchUncovered objectiveBlurFlexophoreHardMatchUncovered = dhFlexophore.getObjectiveCompleteGraph();
+
+		ModelSolutionSimilarity modelSolutionSimilarity = dhFlexophore.getBestMatch(mdhMol, mdhRef);
+		if (modelSolutionSimilarity == null)
+			return null;
+
+		int heap = modelSolutionSimilarity.getSizeHeap();
+
+		objectiveBlurFlexophoreHardMatchUncovered.setBase(mdhMol);
+		objectiveBlurFlexophoreHardMatchUncovered.setQuery(mdhRef);
+
+		float[][] atomContribution = new float[2][molAtomCount];
+
+		for (int i=0; i<heap; i++) {
+			int molNode = modelSolutionSimilarity.getIndexBaseFromHeap(i);
+			int refNode = modelSolutionSimilarity.getIndexQueryFromHeap(i);
+			int[] molAtom = mdhRef.getNodeAtoms()[molNode];
+			int[] refAtom = mdhMol.getNodeAtoms()[refNode];
+
+			for (int atom:molAtom) {
+				atomContribution[0][atom] = modelSolutionSimilarity.getSimilarityNode(refNode);
+				atomContribution[1][atom] = objectiveBlurFlexophoreHardMatchUncovered.getSimilarityHistogramsForNode(modelSolutionSimilarity, i);
+			}
+		}
+
+		return atomContribution;
+	}*/
+
 	private void updateDetailView(DetailViewInfo viewInfo) {
 		if (viewInfo.type.equals(TYPE_STRUCTURE_2D)) {
 			StereoMolecule mol = null;
@@ -321,13 +420,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 							|| new IDCodeParser().getAtomCount(idcode, 0) <= CompoundTableChemistryCellRenderer.ON_THE_FLY_COORD_MAX_ATOMS) {
 						mol = mTableModel.getChemicalStructure(mCurrentRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
 						displayMol = mTableModel.getChemicalStructure(mCurrentRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_ALL, null);
-
-/** test				mol.ensureHelperArrays(Molecule.cHelperRings);
-						int[] atomBackground = new int[mol.getAtoms()];
-						for (int atom=0; atom<mol.getAtoms(); atom++)
-							atomBackground[atom] = mol.isAromaticAtom(atom) ? 0xFFFFFFFF : 0xFF8080FF;
-						((JStructureView) viewInfo.view).setAtomHighlightColors(atomBackground);
- */
+// TODO					addFlexophoreContributions(mol, viewInfo);
 					}
 				}
 			}
@@ -354,6 +447,47 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				((JResultDetailView) viewInfo.view).setReferences(reference == null
 						|| reference.length <= viewInfo.detail ?
 						null : reference[viewInfo.detail]);
+			}
+		}
+	}
+
+	/**
+	 * If a Flexophore similarity filter is active, then this method calculates atom contributions to the
+	 * Flexophore match and adds them as proper color/radius encodings to the 2D structure display.
+	 */
+	private void addFlexophoreContributions(StereoMolecule mol, DetailViewInfo viewInfo) {
+		CompoundRecord highlightedRow = mTableModel.getHighlightedRow();
+		if (highlightedRow != null) {
+			int flexophoreColumn = mTableModel.getChildColumn(viewInfo.column, DescriptorConstants.DESCRIPTOR_Flexophore.shortName);
+			if (flexophoreColumn != -1) {
+				MolDistHist rowFlexophore = (MolDistHist)highlightedRow.getData(flexophoreColumn);
+				if (rowFlexophore != null) {
+					MolDistHist queryFlexophore = mTableModel.getMostRecentExclusionFlexophore(flexophoreColumn);
+					if (queryFlexophore != null) {
+/* TODO remove*/    	StereoMolecule query = mTableModel.getChemicalStructure(highlightedRow, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
+						if (query != null && query.getAllAtoms() != 0) {
+							mol.ensureHelperArrays(Molecule.cHelperRings);
+/* TODO remove*/	    	float[][] atomContribution = getFlexophoreAtomContributions(mol, query);
+// TODO 					float[][] atomContribution = getFlexophoreAtomContributions(rowFlexophore, queryFlexophore, mol.getAllAtoms());
+							if (atomContribution != null) {
+								int[] backgroundColor = new int[mol.getAtoms()];
+								float[] backgroundRadius = new float[mol.getAtoms()];
+								for (int atom=0; atom<mol.getAtoms(); atom++) {
+									if (atomContribution[0][atom] > 0f) {
+										final float f = 4f;
+										// we stretch the range, because original values always tend to be larger than 0.75
+										float nodeSimilarity = Math.max(0f, Math.min(1f, Math.round(atomContribution[0][atom] * f - f + 1f)));
+	//									int color = Color.HSBtoRGB(nodeSimilarity, 1f, 1f);
+										int alpha = Math.round(nodeSimilarity * 255);
+										backgroundColor[atom] = (alpha << 24) | 255;
+										backgroundRadius[atom] = atomContribution[1][atom];
+									}
+								}
+								((JStructureView) viewInfo.view).setAtomHighlightColors(backgroundColor, backgroundRadius);
+							}
+						}
+					}
+				}
 			}
 		}
 	}

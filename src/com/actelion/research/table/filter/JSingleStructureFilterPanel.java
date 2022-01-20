@@ -21,19 +21,22 @@ package com.actelion.research.table.filter;
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
+import com.actelion.research.chem.descriptor.flexophore.FlexophoreAtomContributionColors;
+import com.actelion.research.chem.descriptor.flexophore.MolDistHist;
 import com.actelion.research.gui.JEditableStructureView;
 import com.actelion.research.gui.StructureListener;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.table.model.HighlightListener;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 
-public class JSingleStructureFilterPanel extends JStructureFilterPanel 
-				implements DescriptorConstants,StructureListener {
+public class JSingleStructureFilterPanel extends JStructureFilterPanel implements DescriptorConstants,HighlightListener,StructureListener {
 	private static final long serialVersionUID = 0x20060925;
 
 	private JEditableStructureView  mStructureView;
@@ -96,7 +99,15 @@ public class JSingleStructureFilterPanel extends JStructureFilterPanel
 		if (mol != null)
 			updateExclusion(false);
 
+		mTableModel.addHighlightListener(this);
+
 		mIsUserChange = true;
+		}
+
+	@Override
+	public void removePanel() {
+		mTableModel.removeHighlightListener(this);
+		super.removePanel();
 		}
 
 	@Override
@@ -110,8 +121,7 @@ public class JSingleStructureFilterPanel extends JStructureFilterPanel
 	public void itemStateChanged(ItemEvent e) {
 		super.itemStateChanged(e);
 
-		if (e.getSource() == mComboBox
-		 && !mDisableEvents) {
+		if (e.getSource() == mComboBox && !mDisableEvents) {
 			String item = (String)e.getItem();
 			boolean isSSS = cItemContains.equals(item);
 
@@ -141,6 +151,8 @@ public class JSingleStructureFilterPanel extends JStructureFilterPanel
 
 				updateExclusion(mIsUserChange);
 				}
+
+			updateFlexophoreContributionColors();
 			}
 		}
 
@@ -188,6 +200,33 @@ public class JSingleStructureFilterPanel extends JStructureFilterPanel
 			setInverse(false);
 
 		updateExclusion(mIsUserChange);
+		}
+
+	@Override
+	public void setEnabled(boolean b) {
+		super.setEnabled(b);
+		updateFlexophoreContributionColors();
+	}
+
+
+	@Override
+	public void highlightChanged(CompoundRecord record) {
+		updateFlexophoreContributionColors();
+		}
+
+	private void updateFlexophoreContributionColors() {
+		FlexophoreAtomContributionColors facc = null;
+		CompoundRecord highlightedRow = mTableModel.getHighlightedRow();
+		int descriptorColumn = getCurrentDescriptorColumn();
+		if (highlightedRow != null
+		 && isActive()
+		 && isEnabled()
+		 && DESCRIPTOR_Flexophore.shortName.equals(mTableModel.getColumnSpecialType(descriptorColumn)))
+			facc = new FlexophoreAtomContributionColors(mStructureView.getMolecule(),
+														mTableModel.getMostRecentExclusionFlexophore(descriptorColumn),
+														(MolDistHist)highlightedRow.getData(descriptorColumn));
+
+		mStructureView.setAtomHighlightColors(facc == null ? null : facc.getARGB(), facc == null ? null : facc.getRadius());
 		}
 
 	@Override

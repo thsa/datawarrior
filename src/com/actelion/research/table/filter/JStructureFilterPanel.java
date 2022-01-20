@@ -36,8 +36,7 @@ import java.awt.event.ItemListener;
 import java.util.Hashtable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class JStructureFilterPanel extends JFilterPanel 
-				implements ChangeListener,DescriptorConstants,ItemListener {
+public abstract class JStructureFilterPanel extends JFilterPanel implements ChangeListener,DescriptorConstants,ItemListener {
 	private static final long serialVersionUID = 0x20060925;
 
 	private static final int MIN_ROWS_TO_SHOW_PROGRESS = 20000;
@@ -161,6 +160,10 @@ public abstract class JStructureFilterPanel extends JFilterPanel
 				mSimilarity = null;	// TODO cache descriptors
 				}
 			}
+		}
+
+	public int getCurrentDescriptorColumn() {
+		return mCurrentDescriptorColumn;
 		}
 
 	/**

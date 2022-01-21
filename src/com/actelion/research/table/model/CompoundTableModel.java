@@ -23,6 +23,7 @@ import com.actelion.research.calc.ProgressListener;
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.coords.CoordinateInventor;
 import com.actelion.research.chem.descriptor.*;
+import com.actelion.research.chem.descriptor.flexophore.FlexophoreAtomContributionColors;
 import com.actelion.research.chem.descriptor.flexophore.MolDistHist;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
@@ -97,7 +98,8 @@ public class CompoundTableModel extends AbstractTableModel
 	private volatile ConcurrentHashMap<String,float[]> mFlexophoreSimilarityListCache;	// TODO prevent this to grow to much
 	private volatile ConcurrentHashMap<Integer,ArrayList<Object>> mStoppableSearcherMap;	// flagNo->SSSearcherList to notify that search is stopped
 	private volatile MolDistHist mMostRecentExclusionFlexophore;
-	private volatile int mMostRecentExclusionFlexophoreFlagNo,mMostRecentExclusionFlexophoreColumn;
+	private volatile FlexophoreAtomContributionColors mMostRecentExclusionFlexophoreColors;
+	private volatile int mMostRecentExclusionFlexophoreFlagNo,mMostRecentExclusionFlexophoreColumn,mMostRecentExclusionFlexophoreAtomCount;
 
 	/**
 	 * This is the single point of assigning DescriptorHandlers to shortNames and, thus, defines
@@ -107,7 +109,10 @@ public class CompoundTableModel extends AbstractTableModel
 	 */
 	@SuppressWarnings("rawtypes")
     public static DescriptorHandler getDefaultDescriptorHandler(String shortName) {
-		return getDefaultDescriptorHandlerFactory().getDefaultDescriptorHandler(shortName);
+		DescriptorHandler descriptorHandler = getDefaultDescriptorHandlerFactory().getDefaultDescriptorHandler(shortName);
+		if (descriptorHandler != null && descriptorHandler instanceof DescriptorHandlerFlexophore)
+			((DescriptorHandlerFlexophore)descriptorHandler).setIncludeNodeAtoms(true);
+		return descriptorHandler;
 		}
 
 	/**
@@ -2969,6 +2974,7 @@ public class CompoundTableModel extends AbstractTableModel
 			mMostRecentExclusionFlexophoreFlagNo = -1;
 			mMostRecentExclusionFlexophoreColumn = -1;
 			mMostRecentExclusionFlexophore = null;
+			mMostRecentExclusionFlexophoreColors = null;
 			}
 
 		long mask = convertRowFlagToMask(flagNo);
@@ -3802,21 +3808,34 @@ public class CompoundTableModel extends AbstractTableModel
 	 * matching flexophore graph) in DataWarrior the flexophore descriptor (MolDistHist) keeps
 	 * track of the original atoms that make up a Flexophore node. Thus, by finding the best match
 	 * between two Flexophores, one can link node similarity values back the original atoms.
-	 * @return most recently used Flexophore that is still actively filtering.
+	 * @return Flexophore colors if a flexophore filter is active and a highlighted row exists
 	 */
-	public MolDistHist getMostRecentExclusionFlexophore(int column) {
-		return (mMostRecentExclusionFlexophoreColumn == column) ? mMostRecentExclusionFlexophore : null;
+	public FlexophoreAtomContributionColors getMostRecentExclusionFlexophoreColors(int column) {
+		return (mMostRecentExclusionFlexophoreColumn == column) ? mMostRecentExclusionFlexophoreColors : null;
 		}
 
 	/**
-	 * @param mol used to retrieve the proper flexophore from the cache
+	 * @param refMol used to get the flexophore from the cache or to create it
 	 * @param flagNo
 	 * @param column
 	 */
-	public void setMostRecentExclusionFlexophore(StereoMolecule mol, int flagNo, int column) {
-		mMostRecentExclusionFlexophore = (MolDistHist)mColumnInfo[column].getCachedDescriptor(mol);
+	public void setMostRecentExclusionFlexophore(StereoMolecule refMol, int flagNo, int column) {
+		mMostRecentExclusionFlexophore = (MolDistHist)mColumnInfo[column].getCachedDescriptor(refMol);
+		mMostRecentExclusionFlexophoreAtomCount = refMol.getAtoms();
 		mMostRecentExclusionFlexophoreFlagNo = flagNo;
 		mMostRecentExclusionFlexophoreColumn = column;
+		updateFlexophoreColors();
+		}
+
+	private void updateFlexophoreColors() {
+		mMostRecentExclusionFlexophoreColors = null;
+		if (mMostRecentExclusionFlexophore != null) {
+			MolDistHist rowFlexophore = (mHighlightedRow == null) ? null : (MolDistHist)mHighlightedRow.getData(mMostRecentExclusionFlexophoreColumn);
+			if (rowFlexophore != null) {
+				int molAtomCount = new IDCodeParser().getAtomCount((byte[])mHighlightedRow.getData(getParentColumn(mMostRecentExclusionFlexophoreColumn)), 0);
+				mMostRecentExclusionFlexophoreColors = new FlexophoreAtomContributionColors(rowFlexophore, mMostRecentExclusionFlexophore, molAtomCount, mMostRecentExclusionFlexophoreAtomCount);
+				}
+			}
 		}
 
 	public float[] createStructureSimilarityList(Object chemObject, Object refDescriptor, int descriptorColumn) {
@@ -4103,6 +4122,7 @@ public class CompoundTableModel extends AbstractTableModel
 	public void setHighlightedRow(CompoundRecord record) {
 		if (mHighlightedRow != record) {
 			mHighlightedRow = record;
+			updateFlexophoreColors();
 			for (int i=0; i<mHighlightListener.size(); i++)
 				mHighlightListener.get(i).highlightChanged(record);
 			}
@@ -5811,9 +5831,11 @@ class CompoundTableColumnInfo {
 					descriptorHandler = CompoundTableModel.getDefaultDescriptorHandler(value);
 					if (descriptorHandler == null)
 						properties.remove(key);
+					else if (descriptorHandler instanceof DescriptorHandlerFlexophore)
+						((DescriptorHandlerFlexophore)descriptorHandler).setIncludeNodeAtoms(true);
 					}
-					else {
-						descriptorHandler = null;
+				else {
+					descriptorHandler = null;
 					}
 				}
 			}

@@ -22,7 +22,6 @@ import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.flexophore.FlexophoreAtomContributionColors;
-import com.actelion.research.chem.descriptor.flexophore.MolDistHist;
 import com.actelion.research.gui.JEditableStructureView;
 import com.actelion.research.gui.StructureListener;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
@@ -222,11 +221,9 @@ public class JSingleStructureFilterPanel extends JStructureFilterPanel implement
 		 && isActive()
 		 && isEnabled()
 		 && DESCRIPTOR_Flexophore.shortName.equals(mTableModel.getColumnSpecialType(descriptorColumn)))
-			facc = new FlexophoreAtomContributionColors(mStructureView.getMolecule(),
-														mTableModel.getMostRecentExclusionFlexophore(descriptorColumn),
-														(MolDistHist)highlightedRow.getData(descriptorColumn));
+			facc = mTableModel.getMostRecentExclusionFlexophoreColors(descriptorColumn);
 
-		mStructureView.setAtomHighlightColors(facc == null ? null : facc.getARGB(), facc == null ? null : facc.getRadius());
+		mStructureView.setAtomHighlightColors(facc == null ? null : facc.getRefARGB(), facc == null ? null : facc.getRefRadius());
 		}
 
 	@Override

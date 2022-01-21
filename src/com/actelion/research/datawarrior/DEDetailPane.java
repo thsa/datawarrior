@@ -22,7 +22,6 @@ import com.actelion.research.chem.*;
 import com.actelion.research.chem.alignment3d.PheSAAlignmentOptimizer;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.flexophore.FlexophoreAtomContributionColors;
-import com.actelion.research.chem.descriptor.flexophore.MolDistHist;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.datawarrior.task.table.DETaskSetColumnProperties;
@@ -324,7 +323,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 							|| new IDCodeParser().getAtomCount(idcode, 0) <= CompoundTableChemistryCellRenderer.ON_THE_FLY_COORD_MAX_ATOMS) {
 						mol = mTableModel.getChemicalStructure(mCurrentRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
 						displayMol = mTableModel.getChemicalStructure(mCurrentRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_ALL, null);
-						addFlexophoreContributions(mol, viewInfo);
+						addFlexophoreContributions(viewInfo);
 					}
 				}
 			}
@@ -359,15 +358,15 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 	 * If a Flexophore similarity filter is active, then this method calculates atom contributions to the
 	 * Flexophore match and adds them as proper color/radius encodings to the 2D structure display.
 	 */
-	private void addFlexophoreContributions(StereoMolecule mol, DetailViewInfo viewInfo) {
+	private void addFlexophoreContributions(DetailViewInfo viewInfo) {
 		FlexophoreAtomContributionColors facc = null;
 		CompoundRecord highlightedRow = mTableModel.getHighlightedRow();
 		if (highlightedRow != null) {
 			int flexophoreColumn = mTableModel.getChildColumn(viewInfo.column, DescriptorConstants.DESCRIPTOR_Flexophore.shortName);
 			if (flexophoreColumn != -1)
-				facc = new FlexophoreAtomContributionColors(mol, (MolDistHist)highlightedRow.getData(flexophoreColumn), mTableModel.getMostRecentExclusionFlexophore(flexophoreColumn));
+				facc = mTableModel.getMostRecentExclusionFlexophoreColors(flexophoreColumn);
 			}
-		((JStructureView)viewInfo.view).setAtomHighlightColors(facc == null ? null : facc.getARGB(), facc == null ? null : facc.getRadius());
+		((JStructureView)viewInfo.view).setAtomHighlightColors(facc == null ? null : facc.getMolARGB(), facc == null ? null : facc.getMolRadius());
 	}
 
 	private void update3DView(DetailViewInfo viewInfo, boolean isSuperpose, boolean isAlign) {

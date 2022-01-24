@@ -956,7 +956,7 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 			final AtomicInteger smtIndex = new AtomicInteger(mTableModel.getTotalRowCount());
 			final Object _descriptor = descriptor;
 
-			if (similarityList != null) {
+			if (isDescriptor && similarityList != null) {
 				Thread[] t = new Thread[threadCount];
 				for (int i=0; i<threadCount; i++) {
 					t[i] = new Thread(TASK_NAME+" "+(i+1)) {

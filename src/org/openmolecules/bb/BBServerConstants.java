@@ -19,7 +19,7 @@
 package org.openmolecules.bb;
 
 public interface BBServerConstants {
-// The SERVER_URL is only used by the client
+	// The SERVER_URL is only used by the client
 //	public static final String SERVER_URL = "http://localhost:8087";
 	public static final String SERVER_URL = "http://bb.openmolecules.org";
 
@@ -31,11 +31,15 @@ public interface BBServerConstants {
 
 	String REQUEST_HELP = "help";
 	String REQUEST_TEMPLATE = "template";
+	String REQUEST_PROVIDER_LIST = "providers";
 	String REQUEST_MOLFILE2 = "molfile2";
 	String REQUEST_MOLFILE3 = "molfile3";
 	String QUERY_STRUCTURE_SEARCH_SPEC = "ssspec";
 	String QUERY_AMOUNT = "amount";
 	String QUERY_PRICE_LIMIT = "price";
+	String QUERY_PROVIDERS = "providers";
+	String QUERY_PROVIDERS_VALUE_ANY = "any";
+	String QUERY_ONE_PRODUCT_ONLY = "oneProductOnly"; // if one compound is available from multiple providers
 	String QUERY_MAX_ROWS = "maxrows";
 	String QUERY_MOLWEIGHT = "molweight";
 	String QUERY_RESULT_FORMAT = "format";
@@ -59,4 +63,4 @@ public interface BBServerConstants {
 	String SEARCH_TYPE_SSS = "substructure";
 	String SEARCH_TYPE_SIM = "similarity";
 	String PARAMETER_THRESHOLD = "threshold";
-	}
+}

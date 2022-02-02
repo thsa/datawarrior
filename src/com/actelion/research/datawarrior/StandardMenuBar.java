@@ -154,7 +154,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuChemCreateGenericTautomers,jMenuChemCompareDescriptorSimilarityDistribution,jMenuChemGenerateRandomMolecules,
 					  jMenuChemExtractPairwiseCompoundSimilarities,jMenuChemExtractPairwiseStuff,jMenuChemCountAtomTypes,jMenuChemCheckIDCodes,
 					  jMenuChemRunSurfacePLS,jMenuChemClassifyReactions,jMenuDBWikipedia,jMenuDBReadChEMBL,jMenuDBFindChEMBLActives,jMenuDBPatentReactions,
-					  jMenuDBSearchCOD,jMenuDBSearchEnamine,jMenuDBSearchChemSpace,jMenuDBRetrieveDataFromURL,jMenuDBRetrieveSQLData,jMenuDBGooglePatents,
+					  jMenuDBSearchCOD, jMenuDBSearchBuildingBlocks,jMenuDBSearchChemSpace,jMenuDBRetrieveDataFromURL,jMenuDBRetrieveSQLData,jMenuDBGooglePatents,
 					  jMenuListCreateSelected,jMenuListCreateVisible,jMenuListCreateHidden,jMenuListCreateClipboard,
 					  jMenuListCreateDuplicate,jMenuListCreateUnique,jMenuListCreateDistinct,
 					  jMenuListCreateMerge,jMenuListDeleteAll,jMenuListNewColumn,jMenuListListsFromColumn,jMenuListImport,
@@ -1038,10 +1038,10 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 		jMenuDB.addSeparator();
 
-		jMenuDBSearchEnamine = new JMenuItem();
-		jMenuDBSearchEnamine.setText("Search Enamine Building Blocks...");
-		jMenuDBSearchEnamine.addActionListener(this);
-		jMenuDB.add(jMenuDBSearchEnamine);
+		jMenuDBSearchBuildingBlocks = new JMenuItem();
+		jMenuDBSearchBuildingBlocks.setText("Search Commercial Building Blocks...");
+		jMenuDBSearchBuildingBlocks.addActionListener(this);
+		jMenuDB.add(jMenuDBSearchBuildingBlocks);
 
 		jMenuDBSearchChemSpace = new JMenuItem();
 		jMenuDBSearchChemSpace.setText("Search ChemSpace Chemicals...");
@@ -1702,8 +1702,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskFindSimilarActiveCompounds(mParentFrame).defineAndRun();
 			else if (source == jMenuDBSearchCOD)
 				new DETaskCODQuery(mParentFrame, mApplication).defineAndRun();
-			else if (source == jMenuDBSearchEnamine)
-				new DETaskEnamineQuery(mParentFrame, mApplication).defineAndRun();
+			else if (source == jMenuDBSearchBuildingBlocks)
+				new DETaskBuildingBlockQuery(mParentFrame, mApplication).defineAndRun();
 			else if (source == jMenuDBSearchChemSpace)
 				new DETaskChemSpaceQuery(mParentFrame, mApplication).defineAndRun();
 //			else if (source == jMenuDBSearchMolport)

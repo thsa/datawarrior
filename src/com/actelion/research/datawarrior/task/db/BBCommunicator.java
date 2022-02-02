@@ -23,16 +23,23 @@ import org.openmolecules.comm.ClientCommunicator;
 
 import java.util.TreeMap;
 
-public class EnamineCommunicator extends ClientCommunicator {
-	private static final String sURL_1 = "https://bb.openmolecules.org";
+import static org.openmolecules.bb.BBServerConstants.REQUEST_PROVIDER_LIST;
+
+public class BBCommunicator extends ClientCommunicator {
+	private static final String[] DEFAULT_PROVIDER_LIST = { "Enamine" };
+
+	private static final String sURL_1 = "http://localhost:8087";
+//	private static final String sURL_1 = "https://bb.openmolecules.org";
 	private static final String sURL_2 = "http://87.102.212.253:8087";
 	private static String sPrimaryURL = sURL_1;
 	private static String sSecondaryURL = sURL_2;
 	private static boolean sUseSecondaryServer = false;
 
+	private static String[] sProviderList;
+
 	private ProgressController mProgressController;
 
-	public EnamineCommunicator(ProgressController task, String applicationName) {
+	public BBCommunicator(ProgressController task, String applicationName) {
 		super(false, applicationName);
 		mProgressController = task;
 	}
@@ -69,6 +76,15 @@ public class EnamineCommunicator extends ClientCommunicator {
 	public void setUseSecondaryServer() {
 		sUseSecondaryServer = true;
 		}
+
+	public String[] getProviderList() {
+		if (sProviderList == null) {
+			sProviderList = (String[])getResponse(REQUEST_PROVIDER_LIST);
+			if (sProviderList == null)
+				sProviderList = DEFAULT_PROVIDER_LIST;
+			}
+		return sProviderList;
+	}
 
 	@Override
 	public void showBusyMessage(String message) {

@@ -32,28 +32,35 @@ import info.clearthought.layout.TableLayout;
 import org.openmolecules.bb.BBServerConstants;
 
 import javax.swing.*;
-import java.awt.Color;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.TreeMap;
 
-public class DETaskEnamineQuery extends DETaskStructureQuery implements BBServerConstants {
+public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BBServerConstants {
 	static final long serialVersionUID = 0x20200118;
 
-	public static final String TASK_NAME = "Search Enamine Building Blocks";
+	public static final String TASK_NAME = "Search Commercial Building Blocks";
 	private static final String PROPERTY_MAX_PRICE = "maxPrice";
 	private static final String PROPERTY_MIN_PACKAGE_SIZE = "minPackageSize";
 	private static final String PROPERTY_MOLWEIGHT = "molweight";
 	private static final String PROPERTY_MAX_ROWS = "maxRows";
 	private static final String PROPERTY_PRUNING_MODE = "pruningMode";
+	private static final String PROPERTY_PROVIDER_LIST = "providers";
 
-	private JComboBox mComboBoxPruningMode;
+	private static final String ITEM_ANY_PROVIDER = "<Any Provider>";
+	private static final String ITEM_CUSTOM_LIST = "Custom List...";
+	private static final String[] DEFAULT_ITEMS = { ITEM_ANY_PROVIDER, ITEM_CUSTOM_LIST };
+
+	private JComboBox<String> mComboBoxPruningMode,mComboBoxProviders;
 	private JTextField  mTextFieldMaxPrice,mTextFieldMinPackageSize,mTextFieldMolweight,mTextFieldMaxRows;
-	private String[]	mColumnTitle;
+	private JLabel mLabelCustomProviders;
+	private String[] mColumnTitle,mProviderList;
 
-	public DETaskEnamineQuery(DEFrame owner, DataWarrior application) {
+	public DETaskBuildingBlockQuery(DEFrame owner, DataWarrior application) {
 		super(owner, application);
 	}
 
@@ -61,9 +68,9 @@ public class DETaskEnamineQuery extends DETaskStructureQuery implements BBServer
 	public JPanel createDialogContent() {
 		JPanel panel = new JPanel();
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap},
-				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap,
-						TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap,
+		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, HiDPIHelper.scale(160), gap},
+				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap/2,
+						TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap*2,
 						TableLayout.PREFERRED, gap} };
 		panel.setLayout(new TableLayout(size));
 
@@ -72,24 +79,34 @@ public class DETaskEnamineQuery extends DETaskStructureQuery implements BBServer
 		panel.add(createSimilaritySlider(), "1,3");
 		panel.add(createStructureView(), "3,3,5,3");
 
+		mProviderList = new BBCommunicator(this, "datawarrior").getProviderList();
+		mComboBoxProviders = new JComboBox<>(DEFAULT_ITEMS);
+		for (String provider:mProviderList)
+			mComboBoxProviders.addItem(provider);
+		mComboBoxProviders.addActionListener(this);
+		mLabelCustomProviders = new JLabel();
+		panel.add(new JLabel("Provider(s):", JLabel.RIGHT), "1,5");
+		panel.add(mComboBoxProviders, "3,5");
+		panel.add(mLabelCustomProviders, "5,5");
+
 		mTextFieldMaxPrice = new JTextField(4);
-		panel.add(new JLabel("Maximum price:", JLabel.RIGHT), "1,5");
-		panel.add(mTextFieldMaxPrice, "3,5");
-		panel.add(new JLabel("USD"), "5,5");
+		panel.add(new JLabel("Maximum price:", JLabel.RIGHT), "1,7");
+		panel.add(mTextFieldMaxPrice, "3,7");
+		panel.add(new JLabel("USD"), "5,7");
 
 		mTextFieldMinPackageSize = new JTextField(4);
-		panel.add(new JLabel("Minimum package size:", JLabel.RIGHT), "1,7");
-		panel.add(mTextFieldMinPackageSize, "3,7");
-		panel.add(new JLabel("g"), "5,7");
+		panel.add(new JLabel("Minimum package size:", JLabel.RIGHT), "1,9");
+		panel.add(mTextFieldMinPackageSize, "3,9");
+		panel.add(new JLabel("g"), "5,9");
 
 		mTextFieldMolweight = new JTextField(6);
-		panel.add(new JLabel("Molweight:", JLabel.RIGHT), "1,9");
-		panel.add(mTextFieldMolweight, "3,9");
-		panel.add(new JLabel("e.g. '<300', '120-180'"), "5,9");
+		panel.add(new JLabel("Molweight:", JLabel.RIGHT), "1,11");
+		panel.add(mTextFieldMolweight, "3,11");
+		panel.add(new JLabel("e.g. '<300', '120-180'"), "5,11");
 
 		mTextFieldMaxRows = new JTextField(6);
-		panel.add(new JLabel("Maximum row count:", JLabel.RIGHT), "1,11");
-		panel.add(mTextFieldMaxRows, "3,11");
+		panel.add(new JLabel("Maximum row count:", JLabel.RIGHT), "1,13");
+		panel.add(mTextFieldMaxRows, "3,13");
 
 		mTextFieldMaxPrice.addKeyListener(new KeyAdapter() {
 			@Override
@@ -125,9 +142,25 @@ public class DETaskEnamineQuery extends DETaskStructureQuery implements BBServer
 		mComboBoxPruningMode = new JComboBox(CODE_PRUNING_MODE);
 		pruningPanel.add(mComboBoxPruningMode);
 		pruningPanel.add(new JLabel("subset if more building blocks match"));
-		panel.add(pruningPanel, "1,13,5,13");
+		panel.add(pruningPanel, "1,15,5,15");
 
 		return panel;
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == mComboBoxProviders) {
+			boolean isCustom = mComboBoxProviders.getSelectedItem().equals(ITEM_CUSTOM_LIST);
+			if (isCustom) {
+				String selectedProviders = new BBProviderDialog(getDialog(), mProviderList).getSelectedProviders();
+				if (selectedProviders != null)
+					mLabelCustomProviders.setText(selectedProviders);
+			}
+			mLabelCustomProviders.setEnabled(isCustom);
+			return;
+		}
+
+		super.actionPerformed(e);
 	}
 
 	private boolean validateDoubleField(String value) {
@@ -212,7 +245,7 @@ public class DETaskEnamineQuery extends DETaskStructureQuery implements BBServer
 
 	@Override
 	protected String getDocumentTitle()  {
-		return "Enamine Building Blocks";
+		return "Commercial Building Blocks";
 	}
 
 	@Override
@@ -221,6 +254,13 @@ public class DETaskEnamineQuery extends DETaskStructureQuery implements BBServer
 
 		// for Enamine we use always SkeletonSpheres rather than the default FFP512
 		configuration.setProperty(PROPERTY_DESCRIPTOR_NAME, DescriptorConstants.DESCRIPTOR_SkeletonSpheres.shortName);
+
+		String providers = (String)mComboBoxProviders.getSelectedItem();
+		if (ITEM_CUSTOM_LIST.equals(providers))
+			providers = mLabelCustomProviders.getText();
+		else if (ITEM_ANY_PROVIDER.equals(providers))
+			providers = QUERY_PROVIDERS_VALUE_ANY;
+		configuration.setProperty(PROPERTY_PROVIDER_LIST, providers);
 
 		if (mTextFieldMaxPrice.getText().length() != 0)
 			configuration.setProperty(PROPERTY_MAX_PRICE, mTextFieldMaxPrice.getText());
@@ -243,6 +283,17 @@ public class DETaskEnamineQuery extends DETaskStructureQuery implements BBServer
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
 
+		String providers = configuration.getProperty(PROPERTY_PROVIDER_LIST, "Enamine");
+		if (providers.contains(",")) {
+			mComboBoxProviders.setSelectedItem(ITEM_CUSTOM_LIST);
+			mLabelCustomProviders.setText(providers);
+			mLabelCustomProviders.setEnabled(true);
+			}
+		else {
+			mComboBoxProviders.setSelectedItem(providers);
+			mLabelCustomProviders.setEnabled(false);
+		}
+
 		mTextFieldMaxPrice.setText(configuration.getProperty(PROPERTY_MAX_PRICE, ""));
 		mTextFieldMinPackageSize.setText(configuration.getProperty(PROPERTY_MIN_PACKAGE_SIZE, ""));
 		mTextFieldMolweight.setText(configuration.getProperty(PROPERTY_MOLWEIGHT, ""));
@@ -254,6 +305,7 @@ public class DETaskEnamineQuery extends DETaskStructureQuery implements BBServer
 	public void setDialogConfigurationToDefault() {
 		super.setDialogConfigurationToDefault();
 
+		mComboBoxProviders.setSelectedItem(ITEM_ANY_PROVIDER);
 		mTextFieldMaxPrice.setText("100");
 		mTextFieldMinPackageSize.setText("10");
 		mTextFieldMolweight.setText("<300");
@@ -276,6 +328,12 @@ public class DETaskEnamineQuery extends DETaskStructureQuery implements BBServer
 				return false;
 			}
 		}
+		String providers = configuration.getProperty(PROPERTY_PROVIDER_LIST);
+		if (providers != null && providers.length() == 0) {
+			showErrorMessage("No providers selected.");
+			return false;
+		}
+
 		String minSize = configuration.getProperty(PROPERTY_MIN_PACKAGE_SIZE);
 		if (minSize != null && !validateDoubleField(minSize)) {
 			showErrorMessage("Invalidate minimum package size.");
@@ -309,6 +367,10 @@ public class DETaskEnamineQuery extends DETaskStructureQuery implements BBServer
 		if (ssSpec != null)
 			query.put(QUERY_STRUCTURE_SEARCH_SPEC, ssSpec);
 
+		String providers = configuration.getProperty(PROPERTY_PROVIDER_LIST);
+		if (providers != null)
+			query.put(QUERY_PROVIDERS, providers);
+
 		String minAmount = getTaskConfiguration().getProperty(PROPERTY_MIN_PACKAGE_SIZE);
 		if (minAmount != null)
 			query.put(QUERY_AMOUNT, minAmount);
@@ -330,7 +392,7 @@ public class DETaskEnamineQuery extends DETaskStructureQuery implements BBServer
 			query.put(QUERY_PRUNING_MODE, pruningMode);
 
 		mResultList = new ArrayList<>();
-		byte[][][] resultTable = new EnamineCommunicator(this, "datawarrior").search(query);
+		byte[][][] resultTable = new BBCommunicator(this, "datawarrior").search(query);
 		if (resultTable != null) {
 			mColumnTitle = new String[resultTable[0].length-RESULT_STRUCTURE_COLUMNS];	// title without structure related columns
 			for (int col=RESULT_STRUCTURE_COLUMNS; col<resultTable[0].length; col++)

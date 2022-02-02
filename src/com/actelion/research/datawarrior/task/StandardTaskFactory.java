@@ -40,7 +40,6 @@ import com.actelion.research.datawarrior.task.list.*;
 import com.actelion.research.datawarrior.task.macro.*;
 import com.actelion.research.datawarrior.task.table.*;
 import com.actelion.research.datawarrior.task.view.*;
-import org.openmolecules.datawarrior.plugin.IPluginTask;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -159,7 +158,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskDuplicateColumn.TASK_NAME) ? new DETaskDuplicateColumn(frame, mainPane.getTableModel(), -1)
 			 : codeMatches(taskCode, DETaskDuplicateView.TASK_NAME) ? new DETaskDuplicateView(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskEnableAllFilters.TASK_NAME) ? new DETaskEnableAllFilters(frame)
-			 : codeMatches(taskCode, DETaskEnamineQuery.TASK_NAME) ? new DETaskEnamineQuery(frame, application)
+			 : codeMatches(taskCode, DETaskBuildingBlockQuery.TASK_NAME) ? new DETaskBuildingBlockQuery(frame, application)
 			 : codeMatches(taskCode, DETaskEnumerateCombinatorialLibrary.TASK_NAME) ? new DETaskEnumerateCombinatorialLibrary(frame, application)
 			 : codeMatches(taskCode, DETaskExitProgram.TASK_NAME) ? new DETaskExitProgram(frame, application)
 			 : codeMatches(taskCode, DETaskExportHitlist.TASK_NAME) ? new DETaskExportHitlist(frame, false)
@@ -376,7 +375,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskDuplicateColumn.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskDuplicateView.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskEnableAllFilters.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskEnamineQuery.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskBuildingBlockQuery.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskEnumerateCombinatorialLibrary.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskExitProgram.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskExportHitlist.TASK_NAME));

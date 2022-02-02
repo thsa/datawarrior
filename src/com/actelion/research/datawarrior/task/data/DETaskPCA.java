@@ -18,45 +18,28 @@
 
 package com.actelion.research.datawarrior.task.data;
 
-import com.actelion.research.datawarrior.DataWarrior;
-import com.actelion.research.gui.hidpi.HiDPIHelper;
-import com.actelion.research.table.MarkerLabelConstants;
-import com.actelion.research.table.model.CompoundTableEvent;
-import com.actelion.research.util.DoubleFormat;
-import info.clearthought.layout.TableLayout;
-
-import java.awt.Color;
-import java.awt.Dimension;
-import java.util.Properties;
-
-import javax.swing.BorderFactory;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JEditorPane;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.text.html.HTMLEditorKit;
-
 import com.actelion.research.calc.SingularValueDecomposition;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.DescriptorHelper;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.table.MarkerLabelConstants;
 import com.actelion.research.table.model.CompoundRecord;
+import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.JVisualization;
-import com.actelion.research.table.view.JVisualization2D;
-import com.actelion.research.table.view.JVisualization3D;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.table.view.VisualizationPanel3D;
+import com.actelion.research.util.DoubleFormat;
+import info.clearthought.layout.TableLayout;
+
+import javax.swing.*;
+import javax.swing.text.html.HTMLEditorKit;
+import java.awt.*;
+import java.util.Properties;
 
 
 public class DETaskPCA extends ConfigurableTask {
@@ -172,7 +155,7 @@ public class DETaskPCA extends ConfigurableTask {
 			mTextArea = new JTextArea();
 			scrollPane = new JScrollPane(mTextArea);
 			}
-		scrollPane.setPreferredSize(new Dimension(240,160));
+		scrollPane.setPreferredSize(new Dimension(HiDPIHelper.scale(240),HiDPIHelper.scale(160)));
 		p1.add(parameterLabel, "1,3");
 		p1.add(scrollPane, "3,3,5,3");
 

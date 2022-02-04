@@ -65,7 +65,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 
 	public static final int SEARCH_TYPES_SSS_SIM = 2;
 	public static final int SEARCH_TYPES_SSS_SIM_EXACT = 3;
-	public static final int SEARCH_TYPES_SSS_SIM_EXACT_NOSTEREO_TAUTO = 4;
+	public static final int SEARCH_TYPES_SSS_SIM_EXACT_NOSTEREO_TAUTO = 5;
 
     private static final String[] SEARCH_TYPE_TEXT = {"superstructures of", "similar structures to", "equal structures to", "stereo isomers of", "tautomers of" };
 	protected static final String[] SEARCH_TYPE_CODE = {"sss", "similarity", "exact", "noStereo", "tautomer" };

@@ -21,10 +21,17 @@ package com.actelion.research.datawarrior.task.table;
 import com.actelion.research.datawarrior.DETableView;
 import com.actelion.research.table.model.CompoundTableModel;
 
+import javax.swing.*;
 import java.awt.*;
+import java.util.Properties;
 
 public class DETaskShowTableColumnGroup extends DETaskAbstractTableColumnGroup {
 	public static final String TASK_NAME = "Show Table Column Group";
+
+	private static final String PROPERTY_HIDE_OTHERS = "hideOthers";
+
+	private JCheckBox mCheckBoxHideOthers;
+	private boolean mHideOthers;
 
 	public DETaskShowTableColumnGroup(Frame owner, DETableView tableView, CompoundTableModel tableModel) {
 		super(owner, tableView, tableModel);
@@ -36,8 +43,44 @@ public class DETaskShowTableColumnGroup extends DETaskAbstractTableColumnGroup {
      * @param tableView
      * @param groupName
      */
-	public DETaskShowTableColumnGroup(Frame owner, DETableView tableView, CompoundTableModel tableModel, String groupName) {
+	public DETaskShowTableColumnGroup(Frame owner, DETableView tableView, CompoundTableModel tableModel, String groupName, boolean hideOthers) {
 		super(owner, tableView, tableModel, groupName);
+		mHideOthers = hideOthers;
+		}
+
+	@Override
+	public JComponent createInnerDialogContent() {
+		mCheckBoxHideOthers = new JCheckBox("Hide All Other Columns");
+		return mCheckBoxHideOthers;
+		}
+
+	@Override
+	public Properties getPredefinedConfiguration() {
+		Properties configuration = super.getPredefinedConfiguration();
+		if (configuration == null)
+			return null;
+
+		configuration.setProperty(PROPERTY_HIDE_OTHERS, mHideOthers ? "true" : "false");
+		return configuration;
+		}
+
+	@Override
+	public Properties getDialogConfiguration() {
+		Properties configuration = super.getDialogConfiguration();
+		configuration.setProperty(PROPERTY_HIDE_OTHERS, mCheckBoxHideOthers.isSelected() ? "true" : "false");
+		return configuration;
+		}
+
+	@Override
+	public void setDialogConfiguration(Properties configuration) {
+		super.setDialogConfiguration(configuration);
+		mCheckBoxHideOthers.setSelected(!"false".equals(configuration.getProperty(PROPERTY_HIDE_OTHERS)));
+		}
+
+	@Override
+	public void setDialogConfigurationToDefault() {
+		super.setDialogConfigurationToDefault();
+		mCheckBoxHideOthers.setSelected(true);
 		}
 
 	@Override
@@ -46,9 +89,14 @@ public class DETaskShowTableColumnGroup extends DETaskAbstractTableColumnGroup {
 		}
 
 	@Override
+	public void prepareColumnGroupActions(Properties configuration) {
+		mHideOthers = !"false".equals(configuration.getProperty(PROPERTY_HIDE_OTHERS));
+		}
+
+	@Override
 	public void doColumnGroupAction(int column, boolean isGroupMember, String groupName) {
 		boolean isShown = getTableView().getTable().convertTotalColumnIndexToView(column) != -1;
-		if (isShown != isGroupMember)
+		if ((!isShown || mHideOthers) && (isShown != isGroupMember))
 			getTableView().setColumnVisibility(column, isGroupMember);
 		}
 	}

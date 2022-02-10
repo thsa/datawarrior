@@ -449,9 +449,10 @@ public class CompoundTableModel extends AbstractTableModel
 	private String getSummaryModeString(int column, int valueCount) {
 		switch (mColumnInfo[column].summaryMode) {
 		case cSummaryModeMean:
+			String mode = mColumnInfo[column].logarithmicViewMode ? "geomean" : "mean";
 			String stdDev = DoubleFormat.toString(mParseDoubleStdDev);
 			String end = mColumnInfo[column].stdDeviationShown ? ", stdDev="+stdDev+")" : ")";
-			return " (mean, n="+valueCount+end;
+			return " ("+mode+", n="+valueCount+end;
 		case cSummaryModeMedian:
 			return " (median, n="+valueCount+")";
 		case cSummaryModeMinimum:
@@ -1477,7 +1478,7 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	/**
-	 * This hides the text following any summarizing number, e.g. '(mean of 4)'.
+	 * This hides the standard deviation value from the text following any summarizing number as 'stdDev=x.xx'.
 	 * This way data can be copied or exported for further numerical analysis.
 	 * @param column
 	 * @param isShown

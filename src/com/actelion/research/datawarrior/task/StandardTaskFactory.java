@@ -171,6 +171,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskFindAndReplace.TASK_NAME) ? new DETaskFindAndReplace(frame)
 			 : codeMatches(taskCode, DETaskFindSimilarCompoundsInFile.TASK_NAME) ? new DETaskFindSimilarCompoundsInFile(frame)
 			 : codeMatches(taskCode, DETaskGotoLabel.TASK_NAME) ? new DETaskGotoLabel(frame)
+			 : codeMatches(taskCode, DETaskHideTableColumnGroup.TASK_NAME) ? new DETaskHideTableColumnGroup(frame, mainPane.getTableView(), frame.getTableModel())
 			 : codeMatches(taskCode, DETaskHideTableColumns.TASK_NAME) ? new DETaskHideTableColumns(frame, mainPane.getTableView(), mainPane.getTableModel(), null)
 			 : codeMatches(taskCode, DETaskImportHitlist.TASK_NAME) ? new DETaskImportHitlist(application)
 			 : codeMatches(taskCode, DETaskImportMacro.TASK_NAME) ? new DETaskImportMacro(application)
@@ -388,6 +389,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_EDIT, DETaskFindAndReplace.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskFindSimilarCompoundsInFile.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskGotoLabel.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TABLE, DETaskHideTableColumnGroup.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TABLE, DETaskHideTableColumns.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskImportHitlist.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskImportMacro.TASK_NAME));

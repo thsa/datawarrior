@@ -23,6 +23,7 @@ import com.actelion.research.datawarrior.DETableView;
 import com.actelion.research.table.model.CompoundTableModel;
 
 import java.awt.*;
+import java.util.Properties;
 
 public class DETaskRemoveColumnGroup extends DETaskAbstractTableColumnGroup {
 	public static final String TASK_NAME = "Remove Column Group";
@@ -45,6 +46,9 @@ public class DETaskRemoveColumnGroup extends DETaskAbstractTableColumnGroup {
 	public String getTaskName() {
 		return TASK_NAME;
 		}
+
+	@Override
+	public void prepareColumnGroupActions(Properties configuration) {}
 
 	@Override
 	public void doColumnGroupAction(int column, boolean isGroupMember, String groupName) {

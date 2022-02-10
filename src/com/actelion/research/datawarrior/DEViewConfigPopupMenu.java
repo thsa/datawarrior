@@ -45,7 +45,9 @@ public class DEViewConfigPopupMenu extends JPopupMenu implements ActionListener,
 	private static final String TEXT_SET_FONT_SIZE = "Set Font Size...";
 	private static final String TEXT_SET_HEADER_LINES = "Set Header Line Count ";
 	private static final String TEXT_CHANGE_COLUMN_ORDER = "Change Column Order...";
-	private static final String TEXT_SHOW_GROUP = "Show Column Group Only";
+	private static final String TEXT_SHOW_GROUP = "Show Column Group";
+	private static final String TEXT_HIDE_GROUP = "Hide Column Group";
+	private static final String TEXT_SHOW_GROUP_ONLY = "Show Column Group Only";
 	private static final String TEXT_GROUP_SELECTED = "Group Selected Columns...";
 	private static final String TEXT_ADD_TO_GROUP = "Add Selected Columns To";
 	private static final String TEXT_REMOVE_GROUP = "Remove Column Group";
@@ -285,6 +287,24 @@ public class DEViewConfigPopupMenu extends JPopupMenu implements ActionListener,
 					item.setActionCommand(TEXT_SHOW_GROUP + groupName);
 					showMenu.add(item);
 					}
+
+				JMenu hideMenu = new JScrollableMenu(TEXT_HIDE_GROUP);
+				add(hideMenu);
+				for (String groupName:columnGroup) {
+					JMenuItem item = new JMenuItem(groupName);
+					item.addActionListener(this);
+					item.setActionCommand(TEXT_HIDE_GROUP + groupName);
+					hideMenu.add(item);
+					}
+
+				JMenu showOnlyMenu = new JScrollableMenu(TEXT_SHOW_GROUP_ONLY);
+				add(showOnlyMenu);
+				for (String groupName:columnGroup) {
+					JMenuItem item = new JMenuItem(groupName);
+					item.addActionListener(this);
+					item.setActionCommand(TEXT_SHOW_GROUP_ONLY + groupName);
+					showOnlyMenu.add(item);
+					}
 				}
 
 			addSeparator();
@@ -482,9 +502,15 @@ public class DEViewConfigPopupMenu extends JPopupMenu implements ActionListener,
 				JOptionPane.showMessageDialog(getParentFrame(), "No columns selected.");
 			else
 				new DETaskAddColumnsToGroup(getParentFrame(), ((DETableView)mSource), mTableModel, selectedColumn, null).defineAndRun();
+		} else if (e.getActionCommand().startsWith(TEXT_HIDE_GROUP)) {
+			String groupName = e.getActionCommand().substring(TEXT_HIDE_GROUP.length());
+			new DETaskHideTableColumnGroup(getParentFrame(), ((DETableView)mSource), mTableModel, groupName).defineAndRun();
 		} else if (e.getActionCommand().startsWith(TEXT_SHOW_GROUP)) {
 			String groupName = e.getActionCommand().substring(TEXT_SHOW_GROUP.length());
-			new DETaskShowTableColumnGroup(getParentFrame(), ((DETableView)mSource), mTableModel, groupName).defineAndRun();
+			new DETaskShowTableColumnGroup(getParentFrame(), ((DETableView)mSource), mTableModel, groupName, false).defineAndRun();
+		} else if (e.getActionCommand().startsWith(TEXT_SHOW_GROUP_ONLY)) {
+			String groupName = e.getActionCommand().substring(TEXT_SHOW_GROUP_ONLY.length());
+			new DETaskShowTableColumnGroup(getParentFrame(), ((DETableView)mSource), mTableModel, groupName, true).defineAndRun();
 		} else if (e.getActionCommand().startsWith(TEXT_ADD_TO_GROUP)) {
 			int[] selectedColumn = ((DETableView)mSource).getSelectedColumns();
 			if (selectedColumn == null) {

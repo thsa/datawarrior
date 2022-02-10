@@ -26,8 +26,8 @@ import java.util.TreeMap;
 import static org.openmolecules.bb.BBServerConstants.REQUEST_PROVIDER_LIST;
 
 public class BBCommunicator extends ClientCommunicator {
-	private static final String sURL_1 = "http://localhost:8087";
-//	private static final String sURL_1 = "https://bb.openmolecules.org";
+//	private static final String sURL_1 = "http://localhost:8087";
+	private static final String sURL_1 = "https://bb.openmolecules.org";
 	private static final String sURL_2 = "http://87.102.212.253:8087";
 	private static String sPrimaryURL = sURL_1;
 	private static String sSecondaryURL = sURL_2;

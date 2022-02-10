@@ -64,7 +64,7 @@ public abstract class DETaskAbstractTableColumnGroup extends ConfigurableTask {
 		JPanel p = new JPanel();
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap},
-				{gap, TableLayout.PREFERRED, gap} };
+				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		p.setLayout(new TableLayout(size));
 
 		p.add(new JLabel("Column group:"), "1,1");
@@ -72,7 +72,15 @@ public abstract class DETaskAbstractTableColumnGroup extends ConfigurableTask {
 		mComboBox.setEditable(true);
 		p.add(mComboBox, "3,1");
 
+		JComponent innerContent = createInnerDialogContent();
+		if (innerContent != null)
+			p.add(innerContent, "1,3,3,3");
+
 		return p;
+		}
+
+	public JComponent createInnerDialogContent() {
+		return null;
 		}
 
 	@Override
@@ -160,6 +168,7 @@ public abstract class DETaskAbstractTableColumnGroup extends ConfigurableTask {
 
 	@Override
 	public void runTask(Properties configuration) {
+		prepareColumnGroupActions(configuration);
 		String groupName = configuration.getProperty(PROPERTY_GROUP_NAME);
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 			if (mTableModel.isColumnDisplayable(column)) {
@@ -175,5 +184,6 @@ public abstract class DETaskAbstractTableColumnGroup extends ConfigurableTask {
 		mTableView.getTable().getTableHeader().repaint();
 		}
 
+	public abstract void prepareColumnGroupActions(Properties configuration);
 	public abstract void doColumnGroupAction(int column, boolean isGroupMember, String groupName);
 	}

@@ -31,6 +31,7 @@ import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -53,7 +54,15 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 	private static final String PROPERTY_MODE = "mode";
 	
 	private static final String OPTION_ANY_COLUMN = "<any column>";
+	private static final String OPTION_VISIBLE_COLUMN = "<visible columns>";
+	private static final String OPTION_SELECTED_COLUMN = "<selected columns>";
 	private static final String CODE_ANY_COLUMN = "<any>";
+	private static final String CODE_VISIBLE_COLUMN = "<visible>";
+	private static final String CODE_SELECTED_COLUMN = "<selected>";
+
+	private static final int cColumnAny = -1;
+	private static final int cColumnVisible = -2;
+	private static final int cColumnSelected = -3;
 
 	private static final int cModeAllRows = 0;
 	private static final int cModeSelectedOnly = 1;
@@ -80,6 +89,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 	private JLabel				mLabelUseRGroups;
 	private JPanel				mCheckBoxPanel;
 	private boolean				mIsStructureMode;
+	private int                 mColumns,mReplacements;
 
 	public DETaskFindAndReplace(DEFrame owner) {
 		super(owner, true);
@@ -112,6 +122,8 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 	public JPanel createDialogContent() {
 		mComboBoxColumn = new JComboBox();
 		mComboBoxColumn.addItem(OPTION_ANY_COLUMN);
+		mComboBoxColumn.addItem(OPTION_VISIBLE_COLUMN);
+		mComboBoxColumn.addItem(OPTION_SELECTED_COLUMN);
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
 			if (qualifiesAsColumn(column))
 				mComboBoxColumn.addItem(mTableModel.getColumnTitle(column));
@@ -162,8 +174,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			}
 		if (isInteractive() && e.getSource() == mComboBoxColumn) {
 			int column = mTableModel.findColumn((String)mComboBoxColumn.getSelectedItem());
-			boolean isStructure = (column == -1) ?
-					false : mTableModel.isColumnTypeStructure(column);
+			boolean isStructure = (column < 0) ? false : mTableModel.isColumnTypeStructure(column);
 			updateInputFields(isStructure);
 			}
 		if (e.getSource() == mComboBoxWhat) {
@@ -262,6 +273,8 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		Properties configuration = new Properties();
 
 		String column = OPTION_ANY_COLUMN.equals(mComboBoxColumn.getSelectedItem()) ? CODE_ANY_COLUMN
+					: OPTION_VISIBLE_COLUMN.equals(mComboBoxColumn.getSelectedItem()) ? CODE_VISIBLE_COLUMN
+					: OPTION_SELECTED_COLUMN.equals(mComboBoxColumn.getSelectedItem()) ? CODE_SELECTED_COLUMN
 					: mTableModel.getColumnTitleNoAlias(mTableModel.findColumn((String)mComboBoxColumn.getSelectedItem()));
 		configuration.setProperty(PROPERTY_COLUMN, column);
 
@@ -309,6 +322,12 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		String value = configuration.getProperty(PROPERTY_COLUMN);
 		if (value == null || value.equals(CODE_ANY_COLUMN)) {
 			mComboBoxColumn.setSelectedItem(OPTION_ANY_COLUMN);
+			}
+		else if (value.equals(CODE_VISIBLE_COLUMN)) {
+			mComboBoxColumn.setSelectedItem(OPTION_VISIBLE_COLUMN);
+			}
+		else if (value.equals(CODE_SELECTED_COLUMN)) {
+			mComboBoxColumn.setSelectedItem(OPTION_SELECTED_COLUMN);
 			}
 		else {
 			int column = mTableModel.findColumn(value);
@@ -454,13 +473,37 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			}
 
 		String columnName = configuration.getProperty(PROPERTY_COLUMN);
-		if (columnName.equals(CODE_ANY_COLUMN) && isStructureMode) {
-			showErrorMessage("Substructure replacement cannot be combined with '<any column>'.");
-			return false;
+		if (isStructureMode) {
+			if (columnName.equals(CODE_ANY_COLUMN)) {
+				showErrorMessage("Substructure replacement cannot be combined with '<any column>'.");
+				return false;
+				}
+			if (columnName.equals(CODE_VISIBLE_COLUMN)) {
+				showErrorMessage("Substructure replacement cannot be combined with '<visible columns>'.");
+				return false;
+				}
+			if (columnName.equals(CODE_SELECTED_COLUMN)) {
+				showErrorMessage("Substructure replacement cannot be combined with '<selected columns>'.");
+				return false;
+				}
 			}
 
 		if (isLive) {
-			if (!columnName.equals(CODE_ANY_COLUMN)) {
+			if (columnName.equals(CODE_VISIBLE_COLUMN)) {
+				DETable table = mParentFrame.getMainFrame().getMainPane().getTable();
+				if (table.getColumnModel().getColumnCount() == 0) {
+					showErrorMessage("No visible columns found.");
+					return false;
+					}
+				}
+			else if (columnName.equals(CODE_SELECTED_COLUMN)) {
+				DETable table = mParentFrame.getMainFrame().getMainPane().getTable();
+				if (table.getColumnModel().getSelectedColumnCount() == 0) {
+					showErrorMessage("No selected columns found.");
+					return false;
+					}
+				}
+			else if (!columnName.equals(CODE_ANY_COLUMN)) {
 				int column = mTableModel.findColumn(columnName);
 				if (column == -1) {
 					showErrorMessage("Column '"+columnName+"' not found.");
@@ -503,16 +546,21 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		int selectedColumn = -1;
 		if (isInteractive()) {
 			DETable table = mParentFrame.getMainFrame().getMainPane().getTable();
-			if (table.getSelectedColumnCount() == 1 && table.getSelectedRow() != -1)
-				selectedColumn = table.convertTotalColumnIndexFromView(table.getSelectedColumn());
+			if (table.getSelectedRow() != -1) {
+				int selectedColumns = table.getSelectedColumnCount();
+				if (selectedColumns == 1)
+					selectedColumn = table.convertTotalColumnIndexFromView(table.getSelectedColumn());
+				else if (selectedColumns > 1 && selectedColumns < table.getColumnCount())
+					selectedColumn = -2;
+				}
 			}
 
-		if (mComboBoxColumn.getItemCount() != 0) {
-			if (selectedColumn == -1)
-				mComboBoxColumn.setSelectedIndex(0);
-			else
-				mComboBoxColumn.setSelectedItem(mTableModel.getColumnTitle(selectedColumn));
-			}
+		if (selectedColumn == -1)
+			mComboBoxColumn.setSelectedItem(OPTION_VISIBLE_COLUMN);
+		else if (selectedColumn == -2)
+			mComboBoxColumn.setSelectedItem(OPTION_SELECTED_COLUMN);
+		else
+			mComboBoxColumn.setSelectedItem(mTableModel.getColumnTitle(selectedColumn));
 
 		mTextFieldWhat.setText("");
 		mTextFieldWith.setText("");
@@ -537,7 +585,10 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		String what = configuration.getProperty(PROPERTY_WHAT, "").replace("\\n", "\n");
 		String with = configuration.getProperty(PROPERTY_WITH, "").replace("\\n", "\n");
 		String value = configuration.getProperty(PROPERTY_COLUMN);
-		int targetColumn = (value == null || value.equals(CODE_ANY_COLUMN)) ? -1 : mTableModel.findColumn(value);
+		int targetColumn = (value == null || value.equals(CODE_ANY_COLUMN)) ? cColumnAny
+				: value.equals(CODE_VISIBLE_COLUMN) ? cColumnVisible
+				: value.equals(CODE_SELECTED_COLUMN) ? cColumnSelected
+				: mTableModel.findColumn(value);
 		int mode = findListIndex(configuration.getProperty(PROPERTY_MODE), MODE_CODE, 0);
 
 		if ("true".equals(configuration.getProperty(PROPERTY_IS_STRUCTURE))) {
@@ -884,97 +935,111 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		if (!isCaseSensitive && !isRegex)
 			what = what.toLowerCase();
 
-		int maxProgress = (targetColumn != -1) ? mTableModel.getTotalRowCount() / 64 : mTableModel.getColumnCount();
+		DETable table = mParentFrame.getMainFrame().getMainPane().getTable();
+		TableColumnModel columnModel = table.getColumnModel();
+
+		int maxProgress = (targetColumn == cColumnSelected) ? columnModel.getSelectedColumnCount()
+				: (targetColumn == cColumnVisible) ? mTableModel.getColumnCount()
+				: (targetColumn == cColumnAny) ? mTableModel.getColumnCount() : 1;
 		startProgress("Replacing '"+what+"'...", 0, maxProgress);
 
-		int replacements = 0;
-		int columns = 0;
+		mReplacements = 0;
+		mColumns = 0;
 
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
-			if (targetColumn == -1 && column != 0)
+			int viewColumn = table.convertTotalColumnIndexToView(column);
+			if (targetColumn == cColumnSelected && (viewColumn == -1 || !table.isColumnSelected(viewColumn)))
+				continue;
+			if (targetColumn == cColumnVisible && viewColumn == -1)
+				continue;
+
+			if (targetColumn < 0 && column != 0)
 				updateProgress(-1);
 
-			if (column == targetColumn || (targetColumn == -1 && mTableModel.getColumnSpecialType(column) == null)) {
-				boolean found = false;
-
-				for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
-					if (targetColumn != -1 && (row & 63) == 63)
-						updateProgress(-1);
-
-					CompoundRecord record = mTableModel.getTotalRecord(row);
-					if ((mode == cModeSelectedOnly && !mTableModel.isVisibleAndSelected(record))
-					 || (mode == cModeVisibleOnly && !mTableModel.isVisible(record)))
-						continue;
-
-					String value = mTableModel.getTotalValueAt(row, column);
-					if (what.equals(CODE_WHAT_EMPTY)) {
-						if (value.length() == 0) {
-							mTableModel.setTotalValueAt(with, row, column);
-							replacements++;
-							found = true;
-							}
-						}
-					else if (what.equals(CODE_WHAT_ANY)) {
-						mTableModel.setTotalValueAt(with, row, column);
-						replacements++;
-						found = true;
-						}
-					else if (isRegex) {
-						String newValue = value.replaceAll(what, with);
-						if (!newValue.equals(value)) {
-							mTableModel.setTotalValueAt(newValue, row, column);
-							replacements++;
-							found = true;
-							}
-						}
-					else if (isCaseSensitive) {
-						if (value.contains(what)) {
-							mTableModel.setTotalValueAt(value.replace(what, with), row, column);
-							replacements++;
-							found = true;
-							}
-						}
-					else {
-						if (value.toLowerCase().contains(what)) {
-							StringBuilder newValue = new StringBuilder();
-							String lowerValue = value.toLowerCase();
-							int oldValueIndex = 0;
-							int index = lowerValue.indexOf(what);
-							while (index != -1) {
-								if (oldValueIndex < index)
-									newValue.append(value.substring(oldValueIndex, index));
-		
-								newValue.append(with);
-								oldValueIndex = index + what.length();
-		
-								index = lowerValue.indexOf(what, oldValueIndex);
-								}
-		
-							if (oldValueIndex < value.length())
-								newValue.append(value.substring(oldValueIndex));
-		
-							mTableModel.setTotalValueAt(newValue.toString(), row, column);
-							replacements++;
-							found = true;
-							}
-						}
-					}
-
-				if (found) {
-					mTableModel.finalizeChangeAlphaNumericalColumn(column, 0, mTableModel.getTotalRowCount());
-					columns++;
-					}
+			if (column == targetColumn || (targetColumn < 0 && mTableModel.getColumnSpecialType(column) == null)) {
+				final int _column = column;
+				final String _what = what;
+				try {
+					SwingUtilities.invokeAndWait(() -> replaceTextInOneColumn(_what, with, _column, mode, isRegex, isCaseSensitive));
+					} catch (Exception e) {}
 				}
 			}
 
 		if (isInteractive()) {
 			String msg = what.equals(CODE_WHAT_ANY) ?
-					"The cell content was replaced " + replacements + " times in " + columns + " columns."
+					"The cell content was replaced " + mReplacements + " times in " + mColumns + " columns."
 							  : what.equals(CODE_WHAT_EMPTY) ?
-					"" + replacements + " empty cells in " + columns + " columns were filled with '" + with + "'."
-				  : "'" + what + "' was replaced " + replacements + " times in " + columns + " columns.";
+					"" + mReplacements + " empty cells in " + mColumns + " columns were filled with '" + with + "'."
+				  : "'" + what + "' was replaced " + mReplacements + " times in " + mColumns + " columns.";
 			showInteractiveTaskMessage(msg, JOptionPane.INFORMATION_MESSAGE);
 			}
+		}
+
+	private int replaceTextInOneColumn(String what, String with, int column, int mode, boolean isRegex, boolean isCaseSensitive) {
+		int replacements = 0;
+
+		for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
+			CompoundRecord record = mTableModel.getTotalRecord(row);
+			if ((mode == cModeSelectedOnly && !mTableModel.isVisibleAndSelected(record))
+			 || (mode == cModeVisibleOnly && !mTableModel.isVisible(record)))
+				continue;
+
+			String value = mTableModel.getTotalValueAt(row, column);
+			if (what.equals(CODE_WHAT_EMPTY)) {
+				if (value.length() == 0) {
+					mTableModel.setTotalValueAt(with, row, column);
+					replacements++;
+					}
+				}
+			else if (what.equals(CODE_WHAT_ANY)) {
+				mTableModel.setTotalValueAt(with, row, column);
+				replacements++;
+				}
+			else if (isRegex) {
+				String newValue = value.replaceAll(what, with);
+				if (!newValue.equals(value)) {
+					mTableModel.setTotalValueAt(newValue, row, column);
+					replacements++;
+					}
+				}
+			else if (isCaseSensitive) {
+				if (value.contains(what)) {
+					mTableModel.setTotalValueAt(value.replace(what, with), row, column);
+					replacements++;
+					}
+				}
+			else {
+				if (value.toLowerCase().contains(what)) {
+					StringBuilder newValue = new StringBuilder();
+					String lowerValue = value.toLowerCase();
+					int oldValueIndex = 0;
+					int index = lowerValue.indexOf(what);
+					while (index != -1) {
+						if (oldValueIndex < index)
+							newValue.append(value.substring(oldValueIndex, index));
+
+						newValue.append(with);
+						oldValueIndex = index + what.length();
+
+						index = lowerValue.indexOf(what, oldValueIndex);
+						}
+
+					if (oldValueIndex < value.length())
+						newValue.append(value.substring(oldValueIndex));
+
+					mTableModel.setTotalValueAt(newValue.toString(), row, column);
+					replacements++;
+					}
+				}
+			}
+
+		if (replacements != 0) {
+			mTableModel.finalizeChangeAlphaNumericalColumn(column, 0, mTableModel.getTotalRowCount());
+			mColumns++;
+			mReplacements += replacements;
+			}
+
+		return replacements;
 		}
 
 	@Override

@@ -18,10 +18,11 @@
 
 package com.actelion.research.table.model;
 
+import javax.swing.*;
+import javax.swing.event.EventListenerList;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.util.EventListener;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
-import javax.swing.event.*;
 
 public class CompoundListSelectionModel implements ListSelectionModel,CompoundTableListener {
 	private static final int MIN = -1;
@@ -55,8 +56,8 @@ public class CompoundListSelectionModel implements ListSelectionModel,CompoundTa
 		if (updateNeeded)
 			update();
 
-//		return isSelectionEmpty() ? -1 : minIndex;
-		return minIndex;
+		return isSelectionEmpty() ? -1 : minIndex;
+//		return minIndex;
 		}
 
 	// implements javax.swing.ListSelectionModel

@@ -2179,7 +2179,6 @@ public class CompoundTableModel extends AbstractTableModel
 	 */
 	public void finalizeChangeAlphaNumericalColumn(int column, int fromIndex, int toIndex) {
 		analyzeColumn(column, 0, false);
-
 		int row = (fromIndex + 1 == toIndex) ? mNonExcludedRecord[fromIndex].getID() : -1;
 		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, row),
 					  new TableModelEvent(this, 0, mNonExcludedRecords-1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE));

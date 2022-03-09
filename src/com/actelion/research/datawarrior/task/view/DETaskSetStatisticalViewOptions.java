@@ -436,7 +436,7 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 															 CorrelationCalculator.TYPE_NAME, -1));
 		int mode = findListIndex(configuration.getProperty(PROPERTY_CURVE_TYPE), JVisualization2D.CURVE_MODE_CODE, 0);
 		boolean stdDev = "true".equals(configuration.getProperty(PROPERTY_SHOW_STDDEV_AREA));
-		boolean split = "true".equals(configuration.getProperty(PROPERTY_SPLIT_BY_CATEGORY)) && mode != JVisualization2D.cCurveModeExpression;
+		boolean split = "true".equals(configuration.getProperty(PROPERTY_SPLIT_BY_CATEGORY)) && mode != JVisualization2D.cCurveModeExpressionShow;
 		visualization.setCurveMode(mode, stdDev, split);
 		visualization.setCurveExpression(configuration.getProperty(PROPERTY_CURVE_FORMULA));
 		String value = configuration.getProperty(PROPERTY_CURVE_LINE_WIDTH);
@@ -462,8 +462,8 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		mCheckBoxScatterStdDev.setEnabled(curveMode != 0);
 		mCheckBoxMultipleCurves.setEnabled(curveMode != 0);
 		mSliderCurveSmoothing.setEnabled(curveMode == JVisualization2D.cCurveModeSmooth);
-		mCheckBoxMultipleCurves.setEnabled(curveMode != JVisualization2D.cCurveModeExpression);
-		mTextFieldFormula.setEnabled(curveMode == JVisualization2D.cCurveModeExpression);
+		mCheckBoxMultipleCurves.setEnabled(curveMode != JVisualization2D.cCurveModeExpressionShow);
+		mTextFieldFormula.setEnabled(curveMode == JVisualization2D.cCurveModeExpressionShow || curveMode == JVisualization2D.cCurveModeExpressionHide);
 
 		boolean isBoxPlot = (!hasInteractiveView() || getInteractiveVisualization().getChartType() == JVisualization.cChartTypeBoxPlot);
 		if (isBoxPlot) {

@@ -1665,7 +1665,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 								setProperty(cCurveSplitByCategory+viewName, "true");
 							float curveLineWidth = ((JVisualization2D)visualization).getCurveLineWidth();
 							setProperty(cCurveLineWidth+viewName, ""+curveLineWidth);
-							if (curveMode == JVisualization2D.cCurveModeExpression)
+							if (curveMode == JVisualization2D.cCurveModeExpressionShow
+							 || curveMode == JVisualization2D.cCurveModeExpressionHide)
 								setProperty(cCurveExpression+viewName, ((JVisualization2D)visualization).getCurveExpression());
 							if (curveMode == JVisualization2D.cCurveModeSmooth)
 								setProperty(cCurveSmoothing+viewName, ""+((JVisualization2D)visualization).getCurveSmoothing());

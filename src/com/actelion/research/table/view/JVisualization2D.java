@@ -119,15 +119,16 @@ public class JVisualization2D extends JVisualization {
 	private static final int CROSSHAIR_MODE_Y = 3;
 	private static final int CROSSHAIR_MODE_NONE = 4;
 
-	public static final String[] CURVE_MODE_TEXT = { "<none>", "Vertical Line", "Horizontal Line", "Fitted Line", "Smooth Curve", "Use Formula" };
-	public static final String[] CURVE_MODE_CODE = { "none", "abscissa", "ordinate", "fitted", "smooth", "formula" };
+	public static final String[] CURVE_MODE_TEXT = { "<none>", "Vertical Line", "Horizontal Line", "Fitted Line", "Smooth Curve", "Use Formula (Shown)", "Use Formula (Not Shown)" };
+	public static final String[] CURVE_MODE_CODE = { "none", "abscissa", "ordinate", "fitted", "smooth", "formula", "formula2" };
 	private static final int cCurveModeNone = 0;
 	private static final int cCurveModeMask = 7;
 	public static final int cCurveModeVertical = 1;
 	public static final int cCurveModHorizontal = 2;
 	public static final int cCurveModeFitted = 3;
 	public static final int cCurveModeSmooth = 4;
-	public static final int cCurveModeExpression = 5;
+	public static final int cCurveModeExpressionShow = 5;
+	public static final int cCurveModeExpressionHide = 6;
 	private static final int cCurveStandardDeviation = 8;
 	private static final int cCurveSplitByCategory = 16;
 
@@ -621,9 +622,10 @@ public class JVisualization2D extends JVisualization {
 			mLabelHelper.optimizeLabels();
 			}
 
-		if ((mCurveInfo & cCurveModeMask) == cCurveModeSmooth && mCurveY == null)
+		int curveMode = mCurveInfo & cCurveModeMask;
+		if (curveMode == cCurveModeSmooth && mCurveY == null)
 			calculateSmoothCurve(baseGraphRect.width);
-		if ((mCurveInfo & cCurveModeMask) == cCurveModeExpression && mCurveY == null)
+		if ((curveMode == cCurveModeExpressionShow || curveMode == cCurveModeExpressionHide) && mCurveY == null)
 			calculateExpressionCurve(baseGraphRect);
 
 		float thinLineWidth = scaleIfSplitView(mFontHeight)/16f;
@@ -896,7 +898,7 @@ public class JVisualization2D extends JVisualization {
 			if ((mCurveInfo & cCurveStandardDeviation) == cCurveStandardDeviation) {
 				if (getCurveMode() == cCurveModeSmooth)
 					drawSmoothCurveArea(hvIndex, graphRect);
-				else if (getCurveMode() == cCurveModeExpression)
+				else if (getCurveMode() == cCurveModeExpressionShow || getCurveMode() == cCurveModeExpressionHide)
 					drawExpressionCurveArea(hvIndex, graphRect);
 				}
 			if (mScaleMode != cScaleModeHidden)
@@ -2849,8 +2851,11 @@ public class JVisualization2D extends JVisualization {
 		case cCurveModeSmooth:
 			drawSmoothCurve();
 			break;
-		case cCurveModeExpression:
-			drawExpressionCurve(baseGraphRect);
+		case cCurveModeExpressionShow:
+			drawExpressionCurve(baseGraphRect, true);
+			break;
+		case cCurveModeExpressionHide:
+			drawExpressionCurve(baseGraphRect, false);
 			break;
 			}
 		}
@@ -3507,7 +3512,7 @@ public class JVisualization2D extends JVisualization {
 			}
 		}
 
-	private void drawExpressionCurve(Rectangle baseGraphRect) {
+	private void drawExpressionCurve(Rectangle baseGraphRect, boolean showFormula) {
 		if (mCurveY != null) {
 			for (int hv=0; hv<mHVCount; hv++) {
 				int dx = mSplitter == null ? 0 : mSplitter.getHIndex(hv) * mSplitter.getGridWidth();
@@ -3525,7 +3530,7 @@ public class JVisualization2D extends JVisualization {
 						}
 					}
 
-				if (hv == mHVCount-1) {
+				if (showFormula && hv == mHVCount-1) {
 					String formula = "f(x)="+mCurveExpression;
 					int textWidth = mG.getFontMetrics().stringWidth(formula);
 					int y = baseGraphRect.y+baseGraphRect.height+dy-mG.getFontMetrics().getDescent();
@@ -5939,7 +5944,7 @@ public class JVisualization2D extends JVisualization {
 			if (mode != cCurveModeSmooth
 			 || splitByCategory != ((mCurveInfo & cCurveSplitByCategory) != 0))
 				mCurveY = null;
-			if (mode != cCurveModeExpression) {
+			if (mode != cCurveModeExpressionShow && mode != cCurveModeExpressionHide) {
 				mCurveY = null;
 				}
 			mCurveInfo = newInfo;
@@ -5959,7 +5964,7 @@ public class JVisualization2D extends JVisualization {
 		 || (e != null && !mCurveExpression.equals(e))) {
 			mCurveExpression = e;
 			mCurveY = null;
-			if (getCurveMode() == cCurveModeExpression)
+			if (getCurveMode() == cCurveModeExpressionShow || getCurveMode() == cCurveModeExpressionHide)
 				invalidateOffImage(false);
 			}
 		}

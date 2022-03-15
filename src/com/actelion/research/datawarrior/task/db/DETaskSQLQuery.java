@@ -189,7 +189,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		if (connectString.startsWith("ucanaccess:")) {
 			try {
 				registerMSAccessDriver();
-				connection = DriverManager.getConnection("jdbc:"+connectString, user, password);
+				connection = DriverManager.getConnection("jdbc:"+connectString, "", "");
 			}
 			catch (Exception ex) {
 				ex.printStackTrace();
@@ -215,7 +215,8 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		if (connector != null) {
 			openConnectionUsingConnector(connector, owner, connectString);
 			}
-		else if (user != null && user.length() != 0 && password != null) {
+		else if ((user != null && user.length() != 0 && password != null)
+			  || connectString.startsWith("ucanaccess:")) {
 			openConnection(connectString, user, password);
 			}
 		else {

@@ -349,6 +349,9 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 							mColorThresholds = null;
 							initialize();
 							}
+						else {
+							mColorListener.colorChanged(this);
+							}
 						}
 					else {
 						if (!mTableModel.isColumnTypeCategory(mColorColumn)

@@ -704,10 +704,18 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 				}
 			}
 
+
+		int[] neighborClusterNo = null;
+		int[] neighborClusterSize = null;
+		if (!threadMustDie()) {
+			neighborClusterNo = new int[rowCount];
+			neighborClusterSize = findNeighbourGroups(neighborClusterNo);
+			}
+
 		if (!threadMustDie()) {
 			startProgress("Populating new columns...", 0, 0);
 
-			int newColumnCount = (createIDColumn ? 1 : 0) + 2 + (identifierColumn == -1 ? 0 : 1) + (addCoords ? 2 : 0) + (activityColumn == -1 ? 0 : 1);
+			int newColumnCount = (createIDColumn ? 1 : 0) + 4 + (identifierColumn == -1 ? 0 : 1) + (addCoords ? 2 : 0) + (activityColumn == -1 ? 0 : 1);
 			final String[] columnName = new String[newColumnCount];
 			int index = 0;
 			if (createIDColumn)
@@ -715,6 +723,8 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 			int similarityIndex = index++;
 			columnName[similarityIndex] = "Neighbor Similarity "+descriptorShortName+" "+((int)(100*optSimilarityLimit+0.5))+"%";
 			columnName[index++] =  "Neighbor Count";
+			columnName[index++] =  "Neighbor Cluster No";
+			columnName[index++] =  "Neighbor Cluster Size";
 			int neighborIndex = -1;
 			if (identifierColumn != -1) {
 				columnName[index] = "Neighbor";
@@ -759,6 +769,12 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 				column++;
 
 				mSourceTableModel.setTotalValueAt(""+mNeighborCount[row], row, column++);
+
+				mSourceTableModel.setTotalValueAt(""+neighborClusterNo[row], row, column++);
+
+				int memberCount = (neighborClusterNo[row] < neighborClusterSize.length) ?
+						neighborClusterSize[neighborClusterNo[row]] : 1;
+				mSourceTableModel.setTotalValueAt(""+memberCount, row, column++);
 
 				if (identifierColumn != -1) {
 					if (identifier[row] != null)
@@ -1072,6 +1088,83 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 					}
 				}
 			}
+		}
+
+	private int[] findNeighbourGroups(int[] groupNo) {
+		int rowCount = groupNo.length;
+		int[] next = new int[rowCount];
+		int[] first = new int[rowCount];
+		int[] last = new int[rowCount];
+		int[] count = new int[rowCount+1];
+		count[0] = 0;
+		int groupCount = 0;
+		for (SimilarPair sp:mPairList) {
+			if (groupNo[sp.row1] == 0 && groupNo[sp.row2] == 0) {
+				int group = sp.row1 + 1;
+				groupNo[sp.row1] = group;
+				groupNo[sp.row2] = group;
+				first[group] = sp.row1;
+				last[group] = sp.row2;
+				count[group] = 2;
+				next[sp.row1] = sp.row2;
+				groupCount++;
+				}
+			else if (groupNo[sp.row1] == 0) {
+				int group = groupNo[sp.row2];
+				groupNo[sp.row1] = group;
+				next[last[group]] = sp.row1;
+				last[group] = sp.row1;
+				count[group]++;
+				}
+			else if (groupNo[sp.row2] == 0) {
+				int group = groupNo[sp.row1];
+				groupNo[sp.row2] = group;
+				next[last[group]] = sp.row2;
+				last[group] = sp.row2;
+				count[group]++;
+				}
+			else if (groupNo[sp.row1] != groupNo[sp.row2]) {
+				int group1 = groupNo[sp.row1];
+				int group2 = groupNo[sp.row2];
+				int current = first[group2];
+				while (true) {
+					groupNo[current] = group1;
+					if (current == last[group2])
+						break;
+					current = next[current];
+					}
+				next[last[group1]] = first[group2];
+				last[group1] = last[group2];
+				count[group1] += count[group2];
+				count[group2] = 0;
+				groupCount--;
+				}
+			}
+
+		// Sort all group numbers according to their member size
+		long[] groupAndCount = new long[groupCount];
+		int index = 0;
+		for (int group=1; group<=rowCount; group++)
+			if (count[group] != 0)
+				groupAndCount[index++] = (((long)count[group]) << 32) + group;
+		Arrays.sort(groupAndCount);
+		int[] toSizeSortedGroupNo = new int[rowCount+1];
+		for (int i=0; i<groupCount; i++)
+			toSizeSortedGroupNo[(int)groupAndCount[i]] = groupCount-i;
+
+		int[] groupSize = new int[groupCount+1];
+		for (int i=0; i<rowCount; i++) {
+			int sortedGroupNo = toSizeSortedGroupNo[groupNo[i]];
+			if (groupNo[i] == 0) {
+				groupNo[i] = ++groupCount;  // assign a new number for singletons
+				}
+			else {
+				groupSize[sortedGroupNo] = count[groupNo[i]];
+				groupNo[i] = sortedGroupNo;
+				}
+			}
+
+		return groupSize;
 		}
 
 	private String addValue(String oldValue, String value) {

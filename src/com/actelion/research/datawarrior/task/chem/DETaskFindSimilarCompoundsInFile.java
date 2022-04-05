@@ -213,7 +213,7 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 		content.add(mComboBoxPairID1, "3,14,5,14");
 
 		content.add(new JLabel("Compound-ID of external file:", JLabel.RIGHT), "1,16");
-		mComboBoxPairID2 = new JComboBox();
+		mComboBoxPairID2 = new JComboBox(COMPOUND_ID_OPTIONS);
 		mComboBoxPairID2.setEditable(!isInteractive());
 		content.add(mComboBoxPairID2, "3,16,5,16");
 
@@ -324,7 +324,7 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
 		String value = configuration.getProperty(PROPERTY_IN_FILE_NAME);
-		mLabelInFileName.setPath(value == null ? null : isFileAndPathValid(value, true, false) ? value : null);
+		mLabelInFileName.setPath(value == null ? null : isFileAndPathValid(value, false, false) ? value : null);
 		updateDialogFromFile(mLabelInFileName.getPath());
 
 		value = configuration.getProperty(PROPERTY_DESCRIPTOR_COLUMN);
@@ -755,11 +755,17 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 			catch (IOException ioe) {}
 			}
 
+		String sourceColumnNames = configuration.getProperty(PROPERTY_COLUMN_LIST);
+		String id2ColumnName = configuration.getProperty(PROPERTY_PAIR_ID2);
+		int id2ColumnNameIndex = findListIndex(id2ColumnName, COMPOUND_ID_CODE, -1);
+
 		boolean isSDF = fileName.substring(fileName.length()-4).toLowerCase().equals(".sdf");
 		int dwarMode = DWARFileParser.MODE_COORDINATES_REQUIRE_2D | DWARFileParser.MODE_EXTRACT_DETAILS;
 		if (simWriter != null || dissimWriter != null)
 			dwarMode |= DWARFileParser.MODE_BUFFER_HEAD_AND_TAIL;
 		CompoundFileParser parser = isSDF ? new SDFileParser(fileName) : new DWARFileParser(fileName, dwarMode);
+		if (isSDF && (id2ColumnNameIndex == -1 || sourceColumnNames != null))
+			parser = new SDFileParser(fileName, parser.getFieldNames());
 		parser.setDescriptorHandlerFactory(CompoundTableModel.getDefaultDescriptorHandlerFactory());
 		boolean coordsAvailable = (isSDF || ((DWARFileParser)parser).hasStructureCoordinates());
 
@@ -828,13 +834,11 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 				pairMap.add(new PairMapEntry(PairMapEntry.DESCRIPTOR,
 						dwarCreator.addDescriptorColumn(descriptorType, dh.getVersion(), structure2DestColumn), true));
 
-			String id2ColumnName = configuration.getProperty(PROPERTY_PAIR_ID2);
-			index = findListIndex(id2ColumnName, COMPOUND_ID_CODE, -1);
 			int id2Column = PairMapEntry.CONSTRUCT_ROW_NUMBER;	// default
-			if (index == COMPOUND_ID_OPTION_ROW_NUMBER) {
+			if (id2ColumnNameIndex == COMPOUND_ID_OPTION_ROW_NUMBER) {
 				id2Column = PairMapEntry.CONSTRUCT_ROW_NUMBER;
 				}
-			else if (index == COMPOUND_ID_OPTION_AUTOMATIC) {
+			else if (id2ColumnNameIndex == COMPOUND_ID_OPTION_AUTOMATIC) {
 				if (parser instanceof DWARFileParser) {
 					id2Column = PairMapEntry.AUTOMATIC_COMPOUND_ID;
 					}
@@ -870,7 +874,6 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 
 		int alphaNumColumnCount = 0;
 		int[] sourceColumn = null;
-		String sourceColumnNames = configuration.getProperty(PROPERTY_COLUMN_LIST);
 		if (sourceColumnNames != null) {
 			String[] sourceColumnName = sourceColumnNames.split("\\t");
 			String[] parserColumnName = parser.getFieldNames();
@@ -1063,11 +1066,10 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 									record.setData(coords.getBytes(), structureColumn+1);
 								}
 							}
-
 						for (int i=0; i<alphaNumColumnCount; i++) {
 							String fieldData = parser.getFieldData(sourceColumn[i]);
 							int destColumn = firstNewAlphaNumColumn+i;
-							record.setData(fieldData.getBytes(), destColumn);
+							record.setData(fieldData == null ? null : fieldData.getBytes(), destColumn);
 							if (!isSDF)
 								mTableModel.getDetailHandler().extractEmbeddedDetailReferences(destColumn, fieldData, detailReferences);
 							}

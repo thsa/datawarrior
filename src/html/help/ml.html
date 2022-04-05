@@ -257,8 +257,8 @@ machine (SVM), the k-nearest neighbours (kNN) approach, a partial least squares
 (PLS) regression, or the Power-PLS, which is a PLS modification that supports non-linear
 relationships.</p>
 
-<p>Common to these methods is that they all build a model from numerical X- and Y-values.
-Later then this model can be used to predict Y-values from X-values. X-value in this regard
+<p>Common to these methods is that they all build a model from given numerical X- and Y-values.
+Later this model can be used to predict Y-values from new X-values. X-values in this regard
 are multiple alpha-numerical or purely numerical values that describe the object
 and the Y-value (also called label) is an object property that is either used for model learning
 or is predicted by the final model for objects that where not used during training.
@@ -274,10 +274,10 @@ like historical stock data, gene expression values, pixel color values, etc. Mol
 consist of 3-dimensional graphs. Their biological properties depend on conformational flexibility
 and conformer interactions with target proteins. Machine learning methods cannot directly digest
 molecules as X-values. Their X-values need to be vectors, i.e. lists of numerical values.
-Therefore, molecular descriptors are calculated from the molecular structure and used surrogate
+Therefore, molecular descriptors are calculated from the molecular structure and used as surrogate
 in the hope that they describe a molecule well enough for these methods to work.</li>
 <li>2D-descriptor bits encode the presence or absense of small fragments, but not their 3-dimensional
-orientation in space. Also conformational flexibility is not represented.</li>
+orientation in space. Also, conformational flexibility is not represented.</li>
 <li>Most descriptors are folded (i.e. hashed), which means that the same bit encodes very different
 fragments for different molecules, making it unlikely that descriptor patterns are predictive throughout
 diverse structure classes.</li>
@@ -288,7 +288,7 @@ diverse structure classes.</li>
 the chemical structure. Given the many pitfalls, it is prudent to apply some skepticism and apply
 sound validation checks to determine, whether a method can be applied for a given problem.</p>
 
-<p>In fields outside of drug drug discovery it is common to assess the predictivity of a machine
+<p>In fields outside of drug discovery it is common to assess the predictivity of a machine
 learning method in two steps. First a random subset of data is taken to train a model from X- and Y-data.
 Then, the model is used to predict Y-values for the remaining data. The correlation between predicted
 and known Y-values gives a measure for the model's predictivity for new data. This works well,

@@ -990,7 +990,7 @@ public class JVisualization2D extends JVisualization {
 					drawLabels = mLabelHelper != null && mLabelHelper.hasLabels(vp);
 					if (drawLabels) {
 						mLabelHelper.prepareLabels(vp);
-						mLabelHelper.drawLabelLines(vp, outlineColor);
+						mLabelHelper.drawLabelLines(vp, outlineColor, labelComposite);
 						}
 
 					if (vp.widthOrAngle1 != 0
@@ -2017,7 +2017,7 @@ public class JVisualization2D extends JVisualization {
 				if (isVisibleInBarsOrPies(vp) && labelHelper.hasLabels(vp)) {
 					Color color = mChartInfo.color[getColorIndex(vp, colorListLength, focusFlagNo)];
 					labelHelper.prepareLabels(vp);
-					labelHelper.drawLabelLines(vp, color);
+					labelHelper.drawLabelLines(vp, color, labelComposite);
 					drawMarkerLabels(labelHelper.getLabelInfo(), color, color, false, labelComposite);
 					}
 				}
@@ -6217,10 +6217,26 @@ public class JVisualization2D extends JVisualization {
 			new LabelPostionOptimizer().optimize(graphRect, mLabelPosition, Math.round(0.3f * scaleIfSplitView(mFontHeight)));
 			}
 
-		public void drawLabelLines(VisualizationPoint vp, Color outlineColor) {
-			for (int j = 0; j<mLabelColumn.length; j++)
-				if (mLabelColumn[j] != -1)
+		public void drawLabelLines(VisualizationPoint vp, Color outlineColor, Composite composite) {
+			Composite original = null;
+			if (composite != null) {
+				original = mG.getComposite();
+				mG.setComposite(composite);
+				}
+
+			for (int j = 0; j<mLabelColumn.length; j++) {
+				if (mLabelColumn[j] != -1) {
+					if (composite != null && original == null) {
+						original = mG.getComposite();
+						mG.setComposite(composite);
+						}
+
 					drawMarkerLabelLine(vp, mLabelInfo[j], outlineColor);
+					}
+				}
+
+			if (original != null)
+				mG.setComposite(original);
 			}
 		}
 

@@ -240,15 +240,12 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 		if (mToClipboard && mTable == null)	// just to make sure
 			return;
 
-		int tabs = mTableModel.getTotalColumnCount() - 1;
-
 		// first write non-displayable columns
 		if (mDataType == FileHelper.cFileTypeDataWarrior) {
 			for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 				if (!mTableModel.isColumnDisplayable(column)) {
 					theWriter.write(mTableModel.getColumnTitleNoAlias(column));
-					if (tabs-- > 0)
-						theWriter.write("\t");
+					theWriter.write("\t");
 					}
 				}
 			}
@@ -271,6 +268,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 			}
 		else {
 			// now write displayable columns in table model order
+			int tabs = mTableModel.getColumnCount() - 1;
 			for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 				if (mTableModel.isColumnDisplayable(column)) {
 					if (mDataType == FileHelper.cFileTypeTextTabDelimited)
@@ -302,15 +300,12 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 					mProgressDialog.updateProgress(row);
 					}
 
-				tabs = mTableModel.getTotalColumnCount() - 1;
-
 				if (mDataType == FileHelper.cFileTypeDataWarrior) {
 					// write non-displayable columns first
 					for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 						if (!mTableModel.isColumnDisplayable(column)) {
 							theWriter.write(convertNewlines(getValue(record, column)));
-							if (tabs-- > 0)
-								theWriter.write("\t");
+							theWriter.write("\t");
 							}
 						}
 					}
@@ -327,6 +322,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 					theWriter.write("\n");
 					}
 				else {
+					int tabs = mTableModel.getColumnCount() - 1;
 					for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 						if (mTableModel.isColumnDisplayable(column)) {
 							theWriter.write(convertNewlines(getValue(record, column)));

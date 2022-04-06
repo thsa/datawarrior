@@ -46,6 +46,8 @@ import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.TreeMap;
@@ -177,7 +179,14 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 						if (CompoundTableConstants.cColumnPropertyLookupFilterRemoveMinus.equals(
 								tableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyLookupFilter+"0")))
 							entry = entry.replace("-", "");
-						BrowserControl.displayURL(url.replace("%s", entry));
+						try {
+							if (!"false".equals(CompoundTableConstants.cColumnPropertyLookupEncode+"0"))
+								entry = URLEncoder.encode(entry, "UTF-8").replace("+", "%20");
+							BrowserControl.displayURL(url.replace("%s", entry));
+							}
+						catch (UnsupportedEncodingException uee) {
+							JOptionPane.showMessageDialog(mParentFrame, uee.getMessage());
+							}
 						}
 					}
 				else if (isSelectedFilledCell(e.getPoint())) {

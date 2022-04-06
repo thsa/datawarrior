@@ -63,7 +63,7 @@ public class CompoundTableModel extends AbstractTableModel
 		// Their category lists are, once created, never changed or sorted
 
 		// a comma (',') cannot be a delimiter, because it would interfere with the date format
-	private static final String cSeparatorRegex = cEntrySeparator+"|"+cLineSeparator.replace("\n", "\\n")+"| *; *";
+	private static final String cSeparatorRegex = " *"+cEntrySeparator+" *|"+" *"+cLineSeparator.replace("\n", "\\n")+" *";
 
 	public static final int ATOM_COLOR_MODE_NONE = 0;
 	public static final int ATOM_COLOR_MODE_EXPLICIT = 1;

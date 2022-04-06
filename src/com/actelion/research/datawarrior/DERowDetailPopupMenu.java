@@ -452,7 +452,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 									String name = mTableModel.getColumnProperty(column, CompoundTableModel.cColumnPropertyLookupName+i);
 									String url = mTableModel.getColumnProperty(column, CompoundTableModel.cColumnPropertyLookupURL+i);
 									boolean removeMinus = CompoundTableModel.cColumnPropertyLookupFilterRemoveMinus.equals(
-											mTableModel.getColumnProperty(column, CompoundTableModel.cColumnPropertyLookupFilter+"0"));
+											mTableModel.getColumnProperty(column, CompoundTableModel.cColumnPropertyLookupFilter+i));
 									boolean encode = !"false".equalsIgnoreCase(mTableModel.getColumnProperty(column, CompoundTableModel.cColumnPropertyLookupEncode+i));
 									if (name != null && url != null) {	// just to make sure
 										if (key.length == 1) {

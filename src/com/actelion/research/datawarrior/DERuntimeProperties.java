@@ -1576,14 +1576,14 @@ public class DERuntimeProperties extends RuntimeProperties {
 
 					if (view instanceof VisualizationPanel2D) {
 						double transparency = ((JVisualization2D)visualization).getMarkerTransparency();
-						if (transparency != 0.0) {
+						double transparency1 = ((JVisualization2D)visualization).getMarkerLabelTransparency();
+						double transparency2 = ((JVisualization2D)visualization).getConnectionLineTransparency();
+						if (transparency != 0.0 || transparency1 != 0 || transparency2 != 0) {
 							setProperty(cMarkerTransparency+viewName, ""+transparency);
 
-							double transparency1 = ((JVisualization2D)visualization).getMarkerLabelTransparency();
 							if (transparency1 != transparency)
 								setProperty(cMarkerLabelTransparency+viewName, ""+transparency1);
 
-							double transparency2 = ((JVisualization2D)visualization).getConnectionLineTransparency();
 							if (transparency2 != transparency)
 								setProperty(cConnectionLineTransparency+viewName, ""+transparency2);
 							}

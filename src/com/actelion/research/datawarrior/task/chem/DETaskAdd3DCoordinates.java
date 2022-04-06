@@ -504,7 +504,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure implemen
 			}
 		mMinimizationErrors = 0;
 
-		mStereoIsomerLimit = 0;
+		mStereoIsomerLimit = Integer.MAX_VALUE;
 		String limit = configuration.getProperty(PROPERTY_STEREO_ISOMER_LIMIT);
 		if (limit != null)
 			mStereoIsomerLimit = Integer.parseInt(limit);
@@ -1206,7 +1206,10 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure implemen
 		mFileWriter.write("<columnWidth_Table_Minimization Error=\"75\">\n");
 		mFileWriter.write("<columnWidth_Table_Structure=\"132\">\n");
 		mFileWriter.write("<detailView=\"height[Data]=0.22;height[Structure]=0.30;height[3D-Structure]=0.48\">\n");
-		mFileWriter.write("<filter0=\"#double#\tEnergy\">\n");
+		if (mMinimizationErrors != 0)
+			mFileWriter.write("<filter0=\"#double#\tEnergy\t#disabled#\">\n");
+		else
+			mFileWriter.write("<filter0=\"#double#\tEnergy\">\n");
 		mFileWriter.write("<mainSplitting=\"0.72\">\n");
 		mFileWriter.write("<mainView=\"Structures\">\n");
 		mFileWriter.write("<mainViewCount=\"2\">\n");

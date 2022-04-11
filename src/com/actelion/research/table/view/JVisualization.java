@@ -220,8 +220,8 @@ public abstract class JVisualization extends JComponent
 									mFocusList,mCaseSeparationColumn,mCaseSeparationCategoryCount,mScaleMode,mScaleStyle,
 									mUseAsFilterFlagNo,mTreeViewMode,mActiveExclusionFlags,mHVCount,mHVExclusionTag,mFontSizeMode,
 									mVisibleCategoryExclusionTag,mMarkerJitteringAxes,mGridMode, mLocalExclusionList,
-									mOnePerCategoryLabelCategoryColumn,mOnePerCategoryLabelValueColumn,mOnePerCategoryLabelMode,
-									mConnectionLineListMode,mConnectionLineList1,mConnectionLineList2;
+									mConnectionLineListMode,mConnectionLineList1,mConnectionLineList2,mOnePerCategoryLabelCategoryColumn;
+	private int						mOnePerCategoryLabelValueColumn,mOnePerCategoryLabelMode;
 	protected String				mPValueRefCategory,mWarningMessage;
 	protected Random				mRandom;
 	protected StereoMolecule		mLabelMolecule;
@@ -3631,6 +3631,10 @@ public abstract class JVisualization extends JComponent
 		 || mOnePerCategoryLabelValueColumn == cColumnUnassigned)
 			return null;
 
+		// TODO use better 'magic' algorithm to distribute labels
+		// if (mOnePerCategoryLabelMode == cOPCModeMagic)
+		//     return buildMagicOnePerCategoryMap();
+
 		TreeMap<byte[],VisualizationPoint> oneLabelPerCategoryMap = new TreeMap<>(new ByteArrayComparator());
 		float min = mTableModel.getMinimumValue(mOnePerCategoryLabelValueColumn);
 		float max = mTableModel.getMaximumValue(mOnePerCategoryLabelValueColumn);
@@ -3645,7 +3649,7 @@ public abstract class JVisualization extends JComponent
 		// magicValue contains for every category a different value mapping
 		// the categories in natural order onto the visible value span
 		float[] magicValue = null;
-		if (mOnePerCategoryLabelMode == 3) {
+		if (mOnePerCategoryLabelMode == cOPCModeMagic) {
 			int visCatCount = calculateVisibleCategoryCount(mOnePerCategoryLabelCategoryColumn);
 			if (visCatCount == 0)
 				return null;
@@ -3659,8 +3663,8 @@ public abstract class JVisualization extends JComponent
 				}
 			}
 
-		float targetValue = (mOnePerCategoryLabelMode == 0) ? max
-						  : (mOnePerCategoryLabelMode == 1) ? (max + min) / 2f : min;
+		float targetValue = (mOnePerCategoryLabelMode == cOPCModeHighest) ? max
+						  : (mOnePerCategoryLabelMode == cOPCModeAverage) ? (max + min) / 2f : min;
 		for (VisualizationPoint vp:mPoint) {
 			if (isVisible(vp)) {
 				// don't consider VPs that have no reasonable label
@@ -3676,7 +3680,7 @@ public abstract class JVisualization extends JComponent
 
 				if (hasLabel) {
 					float value = vp.record.getDouble(mOnePerCategoryLabelValueColumn);
-					if (mOnePerCategoryLabelMode == 3) {
+					if (mOnePerCategoryLabelMode == cOPCModeMagic) {
 						int cat = mTableModel.getCategoryIndex(mOnePerCategoryLabelCategoryColumn, vp.record);
 						int visCat = mVisibleCategoryFromCategory[mOnePerCategoryLabelCategoryColumn][cat];
 						targetValue = magicValue[visCat];

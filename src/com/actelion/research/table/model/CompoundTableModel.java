@@ -996,9 +996,11 @@ public class CompoundTableModel extends AbstractTableModel
 		if (CompoundTableListHandler.isListColumn(column))
 			return cColumnNameRowList+mHitlistHandler.getListName(CompoundTableListHandler.convertToListIndex(column))+"'";
 
-		String parent = getColumnProperty(column, cColumnPropertyParentColumn);
-		if (parent != null && !isColumnDisplayable(column))
-			return (isDescriptorColumn(column) ? parent+" Similarity" : parent)+" ["+getColumnSpecialTypeForDisplay(column)+"]";
+		int parent = getParentColumn(column);
+		if (parent != -1 && !isColumnDisplayable(column)) {
+			String parentName = (mColumnInfo[parent].alias != null) ? mColumnInfo[parent].alias : mColumnInfo[parent].name;
+			return (isDescriptorColumn(column) ? parentName + " Similarity" : parentName) + " [" + getColumnSpecialTypeForDisplay(column) + "]";
+			}
 
 		String name = (mColumnInfo[column].alias != null) ? mColumnInfo[column].alias : mColumnInfo[column].name;
 		return decorateWithSummaryMode(name, column);

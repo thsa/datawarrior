@@ -460,9 +460,11 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 			return getSimilarityColorIndex(record);
 		if (mColorListMode == cColorListModeCategories) {
 			if (mColorThresholds != null) {
-				double value = record.getDouble(mColorColumn);
+				float value = record.getDouble(mColorColumn);
+				if (Float.isNaN(value))
+					return cMissingDataColorIndex;
 				if (mTableModel.isLogarithmicViewMode(mColorColumn))
-					value = Math.pow(10, value);
+					value = (float)Math.pow(10, value);
 				for (int i=0; i<mColorThresholds.length; i++)
 					if (value < mColorThresholds[i])
 						return cSpecialColorCount+i;

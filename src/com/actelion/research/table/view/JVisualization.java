@@ -1251,14 +1251,19 @@ public abstract class JVisualization extends JComponent
 			float[] thresholds = mMarkerColor.getColorThresholds();
 			if (thresholds != null) {
 				for (int i=0; i<mDataPoints; i++) {
-					double value = mPoint[i].record.getDouble(mMarkerColor.getColorColumn());
-					if (mTableModel.isLogarithmicViewMode(mMarkerColor.getColorColumn()))
-						value = Math.pow(10, value);
-					mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount+thresholds.length);
-					for (int j=0; j<thresholds.length; j++) {
-						if (value<thresholds[j]) {
-							mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount + j);
-							break;
+					float value = mPoint[i].record.getDouble(mMarkerColor.getColorColumn());
+					if (Float.isNaN(value)) {
+						mPoint[i].colorIndex = VisualizationColor.cMissingDataColorIndex;
+						}
+					else {
+						if (mTableModel.isLogarithmicViewMode(mMarkerColor.getColorColumn()))
+							value = (float)Math.pow(10, value);
+						mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount+thresholds.length);
+						for (int j=0; j<thresholds.length; j++) {
+							if (value<thresholds[j]) {
+								mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount + j);
+								break;
+								}
 							}
 						}
 					}

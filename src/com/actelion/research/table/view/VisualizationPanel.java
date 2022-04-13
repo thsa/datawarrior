@@ -701,13 +701,12 @@ public abstract class VisualizationPanel extends JPanel
 		else if (e.getType() == CompoundTableEvent.cChangeColumnName) {
 			int column = e.getColumn();
 			for (int i=1; i<mQualifyingColumns; i++) {
-				if (mQualifyingColumn[i] == column) {
+				if (mQualifyingColumn[i] == column || mTableModel.getParentColumn(mQualifyingColumn[i]) == column) {
 					for (int axis=0; axis<mDimensions; axis++) {
-						((ComboBoxColorItem)mComboBoxColumn[axis].getItemAt(i)).setText(mVisualization.getAxisTitle(column));
+						((ComboBoxColorItem)mComboBoxColumn[axis].getItemAt(i)).setText(mVisualization.getAxisTitle(mQualifyingColumn[i]));
 						mComboBoxColumn[axis].validate();
 						mComboBoxColumn[axis].repaint();
 						}
-					break;
 					}
 				}
 			}

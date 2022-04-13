@@ -92,6 +92,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask
 		parser.addFunction("row", new JEPRowFunction(this));
 		parser.addFunction("numvalue", new JEPNumValueFunction(this, mTableModel));
 		parser.addFunction("entry", new JEPEntryFunction());
+		parser.addFunction("numcellvalue", new JEPNumCellEntryFunction(this, mTableModel));
 		parser.addFunction("indexof", new JEPIndexOfFunction());
 		parser.addFunction("substring", new JEPSubstringFunction());
 		parser.addFunction("round", new JEPRoundFunction());

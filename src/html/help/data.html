@@ -577,8 +577,12 @@ The expression syntax, all operators and available functions are explained below
     <td><font face="sans-serif"><small>row()</small></font></td>
   </tr>
   <tr bgcolor="#ffffff">
-    <td><font face="sans-serif"><small>Numerical value of cell</small></font></td>
+    <td><font face="sans-serif"><small>Numerical summary value of cell</small></font></td>
     <td><font face="sans-serif"><small>numvalue(column-name, row)</small></font></td>
+  </tr>
+  <tr bgcolor="#ffffff">
+    <td><font face="sans-serif"><small>Numerical individual value of cell</small></font></td>
+    <td><font face="sans-serif"><small>numcellvalue(column-name, n, sortMode)</small></font></td>
   </tr>
   <tr bgcolor="#ffffff">
     <td><font face="sans-serif"><small>Number of cell values including empty ones</small></font></td>
@@ -678,7 +682,13 @@ The expression syntax, all operators and available functions are explained below
 <p>The <b>row()</b> function just returns the row index of the currently processed row starting with 1
   for the first row of the table.</p>
 <p>The <b>numvalue()</b> function returns the numerical content of a cell defined by its column name and
-  its row index starting from 1 for the first row in the table.</p>
+  its row index starting from 1 for the first row in the table. If a cell contains multiple values, then
+  this function retrieves the summary value of the current summary mode (mean, median, min, ...).</p>
+<p>The <b>numcellvalue()</b> function returns the numerical value of the n-th values of a cell's content.
+  The cell is defined by its column name and the currently processed row. If sortMode is not 0, then
+  the cell entries are sorted before taking the n-th value (1:ascending; 2:descending).
+  Modifiers as '<' are neglected. Columns in logarithmic mode return the logarithms of the original value.
+  When sorting, then empty and NaN values are considered larger than the highest numbers.</p>
 <p>The <b>valueCount()</b> function counts the number of entries in a particular cell, no matter
   whether these are separated by '; ' or whether they are in separate lines. Empty values are included.
   The function takes any variable name that refers to a displayable table column.</p>

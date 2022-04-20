@@ -179,6 +179,14 @@ public interface IPluginHelper {
 	void finalizeNewColumns(int firstColumn);
 
 	/**
+	 * If a variable was defined earlier in the running macro, then this method
+	 * returns the value of the valiable with the given name.
+	 * @param name
+	 * @return null if variable doesn't exist
+	 */
+	String getVariable(String name);
+
+	/**
 	 * Runs the given macro in text form on the current front window.
 	 * @param macro
 	 */

@@ -168,6 +168,13 @@ public class PluginHelper implements IPluginHelper {
 		return mol == null || mol.getAllAtoms()==0 ? null : new MolfileV3Creator(mol).getMolfile();
 	}
 
+	@Override
+	public String getVariable(String name) {
+		if (!(mProgressController instanceof DEMacroRecorder))
+			return null;
+		return ((DEMacroRecorder)mProgressController).getVariable(name);
+		}
+
 	public DEFrame getNewFrame() {
 		return mNewFrame;
 		}

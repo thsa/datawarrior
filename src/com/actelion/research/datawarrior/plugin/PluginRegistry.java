@@ -25,7 +25,10 @@ import org.openmolecules.datawarrior.plugin.IPluginTask;
 import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Properties;
 
 public class PluginRegistry {
 	private static final String INITIALIZER_CLASS_NAME = "PluginInitializer";
@@ -94,7 +97,19 @@ public class PluginRegistry {
 					while (line != null && line.length() != 0) {
 						String[] lineEntry = line.split(","); // we may have one or two items per line: <className>[,menuName]
 						if (lineEntry != null && lineEntry.length != 0) {
-							Class pluginClass = loader.loadClass(lineEntry[0].trim());
+							String className = lineEntry[0].trim();
+							Class pluginClass = null;
+							try {
+								// If the class is part of the DataWarrior source code (usually it is not),
+								// then we instantiate it with the standard class loader to make it available for debugging.
+								// For debugging the jar file defining plugin task names must still be in the plugin folder.
+								pluginClass = Class.forName(className);
+								}
+							catch (ClassNotFoundException cnfe) {
+								// However, typically the class is part of an external jar file and is instantiated
+								// with an extra class loader directly from the plugin jar file.
+								pluginClass = loader.loadClass(className);
+								}
 							String menuName = (lineEntry.length == 1 || lineEntry[1].length() == 0) ? null : lineEntry[1].trim();
 							mPluginList.add(new PluginSpec((IPluginTask)pluginClass.newInstance(), menuName));
 							line = br.readLine();

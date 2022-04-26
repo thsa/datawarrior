@@ -475,6 +475,14 @@ public abstract class DataWarrior implements WindowFocusListener {
 		try {
 			UIManager.setLookAndFeel(laf.className);
 			HeaderPaintHelper.setSpotColors(laf.getColor1(), laf.getColor2());
+			try {
+				Color bg = UIManager.getColor("ToolTip.background");
+				Color translucentBG = new Color(bg.getRed(), bg.getGreen(), bg.getBlue(), 0x80);
+				UIManager.put("ToolTip.background", translucentBG);
+				}
+			catch (Exception e) {
+				e.printStackTrace();
+				}
 			return true;
 			}
 		catch (Exception e) {

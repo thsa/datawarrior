@@ -121,3 +121,17 @@ Note: Later, when the plugin runs in the DataWarrior context, it has full access
 classes, e.g. openchemlib and json.org. If you need such classes, don't add them to the plugin.
 Just add them to the classpath, when building the plugin (see comment in the buildAll script).
 
+
+Debugging
+---------
+
+If your created plugins gain in complexity, you may want to more efficiently debug them than just
+adding System.out.println() statements into the source code. You may use the debuger of your development
+environment, e.g. IntelliJ or Eclipse, to set break points, single step through the code, watch variables, etc.
+For that to work, however, you need to do some extra work:
+- Download the DataWarrior source code from github.com and create a runnable project within your IDE.
+- Put your plugin jar into the plugin folder within the current runtime directory
+- Verify that DataWarrior, when started from the IDE, locates and opens your plugin. You should see your plugin's menu item(s).
+- Stop DataWarrior and put your plugin's source code into DataWarrior's project source code. If name and package is
+  what you have defined in the tasknames.txt file within you plugin jar, then DataWarrior will instatiate the plugin class
+  from its own source directory rather than from the plugin jar's bytecode making your source code availabe for full debugging.

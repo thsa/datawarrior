@@ -21,6 +21,7 @@ package com.actelion.research.table.view;
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.gui.generic.GenericRectangle;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.MarkerLabelDisplayer;
 import com.actelion.research.table.category.CategoryList;
@@ -44,7 +45,6 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.awt.print.PageFormat;
@@ -754,7 +754,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			mG3D.drawStringNoSlab(s, null, mAAFactor*x, mAAFactor*y, 0);
 		}
 
-	protected void drawMolecule(StereoMolecule mol, Color color, Rectangle2D.Double rect, int mode, int maxAVBL) {
+	protected void drawMolecule(StereoMolecule mol, Color color, GenericRectangle rect, int mode, int maxAVBL) {
 		Depictor3D d = new Depictor3D(mol, Depictor3D.cDModeSuppressChiralText);
 		rect.x *= mAAFactor;
 		rect.y *= mAAFactor;
@@ -816,7 +816,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 
 			Depictor3D depictor = new Depictor3D(mol, Depictor3D.cDModeSuppressChiralText);
 			depictor.validateView(mG3D, DEPICTOR_RECT, AbstractDepictor.cModeInflateToHighResAVBL+mContentScaling*Math.max(1, (int)(256*getLabelAVBL(vp, position, isTreeView))));
-			Rectangle2D.Double bounds = depictor.getBoundingRect();
+			GenericRectangle bounds = depictor.getBoundingRect();
 			size.width = bounds.width;
 			size.height = bounds.height;
 			return size;
@@ -1598,7 +1598,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 						mScaleMolecule[axis][i] = list.get(i).getMolecule();
 						if (mScaleMolecule[axis][i] != null) {
 							new Depictor(mScaleMolecule[axis][i], Depictor.cDModeSuppressChiralText).updateCoords(g,
-												new Rectangle2D.Double(-molsize/2, -molsize/2, molsize, molsize),
+												new GenericRectangle(-molsize/2, -molsize/2, molsize, molsize),
 												AbstractDepictor.cModeInflateToMaxAVBL
 												+ (int)(molsize/3));	// maximum average bond length
 							mScaleMolecule[axis][i].zoomAndRotateInit(0, 0);
@@ -2710,7 +2710,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			int h = Math.round(mContentScaling*vp.heightOrAngle2);
 			String label = null;
 			Depictor3D depictor = null;
-			Rectangle2D.Double molRect = null;
+			GenericRectangle molRect = null;
 
 			// in case we have an empty label replacing the marker
 			if (position == MarkerLabelDisplayer.cMidCenter) {

@@ -30,10 +30,10 @@ import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.TaskUIDelegate;
 import com.actelion.research.gui.*;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
-import com.actelion.research.gui.editor.DrawAreaEvent;
-import com.actelion.research.gui.editor.DrawAreaListener;
+import com.actelion.research.gui.editor.EditorEvent;
 import com.actelion.research.gui.editor.GenericDrawArea;
 import com.actelion.research.gui.editor.SwingEditorPanel;
+import com.actelion.research.gui.generic.GenericEventListener;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
 
@@ -50,7 +50,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Properties;
 
-public class UIDelegateCLib implements ActionListener,ChangeListener, DrawAreaListener,ItemListener,TaskConstantsCLib,TaskUIDelegate {
+public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEventListener<EditorEvent>,ItemListener,TaskConstantsCLib,TaskUIDelegate {
 	private static final int EDITOR_HEIGHT = 360;
 
 	private static final String COMMAND_RETRIEVE = "retrieve";
@@ -250,8 +250,8 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, DrawAreaLi
 		}
 
 	@Override
-	public void contentChanged(DrawAreaEvent e) {
-		if (e.isUserChange() && e.getType() == DrawAreaEvent.TYPE_MOLECULE_CHANGED) {
+	public void eventHappened(EditorEvent e) {
+		if (e.isUserChange() && e.getWhat() == EditorEvent.WHAT_MOLECULE_CHANGED) {
 			mDisableEvents = true;
 			mComboBoxReaction.setSelectedIndex(0);
 			mDisableEvents = false;

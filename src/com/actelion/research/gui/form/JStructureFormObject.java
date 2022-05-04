@@ -26,6 +26,7 @@ import com.actelion.research.gui.JEditableStructureView;
 import com.actelion.research.gui.JStructureView;
 import com.actelion.research.gui.StructureListener;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
+import com.actelion.research.gui.generic.GenericRectangle;
 
 import javax.swing.border.Border;
 import java.awt.*;
@@ -104,7 +105,7 @@ public class JStructureFormObject extends AbstractFormObject implements Structur
 				Depictor2D d = new Depictor2D(mol);
 				if (mPrintForeground != null)
 					d.setOverruleColor(mPrintForeground, mPrintBackground);
-				d.validateView(g2D, r, AbstractDepictor.cModeInflateToMaxAVBL+(int)(24*scale));
+				d.validateView(g2D, new GenericRectangle(r.x, r.y, r.width, r.height), AbstractDepictor.cModeInflateToMaxAVBL+(int)(24*scale));
 				d.paint(g2D);
 				}
         	}

@@ -67,7 +67,7 @@ public class DEMarkushDialog extends JDialog implements ActionListener,Runnable 
 		mDrawPanel.getDrawArea().setClipboardHandler(new ClipboardHandler());
 		getContentPane().add(mDrawPanel, BorderLayout.CENTER);
 
-		SwingKeyHandler keyHandler = new SwingKeyHandler();
+		SwingKeyHandler keyHandler = new SwingKeyHandler(mDrawPanel.getDrawArea());
 		addKeyListener(keyHandler);
 		keyHandler.addListener(mDrawPanel.getDrawArea());
 

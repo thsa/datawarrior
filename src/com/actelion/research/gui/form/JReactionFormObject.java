@@ -24,6 +24,7 @@ import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.chem.reaction.ReactionEncoder;
 import com.actelion.research.gui.JEditableChemistryView;
 import com.actelion.research.gui.generic.GenericDrawContext;
+import com.actelion.research.gui.generic.GenericRectangle;
 import com.actelion.research.gui.swing.SwingDrawContext;
 
 import javax.swing.border.Border;
@@ -84,7 +85,7 @@ public class JReactionFormObject extends AbstractFormObject {
 			if (rxn != null) {
 				ExtendedDepictor d = new ExtendedDepictor(rxn, null, rxn.isReactionLayoutRequired());
 				GenericDrawContext context = new SwingDrawContext(g2D);
-				d.validateView(context, r, AbstractDepictor.cModeInflateToMaxAVBL);
+				d.validateView(context, new GenericRectangle(r.x, r.y, r.width, r.height), AbstractDepictor.cModeInflateToMaxAVBL);
 				d.paint(context);
 				}
 			}

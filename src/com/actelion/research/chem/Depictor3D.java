@@ -22,7 +22,6 @@ import com.actelion.research.gui.generic.GenericPolygon;
 import org.jmol.g3d.Graphics3D;
 
 import javax.vecmath.Point3i;
-import java.awt.*;
 
 public class Depictor3D extends AbstractDepictor<Graphics3D> {
     private int			mZ;
@@ -105,8 +104,8 @@ public class Depictor3D extends AbstractDepictor<Graphics3D> {
 		}
 
 
-	protected void setColor(Color c) {
-		mColix = Graphics3D.getColix(c.getRGB());
+	protected void setRGB(int rgb) {
+		mColix = Graphics3D.getColix(rgb);
 		mContext.setColix(mColix);
 		}
 	}

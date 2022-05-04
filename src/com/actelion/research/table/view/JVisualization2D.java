@@ -25,6 +25,7 @@ import com.actelion.research.chem.DepictorTransformation;
 import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.gui.generic.GenericRectangle;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.MarkerLabelDisplayer;
 import com.actelion.research.table.category.CategoryList;
@@ -709,7 +710,7 @@ public class JVisualization2D extends JVisualization {
 				if (mSplittingDepictor[0] == null)
 					mG.drawString(title1, x1, textY);
 				else if (mSplittingDepictor[0][cat1Index] != null) {
-					Rectangle.Double r = new Rectangle.Double(x1, titleArea.y, molWidth, titleArea.height);
+					GenericRectangle r = new GenericRectangle(x1, titleArea.y, molWidth, titleArea.height);
 					int maxAVBL = Depictor2D.cOptAvBondLen;
 					if (mIsHighResolution)
 						maxAVBL *= mFontScaling;
@@ -724,7 +725,7 @@ public class JVisualization2D extends JVisualization {
 					if (mSplittingDepictor[1] == null)
 						mG.drawString(title2, x2, textY);
 					else if (mSplittingDepictor[1][mSplitter.getVIndex(hv)] != null) {
-						Rectangle.Double r = new Rectangle.Double(x2, titleArea.y, molWidth, titleArea.height);
+						GenericRectangle r = new GenericRectangle(x2, titleArea.y, molWidth, titleArea.height);
 						int maxAVBL = Depictor2D.cOptAvBondLen;
 						if (mIsHighResolution)
 							maxAVBL *= mFontScaling;
@@ -1140,7 +1141,7 @@ public class JVisualization2D extends JVisualization {
 		mli.y2 = labelPosition.getScreenY2();
 
 		if (mli.depictor != null) {
-			Rectangle2D.Double molRect = mli.depictor.getBoundingRect();
+			GenericRectangle molRect = mli.depictor.getBoundingRect();
 			mli.depictor.applyTransformation(new DepictorTransformation(1.0f,
 					labelPosition.getScreenX1() + mli.border - molRect.x,
 					labelPosition.getScreenY1() + mli.border - molRect.y));
@@ -1173,7 +1174,7 @@ public class JVisualization2D extends JVisualization {
 			}
 
 		if (mli.depictor != null) {
-			Rectangle2D.Double molRect = mli.depictor.getBoundingRect();
+			GenericRectangle molRect = mli.depictor.getBoundingRect();
 			w = (int)molRect.width;
 			h = (int)molRect.height;
 			}
@@ -4599,7 +4600,7 @@ public class JVisualization2D extends JVisualization {
 
 						Depictor2D d = (Depictor2D)sl.label;
 						Font oldFont = g.getFont();
-						d.validateView(g, new Rectangle2D.Double(0, 0, maxSize, maxSize), Depictor2D.cModeInflateToMaxAVBL + maxAVBL);
+						d.validateView(g, new GenericRectangle(0, 0, maxSize, maxSize), Depictor2D.cModeInflateToMaxAVBL + maxAVBL);
 						int usedSize = (int)(axis==0 ? d.getBoundingRect().height: d.getBoundingRect().width);
 						usedScaleSize[axis] = Math.max(usedScaleSize[axis], usedSize);
 						g.setFont(oldFont);
@@ -5875,7 +5876,7 @@ public class JVisualization2D extends JVisualization {
 			maxAVBL *= mFontScaling;
 
 		Font oldFont = g.getFont();
-		depictor.validateView(g, new Rectangle2D.Double(x, y, w, h), Depictor2D.cModeInflateToMaxAVBL+maxAVBL);
+		depictor.validateView(g, new GenericRectangle(x, y, w, h), Depictor2D.cModeInflateToMaxAVBL+maxAVBL);
 		depictor.setOverruleColor(molForeground, molBackground);
 		depictor.paint(g);
 		g.setFont(oldFont);
@@ -6072,7 +6073,7 @@ public class JVisualization2D extends JVisualization {
 		mG.drawString(s, x, y);
 		}
 
-	protected void drawMolecule(StereoMolecule mol, Color color, Rectangle2D.Double rect, int mode, int maxAVBL) {
+	protected void drawMolecule(StereoMolecule mol, Color color, GenericRectangle rect, int mode, int maxAVBL) {
 		Depictor2D d = new Depictor2D(mol, Depictor2D.cDModeSuppressChiralText);
 		d.validateView(mG, rect, mode+maxAVBL);
 		d.setOverruleColor(color, null);

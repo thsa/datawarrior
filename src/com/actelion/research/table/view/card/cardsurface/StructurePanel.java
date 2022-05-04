@@ -3,6 +3,7 @@ package com.actelion.research.table.view.card.cardsurface;
 import com.actelion.research.chem.AbstractDepictor;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.gui.generic.GenericDepictor;
+import com.actelion.research.gui.generic.GenericRectangle;
 import com.actelion.research.gui.swing.SwingDrawContext;
 import com.actelion.research.table.CompoundTableColorHandler;
 import com.actelion.research.table.model.CompoundRecord;
@@ -10,7 +11,6 @@ import com.actelion.research.table.model.CompoundTableModel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -79,7 +79,7 @@ public class StructurePanel extends AbstractCardSurfacePanel {
 
             //depictor.setOverruleColor(fg,bg);
             SwingDrawContext context = new SwingDrawContext((Graphics2D)g);
-            depictor.validateView(context, new Rectangle2D.Double(2, 2, w-4, h-4), AbstractDepictor.cModeInflateToMaxAVBL);
+            depictor.validateView(context, new GenericRectangle(2, 2, w-4, h-4), AbstractDepictor.cModeInflateToMaxAVBL);
             depictor.paint(context);
         }
         else{

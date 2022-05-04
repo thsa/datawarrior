@@ -22,10 +22,10 @@ import com.actelion.research.chem.*;
 import com.actelion.research.chem.coords.CoordinateInventor;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.gui.*;
-import com.actelion.research.gui.editor.DrawAreaEvent;
-import com.actelion.research.gui.editor.DrawAreaListener;
+import com.actelion.research.gui.editor.EditorEvent;
 import com.actelion.research.gui.editor.GenericEditorToolbar;
 import com.actelion.research.gui.editor.SwingEditorArea;
+import com.actelion.research.gui.generic.GenericEventListener;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -41,7 +41,7 @@ import java.util.ArrayList;
 
 
 public class DEInteractiveSARDialog extends JDialog
-                implements ActionListener, DrawAreaListener,ItemListener,Runnable {
+                implements ActionListener, GenericEventListener<EditorEvent>,ItemListener,Runnable {
     private static final long serialVersionUID = 0x20090206;
  
     private static final String[] COMPOUND_FILTER_OPTIONS = {
@@ -384,8 +384,8 @@ public class DEInteractiveSARDialog extends JDialog
         return true;
         }
 
-    public void contentChanged(DrawAreaEvent e) {
-        if (e.getType() == DrawAreaEvent.TYPE_SELECTION_CHANGED) {
+    public void eventHappened(EditorEvent e) {
+        if (e.getWhat() == EditorEvent.WHAT_SELECTION_CHANGED) {
             int selectedAtomCount = 0;
             boolean selectionModified = false;
             StereoMolecule mol = mDrawArea.getGenericDrawArea().getMolecule();

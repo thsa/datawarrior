@@ -22,6 +22,7 @@ import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.gui.JProgressDialog;
+import com.actelion.research.gui.generic.GenericRectangle;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.DetailPopupProvider;
 import com.actelion.research.table.MarkerLabelDisplayer;
@@ -64,7 +65,7 @@ public abstract class JVisualization extends JComponent
 	public static final Color DEFAULT_TITLE_BACKGROUND = new Color(224, 224, 255);
 	public static final Color DEFAULT_LABEL_BACKGROUND = new Color(224, 224, 224);
 	public static final float DEFAULT_LABEL_TRANSPARENCY = 0.25f;
-	protected static final Rectangle2D.Double DEPICTOR_RECT = new Rectangle2D.Double(0, 0, 32000, 32000);
+	protected static final GenericRectangle DEPICTOR_RECT = new GenericRectangle(0, 0, 32000, 32000);
 
 	// For a view width of 460 pixels (no hi-dpi scaling) we assign a default font size of 8 points
 	// multiplied by the actor taken from the font size slider (mReativeFontSize).
@@ -452,7 +453,7 @@ public abstract class JVisualization extends JComponent
 	protected abstract void fillRect(int x, int y, int w, int h);
 	protected abstract void drawMarker(Color color, int shape, int size, int x, int y);
 	protected abstract void drawString(String s, int x, int y);
-	protected abstract void drawMolecule(StereoMolecule mol, Color color, Rectangle2D.Double rect, int mode, int maxAVBL);
+	protected abstract void drawMolecule(StereoMolecule mol, Color color, GenericRectangle rect, int mode, int maxAVBL);
 
 	protected void setActivePoint(VisualizationPoint vp) {
 		mActivePoint = vp;

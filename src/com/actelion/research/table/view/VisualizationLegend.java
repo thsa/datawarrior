@@ -21,6 +21,7 @@ package com.actelion.research.table.view;
 import com.actelion.research.chem.AbstractDepictor;
 import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.gui.generic.GenericRectangle;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -29,7 +30,6 @@ import com.actelion.research.util.ScaleLabel;
 import com.actelion.research.util.ScaleLabelCreator;
 
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -334,7 +334,7 @@ public class VisualizationLegend {
 								  : new IDCodeParser(true).getCompactMolecule(idcode.substring(0, index),
 																		  idcode.substring(index+1));
 						mVisualization.drawMolecule(mol, mVisualization.getContrastGrey(0.80f),
-										   new Rectangle2D.Double(x+mFontHeight*4/3,
+										   new GenericRectangle(x+mFontHeight*4/3,
 			                			   y-mCellHeight/2,
 			                			   mCellWidth*9/10-mFontHeight*4/3,
 			                			   mCellHeight),

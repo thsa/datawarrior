@@ -24,6 +24,7 @@ import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.dnd.MoleculeDragAdapter;
 import com.actelion.research.gui.dnd.MoleculeTransferable;
+import com.actelion.research.gui.generic.GenericRectangle;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.CompoundTableChemistryCellRenderer;
 import com.actelion.research.table.CompoundTableColorHandler;
@@ -369,7 +370,7 @@ public class JStructureGrid extends JScrollPane
 			if (mol != null) {
 				g2D.setColor(Color.black);
 				Depictor2D depictor = new Depictor2D(mol, mStructureDrawMode);
-				depictor.validateView(g2D, new Rectangle2D.Double(r.x, r.y+cellSize.topHeight, r.width,
+				depictor.validateView(g2D, new GenericRectangle(r.x, r.y+cellSize.topHeight, r.width,
 											r.height-cellSize.topHeight-cellSize.bottomHeight-cellSize.tableHeight),
 									  AbstractDepictor.cModeInflateToMaxAVBL+(int)(scaling*AbstractDepictor.cOptAvBondLen));
 
@@ -1196,7 +1197,7 @@ public class JStructureGrid extends JScrollPane
 								if (mol != null) {
 									AbstractDepictor depictor = new Depictor2D(mol, mStructureDrawMode);
 									depictor.validateView(ig,
-														  new Rectangle2D.Double(mCellSize.border,
+														  new GenericRectangle(mCellSize.border,
 																mCellSize.border+mCellSize.topHeight,
 																mCellSize.viewWidth,
 																mCellSize.structureHeight-mCellSize.topHeight-mCellSize.bottomHeight),

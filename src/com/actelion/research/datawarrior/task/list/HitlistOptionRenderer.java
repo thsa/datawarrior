@@ -19,6 +19,8 @@
 package com.actelion.research.datawarrior.task.list;
 
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.gui.hidpi.HiDPIIcon;
+import com.actelion.research.gui.swing.SwingImage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -45,7 +47,9 @@ public class HitlistOptionRenderer extends JPanel implements /*ImageObserver,*/L
 	private boolean			mIsSelected,mIsActiveItem;
 
 	public HitlistOptionRenderer() {
-		sImage = HiDPIHelper.scale(HiDPIHelper.createLaFCompatibleImage(IMAGE_NAME));
+		SwingImage image = HiDPIIcon.createIconImage(IMAGE_NAME);
+		HiDPIHelper.adaptForLookAndFeel(image);
+		sImage = (Image)HiDPIIcon.scale(image).get();
 
 		setPreferredSize(new Dimension(cItemWidth, cItemHeight));
 		}

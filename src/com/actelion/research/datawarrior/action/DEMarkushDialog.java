@@ -29,7 +29,7 @@ import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.JFileChooserOverwrite;
 import com.actelion.research.gui.JProgressDialog;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
-import com.actelion.research.gui.editor.GenericDrawArea;
+import com.actelion.research.gui.editor.GenericEditorArea;
 import com.actelion.research.gui.editor.SwingEditorPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.swing.SwingKeyHandler;
@@ -63,7 +63,7 @@ public class DEMarkushDialog extends JDialog implements ActionListener,Runnable 
 
 		StereoMolecule mol = new StereoMolecule();
 		mol.setFragment(true);
-		mDrawPanel = new SwingEditorPanel(mol, GenericDrawArea.MODE_MARKUSH_STRUCTURE);
+		mDrawPanel = new SwingEditorPanel(mol, GenericEditorArea.MODE_MARKUSH_STRUCTURE);
 		mDrawPanel.getDrawArea().setClipboardHandler(new ClipboardHandler());
 		getContentPane().add(mDrawPanel, BorderLayout.CENTER);
 

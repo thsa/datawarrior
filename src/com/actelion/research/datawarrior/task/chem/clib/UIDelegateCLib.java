@@ -31,7 +31,7 @@ import com.actelion.research.datawarrior.task.TaskUIDelegate;
 import com.actelion.research.gui.*;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.editor.EditorEvent;
-import com.actelion.research.gui.editor.GenericDrawArea;
+import com.actelion.research.gui.editor.GenericEditorArea;
 import com.actelion.research.gui.editor.SwingEditorPanel;
 import com.actelion.research.gui.generic.GenericEventListener;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -144,7 +144,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 
 		StereoMolecule mol = new StereoMolecule();
 		mol.setFragment(true);
-		mDrawPanel = new SwingEditorPanel(mol, GenericDrawArea.MODE_REACTION);
+		mDrawPanel = new SwingEditorPanel(mol, GenericEditorArea.MODE_REACTION);
 		mDrawPanel.getDrawArea().setClipboardHandler(new ClipboardHandler());
 		mDrawPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(800), HiDPIHelper.scale(EDITOR_HEIGHT)));
 		mDrawPanel.getDrawArea().addDrawAreaListener(this);

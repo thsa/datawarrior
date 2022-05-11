@@ -141,8 +141,10 @@ public class DataWarriorLinux extends DataWarrior {
 	public boolean setLookAndFeel(LookAndFeel laf) {
 		float fontFactor = 1f;
 		String dpiFactor = System.getProperty("dpifactor");
-		if (dpiFactor != null)
+		if (dpiFactor != null) {
 			try { fontFactor = Float.parseFloat(dpiFactor); } catch (NumberFormatException nfe) {}
+			System.getProperties().remove("dpifactor");  // prevent HiDPIHelper from applying factor a second time
+			}
 
 		if (super.setLookAndFeel(laf)) {
 			if (fontFactor != 1f) {

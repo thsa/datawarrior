@@ -104,10 +104,7 @@ public abstract class DETaskAbstractSetTableColor extends DETaskAbstractSetColor
 				mComboBoxColumn.setSelectedItem(getTableModel().getColumnTitle(column));
 			}
 		else if (mTableColumn != -1) {
-			boolean isIgnoreEvents = isIgnoreEvents();
-			setIgnoreEvents(false);	// we want this combobox change to be applied to the view
-			setColorByColumn(mTableColumn);
-			setIgnoreEvents(isIgnoreEvents);
+			mComboBoxColumn.setSelectedItem(getTableModel().getColumnTitleExtended(mTableColumn));
 			}
 		}
 

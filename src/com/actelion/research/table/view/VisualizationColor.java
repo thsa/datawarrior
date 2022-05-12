@@ -341,8 +341,7 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 		if (e.getType() == CompoundTableEvent.cChangeColumnData
 		 || e.getType() == CompoundTableEvent.cAddRows
 		 || e.getType() == CompoundTableEvent.cDeleteRows) {
-			int column = e.getColumn();
-			if (mColorColumn == column) {
+			if (e.getType() != CompoundTableEvent.cChangeColumnData || mColorColumn == e.getColumn()) {
 				if (mColorListMode == cColorListModeCategories) {
 					if (mColorThresholds != null) {
 						if (!mTableModel.isColumnTypeDouble(mColorColumn)) {
@@ -355,7 +354,7 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 						}
 					else {
 						if (!mTableModel.isColumnTypeCategory(mColorColumn)
-						 || mTableModel.getCategoryCount(column) > cMaxColorCategories) {
+						 || mTableModel.getCategoryCount(mColorColumn) > cMaxColorCategories) {
 							initialize();
 							}
 						else {

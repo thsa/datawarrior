@@ -76,7 +76,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap},
 							{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, HiDPIHelper.scale(20),
 								  TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
-							 gap, TableLayout.PREFERRED, gap/2, HiDPIHelper.scale(50), gap } };
+							 gap, TableLayout.PREFERRED, gap/2, HiDPIHelper.scale(72), gap } };
 		content.setLayout(new TableLayout(size));
 
 		content.add(new JLabel("Name of target column (new or existing):"), "1,1");
@@ -141,6 +141,9 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		}
 
 	private boolean structureColumnsOnly() {
+		if (mListColumns == null)
+			return true;
+
 		List<String> selection = mListColumns.getSelectedValuesList();
 		if (selection.isEmpty())
 			return false;
@@ -472,7 +475,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		else
 			mTextArea.setText("");
 
-		mCheckBoxRemove.setSelected(true);
+		mCheckBoxRemove.setSelected(false);
 
 		mCheckBoxUseTransformation.setSelected(false);
 

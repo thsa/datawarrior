@@ -74,6 +74,15 @@ column, which receives the original column names and serves to assign rows to or
   to investigate the influence of these one or two R-groups more closely, when focusing on any
   of the molecule categories that are defined by the merged structure column. This is somewhat
   similar to a molecular matched pair analysis.</p>
+<p>Another way to merge multiple chemical structure columns is to specify a transformation reaction,
+which considers the molecules to be merged as reactants and defines the chemical transformation
+  of how to convert them into a product. If a reaction is specified, then the number and order of
+  selected structure columns must match the number and order of the reactants. Moreover, all atoms
+  that exist on the reactant and on the product side should be properly mapped, i.e. assigned to each
+  other using the editor's mapping tool.</p>
+<p align="center"><img src="help/img/analysis/mergeColumnsWithReaction.jpeg" height="309" width="680"></p>
+<p><center><i>Merge Column dialog with specified transformation and table view after product formation.</i></center></p>
+
 <br>
 
 <h3><i><a name="Binning"></a>Binning Numerical Data</i></h3>

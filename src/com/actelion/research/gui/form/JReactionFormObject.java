@@ -44,9 +44,6 @@ public class JReactionFormObject extends AbstractFormObject {
 					super.setBorder(border);
 				}
 			};
-		((JEditableChemistryView)mComponent).setOpaqueBackground(true);
-
-//		((JEditableChemistryView)mComponent).setClipboardHandler(new ClipboardHandler());
 		}
 
 	public void setEditable(boolean b) {

@@ -18,29 +18,75 @@
 
 package com.actelion.research.datawarrior.task.chem;
 
-import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicIntegerArray;
-
-import com.actelion.research.chem.descriptor.DescriptorHandler;
-import com.actelion.research.chem.descriptor.DescriptorHandlerLongFFP512;
-import com.actelion.research.chem.descriptor.DescriptorHandlerFlexophore;
-import com.actelion.research.chem.descriptor.DescriptorHandlerFunctionalGroups;
-import com.actelion.research.chem.descriptor.DescriptorHandlerHashedCFp;
-import com.actelion.research.chem.descriptor.DescriptorHandlerIntVector;
-import com.actelion.research.chem.descriptor.DescriptorHandlerPFP512;
-import com.actelion.research.chem.descriptor.DescriptorHandlerSkeletonSpheres;
+import com.actelion.research.chem.descriptor.*;
 import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.DERuntimeProperties;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+
 
 public class DETestCompareDescriptorSimilarityDistribution extends AbstractTaskWithoutConfiguration {
-    public static final String TASK_NAME = "Compare Descriptor Similarities";
+	public static final String TASK_NAME = "Compare Descriptor Similarities";
+
+	private static final String TEMPLATE = "<datawarrior properties>\n" +
+			"<axisColumn_2D View_0=\"Similarity\">\n" +
+			"<axisColumn_2D View_1=\"Count\">\n" +
+			"<chartType_2D View=\"scatter\">\n" +
+			"<colorColumn_2D View=\"Descriptor\">\n" +
+			"<colorCount_2D View=\"7\">\n" +
+			"<colorListMode_2D View=\"Categories\">\n" +
+			"<color_2D View_0=\"-11992833\">\n" +
+			"<color_2D View_1=\"-65494\">\n" +
+			"<color_2D View_2=\"-16732826\">\n" +
+			"<color_2D View_3=\"-256\">\n" +
+			"<color_2D View_4=\"-11546120\">\n" +
+			"<color_2D View_5=\"-2252554\">\n" +
+			"<color_2D View_6=\"-21735\">\n" +
+			"<columnFilter_Table=\"\">\n" +
+			"<columnWidth_Table_Count=\"80\">\n" +
+			"<columnWidth_Table_Descriptor=\"80\">\n" +
+			"<columnWidth_Table_Similarity=\"80\">\n" +
+			"<curveLineWidth_2D View=\"2.3631606\">\n" +
+			"<curveSmoothing_2D View=\"0.63\">\n" +
+			"<detailView=\"height[Data]=1\">\n" +
+			"<fastRendering_2D View=\"false\">\n" +
+			"<filter0=\"#browser#\t#disabled#\tDescriptor\tFlexophore\">\n" +
+			"<filter1=\"#category#\tDescriptor\">\n" +
+			"<filter2=\"#double#\tSimilarity\">\n" +
+			"<filter3=\"#double#\tCount\">\n" +
+			"<filterAnimation0=\"state=stopped\">\n" +
+			"<filterAnimation2=\"state=stopped low2=80% high1=20% time=10\">\n" +
+			"<filterAnimation3=\"state=stopped low2=80% high1=20% time=10\">\n" +
+			"<headerLines_Table=\"2\">\n" +
+			"<mainSplitting=\"0.72634\">\n" +
+			"<mainView=\"2D View\">\n" +
+			"<mainViewCount=\"2\">\n" +
+			"<mainViewDockInfo0=\"root\">\n" +
+			"<mainViewDockInfo1=\"Table\tbottom\t0.499\">\n" +
+			"<mainViewName0=\"Table\">\n" +
+			"<mainViewName1=\"2D View\">\n" +
+			"<mainViewType0=\"tableView\">\n" +
+			"<mainViewType1=\"2Dview\">\n" +
+			"<markersize_2D View=\"0.1764\">\n" +
+			"<meanLineMode_2D View=\"smooth\">\n" +
+			"<rightSplitting=\"0.66926\">\n" +
+			"<rowHeight_Table=\"16\">\n" +
+			"<scaleStyle_2D View=\"frame\">\n" +
+			"<scatterplotMargin_2D View=\"0.025\">\n" +
+			"<showNaNValues_2D View=\"true\">\n" +
+			"<splitCurveByCategory_2D View=\"true\">\n" +
+			"</datawarrior properties>";
 
 	private DataWarrior			mApplication;
 	private DEFrame				mTargetFrame;
@@ -178,6 +224,15 @@ public class DETestCompareDescriptorSimilarityDistribution extends AbstractTaskW
 
 	        targetTableModel.finalizeTable(CompoundTableEvent.cSpecifierDefaultFiltersAndViews, this);
 			}
+
+		if (!threadMustDie()) {
+			try {
+				DERuntimeProperties rtp = new DERuntimeProperties(mTargetFrame.getMainFrame());
+				rtp.read(new BufferedReader(new StringReader(TEMPLATE)));
+				rtp.apply();
+			}
+			catch (IOException e) {}
+			}
 		}
 
 	private boolean qualifiesAsDescriptorColumn(int column) {
@@ -185,8 +240,9 @@ public class DETestCompareDescriptorSimilarityDistribution extends AbstractTaskW
 			return false;
 		DescriptorHandler<?,?> dh = mSourceTableModel.getDescriptorHandler(column);
 		return dh instanceof DescriptorHandlerLongFFP512
-			|| dh instanceof DescriptorHandlerPFP512
-			|| dh instanceof DescriptorHandlerHashedCFp
+			|| dh instanceof DescriptorHandlerLongPFP512
+			|| dh instanceof DescriptorHandlerAllFragmentsFP
+			|| dh instanceof DescriptorHandlerLongCFP
 			|| dh instanceof DescriptorHandlerSkeletonSpheres
 			|| dh instanceof DescriptorHandlerFunctionalGroups
 			|| dh instanceof DescriptorHandlerIntVector

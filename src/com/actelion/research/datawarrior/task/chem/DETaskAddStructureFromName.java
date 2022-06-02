@@ -42,10 +42,11 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 //	private static final String CACTUS_FORMAT_SMILES = "/smiles";
 
 	private static final String PROPERTY_USE_SERVER = "useServer";
+	private static final String PROPERTY_IS_SMARTS = "isSmarts";
 
 	private static final String[] cSourceColumnName = { "substance name", "compound name", "iupac name" };
 
-	private JCheckBox mCheckBoxUseServer;
+	private JCheckBox mCheckBoxIsSmarts,mCheckBoxUseServer;
 
 	public DETaskAddStructureFromName(DEFrame parentFrame) {
     	super(parentFrame, parentFrame.getTableModel(), true);
@@ -68,15 +69,18 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {TableLayout.PREFERRED},
-							{gap*2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+							{gap/2, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
-		content.add(new JLabel("If DataWarrior cannot interpret a name as IUPAC-name nor as SMILES,"), "0,1");
-		content.add(new JLabel("then DataWarrior may connect to openmolecules.org to resolve names."), "0,3");
+		mCheckBoxIsSmarts = new JCheckBox("Interpret SMILES as SMARTS");
+		content.add(mCheckBoxIsSmarts, "0,1");
+
+		content.add(new JLabel("If DataWarrior cannot interpret a name as IUPAC-name nor as SMILES,"), "0,3");
+		content.add(new JLabel("then DataWarrior may connect to openmolecules.org to resolve names."), "0,5");
 
 		mCheckBoxUseServer = new JCheckBox("Allow openmolecules.org name-to-structure service");
-		content.add(mCheckBoxUseServer, "0,5");
+		content.add(mCheckBoxUseServer, "0,7");
 
 		return content;
 		}
@@ -104,6 +108,8 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 	@Override
 	public Properties getDialogConfiguration() {
 		Properties configuration = super.getDialogConfiguration();
+		String isSmarts = (mCheckBoxIsSmarts == null) ? "false" : mCheckBoxIsSmarts.isSelected()? "true" : "false";
+		configuration.setProperty(PROPERTY_IS_SMARTS, isSmarts);
 		String useServer = (mCheckBoxUseServer == null) ? "true" : mCheckBoxUseServer.isSelected()? "true" : "false";
 		configuration.setProperty(PROPERTY_USE_SERVER, useServer);
 		return configuration;
@@ -112,6 +118,8 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
+		if (mCheckBoxIsSmarts != null)
+			mCheckBoxIsSmarts.setSelected("true".equals(configuration.getProperty(PROPERTY_IS_SMARTS, "false")));
 		if (mCheckBoxUseServer != null)
 			mCheckBoxUseServer.setSelected("true".equals(configuration.getProperty(PROPERTY_USE_SERVER, "true")));
 		}
@@ -119,6 +127,8 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 	@Override
 	public void setDialogConfigurationToDefault() {
 		super.setDialogConfigurationToDefault();
+		if (mCheckBoxIsSmarts != null)
+			mCheckBoxIsSmarts.setSelected(false);
 		if (mCheckBoxUseServer != null)
 			mCheckBoxUseServer.setSelected(true);
 		}
@@ -150,7 +160,9 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 					smiles = name;
 
 				try {
-					new SmilesParser(SmilesParser.SMARTS_MODE_GUESS, false).parse(mol, smiles);
+					boolean isSmarts = "true".equals(configuration.getProperty(PROPERTY_IS_SMARTS, "false"));
+					int smilesMode = isSmarts ? SmilesParser.SMARTS_MODE_IS_SMARTS : SmilesParser.SMARTS_MODE_GUESS;
+					new SmilesParser(smilesMode, false).parse(mol, smiles);
 					}
 				catch (Exception e) {
 					mol.clear();

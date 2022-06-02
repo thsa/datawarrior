@@ -18,19 +18,18 @@
 
 package com.actelion.research.datawarrior.task.chem;
 
-import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLongArray;
-
 import com.actelion.research.chem.descriptor.*;
-import com.actelion.research.chem.descriptor.DescriptorHandlerIntVector;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
+
+import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 
 public class DETestExtractPairwiseCompoundSimilarities extends AbstractTaskWithoutConfiguration {
@@ -213,6 +212,7 @@ public class DETestExtractPairwiseCompoundSimilarities extends AbstractTaskWitho
 		return dh instanceof DescriptorHandlerLongFFP512
 			|| dh instanceof DescriptorHandlerLongPFP512
 			|| dh instanceof DescriptorHandlerLongCFP
+			|| dh instanceof DescriptorHandlerAllFragmentsFP
 			|| dh instanceof DescriptorHandlerSkeletonSpheres
 			|| dh instanceof DescriptorHandlerFunctionalGroups
 			|| dh instanceof DescriptorHandlerReactionFP

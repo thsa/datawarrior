@@ -19,26 +19,39 @@
 package com.actelion.research.datawarrior.task.data;
 
 import com.actelion.research.chem.Canonizer;
+import com.actelion.research.chem.ExtendedDepictor;
 import com.actelion.research.chem.Molecule;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.coords.CoordinateInventor;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.chem.reaction.Reaction;
+import com.actelion.research.chem.reaction.ReactionEncoder;
+import com.actelion.research.chem.reaction.Reactor;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETable;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
+import com.actelion.research.gui.JEditableChemistryView;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
 import java.util.*;
 
-public class DETaskMergeColumns extends ConfigurableTask {
+import static com.actelion.research.chem.reaction.ReactionEncoder.INCLUDE_DEFAULT;
+
+public class DETaskMergeColumns extends ConfigurableTask implements ActionListener,ListSelectionListener {
 	private static final String PROPERTY_TARGET_COLUMN = "newColumn";
 	private static final String PROPERTY_REMOVE_SOURCE_COLUMNS = "remove";
 	private static final String PROPERTY_COLUMN_LIST = "columnList";
+	private static final String PROPERTY_TRANSFORMATION = "transformation";
 
 	public static final String TASK_NAME = "Merge Columns";
 
@@ -46,8 +59,9 @@ public class DETaskMergeColumns extends ConfigurableTask {
 	private JList<String>		mListColumns;
 	private JComboBox			mComboBoxTargetColumn;
 	private JTextArea			mTextArea;
-	private JCheckBox			mCheckBoxRemove;
+	private JCheckBox			mCheckBoxRemove,mCheckBoxUseTransformation;
 	private DETable				mTable;
+	private JEditableChemistryView mTransformationView;
 
 	public DETaskMergeColumns(DEFrame owner) {
 		super(owner, true);
@@ -61,7 +75,8 @@ public class DETaskMergeColumns extends ConfigurableTask {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap},
 							{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, HiDPIHelper.scale(20),
-								  TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap } };
+								  TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
+							 gap, TableLayout.PREFERRED, gap/2, HiDPIHelper.scale(50), gap } };
 		content.setLayout(new TableLayout(size));
 
 		content.add(new JLabel("Name of target column (new or existing):"), "1,1");
@@ -85,6 +100,7 @@ public class DETaskMergeColumns extends ConfigurableTask {
 		JScrollPane scrollPane = null;
 		if (isInteractive()) {
 			mListColumns = new JList<>(itemList);
+			mListColumns.addListSelectionListener(this);
 			scrollPane = new JScrollPane(mListColumns);
 			}
 		else {
@@ -97,7 +113,43 @@ public class DETaskMergeColumns extends ConfigurableTask {
 		mCheckBoxRemove = new JCheckBox("Remove source columns after merging");
 		content.add(mCheckBoxRemove, "1,9");
 
+		mCheckBoxUseTransformation = new JCheckBox("Use reaction for structure merge");
+		content.add(mCheckBoxUseTransformation, "1,11");
+
+		mTransformationView = new JEditableChemistryView(ExtendedDepictor.TYPE_REACTION);
+		mTransformationView.getReaction().setFragment(true);
+		content.add(mTransformationView, "1,13,3,13");
+
 		return content;
+		}
+
+
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+		enableItems();
+		}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		enableItems();
+		}
+
+	private void enableItems() {
+		boolean structureColumnsOnly = structureColumnsOnly();
+		mCheckBoxUseTransformation.setEnabled(structureColumnsOnly);
+		mTransformationView.setEnabled(structureColumnsOnly);
+		}
+
+	private boolean structureColumnsOnly() {
+		List<String> selection = mListColumns.getSelectedValuesList();
+		if (selection.isEmpty())
+			return false;
+
+		for (String item:selection)
+			if (!mTableModel.isColumnTypeStructure(mTableModel.findColumn(item)))
+				return false;
+
+		return true;
 		}
 
 	@Override
@@ -118,6 +170,12 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			p.setProperty(PROPERTY_COLUMN_LIST, columnNames);
 
 		p.setProperty(PROPERTY_REMOVE_SOURCE_COLUMNS, mCheckBoxRemove.isSelected() ? "true" : "false");
+
+		if (mCheckBoxUseTransformation.isSelected()) {
+			Reaction transformation = mTransformationView.getReaction();
+			if (!transformation.isEmpty())
+				p.setProperty(PROPERTY_TRANSFORMATION, ReactionEncoder.encode(transformation, false, INCLUDE_DEFAULT));
+		}
 
 		return p;
 		}
@@ -185,6 +243,24 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			if (alphaNumFound && idcodeFound) {
 				showErrorMessage("Structure columns cannot be merged with alphanumerical columns.");
 				return false;
+				}
+			if (idcodeFound) {
+				String transformation = configuration.getProperty(PROPERTY_TRANSFORMATION, "");
+				if (transformation.length() != 0) {
+					Reaction rxn = ReactionEncoder.decode(transformation, false);
+					if (rxn.isEmpty()) {
+						showErrorMessage("No tranformation reaction defined.");
+						return false;
+						}
+					if (rxn.getReactants() != column.length) {
+						showErrorMessage("The number of reactants in transformation reaction\ndoes not match number of structure columns.");
+						return false;
+						}
+					if (!rxn.isMapped()) {
+						showErrorMessage("The transformation reaction seems to be unmapped or improperly mapped.");
+						return false;
+						}
+					}
 				}
 			if (targetColumn != null) {
 				int tc = mTableModel.findColumn(targetColumn);
@@ -298,12 +374,19 @@ public class DETaskMergeColumns extends ConfigurableTask {
 		Object[][] result = new Object[mTableModel.getTotalRowCount()][2];
 
 		if (isStructureMerge) {
+			String transformation = configuration.getProperty(PROPERTY_TRANSFORMATION, "");
+			Reaction rxn = (transformation.length() == 0) ? null : ReactionEncoder.decode(transformation, true);
+
 			StereoMolecule[] mol = new StereoMolecule[column.length];
 			startProgress("Merging structures...", 0, mTableModel.getTotalRowCount());
 			for (int row = 0; row<mTableModel.getTotalRowCount(); row++) {
 				if ((row & 255) == 255)
 					updateProgress(row);
-				mergeStructureCells(mTableModel.getTotalRecord(row), column, result[row], mol);
+
+				if (rxn == null)
+					mergeStructureCells(mTableModel.getTotalRecord(row), column, result[row], mol);
+				else
+					mergeCellsByTransformation(mTableModel.getTotalRecord(row), column, result[row], mol, new Reactor(rxn));
 				}
 			}
 		else {
@@ -371,6 +454,13 @@ public class DETaskMergeColumns extends ConfigurableTask {
 		mComboBoxTargetColumn.setSelectedItem(targetColumnName);
 
 		mCheckBoxRemove.setSelected("true".equals(configuration.getProperty(PROPERTY_REMOVE_SOURCE_COLUMNS, "true")));
+
+		String transformation = configuration.getProperty(PROPERTY_TRANSFORMATION, "");
+		mCheckBoxUseTransformation.setSelected(transformation.length() != 0);
+		if (transformation.length() != 0)
+			mTransformationView.setContent(ReactionEncoder.decode(transformation, true));
+
+		enableItems();
 		}
 
 	@Override
@@ -383,6 +473,10 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			mTextArea.setText("");
 
 		mCheckBoxRemove.setSelected(true);
+
+		mCheckBoxUseTransformation.setSelected(false);
+
+		enableItems();
 		}
 
 	private void sortByVisibleOrder(int[] column) {
@@ -603,5 +697,26 @@ public class DETaskMergeColumns extends ConfigurableTask {
 			}
 
 		return -1;
+		}
+
+	private void mergeCellsByTransformation(CompoundRecord record, int[] sourceColumn, Object[] result, StereoMolecule[] mol, Reactor reactor) {
+		for (int i=0; i<sourceColumn.length; i++) {
+			mol[i] = mTableModel.getChemicalStructure(record, sourceColumn[i], CompoundTableModel.ATOM_COLOR_MODE_NONE, mol[i]);
+			if (mol[i] == null || mol[i].getAllAtoms() == 0)
+				return;
+
+			mol[i].ensureHelperArrays(Molecule.cHelperNeighbours);
+			}
+
+		for (int i=0; i<mol.length; i++)
+			reactor.setReactant(i, mol[i]);
+
+		StereoMolecule[][] products = reactor.getProducts();
+
+		if (products.length != 0 && products[0].length != 0) {
+			Canonizer canonizer = new Canonizer(products[0][0]);
+			result[0] = canonizer.getIDCode().getBytes();
+			result[1] = canonizer.getEncodedCoordinates().getBytes();
+			}
 		}
 	}

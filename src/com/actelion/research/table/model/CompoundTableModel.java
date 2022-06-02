@@ -3509,10 +3509,13 @@ public class CompoundTableModel extends AbstractTableModel
 		 * @param inverse
 		 */
 	public void setSubStructureExclusion(final AtomicInteger rowAndFragmentIndex, final int exclusionFlagNo, final int idcodeColumn, final StereoMolecule[] fragment, String reactionPart, final boolean inverse) {
+//int threadCount = 1;
 		int threadCount = Runtime.getRuntime().availableProcessors();
 		rowAndFragmentIndex.set(mRecord.length*fragment.length);
 
-		final int ffpColumn = getChildColumn(idcodeColumn, DESCRIPTOR_FFP512.shortName, reactionPart);
+		int allFragColumn = getChildColumn(idcodeColumn, DESCRIPTOR_ALLFRAG.shortName, reactionPart);
+		final boolean isAllFrag = (allFragColumn != -1);
+		final int ffpColumn = isAllFrag ? allFragColumn : getChildColumn(idcodeColumn, DESCRIPTOR_FFP512.shortName, reactionPart);
 		final long mask = convertRowFlagToMask(exclusionFlagNo);
 
 		// These fragments instances are read my multiple threads simultaneously.
@@ -3531,9 +3534,13 @@ public class CompoundTableModel extends AbstractTableModel
 		for (int i=0; i<threadCount; i++) {
 			worker[i] = new Thread("SSS-Matcher "+(i+1)) {
 				public void run() {
-					SSSearcherWithIndex searcherWithIndex = new SSSearcherWithIndex();
+					SSSearcherWithIndex searcherWithIndex = new SSSearcherWithIndex(isAllFrag ?
+										new DescriptorHandlerAllFragmentsFP() : null);
 					sssList.add(searcherWithIndex);
 
+//long time = System.currentTimeMillis();
+//int graphSearchCount = 0;
+//int graphMatchCount = 0;
 					int combinedIndex = rowAndFragmentIndex.decrementAndGet();
 					int fragmentIndex = -1;
 					while (combinedIndex >= 0) {
@@ -3558,15 +3565,20 @@ public class CompoundTableModel extends AbstractTableModel
 							else {	// idcode is normal molecule
 								byte[] idcode = (byte[])mRecord[recordIndex].getData(idcodeColumn);
 								if (idcode != null) {
+//if (searcherWithIndex.isFragmentIndexInMoleculeIndex()) graphSearchCount++;
 									searcherWithIndex.setMolecule(idcode, (long[])mRecord[recordIndex].getData(ffpColumn));
 									if (searcherWithIndex.isFragmentInMolecule())
+//{
 										mRecord[recordIndex].mFlags &= ~mask;
+//graphMatchCount++;
+//}
 									}
 								}
 							}
 
 						combinedIndex = rowAndFragmentIndex.decrementAndGet();
 						}
+//System.out.println("indexHits:"+graphSearchCount+" sssHits:"+graphMatchCount+" millis:"+(System.currentTimeMillis()-time)+" idcode:"+new Canonizer(fragment[0]).getIDCode());
 					}
 				};
 			worker[i].setPriority(Thread.MIN_PRIORITY);

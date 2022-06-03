@@ -23,6 +23,7 @@ import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.generic.GenericRectangle;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.gui.swing.SwingCursorHelper;
 import com.actelion.research.table.MarkerLabelDisplayer;
 import com.actelion.research.table.category.CategoryList;
 import com.actelion.research.table.category.CategoryMolecule;
@@ -31,7 +32,6 @@ import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.util.ColorHelper;
-import com.actelion.research.util.CursorHelper;
 import com.actelion.research.util.DoubleFormat;
 import org.jmol.g3d.Graphics3D;
 
@@ -952,9 +952,9 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		super.mouseMoved(e);
 
 		if (mHighlightedPoint != null && mIsStereo)
-			setCursor(CursorHelper.getCursor(CursorHelper.cInvisibleCursor));
+			setCursor(SwingCursorHelper.getCursor(SwingCursorHelper.cInvisibleCursor));
 		else
-			setCursor(CursorHelper.getCursor(CursorHelper.cPointerCursor));
+			setCursor(SwingCursorHelper.getCursor(SwingCursorHelper.cPointerCursor));
 		}
 
 	public void mouseClicked(MouseEvent e) {

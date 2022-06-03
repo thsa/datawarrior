@@ -22,10 +22,10 @@ import com.actelion.research.gui.JProgressPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.hidpi.HiDPIIconButton;
 import com.actelion.research.gui.hidpi.HiDPIToggleButton;
+import com.actelion.research.gui.swing.SwingCursorHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableListener;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.util.CursorHelper;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -147,20 +147,20 @@ public abstract class JFilterPanel extends JPanel
 		mColumnNameLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseEntered(MouseEvent e) {
-				mColumnNameLabel.setCursor(CursorHelper.getCursor(CursorHelper.cHandCursor));
+				mColumnNameLabel.setCursor(SwingCursorHelper.getCursor(SwingCursorHelper.cHandCursor));
 				mIsMouseDown = false;
 			}
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				mColumnNameLabel.setCursor(CursorHelper.getCursor(e.getButton() == MouseEvent.BUTTON1 ? CursorHelper.cFistCursor : CursorHelper.cPointerCursor));
+				mColumnNameLabel.setCursor(SwingCursorHelper.getCursor(e.getButton() == MouseEvent.BUTTON1 ? SwingCursorHelper.cFistCursor : SwingCursorHelper.cPointerCursor));
 				getParent().repaint();
 				mIsMouseDown = true;
 			}
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				mColumnNameLabel.setCursor(CursorHelper.getCursor(CursorHelper.cHandCursor));
+				mColumnNameLabel.setCursor(SwingCursorHelper.getCursor(SwingCursorHelper.cHandCursor));
 				getParent().repaint();
 				mIsMouseDown = false;
 			}
@@ -168,7 +168,7 @@ public abstract class JFilterPanel extends JPanel
 			@Override
 			public void mouseExited(MouseEvent e) {
 				if (!mIsMouseDown)
-					mColumnNameLabel.setCursor(CursorHelper.getCursor(CursorHelper.cPointerCursor));
+					mColumnNameLabel.setCursor(SwingCursorHelper.getCursor(SwingCursorHelper.cPointerCursor));
 				mIsMouseDown = false;
 				getParent().repaint();
 			}
@@ -203,7 +203,7 @@ public abstract class JFilterPanel extends JPanel
 			Transferable transferable = getTransferable();
 			if (transferable != null) {
 				try {
-					dge.startDrag(CursorHelper.getCursor(CursorHelper.cFistCursor), transferable, this);
+					dge.startDrag(SwingCursorHelper.getCursor(SwingCursorHelper.cFistCursor), transferable, this);
 					}
 				catch (InvalidDnDOperationException idoe) {
 					idoe.printStackTrace();

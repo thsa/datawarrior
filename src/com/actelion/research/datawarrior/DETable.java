@@ -27,6 +27,7 @@ import com.actelion.research.gui.dnd.ReactionTransferable;
 import com.actelion.research.gui.editor.SwingEditorDialog;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.hidpi.HiDPIIconButton;
+import com.actelion.research.gui.swing.SwingCursorHelper;
 import com.actelion.research.gui.table.JTableWithRowNumbers;
 import com.actelion.research.table.CompoundTableChemistryCellRenderer;
 import com.actelion.research.table.MultiLineCellRenderer;
@@ -34,7 +35,6 @@ import com.actelion.research.table.model.*;
 import com.actelion.research.table.view.CellDecorationPainter;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.util.BrowserControl;
-import com.actelion.research.util.CursorHelper;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -151,11 +151,11 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			@Override
 			public void mouseMoved(MouseEvent e) {
 				updateClickableCellsAfterMouseMotion(e.getPoint());
-				setCursor(CursorHelper.getCursor(
+				setCursor(SwingCursorHelper.getCursor(
 						isClickableCell(e.getPoint()) && getClickableCellEntry(e.getPoint()) != null ?
-								CursorHelper.cPointedHandCursor
-						: isSelectedFilledCell(e.getPoint()) ? CursorHelper.cHandCursor
-						: CursorHelper.cPointerCursor));
+								SwingCursorHelper.cPointedHandCursor
+						: isSelectedFilledCell(e.getPoint()) ? SwingCursorHelper.cHandCursor
+						: SwingCursorHelper.cPointerCursor));
 			}
 		});
 
@@ -163,8 +163,8 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if (!isClickableCell(e.getPoint()) || getClickableCellEntry(e.getPoint()) == null)
-					setCursor(CursorHelper.getCursor(e.getButton() == MouseEvent.BUTTON1 ?
-							CursorHelper.cFistCursor : CursorHelper.cPointerCursor));
+					setCursor(SwingCursorHelper.getCursor(e.getButton() == MouseEvent.BUTTON1 ?
+							SwingCursorHelper.cFistCursor : SwingCursorHelper.cPointerCursor));
 				}
 
 			@Override
@@ -190,13 +190,13 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 						}
 					}
 				else if (isSelectedFilledCell(e.getPoint())) {
-					setCursor(CursorHelper.getCursor(CursorHelper.cHandCursor));
+					setCursor(SwingCursorHelper.getCursor(SwingCursorHelper.cHandCursor));
 					}
 				}
 
 			@Override
 			public void mouseExited(MouseEvent e) {
-				setCursor(CursorHelper.getCursor(CursorHelper.cPointerCursor));
+				setCursor(SwingCursorHelper.getCursor(SwingCursorHelper.cPointerCursor));
 				}
 			});
 

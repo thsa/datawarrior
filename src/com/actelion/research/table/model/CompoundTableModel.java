@@ -1423,10 +1423,13 @@ public class CompoundTableModel extends AbstractTableModel
 	 * the proper column change events are fired.
 	 * @param column total column index
 	 * @param type one of cDataTypeAutomatic,cDataTypeNumerical,cDataTypeDate,cDataTypeString
+	 * @param forceCategories whether categories are enforced and number of categories is unlimited
 	 */
-	public void setExplicitDataType(int column, int type) {
-		if (mColumnInfo[column].explicitType != type) {
+	public void setExplicitDataType(int column, int type, boolean forceCategories) {
+		if (mColumnInfo[column].explicitType != type
+		 || mColumnInfo[column].forceCategories != forceCategories) {
 			mColumnInfo[column].explicitType = type;
+			mColumnInfo[column].forceCategories = forceCategories;
 
 			if (column < mAllColumns) {	// if we change the mode of already finalized columns
 				analyzeColumn(column, 0, false);
@@ -2318,6 +2321,10 @@ public class CompoundTableModel extends AbstractTableModel
 
 	public int getExplicitDataType(int column) {
 		return mColumnInfo[column].explicitType;
+		}
+
+	public boolean isForceCategories(int column) {
+		return mColumnInfo[column].forceCategories;
 		}
 
 	public int getColumnSummaryMode(int column) {
@@ -4635,32 +4642,32 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	private CategoryList<?> setupCategoryList(int column) {
-		CategoryList<?> categoryList = null;
+		CategoryList<?> categoryList;
 		mColumnInfo[column].belongsToMultipleCategories = false;
 		boolean isIDCode = isColumnTypeStructure(column);
 
 		if ((mColumnInfo[column].type & cColumnTypeDate) != 0) {
-			categoryList = new SortedCategoryList<Float>(new DateCategoryNormalizer(mColumnInfo[column].dateAnalysis));
+			categoryList = new SortedCategoryList<>(new DateCategoryNormalizer(mColumnInfo[column].dateAnalysis));
 			}
 		else if ((mColumnInfo[column].type & cColumnTypeDouble) != 0) {
 			if (mColumnInfo[column].hasModifiers)
 				return null;
 
-			categoryList = new SortedCategoryList<Float>(new DoubleCategoryNormalizer());
+			categoryList = new SortedCategoryList<>(new DoubleCategoryNormalizer());
 			}
 		else {
 			if (isIDCode) {
 				if (mColumnInfo[column].mCategoryCustomOrder != null) {
-					categoryList = new DefinedCategoryList<CategoryMolecule>(mColumnInfo[column].mCategoryCustomOrder, new MoleculeCategoryNormalizer());
+					categoryList = new DefinedCategoryList<>(mColumnInfo[column].mCategoryCustomOrder, new MoleculeCategoryNormalizer());
 				} else {
-					categoryList = new SortedCategoryList<CategoryMolecule>(new MoleculeCategoryNormalizer());
+					categoryList = new SortedCategoryList<>(new MoleculeCategoryNormalizer());
 				}
 			}
 			else {
 				if (mColumnInfo[column].mCategoryCustomOrder != null) {
-					categoryList = new DefinedCategoryList<String>(mColumnInfo[column].mCategoryCustomOrder, new PlainCategoryNormalizer());
+					categoryList = new DefinedCategoryList<>(mColumnInfo[column].mCategoryCustomOrder, new PlainCategoryNormalizer());
 				} else {
-					categoryList = new SortedCategoryList<String>(new PlainCategoryNormalizer());
+					categoryList = new SortedCategoryList<>(new PlainCategoryNormalizer());
 				}
 			}
 		}
@@ -4687,14 +4694,14 @@ public class CompoundTableModel extends AbstractTableModel
 				}
 
 			if ((mColumnInfo[column].type & cColumnTypeDouble) != 0) {
-				if (categoryList.getSize() >= cMaxDateOrDoubleCategoryCount) {
+				if (categoryList.getSize() >= cMaxDateOrDoubleCategoryCount && !mColumnInfo[column].forceCategories) {
 					categoryList = null;
 					mColumnInfo[column].belongsToMultipleCategories = false;
 					break;
 					}
 				}
 			else {  // this applies also for molecules
-				if (categoryList.getSize() >= cMaxTextCategoryCount) {
+				if (categoryList.getSize() >= cMaxTextCategoryCount && !mColumnInfo[column].forceCategories) {
 					categoryList = null;
 					mColumnInfo[column].belongsToMultipleCategories = false;
 					break;
@@ -5761,7 +5768,7 @@ class CompoundTableColumnInfo {
 	protected int				type,explicitType,summaryMode,significantDigits, hiliteMode;
 	protected boolean			isComplete,isCompleteChild,isUnique,isEqual,isInteger,
 								containsMultiLineText,hasDetail,hasMultipleEntries,
-								belongsToMultipleCategories,logarithmicViewMode,
+								belongsToMultipleCategories,logarithmicViewMode,forceCategories,
 								hasModifiers,excludeModifierValues,summaryCountHidden,stdDeviationShown;
 	protected float				minValue,maxValue,dataMin,dataMax;
 	protected CategoryList<?>	categoryList;

@@ -32,9 +32,12 @@ public class DETaskSetColumnDataType extends AbstractMultiColumnTask {
 	public static final String TASK_NAME = "Set Column Data Type";
 
 	private static final String PROPERTY_DATA_TYPE = "type";
+	private static final String PROPERTY_FORCE_CATEGORIES = "forceCategories";
 
 	private JComboBox mComboBoxDataType;
+	private JCheckBox mCheckBoxForceCategories;
 	private int mDataType;
+	private boolean mForceCategories;
 
 	public DETaskSetColumnDataType(Frame owner, CompoundTableModel tableModel) {
 		super(owner, tableModel, false);
@@ -46,9 +49,10 @@ public class DETaskSetColumnDataType extends AbstractMultiColumnTask {
 	 * @param tableModel
 	 * @param column valid column
 	 * @param dataType valid summaryMode
+	 * @param forceCategories whether categories are enforced and the number of categories is unlimited
 	 */
-	public DETaskSetColumnDataType(Frame owner, CompoundTableModel tableModel, int column, int dataType) {
-		this(owner, tableModel, createColumnList(column), dataType);
+	public DETaskSetColumnDataType(Frame owner, CompoundTableModel tableModel, int column, int dataType, boolean forceCategories) {
+		this(owner, tableModel, createColumnList(column), dataType, forceCategories);
 		}
 
 	/**
@@ -57,10 +61,12 @@ public class DETaskSetColumnDataType extends AbstractMultiColumnTask {
 	 * @param tableModel
 	 * @param columnList valid column list
 	 * @param dataType valid summaryMode
+	 * @param forceCategories whether categories are enforced and the number of categories is unlimited
 	 */
-	public DETaskSetColumnDataType(Frame owner, CompoundTableModel tableModel, int[] columnList, int dataType) {
+	public DETaskSetColumnDataType(Frame owner, CompoundTableModel tableModel, int[] columnList, int dataType, boolean forceCategories) {
 		super(owner, tableModel, false, columnList);
 		mDataType = dataType;
+		mForceCategories = forceCategories;
 		}
 
 	private static int[] createColumnList(int column) {
@@ -77,8 +83,11 @@ public class DETaskSetColumnDataType extends AbstractMultiColumnTask {
 	@Override
 	public Properties getPredefinedConfiguration() {
 		Properties configuration = super.getPredefinedConfiguration();
-		if (configuration != null)
+		if (configuration != null) {
 			configuration.put(PROPERTY_DATA_TYPE, CompoundTableConstants.cDataTypeCode[mDataType]);
+			if (mForceCategories)
+				configuration.put(PROPERTY_FORCE_CATEGORIES, "true");
+			}
 
 		return configuration;
 		}
@@ -87,6 +96,8 @@ public class DETaskSetColumnDataType extends AbstractMultiColumnTask {
 	public Properties getDialogConfiguration() {
 		Properties configuration = super.getDialogConfiguration();
 		configuration.put(PROPERTY_DATA_TYPE, CompoundTableConstants.cDataTypeCode[mComboBoxDataType.getSelectedIndex()]);
+		if (mCheckBoxForceCategories.isSelected())
+			configuration.put(PROPERTY_FORCE_CATEGORIES, "true");
 		return configuration;
 		}
 
@@ -100,19 +111,21 @@ public class DETaskSetColumnDataType extends AbstractMultiColumnTask {
 		super.setDialogConfiguration(configuration);
 		mComboBoxDataType.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_DATA_TYPE),
 				CompoundTableConstants.cDataTypeCode, CompoundTableConstants.cDataTypeAutomatic));
+		mCheckBoxForceCategories.setSelected("true".equals(configuration.getProperty(PROPERTY_FORCE_CATEGORIES)));
 		}
 
 	@Override
 	public void setDialogConfigurationToDefault() {
 		super.setDialogConfigurationToDefault();
 		mComboBoxDataType.setSelectedIndex(CompoundTableConstants.cDataTypeAutomatic);
+		mCheckBoxForceCategories.setSelected(false);
 		}
 
 	@Override
 	public JPanel createInnerDialogContent() {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
-							{gap, TableLayout.PREFERRED, gap} };
+							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 
 		mComboBoxDataType = new JComboBox(CompoundTableConstants.cDataTypeText);
 
@@ -120,6 +133,10 @@ public class DETaskSetColumnDataType extends AbstractMultiColumnTask {
 		ip.setLayout(new TableLayout(size));
 		ip.add(new JLabel("Data type:"), "1,1");
 		ip.add(mComboBoxDataType, "3,1");
+
+		mCheckBoxForceCategories = new JCheckBox("Force Categories");
+		ip.add(mCheckBoxForceCategories, "1,3,3,3");
+
 		return ip;
 		}
 
@@ -127,10 +144,11 @@ public class DETaskSetColumnDataType extends AbstractMultiColumnTask {
 	public void runTask(Properties configuration) {
 		int dataType = findListIndex(configuration.getProperty(PROPERTY_DATA_TYPE),
 				CompoundTableConstants.cDataTypeCode, CompoundTableConstants.cDataTypeAutomatic);
+		boolean forceCategories = "true".equals(configuration.getProperty(PROPERTY_FORCE_CATEGORIES));
 
 		int[] columnList = getColumnList(configuration);
 
 		for (int column:columnList)
-			getTableModel().setExplicitDataType(column, dataType);
+			getTableModel().setExplicitDataType(column, dataType, forceCategories);
 		}
 	}

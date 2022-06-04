@@ -148,8 +148,11 @@ public class RuntimeProperties extends AbstractConfiguration implements Compound
 						if (index != -1) {
 							int column = mTableModel.findColumn(explicitType.substring(0, index));
 							if (column != -1) {
+								boolean forceCategories = explicitType.endsWith(cForceCategoriesCode);
+								if (forceCategories)
+									explicitType = explicitType.substring(0, explicitType.length()-cForceCategoriesCode.length());
 								int type = findCode(explicitType.substring(index+1), cDataTypeCode, cDataTypeAutomatic);
-								mTableModel.setExplicitDataType(column, type);
+								mTableModel.setExplicitDataType(column, type, forceCategories);
 								}
 							}
 						}
@@ -344,7 +347,8 @@ public class RuntimeProperties extends AbstractConfiguration implements Compound
 			for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
 				if (mTableModel.getExplicitDataType(column) != cDataTypeAutomatic)
 					setProperty(cColumnDataType+"_"+columnTypeCount++,
-							mTableModel.getColumnTitleNoAlias(column)+"\t"+cDataTypeCode[mTableModel.getExplicitDataType(column)]);
+							mTableModel.getColumnTitleNoAlias(column)+"\t"+cDataTypeCode[mTableModel.getExplicitDataType(column)]
+							+ (mTableModel.isForceCategories(column) ? cForceCategoriesCode : ""));
 		}
         int significantDigitColumnCount = 0;
         for (int column=0; column<mTableModel.getTotalColumnCount(); column++)

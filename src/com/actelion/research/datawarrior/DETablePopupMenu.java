@@ -132,15 +132,24 @@ public class DETablePopupMenu extends JPopupMenu implements ActionListener {
 		addItem(SET_COLUMN_REFERENCE);
 
 		if (specialType == null) {
+			String forceCategoriesSuffix = mTableModel.isForceCategories(column) ? CompoundTableConstants.cForceCategoriesCode : "";
 			JMenu dataTypeMenu = new JMenu(SET_COLUMN_DATA_TYPE);
 			add(dataTypeMenu);
 			for (int i=0; i<CompoundTableConstants.cDataTypeText.length; i++) {
 				JRadioButtonMenuItem dataTypeItem = new JRadioButtonMenuItem(CompoundTableConstants.cDataTypeText[i],
 						mTableModel.getExplicitDataType(column) == i);
 				dataTypeItem.addActionListener(this);
-				dataTypeItem.setActionCommand(TYPE+CompoundTableConstants.cDataTypeCode[i]);
+				dataTypeItem.setActionCommand(TYPE+CompoundTableConstants.cDataTypeCode[i]+forceCategoriesSuffix);
 				dataTypeMenu.add(dataTypeItem);
 				}
+
+			dataTypeMenu.addSeparator();
+
+			forceCategoriesSuffix = mTableModel.isForceCategories(column) ? "" : CompoundTableConstants.cForceCategoriesCode;
+			JCheckBoxMenuItem categoryItem = new JCheckBoxMenuItem("Force Categories", mTableModel.isForceCategories(column));
+			categoryItem.addActionListener(this);
+			categoryItem.setActionCommand(TYPE+CompoundTableConstants.cDataTypeCode[mTableModel.getExplicitDataType(column)]+forceCategoriesSuffix);
+			dataTypeMenu.add(categoryItem);
 			}
 
 		if (DETaskSetCategoryCustomOrder.columnQualifies(mTableModel, column)) {
@@ -291,8 +300,13 @@ public class DETablePopupMenu extends JPopupMenu implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
 		if (command.startsWith(TYPE)) {
+			boolean forceCategories = false;
+			if (command.endsWith(CompoundTableConstants.cForceCategoriesCode)) {
+				command = command.substring(0, command.length() - CompoundTableConstants.cForceCategoriesCode.length());
+				forceCategories = true;
+				}
 			int type = decodeItem(command.substring(TYPE.length()), CompoundTableConstants.cDataTypeCode);
-			new DETaskSetColumnDataType(mParentFrame, mTableModel, mColumn, type).defineAndRun();
+			new DETaskSetColumnDataType(mParentFrame, mTableModel, mColumn, type, forceCategories).defineAndRun();
 			return;
 			}
 		if (command.startsWith(SUMMARY)) {

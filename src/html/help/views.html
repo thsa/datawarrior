@@ -39,13 +39,25 @@ i.e. those data rows that are not hidden by any filter. It also shows visible co
 Columns may be inherently invisible or they may be temporarily defined to be invisible.</p>
 
 <p>Any column that is shown in the <span class="keyword">Table View</span> displays data
-of an associated column of the underlying data table. Typically, all cells of a column contain
+of the respective column of the underlying data table. Typically, all cells of a column contain
 data of the same kind, e.g. numerical data, dates, categories, chemical structures, identifiers, or text.
-Some columns of the underlying data table may not be displayable, e.g. chemical descriptors or
-3D-atom coordinates. These columns are connected to a displayable parent
-column and hold supporting information for various purposes. Descriptors are used for the calculation
-of chemical similarities or to accelerate sub-structure filterung. Atom coordinates or atom
-color information are used by the molecule depiction of 2D-structures or conformers.</p>
+<span class="keyword">DataWarrior</span> automatically analyzes all column content to figure out, whether
+the column contains integer values, floating point values, text, chemical structures, or reactions.
+It also determines, whether multiple cells contain the same information and then concludes that the column
+contains categorical information, even if the content is numerical or consists of chemical structures.
+If some columns contain superflous spaces or non-numerical symbols, then <span class="keyword">DataWarrior</span>
+may not correctly recognize a column. In such cases one may override the automatic detection by selecting
+<span class="menu">Set Column Data Type To ...</span> from the popup menu that appears on a right mouse click
+on the respective column header. In very large files, <span class="keyword">DataWarrior</span> may also
+not indicate categorical data as such to save some memory. The menu item <span class="menu">Force Categories</span>
+from the same popup menu forces <span class="keyword">DataWarrior</span> to treat the column as categorical data.</p>
+
+<p>Some columns of the underlying data table may not be displayable, e.g. chemical descriptors or
+3D-atom coordinates. Under the hood, these columns are associated with one displayable parent
+column and hold supporting information for various purposes. For instance, chemical descriptors,
+which relate to a chemical structure column, are used to calculate structure similarities
+or they are used internally to accelerate the sub-structure filtering. Invisible atom coordinates
+or atom color information are used to display 2D-structure pictures or rotatable 3D-conformers.</p>
 
 <p><b>Cell coloring:</b> Typically, text and chemical structures are drawn in black or white, depending on the chosen look and feel.
 However, for any column the foreground drawing color as well as the cell's background colors can be chosen

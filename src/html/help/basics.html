@@ -53,9 +53,17 @@ of the row or marker underneath the mouse pointer.</p>
 <br>
 <h3>Table View</h3>
 <p>The <span class="keyword">Table View</span> serves as a direct window to
-the data contained in a <span class="keyword">DataWarrior</span> file. Through it
-rows can be sorted, data can be modified, and display options
-for individual columns can be changed. The <span class="keyword">Table View</span>
+the data contained in a <span class="keyword">DataWarrior</span> file.
+The data always consists of a table with its rows containing objects of any kind.
+In the context of drug discovery these are often molecules or chemical reactions,
+but in fact rows may contain anything as cocktails, animals, or flying objects.
+The columns of the table always contain object properties. These may be a name,
+an identifying number, the objects size, weight, color, taste, chemical structure,
+or a measured value. <span class="keyword">DataWarrior</span>
+automatically analyzes the content of any row to know whether it contains numerical values,
+categories, date value, chemical structures, or just text information.</p>
+<p>Within the <span class="keyword">Table View</span> rows can be sorted, data can be modified,
+and display options for individual columns can be changed. The <span class="keyword">Table View</span>
 cannot be removed nor can there be a second <span class="keyword">Table View</span>.
 Columns may contain and display non-alpha-numerical content like molecules or reactions.
 The visible column order may be changed. Columns can be added, grouped, hidden, or removed.

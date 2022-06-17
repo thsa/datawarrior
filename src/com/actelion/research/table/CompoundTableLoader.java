@@ -2138,7 +2138,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				mProgressController.stopProgress();
 				((JProgressDialog)mProgressController).close(mParentFrame);
 				}
-	
+
 			if ((mAction & (REPLACE_DATA | APPEND_DATA | MERGE_DATA | APPLY_TEMPLATE)) != 0
 			 && mRuntimeProperties != null
 			 && !error)

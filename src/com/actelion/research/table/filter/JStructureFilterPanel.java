@@ -129,11 +129,15 @@ public abstract class JStructureFilterPanel extends JFilterPanel implements Chan
 				return;
 				}
 
+			if (mCurrentDescriptorColumn != -1)
+				mCurrentDescriptorColumn = e.getMapping()[mCurrentDescriptorColumn];
+
 			String selectedItem = (String)mComboBox.getSelectedItem();
 			updateComboBoxLater(selectedItem);
 			}
 		if (e.getType() == CompoundTableEvent.cAddRows
 		 || (e.getType() == CompoundTableEvent.cChangeColumnData && e.getColumn() == mColumnIndex)) {
+			mCurrentDescriptorColumn = -1;
 			mSimilarity = null;	// TODO keep old values and calculate changes only
 			updateExclusionLater();
 			}
@@ -172,12 +176,7 @@ public abstract class JStructureFilterPanel extends JFilterPanel implements Chan
 	 * original change through all listeners. Use this method to do so...
 	 */
 	private void updateComboBoxLater(final String selectedItem) {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				updateComboBox(selectedItem);
-				}
-			});
+		SwingUtilities.invokeLater(() -> updateComboBox(selectedItem) );
 		}
 
 	/**

@@ -937,6 +937,12 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 					getColumnModel().removeColumn(column);
 					}
 				}
+
+			if (mPreviousClickableCellCol != -1) {
+				mPreviousClickableCellCol = e.getMapping()[mPreviousClickableCellCol];
+				if (mPreviousClickableCellCol == -1)
+					mPreviousClickableCellRow = -1;
+				}
 			}
 		else if (e.getType() == CompoundTableEvent.cChangeActiveRow) {
 			mCurrentRecord = ((CompoundTableModel)getModel()).getActiveRow();

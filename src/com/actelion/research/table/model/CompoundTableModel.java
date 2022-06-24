@@ -3520,9 +3520,9 @@ public class CompoundTableModel extends AbstractTableModel
 		int threadCount = Runtime.getRuntime().availableProcessors();
 		rowAndFragmentIndex.set(mRecord.length*fragment.length);
 
-		int allFragColumn = getChildColumn(idcodeColumn, DESCRIPTOR_ALLFRAG.shortName, reactionPart);
+		final int allFragColumn = getChildColumn(idcodeColumn, DESCRIPTOR_ALLFRAG.shortName, reactionPart);
 		final boolean isAllFrag = (allFragColumn != -1);
-		final int ffpColumn = isAllFrag ? allFragColumn : getChildColumn(idcodeColumn, DESCRIPTOR_FFP512.shortName, reactionPart);
+		final int fingerprintColumn = isAllFrag ? allFragColumn : getChildColumn(idcodeColumn, DESCRIPTOR_FFP512.shortName, reactionPart);
 		final long mask = convertRowFlagToMask(exclusionFlagNo);
 
 		// These fragments instances are read my multiple threads simultaneously.
@@ -3561,7 +3561,7 @@ public class CompoundTableModel extends AbstractTableModel
 	
 							if (cColumnTypeRXNCode.equals(getColumnSpecialType(idcodeColumn))) {
 								// do the substructure search in two steps for not unneccessarily creating the product molecule
-								long[] molIndex = (long[])mRecord[recordIndex].getData(ffpColumn);
+								long[] molIndex = (long[])mRecord[recordIndex].getData(fingerprintColumn);
 								searcherWithIndex.setMolecule((StereoMolecule)null, molIndex);
 								if (searcherWithIndex.isFragmentIndexInMoleculeIndex()) {
 									searcherWithIndex.setMolecule(getChemicalStructureFromReaction(mRecord[recordIndex], idcodeColumn, reactionPart, false), molIndex);
@@ -3573,7 +3573,7 @@ public class CompoundTableModel extends AbstractTableModel
 								byte[] idcode = (byte[])mRecord[recordIndex].getData(idcodeColumn);
 								if (idcode != null) {
 //if (searcherWithIndex.isFragmentIndexInMoleculeIndex()) graphSearchCount++;
-									searcherWithIndex.setMolecule(idcode, (long[])mRecord[recordIndex].getData(ffpColumn));
+									searcherWithIndex.setMolecule(idcode, (long[])mRecord[recordIndex].getData(fingerprintColumn));
 									if (searcherWithIndex.isFragmentInMolecule())
 //{
 										mRecord[recordIndex].mFlags &= ~mask;

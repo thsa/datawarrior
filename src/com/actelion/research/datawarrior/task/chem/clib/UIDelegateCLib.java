@@ -19,6 +19,7 @@
 package com.actelion.research.datawarrior.task.chem.clib;
 
 import com.actelion.research.chem.Canonizer;
+import com.actelion.research.chem.MoleculeFilter;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.SubstructureFilter;
 import com.actelion.research.chem.io.CompoundFileHelper;
@@ -26,6 +27,7 @@ import com.actelion.research.chem.io.RDFileParser;
 import com.actelion.research.chem.io.RXNFileParser;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.chem.reaction.ReactionEncoder;
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.TaskUIDelegate;
 import com.actelion.research.gui.*;
@@ -35,6 +37,7 @@ import com.actelion.research.gui.editor.GenericEditorArea;
 import com.actelion.research.gui.editor.SwingEditorPanel;
 import com.actelion.research.gui.generic.GenericEventListener;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -118,6 +121,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 		};
 
 	private Component	mParent;
+	private CompoundTableModel mTableModel;
 	private SwingEditorPanel	mDrawPanel;
 	private JPanel		mReactantPanel;
 	private JComboBox	mComboBoxMode,mComboBoxReaction;
@@ -126,8 +130,9 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 	private boolean		mDisableEvents;
 	private JStructureView[]	mReactantView;
 
-	public UIDelegateCLib(Component parent) {
+	public UIDelegateCLib(DEFrame parent) {
 		mParent = parent;
+		mTableModel = parent.getTableModel();
 		mReactantPaneList = new ArrayList<>();
 		}
 
@@ -230,10 +235,36 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 			bload.addActionListener(this);
 			reactantPanel.add(bload, "1,"+(6*i+3));
 
+			MoleculeFilter filter = new SubstructureFilter(reaction.getReactant(i));
 			CompoundCollectionPane reactantPane = new CompoundCollectionPane<>(new DefaultCompoundCollectionModel.IDCodeWithName(), false);
 			reactantPane.setClipboardHandler(new ClipboardHandler());
-			reactantPane.setCompoundFilter(new SubstructureFilter(reaction.getReactant(i)));
+			reactantPane.setCompoundFilter(filter);
 			reactantPane.setEditable(true);
+
+			JMenu columnMenu = new JMenu("Add From Column");
+			for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
+				if (mTableModel.isColumnTypeStructure(column)) {
+					JMenuItem item = new JMenuItem(mTableModel.getColumnTitle(column));
+					final int col = column;
+					item.addActionListener(e -> {
+						int errorCount = 0;
+						ArrayList<StereoMolecule> reactantList = new ArrayList<>();
+						for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
+							StereoMolecule reactant = mTableModel.getChemicalStructure(mTableModel.getTotalRecord(row), col, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
+							if (filter.moleculeQualifies(reactant))
+								reactantList.add(reactant);
+							else
+								errorCount++;
+							}
+						if (reactantList.size() != 0)
+							reactantPane.getModel().addMoleculeList(reactantList);
+						if (errorCount != 0)
+							JOptionPane.showMessageDialog(mParent, Integer.toString(errorCount).concat(" compounds were not added, because they don't have the required substructure."));
+						});
+					columnMenu.add(item);
+					}
+				}
+			reactantPane.addCustomPopupItem(columnMenu);
 			mReactantPaneList.add(reactantPane);
 			reactantPanel.add(reactantPane, "3,"+(6*i)+",2,"+(6*i+4));
 			}

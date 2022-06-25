@@ -45,7 +45,7 @@ import java.util.Properties;
 public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements Runnable,TaskConstantsCLib {
 	public static final String TASK_NAME = "Enumerate Combinatorial Library";
 
-	private Frame			mParentFrame;
+	private DEFrame			mParentFrame;
 	private DataWarrior		mApplication;
 	private DEFrame			mTargetFrame;
 

@@ -45,8 +45,6 @@ import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.*;
 
-import static com.actelion.research.chem.reaction.ReactionEncoder.INCLUDE_DEFAULT;
-
 public class DETaskMergeColumns extends ConfigurableTask implements ActionListener,ListSelectionListener {
 	private static final String PROPERTY_TARGET_COLUMN = "newColumn";
 	private static final String PROPERTY_REMOVE_SOURCE_COLUMNS = "remove";
@@ -177,7 +175,8 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		if (mCheckBoxUseTransformation.isSelected()) {
 			Reaction transformation = mTransformationView.getReaction();
 			if (!transformation.isEmpty())
-				p.setProperty(PROPERTY_TRANSFORMATION, ReactionEncoder.encode(transformation, false, INCLUDE_DEFAULT));
+				p.setProperty(PROPERTY_TRANSFORMATION, ReactionEncoder.encode(transformation, false,
+						ReactionEncoder.INCLUDE_DEFAULT | ReactionEncoder.RETAIN_REACTANT_AND_PRODUCT_ORDER));
 		}
 
 		return p;

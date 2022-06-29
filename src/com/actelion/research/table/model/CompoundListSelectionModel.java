@@ -388,6 +388,7 @@ public class CompoundListSelectionModel implements ListSelectionModel,CompoundTa
 
 		minIndex = MAX;
 		maxIndex = MIN;
+		selectedRecords = 0;
 		anchorIndex = -1;
 		leadIndex = -1;
 		}

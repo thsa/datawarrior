@@ -112,6 +112,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		content.add(mCheckBoxRemove, "1,9");
 
 		mCheckBoxUseTransformation = new JCheckBox("Use reaction for structure merge");
+		mCheckBoxUseTransformation.addActionListener(this);
 		content.add(mCheckBoxUseTransformation, "1,11");
 
 		mTransformationView = new JEditableChemistryView(ExtendedDepictor.TYPE_REACTION);
@@ -135,7 +136,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 	private void enableItems() {
 		boolean structureColumnsOnly = structureColumnsOnly();
 		mCheckBoxUseTransformation.setEnabled(structureColumnsOnly);
-		mTransformationView.setEnabled(structureColumnsOnly);
+		mTransformationView.setEnabled(structureColumnsOnly && mCheckBoxUseTransformation.isSelected());
 		}
 
 	private boolean structureColumnsOnly() {

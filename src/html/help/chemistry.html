@@ -613,7 +613,17 @@ the selection of a corresponding numerical column that contains IC50-values.</p>
 <p>Some properties match those available in the <i>OSIRIS Property Explorer</i>,
 which was made public in 2000 and in now downloadable on www.openmolecules.org.
 Some of these properties and the algorithms used are explained in more detail
-<a href="help/../properties/properties.html">here</a>.</p> 
+<a href="help/../properties/properties.html">here</a>.</p>
+
+<p>Please note that pKa values and some properties that are derived from pKa-values
+cannot be selected, because <i>DataWarrior</i> currently does not have access to an open-source
+method to reliably calculate pKa-values from chemical structures. However, if you have
+a license to calculate pKa values with software from <i>ChemAxon</i>, then you may download
+the ChemAxon pKa-plugin for <i>DataWarrior</i>
+<a href="https://chemaxon.com/download?dl=%2Fdata%2Fdownload%2Fcalculators%2F.datawarrior%2Fcapka.jar">
+capka.jar</a> from the <i>ChemAxon</i> website. If you put the downloaded 'capka.jar' file into the
+DataWarrior installation folder, then DataWarrior will automatically recognize the
+plugin and allow you to select and calculate those formerly greyed-out properties.</p>
 <br>
 
 <h3><a name="VirtualLibraries"></a>Enumerating Combinatorial Libraries</h3>
@@ -886,7 +896,7 @@ of the seven scaffold modes are shown around the original molecule.</p>
 
 <p>If the <span class="menu">Save scaffold frequency file</span> option is selected, then
 <span class="keyword">DataWarrior</span> creates a new document listing all detected scaffold
-and their occurence frequency. The name and location of the scaffold file can be set
+and their occurrence frequency. The name and location of the scaffold file can be set
 after pressing the <span class="menu">Choose</span> button.</p>
 
 <br>

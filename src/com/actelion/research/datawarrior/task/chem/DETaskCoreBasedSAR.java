@@ -631,9 +631,9 @@ try {   // TODO remove
 					getTableModel().finalizeChangeChemistryColumn(mSubstituentColumn[i], 0, getTableModel().getTotalRowCount(), false);
 
 		if (isInteractive() && mMultipleMatches > 0) {
-			final String message = "In "+mMultipleMatches+" cases a symmetric scaffold could be matched multiple times.\n"
-								 + "In these cases R-groups could not be ssigned in a unique way.\n"
-								 + "You may try avoiding this by specifying less symmetrical scaffold structures.";
+			final String message = "In "+mMultipleMatches+" cases a symmetrical scaffold could be matched multiple times.\n"
+								 + "In these cases R-groups could not be assigned in a unique way.\n"
+								 + "You may try avoiding this by specifying less symmetric scaffold structures.";
 			showInteractiveTaskMessage(message, JOptionPane.WARNING_MESSAGE);
 			}
 		}

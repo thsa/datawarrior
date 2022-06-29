@@ -572,7 +572,7 @@ public class DETaskSetCategoryCustomOrder extends ConfigurableTask implements Ac
 			mActiveSortIsAscending = (mComboBoxSortOrder.getSelectedIndex() == 0);
 
 			mNeglectListEvents = true;
-			updateList(sortCategories(mDefaultColumn, mActiveSortMode, mActiveSortColumn, mActiveSortIsAscending), true);
+			updateList(sortCategories(mDefaultColumn, mActiveSortMode, mActiveSortColumn, mActiveSortIsAscending, false), true);
 			mNeglectListEvents = false;
 			}
 		}
@@ -627,15 +627,22 @@ public class DETaskSetCategoryCustomOrder extends ConfigurableTask implements Ac
 		int sortMode = findListIndex(mode, SORT_MODE_CODE, 0);
 		int sortColumn = (sortMode == cSortModeSize) ? -1 : mTableModel.findColumn(configuration.getProperty(PROPERTY_SORT_COLUMN, ""));
 		boolean isAscending = !"false".equals(configuration.getProperty(PROPERTY_SORT_IS_ASCENDING));
-		mTableModel.setCategoryCustomOrder(column, sortCategories(column, sortMode, sortColumn, isAscending));
+		mTableModel.setCategoryCustomOrder(column, sortCategories(column, sortMode, sortColumn, isAscending, true));
 		}
 
-	private String[] sortCategories(int column, int sortMode, int sortColumn, final boolean isAscending) {
+	private String[] sortCategories(int column, int sortMode, int sortColumn, final boolean isAscending, boolean removeCoords) {
 		int categoryCount = mTableModel.getCategoryCount(column);
 		if (mTableModel.isMultiCategoryColumn(column))
 			categoryCount--;
 		CategoryToSort[] category = new CategoryToSort[categoryCount];
 		String[] categoryName = mTableModel.getCategoryList(column);
+		if (removeCoords && mTableModel.isColumnTypeStructure(column)) {
+			for (int i=0; i<categoryName.length; i++) {
+				int index = categoryName[i].indexOf(' ');
+				if (index != -1)
+					categoryName[i] = categoryName[i].substring(0, index);
+				}
+			}
 		for (int i=0; i<category.length; i++)
 			category[i] = new CategoryToSort(categoryName[i]);
 		for (int row=0; row<mTableModel.getTotalRowCount(); row++) {

@@ -20,6 +20,7 @@ package com.actelion.research.datawarrior;
 
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.task.chem.DETaskCalculateChemicalProperties;
 import com.actelion.research.datawarrior.task.data.*;
 import com.actelion.research.datawarrior.task.filter.DETaskAddNewFilter;
 import com.actelion.research.datawarrior.task.table.*;
@@ -30,7 +31,6 @@ import com.actelion.research.table.filter.JFilterPanel;
 import com.actelion.research.table.model.CompoundTableModel;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Properties;
@@ -44,6 +44,7 @@ public class DETablePopupMenu extends JPopupMenu implements ActionListener {
 	private static final String SET_COLUMN_DATA_TYPE = "Set Column Data Type To";
     private static final String SET_CATEGORY_CUSTOM_ORDER = "Set Category Custom Order...";
 	private static final String UPDATE_FORMULA = "Update Formula And Re-Calculate...";
+	private static final String UPDATE_PROPERTY = "Re-Calculate '";
 	private static final String RECALCULATE_ALL = "Re-Calculate All Columns";
     private static final String NEW_STRUCTURE_FILTER = "New Structure Filter";
     private static final String NEW_SSS_LIST_FILTER = "New SSS-List Filter";
@@ -79,11 +80,11 @@ public class DETablePopupMenu extends JPopupMenu implements ActionListener {
 
     private CompoundTableModel	mTableModel;
 	private int					mColumn;
-	private Frame    			mParentFrame;
+	private DEFrame    			mParentFrame;
 	private DEParentPane		mParentPane;
 	private DETableView         mTableView;
 
-	public DETablePopupMenu(Frame parent, DEParentPane parentPane, DETableView tableView, int column) {
+	public DETablePopupMenu(DEFrame parent, DEParentPane parentPane, DETableView tableView, int column) {
 		super();
 
         mParentFrame = parent;
@@ -158,12 +159,18 @@ public class DETablePopupMenu extends JPopupMenu implements ActionListener {
 			}
 
 		String formula = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyFormula);
-		if (formula != null) {
+		String property = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyCompoundProperty);
+		if (formula != null || property != null) {
 			addSeparator();
-			addItem(UPDATE_FORMULA);
+			if (formula != null)
+				addItem(UPDATE_FORMULA);
+			else if (property != null)
+				addItem(UPDATE_PROPERTY+mTableModel.getColumnTitle(mColumn)+"'");
 
 			for (int i=0; i<mTableModel.getTotalColumnCount(); i++) {
-				if (i != column && mTableModel.getColumnProperty(i, CompoundTableConstants.cColumnPropertyFormula) != null) {
+				if (i != column
+				 && (mTableModel.getColumnProperty(i, CompoundTableConstants.cColumnPropertyFormula) != null
+				  || mTableModel.getColumnProperty(i, CompoundTableConstants.cColumnPropertyCompoundProperty) != null)) {
 					addItem(RECALCULATE_ALL);
 					break;
 					}
@@ -355,14 +362,28 @@ public class DETablePopupMenu extends JPopupMenu implements ActionListener {
 			String formula = mTableModel.getColumnProperty(mColumn, CompoundTableConstants.cColumnPropertyFormula);
 			new DETaskAddCalculatedValues(mParentFrame, mTableModel, mColumn, formula, true).defineAndRun();
 			}
+		else if (e.getActionCommand().startsWith(UPDATE_PROPERTY)) {
+			String property = mTableModel.getColumnProperty(mColumn, CompoundTableConstants.cColumnPropertyCompoundProperty);
+			int index = property.indexOf('@');
+			int idcodeColumn = mTableModel.findColumn(property.substring(index+1));
+			new DETaskCalculateChemicalProperties(mParentFrame, property.substring(0, index), idcodeColumn, mColumn).defineAndRun();
+			}
 		else if (e.getActionCommand().equals(RECALCULATE_ALL)) {
 			final JProgressDialog progressDialog = new JProgressDialog(mParentFrame);
 			// we need to make sure that cilumns are calculated one after another
 			Thread calculationThread = new Thread(() -> {
 				for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 					String formula = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyFormula);
+					String property = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyCompoundProperty);
 					if (formula != null) {
 						DETaskAddCalculatedValues task = new DETaskAddCalculatedValues(mParentFrame, mTableModel, column, formula, false);
+						Properties configuration = task.getPredefinedConfiguration();
+						task.execute(configuration, progressDialog);
+						}
+					else if (property != null) {
+						int index = property.indexOf('@');
+						int idcodeColumn = mTableModel.findColumn(property.substring(index+1));
+						DETaskCalculateChemicalProperties task = new DETaskCalculateChemicalProperties(mParentFrame, property.substring(0, index), idcodeColumn, column);
 						Properties configuration = task.getPredefinedConfiguration();
 						task.execute(configuration, progressDialog);
 						}

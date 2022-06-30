@@ -46,7 +46,7 @@ public class DETableView extends JScrollPane
 
 	private static final int DEFAULT_HEADER_LINES = 2;
 
-	private Frame				    mParentFrame;
+	private DEFrame				    mParentFrame;
 	private DEParentPane		    mParentPane;
 	private DETable				    mTable;
 	private DECompoundTableModel	mTableModel;
@@ -55,7 +55,7 @@ public class DETableView extends JScrollPane
 	private CompoundTableColorHandler	mColorHandler;
 	private ViewSelectionHelper 	mViewSelectionHelper;
 
-	public DETableView(Frame parentFrame, DEParentPane parentPane, DECompoundTableModel tableModel,
+	public DETableView(DEFrame parentFrame, DEParentPane parentPane, DECompoundTableModel tableModel,
 					   CompoundTableColorHandler colorHandler, CompoundListSelectionModel selectionModel) {
 		mParentFrame = parentFrame;
 		mParentPane = parentPane;

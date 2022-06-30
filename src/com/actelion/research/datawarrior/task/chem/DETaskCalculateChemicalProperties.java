@@ -56,6 +56,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final String CHEMPROPERTY_OPTION_SEPARATOR = "|";
 	private static final String PROPERTY_STRUCTURE_COLUMN = "structureColumn";
 	private static final String PROPERTY_CHEMPROPERTY_LIST = "propertyList";
+	private static final String PROPERTY_TARGET_COLUMN = "targetColumn";
 
 	private static final int PREDICTOR_COUNT			= 8;
 	private static final int PREDICTOR_LOGP				= 0;
@@ -176,7 +177,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private TreeMap<String,DEProperty>	mPropertyMap;
 	private ArrayList<DEPropertyOrder>	mPropertyOrderList;
 	private Object[]					mPredictor;
-	private volatile int				mIDCodeColumn,mFragFpColumn,mFlexophoreColumn;
+	private volatile int				mIDCodeColumn,mFragFpColumn,mFlexophoreColumn,mTargetColumn,mPropertyIndex;
 	private JComboBox					mComboBoxStructureColumn;
 	private JTabbedPane					mTabbedPane;
 	private DEPropertyGUI[]				mPropertyGUI;
@@ -184,6 +185,29 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 
 	public DETaskCalculateChemicalProperties(DEFrame parent) {
 		super(parent, true);
+		mTargetColumn = -1; // indicator that it is not a predefined task
+		mParentFrame = parent;
+		mTableModel = parent.getTableModel();
+		}
+
+	/**
+	 * Use this constructor to create a predefined task to re-calculate a defined property into an existing column
+	 * @param parent
+	 * @param propertyCode
+	 * @param idcodeColumn
+	 * @param targetColumn
+	 */
+	public DETaskCalculateChemicalProperties(DEFrame parent, String propertyCode, int idcodeColumn, int targetColumn) {
+		super(parent, true);
+		mIDCodeColumn = idcodeColumn;
+		mPropertyIndex = -1;
+		for (int i=0; i<PROPERTY_CODE.length; i++) {
+			if (PROPERTY_CODE[i].equals(propertyCode)) {
+				mPropertyIndex = i;
+				break;
+				}
+			}
+		mTargetColumn = targetColumn;
 		mParentFrame = parent;
 		mTableModel = parent.getTableModel();
 		}
@@ -271,6 +295,18 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	@Override
 	public String getHelpURL() {
 		return "/html/help/chemistry.html#MolecularProperties";
+		}
+
+	@Override
+	public Properties getPredefinedConfiguration() {
+		if (mTargetColumn == -1)
+			return null;
+
+		Properties configuration = new Properties();
+		configuration.setProperty(PROPERTY_STRUCTURE_COLUMN, mTableModel.getColumnTitleNoAlias(mIDCodeColumn));
+		configuration.setProperty(PROPERTY_CHEMPROPERTY_LIST, PROPERTY_CODE[mPropertyIndex]);
+		configuration.setProperty(PROPERTY_TARGET_COLUMN, mTableModel.getColumnTitleNoAlias(mTargetColumn));
+		return configuration;
 		}
 
 	@Override
@@ -629,17 +665,17 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		if (threadMustDie())
 			return;
 
-		final int firstNewColumn = mTableModel.addNewColumns(columnName);
+		final int firstPropertyColumn = mTargetColumn != -1 ? mTargetColumn : mTableModel.addNewColumns(columnName);
 
 		startProgress("Calculating properties...", 0, mTableModel.getTotalRowCount());
 
 		if (mPredictor[PREDICTOR_PKA] == null)
-			finishTaskMultiCore(firstNewColumn);
+			finishTaskMultiCore(firstPropertyColumn);
 		else
-			finishTaskSingleCore(firstNewColumn);
+			finishTaskSingleCore(firstPropertyColumn);
 		}
 
-	private void finishTaskSingleCore(final int firstNewColumn) {
+	private void finishTaskSingleCore(final int firstPropertyColumn) {
 		int errorCount = 0;
 
 		StereoMolecule containerMol = new StereoMolecule();
@@ -648,7 +684,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 				updateProgress(row);
 
 			try {
-				processRow(row, firstNewColumn, containerMol);
+				processRow(row, firstPropertyColumn, containerMol);
 				}
 			catch (Exception e) {
 				errorCount++;
@@ -658,10 +694,10 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		if (!threadMustDie() && errorCount != 0)
 			showErrorMessage("The task '"+TASK_NAME+"' failed on "+errorCount+" molecules.");
 
-		finalizeTableModel(firstNewColumn);
+		finalizeTableModel(firstPropertyColumn);
 		}
 
-	private void finishTaskMultiCore(final int firstNewColumn) {
+	private void finishTaskMultiCore(final int firstPropertyColumn) {
 		int threadCount = Runtime.getRuntime().availableProcessors();
 		mSMPRecordIndex = new AtomicInteger(mTableModel.getTotalRowCount());
 		mSMPWorkingThreads = new AtomicInteger(threadCount);
@@ -675,7 +711,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 					int recordIndex = mSMPRecordIndex.decrementAndGet();
 					while (recordIndex >= 0 && !threadMustDie()) {
 						try {
-							processRow(recordIndex, firstNewColumn, containerMol);
+							processRow(recordIndex, firstPropertyColumn, containerMol);
 							}
 						catch (Exception e) {
 							mSMPErrorCount.incrementAndGet();
@@ -690,7 +726,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 						if (!threadMustDie() && mSMPErrorCount.get() != 0)
 							showErrorMessage("The task '"+TASK_NAME+"' failed on "+mSMPErrorCount.get()+" molecules.");
 
-   						finalizeTableModel(firstNewColumn);
+   						finalizeTableModel(firstPropertyColumn);
 						}
 					}
 				};
@@ -704,18 +740,25 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 			try { t[i].join(); } catch (InterruptedException e) {}
 		}
 
-	private void finalizeTableModel(int firstNewColumn) {
-		mTableModel.finalizeNewColumns(firstNewColumn, this);
+	private void finalizeTableModel(int firstPropertyColumn) {
+		if (mTargetColumn != -1) {
+			mTableModel.finalizeChangeAlphaNumericalColumn(mTargetColumn, 0, mTableModel.getTotalRowCount());
+			}
+		else {
+			mTableModel.finalizeNewColumns(firstPropertyColumn, this);
 
-		DETableView tableView = mParentFrame.getMainFrame().getMainPane().getTableView();
-		if (tableView != null) {
-			int column = firstNewColumn;
-			for (DEPropertyOrder order:mPropertyOrderList) {
-				if (order.property.backgroundColor != null) {
-					VisualizationColor vc = tableView.getColorHandler().getVisualizationColor(column, CompoundTableColorHandler.BACKGROUND);
-					vc.setColor(column, order.property.backgroundColor.colorList, order.property.backgroundColor.colorMode);
+			DETableView tableView = mParentFrame.getMainFrame().getMainPane().getTableView();
+			if (tableView != null) {
+				int column = firstPropertyColumn;
+				for (DEPropertyOrder order:mPropertyOrderList) {
+					mTableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertyCompoundProperty,
+							PROPERTY_CODE[order.property.type]+"@"+mTableModel.getColumnTitleNoAlias(mIDCodeColumn));
+					if (order.property.backgroundColor != null) {
+						VisualizationColor vc = tableView.getColorHandler().getVisualizationColor(column, CompoundTableColorHandler.BACKGROUND);
+						vc.setColor(column, order.property.backgroundColor.colorList, order.property.backgroundColor.colorMode);
+						}
+					column++;
 					}
-				column++;
 				}
 			}
 		}

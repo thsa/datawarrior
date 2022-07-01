@@ -858,6 +858,9 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					fromIndex = toIndex+1;
 					}
 
+				if (columnName.startsWith("\"") && columnName.endsWith("\""))
+					columnName = columnName.substring(1, columnName.length()-1).trim();
+
 				String[] type = cParentSpecialColumnTypes;
 				for (int i=0; i<type.length; i++) {
 					if (columnName.endsWith("["+type[i]+"]")) {
@@ -1743,6 +1746,10 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				// exclude manually CCDC entries with atoms that are in multiple locations.
 				if (comment.contains("From CSD data") && !comment.contains("No disordered atoms"))
 					throw new Exception("CSD molecule with ambivalent atom location.");
+
+				// exclude manually CCDC entries with matching problems.
+				if (comment.contains("From CSD data") && comment.contains("Matching problem"))
+					throw new Exception("CSD molecule with matching problem.");
 
 				mfParser.parse(mol, molfile);
 				if (mol.getAllAtoms() != 0) {

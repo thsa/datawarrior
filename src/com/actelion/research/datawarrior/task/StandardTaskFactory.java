@@ -142,6 +142,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskCreateGenericTautomer.TASK_NAME) ? new DETaskCreateGenericTautomer(frame)
 			 : codeMatches(taskCode, DETaskCreateListsFromCategories.TASK_NAME) ? new DETaskCreateListsFromCategories(frame)
 			 : codeMatches(taskCode, DETaskCreateTSNEVisualization.TASK_NAME) ? new DETaskCreateTSNEVisualization(frame, false)
+			 : codeMatches(taskCode, DETaskCreateUMAPVisualization.TASK_NAME) ? new DETaskCreateUMAPVisualization(frame, false)
 			 : codeMatches(taskCode, DETaskDefineLabel.TASK_NAME) ? new DETaskDefineLabel(frame)
 			 : codeMatches(taskCode, DETaskDefineVariable.TASK_NAME) ? new DETaskDefineVariable(frame)
 			 : codeMatches(taskCode, DETaskDeleteAllRowLists.TASK_NAME) ? new DETaskDeleteAllRowLists(frame)
@@ -360,6 +361,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskCreateGenericTautomer.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskCreateListsFromCategories.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskCreateTSNEVisualization.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskCreateUMAPVisualization.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskDefineLabel.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskDefineVariable.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskDeleteAllRowLists.TASK_NAME));

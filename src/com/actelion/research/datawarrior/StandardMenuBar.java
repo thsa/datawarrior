@@ -141,7 +141,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuEditNewFilter,jMenuDataRemoveColumns,jMenuDataRemoveSelected,jMenuDataRemoveInvisible,
 					  jMenuDataRemoveDuplicate,jMenuDataRemoveUnique,jMenuDataMergeColumns,jMenuDataMergeDuplicate,jMenuDataSplitRows,
 					  jMenuDataAddEmptyColumns,jMenuDataAddEmptyRows,jMenuDataAddRowNumbers,jMenuDataAddCalculatedValues,
-					  jMenuDataAddBinnedColumn,jMenuDataAddFuzzyScore,jMenuDataAddPrincipalComponents,jMenuDataCreateTSNE,
+					  jMenuDataAddBinnedColumn,jMenuDataAddFuzzyScore,jMenuDataAddPrincipalComponents,jMenuDataCreateTSNE,jMenuDataCreateUMAP,
 					  jMenuDataSOMCreate,jMenuDataSOMApply,jMenuDataSOMAnalyse, jMenuChemPredictMissingValues, jMenuChemAssessPredictionQuality,
 					  jMenuDataGiniScore,jMenuDataArrangeGraph,jMenuDataCorrelationMatrix,
 					  jMenuChemExtractReactants,jMenuChemExtractCatalysts,jMenuChemExtractProducts,jMenuChemExtractTransformation,
@@ -641,6 +641,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuDataAddCalculatedValues = new JMenuItem();
 		jMenuDataAddPrincipalComponents = new JMenuItem();
 		jMenuDataCreateTSNE = new JMenuItem();
+		jMenuDataCreateUMAP = new JMenuItem();
 		jMenuDataSelfOrganizingMap = new JMenu();
 		jMenuDataSOMCreate = new JMenuItem();
 		jMenuDataSOMApply = new JMenuItem();
@@ -686,6 +687,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuDataAddPrincipalComponents.addActionListener(this);
 		jMenuDataCreateTSNE.setText("Create t-SNE Visualization...");
 		jMenuDataCreateTSNE.addActionListener(this);
+		jMenuDataCreateUMAP.setText("Create UMAP Visualization...");
+		jMenuDataCreateUMAP.addActionListener(this);
 		jMenuDataSelfOrganizingMap.setText("Self Organizing Map");
 		jMenuDataSOMCreate.setText("Create...");
 		jMenuDataSOMCreate.addActionListener(this);
@@ -725,6 +728,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuData.add(jMenuDataAddFuzzyScore);
 		jMenuData.add(jMenuDataAddPrincipalComponents);
 		jMenuData.add(jMenuDataCreateTSNE);
+		jMenuData.add(jMenuDataCreateUMAP);
 		jMenuData.add(jMenuDataSelfOrganizingMap);
 		jMenuDataSelfOrganizingMap.add(jMenuDataSOMCreate);
 		jMenuDataSelfOrganizingMap.add(jMenuDataSOMApply);
@@ -1588,6 +1592,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskPCA(mParentFrame, true).defineAndRun();
 			else if (source == jMenuDataCreateTSNE)
 				new DETaskCreateTSNEVisualization(mParentFrame, true).defineAndRun();
+			else if (source == jMenuDataCreateUMAP)
+				new DETaskCreateUMAPVisualization(mParentFrame, true).defineAndRun();
 			else if (source == jMenuDataSOMCreate)
 				new DETaskCalculateSOM(mParentFrame, true).defineAndRun();
 			else if (source == jMenuDataSOMApply)

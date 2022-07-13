@@ -31,41 +31,46 @@ import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.table.view.VisualizationPanel3D;
-import com.jujutsu.tsne.TSneConfiguration;
-import com.jujutsu.tsne.barneshut.BarnesHutTSne;
-import com.jujutsu.tsne.barneshut.ParallelBHTsne;
-import com.jujutsu.utils.TSneUtils;
 import info.clearthought.layout.TableLayout;
+import com.tagbio.umap.Umap;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.Properties;
 
 
-public class DETaskCreateTSNEVisualization extends ConfigurableTask {
+public class DETaskCreateUMAPVisualization extends ConfigurableTask {
     public static final long serialVersionUID = 0x20180802;
 
-    public static final String TASK_NAME = "Create t-SNE Visualization";
+    public static final String TASK_NAME = "Create UMAP Visualization";
 
 	private static final String PROPERTY_COLUMN_LIST = "columnList";
 	private static final String PROPERTY_DIMENSIONS = "dimensions";
-	private static final String PROPERTY_PERPLEXITY = "perplexity";
-	private static final String PROPERTY_PCADIMENSIONS = "pcadimensions";
-	private static final String PROPERTY_ITERATIONS = "iterations";
+	private static final String PROPERTY_NEIGHBOURS = "neighbours";
+	private static final String PROPERTY_MIN_DIST = "minDist";
+	private static final String PROPERTY_METRIC = "metric";
 	private static final String PROPERTY_CREATE_VIEW = "createView";
 
-    private DEFrame				mParentFrame;
-	private CompoundTableModel  mTableModel;
-	private JComboBox			mComboBoxNoOfComponents;
+	private static final String DEFAULT_DIMENSIONS = "3";
+	private static final String DEFAULT_MIN_DIST = "0.5";
+	private static final String DEFAULT_NEIGHBOURS = "100";
+
+	private static final String[] METRIC_NAME = { "euclidean", "l2", "manhattan", "l1", "taxicab", "chebyshev", "linfinity", "linfty",
+			"linf", "canberra", "cosine", "correlation", "haversine", "braycurtis", "hamming", "jaccard", "dice", "matching",
+			"kulsinski", "rogerstanimoto", "russellrao", "sokalsneath", "sokalmichener", "yule" };
+
+    private DEFrame			    mParentFrame;
+	private CompoundTableModel	mTableModel;
+	private JComboBox			mComboBoxNoOfComponents,mComboBoxMetric;
 	private JCheckBox			mCheckBoxCreateViews;
 	private JList				mListColumns;
 	private JTextArea			mTextArea;
-	private JTextField			mTextFieldPerplexity,mTextFieldIterations,mTextFieldPCADimensions;
+	private JTextField          mTextFieldNeighbours, mTextFieldMinDist;
 	private boolean				mIsInteractive;
 	private int					mFullDataRowCount;
 	private int[]				mFullDataRow;
 
-	public DETaskCreateTSNEVisualization(DEFrame parent, boolean isInteractive) {
+	public DETaskCreateUMAPVisualization(DEFrame parent, boolean isInteractive) {
 		super(parent, true);
 		mParentFrame = parent;
 		mIsInteractive = isInteractive;
@@ -85,7 +90,7 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 	@Override
 	public boolean isConfigurable() {
 		if (getDescriptorCount() == 0 && getParameterCount() < 3) {
-			showErrorMessage("A t-SNE visualization either needs a chemical descriptor or at least 3 numerical columns.");
+			showErrorMessage("A UMAP visualization either needs a chemical descriptor or at least 3 numerical columns.");
 			return false;
 			}
 
@@ -131,11 +136,11 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 									TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
         p1.setLayout(new TableLayout(size));
 
-		final String[] optionList = {"2", "3"};
-        mComboBoxNoOfComponents = new JComboBox(optionList);
-		mComboBoxNoOfComponents.setSelectedIndex(0);
-        p1.add(new JLabel("No of target dimensions:"), "1,1,3,1");
-        p1.add(mComboBoxNoOfComponents, "5,1");
+		final String[] optionList = {"2", "3", "4", "5", "6", "7", "8", "9", "10"};
+		mComboBoxNoOfComponents = new JComboBox(optionList);
+		mComboBoxNoOfComponents.setEditable(true);
+		p1.add(new JLabel("Target dimensions:"), "1,1,3,1");
+		p1.add(mComboBoxNoOfComponents, "5,1");
 
         int index = 0;
 		int optionCount = getDescriptorCount() + getParameterCount();
@@ -164,17 +169,18 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 		p1.add(parameterLabel, "1,3");
 		p1.add(scrollPane, "3,3,5,3");
 
-		mTextFieldPerplexity = new JTextField((6));
-		p1.add(new JLabel("Perplexity:"), "1,5");
-		p1.add(mTextFieldPerplexity, "3,5");
+		mTextFieldNeighbours = new JTextField((6));
+		p1.add(new JLabel("Nearest neighbours (default 100):"), "1,5,3,5");
+		p1.add(mTextFieldNeighbours, "5,5");
 
-		mTextFieldPCADimensions = new JTextField((6));
-		p1.add(new JLabel("Source dimensions:"), "1,7");
-		p1.add(mTextFieldPCADimensions, "3,7");
+		mTextFieldMinDist = new JTextField((6));
+		p1.add(new JLabel("Minimum distance (default 0.5):"), "1,7,3,7");
+		p1.add(mTextFieldMinDist, "5,7");
 
-		mTextFieldIterations = new JTextField((6));
-		p1.add(new JLabel("Iterations:"), "1,9");
-		p1.add(mTextFieldIterations, "3,9");
+		mComboBoxMetric = new JComboBox(METRIC_NAME);
+		mComboBoxMetric.setSelectedIndex(0);
+		p1.add(new JLabel("Metric (default euclidian):"), "1,9,3,9");
+		p1.add(mComboBoxMetric, "5,9");
 
 		mCheckBoxCreateViews = new JCheckBox("Automatically create 2D- or 3D-view");
         p1.add(mCheckBoxCreateViews, "1,11,5,11");
@@ -184,7 +190,7 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 
 	@Override
 	public String getHelpURL() {
-		return "/html/help/me.html#TSNE";
+		return "/html/help/me.html#UMAP";
 		}
 
 	@Override
@@ -200,16 +206,16 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 		configuration.put(PROPERTY_DIMENSIONS, mComboBoxNoOfComponents.getSelectedItem());
 		configuration.put(PROPERTY_CREATE_VIEW, mCheckBoxCreateViews.isSelected() ? "true" : "false");
 
-		configuration.put(PROPERTY_PERPLEXITY, mTextFieldPerplexity.getText());
-		configuration.put(PROPERTY_PCADIMENSIONS, mTextFieldPCADimensions.getText());
-		configuration.put(PROPERTY_ITERATIONS, mTextFieldIterations.getText());
+		configuration.put(PROPERTY_NEIGHBOURS, mTextFieldNeighbours.getText());
+		configuration.put(PROPERTY_MIN_DIST, mTextFieldMinDist.getText());
+		configuration.put(PROPERTY_METRIC, mComboBoxMetric.getSelectedItem());
 
 		return configuration;
 		}
 
 	@Override
     public void setDialogConfiguration(Properties configuration) {
-    	String value = configuration.getProperty(PROPERTY_DIMENSIONS, "3");
+    	String value = configuration.getProperty(PROPERTY_DIMENSIONS, DEFAULT_DIMENSIONS);
     	if (value != null)
     		mComboBoxNoOfComponents.setSelectedItem(value);
 
@@ -219,25 +225,25 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 		else
 			mTextArea.setText(columnNames.replace('\t', '\n'));
 
-		mTextFieldPerplexity.setText(configuration.getProperty(PROPERTY_PERPLEXITY, "20.0"));
-		mTextFieldPCADimensions.setText(configuration.getProperty(PROPERTY_PCADIMENSIONS, "50"));
-		mTextFieldIterations.setText(configuration.getProperty(PROPERTY_ITERATIONS, "1000"));
+		mTextFieldNeighbours.setText(configuration.getProperty(PROPERTY_NEIGHBOURS, DEFAULT_NEIGHBOURS));
+		mTextFieldMinDist.setText(configuration.getProperty(PROPERTY_MIN_DIST, DEFAULT_MIN_DIST));
+		mComboBoxMetric.setSelectedItem(configuration.getProperty(PROPERTY_METRIC, METRIC_NAME[0]));
 
 		mCheckBoxCreateViews.setSelected("true".equals(configuration.getProperty(PROPERTY_CREATE_VIEW, "true")));
 		}
 
 	@Override
     public void setDialogConfigurationToDefault() {
-		mComboBoxNoOfComponents.setSelectedItem("3");
+		mComboBoxNoOfComponents.setSelectedItem(DEFAULT_DIMENSIONS);
 
 		if (mIsInteractive)
 			mListColumns.clearSelection();
 		else
 			mTextArea.setText("");
 
-		mTextFieldPerplexity.setText("20.0");
-		mTextFieldPCADimensions.setText("50");
-		mTextFieldIterations.setText("1000");
+		mTextFieldNeighbours.setText(DEFAULT_NEIGHBOURS);
+		mTextFieldMinDist.setText(DEFAULT_MIN_DIST);
+		mComboBoxMetric.setSelectedItem(METRIC_NAME[0]);
 
 		mCheckBoxCreateViews.setSelected(true);
 		}
@@ -251,36 +257,48 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
             showErrorMessage("Column list not defined.");
             return false;
     		}
+		String[] columnName = columnList.split("\\t");
 
-		String perplexity = configuration.getProperty(PROPERTY_PERPLEXITY, "20");
+		String dimensions = configuration.getProperty(PROPERTY_DIMENSIONS, DEFAULT_DIMENSIONS);
+		try {
+			int n = Integer.parseInt(dimensions);
+			if (n < 2) {
+				showErrorMessage("'Dimensions' must be at least 2.");
+				return false;
+				}
+			}
+		catch (NumberFormatException nfe) {
+			showErrorMessage("'Dimensions' value is not an integer.");
+			return false;
+			}
+
+		String neighbours = configuration.getProperty(PROPERTY_NEIGHBOURS, DEFAULT_NEIGHBOURS);
     	try {
-    		Float.parseFloat(perplexity);
+    		int n = Integer.parseInt(neighbours);
+    		if (n <= 2) {
+			    showErrorMessage("'Nearest neighbours' must be larger than 2.");
+			    return false;
+			    }
 			}
 		catch (NumberFormatException nfe) {
-			showErrorMessage("Perplexity value is not numerical.");
+			showErrorMessage("'Nearest neighbours' value is not an integer.");
 			return false;
 			}
 
-		String dimensions = configuration.getProperty(PROPERTY_PCADIMENSIONS, "50");
+		String minDist = configuration.getProperty(PROPERTY_MIN_DIST, DEFAULT_MIN_DIST);
 		try {
-			Integer.parseInt(dimensions);
+			float d = Float.parseFloat(minDist);
+			if (d <= 0f || d >= 1f) {
+				showErrorMessage("'Minimum distance' value not in sensible range (0 > minDist > 1)");
+				return false;
+				}
 			}
 		catch (NumberFormatException nfe) {
-			showErrorMessage("Source dimensions value is not an integer.");
-			return false;
-			}
-
-		String iterations = configuration.getProperty(PROPERTY_ITERATIONS, "1000");
-		try {
-			Integer.parseInt(iterations);
-			}
-		catch (NumberFormatException nfe) {
-			showErrorMessage("Iterations value is not an integer.");
+			showErrorMessage("'Minimum distance' value is not numerical.");
 			return false;
 			}
 
 		if (isLive) {
-	    	String[] columnName = columnList.split("\\t");
 	    	int[] column = new int[columnName.length];
 	
 	    	for (int i=0; i<columnName.length; i++) {
@@ -309,7 +327,7 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 				}
 
 	    	if (descriptorCount == 0 && parameterCount < 3) {
-				showErrorMessage("A t-SNE visualization needs at least 3 numerical columns or one chemical descriptor.");
+				showErrorMessage("An UMAP visualization needs at least 3 numerical columns or one chemical descriptor.");
 			    return false;
 				}
 			if (countFullDataRows(column) < 3) {
@@ -441,10 +459,10 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
         		}
 			}
 
-		double[] rowParameter = new double[regularCount];
+		float[] rowParameter = new float[regularCount];
 
 		startProgress("Calculating mean parameters...", 0, mFullDataRowCount);
-		double[] meanParameter = new double[regularCount];
+		float[] meanParameter = new float[regularCount];
 		for (int r=0; r<mFullDataRowCount; r++) {
 			if (threadMustDie())
 				break;
@@ -475,13 +493,15 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 			}
 		if (!threadMustDie())
 			for (int i=0; i<regularCount; i++)
-				variance[i] /= (double)(mFullDataRowCount-1);
+				variance[i] /= mFullDataRowCount-1;
 
-		int outputDims = 2;
-		try { outputDims = Integer.parseInt(configuration.getProperty(PROPERTY_DIMENSIONS, "2")); } catch (NumberFormatException nfe) {}
+		int outputDims = 3;
+		try { outputDims = Integer.parseInt(configuration.getProperty(PROPERTY_DIMENSIONS, DEFAULT_DIMENSIONS)); } catch (NumberFormatException nfe) {}
+		if (outputDims > regularCount)
+			outputDims = regularCount;
 
-		startProgress("Calculating t-SNE input array...", 0, mFullDataRowCount);
-		double [][] X = new double[mFullDataRowCount][regularCount];
+		startProgress("Calculating UMAP input array...", 0, mFullDataRowCount);
+		float [][] X = new float[mFullDataRowCount][regularCount];
 		for (int r=0; r<mFullDataRowCount; r++) {
 			if (threadMustDie())
 				break;
@@ -489,21 +509,22 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 
 			calculateParameterRow(descriptorColumn, regularColumn, mFullDataRow[r], varyingKey, rowParameter);
 			for (int i=0; i<regularCount; i++)
-				X[r][i] = (rowParameter[i] - meanParameter[i]) / Math.sqrt(variance[i]);
+				X[r][i] = (rowParameter[i] - meanParameter[i]) / (float)Math.sqrt(variance[i]);
 			}
 
-		double perplexity = Float.parseFloat(configuration.getProperty(PROPERTY_PERPLEXITY, "20.0"));
-		int initial_dims = Integer.parseInt(configuration.getProperty(PROPERTY_PCADIMENSIONS, "50"));
-		int iterations = Integer.parseInt(configuration.getProperty(PROPERTY_ITERATIONS, "1000"));
-		double[][] Y = null;
+		int neighbours = Integer.parseInt(configuration.getProperty(PROPERTY_NEIGHBOURS, DEFAULT_NEIGHBOURS));
+		float minDist = Float.parseFloat(configuration.getProperty(PROPERTY_MIN_DIST, DEFAULT_MIN_DIST));
+		String metric = configuration.getProperty(PROPERTY_METRIC, METRIC_NAME[0]);
+		float[][] Y = null;
 		try {
-			BarnesHutTSne tsne = new ParallelBHTsne();    // this is the single thread alternative: new BHTSne();
-
-//BarnesHutTSne tsne = new BHTSne();	// for some small datasets the parallel implementation seems to hang; TLS 26-Oct-2018
-// on 04-Apr-2019 arofab suggested a change in BarnesHutTSne that seems to solve the issue. Thus going back to parallel; TLS 09-Apr-2019
-
-			TSneConfiguration config = TSneUtils.buildConfig(X, outputDims, initial_dims, perplexity, iterations);
-			Y = tsne.tsne(config, this);
+			final Umap umap = new Umap();
+			umap.setNumberComponents(outputDims);         // number of dimensions in result
+			umap.setNumberNearestNeighbours(neighbours);
+			umap.setMinDist(minDist);
+			umap.setMetric(metric);
+			umap.setThreads(Runtime.getRuntime().availableProcessors());
+			startProgress("Fitting UMAP transform...", 0, 0);
+			Y = umap.fitTransform(X);
 			}
 		catch (Exception e) {
 			showErrorMessage(e.getMessage());
@@ -513,7 +534,7 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 		if (!threadMustDie()) {
 			String[] columnTitle = new String[outputDims];
 			for (int i=0; i<outputDims; i++)
-				columnTitle[i] = "t-SNE "+(char)('X'+i);
+				columnTitle[i] = (outputDims <= 3) ? "UMAP "+(char)('X'+i) : "UMAP "+(i+1);
 			final int firstNewColumn = mTableModel.addNewColumns(columnTitle);
 			for (int i=0; i<outputDims; i++)
 				for (int r=0; r<mFullDataRowCount; r++)
@@ -540,37 +561,35 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 
 				final int dimensions = outputDims;
 				final int _colorColumn = colorColumn;
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						DEMainPane mainPane = mParentFrame.getMainFrame().getMainPane();
+				SwingUtilities.invokeLater(() -> {
+					DEMainPane mainPane = mParentFrame.getMainFrame().getMainPane();
 
-						int colorListMode = VisualizationColor.cColorListModeHSBLong;
-						Color[] colorList = (_colorColumn == -1) ? null : VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode, null);
+					int colorListMode = VisualizationColor.cColorListModeHSBLong;
+					Color[] colorList = (_colorColumn == -1) ? null : VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode, null);
 
-						if (dimensions == 2) {
-							VisualizationPanel2D vpanel1 = mainPane.add2DView("t-SNE 2D", null);
-							vpanel1.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
-							vpanel1.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn + 1));
-							vpanel1.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
-		                    if (_colorColumn != -1)
-								vpanel1.getVisualization().getMarkerColor().setColor(_colorColumn, colorList, colorListMode);
-							}
-	                    if (dimensions == 3) {
-		                    VisualizationPanel3D vpanel2 = mainPane.add3DView("t-SNE 3D", null);
-		                    vpanel2.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
-		                    vpanel2.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn+1));
-		                    vpanel2.setAxisColumnName(2, mTableModel.getColumnTitle(firstNewColumn+2));
-		                    vpanel2.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
-							if (_colorColumn != -1)
-			                    vpanel2.getVisualization().getMarkerColor().setColor(_colorColumn, colorList, colorListMode);
-	                    	}
+					if (dimensions == 2) {
+						VisualizationPanel2D vpanel1 = mainPane.add2DView("UMAP 2D", null);
+						vpanel1.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
+						vpanel1.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn + 1));
+						vpanel1.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+	                    if (_colorColumn != -1)
+							vpanel1.getVisualization().getMarkerColor().setColor(_colorColumn, colorList, colorListMode);
 						}
-					} );
+                    else {
+	                    VisualizationPanel3D vpanel2 = mainPane.add3DView("UMAP 3D", null);
+	                    vpanel2.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
+	                    vpanel2.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn+1));
+	                    vpanel2.setAxisColumnName(2, mTableModel.getColumnTitle(firstNewColumn+2));
+	                    vpanel2.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+						if (_colorColumn != -1)
+		                    vpanel2.getVisualization().getMarkerColor().setColor(_colorColumn, colorList, colorListMode);
+	                    }
+					});
 				}
 			}
 		}
 
-	private void calculateParameterRow(int[] descriptorColumn, int[] regularColumn, int row, Object[] varyingKey, double[] rowParameter) {
+	private void calculateParameterRow(int[] descriptorColumn, int[] regularColumn, int row, Object[] varyingKey, float[] rowParameter) {
 		int paramIndex = 0;
 
         for (int fp=0; fp<descriptorColumn.length; fp++) {
@@ -581,7 +600,7 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 			        long theBit = 1L;
 			        for (int j=0; j<64; j++) {
 				        if ((((long[])varyingKey[fp])[i] & theBit) != 0) {
-					        rowParameter[paramIndex++] = ((currentIndex[i] & theBit) == 0) ? 0.0
+					        rowParameter[paramIndex++] = ((currentIndex[i] & theBit) == 0) ? 0.0f
 						: isReactionCenter ? DescriptorHandlerReactionFP.REACTION_CENTER_WEIGHT : DescriptorHandlerReactionFP.PERIPHERY_WEIGHT;
 					        }
 				        theBit <<= 1;
@@ -595,7 +614,7 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 						long theBit = 1L;
 						for (int j=0; j<64; j++) {
 							if ((((long[])varyingKey[fp])[i] & theBit) != 0) {
-								rowParameter[paramIndex++] = ((currentIndex[i] & theBit) != 0) ? 1.0 : 0.0;
+								rowParameter[paramIndex++] = ((currentIndex[i] & theBit) != 0) ? 1.0f : 0.0f;
 								}
 							theBit <<= 1;
 							}
@@ -607,7 +626,7 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 				        int theBit = 1;
 				        for (int j=0; j<32; j++) {
 					        if ((((int[])varyingKey[fp])[i] & theBit) != 0) {
-						        rowParameter[paramIndex++] = ((currentIndex[i] & theBit) != 0) ? 1.0 : 0.0;
+						        rowParameter[paramIndex++] = ((currentIndex[i] & theBit) != 0) ? 1.0f : 0.0f;
 						        }
 					        theBit <<= 1;
 					        }
@@ -626,23 +645,4 @@ public class DETaskCreateTSNEVisualization extends ConfigurableTask {
 			rowParameter[paramIndex++] = mTableModel.getTotalDoubleAt(row, column);
 			}
 		}
-
-/*	private class TSNEDetailDialog implements Runnable {
-		private String mMessage;
-		public TSNEDetailDialog(String message) {
-			mMessage = message;
-			}
-
-		public void run() {
-			JEditorPane textArea = new JEditorPane();
-			textArea.setEditorKit(new HTMLEditorKit());
-			textArea.setEditable(false);
-			textArea.setBorder(BorderFactory.createLineBorder(Color.gray));
-			textArea.setText(mMessage);
-			JScrollPane sp = new JScrollPane(textArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-			sp.setPreferredSize(new Dimension(400, 200));
-
-			JOptionPane.showMessageDialog(getParentFrame(), sp, "t-SNE Visualization", JOptionPane.INFORMATION_MESSAGE);
-			}
-		}*/
 	}

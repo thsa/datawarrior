@@ -101,11 +101,11 @@ can be modified. A good overview of what these parameters mean and how they infl
 <p>UMAP (Uniform Manifold Approximation and Projection) is dimension reduction algorithm that is often used as
 alternative to t-SNE because of various advantages. It was first described by L. McInnes, J. Healy, and J. Melville in
 <a href="https://doi.org/10.48550/arXiv.1802.03426">https://doi.org/10.48550/arXiv.1802.03426</a>. UMAP is summarized by
-the authors as <i>UMAP is constructed from a theoretical framework based in Riemannian geometry and algebraic topology.
+the authors as <i>"UMAP is constructed from a theoretical framework based in Riemannian geometry and algebraic topology.
 The result is a practical scalable algorithm that applies to real world data. The UMAP algorithm is competitive with
 t-SNE for visualization quality, and arguably preserves more of the global structure with superior run time performance.
 Furthermore, UMAP has no computational restrictions on embedding dimension, making it viable as a general purpose dimension
-reduction technique for machine learning.</i></p>
+reduction technique for machine learning."</i></p>
 
 <p>As t-SNE, UMAP can be used visualize multi-dimensional space, which in the case of <span class="keyword">DataWarrior</span>
 can be chemical space. Thus, all chemical descriptors, which are vectors, can be used as input dimensions in addition to
@@ -113,20 +113,20 @@ or without any other numerical columns. <span class="keyword">DataWarrior</span>
 by Sean A. Irvine and Richard Littin.</p>
 
 <p align="center"><img src="help/img/ml/umap.jpeg" width="583" height="465"></p>
-<p align="center"><i>2D-UMAP visualization of >3000 molecules using the SkeletonSpheres descriptor; color by structure classes</i></p>
+<p align="center"><i>2D-UMAP visualization of >3000 molecules using the SkeletonSpheres descriptor, colored by structure classes</i></p>
 
 <p>The algorithm's parameters, which are available to the user, are as follows:</p>
 
 <p><b>Nearest neighbors</b> Larger values result in more global views of the manifold, while smaller values result in
 more local data being preserved. Generally in the range of 3 to 1000. The reported default is 15, but it seems that
-in the context of molecules larger values often result in better results.</p>
+in the context of molecules larger values often give better results.</p>
 <p><b>Target dimensions</b> is typically 2 or 3 to provide easy visualization, but can reasonably be set to any integer value
 in the range of 2 to 100.</p>
 <p><b>Minimum distance</b> influences the desired separation between close points in the embedding space.
 Smaller values will result in a more clustered/clumped embedding where nearby points on the manifold are drawn closer
 together, while larger values will result on a more even disperse of points. The value should be smaller than 1.0,
 which is the algorithm's <i>spread</i> value that determines the scale at which embedded points will be spread out.
-The default reported default value is 0.1, but larger values seem to achieve better local resolution. Therefore, we
+The reported default value is 0.1, but larger values seem to achieve better local resolution. Therefore, we
 use a default of 0.5.</p>
 <p><b>Metric</b> controls how distance is computed in the ambient space of the input data. By default, UMAP uses
 an euclidian metric.</p>

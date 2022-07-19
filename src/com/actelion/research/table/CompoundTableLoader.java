@@ -1766,18 +1766,18 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 						chiralFlagOrV3000Found = true;
 					if (!chiralFlagOrV3000Found && mol.getStereoCenterCount() != 0)
 						stereoCentersFound = true;
+					}
 				}
-			}
 			catch (Exception e) {
 				mErrorCount++;
-			}
+				}
 
 			if (molname.length() != 0) {
 				mMolnameFound = true;
 				fieldData[2] = getBytes(molname);
 				if (structureIDColumn != -1 && !molname.equals(removeTabs(sdParser.getFieldData(structureIDColumn - 3))))
 					mMolnameIsDifferentFromFirstField = true;
-			}
+				}
 
 			for (int i=0; i<fieldNames.length; i++)
 				fieldData[3+i] = getBytes(removeTabs(sdParser.getFieldData(i)));

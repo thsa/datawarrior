@@ -26,7 +26,22 @@ import com.actelion.research.chem.MolfileCreator;
 import com.actelion.research.chem.StereoMolecule;
 
 public class PKaPredictor {
+	private static int sAvailableState = -1;
 	private pKaPlugin plugin;
+
+	public static boolean isAvailable() {
+		if (sAvailableState == -1) {
+			try {
+				Class.forName("chemaxon.marvin.calculations.pKaPlugin");
+				sAvailableState = new pKaPlugin().isLicensed() ? 1 : 0;
+				}
+			catch (ClassNotFoundException cnfe) {
+				sAvailableState = -2;
+				}
+			}
+
+		return sAvailableState == 1;
+		}
 
 	public PKaPredictor() {
 		plugin = new pKaPlugin();

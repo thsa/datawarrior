@@ -1533,16 +1533,9 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 				}
 
 			// Check, whether the ChemAxon classes are available
-			if ((property.predictorFlags & PREDICTOR_FLAG_PKA) != 0) {
-				try {
-					Class.forName("chemaxon.marvin.calculations.pKaPlugin");
-					}
-				catch (ClassNotFoundException cnfe) {
-					mCheckBox.setEnabled(false);
-					}
-//			 && !mParentFrame.getApplication().isActelion()
-//			 && !new File(DataWarrior.getApplicationFolder()+File.separator+"capka.jar").exists())
-				}
+			if ((property.predictorFlags & PREDICTOR_FLAG_PKA) != 0
+			 && !PKaPredictor.isAvailable())
+				mCheckBox.setEnabled(false);
 			}
 
 		public JCheckBox getCheckBox() {

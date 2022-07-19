@@ -105,7 +105,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure implemen
 	private int                 mCacheSizeAtStart;
 	private long                mStartMillis;
 	private volatile boolean	mCheckOverwrite,mPoolConformers;
-	private volatile boolean	mLargestFragmentOnly,mNeutralizeLargestFragment,mMarvinAvailable;
+	private volatile boolean	mLargestFragmentOnly,mNeutralizeLargestFragment;
 	private volatile float		mPH1,mPH2;
 	private volatile int		mAlgorithm,mMinimization,mTorsionSource,mMinimizationErrors,mFileType,mMaxConformers,
 								mStereoIsomerLimit,mIdentifierColumn;
@@ -116,13 +116,6 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure implemen
 	public DETaskAdd3DCoordinates(DEFrame parent) {
 		super(parent, DESCRIPTOR_NONE, false, true);
 		mCheckOverwrite = true;
-		try {
-			Class.forName("chemaxon.marvin.calculations.pKaPlugin");
-			mMarvinAvailable = true;
-			}
-		catch (ClassNotFoundException cnfe) {
-			mMarvinAvailable = false;
-			}
 		}
 
 	@Override
@@ -360,10 +353,10 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure implemen
 		mButtonEdit.setEnabled(isEnabled);
 		mCheckBoxPoolConformers.setEnabled(isEnabled && mComboBoxFileType.getSelectedIndex() == 0);
 		mCheckBoxLargestFragment.setEnabled(isEnabled);
-		mCheckBoxNeutralize.setEnabled(isEnabled && mCheckBoxLargestFragment.isSelected() && (!mMarvinAvailable || !mCheckBoxProtonate.isSelected()));
+		mCheckBoxNeutralize.setEnabled(isEnabled && mCheckBoxLargestFragment.isSelected() && (!PKaPredictor.isAvailable() || !mCheckBoxProtonate.isSelected()));
 		mCheckBoxSkip.setEnabled(isEnabled);
 		mTextFieldSkip.setEnabled(mCheckBoxSkip.isEnabled() && mCheckBoxSkip.isSelected());
-		mCheckBoxProtonate.setEnabled(isEnabled && mMarvinAvailable && (!mCheckBoxLargestFragment.isSelected() || !mCheckBoxNeutralize.isSelected()));
+		mCheckBoxProtonate.setEnabled(isEnabled && PKaPredictor.isAvailable() && (!mCheckBoxLargestFragment.isSelected() || !mCheckBoxNeutralize.isSelected()));
 		mTextFieldPH.setEnabled(mCheckBoxProtonate.isEnabled() && mCheckBoxProtonate.isSelected());
 		mTextFieldPHSpan.setEnabled(mCheckBoxProtonate.isEnabled() && mCheckBoxProtonate.isSelected());
 		}
@@ -510,7 +503,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure implemen
 			mStereoIsomerLimit = Integer.parseInt(limit);
 
 		mPH1 = Float.NaN;
-		String ph = mMarvinAvailable ? configuration.getProperty(PROPERTY_PROTONATION_PH) : null;
+		String ph = PKaPredictor.isAvailable() ? configuration.getProperty(PROPERTY_PROTONATION_PH) : null;
 		if (ph != null) {
 			mPH1 = Float.parseFloat(ph);
 			mPH2 = mPH1;

@@ -120,8 +120,10 @@ public class InchiBuilder {
 			InchiBondType type = (order == 1) ? InchiBondType.SINGLE
 					: (order == 2) ? InchiBondType.DOUBLE
 					: (order == 3) ? InchiBondType.TRIPLE : InchiBondType.NONE;
-			InchiBond b = new InchiBond(input.getAtom(atom1), input.getAtom(atom2), type);
-			input.addBond(b);
+			if (type != InchiBondType.NONE) {
+				InchiBond b = new InchiBond(input.getAtom(atom1), input.getAtom(atom2), type);
+				input.addBond(b);
+				}
 			}
 
 		for (int atom=0; atom<mol.getAtoms(); atom++) {

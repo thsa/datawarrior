@@ -433,7 +433,7 @@ public class DECompoundTableModel extends CompoundTableModel {
 				for (int atom=0; atom<mol.getAllAtoms(); atom++) {
 					int mapNo = mol.getAtomMapNo(atom);
 					if (mapNo != 0)
-						mol.setAtomColor(atom, mol.isAutoMappedAtom(atom) ? Molecule.cAtomColorGreen : Molecule.cAtomColorRed);
+						mol.setAtomColor(atom, mol.isAutoMappedAtom(atom) ? Molecule.cAtomColorGreen : Molecule.cAtomColorDarkRed);
 					}
 				}
 			}

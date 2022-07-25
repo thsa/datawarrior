@@ -4198,16 +4198,16 @@ public class CompoundTableModel extends AbstractTableModel
 		if (listener != null)
 			listener.startProgress("Analyzing columns...", 0, mColumnInfo.length);
 
+		for (int column=0; column<mColumnInfo.length; column++)
+			if (isColumnTypeStructure(column))
+				checkIDCodeVersion(column, firstRow, listener);
+
 		for (int column=0; column<mColumnInfo.length; column++) {
 			if (listener != null)
 				listener.updateProgress(column+1);
 
 			analyzeColumn(column, firstRow, false);
 			}
-
-		for (int column=0; column<mColumnInfo.length; column++)
-			if (isColumnTypeStructure(column))
-				checkIDCodeVersion(column, firstRow, listener);
 
 		mRecords = mRecord.length;
 		mAllColumns = mColumnInfo.length;

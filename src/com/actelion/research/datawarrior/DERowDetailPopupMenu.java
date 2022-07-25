@@ -925,7 +925,9 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 			int idcodeColumn = mTableModel.findColumn(getCommandColumn(actionCommand));
 			byte[] idcode = (byte[]) mRecord.getData(idcodeColumn);
 			if (idcode != null) {
-				StringSelection theData = new StringSelection(new String(idcode));
+				int mappingColumn = mTableModel.getChildColumn(idcodeColumn, CompoundTableConstants.cColumnTypeReactionMapping);
+				byte[] mapping = mappingColumn == -1 ? null : (byte[]) mRecord.getData(mappingColumn);
+				StringSelection theData = new StringSelection(mapping == null ? new String(idcode) : new String(idcode)+"#"+new String(mapping));
 				Toolkit.getDefaultToolkit().getSystemClipboard().setContents(theData, theData);
 			}
 		} else if (actionCommand.startsWith(COPY_RXN_SMILES)) {

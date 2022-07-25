@@ -394,7 +394,7 @@ public class JCategoryBrowser extends JFilterPanel
 			if (mComboBox.getItemCount() != 0) {
 				mComboBox.setSelectedIndex(0);
 				mColumnIndex = mTableModel.findColumn(columnList[0]);
-				mSlider.setMaximum(mTableModel.getCategoryCount(mColumnIndex)-1);
+				mSlider.setMaximum(mTableModel.getCategoryCount(mColumnIndex) - 1);
 				mSlider.setValue(0);
 				}
 			else {

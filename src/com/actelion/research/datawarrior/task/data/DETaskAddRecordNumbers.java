@@ -36,7 +36,7 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
 
 	private static final String PROPERTY_COLUMN_NAME = "columnName";
 	private static final String PROPERTY_FIRST_NUMBER = "firstNumber";
-	private static final String PROPERTY_RANDOM_ORDER = "randomOrder";
+	private static final String PROPERTY_COUNT_MODE = "randomOrder";    // was binary choice before (increase and random)
 	private static final String PROPERTY_VISIBLE_ONLY = "visibleOnly";
 	private static final String PROPERTY_CATEGORY = "category";
 	private static final String PROPERTY_CATEGORY_MODE = "categoryMode";
@@ -45,10 +45,16 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
 	private static final String CATEGORY_MODE_INDEPENDENT = "independent";
 	private static final String CATEGORY_MODE_SAME = "same";
 
+	private static final String[] COUNT_MODE_CODE = { "false", "true", "decrease" };
+	private static final String[] COUNT_MODE_TEXT = { "Increasing Numbers", "Random order", "Descreasing Numbers" };
+	private static final int COUNT_MODE_INCREASING = 0;
+	private static final int COUNT_MODE_RANDOM = 1;
+	private static final int COUNT_MODE_DECREASING = 2;
+
 	private DEFrame				mSourceFrame;
     private JTextField          mTextFieldColumnName,mTextFieldFirstNo,mTextFieldSharedRowCount;
-    private JCheckBox           mCheckBoxVisibleOnly,mCheckBoxRandomOrder,mCheckBoxSharedRowNumbers,mCheckBoxUseSameForSame,mCheckBoxCountWithinCategory;
-    private JComboBox           mComboBoxCategory;
+    private JCheckBox           mCheckBoxVisibleOnly,mCheckBoxSharedRowNumbers,mCheckBoxUseSameForSame,mCheckBoxCountWithinCategory;
+    private JComboBox           mComboBoxCountMode,mComboBoxCategory;
 
 	public DETaskAddRecordNumbers(DEFrame sourceFrame) {
 		super(sourceFrame, true);
@@ -74,7 +80,7 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
     public JPanel createDialogContent() {
         mTextFieldColumnName = new JTextField("Row No", 12);
         mTextFieldFirstNo = new JTextField("1", 3);
-		mCheckBoxRandomOrder = new JCheckBox("Use random order");
+		mComboBoxCountMode = new JComboBox(COUNT_MODE_TEXT);
         mCheckBoxVisibleOnly = new JCheckBox("Visible rows only");
 		mCheckBoxSharedRowNumbers = new JCheckBox("Share same row number for");
 		mCheckBoxSharedRowNumbers.addActionListener(this);
@@ -103,7 +109,8 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
         gp.add(new JLabel("First number to use:", JLabel.RIGHT), "1,3");
         gp.add(mTextFieldColumnName, "3,1,6,1");
         gp.add(mTextFieldFirstNo, "3,3");
-		gp.add(mCheckBoxRandomOrder, "1,5");
+		gp.add(new JLabel("Count mode:", JLabel.RIGHT), "1,5");
+		gp.add(mComboBoxCountMode, "3,5,6,5");
         gp.add(mCheckBoxVisibleOnly, "1,6");
         gp.add(mCheckBoxSharedRowNumbers, "1,8");
 		gp.add(mTextFieldSharedRowCount, "3,8");
@@ -132,7 +139,7 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
 	    	catch (NumberFormatException nfe) {}
     		}
 
-   		configuration.setProperty(PROPERTY_RANDOM_ORDER, mCheckBoxRandomOrder.isSelected() ? "true" : "false");
+   		configuration.setProperty(PROPERTY_COUNT_MODE, COUNT_MODE_CODE[mComboBoxCountMode.getSelectedIndex()]);
 		configuration.setProperty(PROPERTY_VISIBLE_ONLY, mCheckBoxVisibleOnly.isSelected() ? "true" : "false");
 
 		if (mCheckBoxSharedRowNumbers.isSelected())
@@ -156,7 +163,7 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
 		value = configuration.getProperty(PROPERTY_FIRST_NUMBER);
 		mTextFieldFirstNo.setText(value == null ? "1" : value);
 
-		mCheckBoxRandomOrder.setSelected("true".equals(configuration.getProperty(PROPERTY_RANDOM_ORDER)));
+		mComboBoxCountMode.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_COUNT_MODE), COUNT_MODE_CODE, 0));
 		mCheckBoxVisibleOnly.setSelected("true".equals(configuration.getProperty(PROPERTY_VISIBLE_ONLY)));
 
 		value = configuration.getProperty(PROPERTY_SHARED_ROW_COUNT);
@@ -229,7 +236,7 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
     public void setDialogConfigurationToDefault() {
 		mTextFieldColumnName.setText("Row No");
 		mTextFieldFirstNo.setText("1");
-		mCheckBoxRandomOrder.setSelected(false);
+		mComboBoxCountMode.setSelectedIndex(0);
 		mCheckBoxVisibleOnly.setSelected(false);
 		mCheckBoxSharedRowNumbers.setSelected(false);
 		mTextFieldSharedRowCount.setText("2");
@@ -278,7 +285,7 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
         int categoryColumn = tableModel.findColumn(configuration.getProperty(PROPERTY_CATEGORY));
         int shareRowCount = Integer.parseInt(configuration.getProperty(PROPERTY_SHARED_ROW_COUNT, "1"));
 
-		boolean randomOrder = "true".equals(configuration.getProperty(PROPERTY_RANDOM_ORDER));
+		int countMode = findListIndex(configuration.getProperty(PROPERTY_COUNT_MODE), COUNT_MODE_CODE, 0);
         boolean visibleOnly = "true".equals(configuration.getProperty(PROPERTY_VISIBLE_ONLY));
 
 		boolean sameInCategory = false;
@@ -294,9 +301,9 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
 		String value = configuration.getProperty(PROPERTY_FIRST_NUMBER);
 		int firstNo = (value == null) ? 1 : Integer.parseInt(value);
 
-		int[] randomMap = null;
-		TreeMap<String,int[]> categoryRandomMap = null;
-		if (randomOrder) {
+		int[] randomMapOrCount = null;
+		TreeMap<String,int[]> categoryRandomOrCountMap = null;
+		if (countMode != COUNT_MODE_INCREASING) {
 			if (categoryColumn != -1) {
 				if (sameInCategory) {
 					TreeSet<String> set = new TreeSet<String>();
@@ -306,33 +313,47 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
 						for (String entry:entries)
 							set.add(entry);
 						}
-					randomMap = generateRandomMap(set.size(), 1);
+					if (countMode == COUNT_MODE_RANDOM) {
+						randomMapOrCount = generateRandomMap(set.size(), 1);
+						}
+					else {   // COUNT_MODE_DECREASING
+						randomMapOrCount = new int[1];
+						randomMapOrCount[0] = set.size();
+						}
 					}
 				else {
-					categoryRandomMap = new TreeMap<>();
+					categoryRandomOrCountMap = new TreeMap<>();
 					for (int row=0; row<rowCount; row++) {
 						CompoundRecord record = visibleOnly ? tableModel.getRecord(row) : tableModel.getTotalRecord(row);
 						String[] entries = mSourceFrame.getTableModel().separateEntries(tableModel.encodeData(record, categoryColumn));
 						for (String entry:entries) {
-							int[] count = categoryRandomMap.get(entry);
+							int[] count = categoryRandomOrCountMap.get(entry);
 							if (count == null) {
 								count = new int[1];
 								count[0] = 1;
-								categoryRandomMap.put(entry, count);
+								categoryRandomOrCountMap.put(entry, count);
 								}
 							else {
 								count[0]++;
 								}
 							}
 						}
-					for (String category:categoryRandomMap.keySet()) {
-						int[] count = categoryRandomMap.get(category);
-						categoryRandomMap.put(category, generateRandomMap(count[0], 1));
+					if (countMode == COUNT_MODE_RANDOM) {
+						for (String category:categoryRandomOrCountMap.keySet()) {
+							int[] count = categoryRandomOrCountMap.get(category);
+							categoryRandomOrCountMap.put(category, generateRandomMap(count[0], 1));
+							}
 						}
 					}
 				}
 			else {
-				randomMap = generateRandomMap(rowCount, shareRowCount);
+				if (countMode == COUNT_MODE_RANDOM) {
+					randomMapOrCount = generateRandomMap(rowCount, shareRowCount);
+					}
+				else {
+					randomMapOrCount = new int[1];
+					randomMapOrCount[0] = rowCount;
+					}
 				}
 			}
 
@@ -363,14 +384,19 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
 
 					if (sb.length() != 0)
 						sb.append(CompoundTableModel.cEntrySeparator);
-					if (randomOrder)
-						index = new Integer(sameInCategory ? randomMap[index] : categoryRandomMap.get(entry)[index]);
+					if (countMode == COUNT_MODE_RANDOM)
+						index = new Integer(sameInCategory ? randomMapOrCount[index] : categoryRandomOrCountMap.get(entry)[index]);
+					else if (countMode == COUNT_MODE_DECREASING)
+						index = new Integer(sameInCategory ? randomMapOrCount[0]-index-1 : categoryRandomOrCountMap.get(entry)[0]-index-1);
+
 					sb.append(firstNo+index);
 					}
 				data = sb.toString();
 				}
 			else {
-				int index = randomOrder ? randomMap[row] : (shareRowCount != 1) ? row / shareRowCount : row;
+				int index = countMode == COUNT_MODE_RANDOM ? randomMapOrCount[row]
+						  : countMode == COUNT_MODE_DECREASING ? randomMapOrCount[0]-row-1
+						  : (shareRowCount != 1) ? row / shareRowCount : row;
 				data = Integer.toString(firstNo+index);
 				}
 
@@ -392,7 +418,7 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
 		return ia;
 		}
 
-    private String getCategoryNumbers(int firstNo, boolean isSame, TreeMap<String,Integer> map, String categories, StringBuilder sb) {
+/*  private String getCategoryNumbers(int firstNo, boolean isSame, TreeMap<String,Integer> map, String categories, StringBuilder sb) {
         String[] entries = mSourceFrame.getTableModel().separateEntries(categories);
         sb.setLength(0);
         for (String entry:entries) {
@@ -405,6 +431,6 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
 			sb.append(firstNo+index);
             }
         return sb.toString();
-        }
+        }*/
 	}
 

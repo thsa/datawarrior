@@ -18,17 +18,13 @@
 
 package com.actelion.research.datawarrior.task.data;
 
-import info.clearthought.layout.TableLayout;
-
-import java.util.Properties;
-
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.table.model.CompoundTableModel;
+import info.clearthought.layout.TableLayout;
+
+import javax.swing.*;
+import java.util.Properties;
 
 
 public class DETaskAddEmptyRows extends ConfigurableTask {
@@ -45,7 +41,11 @@ public class DETaskAddEmptyRows extends ConfigurableTask {
 
 	@Override
 	public boolean isConfigurable() {
-		return (mTableModel.getTotalColumnCount() != 0);
+		if (mTableModel.getTotalColumnCount() == 0) {
+			showErrorMessage("Cannot add rows to an empty table. Open file, paste data, or create a new table first.");
+			return (false);
+			}
+		return true;
 		}
 
 	@Override

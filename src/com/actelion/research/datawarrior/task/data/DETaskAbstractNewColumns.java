@@ -53,7 +53,7 @@ public abstract class DETaskAbstractNewColumns extends ConfigurableTask implemen
 	private DEFrame				mNewFrame;
 
 
-    public DETaskAbstractNewColumns(DataWarrior application, boolean createNewTable) {
+    public DETaskAbstractNewColumns(DataWarrior application) {
 		super(application.getActiveFrame(), true);
 		mApplication = application;
     	}

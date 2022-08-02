@@ -18,18 +18,18 @@
 
 package com.actelion.research.datawarrior.task.file;
 
-import java.awt.event.ActionListener;
-import java.util.Properties;
-
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.data.DETaskAbstractNewColumns;
+
+import java.awt.event.ActionListener;
+import java.util.Properties;
 
 
 public class DETaskNewFile extends DETaskAbstractNewColumns implements ActionListener {
 	public static final String TASK_NAME = "New File";
 
 	public DETaskNewFile(DataWarrior application) {
-		super(application, true);
+		super(application);
 		}
 
 	@Override

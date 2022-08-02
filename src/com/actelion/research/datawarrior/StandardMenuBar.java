@@ -1573,7 +1573,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuDataSplitRows)
 				new DETaskSplitRows(mParentFrame, mTableModel).defineAndRun();
 			else if (source == jMenuDataAddRowNumbers)
-				new DETaskAddRecordNumbers(mParentFrame).defineAndRun();
+				new DETaskAddRowNumbers(mParentFrame).defineAndRun();
 			else if (source == jMenuDataAddEmptyColumns)
 				new DETaskAddEmptyColumns(mApplication).defineAndRun();
 			else if (source == jMenuDataAddEmptyRows)

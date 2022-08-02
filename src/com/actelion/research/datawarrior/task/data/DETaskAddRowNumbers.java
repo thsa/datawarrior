@@ -31,7 +31,7 @@ import java.awt.event.ActionListener;
 import java.util.*;
 
 
-public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionListener {
+public class DETaskAddRowNumbers extends ConfigurableTask implements ActionListener {
 	public static final String TASK_NAME = "Add Row Numbers";
 
 	private static final String PROPERTY_COLUMN_NAME = "columnName";
@@ -56,7 +56,7 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
     private JCheckBox           mCheckBoxVisibleOnly,mCheckBoxSharedRowNumbers,mCheckBoxUseSameForSame,mCheckBoxCountWithinCategory;
     private JComboBox           mComboBoxCountMode,mComboBoxCategory;
 
-	public DETaskAddRecordNumbers(DEFrame sourceFrame) {
+	public DETaskAddRowNumbers(DEFrame sourceFrame) {
 		super(sourceFrame, true);
 		mSourceFrame = sourceFrame;
 		}
@@ -68,7 +68,11 @@ public class DETaskAddRecordNumbers extends ConfigurableTask implements ActionLi
 
 	@Override
 	public boolean isConfigurable() {
-        return true;
+		if (mSourceFrame.getTableModel().getTotalColumnCount() == 0) {
+			showErrorMessage("Cannot add row numbers to an empty table. Open file, paste data, or create a new table first.");
+			return false;
+			}
+		return true;
 		}
 
 	@Override

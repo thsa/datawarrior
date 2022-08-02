@@ -18,16 +18,16 @@
 
 package com.actelion.research.datawarrior.task.data;
 
+import com.actelion.research.datawarrior.DataWarrior;
+
 import java.awt.event.ActionListener;
 import java.util.Properties;
-
-import com.actelion.research.datawarrior.DataWarrior;
 
 public class DETaskAddEmptyColumns extends DETaskAbstractNewColumns implements ActionListener {
 	public static final String TASK_NAME = "Add Empty Columns";
 
     public DETaskAddEmptyColumns(DataWarrior application) {
-		super(application, false);
+		super(application);
     	}
 
     @Override

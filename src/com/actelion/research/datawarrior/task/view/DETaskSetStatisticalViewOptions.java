@@ -41,7 +41,9 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 
     private static final String PROPERTY_CORRELATION_TYPE = "correlationType";
     private static final String PROPERTY_CURVE_TYPE = "meanLineType";
+	private static final String PROPERTY_CURVE_LIST = "curveList";
     private static final String PROPERTY_SHOW_STDDEV_AREA = "showStdDev";
+	private static final String PROPERTY_TRUNCATE_CURVE = "truncateCurve";
     private static final String PROPERTY_SPLIT_BY_CATEGORY = "splitCurvesByCategory";
 	private static final String PROPERTY_SPLIT_CURVE_COLUMN = "splitCurveColumn";
 	private static final String PROPERTY_CURVE_LINE_WIDTH = "curveWidth";
@@ -58,10 +60,14 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
     private static final String PROPERTY_BOXPLOT_MEAN_VALUES = "boxPlotMeanValues";
 	private static final String PROPERTY_CURVE_FORMULA = "formula";
 
-	private JComboBox	mComboBoxCorrelationType, mComboBoxCurveMode,mComboBoxBoxplotMeanMode,mComboBoxSplitCurveColumn;
-	private JCheckBox mCheckBoxShowStdDev1,mCheckBoxMultipleCurves,mCheckBoxShowMeanValues,
+	private static final String ROW_LIST_TEXT_VISIBLE = "Visible Rows";
+	private static final String ROW_LIST_TEXT_SELECTED = "Selected Rows";
+
+	private JComboBox	mComboBoxCorrelationType, mComboBoxCurveMode,mComboBoxBoxplotMeanMode,mComboBoxSplitCurveColumn,
+						mComboBoxCurveList;
+	private JCheckBox   mCheckBoxShowStdDev1, mCheckBoxSplitCurvesByColor,mCheckBoxShowMeanValues, mCheckBoxTruncateCurve,
 						mCheckBoxShowPValues,mCheckBoxShowFoldChange,mCheckBoxShowBarOrPieSizeValue,
-			mCheckBoxShowStdDev2,mCheckBoxShowConfInterval,mCheckBoxShowValueCount;
+						mCheckBoxShowStdDev2,mCheckBoxShowConfInterval,mCheckBoxShowValueCount;
 	private JTextField  mTextFieldFormula;
 	private JSlider     mSliderCurveLineWidth,mSliderCurveSmoothing;
 	private JComponent	mSelectorPValueColumn,mSelectorPValueRefCategory;
@@ -98,9 +104,9 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 
 		int gap = HiDPIHelper.scale(8);
 		double[][] scatterPlotSize = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
-									   {gap, TableLayout.PREFERRED, gap*3, TableLayout.PREFERRED, gap,
-											   TableLayout.PREFERRED, gap,
-											   TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap,
+									   {gap, TableLayout.PREFERRED, gap*3, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap,
+											   TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/4,
+											   TableLayout.PREFERRED, gap/4, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap,
 											   TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
 		JPanel scatterPlotPanel = new JPanel();
 		scatterPlotPanel.setLayout(new TableLayout(scatterPlotSize));
@@ -119,7 +125,18 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		mComboBoxCurveMode.addActionListener(this);
 		scatterPlotPanel.add(mComboBoxCurveMode, "3,3");
 
-		scatterPlotPanel.add(new JLabel("Formula: f(x)=", JLabel.RIGHT), "1,5");
+		mComboBoxCurveList = new JComboBox();
+		mComboBoxCurveList.addItem(ROW_LIST_TEXT_VISIBLE);
+		mComboBoxCurveList.addItem(ROW_LIST_TEXT_SELECTED);
+		for (int i = 0; i<getTableModel().getListHandler().getListCount(); i++)
+			mComboBoxCurveList.addItem(getTableModel().getListHandler().getListName(i));
+		mComboBoxCurveList.setEditable(!hasInteractiveView());
+		mComboBoxCurveList.setEnabled(false);
+		mComboBoxCurveList.addActionListener(this);
+		scatterPlotPanel.add(new JLabel("Considered rows:", JLabel.RIGHT), "1,5");
+		scatterPlotPanel.add(mComboBoxCurveList, "3,5");
+
+		scatterPlotPanel.add(new JLabel("Formula: f(x)=", JLabel.RIGHT), "1,7");
 		mTextFieldFormula = new JTextField();
 		mTextFieldFormula.addKeyListener(new KeyAdapter() {
 			@Override
@@ -128,19 +145,25 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 				update(false);
 				}
 			});
-		scatterPlotPanel.add(mTextFieldFormula, "3,5");
+		scatterPlotPanel.add(mTextFieldFormula, "3,7");
 
 		mCheckBoxShowStdDev1 = new JCheckBox("Display standard deviation");
         mCheckBoxShowStdDev1.setEnabled(false);
 		mCheckBoxShowStdDev1.addActionListener(this);
-		scatterPlotPanel.add(mCheckBoxShowStdDev1, "3,7");
+		scatterPlotPanel.add(mCheckBoxShowStdDev1, "3,9");
 
-		mCheckBoxMultipleCurves = new JCheckBox("Split by selected color category column");
-		mCheckBoxMultipleCurves.setEnabled(false);
-		mCheckBoxMultipleCurves.addActionListener(this);
-		scatterPlotPanel.add(mCheckBoxMultipleCurves, "3,9");
+		mCheckBoxTruncateCurve = new JCheckBox("Truncate curve/line to marker area");
+		mCheckBoxTruncateCurve.setEnabled(false);
+		mCheckBoxTruncateCurve.addActionListener(this);
+		scatterPlotPanel.add(mCheckBoxTruncateCurve, "3,11");
 
-		scatterPlotPanel.add(new JLabel("Split (also) by category column:", JLabel.RIGHT), "1,11");
+		scatterPlotPanel.add(new JLabel("Split line/curve into sections", JLabel.RIGHT), "1,13");
+		mCheckBoxSplitCurvesByColor = new JCheckBox("by current marker color categories");
+		mCheckBoxSplitCurvesByColor.setEnabled(false);
+		mCheckBoxSplitCurvesByColor.addActionListener(this);
+		scatterPlotPanel.add(mCheckBoxSplitCurvesByColor, "3,13");
+
+		scatterPlotPanel.add(new JLabel("and/or by category column:", JLabel.RIGHT), "1,15");
 		mComboBoxSplitCurveColumn = new JComboBox();
 		mComboBoxSplitCurveColumn.addItem("<none>");
 		for (int column=0; column<getTableModel().getTotalColumnCount(); column++)
@@ -149,19 +172,19 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		mComboBoxSplitCurveColumn.setEnabled(false);
 		mComboBoxSplitCurveColumn.setEditable(!isInteractive());
 		mComboBoxSplitCurveColumn.addActionListener(this);
-		scatterPlotPanel.add(mComboBoxSplitCurveColumn, "3,11");
+		scatterPlotPanel.add(mComboBoxSplitCurveColumn, "3,15");
 
 		mSliderCurveSmoothing = new JSlider(JSlider.HORIZONTAL, 0, 100, 50);
 		mSliderCurveSmoothing.setPreferredSize(new Dimension(HiDPIHelper.scale(150), mSliderCurveSmoothing.getPreferredSize().height));
 		mSliderCurveSmoothing.addChangeListener(this);
-		scatterPlotPanel.add(new JLabel("Smoothing grade:", JLabel.RIGHT), "1,13");
-		scatterPlotPanel.add(mSliderCurveSmoothing, "3,13");
+		scatterPlotPanel.add(new JLabel("Smoothing grade:", JLabel.RIGHT), "1,17");
+		scatterPlotPanel.add(mSliderCurveSmoothing, "3,17");
 
 		mSliderCurveLineWidth = new JSlider(JSlider.HORIZONTAL, 0, 100, 20);
 		mSliderCurveLineWidth.setPreferredSize(new Dimension(HiDPIHelper.scale(150), mSliderCurveLineWidth.getPreferredSize().height));
 		mSliderCurveLineWidth.addChangeListener(this);
-		scatterPlotPanel.add(new JLabel("Curve line width:", JLabel.RIGHT), "1,15");
-		scatterPlotPanel.add(mSliderCurveLineWidth, "3,15");
+		scatterPlotPanel.add(new JLabel("Curve line width:", JLabel.RIGHT), "1,19");
+		scatterPlotPanel.add(mSliderCurveLineWidth, "3,19");
 
 		tabbedPane.add(scatterPlotPanel, "Scatter Plot");
 
@@ -289,9 +312,18 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 
 		if (mComboBoxCurveMode.getSelectedIndex() != 0) {
 			configuration.setProperty(PROPERTY_CURVE_TYPE, JVisualization2D.CURVE_MODE_CODE[mComboBoxCurveMode.getSelectedIndex()]);
+			if (mComboBoxCurveList.isEnabled()) {
+				String listName = (String)mComboBoxCurveList.getSelectedItem();
+				configuration.setProperty(PROPERTY_CURVE_LIST, ROW_LIST_TEXT_VISIBLE.equals(listName) ?
+						JVisualization2D.ROW_LIST_CODE_VISIBLE : ROW_LIST_TEXT_SELECTED.equals(listName) ?
+						JVisualization2D.ROW_LIST_CODE_SELECTED : listName);
+				}
 			configuration.setProperty(PROPERTY_SHOW_STDDEV_AREA, mCheckBoxShowStdDev1.isSelected() ? "true" : "false");
-			configuration.setProperty(PROPERTY_SPLIT_BY_CATEGORY, mCheckBoxMultipleCurves.isSelected() ? "true" : "false");
-			if (mComboBoxSplitCurveColumn.getSelectedIndex() != 0)
+			if (mCheckBoxTruncateCurve.isEnabled())
+				configuration.setProperty(PROPERTY_TRUNCATE_CURVE, mCheckBoxTruncateCurve.isSelected() ? "true" : "false");
+			if (mCheckBoxSplitCurvesByColor.isEnabled())
+				configuration.setProperty(PROPERTY_SPLIT_BY_CATEGORY, mCheckBoxSplitCurvesByColor.isSelected() ? "true" : "false");
+			if (mComboBoxSplitCurveColumn.isEnabled() && mComboBoxSplitCurveColumn.getSelectedIndex() != 0)
 				configuration.setProperty(PROPERTY_SPLIT_CURVE_COLUMN, getTableModel().getColumnTitleNoAlias((String)mComboBoxSplitCurveColumn.getSelectedItem()));
 			configuration.setProperty(PROPERTY_CURVE_FORMULA, mTextFieldFormula.getText());
 			}
@@ -334,8 +366,12 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 																  CorrelationCalculator.TYPE_NAME, -1));
 		mComboBoxCurveMode.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_CURVE_TYPE),
 														 JVisualization2D.CURVE_MODE_CODE, 0));
+		String listName = configuration.getProperty(PROPERTY_CURVE_LIST, JVisualization2D.ROW_LIST_CODE_VISIBLE);
+		mComboBoxCurveList.setSelectedItem(JVisualization2D.ROW_LIST_CODE_VISIBLE.equals(listName) ? ROW_LIST_TEXT_VISIBLE
+				: JVisualization2D.ROW_LIST_CODE_SELECTED.equals(listName) ? ROW_LIST_TEXT_SELECTED : listName);
 		mCheckBoxShowStdDev1.setSelected("true".equals(configuration.getProperty(PROPERTY_SHOW_STDDEV_AREA)));
-		mCheckBoxMultipleCurves.setSelected("true".equals(configuration.getProperty(PROPERTY_SPLIT_BY_CATEGORY)));
+		mCheckBoxTruncateCurve.setSelected("true".equals(configuration.getProperty(PROPERTY_TRUNCATE_CURVE)));
+		mCheckBoxSplitCurvesByColor.setSelected("true".equals(configuration.getProperty(PROPERTY_SPLIT_BY_CATEGORY)));
 		int splitCurveColumn = getTableModel().findColumn(configuration.getProperty(PROPERTY_SPLIT_CURVE_COLUMN));
 		if (splitCurveColumn != -1 && getTableModel().isColumnTypeCategory(splitCurveColumn))
 			mComboBoxSplitCurveColumn.setSelectedItem(getTableModel().getColumnTitle(splitCurveColumn));
@@ -411,7 +447,12 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 			configuration.setProperty(PROPERTY_CORRELATION_TYPE, CorrelationCalculator.TYPE_NAME[correlationType]);
 
 		configuration.setProperty(PROPERTY_CURVE_TYPE, JVisualization2D.CURVE_MODE_CODE[v2d.getCurveMode()]);
+		int list = v2d.getCurveRowList();
+		configuration.setProperty(PROPERTY_CURVE_LIST, list == JVisualization2D.cCurveRowListVisible ?
+				JVisualization2D.ROW_LIST_CODE_VISIBLE : list == JVisualization2D.cCurveRowListSelected ?
+				JVisualization2D.ROW_LIST_CODE_SELECTED : getTableModel().getListHandler().getListName(list));
 		configuration.setProperty(PROPERTY_SHOW_STDDEV_AREA, v2d.isShowStandardDeviationArea() ? "true" : "false");
+		configuration.setProperty(PROPERTY_TRUNCATE_CURVE, v2d.isCurveAreaTruncated() ? "true" : "false");
 		configuration.setProperty(PROPERTY_SPLIT_BY_CATEGORY, v2d.isCurveSplitByColorCategory() ? "true" : "false");
 		int splitCurveColumn = v2d.getCurveSplitSecondCategoryColumn();
 		if (splitCurveColumn != JVisualization.cColumnUnassigned)
@@ -458,10 +499,15 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		visualization.setShownCorrelationType(findListIndex(configuration.getProperty(PROPERTY_CORRELATION_TYPE),
 															 CorrelationCalculator.TYPE_NAME, -1));
 		int mode = findListIndex(configuration.getProperty(PROPERTY_CURVE_TYPE), JVisualization2D.CURVE_MODE_CODE, 0);
+		String listName = configuration.getProperty(PROPERTY_CURVE_LIST, JVisualization2D.ROW_LIST_CODE_VISIBLE);
+		int rowList = listName.equals(JVisualization2D.ROW_LIST_CODE_VISIBLE) ? JVisualization2D.cCurveRowListVisible
+				: listName.equals(JVisualization2D.ROW_LIST_CODE_SELECTED) ? JVisualization2D.cCurveRowListSelected
+				: getTableModel().getListHandler().getListIndex(listName);
 		boolean stdDev = "true".equals(configuration.getProperty(PROPERTY_SHOW_STDDEV_AREA));
+		boolean truncate = "true".equals(configuration.getProperty(PROPERTY_TRUNCATE_CURVE));
 		boolean split = "true".equals(configuration.getProperty(PROPERTY_SPLIT_BY_CATEGORY)) && mode != JVisualization2D.cCurveModeByFormulaShow;
 		int splitCurveColumn = getTableModel().findColumn(configuration.getProperty(PROPERTY_SPLIT_CURVE_COLUMN));
-		visualization.setCurveMode(mode, stdDev, split, splitCurveColumn);
+		visualization.setCurveMode(mode, rowList, stdDev, truncate, split, splitCurveColumn);
 		visualization.setCurveExpression(configuration.getProperty(PROPERTY_CURVE_FORMULA));
 		String value = configuration.getProperty(PROPERTY_CURVE_LINE_WIDTH);
 		if (value != null)
@@ -486,9 +532,12 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		boolean isFormula = curveMode == JVisualization2D.cCurveModeByFormulaShow
 						 || curveMode == JVisualization2D.cCurveModeByFormulaHide;
 		boolean canSplitCurve = curveMode != 0 && !isFormula;
+		boolean canTruncateCurve = curveMode != 0 && !isFormula && curveMode != JVisualization2D.cCurveModeSmooth;
+		mComboBoxCurveList.setEnabled(canSplitCurve);
 		mTextFieldFormula.setEnabled(isFormula);
 		mCheckBoxShowStdDev1.setEnabled(curveMode != 0);
-		mCheckBoxMultipleCurves.setEnabled(canSplitCurve);
+		mCheckBoxTruncateCurve.setEnabled(canTruncateCurve);
+		mCheckBoxSplitCurvesByColor.setEnabled(canSplitCurve);
 		mComboBoxSplitCurveColumn.setEnabled(canSplitCurve);
 		mSliderCurveSmoothing.setEnabled(curveMode == JVisualization2D.cCurveModeSmooth);
 

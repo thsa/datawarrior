@@ -362,7 +362,7 @@ public class DETaskAssessPredictionQuality extends DETaskAbstractMachineLearning
 			int colorListMode = VisualizationColor.cColorListModeCategories;
 			visualization.getMarkerColor().setColor(firstNewColumn, null, colorListMode);
 			visualization.setSplittingColumns(firstNewColumn, -1, 1f, false);
-			visualization.setCurveMode(JVisualization2D.cCurveModeFitted, true, false, JVisualization.cColumnUnassigned);
+			visualization.setCurveMode(JVisualization2D.cCurveModeFitted, JVisualization2D.cCurveRowListVisible, true, false, false, JVisualization.cColumnUnassigned);
 			visualization.setShownCorrelationType(CorrelationCalculator.TYPE_BRAVAIS_PEARSON);
 		} );
 	}

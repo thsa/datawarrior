@@ -39,6 +39,7 @@ import com.actelion.research.util.DoubleFormat;
 import org.nfunk.jep.JEP;
 
 import javax.imageio.ImageIO;
+import javax.swing.event.ListSelectionEvent;
 import java.awt.*;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
@@ -132,6 +133,12 @@ public class JVisualization2D extends JVisualization {
 	public static final int cCurveModeByFormulaHide = 6;
 	private static final int cCurveStandardDeviation = 8;
 	private static final int cCurveSplitByCategory = 16;
+	private static final int cCurveTruncateArea = 32;
+
+	public static final int cCurveRowListVisible = CompoundTableListHandler.LISTINDEX_NONE;
+	public static final int cCurveRowListSelected = CompoundTableListHandler.LISTINDEX_SELECTION;
+	public static final String ROW_LIST_CODE_VISIBLE = "<visible>";
+	public static final String ROW_LIST_CODE_SELECTED = "<selected>";
 
 	public static final float DEFAULT_CURVE_LINE_WIDTH = 1.5f;
 	public static final float DEFAULT_CURVE_SMOOTHING = 0.5f;
@@ -163,7 +170,7 @@ public class JVisualization2D extends JVisualization {
 	private float			mBackgroundColorRadius,mBackgroundColorFading,mFontScaling,mMarkerTransparency,
 							mMarkerLabelTransparency,mConnectionLineTransparency,mCurveLineWidth,mCurveSmoothing;
 	private int				mBorder,mCurveInfo,mBackgroundHCount,mBackgroundVCount,mCrossHairMode,
-							mBackgroundColorConsidered,mCurveSplitCategoryColumn,
+							mBackgroundColorConsidered,mCurveSplitCategoryColumn,mCurveRowList,
 							mConnectionFromIndex1,mConnectionFromIndex2,mShownCorrelationType,mMultiValueMarkerMode;
 	private long			mPreviousPaintEnd,mPreviousFullDetailPaintMillis,mMostRecentRepaintMillis;
 	private boolean			mBackgroundValid,mIsHighResolution,mScaleTitleCentered,
@@ -228,6 +235,7 @@ public class JVisualization2D extends JVisualization {
 		mScaleTitleCentered = true;
 		mDrawMarkerOutline = true;
 		mDrawBarPieBoxOutline = false;
+		mCurveRowList = cCurveRowListVisible;
 		mCurveLineWidth = DEFAULT_CURVE_LINE_WIDTH;
 		mCurveSmoothing = DEFAULT_CURVE_SMOOTHING;
 		mCrossHairMode = CROSSHAIR_MODE_AUTOMATIC;
@@ -2863,13 +2871,14 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private Rectangle[][] getCurveBounds() {
-		int catCount = getSplitCurveCategoryCount();
-		if (catCount == 1)
+		if ((mCurveInfo & cCurveTruncateArea) == 0)
 			return null;
 
+		int catCount = getSplitCurveCategoryCount();
 		Rectangle[][] bounds = new Rectangle[mHVCount][catCount];
+		long mask = mTableModel.getListHandler().getListMask(mCurveRowList);
 		for (int i=0; i<mDataPoints; i++) {
-			if (isVisibleExcludeNaN(mPoint[i])) {
+			if (isConsideredForCurve(mPoint[i], mask)) {
 				int hv = mPoint[i].hvIndex;
 				int cat = (catCount == 1) ? 0 : getSplitCurveCategoryIndex(mPoint[i]);
 				int x = Math.round(mPoint[i].screenX);
@@ -2933,41 +2942,6 @@ public class JVisualization2D extends JVisualization {
 		return stringWriter.toString();
 		}
 
-	/**
-	 * If curves are split by the color category and/or by another selected category column,
-	 * then this method returns the total number of combined categories.
-	 * It does not consider view splitting.
-	 * @return 1, color category count, second category count, or color category count * second category count
-	 */
-	private int getSplitCurveCategoryCount() {
-		int catCount = 1;
-		if (isCurveSplitByColorCategory())
-			catCount = mTableModel.getCategoryCount(mMarkerColor.getColorColumn());
-
-		if (isSplitCurveBySecondCategory())
-			catCount *= mTableModel.getCategoryCount(mCurveSplitCategoryColumn);
-
-		return catCount;
-		}
-
-	/**
-	 * If curves are split by the color category and/or by  another selected category column,
-	 * then this method returns a combined category index for the given visualization point.
-	 * @param vp
-	 * @return
-	 */
-	private int getSplitCurveCategoryIndex(VisualizationPoint vp) {
-		int colorIndex = 0;
-		if (isCurveSplitByColorCategory())
-			colorIndex = vp.colorIndex - VisualizationColor.cSpecialColorCount;
-
-		if (isSplitCurveBySecondCategory())
-			return colorIndex * mTableModel.getCategoryCount(mCurveSplitCategoryColumn)
-				 + mTableModel.getCategoryIndex(mCurveSplitCategoryColumn, vp.record);
-
-		return colorIndex;
-		}
-
 	private void getMeanLineStatistics(BufferedWriter writer, int axis) throws IOException {
 		int colorColumn = mMarkerColor.getColorColumn();
 		int catCount = getSplitCurveCategoryCount();
@@ -2998,8 +2972,8 @@ public class JVisualization2D extends JVisualization {
 			}
 
 		String[][] splittingCategory = getSplitViewCategories();
-		String[] colorCategory = isCurveSplitByColorCategory() ? mTableModel.getCategoryList(colorColumn) : null;
-		String[] secondCategory = isSplitCurveBySecondCategory() ? mTableModel.getCategoryList(mCurveSplitCategoryColumn) : null;
+		String[] colorCategory = isEffectiveCurveSplitByColorCategory() ? mTableModel.getCategoryList(colorColumn) : null;
+		String[] secondCategory = isEffectiveCurveSplitBySecondCategory() ? mTableModel.getCategoryList(mCurveSplitCategoryColumn) : null;
 
 //		writer.write((axis == 0) ? "Vertical Mean Line:" : "Horizontal Mean Line:");	// without this line we can paste the data into DataWarrior
 //		writer.newLine();
@@ -3023,8 +2997,6 @@ public class JVisualization2D extends JVisualization {
 			writer.write("\tStandard Deviation");
 		writer.newLine();
 
-		int secondCategoryCount = isSplitCurveBySecondCategory() ? secondCategory.length : 1;
-
 		for (int hv=0; hv<mHVCount; hv++) {
 			for (int cat=0; cat<catCount; cat++) {
 				if (count[hv][cat] == 0)
@@ -3034,10 +3006,10 @@ public class JVisualization2D extends JVisualization {
 					writer.write(splittingCategory[0][(mSplittingColumn[1] == cColumnUnassigned) ? hv : mSplitter.getHIndex(hv)]+"\t");
 				if (isSplitView() && mSplittingColumn[1] != cColumnUnassigned)
 					writer.write(splittingCategory[1][mSplitter.getVIndex(hv)]+"\t");
-				if (isCurveSplitByColorCategory() && !isRedundantSplitting)
-					writer.write(colorCategory[cat / secondCategoryCount]+"\t");
+				if (colorCategory != null && !isRedundantSplitting)
+					writer.write(colorCategory[getCurveColorIndexFromCombinedCategoryIndex(cat)]+"\t");
 				if (secondCategory != null)
-					writer.write(secondCategory[cat % secondCategoryCount]+"\t");
+					writer.write(secondCategory[getCurveSecondCategoryIndexFromCombinedCategoryIndex(cat)]+"\t");
 				writer.write(count[hv][cat]+"\t");
 				writer.write(count[hv][cat] == 0 ? "" : formatValue(xmean[hv][cat], mAxisIndex[axis]));
 				if ((mCurveInfo & cCurveStandardDeviation) != 0) {
@@ -3096,9 +3068,8 @@ public class JVisualization2D extends JVisualization {
 			}
 
 		String[][] splittingCategory = getSplitViewCategories();
-		String[] colorCategory = isCurveSplitByColorCategory() ? mTableModel.getCategoryList(colorColumn) : null;
-		String[] secondCategory = isSplitCurveBySecondCategory() ? mTableModel.getCategoryList(mCurveSplitCategoryColumn) : null;
-		int secondCategoryCount = isSplitCurveBySecondCategory() ? secondCategory.length : 1;
+		String[] colorCategory = isEffectiveCurveSplitByColorCategory() ? mTableModel.getCategoryList(colorColumn) : null;
+		String[] secondCategory = isEffectiveCurveSplitBySecondCategory() ? mTableModel.getCategoryList(mCurveSplitCategoryColumn) : null;
 
 //		writer.write("Fitted Straight Line:");	// without this line we can paste the data into DataWarrior
 //		writer.newLine();
@@ -3137,9 +3108,9 @@ public class JVisualization2D extends JVisualization {
 				if (isSplitView() && mSplittingColumn[1] != cColumnUnassigned)
 					writer.write(splittingCategory[1][mSplitter.getVIndex(hv)]+"\t");
 				if (colorCategory != null && !isRedundantSplitting)
-					writer.write(colorCategory[cat / secondCategoryCount]+"\t");
+					writer.write(colorCategory[getCurveColorIndexFromCombinedCategoryIndex(cat)]+"\t");
 				if (secondCategory != null)
-					writer.write(secondCategory[cat % secondCategoryCount]+"\t");
+					writer.write(secondCategory[getCurveSecondCategoryIndexFromCombinedCategoryIndex(cat)]+"\t");
 				writer.write(count[hv][cat]+"\t");
 				if (count[hv][cat] < 2) {
 					writer.write("\t");
@@ -3178,13 +3149,24 @@ public class JVisualization2D extends JVisualization {
 		return splittingCategory;
 		}
 
+	private boolean isConsideredForCurve(VisualizationPoint vp, long listMask) {
+		if (!isVisibleExcludeNaN(vp) || vp.hvIndex == -1)
+			return false;
+
+		if (mCurveRowList == cCurveRowListVisible)
+			return true;
+
+		return (vp.record.getFlags() & listMask) != 0;
+		}
+
 	private void drawVerticalMeanLine(Rectangle baseGraphRect, Rectangle[][] splitCurveBounds) {
 		int catCount = getSplitCurveCategoryCount();
 		int[][] count = new int[mHVCount][catCount];
 		float[][] xmean = new float[mHVCount][catCount];
 		float[][] stdDev = new float[mHVCount][catCount];
+		long mask = mTableModel.getListHandler().getListMask(mCurveRowList);
 		for (int i=0; i<mDataPoints; i++) {
-			if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
+			if (isConsideredForCurve(mPoint[i], mask)) {
 				int cat = (catCount == 1) ? 0 : getSplitCurveCategoryIndex(mPoint[i]);
 				xmean[mPoint[i].hvIndex][cat] += mPoint[i].screenX;
 				count[mPoint[i].hvIndex][cat]++;
@@ -3199,15 +3181,13 @@ public class JVisualization2D extends JVisualization {
 		boolean showStdDev = ((mCurveInfo & cCurveStandardDeviation) != 0);
 		if (showStdDev) {
 			for (int i=0; i<mDataPoints; i++) {
-				if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
-					int cat = (catCount == 1) ? 0 : mPoint[i].colorIndex - VisualizationColor.cSpecialColorCount;
+				if (isConsideredForCurve(mPoint[i], mask)) {
+					int cat = (catCount == 1) ? 0 : getSplitCurveCategoryIndex(mPoint[i]);
 					stdDev[mPoint[i].hvIndex][cat] += (mPoint[i].screenX - xmean[mPoint[i].hvIndex][cat])
 											   		* (mPoint[i].screenX - xmean[mPoint[i].hvIndex][cat]);
 					}
 				}
 			}
-
-		int secondCategoryCount = isSplitCurveBySecondCategory() ? mTableModel.getCategoryCount(mCurveSplitCategoryColumn) : 1;
 
 		for (int hv=0; hv<mHVCount; hv++) {
 			for (int cat=0; cat<catCount; cat++) {
@@ -3220,8 +3200,8 @@ public class JVisualization2D extends JVisualization {
 					int ymin = bounds.y + vOffset;
 					int ymax = ymin + bounds.height;
 	
-					if (isCurveSplitByColorCategory())
-						mG.setColor(mMarkerColor.getColor(cat / secondCategoryCount));
+					if (isEffectiveCurveSplitByColorCategory())
+						mG.setColor(mMarkerColor.getColor(getCurveColorIndexFromCombinedCategoryIndex(cat)));
 
 					float dx = 0f;
 					if (showStdDev) {
@@ -3252,8 +3232,9 @@ public class JVisualization2D extends JVisualization {
 		int[][] count = new int[mHVCount][catCount];
 		float[][] ymean = new float[mHVCount][catCount];
 		float[][] stdDev = new float[mHVCount][catCount];
+		long mask = mTableModel.getListHandler().getListMask(mCurveRowList);
 		for (int i=0; i<mDataPoints; i++) {
-			if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
+			if (isConsideredForCurve(mPoint[i], mask)) {
 				int cat = (catCount == 1) ? 0 : getSplitCurveCategoryIndex(mPoint[i]);
 				ymean[mPoint[i].hvIndex][cat] += mPoint[i].screenY;
 				count[mPoint[i].hvIndex][cat]++;
@@ -3268,15 +3249,13 @@ public class JVisualization2D extends JVisualization {
 		boolean showStdDev = ((mCurveInfo & cCurveStandardDeviation) != 0);
 		if (showStdDev) {
 			for (int i=0; i<mDataPoints; i++) {
-				if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
+				if (isConsideredForCurve(mPoint[i], mask)) {
 					int cat = (catCount == 1) ? 0 : getSplitCurveCategoryIndex(mPoint[i]);
 					stdDev[mPoint[i].hvIndex][cat] += (mPoint[i].screenY - ymean[mPoint[i].hvIndex][cat])
 													* (mPoint[i].screenY - ymean[mPoint[i].hvIndex][cat]);
 					}
 				}
 			}
-
-		int secondCategoryCount = isSplitCurveBySecondCategory() ? mTableModel.getCategoryCount(mCurveSplitCategoryColumn) : 1;
 
 		for (int hv=0; hv<mHVCount; hv++) {
 			for (int cat=0; cat<catCount; cat++) {
@@ -3289,8 +3268,8 @@ public class JVisualization2D extends JVisualization {
 					int xmin = bounds.x + hOffset;
 					int xmax = xmin + bounds.width;
 
-					if (isCurveSplitByColorCategory())
-						mG.setColor(mMarkerColor.getColor(cat / secondCategoryCount));
+					if (isEffectiveCurveSplitByColorCategory())
+						mG.setColor(mMarkerColor.getColor(getCurveColorIndexFromCombinedCategoryIndex(cat)));
 
 					float dy = 0f;
 					if (showStdDev) {
@@ -3353,11 +3332,12 @@ public class JVisualization2D extends JVisualization {
 					: baseGraphRect.y + baseGraphRect.height * (1 - (y - mAxisVisMin[1]) / (mAxisVisMax[1] - mAxisVisMin[1]));
 			}
 
+		long mask = mTableModel.getListHandler().getListMask(mCurveRowList);
 		if ((mCurveInfo & cCurveStandardDeviation) != 0) {
 			mCurveStdDev = new float[mHVCount][1];
 			int[][] stdDevCount = new int[mHVCount][1];
 			for (int i=0; i<mDataPoints; i++) {
-				if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
+				if (isConsideredForCurve(mPoint[i], mask)) {
 					int hv = mPoint[i].hvIndex;
 					int dx = mSplitter == null ? 0 : mSplitter.getHIndex(hv) * mSplitter.getGridWidth();
 					int dy = mSplitter == null ? 0 : mSplitter.getVIndex(hv) * mSplitter.getGridHeight();
@@ -3397,8 +3377,9 @@ public class JVisualization2D extends JVisualization {
 				xmax[hv][cat] = Float.MIN_VALUE;
 				}
 			}
+		long mask = mTableModel.getListHandler().getListMask(mCurveRowList);
 		for (int i=0; i<mDataPoints; i++) {
-			if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
+			if (isConsideredForCurve(mPoint[i], mask)) {
 				int cat = (catCount == 1) ? 0 : getSplitCurveCategoryIndex(mPoint[i]);
 				int hv = mPoint[i].hvIndex;
 				if (mCurveXMin[hv][cat] > mPoint[i].screenX)
@@ -3430,7 +3411,7 @@ public class JVisualization2D extends JVisualization {
 		float weightFactor = mCurveSmoothing * mCurveSmoothing * 200f;
 
 		for (int i=0; i<mDataPoints; i++) {
-			if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
+			if (isConsideredForCurve(mPoint[i], mask)) {
 				int cat = (catCount == 1) ? 0 : getSplitCurveCategoryIndex(mPoint[i]);
 				int hv = mPoint[i].hvIndex;
 				if (mCurveY[hv][cat] != null) {
@@ -3454,7 +3435,7 @@ public class JVisualization2D extends JVisualization {
 			mCurveStdDev = new float[mHVCount][catCount];
 			int[][] stdDevCount = new int[mHVCount][catCount];
 			for (int i=0; i<mDataPoints; i++) {
-				if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
+				if (isConsideredForCurve(mPoint[i], mask)) {
 					int cat = (catCount == 1) ? 0 : getSplitCurveCategoryIndex(mPoint[i]);
 					int hv = mPoint[i].hvIndex;
 					if (mCurveY[hv][cat] != null) {
@@ -3484,8 +3465,6 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private void drawSmoothCurveArea(int hv, Rectangle graphRect) {
-		int secondCategoryCount = isSplitCurveBySecondCategory() ? mTableModel.getCategoryCount(mCurveSplitCategoryColumn) : 1;
-
 		for (int cat=0; cat<mCurveY[hv].length; cat++) {
 			if (mCurveY[hv][cat] != null && mCurveStdDev != null && mCurveStdDev[hv][cat] != 0f) {
 				Polygon polygon = new Polygon();
@@ -3501,8 +3480,8 @@ public class JVisualization2D extends JVisualization {
 					float y = Math.min(graphRect.y+graphRect.height, mCurveY[hv][cat][i]+ydif);
 					polygon.addPoint(Math.round(x), Math.round(y));
 					}
-				if (mCurveY[hv].length != 1)
-					mG.setColor(mMarkerColor.getColor(cat / secondCategoryCount));
+				if (isEffectiveCurveSplitByColorCategory())
+					mG.setColor(mMarkerColor.getColor(getCurveColorIndexFromCombinedCategoryIndex(cat)));
 				else
 					mG.setColor(getContrastGrey(1.0f));
 				Composite original = mG.getComposite();
@@ -3515,12 +3494,11 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private void drawSmoothCurve() {
-		int secondCategoryCount = isSplitCurveBySecondCategory() ? mTableModel.getCategoryCount(mCurveSplitCategoryColumn) : 1;
 		for (int hv=0; hv<mHVCount; hv++) {
 			for (int cat = 0; cat<mCurveY[hv].length; cat++) {
 				if (mCurveY[hv][cat] != null) {
-					if (mCurveY[hv].length != 1)
-						mG.setColor(mMarkerColor.getColor(cat / secondCategoryCount));
+					if (isEffectiveCurveSplitByColorCategory())
+						mG.setColor(mMarkerColor.getColor(getCurveColorIndexFromCombinedCategoryIndex(cat)));
 					float x = mCurveXMin[hv][cat];
 					for (int i=0; i<mCurveY[hv][cat].length-1; i++) {
 						mG.draw(new Line2D.Float(x, mCurveY[hv][cat][i], x+mCurveXInc[hv][cat], mCurveY[hv][cat][i+1]));
@@ -3612,8 +3590,9 @@ public class JVisualization2D extends JVisualization {
 		float[][] sy = new float[mHVCount][catCount];
 		float[][] sx2 = new float[mHVCount][catCount];
 		float[][] sxy = new float[mHVCount][catCount];
+		long mask = mTableModel.getListHandler().getListMask(mCurveRowList);
 		for (int i=0; i<mDataPoints; i++) {
-			if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
+			if (isConsideredForCurve(mPoint[i], mask)) {
 				int cat = (catCount == 1) ? 0 : getSplitCurveCategoryIndex(mPoint[i]);
 				sx[mPoint[i].hvIndex][cat] += mPoint[i].screenX;
 				sy[mPoint[i].hvIndex][cat] += mPoint[i].screenY;
@@ -3636,7 +3615,7 @@ public class JVisualization2D extends JVisualization {
 		if (showStdDev) {
 			stdDev = new float[mHVCount][catCount];
 			for (int i=0; i<mDataPoints; i++) {
-				if (isVisibleExcludeNaN(mPoint[i]) && mPoint[i].hvIndex != -1) {
+				if (isConsideredForCurve(mPoint[i], mask)) {
 					int cat = (catCount == 1) ? 0 : getSplitCurveCategoryIndex(mPoint[i]);
 					float b2 = mPoint[i].screenY + mPoint[i].screenX/m[mPoint[i].hvIndex][cat];
 					float xs = (b2-b[mPoint[i].hvIndex][cat])/(m[mPoint[i].hvIndex][cat]+1.0f/m[mPoint[i].hvIndex][cat]);
@@ -3646,8 +3625,6 @@ public class JVisualization2D extends JVisualization {
 					}
 				}
 			}
-
-		int secondCategoryCount = isSplitCurveBySecondCategory() ? mTableModel.getCategoryCount(mCurveSplitCategoryColumn) : 1;
 
 		for (int hv=0; hv<mHVCount; hv++) {
 			for (int cat=0; cat<catCount; cat++) {
@@ -3663,8 +3640,8 @@ public class JVisualization2D extends JVisualization {
 
 				Rectangle bounds = (splitCurveBounds == null) ? baseGraphRect : splitCurveBounds[hv][cat];
 
-				if (isCurveSplitByColorCategory())
-					mG.setColor(mMarkerColor.getColor(cat / secondCategoryCount));
+				if (isEffectiveCurveSplitByColorCategory())
+					mG.setColor(mMarkerColor.getColor(getCurveColorIndexFromCombinedCategoryIndex(cat)));
 
 				if (count[hv][cat]*sx2[hv][cat] == sx[hv][cat]*sx[hv][cat]) {
 					float x = sx[hv][cat] / count[hv][cat];
@@ -4191,6 +4168,16 @@ public class JVisualization2D extends JVisualization {
 					mBackgroundColorConsidered--;
 					}
 				}
+			if (mCurveRowList >= 0) {
+				if (e.getListIndex() == mCurveRowList) {
+					mCurveRowList = cCurveRowListVisible;
+					mCurveY = null;
+					invalidateOffImage(false);
+					}
+				else if (mCurveRowList > e.getListIndex()) {
+					mCurveRowList--;
+					}
+				}
 			}
 		else if (e.getType() == CompoundTableListEvent.cChange) {
 			if (mBackgroundColorConsidered >= 0) {	// is a list index
@@ -4199,9 +4186,27 @@ public class JVisualization2D extends JVisualization {
 					invalidateOffImage(false);
 					}
 				}
+			if (mCurveRowList >= 0) {	// is a list index
+				if (e.getListIndex() == mCurveRowList) {
+					mCurveY = null;
+					invalidateOffImage(false);
+					}
+				}
 			}
 
 		mBackgroundColor.listChanged(e);
+		}
+
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+		super.valueChanged(e);
+
+		if (!e.getValueIsAdjusting()) {
+			if (mCurveRowList == cCurveRowListSelected) {
+				mCurveY = null;
+				invalidateOffImage(false);
+				}
+			}
 		}
 
 	@Override
@@ -5993,10 +5998,17 @@ public class JVisualization2D extends JVisualization {
 			}
 		}
 
+	public boolean isCurveAreaTruncated() {
+		return (mCurveInfo & cCurveTruncateArea) != 0;
+		}
+
 	public boolean isShowStandardDeviationArea() {
 		return (mCurveInfo & cCurveStandardDeviation) != 0;
 		}
 
+	/**
+	 * @return true if user selected curve splitting by marker color AND marker colors are category mode
+	 */
 	public boolean isCurveSplitByColorCategory() {
 		return (mCurveInfo & cCurveSplitByCategory) != 0
 			 && mMarkerColor.getColorColumn() != cColumnUnassigned
@@ -6004,13 +6016,69 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	public int getCurveSplitSecondCategoryColumn() {
-		return isSplitCurveBySecondCategory() ? mCurveSplitCategoryColumn : cColumnUnassigned;
+		return mCurveSplitCategoryColumn;
 		}
 
-	private boolean isSplitCurveBySecondCategory() {
+	/**
+	 * @return true if (user selected curve splitting by marker color AND/OR curve split column is also marker color column) AND marker colors are category mode
+	 */
+	private boolean isEffectiveCurveSplitByColorCategory() {
+		return isCurveSplitByColorCategory()
+			|| (mCurveSplitCategoryColumn != cColumnUnassigned
+			 && mCurveSplitCategoryColumn == mMarkerColor.getColorColumn()
+			 && mMarkerColor.getColorListMode() == VisualizationColor.cColorListModeCategories);
+		}
+
+	/**
+	 * @return true if user selected curve splitting by second column AND second column is not marker color column with category mode
+	 */
+	private boolean isEffectiveCurveSplitBySecondCategory() {
 		return mCurveSplitCategoryColumn != cColumnUnassigned
-			&& (!isCurveSplitByColorCategory()
-			 || mCurveSplitCategoryColumn != mMarkerColor.getColorColumn());
+			&& (mCurveSplitCategoryColumn != mMarkerColor.getColorColumn()
+			 || mMarkerColor.getColorListMode() != VisualizationColor.cColorListModeCategories);
+		}
+
+	/**
+	 * If curves are split by the color category and/or by another selected category column,
+	 * then this method returns the total number of combined categories.
+	 * It does not consider view splitting.
+	 * @return 1, color category count, second category count, or color category count * second category count
+	 */
+	private int getSplitCurveCategoryCount() {
+		int catCount = 1;
+		if (isEffectiveCurveSplitByColorCategory())
+			catCount = mTableModel.getCategoryCount(mMarkerColor.getColorColumn());
+
+		if (isEffectiveCurveSplitBySecondCategory())
+			catCount *= mTableModel.getCategoryCount(mCurveSplitCategoryColumn);
+
+		return catCount;
+		}
+
+	/**
+	 * If curves are split by the color category and/or by  another selected category column,
+	 * then this method returns a combined category index for the given visualization point.
+	 * @param vp
+	 * @return
+	 */
+	private int getSplitCurveCategoryIndex(VisualizationPoint vp) {
+		int colorIndex = 0;
+		if (isEffectiveCurveSplitByColorCategory())
+			colorIndex = vp.colorIndex - VisualizationColor.cSpecialColorCount;
+
+		if (isEffectiveCurveSplitBySecondCategory())
+			return colorIndex * mTableModel.getCategoryCount(mCurveSplitCategoryColumn)
+					+ mTableModel.getCategoryIndex(mCurveSplitCategoryColumn, vp.record);
+
+		return colorIndex;
+		}
+
+	private int getCurveColorIndexFromCombinedCategoryIndex(int cat) {
+		return isEffectiveCurveSplitBySecondCategory() ? cat / mTableModel.getCategoryCount(mCurveSplitCategoryColumn) : cat;
+		}
+
+	private int getCurveSecondCategoryIndexFromCombinedCategoryIndex(int cat) {
+		return cat % mTableModel.getCategoryCount(mCurveSplitCategoryColumn);
 		}
 
 	public void setCurveLineWidth(float lineWidth) {
@@ -6028,24 +6096,35 @@ public class JVisualization2D extends JVisualization {
 		mCrossHairMode = mode;
 		}
 
-	public void setCurveMode(int mode, boolean drawStdDevRange, boolean splitByCategory, int splitCurveColumn) {
+	public void setCurveMode(int mode, int rowList, boolean drawStdDevRange, boolean truncateArea, boolean splitByCategory, int splitCurveColumn) {
 		if (!getTableModel().isColumnTypeCategory(splitCurveColumn))
 			splitCurveColumn = cColumnUnassigned;
+		if (mode == cCurveModeNone)
+			rowList = cCurveRowListVisible;
 
 		int newInfo = mode
 					+ (drawStdDevRange ? cCurveStandardDeviation : 0)
+					+ (truncateArea ? cCurveTruncateArea : 0)
 					+ (splitByCategory ? cCurveSplitByCategory : 0);
 
-		if (mCurveInfo != newInfo || mCurveSplitCategoryColumn != splitCurveColumn) {
+		if (mCurveInfo != newInfo
+		 || mCurveSplitCategoryColumn != splitCurveColumn
+		 || rowList != mCurveRowList) {
 			if (splitByCategory != ((mCurveInfo & cCurveSplitByCategory) != 0)
 			 || splitCurveColumn != mCurveSplitCategoryColumn
+			 || rowList != mCurveRowList
 			 || (mode != cCurveModeByFormulaShow && mode != cCurveModeByFormulaHide))
 				mCurveY = null;
 
 			mCurveInfo = newInfo;
+			mCurveRowList = rowList;
 			mCurveSplitCategoryColumn = splitCurveColumn;
 			invalidateOffImage(false);
 			}
+		}
+
+	public int getCurveRowList() {
+		return mCurveRowList;
 		}
 
 	public String getCurveExpression() {

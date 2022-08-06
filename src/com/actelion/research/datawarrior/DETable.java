@@ -247,6 +247,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 		} else if (columnType.equals(CompoundTableModel.cColumnTypeIDCode)) {
 			StereoMolecule oldMol = tableModel.getChemicalStructure(record, valueColumn, CompoundTableModel.ATOM_COLOR_MODE_EXPLICIT, null);
 			SwingEditorDialog dialog = new SwingEditorDialog(mParentFrame, oldMol);
+			applyCustomProperties(dialog, valueColumn);
 			dialog.setTitle("Edit '" + tableModel.getColumnTitle(valueColumn) + "'");
 			if (tableModel.getChildColumn(valueColumn, CompoundTableConstants.cColumnTypeAtomColorInfo) != -1)
 				dialog.getDrawArea().setAtomColorSupported(true);
@@ -258,6 +259,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 		} else if (columnType.equals(CompoundTableModel.cColumnTypeRXNCode)) {
 			Reaction oldRxn = tableModel.getChemicalReaction(record, valueColumn, CompoundTableModel.ATOM_COLOR_MODE_EXPLICIT);
 			SwingEditorDialog dialog = new SwingEditorDialog(mParentFrame, oldRxn);
+			applyCustomProperties(dialog, valueColumn);
 			dialog.setTitle("Edit '" + tableModel.getColumnTitle(valueColumn) + "'");
 			dialog.setVisible(true);
 			if (!dialog.isCancelled()) {
@@ -271,6 +273,23 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 					tableModel.finalizeChangeCell(record, valueColumn);
 			}
 		}
+	}
+
+	private void applyCustomProperties(SwingEditorDialog editorDialog, int column) {
+		String displayMode = ((CompoundTableModel)getModel()).getColumnProperty(column, CompoundTableConstants.cColumnPropertyChemistryDisplayMode);
+		if (displayMode != null) {
+			try {
+				int mode = displayMode.startsWith("0x") ? Integer.parseInt(displayMode.substring(2), 16) : Integer.parseInt(displayMode);
+				editorDialog.getDrawArea().setDisplayMode(mode);
+			}
+			catch (NumberFormatException nfe) { nfe.printStackTrace(); }
+		}
+		String labelSize = ((CompoundTableModel)getModel()).getColumnProperty(column, CompoundTableConstants.cColumnPropertyChemistryTextSize);
+		if (labelSize != null)
+			try {
+				editorDialog.getDrawArea().setTextSizeFactor(Double.parseDouble(labelSize));
+			}
+			catch (NumberFormatException nfe) { nfe.printStackTrace(); }
 	}
 
 	@Override
@@ -564,6 +583,20 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			TableCellRenderer renderer = tc.getCellRenderer();
 			if (!(renderer instanceof CompoundTableChemistryCellRenderer)) {
 				renderer = new CompoundTableChemistryCellRenderer();
+				String displayMode = ((CompoundTableModel)getModel()).getColumnProperty(column, CompoundTableConstants.cColumnPropertyChemistryDisplayMode);
+				if (displayMode != null) {
+					try {
+						int mode = displayMode.startsWith("0x") ? Integer.parseInt(displayMode.substring(2), 16) : Integer.parseInt(displayMode);
+						((CompoundTableChemistryCellRenderer)renderer).setDisplayMode(mode);
+						}
+					catch (NumberFormatException nfe) { nfe.printStackTrace(); }
+					}
+				String labelSize = ((CompoundTableModel)getModel()).getColumnProperty(column, CompoundTableConstants.cColumnPropertyChemistryTextSize);
+				if (labelSize != null)
+					try {
+						((CompoundTableChemistryCellRenderer)renderer).setTextSizeFactor(Double.parseDouble(labelSize));
+						}
+					catch (NumberFormatException nfe) { nfe.printStackTrace(); }
 				((CompoundTableChemistryCellRenderer)renderer).setAlternateRowBackground(true);
 				tc.setCellRenderer(renderer);
 				}

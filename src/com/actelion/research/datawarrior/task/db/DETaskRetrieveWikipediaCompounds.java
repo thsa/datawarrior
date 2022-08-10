@@ -23,7 +23,8 @@ import java.util.Properties;
 
 public class DETaskRetrieveWikipediaCompounds extends AbstractTaskWithoutConfiguration {
 	public static final String TASK_NAME = "Retrieve Wikipedia Compounds";
-	private static final String RAW_DATA_URL = "http://www.cheminfo.org/wikipedia/idcode.txt";
+//	private static final String RAW_DATA_URL = "http://www.cheminfo.org/wikipedia/idcode.txt";
+	private static final String RAW_DATA_URL = "https://wikipedia.cheminfo.org/idcode.txt";
 	private static final String[] COLUMN_NAME = {"Compound Name", "Formula", "Molweight"};
 	private static final String EXPLANATION =
 			"<html>\n"+

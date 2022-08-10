@@ -111,17 +111,18 @@ public class DETaskImportHitlist extends DETaskAbstractOpenFile implements Actio
 			return false;
 
 		if (isLive) {
-			String listName = configuration.getProperty(PROPERTY_LISTNAME, "");
-			if (listName.length() == 0) {
-				showErrorMessage("No list name specified.");
-				return false;
-				}
+//			String listName = configuration.getProperty(PROPERTY_LISTNAME, "");
+//			if (listName.length() == 0) {
+//				showErrorMessage("No list name specified.");
+//				return false;
+//				}
 			String fileName = configuration.getProperty(PROPERTY_FILENAME, "");
 			if (fileName.length() == 0) {
 				showErrorMessage("No file specified.");
 				return false;
 				}
 			if (!ASK_FOR_FILE.equals(fileName)) {
+				fileName = resolvePathVariables(resolveVariables(fileName));
 				boolean caseSensitive = "true".equals(configuration.getProperty(PROPERTY_CASE_SENSITIVE, "true"));
 				String error = analyzeListFile(new File(fileName), caseSensitive);
 				if (error != null) {
@@ -391,13 +392,18 @@ public class DETaskImportHitlist extends DETaskAbstractOpenFile implements Actio
 		String keyColumnName = configuration.getProperty(PROPERTY_KEYCOLUMN, "");
 		int keyColumn = (keyColumnName.length() == 0) ? mKeyColumn : mTableModel.findColumn(keyColumnName);
 
-		String listName = configuration.getProperty(PROPERTY_LISTNAME);
-		if (listName != null)
+		String listName = configuration.getProperty(PROPERTY_LISTNAME, "");
+		if (listName.length() != 0)
 			mListName = listName;	// otherwise take the default created by analyzeHitlist()
 
 		mTableModel.getListHandler().createList(mListName, -1, CompoundTableListHandler.FROM_KEY_SET, keyColumn, mKeySet, !caseSensitive);
 
         return null;
+		}
+
+	@Override
+	public boolean qualifiesForRecentFileMenu() {
+		return false;
 		}
 
 	private TreeSet<String> readKeys(BufferedReader theReader, boolean caseSensitive) throws IOException {

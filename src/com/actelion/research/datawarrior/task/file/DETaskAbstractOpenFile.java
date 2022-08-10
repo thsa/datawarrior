@@ -299,17 +299,26 @@ public abstract class DETaskAbstractOpenFile extends ConfigurableTask implements
 				return;	// no error message, because user cancelled and knows this
 			}
 		else {
-			file = new File(resolvePathVariables(fileName));
+			file = new File(resolvePathVariables(resolveVariables(fileName)));
 			}
 
-		if (SwingUtilities.isEventDispatchThread())
-			mApplication.updateRecentFiles(file);
-		else {
-			final File _file = file;
-			SwingUtilities.invokeLater(() -> mApplication.updateRecentFiles(_file));
+		if (qualifiesForRecentFileMenu()) {
+			if (SwingUtilities.isEventDispatchThread())
+				mApplication.updateRecentFiles(file);
+			else {
+				final File _file = file;
+				SwingUtilities.invokeLater(() -> mApplication.updateRecentFiles(_file));
+				}
 			}
 
 		mNewFrame = openFile(file, configuration);
+		}
+
+	/**
+	 * Override, if file names shall be added to the 'Recent Files' menu
+ 	 */
+	public boolean qualifiesForRecentFileMenu() {
+		return false;
 		}
 
 	public abstract DEFrame openFile(File file, Properties configuration);

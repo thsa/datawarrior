@@ -1,11 +1,5 @@
 package com.actelion.research.datawarrior.task.file;
 
-import java.awt.Color;
-import java.io.File;
-import java.util.Properties;
-
-import javax.swing.SwingUtilities;
-
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.FileHelper;
@@ -14,6 +8,11 @@ import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import java.util.Properties;
 
 public class DETaskAnalyseSOMFile extends DETaskAbstractOpenFile {
 	public static final String TASK_NAME = "Analyse SOM-File";

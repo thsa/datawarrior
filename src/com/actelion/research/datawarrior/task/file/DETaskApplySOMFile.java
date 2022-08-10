@@ -1,26 +1,25 @@
 package com.actelion.research.datawarrior.task.file;
 
-import java.awt.Color;
+import com.actelion.research.calc.ProgressController;
+import com.actelion.research.calc.SelfOrganizedMap;
+import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.gui.FileHelper;
+import com.actelion.research.table.CompoundTableSOM;
+import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.table.view.JVisualization;
+import com.actelion.research.table.view.JVisualization2D;
+import com.actelion.research.table.view.VisualizationColor;
+import com.actelion.research.table.view.VisualizationPanel2D;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
-
-import javax.swing.SwingUtilities;
-
-import com.actelion.research.calc.ProgressController;
-import com.actelion.research.calc.SelfOrganizedMap;
-import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.DataWarrior;
-import com.actelion.research.gui.FileHelper;
-import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.CompoundTableSOM;
-import com.actelion.research.table.view.JVisualization;
-import com.actelion.research.table.view.JVisualization2D;
-import com.actelion.research.table.view.VisualizationColor;
-import com.actelion.research.table.view.VisualizationPanel2D;
 
 public class DETaskApplySOMFile extends DETaskAbstractOpenFile {
 	public static final String TASK_NAME = "Apply SOM-File";

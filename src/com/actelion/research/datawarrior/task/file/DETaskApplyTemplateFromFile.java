@@ -18,14 +18,14 @@
 
 package com.actelion.research.datawarrior.task.file;
 
-import java.io.File;
-import java.util.Properties;
-
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DERuntimeProperties;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.table.CompoundTableLoader;
+
+import java.io.File;
+import java.util.Properties;
 
 public class DETaskApplyTemplateFromFile extends DETaskAbstractOpenFile {
 	public static final String TASK_NAME = "Open And Apply Template";

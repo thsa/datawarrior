@@ -18,11 +18,6 @@
 
 package com.actelion.research.datawarrior.task.file;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Properties;
-
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMacroEditor;
@@ -33,6 +28,10 @@ import com.actelion.research.gui.dock.Dockable;
 import com.actelion.research.table.model.CompoundTableModel;
 
 import javax.swing.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Properties;
 
 public class DETaskImportMacro extends DETaskAbstractOpenFile {
 	public static final String TASK_NAME = "Import Macro";

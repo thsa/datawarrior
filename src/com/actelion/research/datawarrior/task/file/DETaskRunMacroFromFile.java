@@ -18,16 +18,16 @@
 
 package com.actelion.research.datawarrior.task.file;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Properties;
-
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.DEMacro;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.datawarrior.task.macro.GenericTaskRunMacro;
 import com.actelion.research.gui.FileHelper;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Properties;
 
 public class DETaskRunMacroFromFile extends DETaskAbstractOpenFile implements GenericTaskRunMacro {
 	public static final String TASK_NAME = "Open And Run Macro";

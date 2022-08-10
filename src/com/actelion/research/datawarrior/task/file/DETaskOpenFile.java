@@ -88,6 +88,11 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 		}
 
 	@Override
+	public boolean qualifiesForRecentFileMenu() {
+		return true;
+		}
+
+	@Override
 	public DEFrame openFile(File file, Properties configuration) {
 		final int filetype = FileHelper.getFileType(file.getName());
 		final DEFrame emptyFrame = mApplication.getEmptyFrame(file.getName());

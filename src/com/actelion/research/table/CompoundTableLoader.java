@@ -747,18 +747,34 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 
 		int commaCount = 0;
 		int vlineCount = 0;
+		int semicolonCount = 0;
+		boolean isQuoted = false;
 		for (int i=0; i<line.length(); i++) {
 			char c = line.charAt(i);
-			if (c == ',')
-				commaCount++;
-			else if (c == '|')
-				vlineCount++;
+
+			if (c == '"')
+				isQuoted = !isQuoted;
+
+			if (!isQuoted) {
+				if (c == ',')
+					commaCount++;
+				else if (c == ';')
+					semicolonCount++;
+				else if (c == '|')
+					vlineCount++;
+				}
 			}
 
-		if (vlineCount != 0 && commaCount == 0 && askOnEDT(
-			"Your file seems to contain '|' separators instead of commas.\nDo you want to separate content using '|' characters?",
-			"Warning", JOptionPane.WARNING_MESSAGE))
-			mComma = '|';
+		if (commaCount == 0) {
+			if (semicolonCount != 0 && askOnEDT(
+					"Your file seems to contain ';' separators instead of commas.\nDo you want to separate content using ';' characters?",
+					"Warning", JOptionPane.WARNING_MESSAGE))
+				mComma = ';';
+			else if (vlineCount != 0 && askOnEDT(
+				"Your file seems to contain '|' separators instead of commas.\nDo you want to separate content using '|' characters?",
+				"Warning", JOptionPane.WARNING_MESSAGE))
+				mComma = '|';
+			}
 		}
 
 	/**

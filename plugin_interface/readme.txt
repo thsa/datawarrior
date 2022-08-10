@@ -100,9 +100,12 @@ PluginInitializer Example
 
 Plugins may contain a PluginInitializer class, which must then implement the IPluginInitializer interface.
 An IPluginInitializer defines one method only, which is called by DataWarrior directly, when the plugin is loaded.
-In fact, a plugin's purpose may just be to run some code at load time and not to provide any tasks at all.
-For instance such plugin could just go through the plugin folder and check, whether any of the other
-plugin files should be updated.
+A plugin that contains an initializer class may not necessarily contain any tasks visible to the user.
+In that case, the plugin's purpose may just be to run some code at load time. It won't provide any tasks then.
+For instance, it could just go through the plugin folder and check, whether any of the other plugin files
+are outdated. It could then retrieve updated plugin files from a server and replace the outdated ones in the plugin
+folder, before plugin loading in DataWarrior continues. In that case the name of this plugin should be alphabetically
+lower than all task providing plugins, because plugins are loaded by DataWarrior in alphabetical order.
 
 
 Steps to create a new plugin

@@ -60,7 +60,7 @@ public class JEPNumCellEntryFunction extends PostfixMathCommand {
 
 		int row = mParentTask.getCurrentRow();
 
-		String value =  (row < 1 || row > mTableModel.getTotalRowCount()) ?
+		String value =  (row < 0 || row >= mTableModel.getTotalRowCount()) ?
 				null : mTableModel.getTotalValueAt(row, column);
 
 		double nthValue = Double.NaN;

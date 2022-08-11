@@ -261,8 +261,8 @@ public class JSingleStructureFilterPanel extends JStructureFilterPanel implement
 			String settings = item == null || item.equals(cItemContains) ? cFilterBySubstructure
 					: itemToDescriptor(item)+"\t"+getSimilaritySlider().getValue();
 
-			StereoMolecule mol = mStructureView.getMolecule();
-			settings = attachTABDelimited(settings, new Canonizer(mol).getIDCode());
+			Canonizer canonizer = new Canonizer(mStructureView.getMolecule());
+			settings = attachTABDelimited(settings, canonizer.getIDCode()+" "+canonizer.getEncodedCoordinates());
 			return settings;
 			}
 		return null;

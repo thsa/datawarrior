@@ -5,10 +5,12 @@ import org.openmolecules.datawarrior.plugin.IPluginTask;
 public class PluginSpec {
 	private IPluginTask mTask;
 	private String mMenu;
+	private boolean mMenuFound;
 
 	public PluginSpec(IPluginTask task, String menu) {
 		mTask = task;
 		mMenu = menu;
+		mMenuFound = false;
 	}
 
 	public IPluginTask getTask() {
@@ -25,5 +27,13 @@ public class PluginSpec {
 
 	public String getMenuName() {
 		return mMenu;
+	}
+
+	public boolean isMenuFound() {
+		return mMenuFound;
+	}
+
+	public void setMenuFound() {
+		mMenuFound = true;
 	}
 }

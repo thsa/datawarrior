@@ -151,6 +151,10 @@ public abstract class DETaskAbstractOpenFile extends ConfigurableTask implements
 		return content;
 		}
 
+	public String getFilePath() {
+		return mFilePathLabel.getPath();
+		}
+
 	/**
 	 * Override this if your subclass needs more dialog options.
 	 * There should not be any border except for an 8 pixel spacing at the bottom.
@@ -231,6 +235,8 @@ public abstract class DETaskAbstractOpenFile extends ConfigurableTask implements
 			return;
 			}
 		if (e.getSource() == mFilePathLabel) {
+			String path = mFilePathLabel.getPath();
+			fileChanged(path == null ? null : new File(path));
 			enableItems();
 			}
 		if (!isInteractive() && e.getSource() == mCheckBoxChooseDuringMacro) {
@@ -239,11 +245,14 @@ public abstract class DETaskAbstractOpenFile extends ConfigurableTask implements
 			}
 		}
 
-	private void enableItems() {
-		boolean chooseDuringMacro = (!isInteractive() && mCheckBoxChooseDuringMacro.isSelected());
-		mButtonEdit.setEnabled(!chooseDuringMacro);
-		mFilePathLabel.setEnabled(!chooseDuringMacro);
-		setOKButtonEnabled(chooseDuringMacro || mFilePathLabel.getPath() != null);
+	protected void enableItems() {
+		mButtonEdit.setEnabled(!isChooseFileDuringMacro());
+		mFilePathLabel.setEnabled(!isChooseFileDuringMacro());
+		setOKButtonEnabled(isChooseFileDuringMacro() || mFilePathLabel.getPath() != null);
+		}
+
+	protected boolean isChooseFileDuringMacro() {
+		return !isInteractive() && mCheckBoxChooseDuringMacro.isSelected();
 		}
 
 	/**

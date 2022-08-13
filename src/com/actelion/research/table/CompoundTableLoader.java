@@ -425,7 +425,10 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		if (lineList.size() < 2)
 			return false;
 
-		char columnSeparator = (mDataType == FileHelper.cFileTypeTextCommaSeparated) ? ',' : '\t';
+		char columnSeparator = (mDataType == FileHelper.cFileTypeTextCommaSeparated) ? ','
+							 : (mDataType == FileHelper.cFileTypeTextSemicolonSeparated) ? ';'
+							 : (mDataType == FileHelper.cFileTypeTextVLineSeparated) ? '|' : '\t';
+
 		ArrayList<String> columnNameList = new ArrayList<String>();
 		String header = lineList.get(0);
 		int fromIndex = 0;
@@ -740,10 +743,17 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		}
 
 	private void evaluateSeparatorSymbol(String line) {
-		if (mDataType != FileHelper.cFileTypeTextCommaSeparated || line == null)
+		if (line == null)
 			return;
 
-		mComma = ',';
+		if (mDataType == FileHelper.cFileTypeTextCommaSeparated)
+			mComma = ',';
+		else if (mDataType == FileHelper.cFileTypeTextSemicolonSeparated)
+			mComma = ';';
+		else if (mDataType == FileHelper.cFileTypeTextVLineSeparated)
+			mComma = '|';
+		else
+			return;
 
 		int commaCount = 0;
 		int vlineCount = 0;
@@ -765,13 +775,19 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				}
 			}
 
-		if (commaCount == 0) {
-			if (semicolonCount != 0 && askOnEDT(
-					"Your file seems to contain ';' separators instead of commas.\nDo you want to separate content using ';' characters?",
+		if ((mComma == ',' && commaCount == 0)
+		 || (mComma == ';' && semicolonCount == 0)
+		 || (mComma == '|' && vlineCount == 0)) {
+			if (commaCount != 0 && askOnEDT(
+					"Your file seems to contain ',' separators instead of "+mComma+".\nDo you want to separate content using ',' characters?",
+					"Warning", JOptionPane.WARNING_MESSAGE))
+				mComma = ',';
+			else if (semicolonCount != 0 && askOnEDT(
+					"Your file seems to contain ';' separators instead of "+mComma+".\nDo you want to separate content using ';' characters?",
 					"Warning", JOptionPane.WARNING_MESSAGE))
 				mComma = ';';
 			else if (vlineCount != 0 && askOnEDT(
-				"Your file seems to contain '|' separators instead of commas.\nDo you want to separate content using '|' characters?",
+				"Your file seems to contain '|' separators instead of "+mComma+".\nDo you want to separate content using '|' characters?",
 				"Warning", JOptionPane.WARNING_MESSAGE))
 				mComma = '|';
 			}
@@ -786,7 +802,9 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	 * @throws IOException
 	 */
 	private String convertCSVLine(String line, StringBuilder lineBuilder, BufferedReader theReader) throws IOException {
-		if (mDataType != FileHelper.cFileTypeTextCommaSeparated)
+		if (mDataType != FileHelper.cFileTypeTextCommaSeparated
+		 && mDataType != FileHelper.cFileTypeTextSemicolonSeparated
+		 && mDataType != FileHelper.cFileTypeTextVLineSeparated)
 			return line;
 
 		// for comma-separated files we allow TAB & NL within quoted strings
@@ -2196,6 +2214,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			case FileHelper.cFileTypeDataWarrior:
 			case FileHelper.cFileTypeTextTabDelimited:
 			case FileHelper.cFileTypeTextCommaSeparated:
+			case FileHelper.cFileTypeTextSemicolonSeparated:
+			case FileHelper.cFileTypeTextVLineSeparated:
 				return readTextData();
 			case FileHelper.cFileTypeRD:
 				return readRDFile();

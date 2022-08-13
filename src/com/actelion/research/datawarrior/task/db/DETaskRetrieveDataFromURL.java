@@ -45,9 +45,9 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 	private static final String PROPERTY_TEMPLATE = "template";
 	private static final String PROPERTY_WINDOW_NAME = "windowName";
 
-	private static final String[] FORMAT_TEXT = { "TAB delimited", "comma separated" };
-	private static final String[] FORMAT_CODE = { "td", "cs" };
-	private static final int[] FORMAT = { FileHelper.cFileTypeTextTabDelimited, FileHelper.cFileTypeTextCommaSeparated };
+	private static final String[] FORMAT_TEXT = { "TAB delimited", "comma separated", "semicolon separated", "vertical line separated" };
+	private static final String[] FORMAT_CODE = { "td", "cs", "ss", "vls" };
+	private static final int[] FORMAT = { FileHelper.cFileTypeTextTabDelimited, FileHelper.cFileTypeTextCommaSeparated, FileHelper.cFileTypeTextSemicolonSeparated, FileHelper.cFileTypeTextVLineSeparated };
 
 	private DataWarrior mApplication;
 	private DEFrame     mTargetFrame;

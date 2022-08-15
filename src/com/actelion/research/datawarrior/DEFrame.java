@@ -147,6 +147,10 @@ public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTa
 		setDirty(true);
 		}
 
+	public boolean isDirty() {
+		return mIsDirty;
+		}
+
 	public void setDirty(boolean isDirty) {
 		if (mIsDirty != isDirty) {
 			mIsDirty = isDirty;
@@ -288,7 +292,7 @@ public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTa
 		}
 
 	/**
-	 * @return true if frame can be closed savely, i.e. no macro is running (anymore)
+	 * @return true if frame can be closed savely, i.e. no macro is recording (anymore)
 	 */
 	protected boolean askStopRecordingMacro() {
 		if (!DEMacroRecorder.getInstance().isRecording()

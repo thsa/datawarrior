@@ -23,7 +23,7 @@ import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.chem.InchiBuilder;
 
 
-public class DETaskAddInchiKey extends DETaskAbstractFromStructure implements Runnable {
+public class DETaskAddInchiKey extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Add InChI-Key";
 
 	public DETaskAddInchiKey(DEFrame parent) {

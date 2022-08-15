@@ -86,6 +86,11 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private static final int MAX_ROWS_FOR_SMILES_CHECK = 20;
 	private static final float MAX_TOLERATED_SMILES_FAILURE_RATE = 0.2f;
 
+	public static final String[] DELIMITER_STRING = { ",", ";", "|" };
+	private static final char[] DELIMITER_SYMBOL = { ',', ';', '|' };
+	private static final int DELIMITER_COMMA = 0;
+	private static final int DELIMITER_SEMICOLON = 1;
+	private static final int DELIMITER_VLINE = 2;
 
 	private static volatile IdentifierHandler sIdentifierHandler = new IdentifierHandler() {
 		@Override
@@ -138,7 +143,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private boolean				mWithHeaderLine,mAppendRest,mCoordsMayBe3D,mIsGooglePatentsFile,
 								mMolnameFound,mMolnameIsDifferentFromFirstField,mAssumeChiralFlag;
 	private volatile boolean	mOwnsProgressController;
-	private volatile char		mComma;
+	private volatile int		mDelimiter;
 	private String				mNewWindowTitle,mVersion;
 	private RuntimeProperties	mRuntimeProperties;
 	private String[]			mFieldNames;
@@ -409,7 +414,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private boolean analyzeHeaderLine(Reader reader) throws Exception {
 		BufferedReader theReader = new BufferedReader(reader);
 
-		ArrayList<String> lineList = new ArrayList<String>();
+		ArrayList<String> lineList = new ArrayList<>();
 		try {
 			while (true) {
 				String theLine = theReader.readLine();
@@ -425,6 +430,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		if (lineList.size() < 2)
 			return false;
 
+		// Currently, this is used by paste() only and is always TAB-delimited!!!
 		char columnSeparator = (mDataType == FileHelper.cFileTypeTextCommaSeparated) ? ','
 							 : (mDataType == FileHelper.cFileTypeTextSemicolonSeparated) ? ';'
 							 : (mDataType == FileHelper.cFileTypeTextVLineSeparated) ? '|' : '\t';
@@ -637,6 +643,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 						header = convertCSVLine(theLine, lineBuilder, theReader);
 						}
 					else {
+						if (!mWithHeaderLine && lineList.size() == 0)
+							evaluateSeparatorSymbol(theLine);
 						lineList.add(convertCSVLine(theLine, lineBuilder, theReader).getBytes());
 						if (rowCount > PROGRESS_LIMIT && lineList.size()%PROGRESS_STEP == 0)
 							mProgressController.updateProgress(lineList.size());
@@ -742,22 +750,28 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		return index == 0 ? null : new String(first, 0, index+1);
 		}
 
+	/**
+	 * If we have any kind of CSV file (comma, semicolon, vline), then sets the mDelimiter variable
+	 * to match mDataType. Then it checks existing delimiter symbols and updates mDelimiter variable
+	 * in case, the delimiter found is different from the unexpected one and/or if the defined data
+	 * type was the generic 'anyCSV'.
+	 * @param line
+	 */
 	private void evaluateSeparatorSymbol(String line) {
-		if (line == null)
+		if (line == null || (mDataType & FileHelper.cFileTypeTextAnyCSV) == 0)
 			return;
 
-		if (mDataType == FileHelper.cFileTypeTextCommaSeparated)
-			mComma = ',';
-		else if (mDataType == FileHelper.cFileTypeTextSemicolonSeparated)
-			mComma = ';';
+		if (mDataType == FileHelper.cFileTypeTextAnyCSV)  // default assumtion
+			mDataType = FileHelper.cFileTypeTextCommaSeparated;
+
+		mDelimiter = DELIMITER_COMMA;   // default: comma
+
+		if (mDataType == FileHelper.cFileTypeTextSemicolonSeparated)
+			mDelimiter = DELIMITER_SEMICOLON;
 		else if (mDataType == FileHelper.cFileTypeTextVLineSeparated)
-			mComma = '|';
-		else
-			return;
+			mDelimiter = DELIMITER_VLINE;
 
-		int commaCount = 0;
-		int vlineCount = 0;
-		int semicolonCount = 0;
+		int[] delimiterCount = new int[DELIMITER_SYMBOL.length];
 		boolean isQuoted = false;
 		for (int i=0; i<line.length(); i++) {
 			char c = line.charAt(i);
@@ -765,31 +779,23 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			if (c == '"')
 				isQuoted = !isQuoted;
 
-			if (!isQuoted) {
-				if (c == ',')
-					commaCount++;
-				else if (c == ';')
-					semicolonCount++;
-				else if (c == '|')
-					vlineCount++;
-				}
+			if (!isQuoted)
+				for (int d=0; d<DELIMITER_SYMBOL.length; d++)
+					if (c == DELIMITER_SYMBOL[d])
+						delimiterCount[d]++;
 			}
 
-		if ((mComma == ',' && commaCount == 0)
-		 || (mComma == ';' && semicolonCount == 0)
-		 || (mComma == '|' && vlineCount == 0)) {
-			if (commaCount != 0 && askOnEDT(
-					"Your file seems to contain ',' separators instead of "+mComma+".\nDo you want to separate content using ',' characters?",
-					"Warning", JOptionPane.WARNING_MESSAGE))
-				mComma = ',';
-			else if (semicolonCount != 0 && askOnEDT(
-					"Your file seems to contain ';' separators instead of "+mComma+".\nDo you want to separate content using ';' characters?",
-					"Warning", JOptionPane.WARNING_MESSAGE))
-				mComma = ';';
-			else if (vlineCount != 0 && askOnEDT(
-				"Your file seems to contain '|' separators instead of "+mComma+".\nDo you want to separate content using '|' characters?",
-				"Warning", JOptionPane.WARNING_MESSAGE))
-				mComma = '|';
+		if (delimiterCount[mDelimiter] == 0) {
+			for (int d=0; d<DELIMITER_SYMBOL.length; d++) {
+				if (d != mDelimiter && delimiterCount[d] != 0) {
+					if (askOnEDT(
+						"Your file seems to contain '"+DELIMITER_SYMBOL[d]+"' separators instead of '"+DELIMITER_SYMBOL[mDelimiter]+"'.\nDo you want to separate content using ',' characters?",
+						"Warning", JOptionPane.WARNING_MESSAGE)) {
+						mDelimiter = d;
+						}
+					break;
+					}
+				}
 			}
 		}
 
@@ -802,9 +808,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	 * @throws IOException
 	 */
 	private String convertCSVLine(String line, StringBuilder lineBuilder, BufferedReader theReader) throws IOException {
-		if (mDataType != FileHelper.cFileTypeTextCommaSeparated
-		 && mDataType != FileHelper.cFileTypeTextSemicolonSeparated
-		 && mDataType != FileHelper.cFileTypeTextVLineSeparated)
+		if ((mDataType & FileHelper.cFileTypeTextAnyCSV) == 0)
 			return line;
 
 		// for comma-separated files we allow TAB & NL within quoted strings
@@ -826,7 +830,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					if (theChar == ' ' && !isQuotedSection)
 						continue;
 
-					if (theChar != mComma)
+					if (theChar != DELIMITER_SYMBOL[mDelimiter])
 						isFirstColumnChar = false;
 
 					if (theChar == '\"') {
@@ -840,7 +844,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 						continue;
 						}
 
-					if (!isQuotedSection && theChar == mComma)
+					if (!isQuotedSection && theChar == DELIMITER_SYMBOL[mDelimiter])
 						isFirstColumnChar = true;
 
 					if ((theChar == '\\' || theChar == '\"') && i+1 < line.length() && line.charAt(i+1) == '\"') {
@@ -853,7 +857,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 						}
 					}
 
-				if (!isQuotedSection && theChar == mComma)
+				if (!isQuotedSection && theChar == DELIMITER_SYMBOL[mDelimiter])
 					theChar = '\t';
 
 				lineBuilder.append(theChar);
@@ -1686,6 +1690,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 						+ "Do you want DataWarrior to interpret those stereo centers as absolute? If you answer YES, then\n"
 						+ "molecules with defined stereo conters will be assumed to be pure enantiomers rather then racemates.", "Warning",
 				JOptionPane.WARNING_MESSAGE)) {
+			mAssumeChiralFlag = true;
 			fieldDataList.clear();
 			processSDFile(fieldNames, structureIDColumn, fieldDataList, true);
 			}
@@ -1964,7 +1969,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		return (s == null) ? null : s.trim().replace('\t', ' ');
 		}
 
-	private void handleMissingChiralFlag() {
+/*	private void handleMissingChiralFlag() {
 		if (!askOnEDT("Erroneously, some programs store pure enantiomers as racemates when exporting to an SD-file.\n"
 			+ "All molecules in this SD-file are marked as racemate and some molecules contain stereo centers.\n"
 			+ "Do you want DataWarrior to interpret those stereo centers as absolute?", "Warning",
@@ -1993,7 +1998,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					}
 				}
 			}
-		}
+		}*/
 
 	private void showMessageOnEDT(String message, String title, int type) {
 		if (SwingUtilities.isEventDispatchThread())
@@ -2208,20 +2213,15 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		clearBufferedData();
 
 		try {
-			switch (mDataType) {
-			case FileHelper.cFileTypeDataWarriorTemplate:
+			if (mDataType == FileHelper.cFileTypeDataWarriorTemplate)
 				return readTemplateOnly();
-			case FileHelper.cFileTypeDataWarrior:
-			case FileHelper.cFileTypeTextTabDelimited:
-			case FileHelper.cFileTypeTextCommaSeparated:
-			case FileHelper.cFileTypeTextSemicolonSeparated:
-			case FileHelper.cFileTypeTextVLineSeparated:
+			if ((mDataType & (FileHelper.cFileTypeDataWarrior
+							| FileHelper.cFileTypeTextAny)) != 0)
 				return readTextData();
-			case FileHelper.cFileTypeRD:
+			if ((mDataType & FileHelper.cFileTypeRD) != 0)
 				return readRDFile();
-			case FileHelper.cFileTypeSD:
+			if ((mDataType & FileHelper.cFileTypeSD) != 0)
 				return readSDFile();
-				}
 			}
 		catch (OutOfMemoryError err) {
 			showMessageOnEDT("Out of memory. Launch this application with Java option -Xms???m or -Xmx???m.", "Memory Error", JOptionPane.WARNING_MESSAGE);
@@ -2824,8 +2824,16 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			}
 		}
 
+	public boolean isAssumeChiralFlag() {
+		return mAssumeChiralFlag;
+		}
+
 	public void setAssumeChiralFlag(boolean b) {
 		mAssumeChiralFlag = b;
+		}
+
+	public int getCSVDelimiter() {
+		return mDelimiter;
 		}
 
 	private void setListFlags(int flagNo, byte[] data, int rowCount, int offset, int[][] destRowMap) {

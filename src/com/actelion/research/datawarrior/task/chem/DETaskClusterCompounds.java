@@ -31,7 +31,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Properties;
 
-public class DETaskClusterCompounds extends ConfigurableTask implements ActionListener,Runnable {
+public class DETaskClusterCompounds extends ConfigurableTask implements ActionListener {
     static final long serialVersionUID = 0x20061004;
 
     private static final String PROPERTY_DESCRIPTOR_COLUMN = "descriptorColumn";

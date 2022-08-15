@@ -34,7 +34,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 
-public class DETaskAutomaticSAR extends DETaskAbstractFromStructure implements Runnable {
+public class DETaskAutomaticSAR extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Automatic SAR Analysis";
 	private static final String SUBSTITUENT_VARIES = "*";
 

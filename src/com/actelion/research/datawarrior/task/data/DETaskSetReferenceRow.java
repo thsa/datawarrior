@@ -29,7 +29,7 @@ import java.util.Properties;
 import java.util.Random;
 
 
-public class DETaskSetReferenceRow extends ConfigurableTask implements Runnable {
+public class DETaskSetReferenceRow extends ConfigurableTask {
 	public static final long serialVersionUID = 0x20140119;
 
 	public static final String TASK_NAME = "Set Reference Row";

@@ -18,23 +18,19 @@
 
 package com.actelion.research.datawarrior.task.chem.rxn;
 
-import info.clearthought.layout.TableLayout;
-
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
 import com.actelion.research.chem.reaction.Classification;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.chem.reaction.ReactionClassifier;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.table.model.CompoundTableModel;
+import info.clearthought.layout.TableLayout;
 
-public class DETaskClassifyReactions extends ConfigurableTask implements Runnable {
+import javax.swing.*;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class DETaskClassifyReactions extends ConfigurableTask {
 	public static final String TASK_NAME = "Classify Reactions";
 
 	private static final String PROPERTY_REACTION_COLUMN = "structureColumn";

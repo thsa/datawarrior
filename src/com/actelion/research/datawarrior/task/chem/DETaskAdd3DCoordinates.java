@@ -47,7 +47,7 @@ import java.util.*;
 import java.util.concurrent.SynchronousQueue;
 
 
-public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure implements Runnable {
+public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Generate Conformers";
 
 	private static final String PROPERTY_ALGORITHM = "algorithm";

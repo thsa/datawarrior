@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implements ActionListener,Runnable {
+public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implements ActionListener {
 	static final long serialVersionUID = 0x20140205;
 
 	private static final String PROPERTY_DESCRIPTOR_COLUMN = "descriptorColumn";

@@ -40,9 +40,8 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	private static final String PROPERTY_ASSUME_CHIRAL = "assumeChiral";
 	private static final String PROPERTY_CSV_DELIMITER = "csvDelimiter";
 
-	private static final String[] FORMAT_TEXT = { "Comma (default)", "Semicolon", "Vertical line" };
-	private static final String[] FORMAT_CODE = { "comma", "semicolon", "vline" };
-	private static final int[] FORMAT = { FileHelper.cFileTypeTextCommaSeparated, FileHelper.cFileTypeTextSemicolonSeparated, FileHelper.cFileTypeTextVLineSeparated };
+	private static final String[] DELIMITER_TEXT = { "Comma (default)", "Semicolon", "Vertical line" };
+	private static final int[] DELIMITER_FILETYPE = { FileHelper.cFileTypeTextCommaSeparated, FileHelper.cFileTypeTextSemicolonSeparated, FileHelper.cFileTypeTextVLineSeparated };
 
 	private DataWarrior mApplication;
 	private JComboBox mComboBoxCSVDelimiter;
@@ -70,7 +69,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 		double[][] size = { {TableLayout.PREFERRED, gap, TableLayout.PREFERRED}, {TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		p.setLayout(new TableLayout(size));
 
-		mComboBoxCSVDelimiter = new JComboBox(FORMAT_TEXT);
+		mComboBoxCSVDelimiter = new JComboBox(DELIMITER_TEXT);
 		mComboBoxCSVDelimiter.setEnabled(false);
 		p.add(new JLabel("CSV-File delimiter:", JLabel.RIGHT), "0,0");
 		p.add(mComboBoxCSVDelimiter, "2,0");
@@ -103,7 +102,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	public Properties getDialogConfiguration() {
 		Properties configuration = super.getDialogConfiguration();
 		if (mComboBoxCSVDelimiter.isEnabled())
-			configuration.setProperty(PROPERTY_CSV_DELIMITER, FORMAT_CODE[mComboBoxCSVDelimiter.getSelectedIndex()]);
+			configuration.setProperty(PROPERTY_CSV_DELIMITER, CompoundTableLoader.DELIMITER_STRING[mComboBoxCSVDelimiter.getSelectedIndex()]);
 		if (mCheckBoxAssumeChiralTrue.isEnabled())
 			configuration.setProperty(PROPERTY_ASSUME_CHIRAL, mCheckBoxAssumeChiralTrue.isSelected() ? "true" : "false");
 		return configuration;
@@ -112,7 +111,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
-		mComboBoxCSVDelimiter.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_CSV_DELIMITER), FORMAT_CODE, 0));
+		mComboBoxCSVDelimiter.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_CSV_DELIMITER), CompoundTableLoader.DELIMITER_STRING, 0));
 		mCheckBoxAssumeChiralTrue.setSelected("true".equals(configuration.getProperty(PROPERTY_ASSUME_CHIRAL)));
 		enableLocalItems();
 		}
@@ -134,9 +133,9 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	public DEFrame openFile(File file, Properties configuration) {
 		int type = FileHelper.getFileType(file.getName());
 		if ((type & FileHelper.cFileTypeTextCommaSeparated) != 0) {
-			int delimiter = findListIndex(configuration.getProperty(PROPERTY_CSV_DELIMITER), FORMAT_CODE, -1);
+			int delimiter = findListIndex(configuration.getProperty(PROPERTY_CSV_DELIMITER), CompoundTableLoader.DELIMITER_STRING, -1);
 			if (delimiter != -1)
-				type = FORMAT[delimiter];
+				type = DELIMITER_FILETYPE[delimiter];
 			}
 		final int filetype = type;
 		final DEFrame emptyFrame = mApplication.getEmptyFrame(file.getName());
@@ -152,6 +151,10 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 		loader.addDataDependentPropertyReader(CardViewPositionWriter.PROPERTY_NAME, new CardViewPositionReader(emptyFrame));
 		loader.setAssumeChiralFlag("true".equals(configuration.getProperty(PROPERTY_ASSUME_CHIRAL)));
 		loader.readFile(file, new DERuntimeProperties(emptyFrame.getMainFrame()), filetype);
+		if (loader.isAssumeChiralFlag())
+			configuration.setProperty(PROPERTY_ASSUME_CHIRAL, "true");
+		if ((filetype & FileHelper.cFileTypeTextAnyCSV) != 0)
+			configuration.setProperty(PROPERTY_CSV_DELIMITER, CompoundTableLoader.DELIMITER_STRING[loader.getCSVDelimiter()]);
 		return emptyFrame;
 		}
 

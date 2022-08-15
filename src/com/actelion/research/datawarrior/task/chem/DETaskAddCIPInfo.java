@@ -23,7 +23,7 @@ import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.datawarrior.DEFrame;
 
 
-public class DETaskAddCIPInfo extends DETaskAbstractFromStructure implements Runnable {
+public class DETaskAddCIPInfo extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Add CIP Info";
 
 	public DETaskAddCIPInfo(DEFrame parent) {

@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 
-public class DETaskArrangeGraphNodes extends ConfigurableTask implements ActionListener,Runnable {
+public class DETaskArrangeGraphNodes extends ConfigurableTask implements ActionListener {
 	private static final String PROPERTY_KEY_COLUMN = "keyColumn";
 	private static final String PROPERTY_REFERENCING_COLUMN = "referencingColumn";
 	private static final String PROPERTY_STRENGTH_COLUMN = "strengthColumn";

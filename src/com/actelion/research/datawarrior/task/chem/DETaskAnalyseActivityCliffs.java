@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 
-public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements ItemListener,Runnable {
+public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements ItemListener {
 	private static final String PROPERTY_IDENTIFIER_COLUMN = "identifierColumn";
 	private static final String PROPERTY_DESCRIPTOR_COLUMN = "descriptorColumn";
 	private static final String PROPERTY_ACTIVITY_COLUMN = "activityColumn";

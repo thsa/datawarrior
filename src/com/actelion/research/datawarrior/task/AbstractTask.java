@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
 
-public abstract class AbstractTask implements ProgressController,Runnable {
+public abstract class AbstractTask implements ProgressController {
 	public static final int ERROR_MESSAGE = JOptionPane.ERROR_MESSAGE;
 	public static final int WARNING_MESSAGE = JOptionPane.WARNING_MESSAGE;
 	public static final int INFORMATION_MESSAGE = JOptionPane.INFORMATION_MESSAGE;
@@ -621,21 +621,37 @@ public abstract class AbstractTask implements ProgressController,Runnable {
 			if (mStatusOK) {	// the configuration is valid
 				setRecentConfiguration(configuration);
 
-				if (!(this instanceof GenericTaskRunMacro))
-					DEMacroRecorder.record(this, configuration);
-				
 				mTaskConfiguration = configuration;
 				if (mUseOwnThread) {
 					mProgressController = new JProgressDialog(mParentFrame, true);
-					Thread t = new Thread(this, getTaskName());
+					Thread t = new Thread(() -> {
+						try {
+							runAndRecordTask(mTaskConfiguration);
+							}
+						catch (OutOfMemoryError e) {
+							showErrorMessage("Out of memory. Launch DataWarrior with Java option -Xms???m or -Xmx???m.");
+							}
+
+						mProgressController.stopProgress();
+						((JProgressDialog)mProgressController).close(getNewFrontFrame());
+						mProgressController = null;
+						}, getTaskName());
 					t.setPriority(Thread.MIN_PRIORITY);
 					t.start();
 					}
 				else {
-					runTask(configuration);
+					runAndRecordTask(configuration);
 					}
 				}
 			}
+		}
+
+	private void runAndRecordTask(Properties configuration) {
+		// although task recording is done before execution, tasks may add configuration details at run time
+		if (!(this instanceof GenericTaskRunMacro))
+			DEMacroRecorder.record(this, configuration);
+
+		runTask(configuration);
 		}
 
 	/**
@@ -669,17 +685,16 @@ public abstract class AbstractTask implements ProgressController,Runnable {
 		 && isConfigurationValid(configuration, true)) {
 			mTaskConfiguration = configuration;
 
-			if (!(this instanceof GenericTaskRunMacro))
-				DEMacroRecorder.record(this, configuration);
-
 			if (!mUseOwnThread) {
 				try {
-					SwingUtilities.invokeAndWait(() -> runTask(configuration));
+					SwingUtilities.invokeAndWait(() -> {
+						runAndRecordTask(configuration);
+						} );
 					}
 				catch (Exception e) {}
 				}
 			else {
-				runTask(configuration);
+				runAndRecordTask(configuration);
 				}
 			}
 		}
@@ -690,23 +705,6 @@ public abstract class AbstractTask implements ProgressController,Runnable {
 	 */
 	public ProgressController getProgressController() {
 		return mProgressController;
-		}
-
-	/**
-	 * 
-	 */
-	@Override
-	public void run() {
-		try {
-			runTask(mTaskConfiguration);
-			}
-		catch (OutOfMemoryError e) {
-			showErrorMessage("Out of memory. Launch DataWarrior with Java option -Xms???m or -Xmx???m.");
-			}
-
-		mProgressController.stopProgress();
-		((JProgressDialog)mProgressController).close(getNewFrontFrame());
-		mProgressController = null;
 		}
 
 	/**

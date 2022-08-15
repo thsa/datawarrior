@@ -40,7 +40,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 
-public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implements ActionListener,Runnable {
+public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implements ActionListener {
 	public static final String TASK_NAME = "Generate 2D-Atom-Coordinates";
 
 	private static final String PROPERTY_SCAFFOLD_LIST = "scaffolds";

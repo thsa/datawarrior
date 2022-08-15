@@ -23,7 +23,7 @@ import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.datawarrior.DEFrame;
 
 
-public class DETaskAddSmiles extends DETaskAbstractFromStructure implements Runnable {
+public class DETaskAddSmiles extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Add Smiles Codes";
 
 	public DETaskAddSmiles(DEFrame parent) {

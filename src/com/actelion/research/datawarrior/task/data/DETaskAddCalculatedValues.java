@@ -36,8 +36,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
 
-public class DETaskAddCalculatedValues extends ConfigurableTask
-			implements ActionListener,Runnable {
+public class DETaskAddCalculatedValues extends ConfigurableTask implements ActionListener {
 	static final long serialVersionUID = 0x20061004;
 
 	public static final String TASK_NAME = "Add Calculated Values";

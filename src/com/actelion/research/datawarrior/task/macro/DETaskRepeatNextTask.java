@@ -310,7 +310,7 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 		case FILETYPE_SD:
 			return CompoundFileHelper.cFileTypeSD;
 		case FILETYPE_TEXT:
-			return CompoundFileHelper.cFileTypeText;
+			return CompoundFileHelper.cFileTypeTextAny;
 		case FILETYPE_DIR:
 			return CompoundFileHelper.cFileTypeDirectory;
 		default:

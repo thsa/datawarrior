@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 
-public class DETaskFindAndReplace extends ConfigurableTask implements ActionListener,Runnable {
+public class DETaskFindAndReplace extends ConfigurableTask implements ActionListener {
 	public static final long serialVersionUID = 0x20130131;
 
 	public static final String TASK_NAME = "Find And Replace";

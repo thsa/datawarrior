@@ -30,7 +30,7 @@ import org.openmolecules.chembl.ChemblServerConstants;
 import java.util.*;
 
 
-public class DETaskFindSimilarActiveCompounds extends DETaskAbstractFromStructure implements ChemblServerConstants,Runnable {
+public class DETaskFindSimilarActiveCompounds extends DETaskAbstractFromStructure implements ChemblServerConstants {
 	public static final String TASK_NAME = "Find Similar Compounds In ChEMBL Actives";
 
 	private static final int MAX_COMPOUNDS = 10000;

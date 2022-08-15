@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * setDialogConfiguration(), setDialogConfigurationToDefault()
  * and possibly isConfigurable(), isConfigurationValid().
  */
-public abstract class DETaskAbstractFromChemistry extends ConfigurableTask implements ActionListener,Runnable {
+public abstract class DETaskAbstractFromChemistry extends ConfigurableTask implements ActionListener {
 	protected static final int DESCRIPTOR_NONE = 0;
 	protected static final int DESCRIPTOR_BINARY = 1;
 	protected static final int DESCRIPTOR_VECTOR = 2;

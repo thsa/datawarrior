@@ -18,15 +18,15 @@
 
 package com.actelion.research.datawarrior.task.chem;
 
-import java.util.Arrays;
-import java.util.Comparator;
-
 import com.actelion.research.chem.MolecularFormula;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.datawarrior.DEFrame;
 
+import java.util.Arrays;
+import java.util.Comparator;
 
-public class DETaskAddFormula extends DETaskAbstractFromStructure implements Runnable {
+
+public class DETaskAddFormula extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Add Molecular Formula";
 
 	public DETaskAddFormula(DEFrame parent) {

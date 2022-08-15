@@ -42,7 +42,7 @@ import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.Properties;
 
-public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements Runnable,TaskConstantsCLib {
+public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements TaskConstantsCLib {
 	public static final String TASK_NAME = "Enumerate Combinatorial Library";
 
 	private DEFrame			mParentFrame;

@@ -38,7 +38,7 @@ import java.util.Properties;
 import java.util.TreeSet;
 
 
-public class DETaskSelectDiverse extends ConfigurableTask implements ActionListener,Runnable {
+public class DETaskSelectDiverse extends ConfigurableTask implements ActionListener {
 	static final long serialVersionUID = 0x20120309;
 
 	private static final String PROPERTY_DESCRIPTOR_COLUMN = "descriptorColumn";

@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Properties;
 
-public class DETaskValidateIDCodes extends DETaskAbstractFromChemistry implements Runnable {
+public class DETaskValidateIDCodes extends DETaskAbstractFromChemistry {
 	public static final String TASK_NAME = "Validate ID-Codes";
 
 	private static final String PROPERTY_IDCODE_FILE = "idcodeFile";

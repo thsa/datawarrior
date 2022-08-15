@@ -46,7 +46,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
-public abstract class DETaskStructureQuery extends ConfigurableTask implements ActionListener,ProgressController,Runnable {
+public abstract class DETaskStructureQuery extends ConfigurableTask implements ActionListener,ProgressController {
     public static final int SEARCH_TYPE_SSS = StructureSearchSpecification.TYPE_SUBSTRUCTURE;
     public static final int SEARCH_TYPE_SIMILARITY = StructureSearchSpecification.TYPE_SIMILARITY;
     public static final int SEARCH_TYPE_EXACT = StructureSearchSpecification.TYPE_EXACT_STRICT;

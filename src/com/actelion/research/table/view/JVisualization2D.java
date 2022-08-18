@@ -189,7 +189,8 @@ public class JVisualization2D extends JVisualization {
 	private byte[]			mBackgroundImageData;	// cached if delivered or constructed from mBackgroundImage if needed
 //	private byte[]			mSVGBackgroundData;		// alternative to mBackgroundImage
 	private Graphics2D		mOffG;
-	private ArrayList<ScaleLine>[]	mScaleLineList;
+	private ArrayList<ScaleLine>[] mScaleLineList;
+	private ArrayList<GraphPoint> mCrossHairList;
 	private float[][]       mCurveXMin,mCurveXInc,mCurveStdDev;
 	private float[][][]     mCurveY;
 	private String          mCurveExpression;
@@ -212,6 +213,7 @@ public class JVisualization2D extends JVisualization {
 		mSplittingMolIndex = new int[2];
 		mSplittingMolIndex[0] = cColumnUnassigned;
 		mSplittingMolIndex[1] = cColumnUnassigned;
+		mCrossHairList = new ArrayList<>();
 
 		mBackgroundColor = new VisualizationColor(mTableModel, this);
 
@@ -369,8 +371,29 @@ public class JVisualization2D extends JVisualization {
 		if (mHighlightedPoint != null)
 			markHighlighted((Graphics2D)g);
 
-		if (showCrossHair())
-			drawCrossHair((Graphics2D)g);
+		// draw all cross hairs in list
+		if (!mCrossHairList.isEmpty()) {
+			if (isSplitView()) {
+				for (int hv = 0; hv<mHVCount; hv++) {
+					Rectangle bounds = getGraphBounds(mSplitter.getSubViewBounds(hv));
+					for (GraphPoint p:mCrossHairList)
+						drawCrossHair((Graphics2D)g, (float)p.getRelativeX(), (float)p.getRelativeY(), bounds);
+					}
+				}
+			else {
+				Rectangle bounds = getGraphBounds(getFullGraphBounds());
+				for (GraphPoint p:mCrossHairList)
+					drawCrossHair((Graphics2D)g, (float)p.getRelativeX(), (float)p.getRelativeY(), bounds);
+				}
+			}
+
+		// draw interactive cross hair if mouse is in area
+		if (showCrossHair()) {
+			Rectangle bounds = getGraphBounds(mMouseX1, mMouseY1, true);
+			if (bounds != null)
+				drawCrossHair((Graphics2D)g, (mMouseX1-bounds.x)/(float)bounds.width,
+						(bounds.y+bounds.height-mMouseY1)/(float)bounds.height, bounds);
+			}
 
 		drawSelectionOutline(g);
 
@@ -811,12 +834,7 @@ public class JVisualization2D extends JVisualization {
 				}
 			}
 		else {
-			int width = getWidth();
-			int height = getHeight();
-			Insets insets = getInsets();
-			Rectangle allBounds = new Rectangle(insets.left, insets.top, width-insets.left-insets.right, height-insets.top-insets.bottom);
-			for (VisualizationLegend legend:mLegendList)
-				allBounds.height -= legend.getHeight();
+			Rectangle allBounds = getFullGraphBounds();
 			Rectangle bounds = getGraphBounds(allBounds);
 			if (tolerant) {
 				int gap = Math.min(mBorder, mFontHeight);
@@ -834,6 +852,20 @@ public class JVisualization2D extends JVisualization {
 				}
 			}
 		return null;
+		}
+
+	/**
+	 * @return
+	 */
+	private Rectangle getFullGraphBounds() {
+		int width = getWidth();
+		int height = getHeight();
+		Insets insets = getInsets();
+		Rectangle allBounds = new Rectangle(insets.left, insets.top, width-insets.left-insets.right, height-insets.top-insets.bottom);
+		for (VisualizationLegend legend:mLegendList)
+			allBounds.height -= legend.getHeight();
+
+		return allBounds;
 		}
 
 	/**
@@ -2807,39 +2839,33 @@ public class JVisualization2D extends JVisualization {
 
 	@Override
 	public boolean showCrossHair() {
-		return !mMouseIsDown && mCrossHairMode != CROSSHAIR_MODE_NONE
+		return mCrossHairMode != CROSSHAIR_MODE_NONE
+			&& (qualifiesAsCrossHairAxis(0) || qualifiesAsCrossHairAxis(1))
 			&& (mSplitter == null || mSplitter.getHVIndex(mMouseX1, mMouseY1, false) != -1);
 		}
 
-	private void drawCrossHair(Graphics2D g) {
-		Rectangle bounds = getGraphBounds(mMouseX1, mMouseY1, true);
-		if (bounds != null) {
-			g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, (int)scaleIfSplitView(mFontHeight)));
-			if (mMouseX1 >= bounds.x
-			 && (mCrossHairMode == CROSSHAIR_MODE_BOTH
-			  || mCrossHairMode == CROSSHAIR_MODE_X
-			  || (mCrossHairMode == CROSSHAIR_MODE_AUTOMATIC
-			   && (mScaleLineList[0].size() == 0
-				|| (mAxisIndex[0] != -1 && !mIsCategoryAxis[0])
-				|| (mAxisIndex[0] == -1 && mChartType == cChartTypeBars && mChartInfo.barAxis == 0))))) {
-				float position = (float)(mMouseX1-bounds.x)/(float)bounds.width;
-				Object label = calculateDynamicScaleLabel(0, position);
-				if (label != null)
-					drawScaleLine(g, bounds, 0, label, position, true, false);
-				}
-			if (mMouseY1 <= bounds.y+bounds.height
-			 && (mCrossHairMode == CROSSHAIR_MODE_BOTH
-			  || mCrossHairMode == CROSSHAIR_MODE_Y
-			  || (mCrossHairMode == CROSSHAIR_MODE_AUTOMATIC
-			   && (mScaleLineList[1].size() == 0
-				|| (mAxisIndex[1] != -1 && !mIsCategoryAxis[1])
-				|| (mAxisIndex[1] == -1 && mChartType == cChartTypeBars && mChartInfo.barAxis == 1))))) {
-				float position = (float)(bounds.y+bounds.height-mMouseY1)/(float)bounds.height;
-				Object label = calculateDynamicScaleLabel(1, position);
-				if (label != null)
-					drawScaleLine(g, bounds, 1, label, position, true, false);
-				}
+	private void drawCrossHair(Graphics2D g, float positionX, float positionY, Rectangle bounds) {
+		g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, (int)scaleIfSplitView(mFontHeight)));
+		if (positionX >= 0 && qualifiesAsCrossHairAxis(0)) {
+			Object label = calculateDynamicScaleLabel(0, positionX);
+			if (label != null)
+				drawScaleLine(g, bounds, 0, label, positionX, true, false);
 			}
+		if (positionY >= 0 && qualifiesAsCrossHairAxis(1)) {
+			Object label = calculateDynamicScaleLabel(1, positionY);
+			if (label != null)
+				drawScaleLine(g, bounds, 1, label, positionY, true, false);
+			}
+		}
+
+	private boolean qualifiesAsCrossHairAxis(int axis) {
+		return mCrossHairMode == CROSSHAIR_MODE_BOTH
+			|| (mCrossHairMode == CROSSHAIR_MODE_X && axis == 0)
+			|| (mCrossHairMode == CROSSHAIR_MODE_Y && axis == 1)
+			|| (mCrossHairMode == CROSSHAIR_MODE_AUTOMATIC
+			 && (mScaleLineList[axis].size() == 0
+			  || (mAxisIndex[axis] != -1 && !mIsCategoryAxis[axis])
+			  || (mAxisIndex[axis] == -1 && mChartType == cChartTypeBars && mChartInfo.barAxis == axis)));
 		}
 
 	private void drawCurves(Rectangle baseGraphRect) {
@@ -4614,6 +4640,7 @@ public class JVisualization2D extends JVisualization {
 	public void initializeAxis(int axis) {
 		super.initializeAxis(axis);
 
+		mCrossHairList.clear();
 		mBackgroundValid = false;
 		mScaleDepictor[axis] = null;
 		}
@@ -6096,6 +6123,18 @@ public class JVisualization2D extends JVisualization {
 		mCrossHairMode = mode;
 		}
 
+	public void freezeCrossHair() {
+		Rectangle bounds = getGraphBounds(mPopupX, mPopupY, true);
+		if (bounds != null && showCrossHair())
+			mCrossHairList.add(new GraphPoint(mPopupX, mPopupY, bounds));
+		invalidateOffImage(false);
+		}
+
+	public void unfreezeCrossHairs() {
+		mCrossHairList.clear();
+		invalidateOffImage(false);
+		}
+
 	public void setCurveMode(int mode, int rowList, boolean drawStdDevRange, boolean truncateArea, boolean splitByCategory, int splitCurveColumn) {
 		if (!getTableModel().isColumnTypeCategory(splitCurveColumn))
 			splitCurveColumn = cColumnUnassigned;
@@ -6512,6 +6551,40 @@ public class JVisualization2D extends JVisualization {
 					barY[i] = zeroY+1;
 					}
 				}
+			}
+		}
+
+	class GraphPoint {
+		private float valueX,valueY;
+
+		public GraphPoint(int x, int y, Rectangle bounds) {
+			// relative position in zoomed graph
+			float positionX = (x-bounds.x)/(float)bounds.width;
+			float positionY = (bounds.y+bounds.height-y)/(float)bounds.height;
+
+			// data values at axis positions
+			valueX = mAxisVisMin[0] + positionX * (mAxisVisMax[0] - mAxisVisMin[0]);
+			valueY = mAxisVisMin[1] + positionY * (mAxisVisMax[1] - mAxisVisMin[1]);
+			}
+
+		/**
+		 * @return relative x-position on currently zoomed axis
+		 */
+		public double getRelativeX() {
+			if (mPruningBarLow[0] == mPruningBarHigh[0])
+				return 0.5f;
+
+			return (valueX - mAxisVisMin[0]) / (mAxisVisMax[0] - mAxisVisMin[0]);
+			}
+
+		/**
+		 * @return relative y-position on currently zoomed axis
+		 */
+		public double getRelativeY() {
+			if (mPruningBarLow[1] == mPruningBarHigh[1])
+				return 0.5f;
+
+			return (valueY - mAxisVisMin[1]) / (mAxisVisMax[1] - mAxisVisMin[1]);
 			}
 		}
 

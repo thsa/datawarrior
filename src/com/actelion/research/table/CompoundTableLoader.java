@@ -788,8 +788,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		if (delimiterCount[mDelimiter] == 0) {
 			for (int d=0; d<DELIMITER_SYMBOL.length; d++) {
 				if (d != mDelimiter && delimiterCount[d] != 0) {
-					if (askOnEDT(
-						"Your file seems to contain '"+DELIMITER_SYMBOL[d]+"' separators instead of '"+DELIMITER_SYMBOL[mDelimiter]+"'.\nDo you want to separate content using ',' characters?",
+					if (askOnEDT("Your file seems to contain '"+DELIMITER_SYMBOL[d]+"' separators instead of '"
+								+DELIMITER_SYMBOL[mDelimiter]+"'.\nDo you want to separate content using "+DELIMITER_SYMBOL[d]+" characters?",
 						"Warning", JOptionPane.WARNING_MESSAGE)) {
 						mDelimiter = d;
 						}

@@ -44,7 +44,6 @@ import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.geom.Rectangle2D;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.io.BufferedWriter;
@@ -221,7 +220,8 @@ public abstract class JVisualization extends JComponent
 									mFocusList,mCaseSeparationColumn,mCaseSeparationCategoryCount,mScaleMode,mScaleStyle,
 									mUseAsFilterFlagNo,mTreeViewMode,mActiveExclusionFlags,mHVCount,mHVExclusionTag,mFontSizeMode,
 									mVisibleCategoryExclusionTag,mMarkerJitteringAxes,mGridMode, mLocalExclusionList,
-									mConnectionLineListMode,mConnectionLineList1,mConnectionLineList2,mOnePerCategoryLabelCategoryColumn;
+									mConnectionLineListMode,mConnectionLineList1,mConnectionLineList2,mPopupX,mPopupY,
+									mOnePerCategoryLabelCategoryColumn;
 	private int						mOnePerCategoryLabelValueColumn,mOnePerCategoryLabelMode;
 	protected String				mPValueRefCategory,mWarningMessage;
 	protected Random				mRandom;
@@ -4581,9 +4581,11 @@ public abstract class JVisualization extends JComponent
 	protected boolean showPopupMenu() {
 		if (mDetailPopupProvider != null) {
 			CompoundRecord record = (mHighlightedPoint == null) ? null : mHighlightedPoint.record;
-			if (record != null) {
+			if (record != null || showCrossHair()) {
 				JPopupMenu popup = mDetailPopupProvider.createPopupMenu(record, (VisualizationPanel)getParent(), -1, mMouseIsControlDown);
 				if (popup != null) {
+					mPopupX = mMouseX1;
+					mPopupY = mMouseY1;
 					popup.show(this, mMouseX1, mMouseY1);
 					return true;
 					}

@@ -35,9 +35,7 @@ import com.actelion.research.table.filter.JMultiStructureFilterPanel;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.CompoundTableView;
-import com.actelion.research.table.view.JCardView;
-import com.actelion.research.table.view.JStructureGrid;
+import com.actelion.research.table.view.*;
 import com.actelion.research.table.view.card.CardElement;
 import com.actelion.research.table.view.card.JCardPane;
 import com.actelion.research.table.view.card.positioning.CardNumericalShaper1D;
@@ -98,6 +96,8 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 	private static final String PASTE_INTO = "pasteInto" + DELIMITER;
 	protected static final String EDIT_VALUE = "edit" + DELIMITER;
 	private static final String SORT = "sort" + DELIMITER;
+	private static final String FREEZE_CROSSHAIR = "freeze";
+	private static final String UNFREEZE_CROSSHAIRS = "unfreeze";
 	private static final String ADD_TO_LIST = "add" + DELIMITER;
 	private static final String REMOVE_FROM_LIST = "remove" + DELIMITER;
 	private static final String PATENT_SEARCH = "patentSearch" + DELIMITER;
@@ -175,7 +175,13 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 		mSource = source;
 		mDatabaseActions = databaseActions;
 
-		if (record != null) {
+		if (record == null) {
+			if (mSource instanceof VisualizationPanel2D && ((VisualizationPanel)mSource).getVisualization().showCrossHair()) {
+				addMenuItem("Freeze Crosshair", FREEZE_CROSSHAIR);
+				addMenuItem("Remove Frozen Crosshairs", UNFREEZE_CROSSHAIRS);
+				}
+			}
+		else {
 			if(selectedColumn != -1 && System.getProperty("development") != null) {
 				addMenuItem("Do Test Stuff", "TEST"+DELIMITER+mTableModel.getColumnTitle(selectedColumn));
 				addSeparator();
@@ -314,6 +320,14 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 					}
 				addSeparator();
 				add(sortMenu);
+				}
+
+			if (mSource instanceof VisualizationPanel2D && ((VisualizationPanel)mSource).getVisualization().showCrossHair()) {
+				JMenu crosshairMenu = new JMenu("Crosshair");
+				addSubmenuItem(crosshairMenu, "Freeze Crosshair", FREEZE_CROSSHAIR, null);
+				addSubmenuItem(crosshairMenu, "Remove Frozen Crosshairs", UNFREEZE_CROSSHAIRS, null);
+				addSeparator();
+				add(crosshairMenu);
 				}
 
 			CompoundTableListHandler hh = mTableModel.getListHandler();
@@ -1026,6 +1040,10 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 				new DETaskSortReactionsBySimilarity(getParentFrame(), descriptorColumn, reactionPart, mRecord).defineAndRun();
 			else
 				new DETaskSortStructuresBySimilarity(getParentFrame(), descriptorColumn, mRecord).defineAndRun();
+		} else if (actionCommand.equals(FREEZE_CROSSHAIR)) {
+			((JVisualization2D)((VisualizationPanel)mSource).getVisualization()).freezeCrossHair();
+		} else if (actionCommand.equals(UNFREEZE_CROSSHAIRS)) {
+			((JVisualization2D)((VisualizationPanel)mSource).getVisualization()).unfreezeCrossHairs();
 		} else if (actionCommand.startsWith(ADD_TO_LIST)) {
 			String hitlistName = getCommandColumn(actionCommand);
 			CompoundTableListHandler hh = mTableModel.getListHandler();

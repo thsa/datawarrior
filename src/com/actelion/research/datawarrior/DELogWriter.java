@@ -32,14 +32,12 @@ public class DELogWriter {
         if (sLogURL != null && System.getProperty("development") == null) {
             final String _action = action.replaceAll("\\s", "_");
             final String _params = params.replaceAll("\\s", "_");
-            new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        new URL(sLogURL+"?project=DataWarrior&username="+System.getProperty("user.name")+"&action="+_action+"&parameters="+_params).getContent();
-                        }
-                    catch(Exception e) {
-                        e.printStackTrace();
-                        }
+            new Thread(() -> {
+                try {
+                    new URL(sLogURL+"?project=DataWarrior&username="+System.getProperty("user.name")+"&action="+_action+"&parameters="+_params).getContent();
+                    }
+                catch(Exception e) {
+                    e.printStackTrace();
                     }
                 }).start();
             }

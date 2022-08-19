@@ -1492,7 +1492,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuFileNewFromTransposition)
 				new DETaskNewFileFromTransposition(mParentFrame, mApplication).defineAndRun();
 			else if (actionCommand.startsWith(OPEN_FILE))    // these are the reference,sample,etc-files
-				new DETaskOpenFile(mApplication, actionCommand.substring(OPEN_FILE.length())).defineAndRun();
+				openFile(actionCommand.substring(OPEN_FILE.length()));
 			else if (source == jMenuFileOpen)
 				new DETaskOpenFile(mApplication).defineAndRun();
 			else if (source == jMenuFileOpenTemplate)
@@ -1794,7 +1794,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskCopyMacro(mParentFrame, macroName).defineAndRun();
 				}
 			else if (e.getActionCommand().startsWith(RUN_GLOBAL_MACRO)) {
-				new DETaskRunMacroFromFile(mApplication, e.getActionCommand().substring(RUN_GLOBAL_MACRO.length())).defineAndRun();
+				runMacro(e.getActionCommand().substring(RUN_GLOBAL_MACRO.length()));
 				}
 			else if (e.getActionCommand().startsWith(RUN_INTERNAL_MACRO)) {
 				new DETaskRunMacro(mParentFrame, e.getActionCommand().substring(RUN_INTERNAL_MACRO.length())).defineAndRun();
@@ -2277,6 +2277,14 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuMacroStartRecording.setEnabled(!isRecording);
 		jMenuMacroStopRecording.setEnabled(isRecording);
 		jMenuMacroContinueRecording.setEnabled(DEMacroRecorder.getInstance().canContinueRecording(mParentFrame));
+		}
+
+	public void openFile(String filePath) {
+		new DETaskOpenFile(mApplication, filePath).defineAndRun();
+		}
+
+	public void runMacro(String filePath) {
+		new DETaskRunMacroFromFile(mApplication, filePath).defineAndRun();
 		}
 	}
 

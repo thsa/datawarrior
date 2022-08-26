@@ -911,7 +911,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 			case ACCEPTORS:
 				value = 0;
 				for (int atom=0; atom<mol.getAllAtoms(); atom++)
-					if (mol.getAtomicNo(atom) == 7 || mol.getAtomicNo(atom) == 8)
+					if ((mol.getAtomicNo(atom) == 7 || mol.getAtomicNo(atom) == 8) && mol.getAtomCharge(atom) <= 0)
 						value++;
 				break;
 			case DONORS:

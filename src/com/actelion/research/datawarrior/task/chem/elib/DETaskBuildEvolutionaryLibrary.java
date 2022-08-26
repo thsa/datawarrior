@@ -19,14 +19,19 @@
 package com.actelion.research.datawarrior.task.chem.elib;
 
 import com.actelion.research.chem.*;
+import com.actelion.research.chem.io.CompoundFileHelper;
+import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.TaskUIDelegate;
+import com.actelion.research.datawarrior.task.chem.DECompoundProvider;
+import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.JProgressPanel;
 import com.actelion.research.gui.JStructureView;
 import com.actelion.research.gui.dock.ShadowBorder;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -42,6 +47,7 @@ import java.awt.*;
 import java.awt.dnd.DnDConstants;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -91,7 +97,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 
 	@Override
 	public TaskUIDelegate createUIDelegate() {
-		return new UIDelegateELib(mParentFrame, mSourceTableModel);
+		return new UIDelegateELib(mParentFrame, mSourceTableModel, this);
 		}
 
 	@Override
@@ -191,15 +197,58 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
-		String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
-		if (startSet.length() != 0) {
-			for (String idcode:startSet.split("\\t")) {
-				try {
-					new IDCodeParser(true).getCompactMolecule(idcode).validate();
+		boolean isDeferred = "true".equals(configuration.getProperty(PROPERTY_START_SET_DEFERRED));
+		if (isDeferred) {
+			int startSetOption = findListIndex(configuration.getProperty(PROPERTY_START_SET_OPTION), START_COMPOUND_CODE, RANDOM_OPTION);
+			if (startSetOption == FILE_OPTION) {
+				String fileName = configuration.getProperty(PROPERTY_START_SET_FILE, "");
+				if (isLive && fileName.length() != 0) {
+					File file = new File(fileName);
+					if (!file.exists()) {
+						showErrorMessage("First generation file '"+fileName+"' not found.");
+						return false;
+						}
+					if (!file.canRead()) {
+						showErrorMessage("First generation file '"+fileName+"' can not be read.");
+						return false;
+						}
 					}
-				catch (Exception e) {
-					showErrorMessage("Some of your first generation compounds are invalid:\n"+e.toString());
+				}
+			if (startSetOption == COLUMN_OPTION
+			 || startSetOption == SELECTED_OPTION
+			 || startSetOption == LIST_OPTION) {
+				if (isLive && mSourceTableModel.getSpecialColumnList(CompoundTableConstants.cColumnTypeIDCode) == null) {
+					showErrorMessage("No structure column found.");
 					return false;
+					}
+				}
+			if (startSetOption == SELECTED_OPTION && isLive && !mSourceTableModel.hasSelectedRows()) {
+				showErrorMessage("No selected rows found.");
+				return false;
+				}
+			if (startSetOption == LIST_OPTION) {
+				String listName = configuration.getProperty(PROPERTY_START_SET_LIST, "");
+				if (listName.length() == 0) {
+					showErrorMessage("First generation row list not specified.");
+					return false;
+					}
+				if (isLive && mSourceTableModel.getListHandler().getListIndex(listName) == -1) {
+					showErrorMessage("First generation row list '"+listName+"' not found.");
+					return false;
+					}
+				}
+			}
+		else {
+			String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
+			if (startSet.length() != 0) {
+				for (String idcode:startSet.split("\\t")) {
+					try {
+						new IDCodeParser(true).getCompactMolecule(idcode).validate();
+						}
+					catch (Exception e) {
+						showErrorMessage("Some of your first generation compounds are invalid:\n"+e);
+						return false;
+						}
 					}
 				}
 			}
@@ -311,21 +360,98 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 
 			// Compile first parent generation including fitness calculation
 			TreeSet<EvolutionResult> parentGeneration = new TreeSet<>();
-			String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
-			if (startSet.length() == 0) {
-				ConcurrentLinkedQueue<StereoMolecule> compounds = new ConcurrentLinkedQueue<>();
-				UIDelegateELib.createRandomStartSet(mProgressPanel, 4*survivalCount, kind, compounds);
-				for (StereoMolecule compound:compounds) {
-					if (!mStopProcessing)
+
+			boolean isDeferred = "true".equals(configuration.getProperty(PROPERTY_START_SET_DEFERRED));
+
+			if (isDeferred) {
+				int startSetOption = findListIndex(configuration.getProperty(PROPERTY_START_SET_OPTION), START_COMPOUND_CODE, DEFAULT_OPTION);
+				int startSetColumn = mSourceTableModel.findColumn(configuration.getProperty(PROPERTY_START_SET_COLUMN));
+				int startSetList = mSourceTableModel.getListHandler().getListIndex(configuration.getProperty(PROPERTY_START_SET_LIST));
+
+				if (startSetColumn == -1) {
+					int[] structureColumn = mSourceTableModel.getSpecialColumnList(CompoundTableConstants.cColumnTypeIDCode);
+					if (structureColumn != null)
+						startSetColumn = structureColumn[0];
+					}
+				if ((startSetOption == COLUMN_OPTION
+				  || startSetOption == SELECTED_OPTION
+				  || startSetOption == LIST_OPTION)
+				 && startSetColumn == -1) {
+					showMessage("WARNING: Using random compounds as start set, because structure column not found.", WARNING_MESSAGE);
+					startSetOption = RANDOM_OPTION;
+					}
+				if (startSetOption == SELECTED_OPTION
+				 && !mSourceTableModel.hasSelectedRows()) {
+					showMessage("WARNING: Using all rows as start set, because now rows are selected.", WARNING_MESSAGE);
+					startSetOption = COLUMN_OPTION;
+					}
+				if (startSetOption == LIST_OPTION
+				 && startSetList == -1) {
+					showMessage("WARNING: Using all rows as start set, because row list doesn't exist.", WARNING_MESSAGE);
+					startSetOption = COLUMN_OPTION;
+					}
+
+				if (startSetOption == RANDOM_OPTION) {
+					ConcurrentLinkedQueue<StereoMolecule> moleculeQueue = new ConcurrentLinkedQueue<>();
+					DECompoundProvider.createRandomCompounds(getProgressController(), 4*survivalCount, kind, moleculeQueue);
+					while (!moleculeQueue.isEmpty()) {
+						StereoMolecule compound = moleculeQueue.poll();
 						parentGeneration.add(new EvolutionResult(compound,
 								new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+						}
+					}
+				else if (startSetOption == FILE_OPTION) {
+					String fileName = configuration.getProperty(PROPERTY_START_SET_FILE, "");
+					File[] file = new File[1];
+					file[0] = (fileName.length() == 0) ? null : new File(resolvePathVariables(fileName));
+					if (file[0] == null)
+						try {
+							SwingUtilities.invokeAndWait(() -> file[0] = new FileHelper(mParentFrame).selectFileToOpen(
+									"Select 1st-Generation File", CompoundFileHelper.cFileTypeCompoundFiles, null));
+						} catch (Exception e) {}
+					if (file[0] != null && file[0].exists() && file[0].canRead()) {
+						ArrayList<StereoMolecule> compounds = new FileHelper(mParentFrame).readStructuresFromFile(file[0], false);
+						for (StereoMolecule compound:compounds)
+							parentGeneration.add(new EvolutionResult(compound,
+									new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+						}
+					}
+				else {
+					CompoundTableListHandler listHandler = mSourceTableModel.getListHandler();
+					long listMask = (startSetOption == SELECTED_OPTION) ? listHandler.getListMask(CompoundTableListHandler.LISTINDEX_SELECTION)
+								  : (startSetOption == LIST_OPTION) ? listHandler.getListMask(listHandler.getListIndex(startSetList)) : 0L;
+					for (int row=0; row<mSourceTableModel.getTotalRowCount(); row++) {
+						CompoundRecord record = mSourceTableModel.getRecord(row);
+						if (listMask == 0 || (record.getFlags() & listMask) != 0) {
+							StereoMolecule compound = mSourceTableModel.getChemicalStructure(record, startSetColumn, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
+							if (compound != null)
+								parentGeneration.add(new EvolutionResult(compound,
+										new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+							}
+						}
+
+					if (parentGeneration.isEmpty())
+						showMessage("WARNING: No molecules found in deferred start generation. Using random molecules...", WARNING_MESSAGE);
 					}
 				}
-			else {
-				for (String idcode : startSet.split("\\t"))
-					if (!mStopProcessing)
-						parentGeneration.add(new EvolutionResult(new IDCodeParser(true).getCompactMolecule(idcode),
-								idcode, null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+
+			if (parentGeneration.isEmpty()) {
+				String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
+				if (startSet.length() == 0) {
+					ConcurrentLinkedQueue<StereoMolecule> compounds = new ConcurrentLinkedQueue<>();
+					DECompoundProvider.createRandomCompounds(mProgressPanel, 4*survivalCount, kind, compounds);
+					for (StereoMolecule compound:compounds) {
+						if (!mStopProcessing)
+							parentGeneration.add(new EvolutionResult(compound,
+									new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+						}
+					}
+				else {
+					for (String idcode : startSet.split("\\t"))
+						if (!mStopProcessing)
+							parentGeneration.add(new EvolutionResult(new IDCodeParser(true).getCompactMolecule(idcode),
+									idcode, null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+					}
 				}
 
 			int childCompoundCount = generationSize / (2*survivalCount);

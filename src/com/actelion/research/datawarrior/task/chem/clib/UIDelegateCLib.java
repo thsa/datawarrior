@@ -30,6 +30,7 @@ import com.actelion.research.chem.reaction.ReactionEncoder;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.TaskUIDelegate;
+import com.actelion.research.datawarrior.task.chem.DECompoundProvider;
 import com.actelion.research.gui.*;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.editor.EditorEvent;
@@ -129,6 +130,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 	private Reaction	mCustomReaction;
 	private boolean		mDisableEvents;
 	private JStructureView[]	mReactantView;
+	private DECompoundProvider mCompoundCollectionHelper;
 
 	public UIDelegateCLib(DEFrame parent) {
 		mParent = parent;
@@ -265,6 +267,10 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 					}
 				}
 			reactantPane.addCustomPopupItem(columnMenu);
+
+			mCompoundCollectionHelper = new DECompoundProvider(reactantPane);
+			mCompoundCollectionHelper.addPopupItems(mParent);
+
 			mReactantPaneList.add(reactantPane);
 			reactantPanel.add(reactantPane, "3,"+(6*i)+",2,"+(6*i+4));
 			}
@@ -378,44 +384,6 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 
 			new BuildingBlockRetrievalDialog((Frame)parent, idcode, mReactantPaneList.get(reactant).getModel());
 			}
-/*		if (cmd.startsWith(COMMAND_OPEN_FILE)) {
-			int reactant = cmd.charAt(COMMAND_OPEN_FILE.length()) - '0';
-
-			ArrayList<String[]> idcodeWithNameList = new FileHelper(mParent).readIDCodesWithNamesFromFile(null, true);
-
-			if (idcodeWithNameList != null) {
-				Reaction rxn = mDrawPanel.getDrawArea().getReaction();
-				SSSearcher searcher = new SSSearcher();
-				searcher.setFragment(rxn.getReactant(reactant));
-				int matchErrors = 0;
-				for (int i=idcodeWithNameList.size()-1; i>=0; i--) {
-					searcher.setMolecule(new IDCodeParser().getCompactMolecule(idcodeWithNameList.get(i)[0]));
-					if (!searcher.isFragmentInMolecule()) {
-						idcodeWithNameList.remove(i);
-						matchErrors++;
-						}
-					}
-
-				if (matchErrors != 0) {
-					String message = (idcodeWithNameList.size() == 0) ?
-							"None of your file's compounds have generic reactant "+(char)('A'+reactant)+" as substructure.\n"
-									+ "Therefore no compound could be added to the reactant list."
-							: ""+matchErrors+" of your file's compounds don't contain generic reactant "+(char)('A'+reactant)+" as substructure.\n"
-							+ "Therefore these compounds were not added to the reactant list.";
-					JOptionPane.showMessageDialog(mParent, message);
-					}
-
-				if (idcodeWithNameList.size() != 0) {
-					if (mReactantPaneList.get(reactant).getModel().getSize() != 0 && 0 == JOptionPane.showOptionDialog(mParent,
-							"Do you want to add these compounds or to replace the current list?",
-							"Add Or Replace Compounds", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
-							null, new String[] {"Add", "Replace"}, "Replace" ))
-						mReactantPaneList.get(reactant).getModel().addCompoundList(idcodeWithNameList);
-					else
-						mReactantPaneList.get(reactant).getModel().setCompoundList(idcodeWithNameList);
-					}
-				}
-			}*/
 		}
 
 	@Override
@@ -432,21 +400,23 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 
 		int index = 0;
 		for (CompoundCollectionPane<String[]> ccp:mReactantPaneList) {
-			StringBuilder sb1 = new StringBuilder();
-			StringBuilder sb2 = new StringBuilder();
-			CompoundCollectionModel<String[]> model = ccp.getModel();
-			for (int i = 0; i < model.getSize(); i++) {
-				if (i != 0) {
-					sb1.append('\t');
-					sb2.append('\t');
-					}
-				sb1.append(model.getCompound(i)[0]);
-				if (model.getCompound(i)[1] != null)
-					sb2.append(model.getCompound(i)[1]);
+			if (!mCompoundCollectionHelper.getDialogConfiguration(configuration)) {
+				StringBuilder sb1 = new StringBuilder();
+				StringBuilder sb2 = new StringBuilder();
+				CompoundCollectionModel<String[]> model = ccp.getModel();
+				for (int i = 0; i < model.getSize(); i++) {
+					if (i != 0) {
+						sb1.append('\t');
+						sb2.append('\t');
+						}
+					sb1.append(model.getCompound(i)[0]);
+					if (model.getCompound(i)[1] != null)
+						sb2.append(model.getCompound(i)[1]);
+				}
+				configuration.setProperty(PROPERTY_REACTANT+(index), sb1.toString());
+				configuration.setProperty(PROPERTY_REACTANT_NAME+(index), sb2.toString());
+				index++;
 			}
-			configuration.setProperty(PROPERTY_REACTANT+(index), sb1.toString());
-			configuration.setProperty(PROPERTY_REACTANT_NAME+(index), sb2.toString());
-			index++;
 		}
 
 		configuration.setProperty(PROPERTY_MODE, MODE_CODE[mComboBoxMode.getSelectedIndex()]);
@@ -465,13 +435,15 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 
 		for (int i=0; i<reactantCount; i++) {
 			CompoundCollectionPane<String[]> ccp = mReactantPaneList.get(i);
-			String[] idcode = configuration.getProperty(PROPERTY_REACTANT+i, "").split("\\t");
-			String[] name = configuration.getProperty(PROPERTY_REACTANT_NAME+i, "").split("\\t");
-			for (int j=0; j<idcode.length; j++) {
-				String[] idcodeWithName = new String[2];
-				idcodeWithName[0] = idcode[j];
-				idcodeWithName[1] = (j >= name.length || name[j].length() == 0) ? Integer.toString(j+1) : name[j];
-				ccp.getModel().addCompound(idcodeWithName);
+			if (!mCompoundCollectionHelper.setDialogConfiguration(configuration)) {
+				String[] idcode = configuration.getProperty(PROPERTY_REACTANT+i, "").split("\\t");
+				String[] name = configuration.getProperty(PROPERTY_REACTANT_NAME+i, "").split("\\t");
+				for (int j=0; j<idcode.length; j++) {
+					String[] idcodeWithName = new String[2];
+					idcodeWithName[0] = idcode[j];
+					idcodeWithName[1] = (j >= name.length || name[j].length() == 0) ? Integer.toString(j+1) : name[j];
+					ccp.getModel().addCompound(idcodeWithName);
+					}
 				}
 			}
 

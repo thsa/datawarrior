@@ -230,8 +230,7 @@ public class DETableView extends JScrollPane
 
 	@Override
 	public boolean copyViewContent() {
-		boolean skipHeader = mTable.getSelectedColumns().length <= 1;
-//			|| ((CompoundListSelectionModel)mTable.getSelectionModel()).getSelectionCount() <= 1;
+		boolean skipHeader = mTable.getSelectedRowCount() <= 1;
 		new CompoundTableSaver(mParentFrame, mTableModel, mTable).copy(skipHeader);
 		return true;
 		}

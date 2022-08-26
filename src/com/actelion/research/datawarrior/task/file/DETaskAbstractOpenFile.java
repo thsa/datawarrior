@@ -276,12 +276,7 @@ public abstract class DETaskAbstractOpenFile extends ConfigurableTask implements
 			return askForFileInEDT(selectedFile);
 
 		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-				@Override
-				public void run() {
-					mFile = askForFileInEDT(selectedFile);
-					}
-				});
+			SwingUtilities.invokeAndWait(() -> mFile = askForFileInEDT(selectedFile));
 			}
 		catch (Exception e) {}
 

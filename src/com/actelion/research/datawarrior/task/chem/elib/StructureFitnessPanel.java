@@ -22,6 +22,7 @@ import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
+import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.gui.CompoundCollectionModel;
 import com.actelion.research.gui.CompoundCollectionPane;
@@ -42,8 +43,11 @@ public class StructureFitnessPanel extends FitnessPanel {
 	private static final String[] SEARCH_TYPE_TEXT = {"similar to any", "dissimilar to all"};
 	protected static final String[] SEARCH_TYPE_CODE = {"similar", "dissimilar"};
 
-	private static final String FILE_OPTION = "Structure(s) from file";
 	private static final String CUSTOM_OPTION = "Custom structure(s)";
+	private static final String FILE_OPTION = "Structure(s) from file";
+	private static final String COLUMN_OPTION = "Structure(s) from column";
+	private static final String SELECTION_OPTION = "Selected structure(s)";
+	private static final String LIST_OPTION = "Structure(s) from row list";
 
 	protected JComboBox mComboBoxSearchType,mComboBoxDescriptor,mComboBoxRefStructures;
 	protected CompoundCollectionPane<StereoMolecule> mStructurePane;
@@ -81,7 +85,13 @@ public class StructureFitnessPanel extends FitnessPanel {
 		mComboBoxRefStructures = new JComboBox();
 		mComboBoxRefStructures.addItem(CUSTOM_OPTION);
 		mComboBoxRefStructures.addItem(FILE_OPTION);
-		delegate.addStructureOptions(mComboBoxRefStructures);
+		if (delegate.getTableModel().getSpecialColumnList(CompoundTableConstants.cColumnTypeIDCode) != null) {
+			mComboBoxRefStructures.addItem(COLUMN_OPTION);
+			if (delegate.getTableModel().hasSelectedRows())
+				mComboBoxRefStructures.addItem(SELECTION_OPTION);
+			if (delegate.getTableModel().getListHandler().getListCount() != 0)
+				mComboBoxRefStructures.addItem(LIST_OPTION);
+			}
 		mComboBoxRefStructures.addActionListener(this);
 		mComboBoxDescriptor = new JComboBox();
 		for (int i=0; i<DescriptorConstants.DESCRIPTOR_LIST.length; i++)
@@ -119,7 +129,7 @@ public class StructureFitnessPanel extends FitnessPanel {
 		StringBuilder sb = new StringBuilder(STRUCTURE_OPTION_CODE);
 		sb.append('\t').append(SEARCH_TYPE_CODE[mComboBoxSearchType.getSelectedIndex()]);
 		sb.append('\t').append(mComboBoxDescriptor.getSelectedItem());
-		sb.append('\t').append(Integer.toString(mSlider.getValue()));
+		sb.append('\t').append(mSlider.getValue());
 		CompoundCollectionModel<StereoMolecule> model = mStructurePane.getModel();
 		for (int i=0; i<model.getSize(); i++)
 			sb.append('\t').append(new Canonizer(model.getMolecule(i)).getIDCode());
@@ -139,7 +149,11 @@ public class StructureFitnessPanel extends FitnessPanel {
 					}
 				}
 			else if (!targetSetOption.equals(CUSTOM_OPTION)) {
-				ArrayList<MoleculeWithDescriptor> mwdl = mUIDelegate.getSelectedMolecules(targetSetOption, null);
+				int option = targetSetOption.equals(SELECTION_OPTION) ? TaskConstantsELib.SELECTED_OPTION
+						   : targetSetOption.equals(LIST_OPTION) ? TaskConstantsELib.LIST_OPTION : TaskConstantsELib.COLUMN_OPTION;
+
+				String[] columnAndList = mUIDelegate.inquireColumnNameAndListName(option != TaskConstantsELib.LIST_OPTION);
+				ArrayList<MoleculeWithDescriptor> mwdl = mUIDelegate.getMoleculesFromColumn(option, null, columnAndList[0], columnAndList[1]);
 				if (mwdl != null)
 					for (MoleculeWithDescriptor mwd:mwdl)
 						mStructurePane.getModel().addCompound(mwd.mMol);

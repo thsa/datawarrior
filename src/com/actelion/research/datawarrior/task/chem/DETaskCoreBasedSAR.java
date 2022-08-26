@@ -31,7 +31,9 @@ import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Properties;
+import java.util.TreeMap;
 
 import static com.actelion.research.chem.coords.CoordinateInventor.MODE_PREFER_MARKED_ATOM_COORDS;
 
@@ -319,20 +321,16 @@ try {   // TODO remove
 						if (scaffoldToMolAtom[i] != -1)
 							isCoreAtom[scaffoldToMolAtom[i]] = true;
 
-					String stereoInfo = "";
+					String extendedCoreIDCode = null;
 					int[] coreAtomParity = null;
 					if (distinguishStereoCenters) {
-						mol.ensureHelperArrays(Molecule.cHelperParities);
 						boolean[] isExtendedCoreAtom = new boolean[mol.getAllAtoms()];	// core plus direct neighbours
 						for (int i=0; i<scaffoldToMolAtom.length; i++) {
 							int atom = scaffoldToMolAtom[i];
 							if (atom != -1) {
 								isExtendedCoreAtom[atom] = true;
-								for (int j = 0; j < mol.getConnAtoms(atom); j++) {
-									int connAtom = mol.getConnAtom(atom, j);
-									if (!isCoreAtom[connAtom])
-										isExtendedCoreAtom[connAtom] = true;
-									}
+								for (int j=0; j<mol.getConnAtoms(atom); j++)
+									isExtendedCoreAtom[mol.getConnAtom(atom, j)] = true;
 								}
 							}
 
@@ -352,7 +350,7 @@ try {   // TODO remove
 						for (int atom=0; atom<extendedCore.getAllAtoms(); atom++) {
 							int scaffoldAtomNo = extendedCore.getAtomMapNo(atom) - 1;
 							if (scaffoldAtomNo != -1) {
-								if (mol.isAtomStereoCenter(scaffoldToMolAtom[scaffoldAtomNo])) {
+								if (extendedCore.isAtomStereoCenter(atom)) {
 									int atomParity = extendedCore.getAtomParity(atom);
 									coreAtomParity[scaffoldAtomNo] = atomParity;
 									parityByte[scaffoldAtomNo] = (byte)('0'+atomParity);
@@ -371,10 +369,10 @@ try {   // TODO remove
 									}
 								}
 							}
-                        if (stereoCenterFound)
-                            stereoInfo = new String(parityByte);
+                        if (!stereoCenterFound)
+	                        coreAtomParity = null;
                         else
-                            coreAtomParity = null;
+                        	extendedCoreIDCode = new Canonizer(extendedCore).getIDCode();
 						}
 
 					StereoMolecule core = new StereoMolecule();
@@ -382,15 +380,17 @@ try {   // TODO remove
 
 					mol.copyMoleculeByAtoms(core, isCoreAtom, true, molToCoreAtom);
 					for (int atom=0; atom<scaffoldMol.getAllAtoms(); atom++) {
-						int coreAtom = molToCoreAtom[scaffoldToMolAtom[atom]];
-						core.setAtomX(coreAtom, scaffoldMol.getAtomX(atom));
-						core.setAtomY(coreAtom, scaffoldMol.getAtomY(atom));
-						core.setAtomMarker(atom, true);  // to keep the original scaffold coordinates
+						if (scaffoldToMolAtom[atom] != -1) {
+							int coreAtom = molToCoreAtom[scaffoldToMolAtom[atom]];
+							core.setAtomX(coreAtom, scaffoldMol.getAtomX(atom));
+							core.setAtomY(coreAtom, scaffoldMol.getAtomY(atom));
+							core.setAtomMarker(coreAtom, true);  // to keep the original scaffold coordinates
+							}
 						}
 
 					core.setFragment(false);
 					core.stripStereoInformation();
-					String coreIDCode = new Canonizer(core).getIDCode() + stereoInfo;
+					String coreIDCode = (extendedCoreIDCode != null) ? extendedCoreIDCode : new Canonizer(core).getIDCode();
 					coreInfoOfRow[row] = coreMap.get(coreIDCode);
 					if (coreInfoOfRow[row] == null) {
 						coreInfoOfRow[row] = new CoreInfo(core, coreAtomParity, scaffoldToMolAtom.length);
@@ -431,7 +431,7 @@ try {   // TODO remove
 								current++;
 								}
 
-							fragment.deleteMolecule();
+							fragment.clear();
 							mol.setAtomCustomLabel(scaffoldToMolAtom[i], (String)null);	// no encoding for the connection atom
 
 							mol.copyMoleculeByAtoms(fragment, isSubstituentAtom, false, null);
@@ -529,6 +529,7 @@ try {   // TODO remove
                                 Molecule.cESRTypeAnd : Molecule.cESRTypeOr, esrGroup);
 				        }
                     }
+				core.setParitiesValid(0);
                 }
 
 			new CoordinateInventor(MODE_PREFER_MARKED_ATOM_COORDS).invent(core);	// creates stereo bonds from parities

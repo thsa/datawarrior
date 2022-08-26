@@ -19,36 +19,48 @@
 package com.actelion.research.datawarrior.task.chem.elib;
 
 public interface TaskConstantsELib {
-	public static final String[] START_COMPOUND_CODE = { "default", "random", "file", "custom", "onthefly", "list", "selected", "all" };
+	String[] START_COMPOUND_TEXT = { "Default", "Custom", "Random", "From the clipboard", "From a file...", "From a structure column...", "From all selected rows...", "From a row list..." };
+	String[] START_COMPOUND_CODE = { "default", "custom", "random", "clipboard", "file", "column", "selected", "list" };
+	int DEFAULT_OPTION = 0;
+	int CUSTOM_OPTION = 1;
+	int RANDOM_OPTION = 2;  // first that can be deferred
+	int CLIPBOARD_OPTION = 3;
+	int FILE_OPTION = 4;    // first that needs detail info when deferred
+	int COLUMN_OPTION = 5;
+	int SELECTED_OPTION = 6;
+	int LIST_OPTION = 7;
 
-	public static final String GENERATIONS_AUTOMATIC = "automatic";
-	public static final String GENERATIONS_UNLIMITED = "unlimited";
-	public static final String DEFAULT_GENERATIONS = GENERATIONS_AUTOMATIC;
-	public static final String[] GENERATION_OPTIONS = {GENERATIONS_AUTOMATIC, "10", "25", "50", "75", "100", "150", "200", "300", "400", GENERATIONS_UNLIMITED };
+	String GENERATIONS_AUTOMATIC = "automatic";
+	String GENERATIONS_UNLIMITED = "unlimited";
+	String DEFAULT_GENERATIONS = GENERATIONS_AUTOMATIC;
+	String[] GENERATION_OPTIONS = {GENERATIONS_AUTOMATIC, "10", "25", "50", "75", "100", "150", "200", "300", "400", GENERATIONS_UNLIMITED };
 
-	public static final String DEFAULT_COMPOUNDS = "128";
-	public static final String[] COMPOUND_OPTIONS = {"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096"};
+	String DEFAULT_COMPOUNDS = "128";
+	String[] COMPOUND_OPTIONS = {"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096"};
 
-	public static final String DEFAULT_SURVIVALS = "8";
-	public static final String[] SURVIVAL_OPTIONS = {"1", "2", "4", "8", "16", "32", "64", "128", "256"};
+	String DEFAULT_SURVIVALS = "8";
+	String[] SURVIVAL_OPTIONS = {"1", "2", "4", "8", "16", "32", "64", "128", "256"};
 
-	public static final String DEFAULT_RUNS = "1";
-	public static final String[] RUN_OPTIONS = {"1", "2", "4", "8", "16", "32", "64"};
+	String DEFAULT_RUNS = "1";
+	String[] RUN_OPTIONS = {"1", "2", "4", "8", "16", "32", "64"};
 
-	public static final String[] COMPOUND_KIND_TEXT = {"Approved drugs", "Natural products"};
-	public static final String[] COMPOUND_KIND_CODE = {"drugs", "naturalProducts"};
-	public static final String[] COMPOUND_KIND_FILE = {"drugbank_nosugar.typ", "derep.typ"};
-	public static final int COMPOUND_KIND_DRUGS = 0;
-	public static final int COMPOUND_KIND_NATURAL_PRODUCTS = 1;
+	String[] COMPOUND_KIND_TEXT = {"Approved drugs", "Natural products"};
+	String[] COMPOUND_KIND_CODE = {"drugs", "naturalProducts"};
+	String[] COMPOUND_KIND_FILE = {"drugbank_nosugar.typ", "derep.typ"};
+	int COMPOUND_KIND_DRUGS = 0;
+	int COMPOUND_KIND_NATURAL_PRODUCTS = 1;
 
-	public static final String PROPERTY_START_SET_OPTION = "startOption";
-    public static final String PROPERTY_START_COMPOUNDS = "startSet";
-    public static final String PROPERTY_SURVIVAL_COUNT = "survivalCount";
-	public static final String PROPERTY_GENERATION_COUNT = "generationCount";
-	public static final String PROPERTY_GENERATION_SIZE = "generationSize";
-    public static final String PROPERTY_COMPOUND_KIND = "kind";
-    public static final String PROPERTY_FITNESS_PARAM_COUNT = "paramCount";
-    public static final String PROPERTY_FITNESS_PARAM_CONFIG = "paramConfig";
-	public static final String PROPERTY_RUN_COUNT = "runs";
-
+	String PROPERTY_START_SET_OPTION = "startSetOption";
+	String PROPERTY_START_SET_DEFERRED = "startSetDeferred";
+	String PROPERTY_START_SET_FILE = "startSetFile";
+	String PROPERTY_START_SET_COLUMN = "startSetColumn";
+	String PROPERTY_START_SET_LIST = "startSetList";
+	String PROPERTY_START_COMPOUNDS = "startSet";
+	String PROPERTY_SURVIVAL_COUNT = "survivalCount";
+	String PROPERTY_GENERATION_COUNT = "generationCount";
+	String PROPERTY_GENERATION_SIZE = "generationSize";
+	String PROPERTY_COMPOUND_KIND = "kind";
+	String PROPERTY_FITNESS_PARAM_COUNT = "paramCount";
+	String PROPERTY_FITNESS_PARAM_CONFIG = "paramConfig";
+	String PROPERTY_RUN_COUNT = "runs";
 }

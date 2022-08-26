@@ -30,6 +30,7 @@ import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.TaskUIDelegate;
+import com.actelion.research.datawarrior.task.chem.DECompoundProvider;
 import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -38,7 +39,6 @@ import com.actelion.research.table.view.VisualizationPanel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -137,20 +137,28 @@ public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements
 		StereoMolecule[][] reactant = new StereoMolecule[reaction.getReactants()][];
 		int rowCount = 1;
 		for (int i=0; i<reaction.getReactants(); i++) {
-			String[] idcode = configuration.getProperty(PROPERTY_REACTANT+i).split("\\t");
-			String[] name = configuration.getProperty(PROPERTY_REACTANT_NAME+i, "").split("\\t");
-			if (name.length != idcode.length) {
-				System.out.println("WARNING: counts of idcodes and IDs don't match.");
-				name = null;
+			ArrayList<StereoMolecule> reactantList = DECompoundProvider.getCompounds(getParentFrame(), configuration);
+			if (reactantList != null) {
+				for (int j=0; j<reactantList.size(); j++)
+					if (reactantList.get(i).getName() == null)
+						reactantList.get(i).setName("Compound "+(i+1));
 			}
-			rowCount *= idcode.length;
-			ArrayList<StereoMolecule> reactantList = new ArrayList<>();
-			for (int j=0; j<idcode.length; j++) {
-				StereoMolecule mol = new IDCodeParser().getCompactMolecule(idcode[j]);
-				if (mol != null) {
-					reactantList.add(mol);
-					if (name != null && name[j] != null && name[j].length() != 0)
-						mol.setName(name[j]);
+			else {
+				String[] idcode = configuration.getProperty(PROPERTY_REACTANT+i).split("\\t");
+				String[] name = configuration.getProperty(PROPERTY_REACTANT_NAME+i, "").split("\\t");
+				if (name.length != idcode.length) {
+					System.out.println("WARNING: counts of idcodes and IDs don't match.");
+					name = null;
+				}
+				rowCount *= idcode.length;
+				reactantList = new ArrayList<>();
+				for (int j=0; j<idcode.length; j++) {
+					StereoMolecule mol = new IDCodeParser().getCompactMolecule(idcode[j]);
+					if (mol != null) {
+						reactantList.add(mol);
+						if (name != null && name[j] != null && name[j].length() != 0)
+							mol.setName(name[j]);
+					}
 				}
 			}
 			reactant[i] = reactantList.toArray(new StereoMolecule[0]);
@@ -168,7 +176,7 @@ public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements
 		int[] index = new int[dimensions];
 		ArrayList<Object[]> recordList = new ArrayList<Object[]>();
 		int row = 0;
-		BufferedWriter writer = null;
+//		BufferedWriter writer = null;
 
 //try { writer = new BufferedWriter(new FileWriter("/home/thomas/test.rdf"));
 
@@ -252,33 +260,29 @@ public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements
 	}
 
 	private void setRuntimeSettings(final int dimensions) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-//				mTargetFrame.getMainFrame().getMainPane().removeAllViews();
-//				mTargetFrame.getMainFrame().getMainPane().addTableView("Table", null);
-				mTargetFrame.getMainFrame().getMainPane().addStructureView("Structure", "Table\tbottom\t0.5", 0);
+		SwingUtilities.invokeLater(() -> {
+			mTargetFrame.getMainFrame().getMainPane().addStructureView("Structure", "Table\tbottom\t0.5", 0);
 
-				mTargetFrame.getMainFrame().getPruningPanel().removeAllFilters();	// this is the automatically added list filter
-				mTargetFrame.getMainFrame().getPruningPanel().addDefaultFilters();
+			mTargetFrame.getMainFrame().getPruningPanel().removeAllFilters();	// this is the automatically added list filter
+			mTargetFrame.getMainFrame().getPruningPanel().addDefaultFilters();
 
-				VisualizationPanel vpanel = null;
-				if (dimensions == 2)
-					vpanel = mTargetFrame.getMainFrame().getMainPane().add2DView("2D-View", "Structure\tright\t0.5");
-				if (dimensions == 3)
-					vpanel = mTargetFrame.getMainFrame().getMainPane().add3DView("3D-View", "Structure\tright\t0.5");
+			VisualizationPanel vpanel = null;
+			if (dimensions == 2)
+				vpanel = mTargetFrame.getMainFrame().getMainPane().add2DView("2D-View", "Structure\tright\t0.5");
+			if (dimensions == 3)
+				vpanel = mTargetFrame.getMainFrame().getMainPane().add3DView("3D-View", "Structure\tright\t0.5");
 
-				if (vpanel != null) {
-					for (int i=0; i<dimensions; i++) {
-						vpanel.setAxisColumnName(i, "Reactant "+(i+1));
-						JVisualization visualization = vpanel.getVisualization();
-						if (LookAndFeelHelper.isDarkLookAndFeel())
-							visualization.setViewBackground(new Color(32,0,64));
-						visualization.setMarkerSize(0.6f, false);
-						visualization.setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
-						visualization.getMarkerColor().setColor(mTargetFrame.getTableModel().getChildColumn(0, DescriptorConstants.DESCRIPTOR_FFP512.shortName));
-					}
+			if (vpanel != null) {
+				for (int i=0; i<dimensions; i++) {
+					vpanel.setAxisColumnName(i, "Reactant "+(i+1));
+					JVisualization visualization = vpanel.getVisualization();
+					if (LookAndFeelHelper.isDarkLookAndFeel())
+						visualization.setViewBackground(new Color(32,0,64));
+					visualization.setMarkerSize(0.6f, false);
+					visualization.setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+					visualization.getMarkerColor().setColor(mTargetFrame.getTableModel().getChildColumn(0, DescriptorConstants.DESCRIPTOR_FFP512.shortName));
 				}
 			}
-		} );
+		});
 	}
 }

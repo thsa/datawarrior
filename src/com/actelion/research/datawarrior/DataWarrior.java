@@ -61,6 +61,8 @@ public abstract class DataWarrior implements WindowFocusListener {
 	public static final String MACRO_DIR = "Macro";
 	public static final String PLUGIN_DIR = "Plugin";
 
+	private boolean mIsCapkaAvailable;
+
 	public enum LookAndFeel {
 		GRAPHITE("Graphite", "org.pushingpixels.substance.api.skin.SubstanceGraphiteAquaLookAndFeel", new Color(0x3838C0), new Color(0x252560)),
 		GRAY("Gray", "org.pushingpixels.substance.api.skin.SubstanceOfficeBlack2007LookAndFeel", new Color(0xAEDBFF), new Color(0x0060FF)),
@@ -231,6 +233,10 @@ public abstract class DataWarrior implements WindowFocusListener {
 		sApplication = this;
 		}
 
+	public boolean isCapkaAvailable() {
+		return mIsCapkaAvailable;
+		}
+
 	public StandardTaskFactory createTaskFactory() {
 		return new StandardTaskFactory(this);
 		}
@@ -249,6 +255,19 @@ public abstract class DataWarrior implements WindowFocusListener {
 		Molecule.setDefaultAverageBondLength(HiDPIHelper.scale(24));
 		StructureNameResolver.setInstance(new DEStructureNameResolver());
 		GenericEditorArea.setReactionMapper(new ChemicalRuleEnhancedReactionMapper());
+
+		try {
+			mIsCapkaAvailable = false;
+			Class.forName("chemaxon.marvin.calculations.pKaPlugin");
+			if (new chemaxon.marvin.calculations.pKaPlugin().isLicensed())
+				mIsCapkaAvailable = true;
+			else
+				JOptionPane.showMessageDialog(getActiveFrame(), "The ChemAxon pKa plugin 'capka.jar' was found, but the license file\nseems to be missing or invalid. pKa calculations won't be available.");
+			}
+		catch (ClassNotFoundException cnfe) {}
+		catch (Throwable t) {
+			t.printStackTrace();
+			}
 		}
 
 	public void checkVersion(boolean showUpToDateMessage) {

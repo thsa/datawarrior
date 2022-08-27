@@ -1534,7 +1534,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 
 			// Check, whether the ChemAxon classes are available
 			if ((property.predictorFlags & PREDICTOR_FLAG_PKA) != 0
-			 && !PKaPredictor.isAvailable())
+			 && !mParentFrame.getApplication().isCapkaAvailable())
 				mCheckBox.setEnabled(false);
 			}
 

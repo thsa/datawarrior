@@ -12,6 +12,7 @@ public class pKaPlugin {
 			throw new PluginException();
 	}
 
+	public boolean isLicensed() { return false; };
 	public void setMaxIons(int max) {}
 	public void setBasicpKaLowerLimit(double l) {}
 	public void setAcidicpKaUpperLimit(double l) {}

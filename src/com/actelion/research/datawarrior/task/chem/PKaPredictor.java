@@ -22,26 +22,12 @@ import chemaxon.formats.MolFormatException;
 import chemaxon.formats.MolImporter;
 import chemaxon.marvin.calculations.pKaPlugin;
 import chemaxon.marvin.plugin.PluginException;
+
 import com.actelion.research.chem.MolfileCreator;
 import com.actelion.research.chem.StereoMolecule;
 
 public class PKaPredictor {
-	private static int sAvailableState = -1;
 	private pKaPlugin plugin;
-
-	public static boolean isAvailable() {
-		if (sAvailableState == -1) {
-			try {
-				Class.forName("chemaxon.marvin.calculations.pKaPlugin");
-				sAvailableState = new pKaPlugin().isLicensed() ? 1 : 0;
-				}
-			catch (ClassNotFoundException cnfe) {
-				sAvailableState = -2;
-				}
-			}
-
-		return sAvailableState == 1;
-		}
 
 	public PKaPredictor() {
 		plugin = new pKaPlugin();
@@ -72,10 +58,10 @@ public class PKaPredictor {
 			plugin.getMacropKaValues(pKaPlugin.ACIDIC, acidicpKa, acidicIndexes);
 		}
 		catch (PluginException pe) {
-			System.out.println("PluginException:"+pe.toString());
+			System.out.println("PluginException:"+pe);
 		}
 		catch (Exception e) {
-			System.out.println("Unexpected ChemAxon Exception:"+e.toString());
+			System.out.println("Unexpected ChemAxon Exception:"+e);
 		}
 	}
 
@@ -89,10 +75,10 @@ public class PKaPredictor {
 			plugin.getMacropKaValues(pKaPlugin.BASIC, basicpKa, basicIndexes);
 		}
 		catch (PluginException pe) {
-			System.out.println("PluginException:"+pe.toString());
+			System.out.println("PluginException:"+pe);
 		}
 		catch (Exception e) {
-			System.out.println("Unexpected ChemAxon Exception:"+e.toString());
+			System.out.println("Unexpected ChemAxon Exception:"+e);
 		}
 
 		return basicpKa;
@@ -107,27 +93,17 @@ public class PKaPredictor {
 			plugin.getMacropKaValues(pKaPlugin.ACIDIC, acidicpKa, acidicIndexes);
 		}
 		catch (PluginException pe) {
-			System.out.println("PluginException:"+pe.toString());
+			System.out.println("PluginException:"+pe);
 		}
 		catch (Exception e) {
-			System.out.println("Unexpected ChemAxon Exception:"+e.toString());
+			System.out.println("Unexpected ChemAxon Exception:"+e);
 		}
 
 		return acidicpKa;
 	}
 
-/*		private StereoMolecule convert(chemaxon.struc.Molecule chemAxonMol) {
-			try {
-				return new MolfileParser().getCompactMolecule(MolExporter.exportToFormat(chemAxonMol, "mol"));
-				}
-			catch (IOException ioe) {
-				ioe.printStackTrace();
-				return null;
-				}
-			}*/
-
 	public chemaxon.struc.Molecule convert(StereoMolecule actelionMol) {
-		String molfile = null;
+		String molfile;
 		try {
 			molfile = new MolfileCreator(actelionMol).getMolfile();
 			return MolImporter.importMol(molfile, "mol");

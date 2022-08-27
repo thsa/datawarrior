@@ -25,6 +25,7 @@ import com.actelion.research.chem.conf.TorsionDescriptorHelper;
 import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.FXConformerDialog;
 import com.actelion.research.datawarrior.task.file.JFilePathLabel;
 import com.actelion.research.gui.FileHelper;
@@ -353,10 +354,10 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		mButtonEdit.setEnabled(isEnabled);
 		mCheckBoxPoolConformers.setEnabled(isEnabled && mComboBoxFileType.getSelectedIndex() == 0);
 		mCheckBoxLargestFragment.setEnabled(isEnabled);
-		mCheckBoxNeutralize.setEnabled(isEnabled && mCheckBoxLargestFragment.isSelected() && (!PKaPredictor.isAvailable() || !mCheckBoxProtonate.isSelected()));
+		mCheckBoxNeutralize.setEnabled(isEnabled && mCheckBoxLargestFragment.isSelected() && (!DataWarrior.getApplication().isCapkaAvailable() || !mCheckBoxProtonate.isSelected()));
 		mCheckBoxSkip.setEnabled(isEnabled);
 		mTextFieldSkip.setEnabled(mCheckBoxSkip.isEnabled() && mCheckBoxSkip.isSelected());
-		mCheckBoxProtonate.setEnabled(isEnabled && PKaPredictor.isAvailable() && (!mCheckBoxLargestFragment.isSelected() || !mCheckBoxNeutralize.isSelected()));
+		mCheckBoxProtonate.setEnabled(isEnabled && DataWarrior.getApplication().isCapkaAvailable() && (!mCheckBoxLargestFragment.isSelected() || !mCheckBoxNeutralize.isSelected()));
 		mTextFieldPH.setEnabled(mCheckBoxProtonate.isEnabled() && mCheckBoxProtonate.isSelected());
 		mTextFieldPHSpan.setEnabled(mCheckBoxProtonate.isEnabled() && mCheckBoxProtonate.isSelected());
 		}
@@ -503,7 +504,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 			mStereoIsomerLimit = Integer.parseInt(limit);
 
 		mPH1 = Float.NaN;
-		String ph = PKaPredictor.isAvailable() ? configuration.getProperty(PROPERTY_PROTONATION_PH) : null;
+		String ph = DataWarrior.getApplication().isCapkaAvailable() ? configuration.getProperty(PROPERTY_PROTONATION_PH) : null;
 		if (ph != null) {
 			mPH1 = Float.parseFloat(ph);
 			mPH2 = mPH1;

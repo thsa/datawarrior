@@ -389,7 +389,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 				return columnNameAndListName;
 				}
 
-			if (hh.getListCount() == 0) {
+			if (!columnNameOnly && hh.getListCount() == 0) {
 				mTask.showInteractiveTaskMessage("Your DataWarrior document doesn't contain any row list.", AbstractTask.WARNING_MESSAGE);
 				return columnNameAndListName;
 				}

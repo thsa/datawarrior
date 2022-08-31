@@ -33,7 +33,7 @@ public class PluginSpec {
 		return mMenuFound;
 	}
 
-	public void setMenuFound() {
-		mMenuFound = true;
+	public void setMenuFound(boolean b) {
+		mMenuFound = b;
 	}
 }

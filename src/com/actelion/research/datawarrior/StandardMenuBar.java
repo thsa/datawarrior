@@ -357,6 +357,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		}
 
 	protected void buildMenu() {
+		for (PluginSpec plugin:mApplication.getPluginRegistry().getPlugins())
+			plugin.setMenuFound(false);
+
 		add(buildFileMenu());
 		add(buildEditMenu());
 		add(buildDataMenu());
@@ -2115,7 +2118,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				JMenuItem item = new JMenuItem(plugin.getTaskName() + "...");
 				item.addActionListener(e -> new DETaskPluginTask(mParentFrame, plugin.getTask()).defineAndRun());
 				parentMenu.add(item);
-				plugin.setMenuFound();
+				plugin.setMenuFound(true);
 				}
 			}
 		}

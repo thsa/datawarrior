@@ -123,7 +123,7 @@ public class DEMarkushDialog extends JDialog implements ActionListener,Runnable 
                 JFileChooserOverwrite fileChooser = new JFileChooserOverwrite();
                 fileChooser.setCurrentDirectory(FileHelper.getCurrentDirectory());
                 fileChooser.setFileFilter(FileHelper.createFileFilter(FileHelper.cFileTypeTextTabDelimited, true));
-                fileChooser.setExtension(FileHelper.getExtension(FileHelper.cFileTypeTextTabDelimited));
+                fileChooser.setExtensions(FileHelper.getExtensions(FileHelper.cFileTypeTextTabDelimited));
                 int option = fileChooser.showSaveDialog(mParentFrame);
                 FileHelper.setCurrentDirectory(fileChooser.getCurrentDirectory());
                 if (option == JFileChooser.APPROVE_OPTION)

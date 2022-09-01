@@ -152,14 +152,14 @@ public class JComponentCopyDialog extends JDialog implements ActionListener {
 			    int width = Integer.parseInt(mTextFieldWidth.getText());
 			    int height = Integer.parseInt(mTextFieldHeight.getText());
 			    if (mRadioButtonSaveAsSVG.isSelected()) {
-			        File file = selectFile("svg", "SVG image files");
+			        File file = selectFile(FileHelper.cFileTypeSVG, "SVG image files");
 			        if (file != null)
 			            writeSVG(mComponent, width, height, FONT_FACTOR[mComboBoxResolution.getSelectedIndex()], new FileWriter(file));
 			        }
 			    else {
                     Image image = createComponentImage(mComponent, width, height, FONT_FACTOR[mComboBoxResolution.getSelectedIndex()]);
 			        if (mRadioButtonSaveAsPNG.isSelected()) {
-                        File file = selectFile("png", "PNG image files");
+                        File file = selectFile(FileHelper.cFileTypePNG, "PNG image files");
                         if (file != null) {
                             try {
                                 /* do something like this for setting the image to 300 dpi
@@ -217,15 +217,17 @@ public class JComponentCopyDialog extends JDialog implements ActionListener {
         return width;
         }
 
-    private File selectFile(String extention, String description) {
+    private File selectFile(int filetype, String description) {
         CompoundFileFilter filter = new CompoundFileFilter();
-        filter.addExtension(extention);
+        String[] extentions = FileHelper.getExtensions(filetype);
+        for (String extension:extentions)
+	        filter.addExtension(extension);
         filter.addDescription(description);
 
         JFileChooserOverwrite fileChooser = new JFileChooserOverwrite();
         fileChooser.setCurrentDirectory(FileHelper.getCurrentDirectory());
         fileChooser.setFileFilter(filter);
-        fileChooser.setExtension("."+extention);
+        fileChooser.setExtensions(extentions);
         int option = fileChooser.showSaveDialog(mParentFrame);
         FileHelper.setCurrentDirectory(fileChooser.getCurrentDirectory());
         return (option == JFileChooser.APPROVE_OPTION) ? fileChooser.getFile() : null;

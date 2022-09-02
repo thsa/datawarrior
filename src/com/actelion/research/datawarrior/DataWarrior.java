@@ -33,6 +33,7 @@ import com.actelion.research.gui.editor.GenericEditorArea;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableDetailHandler;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.util.Platform;
 
 import javax.swing.*;
@@ -41,6 +42,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
@@ -497,6 +499,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 				break;
 				}
 			}
+
 		setLookAndFeel(selectedLAF);
 		}
 
@@ -510,14 +513,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 		try {
 			UIManager.setLookAndFeel(laf.className);
 			HeaderPaintHelper.setSpotColors(laf.getColor1(), laf.getColor2());
-			try {
-				Color bg = UIManager.getColor("ToolTip.background");
-				Color translucentBG = new Color(bg.getRed(), bg.getGreen(), bg.getBlue(), 0x80);
-				UIManager.put("ToolTip.background", translucentBG);
-				}
-			catch (Exception e) {
-				e.printStackTrace();
-				}
+			makeTooltipsTranslucent();
 			return true;
 			}
 		catch (Exception e) {
@@ -546,9 +542,53 @@ public abstract class DataWarrior implements WindowFocusListener {
 				SwingUtilities.updateComponentTreeUI(f);
 
 			getPreferences().put(PREFERENCES_KEY_LAF_NAME, laf.className);
+
 			return true;
 			}
 		return false;
+		}
+
+	private void makeTooltipsTranslucent() {
+		try {
+			Color bg = UIManager.getColor("Label.background");
+			Color translucentBG = new Color(bg.getRed(), bg.getGreen(), bg.getBlue(), 0x80);
+			UIManager.put("ToolTip.background", translucentBG);
+			}
+		catch (Exception e) {
+			e.printStackTrace();
+			}
+
+		// Although ToolTip.background is defined to be half transparent, first tooltips shown are opaque,
+		// because the JPanels underneith are opaque for some reason.
+		// In addition, tooltips that are partially outside their parent window aren't transparent either,
+		// because they are shown on top an opaque heavyweight window.
+		// The following hack solves both issues.
+		PopupFactory.setSharedInstance(new PopupFactory() {
+			@Override
+			public Popup getPopup(Component owner, Component contents, int x, int y) throws IllegalArgumentException {
+				Popup p = super.getPopup(owner, contents, x, y);
+				if (contents instanceof JToolTip && owner instanceof JVisualization) {
+					boolean found = false;
+					Class<?> clazz = p.getClass();
+					while (clazz != null && !found) {
+						try {
+							Method m = clazz.getDeclaredMethod("getComponent", null);
+							m.setAccessible(true);
+							Component c = (Component)m.invoke(p, null);
+							if (c instanceof JWindow)
+								((JWindow)c).setOpacity(0.7f);
+							else if (c instanceof JPanel)
+								((JPanel)c).setOpaque(false);
+							found = true;
+							}
+						catch (Exception e) {}
+						clazz = clazz.getSuperclass();
+						}
+					}
+
+				return p;
+				}
+			});
 		}
 
 	public static Preferences getPreferences() {

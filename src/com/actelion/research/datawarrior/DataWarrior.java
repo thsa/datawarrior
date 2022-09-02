@@ -572,9 +572,9 @@ public abstract class DataWarrior implements WindowFocusListener {
 					Class<?> clazz = p.getClass();
 					while (clazz != null && !found) {
 						try {
-							Method m = clazz.getDeclaredMethod("getComponent", null);
+							Method m = clazz.getDeclaredMethod("getComponent");
 							m.setAccessible(true);
-							Component c = (Component)m.invoke(p, null);
+							Component c = (Component)m.invoke(p);
 							if (c instanceof JWindow)
 								((JWindow)c).setOpacity(0.7f);
 							else if (c instanceof JPanel)

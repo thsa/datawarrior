@@ -551,7 +551,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 	private void makeTooltipsTranslucent() {
 		try {
 			Color bg = UIManager.getColor("Label.background");
-			Color translucentBG = new Color(bg.getRed(), bg.getGreen(), bg.getBlue(), 0x80);
+			Color translucentBG = new Color(bg.getRed(), bg.getGreen(), bg.getBlue(), Platform.isLinux() ? 0x70 : 0xA8 );
 			UIManager.put("ToolTip.background", translucentBG);
 			}
 		catch (Exception e) {

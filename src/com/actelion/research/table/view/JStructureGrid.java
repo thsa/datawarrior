@@ -100,7 +100,7 @@ public class JStructureGrid extends JScrollPane
 		mFocusList = cFocusNone;
 		mFocusValid = true;
 		mIsShowColumnNameInTable = true;
-		mStructureDrawMode = Depictor.cDModeSuppressChiralText;
+		mStructureDrawMode = AbstractDepictor.cDModeSuppressChiralText;
 
 		addKeyListener(new KeyAdapter() {
 			@Override

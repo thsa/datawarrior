@@ -90,20 +90,50 @@ software of Daylight Inc. uses for calculating chemical similarities.</p>
 
 <h3><a name="SphereFp"></a>The <span class="keyword">SphereFp</span> Descriptor</h3>
 <p>The <span class="keyword">SphereFp descriptor</span> encodes circular spheres of atoms and bonds
-into a hashed binary fingerprint of 512 bits. From every atom in the molecule, <span class="keyword">DataWarrior</span>
-constructs fragments of increasing size by including n layers of atom neighbours (n=1 to 5).
-These circular fragments are canonicalized considering aromaticity, but neglecting stereo configurations.
-From the canonical representation a hash code is generated, which is used to set the respective bit of the fingerprint.
-In the literature spherical fingerprints are sometimes referred to as HOSE codes and are in use for spectroscopy prediction.</p>
+into a hashed binary fingerprint of 1024 bits. To construct the fingerprint <span class="keyword">DataWarrior</span>
+does the following for every atom in the molecule: The atom itself is considered and taken as a first fragment.
+Then, for four times all direct neighbour atoms are added to the fragment, which every time grows the previous fragment.
+This way five substructure fragments with increasing atom layer count (n=1 to 5) are built.
+
+<p align="center"><img src="help/img/similarity/cfpSpheres.jpeg" width="450" height="236"></p>
+<p align="center"><i>Spheres show-cased for two atoms, when building the SphereFp descriptor.</i></p>
+
+<p>These circular fragments are then converted into a canonical representation that retains the aromaticity information
+even if rings are broken. Then, the canonical representation is used to reproducibly generate a hash code, which is
+a number between 0 and 1023. Then the respective bit in the fingerprint is set to true.</p>
+
+<p align="center"><img src="help/img/similarity/cfpFragments.jpeg" width="600" height="297"></p>
+<p align="center"><i>Fragments built from the two example atoms.</i></p>
+
+<p>Circular (i.e. spherical) fingerprints are probably more often used for the calculation of molecular similarities
+than any other kind of descriptor, because similarities obtained from circular fingerprints feel intuitive for chemists.
+Therefore, they are often used for structure-activity- and activity-cliff-analysis.
+They even serve for virtual screening and machine-learning, if structural similarity is an issue and scaffold hopping
+is not desired, which would rather need a pharmacophore or/and 3D-shape similarity or
+computationally more demanding methods to predict ligand-protein interactions. In the literature circular fingerprints
+are sometimes referred to as HOSE codes and are in use for spectroscopy prediction. Circular fingerprints cannot be used,
+however, in the pre-screening step of a substructure search.</p>
+
+<p>Other well known examples for spherical descriptors are Morgan-fingerprints and ECFP-descriptors.</p>
 <br>
 
 <h3><a name="SkelSpheres"></a>The <span class="keyword">SkelSpheres</span> Descriptor</h3>
-<p>When a more subtle structural similarity is needed, the <span class="keyword">SkeletonSpheres descriptor</span>
-should be used. It is related to the <span class="keyword">SphereFp</span>, but also considers stereochemistry,
-counts duplicate fragments, in addition encodes hetero-atom depleted skeletons, and has twice the resolution leading to less
-hash collisions. It is the most accurate descriptor for calculating similarities of chemical graphs. On the flipside
-it needs more memory and similarity calculations take slightly longer.
-Technically, it is a byte vector with a resolution of 1024 bins.</p>
+<p>The <span class="keyword">SkeletonSpheres descriptor</span> is the big brother of the <span class="keyword">SphereFp</span>.
+While it is based on the same principle, it differs in two ways, which makes it the preferred descriptor whenever
+structural similarity is needed. The first difference is a simple one: The fingerprint is not binary, it actually counts
+how many times a paricular hash value occurrs. The second difference is that every created circular fragment is used twice,
+once to increment the fingerprint's count value as in the <span class="keyword">SphereFp</span>.
+Then, every non-carbon atom of the circular fragment is converted into a carbon atom creating carbon-only skeleton fragment.
+As the original fragment, the skeleton fragment is converted into a hash code through its canonical representation.
+The hash code is also used to increase the count of the respective descriptor bin.</p>
+<p>Both measures together cause a more robust and intuitive similarity value, because half of the fragments don't change,
+if just a single atom of the molecule is replaced, while other descriptors usually underestimate the similarity of two
+molecules that differ at one atom only.</p>
+
+<p>The <span class="keyword">SkeletonSpheres</span> descriptor is the most accurate descriptor for the purpose of
+calculating similarities of chemical graphs. It considers aromaticity and stereo features. On the flipside it needs
+more memory and similarity calculations take slightly longer. With less than a million of compounds, this is rarely an issue.
+Technically, it is a byte array or vector with a resolution of 1024 bins.</p>
 <br>
 
 <h3><a name="OrgFunctions"></a>The <span class="keyword">OrgFunctions</span> Descriptor</h3>

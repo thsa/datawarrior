@@ -23,7 +23,9 @@ import java.net.URL;
 public class DELogWriter {
 	private static String sLogURL = null;
 
-	// Within the Actelion network log some database queries 
+	// Idorsia's specific version of DataWarrior writes some log entries, if it is inside the Idorsia network:
+	// running database queries, running macros, opening files...
+	// In the public DataWarrior version no logs are written, because sLogURL is NULL!!!
 	public static void setURL(String url) {
 		sLogURL = url;
 		}

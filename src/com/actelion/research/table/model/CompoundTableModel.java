@@ -3343,9 +3343,9 @@ public class CompoundTableModel extends AbstractTableModel
 											reactantSearcher.setMolecule(reactant, reactantFFP);
 											inReactantCount = reactantSearcher.findFragmentInMoleculeWithoutIndex(SSSearcher.cCountModeOverlapping);
 											if (inReactantCount != 0 && isMapped) {
-												inProductCount -= countEquivalentMatches(product, productSearcher.getMatchList());
+												inProductCount -= countEquivalentMatches(product, productSearcher.getGraphMatcher().getMatchList());
 												if (inProductCount <= inReactantCount)
-													inReactantCount -= countEquivalentMatches(reactant, reactantSearcher.getMatchList());
+													inReactantCount -= countEquivalentMatches(reactant, reactantSearcher.getGraphMatcher().getMatchList());
 												}
 											}
 										// TODO check, whether we also have to take into account in catalyst occurences

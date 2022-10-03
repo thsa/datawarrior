@@ -302,10 +302,12 @@ try {   // TODO remove
 				searcher.setMolecule(idcode, (long[])getTableModel().getTotalRecord(row).getData(fingerprintColumn));
 				int matchCount = searcher.findFragmentInMolecule(SSSearcher.cCountModeRigorous, SSSearcher.cDefaultMatchMode);
 				if (matchCount > 0) {
+					int match = 0;  // currently consider just the first match. Later do that more prudently
+
 					if (matchCount > 1)
 						mMultipleMatches++;
 
-					int[] scaffoldToMolAtom = searcher.getMatchList().get(0);
+					int[] scaffoldToMolAtom = searcher.getGraphMatcher().getMatchList().get(match);
 
 					byte[] coords = (byte[])getTableModel().getTotalRecord(row).getData(coordinateColumn);
 					StereoMolecule mol = new IDCodeParser(true).getCompactMolecule(idcode, coords);
@@ -320,6 +322,15 @@ try {   // TODO remove
 					for (int i=0; i<scaffoldToMolAtom.length; i++)
 						if (scaffoldToMolAtom[i] != -1)
 							isCoreAtom[scaffoldToMolAtom[i]] = true;
+
+					boolean[] isBridgeAtom = searcher.getGraphMatcher().getMatchingBridgeBondAtoms(match);
+					if (isBridgeAtom != null)
+						for (int i=0; i<isBridgeAtom.length; i++)
+							if (isBridgeAtom[i])
+								isCoreAtom[i] = true;
+
+// TODO for symmetrical matches choose the most reasonable one (ideally by minimizing different substitution patterns AND! kinds of substituents)
+// TODO for multiple scaffolds matched by one substructure use consistent numbering, if possible and compatible with R-groups in bridge bonds
 
 					String extendedCoreIDCode = null;
 					int[] coreAtomParity = null;

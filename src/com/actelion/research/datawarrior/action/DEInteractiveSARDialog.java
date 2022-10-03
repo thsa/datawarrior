@@ -1163,7 +1163,7 @@ class MoleculeContext {
         int bestMatchValue = Integer.MAX_VALUE;
         for (int i=0; i<matchCount; i++) {
             ExtendedMolecule mol = mSearcher.getMolecule();
-            int[] matchingAtom = mSearcher.getMatchList().get(i);
+            int[] matchingAtom = mSearcher.getGraphMatcher().getMatchList().get(i);
 
             boolean constraintsViolated = false;
             for (BBConnection c:connectionList) {

@@ -821,15 +821,15 @@ structures, because the underlying data structure is just a sequence of characte
 
 <p><span class="keyword">DataWarrior</span> uses a different principle for the generation of
 random structures: Starting from a methane molecule it performs many random mutations on the molecule
-until the its size reaches a desired molecular weight range. These mutations include
-atom additions, atom insertions, ring closures, border order changes, atom changes, atom removal,
-and similar small modifications of the molecular structure. The algorithms favors mutations,
+until its size reaches a desired molecular weight range. These mutations include
+atom additions, atom insertions, ring closures, bond order changes, atom changes, atom removal,
+and similar small modifications of the molecular structure. The algorithm favors mutations,
 which cause drug-like (or natural-product-like) sub-structures. It also prefers changes that
 let the molecule grow until its non-hydrogen atom count reaches a desired range.</p>
 
-<p>Optionally one may define a structure to start with. In addition one may select a part of the
+<p>Optionally one may define a structure to start with. In addition, one may select a part of the
 starting structure, which would then be protected against mutations. This selected substructure
-would then be retained during molecule growth and, thus, would exists as substructure within every
+would then be retained during molecule growth and, thus, would be part of every
 generated random molecule. To open the dialog for defining the random molecule generation process
 <span class="menu">Generate Random Molecules...</span> from the <span class="menu">Chemistry</span>
 menu.</p>
@@ -846,8 +846,8 @@ to introduce nitrogen or oxygen atoms, respectively.</p>
 <p><b>Seed compound:</b> This defines that starting molecule for the algorithm. If you intend
 to generate molecules with a certain substructure, then you need to draw a start molecule that
 contains this substructure and at least one more atom. Then use the lasso tool to select the
-substructure, which causes the algorithm to protect its atoms and bonds from being mutated.
-All generated molecules will then contains the selected substructure.</p>
+substructure, which causes the algorithm to protect selected atoms and bonds from being mutated.
+All generated molecules will then contain the selected substructure.</p>
 
 <p><b>Molecule count:</b> The number of molecules being generated.</p>
 
@@ -905,8 +905,8 @@ after pressing the <span class="menu">Choose</span> button.</p>
 
 <p><i>Structure-Activity Relationship (SAR)</i> Tables are frequently used to
 correlate biological properties with the substitution patterns of compound sets
-that share one or a few chemical scaffolds and often have been synthesised
-in a combinatorial fashion. If a dataset contains chemical structures,
+that share the same or a few similar scaffolds. Often such compounds sets have been
+synthesised in a combinatorial fashion. If a dataset contains chemical structures,
 <i>DataWarrior</i> may decompose the structures by analysing scaffold and substituents
 and putting them into new dedicated columns.
 This can be done either fully automatic or a little more flexible with some user guidance.
@@ -922,20 +922,26 @@ this option that ring system of the molecule, which is closest to the topologica
 of the molecule, is taken as the scaffold.</li>
 <li><span class="menu">Murcko scaffold</span>: The <i>Murcko scaffold</i> of a molecule
 is determined by locating all ring systems of the molecule and all direct connections
-between them. Everything else is considered as substituents.</li>
+between them. Everything else is considered a substituent.</li>
 </ul>
-Compounds without any rings are not subjected to the analysis and their cells
-in the new columns remain empty.</p>
+Compounds without any rings are not subjected to the analysis and in the new columns
+their cells remain empty.</p>
 
-<p>If you need more flexibility in determining, which sub-structures should be considered
-the central scaffold, then you should select <span class="menu">Core based SAR-Analysis...</span>
-from the <span class="menu">Chemistry</span> menu. The dialog lets you define a sub-structure
-that may include query features. By using atom wild cards or variable bond bridges,
-one drawn sub-structure may detect multiple different scaffolds at once. Nevertheless,
-often the <span class="menu">Core based SAR-Analysis...</span> function needs to be
-used multiple times to process all scaffolds in the dataset.</p>
+<p>If you want more flexibility in defining, which sub-structures should be considered
+a common scaffold, then you should select <span class="menu">Core based SAR-Analysis...</span>
+from the <span class="menu">Chemistry</span> menu. The dialog lets you draw a scaffold as
+sub-structure which may or may not include atom or bond query features. By, for instance,
+using atom wild cards or variable bond bridges, a drawn sub-structure may detect multiple
+similar, but still different scaffolds at once.
+<!--Is not yet true:    Defining a sub-structure to cover multiple
+structurally scaffolds in one run has the advantage that R-group positioning and numbering
+will be consistent for all scaffolds of that run.
+-->
+If your data set contains multiple substancially different scaffold, then you need to run
+the <span class="menu">Core based SAR-Analysis...</span> task multiple times until all
+distinct scaffolds have been processed.</p>
 
-<p>Whatever mode you use to generate a <span class="keyword">SAR-Table</span>,
+<p>Whatever mode you use to generating a <span class="keyword">SAR-Table</span>,
 for every different scaffold, the entire dataset is processed to find those scaffold atoms,
 which have variations concerning their substituents they carry. For all of these, a
 generic R-group is attached to the scaffold. If a scaffold atom is always carrying the

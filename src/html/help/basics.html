@@ -22,7 +22,7 @@ as easily as with numerical values. Data can be filtered on structural motives,
 views are chemistry aware, molecule properties can be predicted from chemical structures, and
 specialized cheminformatics methods explore the relationship between chemical structure
 and measured properties.
-<span class="keyword">DataWarrior</span> supports multiple files types and allows
+<span class="keyword">DataWarrior</span> supports multiple file types and allows
 merging data from files with data from the clipboard or from databases.
 <span class="keyword">DataWarrior</span> is freely available for Linux, Macintosh and Windows
 and its complete source code is <a href="https://github.com/thsa/datawarrior">accessible</a> under the
@@ -56,11 +56,11 @@ of the row or marker underneath the mouse pointer.</p>
 the data contained in a <span class="keyword">DataWarrior</span> file.
 The data always consists of a table with its rows containing objects of any kind.
 In the context of drug discovery these are often molecules or chemical reactions,
-but in fact rows may contain anything as cocktails, animals, or flying objects.
+but in fact rows may contain anything like cocktails, animals, or flying objects.
 The columns of the table always contain object properties. These may be a name,
 an identifying number, the objects size, weight, color, taste, chemical structure,
-or a measured value. <span class="keyword">DataWarrior</span>
-automatically analyzes the content of any row to know whether it contains numerical values,
+or measured values. <span class="keyword">DataWarrior</span>
+automatically analyzes the content of any column to know whether it contains numerical values,
 categories, date value, chemical structures, or just text information.</p>
 <p>Within the <span class="keyword">Table View</span> rows can be sorted, data can be modified,
 and display options for individual columns can be changed. The <span class="keyword">Table View</span>
@@ -115,8 +115,8 @@ Filters are used to hide rows from all main views to temporarily focus on subset
 Various filter kinds are available, but they all share certain characteristics.
 Usually, all filters apply to all views, which means that if a row is hidden by one or more
 filters, then it is not visible in any view. Views, however, can be configured to ignore filters.
-Usually, a filter is associated with one data column. The kind of data determines,
-which filter types can be used for a column.
+Usually, a filter is associated with one data column. The type of data within a column determines,
+which filter types can be used for that column.
 The effect of a filter can be inverted by selecting its <span class="menu">Invert</span> button.
 A <span class="menu">Disable</span> button allows to temporarily switch off the filtering effect
 without removing the filter's settings. Some filters possess animation options that can be set

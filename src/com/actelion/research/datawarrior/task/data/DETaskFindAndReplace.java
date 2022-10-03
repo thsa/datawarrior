@@ -713,7 +713,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			else {
 				searcherWithIndex.setMolecule(mol, (long[])mTableModel.getTotalRecord(row).getData(fragFpColumn));
 				if (searcherWithIndex.findFragmentInMolecule() != 0)
-					matchList = searcherWithIndex.getMatchList();
+					matchList = searcherWithIndex.getGraphMatcher().getMatchList();
 				}
 			if (matchList != null) {
 				boolean[] atomUsed = new boolean[mol.getAllAtoms()];

@@ -2256,7 +2256,10 @@ public abstract class JVisualization extends JComponent
 			 || mPreferredChartType == cChartTypePies) {
 				for (int axis=0; axis<mDimensions; axis++) {
 					if (!qualifiesAsChartCategory(axis)) {
-						mWarningMessage = "A " + preferred + " is not shown, because an axis is assigned to a column that does not contain categories!";
+						if (mTableModel.isColumnTypeCategory(mAxisIndex[axis]))
+							mWarningMessage = "A " + preferred + " is not shown, because an axis is assigned to a column containing too many categories!";
+						else
+							mWarningMessage = "A " + preferred + " is not shown, because an axis is assigned to a column that does not contain categories!";
 						return;
 						}
 					}

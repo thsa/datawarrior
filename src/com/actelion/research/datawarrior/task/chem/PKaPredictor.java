@@ -26,6 +26,8 @@ import chemaxon.marvin.plugin.PluginException;
 import com.actelion.research.chem.MolfileCreator;
 import com.actelion.research.chem.StereoMolecule;
 
+import java.util.Arrays;
+
 public class PKaPredictor {
 	private pKaPlugin plugin;
 
@@ -58,9 +60,13 @@ public class PKaPredictor {
 			plugin.getMacropKaValues(pKaPlugin.ACIDIC, acidicpKa, acidicIndexes);
 		}
 		catch (PluginException pe) {
+			Arrays.fill(basicIndexes, -1);
+			Arrays.fill(acidicIndexes, -1);
 			System.out.println("PluginException:"+pe);
 		}
-		catch (Exception e) {
+		catch (Throwable e) {
+			Arrays.fill(basicIndexes, -1);
+			Arrays.fill(acidicIndexes, -1);
 			System.out.println("Unexpected ChemAxon Exception:"+e);
 		}
 	}
@@ -75,9 +81,11 @@ public class PKaPredictor {
 			plugin.getMacropKaValues(pKaPlugin.BASIC, basicpKa, basicIndexes);
 		}
 		catch (PluginException pe) {
+			Arrays.fill(basicpKa, Double.NaN);
 			System.out.println("PluginException:"+pe);
 		}
-		catch (Exception e) {
+		catch (Throwable e) {
+			Arrays.fill(basicpKa, Double.NaN);
 			System.out.println("Unexpected ChemAxon Exception:"+e);
 		}
 
@@ -93,9 +101,11 @@ public class PKaPredictor {
 			plugin.getMacropKaValues(pKaPlugin.ACIDIC, acidicpKa, acidicIndexes);
 		}
 		catch (PluginException pe) {
+			Arrays.fill(acidicpKa, Double.NaN);
 			System.out.println("PluginException:"+pe);
 		}
-		catch (Exception e) {
+		catch (Throwable e) {
+			Arrays.fill(acidicpKa, Double.NaN);
 			System.out.println("Unexpected ChemAxon Exception:"+e);
 		}
 

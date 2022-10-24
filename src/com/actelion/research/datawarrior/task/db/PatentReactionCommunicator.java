@@ -7,6 +7,7 @@ import java.util.TreeMap;
 
 public class PatentReactionCommunicator extends ClientCommunicator implements PatentReactionServerConstants {
 	public static final String SERVER_URL = "https://rxns.openmolecules.org";
+//	public static final String SERVER_URL = "http://localhost:8088";
 
 	private static String sPrimaryURL = SERVER_URL;
 	private static String sSecondaryURL = null;

@@ -756,7 +756,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		if (mLargestFragmentOnly) {
 			mol.stripSmallFragments();
 			if (mNeutralizeLargestFragment)
-				new MoleculeNeutralizer().neutralizeChargedMolecule(mol);
+				MoleculeNeutralizer.neutralizeChargedMolecule(mol);
 			}
 
 		// don't create any protonation states

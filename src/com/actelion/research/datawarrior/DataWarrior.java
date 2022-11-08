@@ -40,8 +40,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.security.CodeSource;
 import java.util.ArrayList;
@@ -62,6 +61,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 	public static final String[] RESOURCE_DIR = { "Reference", "Example", "Tutorial" };
 	public static final String MACRO_DIR = "Macro";
 	public static final String PLUGIN_DIR = "Plugin";
+	public static final String QUERY_REACTION_TEMPLATE_FILE = "template/reactionqueries.txt";
 
 	private boolean mIsCapkaAvailable;
 
@@ -270,6 +270,47 @@ public abstract class DataWarrior implements WindowFocusListener {
 		catch (Throwable t) {
 			t.printStackTrace();
 			}
+
+		initializeCustomTemplates();
+		}
+
+	private void initializeCustomTemplates() {
+		File rtf = resolveResourcePath(QUERY_REACTION_TEMPLATE_FILE);
+		if (rtf != null) {
+			try {
+				ArrayList<String[]> list = new ArrayList<>();
+				BufferedReader reader = new BufferedReader(new FileReader(rtf));
+				String[] keyAndValue = parseTemplateLine(reader);
+				if (keyAndValue != null
+				 && keyAndValue[0].equals(GenericEditorArea.TEMPLATE_TYPE_KEY)
+				 && keyAndValue[1].equals(GenericEditorArea.TEMPLATE_TYPE_REACTION_QUERIES)) {
+					keyAndValue = parseTemplateLine(reader);
+					while (keyAndValue != null) {
+						list.add(keyAndValue);
+						keyAndValue = parseTemplateLine(reader);
+					}
+				}
+				reader.close();
+				if (list.size() != 0)
+					GenericEditorArea.setReactionQueryTemplates(list.toArray(new String[0][]));
+			}
+			catch (IOException ioe) {}
+			}
+		}
+
+	private String[] parseTemplateLine(BufferedReader reader) throws IOException {
+		String line = reader.readLine();
+		if (line == null)
+			return null;
+
+		int index = line.indexOf(':');
+		if (index == -1)
+			return null;
+
+		String[] template = new String[2];
+		template[0] = line.substring(0, index).trim();
+		template[1] = line.substring(index+1).trim();
+		return template;
 		}
 
 	public void checkVersion(boolean showUpToDateMessage) {

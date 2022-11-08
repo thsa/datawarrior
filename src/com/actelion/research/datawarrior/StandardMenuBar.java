@@ -1505,7 +1505,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuFileOpenMDLReactions)
 				new DETaskOpenMDLReactionDatabase(mApplication).defineAndRun();
 			else if (source == jMenuFileMerge)
-				new DETaskMergeFile(mParentFrame, true).defineAndRun();
+				new DETaskMergeFile(mParentFrame).defineAndRun();
 			else if (source == jMenuFileAppend) {
 				if (mParentFrame.getTableModel().getTotalRowCount() == 0)
 					JOptionPane.showMessageDialog(mParentFrame, "You cannot append a file to an empty table. Use 'Open File...' instead.");

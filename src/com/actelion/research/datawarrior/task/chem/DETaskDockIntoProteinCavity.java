@@ -233,7 +233,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 	private void handleMolecule(StereoMolecule mol) {
 		mol.stripSmallFragments();
 		if (mProtonateFragment) {
-			new MoleculeNeutralizer().neutralizeChargedMolecule(mol);
+			MoleculeNeutralizer.neutralizeChargedMolecule(mol);
 			assignLikelyProtonationStates(mol);
 			}
 

@@ -179,7 +179,7 @@ public class DETaskAddLargestFragment extends DETaskAbstractFromStructure {
 	private void handleMolecule(StereoMolecule mol) {
 		mol.stripSmallFragments();
 		if (mNeutralizeFragment)
-			new MoleculeNeutralizer().neutralizeChargedMolecule(mol);
+			MoleculeNeutralizer.neutralizeChargedMolecule(mol);
 		if (mAsSubstructure)
 			mol.setFragment(true);
 		}

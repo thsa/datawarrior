@@ -41,7 +41,7 @@ public class DETaskMergeFile extends AbstractTask implements TaskConstantsMergeF
 	private UIDelegateMergeFile	mUIDelegate;
 	private CompoundTableLoader	mLoader;
 
-	public DETaskMergeFile(DEFrame parent, boolean isInteractive) {
+	public DETaskMergeFile(DEFrame parent) {
 		super(parent, true);
 		// All tasks that use CompoundTableLoader need to run in an own thread if they run in a macro
 		// to prevent the CompoundTableLoader to run processData() in a new thread without waiting

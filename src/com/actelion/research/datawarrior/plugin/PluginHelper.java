@@ -237,7 +237,8 @@ public class PluginHelper implements IPluginHelper {
 
 	@Override
 	public void setRuntimeProperties(String template, boolean clearFirst) {
-		DERuntimeProperties rtp = new DERuntimeProperties(mNewFrame.getMainFrame());
+		DEFrame frame = mNewFrame != null ? mNewFrame : mApplication.getActiveFrame();
+		DERuntimeProperties rtp = new DERuntimeProperties(frame.getMainFrame());
 		try {
 			rtp.read(new BufferedReader(new StringReader(template)));
 			rtp.apply(clearFirst);

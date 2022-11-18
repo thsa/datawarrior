@@ -18,21 +18,17 @@
 
 package com.actelion.research.datawarrior.task.data;
 
-import info.clearthought.layout.TableLayout;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Properties;
-
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableModel;
+import info.clearthought.layout.TableLayout;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Calendar;
+import java.util.Properties;
 
 
 public class DETaskSetValueRange extends ConfigurableTask implements ActionListener {
@@ -59,8 +55,8 @@ public class DETaskSetValueRange extends ConfigurableTask implements ActionListe
 			if (column != -1) {
 				String min = mTableModel.getColumnProperty(column, CompoundTableModel.cColumnPropertyDataMin);
 				String max = mTableModel.getColumnProperty(column, CompoundTableModel.cColumnPropertyDataMax);
-				mTextFieldMin.setText(min == null ? "" : min);
-				mTextFieldMax.setText(max == null ? "" : max);
+				mTextFieldMin.setText(min == null ? "" : millisToDDMMYYYY(min));
+				mTextFieldMax.setText(max == null ? "" : millisToDDMMYYYY(max));
 				}
 			return;
 			}
@@ -84,17 +80,20 @@ public class DETaskSetValueRange extends ConfigurableTask implements ActionListe
 	@Override
 	public JComponent createDialogContent() {
 		JPanel mp = new JPanel();
-		double[][] size = { {8, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 8, TableLayout.FILL, 8},
-							{8, TableLayout.PREFERRED, 16, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 8} };
+		int gap = HiDPIHelper.scale(8);
+		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.FILL, gap},
+							{gap, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap/2,
+									TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		mp.setLayout(new TableLayout(size));
 
 		mp.add(new JLabel("Data column:"), "1,1");
 		mp.add(new JLabel("Minimum value:"), "1,3");
 		mp.add(new JLabel("Maximum value:"), "1,5");
+		mp.add(new JLabel("(use 'ddmmyyyy' for date values)"), "1,7,5,7");
 
 		mComboBoxColumn = new JComboBox();
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
-			if (mTableModel.isColumnTypeDouble(column) && !mTableModel.isColumnTypeDate(column))
+			if (mTableModel.isColumnTypeDouble(column))
 				mComboBoxColumn.addItem(mTableModel.getColumnTitle(column));
 		if (mDefaultColumn == -1) {
 			mComboBoxColumn.setEditable(true);
@@ -155,8 +154,9 @@ public class DETaskSetValueRange extends ConfigurableTask implements ActionListe
 
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
+    	int column = -1;
 		if (isLive) {
-			int column = mTableModel.findColumn(configuration.getProperty(PROPERTY_COLUMN, ""));
+			column = mTableModel.findColumn(configuration.getProperty(PROPERTY_COLUMN, ""));
 			if (column == -1) {
 				showErrorMessage("Column '"+configuration.getProperty(PROPERTY_COLUMN)+"' not found.");
 		        return false;
@@ -167,24 +167,38 @@ public class DETaskSetValueRange extends ConfigurableTask implements ActionListe
 	    String maxString = configuration.getProperty(PROPERTY_MAXIMUM);
 	    float min = Float.NaN;
 	    float max = Float.NaN;
-	    if (minString != null) {
-		    try {
-		        min = Float.parseFloat(minString);
-		    	}
-		    catch (NumberFormatException nfe) {
-				showErrorMessage("Invalid minimum value.");
-		        return false;
-		    	}
-	    	}
-	    if (maxString != null) {
-		    try {
-		        max = Float.parseFloat(maxString);
-		    	}
-		    catch (NumberFormatException nfe) {
-				showErrorMessage("Invalid maximum value.");
-		        return false;
-		    	}
-	    	}
+
+	    if (isLive && mTableModel.isColumnTypeDate(column)) {
+	    	if (minString != null && interpret8DigitDate(minString) == null) {
+			    showErrorMessage("Invalid minimum date.");
+			    return false;
+			    }
+		    if (maxString != null && interpret8DigitDate(maxString) == null) {
+			    showErrorMessage("Invalid maximum date.");
+			    return false;
+			    }
+	        }
+	    else {
+		    if (minString != null) {
+			    try {
+			        min = Float.parseFloat(minString);
+			        }
+			    catch (NumberFormatException nfe) {
+					showErrorMessage("Invalid minimum value.");
+			        return false;
+			        }
+		        }
+		    if (maxString != null) {
+			    try {
+			        max = Float.parseFloat(maxString);
+			        }
+			    catch (NumberFormatException nfe) {
+					showErrorMessage("Invalid maximum value.");
+			        return false;
+			        }
+		        }
+		    }
+
 	    if (minString != null && maxString != null && (min >= max)) {
 			showErrorMessage("Minimum value is not smaller than maximum.");
 	        return false;
@@ -192,12 +206,59 @@ public class DETaskSetValueRange extends ConfigurableTask implements ActionListe
 		return true;
 		}
 
+	private String millisToDDMMYYYY(String millisString) {
+    	long millis = 0;
+    	try { millis = Long.parseLong(millisString); } catch (NumberFormatException nfe) {}
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(millis);
+		StringBuilder date = new StringBuilder();
+		int day = calendar.get(Calendar.DAY_OF_MONTH);
+		int month = calendar.get(Calendar.MONTH)+1;
+		int year = calendar.get(Calendar.YEAR);
+		if (day < 10)
+			date.append("0");
+		date.append(day);
+		if (month < 10)
+			date.append("0");
+		date.append(month);
+		if (year < 10)
+			date.append("000");
+		else if (year < 100)
+			date.append("00");
+		else if (year < 1000)
+			date.append("0");
+		date.append(year);
+		return date.toString();
+		}
+
+	private Long interpret8DigitDate(String dateString) {
+    	if (dateString != null && dateString.length() == 8) {
+	        try {
+		        int day = Integer.parseInt(dateString.substring(0, 2));
+		        int month = Integer.parseInt(dateString.substring(2, 4));
+		        int year = Integer.parseInt(dateString.substring(4));
+		        if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 0) {
+			        Calendar calendar = Calendar.getInstance();
+			        calendar.clear();
+			        calendar.set(year, month-1, day, 12, 0, 0);
+			        return calendar.getTimeInMillis();
+			        }
+	            }
+	        catch (NumberFormatException nfe) {}
+		    }
+
+	    return null;
+		}
+
 	@Override
 	public void runTask(Properties configuration) {
 		int column = mTableModel.findColumn(configuration.getProperty(PROPERTY_COLUMN, ""));
 	    String minString = configuration.getProperty(PROPERTY_MINIMUM);
 	    String maxString = configuration.getProperty(PROPERTY_MAXIMUM);
-		mTableModel.setValueRange(column, minString, maxString);
+	    if (mTableModel.isColumnTypeDate(column))
+		    mTableModel.setValueRange(column, interpret8DigitDate(minString), interpret8DigitDate(maxString));
+    	else
+			mTableModel.setValueRange(column, minString, maxString);
 		}
 
 	@Override

@@ -1379,8 +1379,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					item.addItemListener(this);
 					jMenuDataViewLogarithmic.add(item);
 					}
-				if (mTableModel.isColumnTypeDouble(column)
-				 && !mTableModel.isColumnTypeDate(column)) {
+				if (mTableModel.isColumnTypeDouble(column)) {
 					addMenuItem(jMenuDataSetRange, mTableModel.getColumnTitle(column)+"...", SET_RANGE+mTableModel.getColumnTitle(column));
 					}
 				} jMenuDataViewLogarithmic.updateUI();

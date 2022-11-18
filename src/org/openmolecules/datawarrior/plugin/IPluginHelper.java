@@ -193,6 +193,15 @@ public interface IPluginHelper {
 	void runMacro(String macro);
 
 	/**
+	 * Applies the given runtime properties in text format.
+	 * The template needs to be a multi line String as it appears in a dwat or dwar file
+	 * starting with a '<column properties>' line and ending with a '</column properties>' line.
+	 * @param template
+	 * @param clearFirst if true, then all all views and filters are removed before applying the template
+	 */
+	void setRuntimeProperties(String template, boolean clearFirst);
+
+	/**
 	 * If errors happen during the execution of the task (e.g. database is down)
 	 * then call this method to show a user interpretable error to the user and return
 	 * from the task's run() method.

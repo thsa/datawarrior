@@ -236,6 +236,16 @@ public class PluginHelper implements IPluginHelper {
 		}
 
 	@Override
+	public void setRuntimeProperties(String template, boolean clearFirst) {
+		DERuntimeProperties rtp = new DERuntimeProperties(mNewFrame.getMainFrame());
+		try {
+			rtp.read(new BufferedReader(new StringReader(template)));
+			rtp.apply(clearFirst);
+			}
+		catch (IOException ioe) {}
+		}
+
+	@Override
 	public void setCellData(int column, int row, String value) {
 		if (mProgressController.threadMustDie())
 			return;

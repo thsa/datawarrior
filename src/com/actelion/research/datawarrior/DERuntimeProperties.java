@@ -234,17 +234,22 @@ public class DERuntimeProperties extends RuntimeProperties {
 		mPruningPanel = parentPane.getPruningPanel();
 		}
 
+	@Override
 	public void apply() {
+		apply(true);
+		}
+
+	public void apply(boolean clearAllFirst) {
 		if (size() == 0)
 			return;
 
 		if (SwingUtilities.isEventDispatchThread()) {
-			doApply();
+			applyEDT(clearAllFirst);
 			}
 		else {
 				// if we are not in the event dispatcher thread we need to use invokeAndWait
 			try {
-				SwingUtilities.invokeAndWait(() -> doApply());
+				SwingUtilities.invokeAndWait(() -> applyEDT(clearAllFirst));
 				}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -252,12 +257,14 @@ public class DERuntimeProperties extends RuntimeProperties {
 			}
 		}
 
-	protected void doApply() {
+	private void applyEDT(boolean clearAllFirst) {
 		if (size() == 0)
 			return;
 
-		mMainPane.removeAllViews();
-		mPruningPanel.removeAllFilters();
+		if (clearAllFirst) {
+			mMainPane.removeAllViews();
+			mPruningPanel.removeAllFilters();
+			}
 
 		super.apply();
 

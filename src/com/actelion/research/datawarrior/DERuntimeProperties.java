@@ -287,19 +287,19 @@ public class DERuntimeProperties extends RuntimeProperties {
 			}
 
 		String viewCountString = getProperty(cMainViewCount);
-		if (viewCountString == null) {	// old file with standard views only
-			applyViewProperties(mMainPane.addTableView("Table", "root"), "Table");
-			applyViewProperties(mMainPane.add2DView("2D View", "Table\tcenter"), "2D");
-			applyViewProperties(mMainPane.add3DView("3D View", "Table\tcenter"), "3D");
+		if (viewCountString == null && clearAllFirst) {	// either old file with standard views only, or applying just additional properties (clearAllFirst==false)
+			applyViewProperties(mMainPane.addTableView("Table", "root"), "Table", true);
+			applyViewProperties(mMainPane.add2DView("2D View", "Table\tcenter"), "2D", true);
+			applyViewProperties(mMainPane.add3DView("3D View", "Table\tcenter"), "3D", true);
 			for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 				if (mTableModel.isColumnTypeStructure(column)) {
-					applyViewProperties(mMainPane.addStructureView("Structures", "Table\tcenter", column), "StructureView");
+					applyViewProperties(mMainPane.addStructureView("Structures", "Table\tcenter", column), "StructureView", true);
 					break;
 					}
 				}
 			}
 		else {
-			int viewCount = Integer.parseInt(viewCountString);
+			int viewCount = (viewCountString == null) ? 0 : Integer.parseInt(viewCountString);
 			for (int i=0; i<viewCount; i++) {
 				String viewType = getProperty(cMainViewType+i);
 				String tabName = getProperty(cMainViewName+i);
@@ -335,7 +335,13 @@ public class DERuntimeProperties extends RuntimeProperties {
 							   : viewType.equals(cViewTypeMacroEditor) ? mMainPane.addApplicationView(DEMainPane.VIEW_TYPE_MACRO_EDITOR, tabName, dockInfo)
 							   : null;
 				if (view != null)
-					applyViewProperties(view, "_" + tabName);
+					applyViewProperties(view, "_" + tabName, clearAllFirst);
+				}
+
+			if (!clearAllFirst) {
+				// we may have additional properties to already existing views
+				for (String viewName:mMainPane.getDockableTitles())
+					applyViewProperties(mMainPane.getView(viewName), "_" + viewName, clearAllFirst);
 				}
 
 			for (int i=0; i<viewCount; i++)
@@ -444,7 +450,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 			displayer.setMarkerLabelsBlackOrWhite("true".equals(blackOrWhite));
 		}
 
-	public void applyViewProperties(CompoundTableView view, String viewName) {
+	public void applyViewProperties(CompoundTableView view, String viewName, boolean isNewView) {
 		ViewConfiguration config = getViewConfiguration(viewName.substring(1));
 		if (config != null) {
 			config.apply(view);
@@ -454,7 +460,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 		if (view instanceof DETableView) {
 			DETable table = ((DETableView)view).getTable();
 			String value = getProperty(cTableRowHeight+viewName);
-			table.setRowHeight(HiDPIHelper.scale(value == null ? 16 : Integer.parseInt(value)));
+			if (value != null || isNewView)
+				table.setRowHeight(HiDPIHelper.scale(value == null ? 16 : Integer.parseInt(value)));
 			value = getProperty(cViewFontSize+viewName);
 			if (value != null)
 				table.setFontSize(Integer.parseInt(value));

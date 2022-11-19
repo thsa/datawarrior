@@ -591,7 +591,7 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 			newView = add3DView(newTitle, title+"\tcenter");
 		else if (view instanceof JStructureGrid)
 			newView = addStructureView(newTitle, title+"\tcenter", ((JStructureGrid)view).getStructureColumn());
-		properties.applyViewProperties(newView, "_"+title);
+		properties.applyViewProperties(newView, "_"+title, true);
 
 		if (view instanceof VisualizationPanel2D
 		 || view instanceof VisualizationPanel3D) {

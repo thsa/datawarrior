@@ -1358,112 +1358,52 @@ public class CompoundTableModel extends AbstractTableModel
 	 * even if the column is set to logarithmic mode. In logarithmic mode
 	 * the specified minValue must be larger than 0.0.
 	 * @param column numerical column except for date columns
-	 * @param minValue null or as float interpretable string value
-	 * @param maxValue null or as float interpretable string value
+	 * @param min null or valid CompoundTableRangeBorder
+	 * @param max null or valid CompoundTableRangeBorder
 	 */
-	public void setValueRange(int column, String minValue, String maxValue) {
+	public void setValueRange(int column, CompoundTableRangeBorder min, CompoundTableRangeBorder max) {
 		if ((mColumnInfo[column].type & cColumnTypeDouble) == 0)
 			return; // cannot set range for non-float columns
-		if ((mColumnInfo[column].type & cColumnTypeDate) != 0)
-			return;
 		if (getColumnProperty(column, cColumnPropertyCyclicDataMax) != null)
 			return; // cannot set range for cyclic data
 
-		float min = Float.NaN;
-		float max = Float.NaN;
-	    try {
-	    	if (minValue != null)
-	    		min = Float.parseFloat(minValue);
-	    	if (maxValue != null)
-	    		max = Float.parseFloat(maxValue);
-	    	}
-	    catch (NumberFormatException nfe) {
-	    	return;
-	    	}
-
-		if (!Float.isNaN(min) && mColumnInfo[column].logarithmicViewMode && min <= 0)
-			return;
-
 		boolean changed = false;
 		String oldMinValue = getColumnProperty(column, cColumnPropertyDataMin);
-		if (minValue == null) {
+		if (min == null) {
 			if (oldMinValue != null) {
 				setColumnProperty(column, cColumnPropertyDataMin, null);
 				changed = true;
 				}
 			}
 		else {
-			if (oldMinValue == null || Float.parseFloat(oldMinValue) != min) {
-				setColumnProperty(column, cColumnPropertyDataMin, minValue);
+			if (oldMinValue == null || !oldMinValue.equals(min.getText())) {
+				setColumnProperty(column, cColumnPropertyDataMin, min.getText());
 				changed = true;
 				}
 			}
 		String oldMaxValue = getColumnProperty(column, cColumnPropertyDataMax);
-		if (maxValue == null) {
+		if (max == null) {
 			if (oldMaxValue != null) {
 				setColumnProperty(column, cColumnPropertyDataMax, null);
 				changed = true;
 				}
 			}
 		else {
-			if (oldMaxValue == null || Float.parseFloat(oldMaxValue) != max) {
-				setColumnProperty(column, cColumnPropertyDataMax, maxValue);
+			if (oldMaxValue == null || !oldMaxValue.equals(max.getText())) {
+				setColumnProperty(column, cColumnPropertyDataMax, max.getText());
 				changed = true;
 				}
 			}
 
 		if (changed) {
-			updateMinAndMaxFromDouble(column);
+			if (isColumnTypeDate(column))
+				updateMinAndMaxFromDate(column);
+			else
+				updateMinAndMaxFromDouble(column);
+
 			fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column), null);
 			}
 		}
-
-	/**
-	 * Define the full data range for this date column, which must
-	 * include all values.
-	 * @param column
-	 * @param minDate null or date in millis
-	 * @param maxDate null or date in millis
-	 */
-	public void setValueRange(int column, Long minDate, Long maxDate) {
-		if ((mColumnInfo[column].type & cColumnTypeDate) == 0)
-			return;
-		if (getColumnProperty(column, cColumnPropertyCyclicDataMax) != null)
-			return; // cannot set range for cyclic data
-
-		boolean changed = false;
-		String oldMinDate = getColumnProperty(column, cColumnPropertyDataMin);
-		if (minDate == null) {
-			if (oldMinDate != null) {
-				setColumnProperty(column, cColumnPropertyDataMin, null);
-				changed = true;
-			}
-		}
-		else {
-			if (oldMinDate == null || Long.parseLong(oldMinDate) != minDate) {
-				setColumnProperty(column, cColumnPropertyDataMin, Long.toString(minDate));
-				changed = true;
-			}
-		}
-		String oldMaxDate = getColumnProperty(column, cColumnPropertyDataMax);
-		if (maxDate == null) {
-			if (oldMaxDate != null) {
-				setColumnProperty(column, cColumnPropertyDataMax, null);
-				changed = true;
-			}
-		}
-		else {
-			if (oldMaxDate == null || Long.parseLong(oldMaxDate) != maxDate) {
-				setColumnProperty(column, cColumnPropertyDataMax, Long.toString(maxDate));
-				changed = true;
-			}
-		}
-
-		if (changed) {
-			updateMinAndMaxFromDate(column);
-			fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column), null);
-		}
-	}
 
 	/**
 	 * Sets the explicit column data type. The default is cDataTypeAutomatic.
@@ -5344,25 +5284,16 @@ public class CompoundTableModel extends AbstractTableModel
 				mColumnInfo[column].maxValue = max;
 			}
 		else {
-			if (getColumnProperty(column, cColumnPropertyDataMin) != null) {
-				float min = Float.parseFloat(getColumnProperty(column, cColumnPropertyDataMin));
-				if (!mColumnInfo[column].logarithmicViewMode || min > 0.0f) {
-					if (mColumnInfo[column].logarithmicViewMode)
-						min = (float)Math.log10(min);
-					if (mColumnInfo[column].minValue > min)
-						mColumnInfo[column].minValue = min;
-					}
-				}
-				
-			if (getColumnProperty(column, cColumnPropertyDataMax) != null) {
-				float max = Float.parseFloat(getColumnProperty(column, cColumnPropertyDataMax));
-				if (!mColumnInfo[column].logarithmicViewMode || max > 0.0f) {
-					if (mColumnInfo[column].logarithmicViewMode)
-						max = (float)Math.log10(max);
-					if (mColumnInfo[column].maxValue < max)
-						mColumnInfo[column].maxValue = max;
-					}
-				}
+			float range = mColumnInfo[column].dataMax - mColumnInfo[column].dataMin;
+			String min = getColumnProperty(column, cColumnPropertyDataMin);
+			if (min != null)
+				mColumnInfo[column].minValue = new CompoundTableRangeBorder(min).getBorderDoubleValue(
+						mColumnInfo[column].dataMin, range, true, mColumnInfo[column].logarithmicViewMode);
+
+			String max = getColumnProperty(column, cColumnPropertyDataMax);
+			if (max != null)
+				mColumnInfo[column].maxValue = new CompoundTableRangeBorder(max).getBorderDoubleValue(
+						mColumnInfo[column].dataMax, range, false, mColumnInfo[column].logarithmicViewMode);
 			}
 		}
 
@@ -5373,18 +5304,16 @@ public class CompoundTableModel extends AbstractTableModel
 	private void updateMinAndMaxFromDate(int column) {
 		mColumnInfo[column].minValue = mColumnInfo[column].dataMin - 0.5f;
 		mColumnInfo[column].maxValue = mColumnInfo[column].dataMax + 0.5f;
-		if (getColumnProperty(column, cColumnPropertyDataMin) != null) {
-			long minMillis = Long.parseLong(getColumnProperty(column, cColumnPropertyDataMin));
-			float min = (float)(minMillis/86400000) - 0.5f;
-			if (mColumnInfo[column].minValue > min)
-				mColumnInfo[column].minValue = min;
-			}
-		if (getColumnProperty(column, cColumnPropertyDataMax) != null) {
-			float maxMillis = Long.parseLong(getColumnProperty(column, cColumnPropertyDataMax));
-			float max = (float)(maxMillis/86400000) + 0.5f;
-			if (mColumnInfo[column].maxValue < max)
-				mColumnInfo[column].maxValue = max;
-			}
+		float range = mColumnInfo[column].maxValue - mColumnInfo[column].minValue;
+		String min = getColumnProperty(column, cColumnPropertyDataMin);
+		if (min != null)
+			mColumnInfo[column].minValue = new CompoundTableRangeBorder(min).getBorderDateValue(
+					mColumnInfo[column].minValue, range, true);
+
+		String max = getColumnProperty(column, cColumnPropertyDataMax);
+		if (max != null)
+			mColumnInfo[column].maxValue = new CompoundTableRangeBorder(max).getBorderDateValue(
+					mColumnInfo[column].maxValue, range, false);
 		}
 
 	private void validateColumnNames(String[] columnName) {

@@ -22,12 +22,12 @@ import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.table.model.CompoundTableRangeBorder;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Calendar;
 import java.util.Properties;
 
 
@@ -55,8 +55,8 @@ public class DETaskSetValueRange extends ConfigurableTask implements ActionListe
 			if (column != -1) {
 				String min = mTableModel.getColumnProperty(column, CompoundTableModel.cColumnPropertyDataMin);
 				String max = mTableModel.getColumnProperty(column, CompoundTableModel.cColumnPropertyDataMax);
-				mTextFieldMin.setText(min == null ? "" : millisToDDMMYYYY(min));
-				mTextFieldMax.setText(max == null ? "" : millisToDDMMYYYY(max));
+				mTextFieldMin.setText(min == null ? "" : min);
+				mTextFieldMax.setText(max == null ? "" : max);
 				}
 			return;
 			}
@@ -82,14 +82,17 @@ public class DETaskSetValueRange extends ConfigurableTask implements ActionListe
 		JPanel mp = new JPanel();
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.FILL, gap},
-							{gap, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap/2,
-									TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+							{gap, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED,
+							 gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
 		mp.setLayout(new TableLayout(size));
 
 		mp.add(new JLabel("Data column:"), "1,1");
 		mp.add(new JLabel("Minimum value:"), "1,3");
 		mp.add(new JLabel("Maximum value:"), "1,5");
-		mp.add(new JLabel("(use 'ddmmyyyy' for date values)"), "1,7,5,7");
+		mp.add(new JLabel("Define data range with absolute values"), "1,7,5,7");
+		mp.add(new JLabel("or extend by percentage (trailing '%')"), "1,9,5,9");
+		mp.add(new JLabel("or extend by width value (trailing '#')"), "1,11,5,11");
+		mp.add(new JLabel("(Dates: \"ddmmyyyy\"; \"50#\": 50 days)"), "1,13,5,13");
 
 		mComboBoxColumn = new JComboBox();
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
@@ -165,100 +168,43 @@ public class DETaskSetValueRange extends ConfigurableTask implements ActionListe
 
 	    String minString = configuration.getProperty(PROPERTY_MINIMUM);
 	    String maxString = configuration.getProperty(PROPERTY_MAXIMUM);
-	    float min = Float.NaN;
-	    float max = Float.NaN;
+
+	    CompoundTableRangeBorder min = minString == null ? null : new CompoundTableRangeBorder(minString);
+		CompoundTableRangeBorder max = maxString == null ? null : new CompoundTableRangeBorder(maxString);
 
 	    if (isLive && mTableModel.isColumnTypeDate(column)) {
-	    	if (minString != null && interpret8DigitDate(minString) == null) {
+	    	if (minString != null && !min.isValid(true)) {
 			    showErrorMessage("Invalid minimum date.");
 			    return false;
 			    }
-		    if (maxString != null && interpret8DigitDate(maxString) == null) {
+		    if (maxString != null && !max.isValid(true)) {
 			    showErrorMessage("Invalid maximum date.");
 			    return false;
 			    }
 	        }
 	    else {
-		    if (minString != null) {
-			    try {
-			        min = Float.parseFloat(minString);
-			        }
-			    catch (NumberFormatException nfe) {
-					showErrorMessage("Invalid minimum value.");
-			        return false;
-			        }
+		    if (minString != null && !min.isValid(false)) {
+				showErrorMessage("Invalid minimum value.");
+		        return false;
 		        }
-		    if (maxString != null) {
-			    try {
-			        max = Float.parseFloat(maxString);
-			        }
-			    catch (NumberFormatException nfe) {
-					showErrorMessage("Invalid maximum value.");
-			        return false;
-			        }
+		    if (maxString != null && !max.isValid(false)) {
+				showErrorMessage("Invalid maximum value.");
+		        return false;
 		        }
 		    }
 
-	    if (minString != null && maxString != null && (min >= max)) {
-			showErrorMessage("Minimum value is not smaller than maximum.");
-	        return false;
-	    	}
 		return true;
 		}
 
-	private String millisToDDMMYYYY(String millisString) {
-    	long millis = 0;
-    	try { millis = Long.parseLong(millisString); } catch (NumberFormatException nfe) {}
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTimeInMillis(millis);
-		StringBuilder date = new StringBuilder();
-		int day = calendar.get(Calendar.DAY_OF_MONTH);
-		int month = calendar.get(Calendar.MONTH)+1;
-		int year = calendar.get(Calendar.YEAR);
-		if (day < 10)
-			date.append("0");
-		date.append(day);
-		if (month < 10)
-			date.append("0");
-		date.append(month);
-		if (year < 10)
-			date.append("000");
-		else if (year < 100)
-			date.append("00");
-		else if (year < 1000)
-			date.append("0");
-		date.append(year);
-		return date.toString();
-		}
-
-	private Long interpret8DigitDate(String dateString) {
-    	if (dateString != null && dateString.length() == 8) {
-	        try {
-		        int day = Integer.parseInt(dateString.substring(0, 2));
-		        int month = Integer.parseInt(dateString.substring(2, 4));
-		        int year = Integer.parseInt(dateString.substring(4));
-		        if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 0) {
-			        Calendar calendar = Calendar.getInstance();
-			        calendar.clear();
-			        calendar.set(year, month-1, day, 12, 0, 0);
-			        return calendar.getTimeInMillis();
-			        }
-	            }
-	        catch (NumberFormatException nfe) {}
-		    }
-
-	    return null;
-		}
 
 	@Override
 	public void runTask(Properties configuration) {
 		int column = mTableModel.findColumn(configuration.getProperty(PROPERTY_COLUMN, ""));
 	    String minString = configuration.getProperty(PROPERTY_MINIMUM);
 	    String maxString = configuration.getProperty(PROPERTY_MAXIMUM);
-	    if (mTableModel.isColumnTypeDate(column))
-		    mTableModel.setValueRange(column, interpret8DigitDate(minString), interpret8DigitDate(maxString));
-    	else
-			mTableModel.setValueRange(column, minString, maxString);
+		CompoundTableRangeBorder min = minString == null ? null : new CompoundTableRangeBorder(minString);
+		CompoundTableRangeBorder max = maxString == null ? null : new CompoundTableRangeBorder(maxString);
+	    mTableModel.setValueRange(column, min, max);
 		}
 
 	@Override

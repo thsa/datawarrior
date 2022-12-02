@@ -185,7 +185,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	/**
 	 * @param headerRow 0:no, 1:yes, 2:analyze
 	 */
-	public void paste(int headerRow) {
+	public void paste(int headerRow, boolean isReadOnly) {
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		if (!clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor))
 			return;
@@ -198,7 +198,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			else if (headerRow != 0)
 				mWithHeaderLine = analyzeHeaderLine(new StringReader(s));
 			mDataReader = new StringReader(s);
-			mAction = READ_DATA | REPLACE_DATA;
+			mAction = isReadOnly ? READ_DATA : READ_DATA | REPLACE_DATA;
 			mDataType = FileHelper.cFileTypeTextTabDelimited;
 			mNewWindowTitle = "Data From Clipboard";
 			mRuntimeProperties = null;

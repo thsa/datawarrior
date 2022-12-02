@@ -32,7 +32,8 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 public class DETaskMergeFile extends AbstractTask implements TaskConstantsMergeFile {
-	public static final String TASK_NAME = "Merge File";
+	public static final String TASK_NAME_FILE = "Merge File";
+	public static final String TASK_NAME_CLIPBOARD = "Merge Clipboard Content";
 
 	private static final int IS_NOT_DISPLAYABLE = -1;
 	private static final int IS_NORMAL_DISPLAYABLE = 0;
@@ -40,18 +41,20 @@ public class DETaskMergeFile extends AbstractTask implements TaskConstantsMergeF
 	private CompoundTableModel	mTableModel;
 	private UIDelegateMergeFile	mUIDelegate;
 	private CompoundTableLoader	mLoader;
+	private boolean             mIsClipboard;
 
-	public DETaskMergeFile(DEFrame parent) {
+	public DETaskMergeFile(DEFrame parent, boolean isClipboard) {
 		super(parent, true);
 		// All tasks that use CompoundTableLoader need to run in an own thread if they run in a macro
 		// to prevent the CompoundTableLoader to run processData() in a new thread without waiting
 		// in the EDT
 		mTableModel = parent.getTableModel();
+		mIsClipboard = isClipboard;
 		}
 
 	@Override
 	public String getTaskName() {
-		return TASK_NAME;
+		return mIsClipboard ? TASK_NAME_CLIPBOARD : TASK_NAME_FILE;
 		}
 
 	@Override
@@ -66,7 +69,7 @@ public class DETaskMergeFile extends AbstractTask implements TaskConstantsMergeF
 
 	@Override
 	public TaskUIDelegate createUIDelegate() {
-		mUIDelegate = new UIDelegateMergeFile((DEFrame)getParentFrame(), this, isInteractive());
+		mUIDelegate = new UIDelegateMergeFile((DEFrame)getParentFrame(), this, isInteractive(), mIsClipboard);
 		return mUIDelegate;
 		}
 
@@ -83,7 +86,7 @@ public class DETaskMergeFile extends AbstractTask implements TaskConstantsMergeF
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String fileName = configuration.getProperty(PROPERTY_FILENAME);
-		if (!isFileAndPathValid(fileName, false, false))
+		if (!mIsClipboard && !isFileAndPathValid(fileName, false, false))
 			return false;
 
 		int columnCount = 0;
@@ -142,10 +145,17 @@ public class DETaskMergeFile extends AbstractTask implements TaskConstantsMergeF
 			mLoader = mUIDelegate.getCompoundTableLoader();
 			}
 		else {
-			fileName = resolvePathVariables(fileName);
-			DEFrame parent = (DEFrame)getParentFrame();
-			mLoader = new CompoundTableLoader(parent, parent.getTableModel(), getProgressController());
-			mLoader.readFile(new File(fileName), new DERuntimeProperties(parent.getMainFrame()), FileHelper.getFileType(fileName), CompoundTableLoader.READ_DATA);
+			if (mIsClipboard) {
+				DEFrame parent = (DEFrame)getParentFrame();
+				mLoader = new CompoundTableLoader(parent, parent.getTableModel(), getProgressController());
+				mLoader.paste(1, true);
+				}
+			else {
+				fileName = resolvePathVariables(fileName);
+				DEFrame parent = (DEFrame)getParentFrame();
+				mLoader = new CompoundTableLoader(parent, parent.getTableModel(), getProgressController());
+				mLoader.readFile(new File(fileName), new DERuntimeProperties(parent.getMainFrame()), FileHelper.getFileType(fileName), CompoundTableLoader.READ_DATA);
+				}
 			}
 
 		int keyColumnCount = 0;

@@ -68,6 +68,8 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 	private static final int QUERY_SOURCE_SELECTED = 1;
 
 	private static final int CHEMISTRY_COLUMN_COUNT = STRUCTURE_COLUMN_TITLE.length + DESCRIPTOR_COLUMN_TITLE.length;
+	private static final int REACTANT_FFP_COLUMN = 4;   // The server delivers the reactant (and product) FFPs as array of FFPs
+	private static final int PRODUCT_FFP_COLUMN = 5;    //  for every reactant (product). Thus, We need to merge them.
 
 	private static final String DOC_TITLE = "Reactions From EU And US Patents";
 
@@ -943,6 +945,29 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 		return resultTable;
 		}
 
+	private long[] mergeLongDescriptors(Object o) {
+		if (o != null && o instanceof long[][]) {
+			long[][] ffpArray = (long[][])o;
+			if (ffpArray.length == 0)
+				return null;
+
+			long[] mergedFFP = null;
+			for (int i=0; i<ffpArray.length; i++) {
+				if (ffpArray[i] != null) {
+					if (mergedFFP == null)
+						mergedFFP = ffpArray[i];
+					else
+						for (int j = 0; j<mergedFFP.length; j++)
+							mergedFFP[j] |= ffpArray[i][j];
+					}
+				}
+
+			return mergedFFP;
+			}
+
+		return null;
+		}
+
 	@Override
 	public void runTask(Properties configuration) {
 		startProgress("Searching And Retrieving Patent Reactions On/From Server...", 0, 0);
@@ -982,6 +1007,8 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 
 				for (int column=0; column<columnCount; column++) {
 					Object value = resultTable[i][column];
+					if (value != null && (column == REACTANT_FFP_COLUMN || column == PRODUCT_FFP_COLUMN))
+						value = mergeLongDescriptors(value);
 					tableModel.setTotalDataAt(value, i - 1, column);
 					}
 				}

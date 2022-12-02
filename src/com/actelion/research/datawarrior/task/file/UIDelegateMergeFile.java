@@ -60,19 +60,20 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 	private JCheckBox			mCheckBoxAppendRows,mCheckBoxAppendColumns;
 	private CompoundTableLoader	mLoader;
 	private String[]			mTotalFieldName,mFieldName,mFieldAlias;
-	private boolean 			mIsInteractive;
+	private boolean 			mIsInteractive,mIsClipboard;
 
-	public UIDelegateMergeFile(DEFrame parent, DETaskMergeFile parentTask, boolean isInteractive) {
+	public UIDelegateMergeFile(DEFrame parent, DETaskMergeFile parentTask, boolean isInteractive, boolean isClipboard) {
 		mParentFrame = parent;
 		mParentTask = parentTask;
 		mTableModel = parent.getTableModel();
 		mIsInteractive = isInteractive;
+		mIsClipboard = isClipboard;
 		}
 
 	@Override
 	public JComponent createDialogContent() {
 		File file = null;
-		if (mIsInteractive) {
+		if (mIsInteractive && !mIsClipboard) {
 			file = askForFile(null);
 			if (file == null)
 				return null;
@@ -84,14 +85,16 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 		mDialogPanel = new JPanel();
 		mDialogPanel.setLayout(new TableLayout(size1));
 
-		mFilePathLabel = new JFilePathLabel(!mIsInteractive);
-		mFilePathLabel.setListener(this);
-		JButton buttonEdit = new JButton(JFilePathLabel.BUTTON_TEXT);
-		buttonEdit.addActionListener(this);
+		if (!mIsClipboard) {
+			mFilePathLabel = new JFilePathLabel(!mIsInteractive);
+			mFilePathLabel.setListener(this);
+			JButton buttonEdit = new JButton(JFilePathLabel.BUTTON_TEXT);
+			buttonEdit.addActionListener(this);
 
-		mDialogPanel.add(new JLabel("File:"), "1,1");
-		mDialogPanel.add(mFilePathLabel, "3,1");
-		mDialogPanel.add(buttonEdit, "5,1");
+			mDialogPanel.add(new JLabel("File:"), "1,1");
+			mDialogPanel.add(mFilePathLabel, "3,1");
+			mDialogPanel.add(buttonEdit, "5,1");
+			}
 
 		mCheckBoxAppendRows = new JCheckBox("Append rows not existing in current data", true);
 
@@ -109,13 +112,19 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 		}
 
 	private void updateUIFromFile(File file) {
-		mFilePathLabel.setPath(file.getAbsolutePath());
-
-		// parse the file to be merged
-		int fileType = FileHelper.getFileType(file.getName());
 		DERuntimeProperties rtp = new DERuntimeProperties(mParentFrame.getMainFrame());
-		mLoader = new CompoundTableLoader(mParentFrame, mParentFrame.getTableModel(), null);
-		mLoader.readFile(file, rtp, fileType, CompoundTableLoader.READ_DATA);
+		if (mIsClipboard) {
+			mLoader = new CompoundTableLoader(mParentFrame, mParentFrame.getTableModel(), null);
+			mLoader.paste(1, true);
+			}
+		else {
+			mFilePathLabel.setPath(file.getAbsolutePath());
+
+			// parse the file to be merged
+			int fileType = FileHelper.getFileType(file.getName());
+			mLoader = new CompoundTableLoader(mParentFrame, mParentFrame.getTableModel(), null);
+			mLoader.readFile(file, rtp, fileType, CompoundTableLoader.READ_DATA);
+			}
 
 		// create arrays with field names
 		mTotalFieldName = mLoader.getFieldNames();
@@ -386,9 +395,11 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 	public Properties getDialogConfiguration() {
 		Properties configuration = new Properties();
 
-		String fileName = mFilePathLabel.getPath();
-		if (fileName != null)
-			configuration.setProperty(PROPERTY_FILENAME, fileName);
+		if (!mIsClipboard) {
+			String fileName = mFilePathLabel.getPath();
+			if (fileName != null)
+				configuration.setProperty(PROPERTY_FILENAME, fileName);
+			}
 
 		configuration.setProperty(PROPERTY_COLUMN_COUNT, Integer.toString(mFieldName.length));
 		for (int i=0; i<mFieldName.length; i++) {
@@ -413,7 +424,7 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 		if (!mIsInteractive) {
 			String fileName = configuration.getProperty(PROPERTY_FILENAME);
 			File file = (fileName == null) ? null : new File(mParentTask.resolvePathVariables(fileName));
-			if (file.exists())
+			if (file.exists() || mIsClipboard)
 				updateUIFromFile(file);
 			}
 

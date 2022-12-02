@@ -112,7 +112,7 @@ public class DETaskPaste extends ConfigurableTask {
 		mNewFrame = mApplication.getEmptyFrame(null);
 		int headerHandling = findListIndex(configuration.getProperty(PROPERTY_HEADER_HANDLING),
 				CODE_HEADER_HANDLING, DEFAULT_HEADER_HANDLING);
-		new CompoundTableLoader(mNewFrame, mNewFrame.getTableModel(), null).paste(headerHandling);
+		new CompoundTableLoader(mNewFrame, mNewFrame.getTableModel(), null).paste(headerHandling, false);
 		}
 
 	@Override

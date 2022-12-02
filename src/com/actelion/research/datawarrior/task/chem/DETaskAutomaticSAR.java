@@ -36,6 +36,7 @@ import java.util.TreeMap;
 
 public class DETaskAutomaticSAR extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Automatic SAR Analysis";
+	private static final String SUBSTITUENT_NONE = "#";
 	private static final String SUBSTITUENT_VARIES = "*";
 
 	private static final String PROPERTY_SCAFFOLD_MODE = "scaffoldMode";
@@ -123,7 +124,7 @@ public class DETaskAutomaticSAR extends DETaskAbstractFromStructure {
 		int scaffoldMode = findListIndex(configuration.getProperty(PROPERTY_SCAFFOLD_MODE), SCAFFOLD_CODE, SCAFFOLD_CENTRAL_RING);
 		mCoreIDCode = new String[rowCount];
 		mCoreAtom = new int[rowCount][];
-		mSubstitutionMap = new TreeMap<String,String[]>();
+		mSubstitutionMap = new TreeMap<>();
 		StereoMolecule core = new StereoMolecule();
 		StereoMolecule container = new StereoMolecule();
 		for (int row=0; row<rowCount; row++) {
@@ -139,16 +140,17 @@ public class DETaskAutomaticSAR extends DETaskAbstractFromStructure {
 				boolean[] isCoreAtom = (scaffoldMode == SCAFFOLD_MURCKO) ?
 						ScaffoldHelper.findMurckoScaffold(mol) : ScaffoldHelper.findMostCentralRingSystem(mol);
 				if (isCoreAtom != null) {
-					int[] coreAtom = new int[mol.getAllAtoms()];
-					mol.copyMoleculeByAtoms(core, isCoreAtom, true, coreAtom);
+					int[] molToCoreAtom = new int[mol.getAllAtoms()];
+					mol.copyMoleculeByAtoms(core, isCoreAtom, true, molToCoreAtom);
+					core.setFragment(true);
 					Canonizer canonizer = new Canonizer(core);
 					int[] graphIndex = canonizer.getGraphIndexes();
 
 					// build atom index map from canonized core to fragment stripped molecule of this row
 					mCoreAtom[row] = new int[core.getAtoms()];
-					for (int atom=0; atom<coreAtom.length; atom++)
-						if (coreAtom[atom] != -1)
-							mCoreAtom[row][graphIndex[coreAtom[atom]]] = atom;
+					for (int atom=0; atom<molToCoreAtom.length; atom++)
+						if (molToCoreAtom[atom] != -1)
+							mCoreAtom[row][graphIndex[molToCoreAtom[atom]]] = atom;
 
 					mCoreIDCode[row] = canonizer.getIDCode();
 
@@ -157,17 +159,16 @@ public class DETaskAutomaticSAR extends DETaskAbstractFromStructure {
 						sharedSubstituentCode = new String[core.getAtoms()];
 						mSubstitutionMap.put(mCoreIDCode[row], sharedSubstituentCode);
 						}
-					for (int atom=0; atom<coreAtom.length; atom++) {
-						if (coreAtom[atom] != -1) {
-							int canonicalCoreAtom = graphIndex[coreAtom[atom]];
-							if (sharedSubstituentCode[canonicalCoreAtom] != SUBSTITUENT_VARIES) {
-								if (mol.getConnAtoms(atom) > core.getConnAtoms(coreAtom[atom])) {
-									String idcode = getSubstituentIDCode(mol, atom, isCoreAtom);
-									if (sharedSubstituentCode[canonicalCoreAtom] == null)
-										sharedSubstituentCode[canonicalCoreAtom] = idcode;
-									else if (!sharedSubstituentCode[canonicalCoreAtom].equals(idcode))
-										sharedSubstituentCode[canonicalCoreAtom] = SUBSTITUENT_VARIES;
-									}
+					for (int atom=0; atom<molToCoreAtom.length; atom++) {
+						if (molToCoreAtom[atom] != -1) {
+							int canonicalCoreAtom = graphIndex[molToCoreAtom[atom]];
+							if (!SUBSTITUENT_VARIES.equals(sharedSubstituentCode[canonicalCoreAtom])) {
+								String idcode = (mol.getConnAtoms(atom) > core.getConnAtoms(molToCoreAtom[atom])) ?
+										getSubstituentIDCode(mol, atom, isCoreAtom) : SUBSTITUENT_NONE;
+								if (sharedSubstituentCode[canonicalCoreAtom] == null)
+									sharedSubstituentCode[canonicalCoreAtom] = idcode;
+								else if (!sharedSubstituentCode[canonicalCoreAtom].equals(idcode))
+									sharedSubstituentCode[canonicalCoreAtom] = SUBSTITUENT_VARIES;
 							 	}
 							}
 						}
@@ -180,7 +181,7 @@ public class DETaskAutomaticSAR extends DETaskAbstractFromStructure {
 			for (String[] sharedSubstituentCode:mSubstitutionMap.values()) {
 				int count = 0;
 				for (String s:sharedSubstituentCode)
-					if (s != null)
+					if (SUBSTITUENT_VARIES.equals(s))
 						count++;
 				if (mSubstituentCount < count)
 					mSubstituentCount = count;
@@ -224,9 +225,9 @@ public class DETaskAutomaticSAR extends DETaskAbstractFromStructure {
 			substituentNo = 1;
 			for (int i=0; i<sharedSubstituentCode.length; i++) {
 				if (sharedSubstituentCode[i] == SUBSTITUENT_VARIES) {
-					int restAtom = mol.addAtom(6);
+					int restAtom = mol.addAtom((substituentNo <= 3) ? 141+substituentNo : 125+substituentNo);
 					mol.addBond(mCoreAtom[row][i], restAtom, Molecule.cBondTypeSingle);
-					mol.setAtomCustomLabel(restAtom, "R"+substituentNo);
+//					mol.setAtomCustomLabel(restAtom, "R"+substituentNo);
 					isCoreAtom[restAtom] = true;
 					substituentNo++;
 					}
@@ -242,20 +243,18 @@ public class DETaskAutomaticSAR extends DETaskAbstractFromStructure {
 
 	@Override
 	public void postprocess(final int firstNewColumn) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				if (getTableModel().getCategoryCount(firstNewColumn) <= 64) {
-					VisualizationPanel2D vpanel = mFrame.getMainFrame().getMainPane().add2DView("Core Structures", null);
-					vpanel.setAxisColumnName(0, getTableModel().getColumnTitleNoAlias(firstNewColumn+1));
-					vpanel.setAxisColumnName(1, getTableModel().getColumnTitleNoAlias(firstNewColumn+2));
-	
-					JVisualization2D visualization = (JVisualization2D)vpanel.getVisualization();
-					visualization.setMarkerSize(0.6f, false);
-					visualization.setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
-					visualization.setSplittingColumns(firstNewColumn, JVisualization.cColumnUnassigned, 1.0f, false);
-					}
+		SwingUtilities.invokeLater(() -> {
+			if (getTableModel().getCategoryCount(firstNewColumn) <= 64) {
+				VisualizationPanel2D vpanel = mFrame.getMainFrame().getMainPane().add2DView("Core Structures", null);
+				vpanel.setAxisColumnName(0, getTableModel().getColumnTitleNoAlias(firstNewColumn+1));
+				vpanel.setAxisColumnName(1, getTableModel().getColumnTitleNoAlias(firstNewColumn+2));
+
+				JVisualization2D visualization = (JVisualization2D)vpanel.getVisualization();
+				visualization.setMarkerSize(0.6f, false);
+				visualization.setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+				visualization.setSplittingColumns(firstNewColumn, JVisualization.cColumnUnassigned, 1.0f, false);
 				}
-			} );
+			});
 		}
 
 	private void addSubstituent(StereoMolecule mol, int startAtom, boolean[] isCoreAtom) {

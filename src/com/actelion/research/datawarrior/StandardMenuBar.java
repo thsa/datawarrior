@@ -135,7 +135,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuFileAppend,jMenuFileClose,jMenuFileCloseAll,jMenuFileSave,jMenuFileSaveAs,jMenuFileSaveText,
 					  jMenuFileSaveSDF,jMenuFileSaveTemplate,jMenuFileSaveVisibleAs,jMenuFilePageFormat,
 					  jMenuFilePreview,jMenuFilePrint, jMenuFileQuit,jMenuEditCut,jMenuEditCopy,jMenuEditPaste,
-					  jMenuEditPasteWithHeader,jMenuEditPasteWithoutHeader,jMenuEditDelete,jMenuEditPasteAppend,
+					  jMenuEditPasteWithHeader,jMenuEditPasteWithoutHeader,jMenuEditDelete,jMenuEditPasteAppend,jMenuEditPasteMerge,
 					  jMenuEditSelectAll,jMenuEditSelectRowsRandomly,jMenuEditExtendSelection,jMenuEditInvertSelection,jMenuEditSearchAndReplace,jMenuEditDisableFilters,
 					  jMenuEditEnableFilters,jMenuEditResetFilters,jMenuEditRemoveFilters,
 					  jMenuEditNewFilter,jMenuDataRemoveColumns,jMenuDataRemoveSelected,jMenuDataRemoveInvisible,
@@ -552,6 +552,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuEditPasteWithHeader = new JMenuItem();
 		jMenuEditPasteWithoutHeader = new JMenuItem();
 		jMenuEditPasteAppend = new JMenuItem();
+		jMenuEditPasteMerge = new JMenuItem();
 		jMenuEditDelete = new JMenuItem();
 		jMenuEditSelectAll = new JMenuItem();
 		jMenuEditSelectRowsRandomly = new JMenuItem();
@@ -580,6 +581,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuEditPasteWithoutHeader.addActionListener(this);
 		jMenuEditPasteAppend.setText("Append Data Without Header Row");
 		jMenuEditPasteAppend.addActionListener(this);
+		jMenuEditPasteMerge.setText("Merge Clipboard Content...");
+		jMenuEditPasteMerge.addActionListener(this);
 		jMenuEditDelete.setText("Delete");
 		jMenuEditDelete.setEnabled(false);
 		jMenuEditSelectAll.setText("Select All");
@@ -614,6 +617,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuEditPasteSpecial.add(jMenuEditPasteWithHeader);
 		jMenuEditPasteSpecial.add(jMenuEditPasteWithoutHeader);
 		jMenuEditPasteSpecial.add(jMenuEditPasteAppend);
+		jMenuEditPasteSpecial.add(jMenuEditPasteMerge);
 		jMenuEdit.add(jMenuEditPasteSpecial);
 		jMenuEdit.add(jMenuEditDelete);
  		jMenuEdit.addSeparator();
@@ -1504,7 +1508,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuFileOpenMDLReactions)
 				new DETaskOpenMDLReactionDatabase(mApplication).defineAndRun();
 			else if (source == jMenuFileMerge)
-				new DETaskMergeFile(mParentFrame).defineAndRun();
+				new DETaskMergeFile(mParentFrame, false).defineAndRun();
 			else if (source == jMenuFileAppend) {
 				if (mParentFrame.getTableModel().getTotalRowCount() == 0)
 					JOptionPane.showMessageDialog(mParentFrame, "You cannot append a file to an empty table. Use 'Open File...' instead.");
@@ -1542,6 +1546,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskPaste(mParentFrame, mApplication, DETaskPaste.HEADER_WITHOUT).defineAndRun();
 			else if (source == jMenuEditPasteAppend)
 				new DETaskPasteIntoTable(mParentFrame, DETaskPasteIntoTable.NO_COLUMN, DETaskPasteIntoTable.ROW_APPEND).defineAndRun();
+			else if (source == jMenuEditPasteMerge)
+				new DETaskMergeFile(mParentFrame, true).defineAndRun();
 			else if (source == jMenuEditSelectAll)
 				new DETaskSelectAll(mParentFrame).defineAndRun();
 			else if (source == jMenuEditSelectRowsRandomly)

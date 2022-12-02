@@ -18,16 +18,19 @@
 
 package com.actelion.research.datawarrior.action;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.util.*;
-
-import javax.swing.*;
-
-import com.actelion.research.chem.*;
+import com.actelion.research.chem.SortedStringList;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.CompoundTableLoader;
 import com.actelion.research.table.model.CompoundTableModel;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.File;
+import java.util.ArrayList;
 
 public class DEAppendFileDialog extends JDialog
                                 implements ActionListener,ItemListener,Runnable {
@@ -92,6 +95,8 @@ public class DEAppendFileDialog extends JDialog
 		tp1.add(mCheckBoxNewColumn);
 		tp1.add(mComboBoxNewColumn);
 
+		int gap = HiDPIHelper.scale(8);
+
 		if (selectedIndex == 0) {
 			mTextFieldOldSetName = new JTextField(mOldSetName, 16);
 			}
@@ -104,7 +109,7 @@ public class DEAppendFileDialog extends JDialog
                                           : mNewSetFileName.substring(0, index);
 		mTextFieldNewSetName = new JTextField(newSetName, 16);
 		JPanel tp21 = new JPanel();
-		tp21.setLayout(new GridLayout(2, 2, 4, 4));
+		tp21.setLayout(new GridLayout(2, 2, gap/2, gap/2));
 		tp21.add(new JLabel("Existing dataset name:", SwingConstants.RIGHT));
 		tp21.add(mTextFieldOldSetName);
 		tp21.add(new JLabel("New dataset name:", SwingConstants.RIGHT));
@@ -116,13 +121,13 @@ public class DEAppendFileDialog extends JDialog
 		tp.setLayout(new BorderLayout());
 		tp.add(tp1, BorderLayout.NORTH);
 		tp.add(tp2, BorderLayout.CENTER);
-		tp.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+		tp.setBorder(BorderFactory.createEmptyBorder(gap, gap, gap, gap));
 
         // create lists of potential mapping columns for these column types:
         // non-special and all parent special types (idcode, rxncode, <more?>)
         ArrayList<String>[] columnListBySpecialType = new ArrayList[1+CompoundTableModel.cParentSpecialColumnTypes.length];
         for (int i=0; i<=CompoundTableModel.cParentSpecialColumnTypes.length; i++) {
-            columnListBySpecialType[i] = new ArrayList<String>();
+            columnListBySpecialType[i] = new ArrayList<>();
             columnListBySpecialType[i].add("<new column>");
             columnListBySpecialType[i].add("<trash it>");
             }
@@ -134,7 +139,7 @@ public class DEAppendFileDialog extends JDialog
 
         mComboBoxList = new JComboBox[mVisibleFieldName.length];
 		JPanel mp0 = new JPanel();
-		mp0.setLayout(new GridLayout(mVisibleFieldName.length, 2, 4, 4));
+		mp0.setLayout(new GridLayout(mVisibleFieldName.length, 2, gap/2, gap/2));
 		for (int i=0; i<mVisibleFieldName.length; i++) {
             int typeIndex = getDisplayableType(mLoader.getColumnSpecialType(mVisibleFieldName[i]));
             mComboBoxList[i] = new JComboBox(columnListBySpecialType[typeIndex].toArray());
@@ -147,26 +152,26 @@ public class DEAppendFileDialog extends JDialog
             mp0.add(new JLabel("assign '"+mVisibleFieldName[i]+"' to ", SwingConstants.RIGHT));
 			mp0.add(mComboBoxList[i]);
 			}
-		mp0.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+		mp0.setBorder(BorderFactory.createEmptyBorder(gap/2, gap, gap/2, gap));
 		JComponent mp = null;
 		if (mVisibleFieldName.length > 5) {
 			JScrollPane mps = new JScrollPane(mp0, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER) {
                 static final long serialVersionUID = 0x20061005;
-				public Dimension getPreferredSize() { return new Dimension(getViewport().getView().getPreferredSize().width+16, 156); }
+				public Dimension getPreferredSize() { return new Dimension(getViewport().getView().getPreferredSize().width+16, HiDPIHelper.scale(156)); }
 				};
 			mp = new JPanel();
 			mp.add(mps);
-			mp.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+			mp.setBorder(BorderFactory.createEmptyBorder(gap/2, gap, gap/2, gap));
 			}
 		else {
 			mp = mp0;
 			}
 
 		JPanel bp = new JPanel();
-		bp.setBorder(BorderFactory.createEmptyBorder(12, 8, 8, 8));
+		bp.setBorder(BorderFactory.createEmptyBorder(3*gap/2, gap, gap, gap));
 		bp.setLayout(new BorderLayout());
 		JPanel ibp = new JPanel();
-		ibp.setLayout(new GridLayout(1, 2, 8, 0));
+		ibp.setLayout(new GridLayout(1, 2, gap, 0));
 		JButton bcancel = new JButton("Cancel");
 		bcancel.addActionListener(this);
 		ibp.add(bcancel);
@@ -198,7 +203,7 @@ public class DEAppendFileDialog extends JDialog
 
     public void run() {
         mTotalFieldName = mLoader.getFieldNames();
-        ArrayList<String> visibleFieldList = new ArrayList<String>();
+        ArrayList<String> visibleFieldList = new ArrayList<>();
         for (int i=0; i<mTotalFieldName.length; i++) {
             int typeIndex = getDisplayableType(mLoader.getColumnSpecialType(mTotalFieldName[i]));
             if (typeIndex != IS_NOT_DISPLAYABLE)

@@ -244,15 +244,19 @@ public class DETaskAutomaticSAR extends DETaskAbstractFromStructure {
 	@Override
 	public void postprocess(final int firstNewColumn) {
 		SwingUtilities.invokeLater(() -> {
-			if (getTableModel().getCategoryCount(firstNewColumn) <= 64) {
+			int coreCount = getTableModel().isColumnTypeCategory(firstNewColumn) ? getTableModel().getCategoryCount(firstNewColumn) : 1;
+			int rCount = getTableModel().getTotalColumnCount() - firstNewColumn - 1;
+			if (coreCount <= 64 && (rCount >= 2 || (rCount == 1 && coreCount != 1))) {
 				VisualizationPanel2D vpanel = mFrame.getMainFrame().getMainPane().add2DView("Core Structures", null);
-				vpanel.setAxisColumnName(0, getTableModel().getColumnTitleNoAlias(firstNewColumn+1));
-				vpanel.setAxisColumnName(1, getTableModel().getColumnTitleNoAlias(firstNewColumn+2));
+				int firstAxisColumn = (rCount >= 2) ? firstNewColumn+1 : firstNewColumn;
+				vpanel.setAxisColumnName(0, getTableModel().getColumnTitleNoAlias(firstAxisColumn));
+				vpanel.setAxisColumnName(1, getTableModel().getColumnTitleNoAlias(firstAxisColumn+1));
 
 				JVisualization2D visualization = (JVisualization2D)vpanel.getVisualization();
 				visualization.setMarkerSize(0.6f, false);
 				visualization.setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
-				visualization.setSplittingColumns(firstNewColumn, JVisualization.cColumnUnassigned, 1.0f, false);
+				if (coreCount != 1 && firstAxisColumn != firstNewColumn)
+					visualization.setSplittingColumns(firstNewColumn, JVisualization.cColumnUnassigned, 1.0f, false);
 				}
 			});
 		}

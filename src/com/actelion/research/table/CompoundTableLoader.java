@@ -2773,11 +2773,12 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 							// to parent columns may need to be translated
 						if (appendOrMergeDestColumn != null) {
 							if (key.equals(cColumnPropertyParentColumn)) {
-								int parentColumn = appendOrMergeDestColumn[getSourceColumn(value)];
-								if (parentColumn == NO_COLUMN)	// visible columns that have a parent (e.g. cluster no)
+								int sourceParentColumn = getSourceColumn(value);
+								int destParentColumn = (sourceParentColumn == NO_COLUMN) ? NO_COLUMN : appendOrMergeDestColumn[getSourceColumn(value)];
+								if (destParentColumn == NO_COLUMN)	// visible columns that have a parent (e.g. cluster no)
 									value = null;
 								else
-									value = mTableModel.getColumnTitleNoAlias(parentColumn);
+									value = mTableModel.getColumnTitleNoAlias(destParentColumn);
 								}
 							}
 

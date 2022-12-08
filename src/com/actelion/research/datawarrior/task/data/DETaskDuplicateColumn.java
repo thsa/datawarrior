@@ -47,7 +47,13 @@ public class DETaskDuplicateColumn extends AbstractSingleColumnTask {
 		content.add(mTextFieldNewColumnName, "2,1");
 
 		return content;
-	}
+		}
+
+	@Override
+	public void columnChanged(int column) {
+		if (mTextFieldNewColumnName != null)
+			mTextFieldNewColumnName.setText(column == -1 ? "Column Name" : "Copy of "+getTableModel().getColumnTitle(column));
+		}
 
 	@Override
 	public String getColumnLabelText() {
@@ -64,7 +70,8 @@ public class DETaskDuplicateColumn extends AbstractSingleColumnTask {
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
-		mTextFieldNewColumnName.setText(configuration.getProperty(PROPERTY_NEW_COLUMN_NAME, ""));
+		mTextFieldNewColumnName.setText(getPredefinedColumn() == -1 ?
+				configuration.getProperty(PROPERTY_NEW_COLUMN_NAME, "") : "Copy of "+getSelectedColumnName());
 		}
 
 	@Override

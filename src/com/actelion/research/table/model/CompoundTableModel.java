@@ -557,7 +557,8 @@ public class CompoundTableModel extends AbstractTableModel
 	/**
 	 * Creates a StereoMolecule from this record's content at the specified column. If a molecule is passed,
 	 * then this is used as a container; otherwise a new StereoMolecule is created.
-	 * If record does not contain a molecule, then null is returned even if mol is not null.
+	 * If record does not contain a molecule, then null is returned even if mol is not null, unless
+	 * the column is defined to contain fragments, in which case an empty fragment is returned.
 	 * The atomColorMode defines whether and to which extend atoms are in color. For displaying mol on the
 	 * screen use ATOM_COLOR_MODE_ALL, for printing use ATOM_COLOR_MODE_EXPLICIT and for copy/paste,
 	 * drag&drop, cheminformatics purposes, etc use ATOM_COLOR_MODE_NONE.
@@ -576,43 +577,49 @@ public class CompoundTableModel extends AbstractTableModel
 		if (isColumnTypeStructure(column)) {
 			byte[] idcode = (byte[])record.getData(column);
 			if (idcode != null) {
-				int index1 = 0;
-				while (index1<idcode.length && idcode[index1] != '\n')
-					index1++;
-				if (index1 != idcode.length) {
+				try {
+					int index1 = 0;
+					while (index1<idcode.length && idcode[index1] != '\n')
+						index1++;
+					if (index1 != idcode.length) {
+						if (mol == null)
+							mol = new StereoMolecule();
+						new IDCodeParser(true).parse(mol, idcode);
+						do {
+							int index2 = index1+1;
+							while (index2<idcode.length && idcode[index2] != '\n')
+								index2++;
+							byte[] subIDCode = new byte[index2-index1-1];
+							System.arraycopy(idcode, index1+1, subIDCode, 0, index2-index1-1);
+							mol.addMolecule(new IDCodeParser(true).getCompactMolecule(subIDCode));
+							index1 = index2;
+							} while (index1 != idcode.length);
+						new CoordinateInventor().invent(mol);
+						return mol;
+						}
+
+					int coordsColumn = getChildColumn(column, cColumnType2DCoordinates);
+					byte[] coords = (byte[])record.getData(coordsColumn);
 					if (mol == null)
-						mol = new StereoMolecule();
-					new IDCodeParser(true).parse(mol, idcode);
-					do {
-						int index2 = index1+1;
-						while (index2<idcode.length && idcode[index2] != '\n')
-							index2++;
-						byte[] subIDCode = new byte[index2-index1-1];
-						System.arraycopy(idcode, index1+1, subIDCode, 0, index2-index1-1);
-						mol.addMolecule(new IDCodeParser(true).getCompactMolecule(subIDCode));
-						index1 = index2;
-						} while (index1 != idcode.length);
-					new CoordinateInventor().invent(mol);
+						mol = new IDCodeParser(true).getCompactMolecule(idcode, coords);
+					else
+						new IDCodeParser(true).parse(mol, idcode, coords);
+					String identifierColumnName = getColumnProperty(column, cColumnPropertyRelatedIdentifierColumn);
+					if (identifierColumnName != null && mol != null) {
+						int identifierColumn = findColumn(identifierColumnName);
+						if (identifierColumn != -1) {
+							byte[] data = (byte[])record.getData(identifierColumn);
+							if (data != null && data.length != 0)
+								mol.setName(new String(data));
+							}
+						}
+				    colorizeStructureAtoms(record, column, atomColorMode, mol);
 					return mol;
 					}
-
-				int coordsColumn = getChildColumn(column, cColumnType2DCoordinates);
-				byte[] coords = (byte[])record.getData(coordsColumn);
-				if (mol == null)
-					mol = new IDCodeParser(true).getCompactMolecule(idcode, coords);
-				else
-					new IDCodeParser(true).parse(mol, idcode, coords);
-				String identifierColumnName = getColumnProperty(column, cColumnPropertyRelatedIdentifierColumn);
-				if (identifierColumnName != null && mol != null) {
-					int identifierColumn = findColumn(identifierColumnName);
-					if (identifierColumn != -1) {
-						byte[] data = (byte[])record.getData(identifierColumn);
-						if (data != null && data.length != 0)
-							mol.setName(new String(data));
-						}
+				catch (Exception e) {
+					byte[] coords = (byte[])record.getData(getChildColumn(column, cColumnType2DCoordinates));
+					System.out.println("ERROR: Couldn't create structure. IDCode:"+new String(idcode)+" Coords:"+(coords==null?"null":new String(coords)));
 					}
-			   	colorizeStructureAtoms(record, column, atomColorMode, mol);
-				return mol;
 				}
 			else if ("true".equals(mColumnInfo[column].getProperty(cColumnPropertyIsFragment))) {
 				if (mol == null)
@@ -627,17 +634,23 @@ public class CompoundTableModel extends AbstractTableModel
 			int idcodeColumn = getParentColumn(column);
 			byte[] idcode = (byte[])record.getData(idcodeColumn);
 			if (idcode != null) {
-				byte[] coords = (byte[])record.getData(column);
-				if (mol == null)
-					mol = new IDCodeParser(false).getCompactMolecule(idcode, coords);
-				else
-					new IDCodeParser(false).parse(mol, idcode, coords);
-				if (mol != null) {
-					String identifier = getIdentifier(record, idcodeColumn);
-					if (identifier != null)
-						mol.setName(identifier);
+				try {
+					byte[] coords = (byte[])record.getData(column);
+					if (mol == null)
+						mol = new IDCodeParser(false).getCompactMolecule(idcode, coords);
+					else
+						new IDCodeParser(false).parse(mol, idcode, coords);
+					if (mol != null) {
+						String identifier = getIdentifier(record, idcodeColumn);
+						if (identifier != null)
+							mol.setName(identifier);
+						}
+					return mol;
 					}
-				return mol;
+				catch (Exception e) {
+					byte[] coords = (byte[])record.getData(column);
+					System.out.println("ERROR: Couldn't create structure. IDCode:"+new String(idcode)+" Coords:"+(coords==null?"null":new String(coords)));
+					}
 				}
 			}
 

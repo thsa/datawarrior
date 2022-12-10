@@ -165,7 +165,8 @@ public class DataWarriorLinux extends DataWarrior {
 				Thread.setDefaultUncaughtExceptionHandler((final Thread t, final Throwable e) ->
 					SwingUtilities.invokeLater(() -> {
 						e.printStackTrace();
-						JOptionPane.showMessageDialog(sDataExplorer.getActiveFrame(), "Uncaught Exception:"+e.getMessage());
+						if (e.getMessage() != null)
+							JOptionPane.showMessageDialog(sDataExplorer.getActiveFrame(), "Uncaught Exception:"+e.getMessage());
 						} )
 					);
 

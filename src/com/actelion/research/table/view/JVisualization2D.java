@@ -6135,6 +6135,30 @@ public class JVisualization2D extends JVisualization {
 		invalidateOffImage(false);
 		}
 
+	public String getCrossHairList() {
+		StringBuilder list = new StringBuilder();
+		for (GraphPoint p:mCrossHairList) {
+			if (list.length() != 0)
+				list.append(";");
+			list.append(p.toString());
+			}
+
+		return list.toString();
+		}
+
+	public void setCrossHairList(String list) {
+		mCrossHairList.clear();
+		if (list != null) {
+			String[] points = list.split(";");
+			for (String point:points) {
+				GraphPoint p = new GraphPoint(point);
+				if (p.isValid())
+					mCrossHairList.add(p);
+				}
+			}
+		invalidateOffImage(false);
+		}
+
 	public void setCurveMode(int mode, int rowList, boolean drawStdDevRange, boolean truncateArea, boolean splitByCategory, int splitCurveColumn) {
 		if (!getTableModel().isColumnTypeCategory(splitCurveColumn))
 			splitCurveColumn = cColumnUnassigned;
@@ -6557,6 +6581,16 @@ public class JVisualization2D extends JVisualization {
 	class GraphPoint {
 		private float valueX,valueY;
 
+		public GraphPoint(String coords) {
+			valueX = Float.NaN;
+			valueY = Float.NaN;
+			String[] coord = coords.split(",");
+			if (coord.length == 2) {
+				try { valueX = Float.parseFloat(coord[0]); } catch (NumberFormatException nfe) {}
+				try { valueY = Float.parseFloat(coord[1]); } catch (NumberFormatException nfe) {}
+				}
+			}
+
 		public GraphPoint(int x, int y, Rectangle bounds) {
 			// relative position in zoomed graph
 			float positionX = (x-bounds.x)/(float)bounds.width;
@@ -6565,6 +6599,15 @@ public class JVisualization2D extends JVisualization {
 			// data values at axis positions
 			valueX = mAxisVisMin[0] + positionX * (mAxisVisMax[0] - mAxisVisMin[0]);
 			valueY = mAxisVisMin[1] + positionY * (mAxisVisMax[1] - mAxisVisMin[1]);
+
+			if (mAxisVisRangeIsLogarithmic[0])
+				valueX = (float)Math.pow(10, valueX);
+			if (mAxisVisRangeIsLogarithmic[1])
+				valueY = (float)Math.pow(10, valueY);
+			}
+
+		public boolean isValid() {
+			return !Float.isNaN(valueX) && !Float.isNaN(valueX);
 			}
 
 		/**
@@ -6574,7 +6617,7 @@ public class JVisualization2D extends JVisualization {
 			if (mPruningBarLow[0] == mPruningBarHigh[0])
 				return 0.5f;
 
-			return (valueX - mAxisVisMin[0]) / (mAxisVisMax[0] - mAxisVisMin[0]);
+			return ((mAxisVisRangeIsLogarithmic[0] ? Math.log10(valueX) : valueX) - mAxisVisMin[0]) / (mAxisVisMax[0] - mAxisVisMin[0]);
 			}
 
 		/**
@@ -6584,7 +6627,11 @@ public class JVisualization2D extends JVisualization {
 			if (mPruningBarLow[1] == mPruningBarHigh[1])
 				return 0.5f;
 
-			return (valueY - mAxisVisMin[1]) / (mAxisVisMax[1] - mAxisVisMin[1]);
+			return ((mAxisVisRangeIsLogarithmic[1] ? Math.log10(valueY) : valueY) - mAxisVisMin[1]) / (mAxisVisMax[1] - mAxisVisMin[1]);
+			}
+
+		public String toString() {
+			return valueX+","+valueY;
 			}
 		}
 

@@ -213,7 +213,7 @@ public abstract class JVisualization extends JComponent
 									mIsFastRendering,mOptimizeLabelPositions,mSuppressLegend,mTreeViewShowAll;
 	private boolean                 mShowStandardDeviation,mShowConfidenceInterval,mShowValueCount,mShowBarOrPieSizeValues,
 									mShowMeanAndMedianValues;
-	private boolean[]				mAxisVisRangeIsLogarithmic;
+	protected boolean[]				mAxisVisRangeIsLogarithmic;
 	protected int					mDataPoints,mMarkerSizeColumn,mMarkerShapeColumn,mFontHeight,mBoxplotMeanMode,mLabelList,
 									mMouseX1,mMouseY1,mMouseX2,mMouseY2,mDimensions,mConnectionColumn,mConnectionOrderColumn,
 									mChartColumn,mChartMode,mChartType,mPreferredChartType,mPValueColumn,mTreeViewRadius,

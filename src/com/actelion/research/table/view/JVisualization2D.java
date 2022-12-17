@@ -6607,9 +6607,9 @@ public class JVisualization2D extends JVisualization {
 					max[i] = -0.5f + mTableModel.getCategoryCount(column);
 					}
 				else {
-					float[] minAndMax = getDataMinAndMax(i);
-					min[i] = minAndMax[0];
-					max[i] = minAndMax[1];
+					AxisDataRange range = calculateDataMinAndMax(i);
+					min[i] = range.scaledMin();
+					max[i] = range.scaledMax();
 					}
 				visMin[i] = mAxisVisMin[i];
 				visMax[i] = mAxisVisMax[i];
@@ -6618,10 +6618,6 @@ public class JVisualization2D extends JVisualization {
 
 		float getRange(int dimension) {
 			return max[dimension] - min[dimension];
-			}
-
-		float getVisRangle(int dimension) {
-			return visMax[dimension] - visMin[dimension];
 			}
 		}
 	}

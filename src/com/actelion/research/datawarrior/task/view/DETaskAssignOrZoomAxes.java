@@ -117,8 +117,8 @@ public class DETaskAssignOrZoomAxes extends DETaskAbstractSetViewOptions {
 		for (int i=0; i<vp.getDimensionCount(); i++) {
 			if (vp.getSelectedColumn(i) != JVisualization.cColumnUnassigned) {
 				configuration.setProperty(PROPERTY_COLUMN+i, vp.getAxisColumnName(i));
-				configuration.setProperty(PROPERTY_LOW+i, ""+ vp.getVisualization().getPruningBarLow(i));
-				configuration.setProperty(PROPERTY_HIGH+i, ""+ vp.getVisualization().getPruningBarHigh(i));
+				configuration.setProperty(PROPERTY_LOW+i, ""+ vp.getPruningBar(i).getLowValue());
+				configuration.setProperty(PROPERTY_HIGH+i, ""+ vp.getPruningBar(i).getHighValue());
 				}
 			}
 		configuration.setProperty(PROPERTY_MILLIS, "1000");
@@ -211,11 +211,7 @@ public class DETaskAssignOrZoomAxes extends DETaskAbstractSetViewOptions {
 					high[i] = h1[i] + (h2[i] - h1[i]) * progress;
 					}
 				try {
-					SwingUtilities.invokeAndWait(new Runnable() {
-			            public void run() {
-			            	vp.setZoom(low, high, true, false);
-			            	}
-						} );
+					SwingUtilities.invokeAndWait(() -> vp.setZoom(low, high, true, false));
 					}
 				catch (Exception e) {}
 				millis = System.currentTimeMillis();
@@ -223,11 +219,7 @@ public class DETaskAssignOrZoomAxes extends DETaskAbstractSetViewOptions {
 			}
 
 		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-	            public void run() {
-	    			vp.setZoom(l2, h2, false, false);
-	            	}
-				} );
+			SwingUtilities.invokeAndWait(() -> vp.setZoom(l2, h2, false, false));
 			}
 		catch (Exception e) {}
 		}

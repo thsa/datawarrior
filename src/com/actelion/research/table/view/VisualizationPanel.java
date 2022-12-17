@@ -331,35 +331,33 @@ public abstract class VisualizationPanel extends JPanel
 	 * Sets a visible range for the given axis in non-logarithmic value space.
 	 * For categories (0...n) typical values are: NaN, 0.5, 1.5, ... n-1.5
 	 * @param axis
-	 * @param low NaN if there is no low limit
-	 * @param high NaN if there is no high limit
+	 * @param dataLow NaN if there is no low limit
+	 * @param dataHigh NaN if there is no high limit
 	 */
-	public void setVisibleRange(int axis, float low, float high) {
+	public void setVisibleRange(int axis, float dataLow, float dataHigh) {
 		int column = mVisualization.getColumnIndex(axis);
 		if (column != -1) {
-			float limit1 = 0f;
-			float limit2 = 1f;
+			float barLow = 0f;
+			float barHigh = 1f;
 			if (mVisualization.isCategoryAxis(axis)) {
 				int categoryCount = mTableModel.getCategoryCount(column);
-				if (!Float.isNaN(low) && low > 0f)
-					limit1 = (low >= categoryCount-1) ? 1f : (0.5f + low) / (float)categoryCount;
-				if (!Float.isNaN(high) && high < categoryCount-1)
-					limit2 = (high < 0f) ? 0f : (0.5f + high) / (float)categoryCount;
-				if (limit1 > limit2)
-					limit1 = limit2;
+				if (!Float.isNaN(dataLow) && dataLow > 0f)
+					barLow = (dataLow >= categoryCount-1) ? 1f : (0.5f + dataLow) / (float)categoryCount;
+				if (!Float.isNaN(dataHigh) && dataHigh < categoryCount-1)
+					barHigh = (dataHigh < 0f) ? 0f : (0.5f + dataHigh) / (float)categoryCount;
+				if (barLow > barHigh)
+					barLow = barHigh;
 				}
 			else {
-				float[] minAndMax = mVisualization.getDataMinAndMax(axis);
-				if (minAndMax[0] < minAndMax[1]) {
-					if (!Float.isNaN(low) && low > minAndMax[0])
-						limit1 = (low >= minAndMax[1]) ? 1f : (low - minAndMax[0]) / (minAndMax[1] - minAndMax[0]);
-					if (!Float.isNaN(high) && high < minAndMax[1])
-						limit2 = (high <= minAndMax[0]) ? 0f : (high - minAndMax[0]) / (minAndMax[1] - minAndMax[0]);
-					if (limit1 > limit2)
-						limit1 = limit2;
+				if (mTableModel.isLogarithmicViewMode(column)) {
+					dataLow = (float)Math.log10(dataLow);
+					dataHigh = (float)Math.log10(dataHigh);
 					}
+				float[] barLowAndHigh = mVisualization.calculatePruningBarLowAndHigh(axis, dataLow, dataHigh);
+				barLow = barLowAndHigh[0];
+				barHigh = barLowAndHigh[1];
 				}
-			getPruningBar(axis).setLowAndHigh(limit1, limit2, false);
+			getPruningBar(axis).setLowAndHigh(barLow, barHigh, false);
 			}
 		}
 
@@ -478,7 +476,7 @@ public abstract class VisualizationPanel extends JPanel
 				zoom = MAX_AUTO_ZOOM_VALUE;
 
 			for (int i=0; i<mDimensions; i++) {
-				float value = mVisualization.getPruningBarMappedValue(ref, i);
+				float value = mVisualization.calcPruningBarMappedValue(ref, i);
 				if (Float.isNaN(value)) {
 					low[i] = 0f;
 					high[i] = 1f;
@@ -541,16 +539,22 @@ public abstract class VisualizationPanel extends JPanel
 			for (VisualizationPanel child:getSynchronizationChildList()) {
 				float low = e.getLowValue();
 				float high = e.getHighValue();
-				float[] range = new float[2];
-				boolean isLog = child.getVisualization().getFullDataRange(e.getID(), range);
-				float val = Float.isNaN(low) ? high : low;
-				if (isLog)
-					val = (float)Math.log10(val);
-				float pos = (val - range[0]) / (range[1] - range[0]);
+				JVisualization visualization = child.getVisualization();
+
 				if (Float.isNaN(low))
-					mPruningBar[e.getID()].setHighValue(pos);
-				else
-					mPruningBar[e.getID()].setLowValue(pos);
+					low = visualization.getVisibleMin(e.getID());
+				else if (mTableModel.isLogarithmicViewMode(visualization.getColumnIndex(e.getID())))
+					low = (float)Math.log10(low);
+
+				if (Float.isNaN(high))
+					high = visualization.getVisibleMax(e.getID());
+				else if (mTableModel.isLogarithmicViewMode(visualization.getColumnIndex(e.getID())))
+					high = (float)Math.log10(high);
+
+				if (low <= high) {
+					float[] lowAndHigh = visualization.calculatePruningBarLowAndHigh(e.getID(), low, high);
+					mPruningBar[e.getID()].setLowAndHigh(lowAndHigh[0], lowAndHigh[1], false);
+					}
 				return;
 				}
 			}
@@ -644,8 +648,31 @@ public abstract class VisualizationPanel extends JPanel
 							mDisableEvents = true;
 							setComboBox(axis, j);
 							mDisableEvents = false;
-							float newMin = (mPruningBar[axis].getLowValue() == 0.0) ? 0f : mVisualization.getPruningBarLow(axis);
-							float newMax = (mPruningBar[axis].getHighValue() == 1.0) ? 1f : mVisualization.getPruningBarHigh(axis);
+
+							float dataLow = mVisualization.getVisibleMin(axis);
+							float dataHigh = mVisualization.getVisibleMax(axis);
+							if (mVisualization.isLogarithmicAxis(axis) && !mTableModel.isLogarithmicViewMode(column)) {
+								dataLow = (float)Math.pow(10, dataLow);
+								dataHigh = (float)Math.pow(10, dataHigh);
+								}
+							else if (!mVisualization.isLogarithmicAxis(axis) && mTableModel.isLogarithmicViewMode(column)) {
+								// as last resort make sure that we have positive values for log scale
+								if (dataHigh <= 0) {
+									dataHigh = mTableModel.getMaximumValue(column);
+									if (dataHigh <= 0)
+										dataHigh = 1f;
+									}
+								if (dataLow <= 0) {
+									dataLow = mTableModel.getMinimumValue(column);
+									if (dataLow <= 0)
+										dataLow = dataHigh / 1000;
+									}
+								dataLow = (float)Math.log10(dataLow);
+								dataHigh = (float)Math.log10(dataHigh);
+								}
+							float[] barLowAndHigh = mVisualization.calculatePruningBarLowAndHigh(axis, dataLow, dataHigh);
+							float newMin = (mPruningBar[axis].getLowValue() == 0.0) ? 0f : barLowAndHigh[0];
+							float newMax = (mPruningBar[axis].getHighValue() == 1.0) ? 1f : barLowAndHigh[1];
 
 							// silently update sliders in case of logMode change
 							mPruningBar[axis].setLowAndHigh(newMin, newMax, true);
@@ -653,7 +680,8 @@ public abstract class VisualizationPanel extends JPanel
 									&& !mTableModel.isColumnDataComplete(column)
 									&& mTableModel.isColumnTypeDouble(column));
 
-							mVisualization.updateVisibleRange(axis, newMin, newMax, false);
+							for (VisualizationPanel vp:mSynchronizationChildList)
+								vp.getVisualization().updateVisibleRange(axis, newMin, newMax, false);
 
 							found = true;
 							break;

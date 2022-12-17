@@ -2235,7 +2235,7 @@ public abstract class JVisualization extends JComponent
 			if (mIsCategoryAxis[axis] != wasCategoryAxis[axis])
 				localExclusionNeeds |= (EXCLUSION_FLAG_ZOOM_0 << axis);
 
-			calculateVisibleRange(axis);
+			calculateVisibleDataRange(axis);
 			}
 
 		int newChartColumn = (mChartInfo == null || !mChartInfo.useProportionalFractions()) ? -1 : mChartColumn;
@@ -2371,72 +2371,114 @@ public abstract class JVisualization extends JComponent
 		}
 
 	/**
+	 * Calculates for numerical or date columns the pruning bar low and high values
+	 * needed to exactly represent the given non-logarithmic data range.
+	 * This method applies the margin concept used in calcDataMinAndMax(),
+	 * where absolute margins shrink when zooming to keep relative margin sizes unchanged.
+	 * For logarithmic columns passed data low and high values must be logarithmic.
+	 * @param dataLow
+	 * @param dataHigh
+	 * @return
+	 */
+	protected float[] calculatePruningBarLowAndHigh(int axis, float dataLow, float dataHigh) {
+		// NOTE: If you change the margin logic here, then also adapt the margin logic
+		//       in calculateDataMinAndMax() accordingly!!!
+		float[] lowAndHigh = new float[2];
+		lowAndHigh[0] = 0f;
+		lowAndHigh[1] = 1f;
+		JVisualization.AxisDataRange range = calculateDataMinAndMax(axis);
+		if (range.min < range.max) {
+			if (!Float.isNaN(dataLow) && dataLow <= range.min-range.leftMargin)
+				dataLow = Float.NaN;
+			if (!Float.isNaN(dataHigh) && dataHigh >= range.max+range.rightMargin)
+				dataHigh = Float.NaN;
+			boolean maxOutLeft = Float.isNaN(dataLow);
+			boolean maxOutRight = Float.isNaN(dataHigh);
+			if (!maxOutLeft || !maxOutRight) {
+				dataLow = Math.min(range.max+range.rightMargin, maxOutLeft ? range.min-range.leftMargin : dataLow);
+				dataHigh = Math.max(dataLow, maxOutRight ? range.max+range.rightMargin : dataHigh);
+				float barRange = (dataHigh - dataLow) / range.fullRange();
+				float scaledLeftMargin = barRange * range.leftMargin;
+				float scaledRightMargin = barRange * range.rightMargin;
+				if (!maxOutLeft)
+					lowAndHigh[0] = (dataLow - range.min + scaledLeftMargin) / (scaledLeftMargin + scaledRightMargin + range.max - range.min);
+				if (!maxOutRight)
+					lowAndHigh[1] = (dataHigh - range.min + scaledLeftMargin) / (scaledLeftMargin + scaledRightMargin + range.max - range.min);
+				}
+			}
+		return lowAndHigh;
+		}
+
+	/**
 	 * Calculates visual min and max values for numerical or date columns.
 	 * These are the lowest and highest data values extended by some percent
 	 * of the total range as added margin. For cyclic data or if explicit data low and high
-	 * values exist, then no margin is added.
+	 * values exist, then no margin is added. In case of logarithmic columns returned
+	 * values are also on a logarithmic scale.
+	 * Note: The total data range depends on the zoom state, because the added margin
+	 * shrinks with increasing zoom state to compensate and keep same size in view space!
 	 * @param axis
-	 * @return min and max values of total data range
+	 * @return min and max values of total data range incl. margin or data range definition
 	 */
-	protected float[] getDataMinAndMax(int axis) {
+	protected AxisDataRange calculateDataMinAndMax(int axis) {
+		// NOTE: If you change the margin logic here, then also adapt the margin logic
+		//       in calculatePruningBarLowAndHigh() accordingly!!!
 		int column = mAxisIndex[axis];
-		float[] minAndMax = new float[2];
-		minAndMax[0] = mTableModel.getMinimumValue(column);
-		minAndMax[1] = mTableModel.getMaximumValue(column);
+		AxisDataRange adr = new AxisDataRange();
+
+		if (mTableModel.isDescriptorColumn(column)) {
+			adr.min = 0f;
+			adr.max = 1f;
+			return adr;
+			}
+
+		adr.min = mTableModel.getMinimumValue(column);
+		adr.max = mTableModel.getMaximumValue(column);
 		if (mScatterPlotMargin != 0f
-		 && minAndMax[0] != minAndMax[1]
+		 && adr.min != adr.max
 		 && mTableModel.getColumnProperty(column, cColumnPropertyCyclicDataMax) == null) {
-			float margin = mScatterPlotMargin * (minAndMax[1] - minAndMax[0]) * (mPruningBarHigh[axis] - mPruningBarLow[axis]);
+			adr.pruning = mPruningBarHigh[axis] - mPruningBarLow[axis];
+			float margin = mScatterPlotMargin * (adr.max - adr.min);
 			if (mTableModel.getColumnProperty(column, cColumnPropertyDataMin) == null)
-				minAndMax[0] -= margin;
+				adr.leftMargin = margin;
 			if (mTableModel.getColumnProperty(column, cColumnPropertyDataMax) == null)
-				minAndMax[1] += margin;
+				adr.rightMargin = margin;
 			}
-		return minAndMax;
+		return adr;
 		}
 
-	/**
-	 * Calculates the total available data range on the axis including any additional margins,
-	 * considering current graph type and logarithmic view mode.
-	 * These values are the data space values mapped to both end positions of the range slider.
-	 * @param axis
-	 * @param range array to be filled with min and max values
-	 * @return whether values are treated logarithmically
-	 */
-	public boolean getFullDataRange(int axis, float[] range) {
-		boolean visRangeIsLog = false;
-		int column = mAxisIndex[axis];
-		if (column == cColumnUnassigned) {
-			range[0] = -1.0f;
-			range[1] =  1.0f;
-			}
-		else {
-			if (mIsCategoryAxis[axis]) {
-				range[0] = -0.5f;
-				range[1] = -0.5f + mTableModel.getCategoryCount(column);
-				}
-			else if (mTableModel.isDescriptorColumn(column)) {
-				range[0] = 0.0f;
-				range[1] = 1.0f;
-				}
-			else {
-				float[] minAndMax = getDataMinAndMax(axis);
-				range[0] = minAndMax[0];
-				range[1] = minAndMax[1];
-				visRangeIsLog = mTableModel.isLogarithmicViewMode(column);
-				}
-			}
+	class AxisDataRange {
+		private float min,max,leftMargin,rightMargin,pruning;
 
-		return visRangeIsLog;
+		public float scaledMin() {
+			return min - pruning * leftMargin;
 		}
 
+		public float scaledMax() {
+			return max + pruning * rightMargin;
+		}
+
+		public float fullMin() {
+			return min - leftMargin;
+		}
+
+		public float fullMax() {
+			return max + rightMargin;
+		}
+
+		public float fullRange() {
+			return max - min + leftMargin + rightMargin;
+		}
+	}
+
 	/**
-	 * Calculates the visible range of the axis based on pruning bar settings,
-	 * current graph type, logarithmic view mode.
+	 * Calculates the visible range of the axis based on pruning bar settings
+	 * and the full data range, which considers current graph type, margins,
+	 * data range definitions, and logarithmic view mode.
 	 * @param axis
 	 * @return whether the visible range has been changed
 	 */
-	private boolean calculateVisibleRange(int axis) {
+	private boolean calculateVisibleDataRange(int axis) {
 		float visMin = -0.5f;
 		float visMax =  0.5f;
 		boolean visRangeIsLog = false;
@@ -2452,9 +2494,9 @@ public abstract class JVisualization extends JComponent
 				visMax = mPruningBarHigh[axis];
 				}
 			else {
-				float[] minAndMax = getDataMinAndMax(axis);
-				float dataMin = minAndMax[0];
-				float dataMax = minAndMax[1];
+				AxisDataRange adr = calculateDataMinAndMax(axis);
+				float dataMin = adr.scaledMin();
+				float dataMax = adr.scaledMax();
 				float dataRange = dataMax - dataMin;
 				visMin = (mPruningBarLow[axis] == 0.0f) ? dataMin : dataMin + mPruningBarLow[axis] * dataRange;
 				visMax = (mPruningBarHigh[axis] == 1.0f) ? dataMax : dataMin + mPruningBarHigh[axis] * dataRange;
@@ -2473,81 +2515,36 @@ public abstract class JVisualization extends JComponent
 		return false;
 		}
 
+	/**
+	 * @param axis
+	 * @return value at the right/upper end of visible range; logarithmic in case of logarithmic columns
+	 */
 	public float getVisibleMin(int axis) {
 		return mAxisVisMin[axis];
 		}
 
+	/**
+	 * @param axis
+	 * @return value at the right/upper end of visible range; logarithmic in case of logarithmic columns
+	 */
 	public float getVisibleMax(int axis) {
 		return mAxisVisMax[axis];
 		}
 
-	/**
-	 * Based on the currently selected visible range, the displayed chart type and axis usage,
-	 * this method calculates the pruning bar value from 0.0 to 1.0 to reflect visible range low value.
-	 * @param axis
-	 * @return low value of visible range normalized to span 0.0 to 1.0
-	 */
-	public float getPruningBarLow(int axis) {
-		int column = mAxisIndex[axis];
-		if (column == cColumnUnassigned)
-			return 0.0f;
-		if (mTableModel.isDescriptorColumn(column))
-			return mAxisVisMin[axis];
-		if (mIsCategoryAxis[axis])
-			return (float)Math.round(mAxisVisMin[axis] + 0.5f) / (float)mTableModel.getCategoryCount(column);
-
-		float[] minAndMax = getDataMinAndMax(axis);
-		float visMin = mAxisVisMin[axis];
-
-		if (mTableModel.isLogarithmicViewMode(column) != mAxisVisRangeIsLogarithmic[axis]) {
-			if (mAxisVisRangeIsLogarithmic[axis])
-				visMin = (float)Math.pow(10, visMin);
-			else
-				visMin = (float)Math.log10(visMin);
-			}
-
-		return Math.min(1f, Math.max(0f, (visMin - minAndMax[0])
-			 / (minAndMax[1] - minAndMax[0])));
+	public boolean isLogarithmicAxis(int axis) {
+		return mAxisVisRangeIsLogarithmic[axis];
 		}
 
 	/**
-	 * Based on the currently selected visible range, the displayed chart type and axis usage,
-	 * this method calculates the pruning bar value from 0.0 to 1.0 to reflect visible range high value.
-	 * @param axis
-	 * @return high value of visible range normalized to span 0.0 to 1.0
-	 */
-	public float getPruningBarHigh(int axis) {
-		int column = mAxisIndex[axis];
-		if (column == cColumnUnassigned)
-			return 1.0f;
-		if (mTableModel.isDescriptorColumn(column))
-			return mAxisVisMax[axis];
-		if (mIsCategoryAxis[axis])
-			return (float)Math.round(mAxisVisMax[axis] + 0.5f) / (float)mTableModel.getCategoryCount(column);
-
-		float[] minAndMax = getDataMinAndMax(axis);
-		float visMax = mAxisVisMax[axis];
-
-		if (mTableModel.isLogarithmicViewMode(column) != mAxisVisRangeIsLogarithmic[axis]) {
-			if (mAxisVisRangeIsLogarithmic[axis])
-				visMax = (float)Math.pow(10, visMax);
-			else
-				visMax = (float)Math.log10(visMax);
-			}
-
-		return Math.min(1f, Math.max(0f, (visMax - minAndMax[0]) / (minAndMax[1] - minAndMax[0])));
-		}
-
-	/**
-	 * For the given axis this method maps the original data range to the pruning bar range
-	 * (0.0 to 1.0). It then determines the data value of the given record and axis column
+	 * For the given axis this method maps the axis column's full data range to the pruning bar
+	 * range (0.0 to 1.0). It then determines the data value of the given record and axis column
 	 * and translates it to the pruning bar range. If the axis is unused, then it returns 0.5.
 	 * If the data value is NaN, then NaN is returned.
 	 * @param axis
 	 * @param record
-	 * @return the record's data value mapped to full pruning bar range from 0.0 to 1.0
+	 * @return pruning bar value in range 0.0 to 1.0 reflecting the record's data
 	 */
-	public float getPruningBarMappedValue(CompoundRecord record, int axis) {
+	public float calcPruningBarMappedValue(CompoundRecord record, int axis) {
 		int column = mAxisIndex[axis];
 		if (column == cColumnUnassigned)
 			return 0.5f;
@@ -2561,7 +2558,7 @@ public abstract class JVisualization extends JComponent
 		if (mIsCategoryAxis[axis])
 			return (float)Math.round(value + 0.5f) / (float)mTableModel.getCategoryCount(column);
 
-		float[] minAndMax = getDataMinAndMax(axis);
+		AxisDataRange adr = calculateDataMinAndMax(axis);
 
 		if (mTableModel.isLogarithmicViewMode(column) != mAxisVisRangeIsLogarithmic[axis]) {
 			if (mAxisVisRangeIsLogarithmic[axis])
@@ -2570,7 +2567,7 @@ public abstract class JVisualization extends JComponent
 				value = (float)Math.log10(value);
 			}
 
-		return Math.min(1f, Math.max(0f, (value - minAndMax[0]) / (minAndMax[1] - minAndMax[0])));
+		return Math.min(1f, Math.max(0f, (value - adr.scaledMin()) / (adr.scaledMax() - adr.scaledMin())));
 		}
 
 	private void updateZoomState() {
@@ -5192,7 +5189,7 @@ public abstract class JVisualization extends JComponent
 		if (axis < mDimensions && mAxisIndex[axis] != cColumnUnassigned) {
 			mPruningBarLow[axis] = low;
 			mPruningBarHigh[axis] = high;
-			if (calculateVisibleRange(axis)) {
+			if (calculateVisibleDataRange(axis)) {
 				updateLocalZoomExclusion(axis);
 				applyLocalExclusion(isAdjusting);
 				updateZoomState();

@@ -6130,11 +6130,14 @@ public class JVisualization2D extends JVisualization {
 		invalidateOffImage(false);
 		}
 
-	public void unfreezeCrossHairs() {
+	public void clearCrossHairs() {
 		mCrossHairList.clear();
 		invalidateOffImage(false);
 		}
 
+	/**
+	 * @return non-log 'x,y' coordinate pairs of all crosshairs ';' separated
+	 */
 	public String getCrossHairList() {
 		StringBuilder list = new StringBuilder();
 		for (GraphPoint p:mCrossHairList) {
@@ -6146,10 +6149,13 @@ public class JVisualization2D extends JVisualization {
 		return list.toString();
 		}
 
-	public void setCrossHairList(String list) {
+	/**
+	 * @param coords non-log 'x,y' coordinate pairs of all crosshairs ';' separated
+	 */
+	public void setCrossHairList(String coords) {
 		mCrossHairList.clear();
-		if (list != null) {
-			String[] points = list.split(";");
+		if (coords != null) {
+			String[] points = coords.split(";");
 			for (String point:points) {
 				GraphPoint p = new GraphPoint(point);
 				if (p.isValid())

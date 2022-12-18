@@ -240,6 +240,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskSetColumnProperties.TASK_NAME) ? new DETaskSetColumnProperties(frame)
 			 : codeMatches(taskCode, DETaskSetColumnReference.TASK_NAME) ? new DETaskSetColumnReference(frame, frame.getTableModel(), -1)
 			 : codeMatches(taskCode, DETaskSetConnectionLines.TASK_NAME) ? new DETaskSetConnectionLines(frame, mainPane, null)
+			 : codeMatches(taskCode, DETaskSetCrossHairs.TASK_NAME) ? new DETaskSetCrossHairs(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskSetExplanationHTML.TASK_NAME) ? new DETaskSetExplanationHTML(frame, frame.getTableModel())
 			 : codeMatches(taskCode, DETaskSetFocus.TASK_NAME) ? new DETaskSetFocus(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskSetFontSize.TASK_NAME) ? new DETaskSetFontSize(frame, mainPane, null)
@@ -459,6 +460,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TABLE, DETaskSetColumnProperties.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskSetColumnReference.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSetConnectionLines.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSetCrossHairs.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILE, DETaskSetExplanationHTML.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSetFocus.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TABLE, DETaskSetFontSize.TASK_NAME));

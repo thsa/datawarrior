@@ -28,6 +28,7 @@ import com.actelion.research.datawarrior.task.chem.DETaskSortReactionsBySimilari
 import com.actelion.research.datawarrior.task.chem.DETaskSortStructuresBySimilarity;
 import com.actelion.research.datawarrior.task.table.DETaskCopyTableCells;
 import com.actelion.research.datawarrior.task.table.DETaskPasteIntoTable;
+import com.actelion.research.datawarrior.task.view.DETaskSetCrossHairs;
 import com.actelion.research.datawarrior.task.view.cards.*;
 import com.actelion.research.gui.JScrollableMenu;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
@@ -106,7 +107,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 	protected static final String EDIT_VALUE = "edit" + DELIMITER;
 	private static final String SORT = "sort" + DELIMITER;
 	private static final String FREEZE_CROSSHAIR = "freeze";
-	private static final String UNFREEZE_CROSSHAIRS = "unfreeze";
+	private static final String CLEAR_CROSSHAIRS = "unfreeze";
 	private static final String ADD_TO_LIST = "add" + DELIMITER;
 	private static final String REMOVE_FROM_LIST = "remove" + DELIMITER;
 	private static final String PATENT_SEARCH = "patentSearch" + DELIMITER;
@@ -187,7 +188,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 		if (record == null) {
 			if (mSource instanceof VisualizationPanel2D && ((VisualizationPanel)mSource).getVisualization().showCrossHair()) {
 				addMenuItem("Freeze Crosshair", FREEZE_CROSSHAIR);
-				addMenuItem("Remove Frozen Crosshairs", UNFREEZE_CROSSHAIRS);
+				addMenuItem("Remove Frozen Crosshairs", CLEAR_CROSSHAIRS);
 				}
 			}
 		else {
@@ -334,7 +335,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 			if (mSource instanceof VisualizationPanel2D && ((VisualizationPanel)mSource).getVisualization().showCrossHair()) {
 				JMenu crosshairMenu = new JMenu("Crosshair");
 				addSubmenuItem(crosshairMenu, "Freeze Crosshair", FREEZE_CROSSHAIR, null);
-				addSubmenuItem(crosshairMenu, "Remove Frozen Crosshairs", UNFREEZE_CROSSHAIRS, null);
+				addSubmenuItem(crosshairMenu, "Remove Frozen Crosshairs", CLEAR_CROSSHAIRS, null);
 				addSeparator();
 				add(crosshairMenu);
 				}
@@ -1059,9 +1060,9 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 			else
 				new DETaskSortStructuresBySimilarity(getParentFrame(), descriptorColumn, mRecord).defineAndRun();
 		} else if (actionCommand.equals(FREEZE_CROSSHAIR)) {
-			((JVisualization2D)((VisualizationPanel)mSource).getVisualization()).freezeCrossHair();
-		} else if (actionCommand.equals(UNFREEZE_CROSSHAIRS)) {
-			((JVisualization2D)((VisualizationPanel)mSource).getVisualization()).unfreezeCrossHairs();
+			new DETaskSetCrossHairs(getParentFrame(), mMainPane, (VisualizationPanel2D)mSource, DETaskSetCrossHairs.MODE_FREEZE_CURRENT).defineAndRun();
+		} else if (actionCommand.equals(CLEAR_CROSSHAIRS)) {
+			new DETaskSetCrossHairs(getParentFrame(), mMainPane, (VisualizationPanel2D)mSource, DETaskSetCrossHairs.MODE_CLEAR).defineAndRun();
 		} else if (actionCommand.startsWith(ADD_TO_LIST)) {
 			String hitlistName = getCommandColumn(actionCommand);
 			CompoundTableListHandler hh = mTableModel.getListHandler();

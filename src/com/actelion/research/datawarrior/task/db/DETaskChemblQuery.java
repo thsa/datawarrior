@@ -89,9 +89,10 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 			}
 
 		JPanel panel = new JPanel();
-		double[][] size = { {8, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 16, HiDPIHelper.scale(512), 8},
-							{8, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 32, TableLayout.PREFERRED,
-							 8, TableLayout.PREFERRED, 24, TableLayout.PREFERRED, 24, TableLayout.PREFERRED, 8} };
+		int gap = HiDPIHelper.scale(8);
+		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, 2*gap, HiDPIHelper.scale(512), gap},
+							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, 4*gap, TableLayout.PREFERRED,
+									gap, TableLayout.PREFERRED, 3*gap, TableLayout.PREFERRED, 3*gap, TableLayout.PREFERRED, gap} };
 		panel.setLayout(new TableLayout(size));
 
 		panel.add(createComboBoxSearchType(SEARCH_TYPES_SSS_SIM_EXACT_NOSTEREO_TAUTO), "1,5");
@@ -105,9 +106,9 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 		panel.add(mTextFieldFilter, "3,1");
 
 		JPanel filterPanel = new JPanel();
-		double[][] fs = { {TableLayout.FILL, TableLayout.PREFERRED, 16, TableLayout.PREFERRED, TableLayout.FILL},
-						  {TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 4,
-						   TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 4, TableLayout.PREFERRED} };
+		double[][] fs = { {TableLayout.FILL, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, TableLayout.FILL},
+						  {TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2,
+						   TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED} };
 		filterPanel.setLayout(new TableLayout(fs));
 		mComboBoxFamily = new JComboBox[PROTEIN_CLASS_LEVELS];
 		for (int i=0; i<PROTEIN_CLASS_LEVELS; i++) {

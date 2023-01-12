@@ -100,6 +100,10 @@ public class DEParentPane extends JComponent implements DetailPopupProvider  {
 		mRPListener = new ArrayList<>();
 		}
 
+	public DEFrame getParentFrame() {
+		return mParentFrame;
+		}
+
 	@Override
 	public void updateUI() {
 		super.updateUI();

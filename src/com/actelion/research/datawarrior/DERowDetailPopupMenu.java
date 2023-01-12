@@ -332,6 +332,30 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 				add(sortMenu);
 				}
 
+			ArrayList<DETableRowTaskDef> rowTasks = mainPane.getRowTaskList();
+			if (!rowTasks.isEmpty()) {
+				addSeparator();
+				TreeMap<String,JMenu> parentMenuMap = new TreeMap<>();
+				for (DETableRowTaskDef taskDef:rowTasks) {
+					String parentMenuName = taskDef.getParentMenu();
+					if (parentMenuName != null && !parentMenuMap.containsKey(parentMenuName)) {
+						JMenu parentMenu = new JMenu(parentMenuName);
+						add(parentMenu);
+						parentMenuMap.put(parentMenuName, parentMenu);
+						}
+					}
+				for (DETableRowTaskDef taskDef:rowTasks) {
+					JMenuItem item = new JMenuItem(taskDef.getMenuItem());
+					item.addActionListener(taskDef);
+					String parentMenuName = taskDef.getParentMenu();
+					if (parentMenuName != null)
+						parentMenuMap.get(parentMenuName).add(item);
+					else
+						add(item);
+					taskDef.setTableRow(mRecord);
+					}
+				}
+
 			if (mSource instanceof VisualizationPanel2D && ((VisualizationPanel)mSource).getVisualization().showCrossHair()) {
 				JMenu crosshairMenu = new JMenu("Crosshair");
 				addSubmenuItem(crosshairMenu, "Freeze Crosshair", FREEZE_CROSSHAIR, null);

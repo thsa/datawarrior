@@ -48,7 +48,7 @@ public abstract class AbstractTask implements ProgressController {
 	private boolean				mStatusOK,mIsLive;
 	private volatile Frame		mParentFrame;
 	private volatile ProgressController	mProgressController;
-	private volatile Properties	mTaskConfiguration;
+	private volatile Properties	mTaskConfiguration,mPredefinedConfiguration;
 	private volatile boolean	mUseOwnThread,mIsInteractive,mIsExecuting;
 
 	public static String configurationToString(Properties configuration) {
@@ -160,7 +160,23 @@ public abstract class AbstractTask implements ProgressController {
 	 * @return null or valid configuration, if the task is predefined and is interactively called
 	 */
 	public Properties getPredefinedConfiguration() {
-		return null;
+		return mPredefinedConfiguration;
+		}
+
+	/**
+	 * Typically, a predefined configuration is built on-the-fly by the getPredefinedConfiguration()
+	 * method from information that was passed to the constructor of any derived AbstractTask.
+	 * This happens, when a task is interactively executed from UI-elements, which implicitly
+	 * contains the information needed to configure the task, e.g. when a column shall be deleted
+	 * by selecting the column's popup menu, the column to be deleted is known and passed to the
+	 * DeleteColumnTask's constructor. No column selection dialog is shown.<br>
+	 * In the rare case, when a task is constructed by a task factory for interactive execution and
+	 * if the configuration is known for whatever reason, then use this function. Example:
+	 * A plugin row task launched from e row popup menu item with the configuration taken from a template.
+	 * @param configuration
+	 */
+	public void setPredefinedConfiguration(Properties configuration) {
+		mPredefinedConfiguration = configuration;
 		}
 
 	/**
@@ -169,7 +185,7 @@ public abstract class AbstractTask implements ProgressController {
 	 * override this method and return false. Example TaskOpenFile: Instead of a configuration dialog
 	 * a file dialog is shown within the getPredefinedConfiguration() method. If the file dialog
 	 * is cancelled, the task should not be executed nor recorded in a macro.
-	 * This method is called only, after getPredefinedConfiguration() return something != null.
+	 * This method is called only, after getPredefinedConfiguration() returns something != null.
 	 * @param predefinedConfiguration
 	 * @return
 	 */
@@ -370,14 +386,23 @@ public abstract class AbstractTask implements ProgressController {
 		JButton bcancel = new JButton("Cancel");
 		bcancel.addActionListener(al);
 		buttonPanel.add(bcancel, "4,1");
-		JButton bok = new JButton("OK");
+		JButton bok = new JButton(getDefaultButtonText());
+		bok.setActionCommand("OK");
 		bok.addActionListener(al);
 		buttonPanel.add(bok, "6,1");
 		mDialog.getRootPane().setDefaultButton(bok);
 		return buttonPanel;
 		}
 
-/*	private void showSwingHelpWindow() {
+	/**
+	 * Override if you need a different text on the OK-button than 'OK'
+	 * @return
+	 */
+	public String getDefaultButtonText() {
+		return "OK";
+		}
+
+	/*	private void showSwingHelpWindow() {
 		final float zoomFactor = HiDPIHelper.getUIScaleFactor();
 		final JEditorPane helpPane = new JEditorPane();
 		helpPane.setEditorKit(HiDPIHelper.getUIScaleFactor() == 1f ? new HTMLEditorKit() : new ScaledEditorKit());
@@ -569,7 +594,7 @@ public abstract class AbstractTask implements ProgressController {
 	 * @param messageType one of ERROR_MESSAGE, WARNING_MESSAGE, INFORMATION_MESSAGE
 	 */
 	public void showMessage(String message, int messageType) {
-		if (!isRunningMacro()) {
+		if (!isRunningMacro() || mProgressController == null) {
 			showInteractiveTaskMessage(message, messageType);
 			}
 		else {

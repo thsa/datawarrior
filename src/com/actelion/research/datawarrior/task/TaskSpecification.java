@@ -19,6 +19,8 @@
 package com.actelion.research.datawarrior.task;
 
 
+import java.util.ArrayList;
+
 public class TaskSpecification implements Comparable<TaskSpecification> {
 	public static final int CATEGORY_FILE = 0;
 	public static final int CATEGORY_EDIT = 1;
@@ -33,6 +35,7 @@ public class TaskSpecification implements Comparable<TaskSpecification> {
 	public static final int CATEGORY_TEST = 10;
 	public static final String[] CATEGORY_NAME = { "File", "Edit", "Data", "Chemistry", "List", "Database", "Filter", "Table", "View", "Macro", "Test" };
 
+	private static ArrayList<String> sCustomCategoryList = null;
 	private int mCategory;
 	private String mName;
 
@@ -41,12 +44,32 @@ public class TaskSpecification implements Comparable<TaskSpecification> {
 		mName = name;
 		}
 
+	public TaskSpecification(String customCategory, String name) {
+		mCategory = -1;
+		for (int i=0; i<CATEGORY_NAME.length; i++) {
+			if (CATEGORY_NAME[i].equals(name)) {
+				mCategory = i;
+				break;
+				}
+			}
+
+		if (mCategory == -1) {
+			if (sCustomCategoryList == null)
+				sCustomCategoryList = new ArrayList<>();
+			if (!sCustomCategoryList.contains(customCategory))
+				sCustomCategoryList.add(customCategory);
+			mCategory = CATEGORY_NAME.length + sCustomCategoryList.indexOf(customCategory);
+			}
+
+		mName = name;
+		}
+
 	public int getCategory() {
 		return mCategory;
 		}
 
 	public String getCategoryName() {
-		return CATEGORY_NAME[mCategory];
+		return mCategory < CATEGORY_NAME.length ? CATEGORY_NAME[mCategory] : sCustomCategoryList.get(mCategory - CATEGORY_NAME.length);
 		}
 
 	public String getTaskName() {

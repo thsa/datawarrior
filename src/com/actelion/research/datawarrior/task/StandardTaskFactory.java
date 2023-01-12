@@ -24,7 +24,8 @@ import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.DEPruningPanel;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.help.DETaskSetExplanationHTML;
-import com.actelion.research.datawarrior.plugin.PluginSpec;
+import com.actelion.research.datawarrior.plugin.PluginMenuEntry;
+import com.actelion.research.datawarrior.plugin.PluginTaskDefinition;
 import com.actelion.research.datawarrior.task.chem.*;
 import com.actelion.research.datawarrior.task.chem.clib.DETaskEnumerateCombinatorialLibrary;
 import com.actelion.research.datawarrior.task.chem.elib.DETaskBuildEvolutionaryLibrary;
@@ -40,6 +41,7 @@ import com.actelion.research.datawarrior.task.list.*;
 import com.actelion.research.datawarrior.task.macro.*;
 import com.actelion.research.datawarrior.task.table.*;
 import com.actelion.research.datawarrior.task.view.*;
+import org.openmolecules.datawarrior.plugin.IPluginStartHelper;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -283,14 +285,14 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskValidateIDCodes.TASK_NAME) ? new DETaskValidateIDCodes(frame, CompoundTableConstants.cColumnTypeIDCode)
 			 : codeMatches(taskCode, DETaskUseAsFilter.TASK_NAME) ? new DETaskUseAsFilter(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskWait.TASK_NAME) ? new DETaskWait(frame)
-			 : createPluginTaskFromCode(frame, taskCode);
+			 : createPluginTaskFromCode(application, taskCode);
 		}
 
-	private AbstractTask createPluginTaskFromCode(DEFrame frame, String taskCode) {
-		ArrayList<PluginSpec> pluginList = frame.getApplication().getPluginRegistry().getPlugins();
-		for (PluginSpec plugin:pluginList)
-			if (taskCode.equals(plugin.getTaskCode()))
-				return new DETaskPluginTask(frame, plugin.getTask());
+	private AbstractTask createPluginTaskFromCode(DataWarrior application, String taskCode) {
+		ArrayList<PluginTaskDefinition> pluginTaskList = application.getPluginRegistry().getPluginTasks();
+		for (PluginTaskDefinition def:pluginTaskList)
+			if (taskCode.equals(def.getTaskCode()))
+				return new DETaskPluginTask(application, def.getTask());
 
 		return null;
 		}
@@ -503,9 +505,15 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskUseAsFilter.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskWait.TASK_NAME));
 
-			ArrayList<PluginSpec> pluginList = frame.getApplication().getPluginRegistry().getPlugins();
-			for (PluginSpec pluginTask:pluginList)
-				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, pluginTask.getTaskName()));
+			ArrayList<PluginTaskDefinition> pluginList = frame.getApplication().getPluginRegistry().getPluginTasks();
+			for (PluginTaskDefinition pluginTask:pluginList) {
+				String category = pluginTask.getTaskGroupNamer();
+				if (category == null)
+					mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, pluginTask.getTaskName()));
+				else {
+					mTaskDictionary.add(new TaskSpecification(category, pluginTask.getTaskName()));
+					}
+				}
 
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETaskValidateIDCodes.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETaskCompareReactionMapping.TASK_NAME));
@@ -528,8 +536,8 @@ public class StandardTaskFactory {
 	 * @return unique task name
 	 */
 	public String getTaskCodeFromName(String taskName) {
-		ArrayList<PluginSpec> pluginList = mApplication.getPluginRegistry().getPlugins();
-		for (PluginSpec plugin:pluginList)
+		ArrayList<PluginTaskDefinition> pluginTaskList = mApplication.getPluginRegistry().getPluginTasks();
+		for (PluginTaskDefinition plugin:pluginTaskList)
 			if (taskName.equals(plugin.getTaskName()))
 				return plugin.getTaskCode();
 

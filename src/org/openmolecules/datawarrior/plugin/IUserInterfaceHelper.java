@@ -19,6 +19,7 @@
 package org.openmolecules.datawarrior.plugin;
 
 import javax.swing.*;
+import java.awt.*;
 
 /**
  * IUserInterfaceHelper is a class passed to the IPluginTask.createDialogContent() method.
@@ -42,7 +43,7 @@ public interface IUserInterfaceHelper {
 	 * borders and padding should be scaled by this factor.
 	 * @return UI scaling factor for highly resolved screens, e.g. 4k-monitors
 	 */
-	public float getUIScaleFactor();
+	float getUIScaleFactor();
 
 	/**
 	 * Macintosh computers with HiDPI (Retina) monitors use a concept different from Linux
@@ -52,7 +53,7 @@ public interface IUserInterfaceHelper {
 	 * prepared in double resolution and scaled down by factor 2, when drawing.
 	 * @return 1 or 2 for non-retina and retina displays, respectively
 	 */
-	public float getRetinaScaleFactor();
+	float getRetinaScaleFactor();
 
 	/**
 	 * Creates and returns a chemical structure editor that supports editing molecules
@@ -60,7 +61,7 @@ public interface IUserInterfaceHelper {
 	 * allows to edit atom and bond specific query features.
 	 * @return
 	 */
-	public IChemistryPanel getChemicalEditor();
+	IChemistryPanel getChemicalEditor();
 
 	/**
 	 * Creates and return a JComboBox prefilled with all columns of the current fron window
@@ -69,5 +70,21 @@ public interface IUserInterfaceHelper {
 	 * @param columnType one or more of the COLUMN_TYPE_xxx flags
 	 * @return
 	 */
-	public JComboBox<String> getComboBoxForColumnSelection(int columnType);
-}
+	JComboBox<String> getComboBoxForColumnSelection(int columnType);
+
+	/**
+	 * Creates a plugin helper instance for any purpose
+	 * @return
+	 */
+	IPluginHelper getPluginHelper();
+
+	/**
+	 * @return the parent dialog
+	 */
+	Dialog getParentDialog();
+
+	/**
+	 * @param text text shown on the OK-button (default is 'OK')
+	 */
+	void setDefaultButtonText(String text);
+	}

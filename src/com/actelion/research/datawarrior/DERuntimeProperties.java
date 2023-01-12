@@ -38,6 +38,7 @@ import com.actelion.research.util.DoubleFormat;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 
 import static com.actelion.research.table.MarkerLabelConstants.cOnePerCategoryMode;
 import static com.actelion.research.table.view.JVisualization.DEFAULT_LABEL_TRANSPARENCY;
@@ -45,6 +46,12 @@ import static com.actelion.research.table.view.JVisualization.cColumnUnassigned;
 
 public class DERuntimeProperties extends RuntimeProperties {
 	private static final long serialVersionUID = 0x20061101;
+
+	private static final String cRowTaskCount = "rowTaskCount";
+	private static final String cRowTaskCode = "rowTaskCode";
+	private static final String cRowTaskMenu = "rowTaskMenu";
+	private static final String cRowTaskItem = "rowTaskItem";
+	private static final String cRowTaskConfig = "rowTaskConfig";
 
 	private static final String cViewTypeTable = "tableView";
 	private static final String cViewType2D = "2Dview";
@@ -271,6 +278,20 @@ public class DERuntimeProperties extends RuntimeProperties {
 
 		boolean suppressMessages = DEMacroRecorder.getInstance().isRunningMacro()
 				&& (DEMacroRecorder.getInstance().getMessageMode() == DEMacroRecorder.MESSAGE_MODE_SKIP_ERRORS);
+
+		String rowTaskCountString = getProperty(cRowTaskCount);
+		if (rowTaskCountString != null) {
+			int rowTaskCount = Integer.parseInt(rowTaskCountString);
+			for (int i=0; i<rowTaskCount; i++) {
+				String taskCode = getProperty(cRowTaskCode+i);
+				String taskMenu = getProperty(cRowTaskMenu+i);
+				String taskItem = getProperty(cRowTaskItem+i);
+				String taskConfig = getProperty(cRowTaskConfig+i);
+				DETableRowTaskDef rtd = new DETableRowTaskDef(mParentPane.getParentFrame(), taskCode, taskConfig, taskMenu, taskItem);
+				if (rtd.isValid())
+				    mMainPane.addRowTask(rtd);
+				}
+			}
 
 		String mainSplitting = getProperty(cMainSplitting);
 		if (mainSplitting != null) {
@@ -1223,7 +1244,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 				}
 			}
 		catch (Exception e) {
-//				JOptionPane.showMessageDialog(mParentFrame, "Invalid color settings");
+			JOptionPane.showMessageDialog(mParentPane.getParentFrame(), "Invalid color settings");
 			}
 		}
 
@@ -1261,6 +1282,23 @@ public class DERuntimeProperties extends RuntimeProperties {
 
 	private void doLearn() {
 		super.learn();
+
+		ArrayList<DETableRowTaskDef> rowTasks = mMainPane.getRowTaskList();
+		if (!rowTasks.isEmpty()) {
+			setProperty(cRowTaskCount, Integer.toString(rowTasks.size()));
+			for (int i=0; i<rowTasks.size(); i++) {
+				DETableRowTaskDef taskDef = rowTasks.get(i);
+				setProperty(cRowTaskCode+i, taskDef.getTaskCode());
+				String menu = taskDef.getParentMenu();
+				if (menu != null)
+					setProperty(cRowTaskMenu+i, menu);
+				setProperty(cRowTaskItem+i, taskDef.getMenuItem());
+				String detail = taskDef.getTaskConfig();
+				if (detail != null)
+					setProperty(cRowTaskConfig+i, detail);
+				}
+			}
+
 		setProperty(cMainSplitting, DoubleFormat.toString(mParentPane.getMainSplitting()));
 		setProperty(cRightSplitting, DoubleFormat.toString(mParentPane.getRightSplitting()));
 		setProperty(cSelectedMainView, mMainPane.getSelectedViewTitle());

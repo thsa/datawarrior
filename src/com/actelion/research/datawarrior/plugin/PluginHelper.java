@@ -24,14 +24,17 @@ import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DERuntimeProperties;
 import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.DEMacro;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
+import com.actelion.research.datawarrior.task.db.DETaskPluginTask;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
 import org.openmolecules.datawarrior.plugin.IPluginHelper;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
@@ -39,14 +42,16 @@ import java.util.HashMap;
 
 public class PluginHelper implements IPluginHelper {
 	private DataWarrior mApplication;
+	private DETaskPluginTask mPluginTask;
 	private DEFrame mNewFrame;
 	private CompoundTableModel  mSourceTableModel,mTargetTableModel;
 	private ProgressController  mProgressController;
 	private int[]               mColumnType,mCoordinateColumn;
 	private StereoMolecule      mMol;
 
-	public PluginHelper(DataWarrior application, ProgressController pl) {
+	public PluginHelper(DataWarrior application, DETaskPluginTask task, ProgressController pl) {
 		mApplication = application;
+		mPluginTask = task;
 		mSourceTableModel = application.getActiveFrame().getTableModel();
 		mTargetTableModel = mSourceTableModel;  // unless a new window is created
 		mProgressController = pl;
@@ -175,6 +180,11 @@ public class PluginHelper implements IPluginHelper {
 		return ((DEMacroRecorder)mProgressController).getVariable(name);
 		}
 
+	@Override
+	public Frame getParentFrame() {
+		return mApplication.getActiveFrame();
+	}
+
 	public DEFrame getNewFrame() {
 		return mNewFrame;
 		}
@@ -288,6 +298,11 @@ public class PluginHelper implements IPluginHelper {
 	}
 
 	@Override
+	public void setCellDataNative(int column, int row, Object value) {
+		mTargetTableModel.getTotalRecord(row).setData(value, column);
+	}
+
+	@Override
 	public void finalizeData(String template) {
 		if (mProgressController.threadMustDie())
 			return;
@@ -299,9 +314,15 @@ public class PluginHelper implements IPluginHelper {
 						CompoundTableConstants.cColumnPropertyParentColumn,
 						mTargetTableModel.getColumnTitleNoAlias(column));
 
-		if (template == null) {
+		if (template == null || template.equals(TEMPLATE_DEFAULT_FILTERS_AND_VIEWS)) {
 			mTargetTableModel.finalizeTable(CompoundTableEvent.cSpecifierDefaultFiltersAndViews, mProgressController);
-			}
+		}
+		else if (template.equals(TEMPLATE_DEFAULT_FILTERS)) {
+			mTargetTableModel.finalizeTable(CompoundTableEvent.cSpecifierDefaultFilters, mProgressController);
+		}
+		else if (template.equals(TEMPLATE_NONE)) {
+			mTargetTableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, mProgressController);
+		}
 		else {
 			mTargetTableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, mProgressController);
 			DERuntimeProperties rtp = new DERuntimeProperties(mNewFrame.getMainFrame());
@@ -335,6 +356,16 @@ public class PluginHelper implements IPluginHelper {
 	@Override
 	public void showErrorMessage(String message) {
 		mProgressController.showErrorMessage(message);
+		}
+
+	@Override
+	public void showSuccessMessage(String message) {
+		mPluginTask.showInteractiveTaskMessage(message, AbstractTask.INFORMATION_MESSAGE);
+		}
+
+	@Override
+	public void showWarningMessage(String message) {
+		mPluginTask.showInteractiveTaskMessage(message, AbstractTask.WARNING_MESSAGE);
 		}
 
 	@Override

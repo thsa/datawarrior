@@ -83,6 +83,7 @@ public class DEMainPane extends JDockingPanel
 	private DEDetailPane				mDetailPane;
 	private DEStatusPanel				mStatusPanel;
 	private CompoundTableColorHandler	mColorHandler;
+	private ArrayList<DETableRowTaskDef> mRowTaskList;
 
 	public DEMainPane(DEFrame parent,
 					  DECompoundTableModel tableModel,
@@ -110,6 +111,8 @@ public class DEMainPane extends JDockingPanel
 		mListSelectionModel = new CompoundListSelectionModel(mTableModel);
 		mListSelectionModel.addListSelectionListener(this);
 		mListSelectionModel.addListSelectionListener(statusPanel);
+
+		mRowTaskList = new ArrayList<>();
 		}
 
 	public DataWarrior getApplication() {
@@ -191,6 +194,14 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		return (tv == null) ? null : tv.getTable();
 		}
 
+	public ArrayList<DETableRowTaskDef> getRowTaskList() {
+		return mRowTaskList;
+		}
+
+	public void addRowTask(DETableRowTaskDef rowTask) {
+		mRowTaskList.add(rowTask);
+		}
+
 	public void resetAllFilters() {
 		for (Dockable dockable:getDockables())
 			if (dockable.getContent() instanceof VisualizationPanel)
@@ -198,6 +209,10 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		}
 
 	public void compoundTableChanged(CompoundTableEvent e) {
+		for (int i=mRowTaskList.size()-1; i>=0; i--)
+			if (!mRowTaskList.get(i).handleCompoundTableChanged(e))
+				mRowTaskList.remove(i);
+
 		if (e.getType() == CompoundTableEvent.cAddColumns) {
 			for (int column=e.getColumn(); column<mTableModel.getTotalColumnCount(); column++) {
 				if (mTableModel.isColumnTypeStructure(column)

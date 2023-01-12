@@ -100,7 +100,7 @@ public class FXHelpFrame extends JFrame {
 		helpPanel.add(fxPanel, BorderLayout.CENTER);
 		getContentPane().add(helpPanel);
 
-		Dimension fsize = new Dimension(HiDPIHelper.scale(740), HiDPIHelper.scale(740));
+		Dimension fsize = new Dimension(HiDPIHelper.scale(740), HiDPIHelper.scale(820));
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		setPreferredSize(fsize);
 		setLocation(Math.min(parent.getX()+parent.getWidth()+HiDPIHelper.scale(16), screenSize.width - fsize.width), parent.getY());

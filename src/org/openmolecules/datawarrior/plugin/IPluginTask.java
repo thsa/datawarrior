@@ -80,15 +80,13 @@ public interface IPluginTask {
 	/**
 	 * Checks, whether the task configuration is valid such that the task can be executed without forseeable errors.
 	 * @param configuration
-	 * @return null if configuration is valid; otherwise human readable error message
+	 * @return null if configuration is valid; otherwise human-readable error message
 	 */
 	String checkConfiguration(Properties configuration);
 
-	//
-
 	/**
-	 * When this method is called to execute the task, the dialog and its UI elemts are
-	 * not existing. This method must use the configuration object
+	 * When this method is called to execute the task, the dialog and its UI elements are
+	 * not existing. This method must take execution details from the configuration object.
 	 * This method is not(!) called from the event dispatch thread and should not use any UI components.
 	 * @param configuration
 	 * @param dwInterface

@@ -2,7 +2,6 @@ package com.actelion.research.datawarrior.task.jep;
 
 import com.actelion.research.datawarrior.task.data.DETaskAddCalculatedValues;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.util.ByteArrayComparator;
 import org.nfunk.jep.ParseException;
 import org.nfunk.jep.function.PostfixMathCommand;
 
@@ -76,17 +75,23 @@ public class JEPNormalizeFunction extends PostfixMathCommand {
 		checkStack(inStack);
 
 		// get the parameters from the stack
-		Object param = inStack.pop();
-		if (!(param instanceof String))
-			throw new ParseException("Parameter type is not 'String'");
+		Object param2 = inStack.pop();
+		Object param1 = inStack.pop();
 
-		int column = mTableModel.findColumn((String)param);
+		if (!(param2 instanceof String))
+			throw new ParseException("Type of 2nd parameter is not 'String'");
+
+		int column = mTableModel.findColumn((String)param2);
 		if (column == -1)
-			throw new ParseException("Column '"+param+"' not found.");
+			throw new ParseException("Column '"+param2+"' not found.");
 		if (!mTableModel.isColumnTypeDouble(column))
-			throw new ParseException("Column '"+param+"' is not numerical.");
+			throw new ParseException("Column '"+param2+"' is not numerical.");
 
-		double value = mTableModel.getTotalDoubleAt(mParentTask.getCurrentRow(), column);
+		if (!(param1 instanceof Double))
+			throw new ParseException("1st parameter is not numerical.");
+
+		double value = ((Double)param1).doubleValue();
+
 		if (Double.isNaN(value)) {
 			inStack.push(new Double(Double.NaN));
 			}

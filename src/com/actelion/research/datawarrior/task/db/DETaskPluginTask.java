@@ -23,24 +23,31 @@ import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.plugin.PluginHelper;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.datawarrior.plugin.PluginGUIHelper;
+import com.actelion.research.datawarrior.task.ITableRowTask;
+import com.actelion.research.table.model.CompoundRecord;
 import org.openmolecules.datawarrior.plugin.IPluginTask;
 
 import javax.swing.*;
 import java.util.Properties;
 
 /**
- * This is a facade for any database plugin task
+ * This is a facade for any plugin task
  */
-public class DETaskPluginTask extends ConfigurableTask {
+public class DETaskPluginTask extends ConfigurableTask implements ITableRowTask {
 	private IPluginTask mDelegate;
 	private PluginHelper mPluginHelper;
+	private PluginGUIHelper mGUIHelper;
 	private DataWarrior mApplication;
 
-	public DETaskPluginTask(DEFrame owner, IPluginTask delegate) {
-		super(owner, true);
-		mApplication = owner.getApplication();
+	public DETaskPluginTask(DataWarrior application, IPluginTask delegate) {
+		super(application.getActiveFrame(), true);
+		mApplication = application;
 		mDelegate = delegate;
 		}
+
+//	public IPluginTask getDelegate() {
+//		return mDelegate;
+//		}
 
 	@Override
 	public boolean isConfigurable() {
@@ -65,7 +72,7 @@ public class DETaskPluginTask extends ConfigurableTask {
 	@Override
 	public void runTask(Properties configuration) {
 		ProgressController pc = getProgressController();
-		mPluginHelper = new PluginHelper(mApplication, pc);
+		mPluginHelper = new PluginHelper(mApplication, this, pc);
 		pc.startProgress("Retrieving data from plugin...", 0, 0);
 		mDelegate.run(configuration, mPluginHelper);
 		}
@@ -77,7 +84,8 @@ public class DETaskPluginTask extends ConfigurableTask {
 
 	@Override
 	public JComponent createDialogContent() {
-		return mDelegate.createDialogContent(new PluginGUIHelper(mApplication.getActiveFrame(), isInteractive()));
+		mGUIHelper = new PluginGUIHelper(mApplication, getDialog(), this, isInteractive());
+		return mDelegate.createDialogContent(mGUIHelper);
 		}
 
 	@Override
@@ -94,4 +102,20 @@ public class DETaskPluginTask extends ConfigurableTask {
 	public void setDialogConfigurationToDefault() {
 		//
 		}
+
+	@Override
+	public String getDefaultButtonText() {
+		return mGUIHelper.getDefaultButtonText();
+		}
+
+	// Implement ITableRowTask interface for all DETaskPluginTasks, because we don't know which of the delegates use it...
+	@Override
+	public void setTableRow(CompoundRecord row) {
+		((ITableRowTask)mDelegate).setTableRow(row);
+		}
+
+	@Override
+	public void initConfiguration(Properties configuration) {
+		((ITableRowTask)mDelegate).initConfiguration(configuration);
 	}
+}

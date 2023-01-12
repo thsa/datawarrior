@@ -18,6 +18,7 @@
 
 package org.openmolecules.datawarrior.plugin;
 
+import java.awt.*;
 import java.util.HashMap;
 
 /**
@@ -30,6 +31,15 @@ public interface IPluginHelper {
 	int COLUMN_TYPE_STRUCTURE_FROM_SMILES = 1;
 	int COLUMN_TYPE_STRUCTURE_FROM_MOLFILE = 2;
 	int COLUMN_TYPE_STRUCTURE_FROM_IDCODE = 3;
+
+	String TEMPLATE_DEFAULT_FILTERS = "Filters";
+	String TEMPLATE_DEFAULT_FILTERS_AND_VIEWS = "FiltersAndViews";
+	String TEMPLATE_NONE = "None";
+
+	/**
+	 * @return Frame of front window
+	 */
+	Frame getParentFrame();
 
 	/**
 	 * Call this to get the column index of a structure column of the current front window.
@@ -149,6 +159,8 @@ public interface IPluginHelper {
 	void setColumnProperty(int column, String key, String value);
 
 	/**
+	 * If you have used setColumnType() to define the nature of new columns, then use
+	 * this method to populate table data.
 	 * If the column's type is COLUMN_TYPE_STRUCTURE_FROM_SMILES or
 	 * COLUMN_TYPE_STRUCTURE_FROM_MOLFILE, then a SMILES string or molfile (v2000 or v3000)
 	 * should be passed. if the column's type is COLUMN_TYPE_STRUCTURE_FROM_IDCODE,
@@ -163,10 +175,21 @@ public interface IPluginHelper {
 	void setCellData(int column, int row, String value);
 
 	/**
+	 * This method directly stores the passed object in the native DataWarrior table
+	 * skipping any structure format adaption. If you have defined columns natively using
+	 * setColumnProperty() rather setColumnType(), then you may use this method to populate
+	 * table model calls with idcodes, id-coords, descriptors and alphanumerical content.
+	 * @param column
+	 * @param row
+	 * @param value byte[] for alphanumerical columns and native object for descriptors
+	 */
+	void setCellDataNative(int column, int row, Object value);
+
+	/**
 	 * If you have called initializeData() and, thus, created a new windows, then
 	 * call this methof after all column types and titles are defined and after
 	 * all cell data was set.
-	 * @param template null or a valid template String as it is found in a .dwat file
+	 * @param template null or TEMPLATE... or a valid custom template String as it is found in a .dwat file
 	 */
 	void finalizeData(String template);
 
@@ -197,7 +220,7 @@ public interface IPluginHelper {
 	 * The template needs to be a multi line String as it appears in a dwat or dwar file
 	 * starting with a '<column properties>' line and ending with a '</column properties>' line.
 	 * @param template
-	 * @param clearFirst if true, then all all views and filters are removed before applying the template
+	 * @param clearFirst if true, then all views and filters are removed before applying the template
 	 */
 	void setRuntimeProperties(String template, boolean clearFirst);
 
@@ -208,6 +231,19 @@ public interface IPluginHelper {
 	 * @param message
 	 */
 	void showErrorMessage(String message);
+
+	/**
+	 * To show a success messages, e.g. after a performed database transaction,
+	 * call this method from the task's run() method after successful task completion.
+	 * @param message
+	 */
+	void showSuccessMessage(String message);
+
+	/**
+	 * Shows a warning messages, when called in the task's run() method.
+	 * @param message
+	 */
+	void showWarningMessage(String message);
 
 	/**
 	 * During task execution DataWarrior shows a progress dialog with a cancel button.

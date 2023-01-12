@@ -28,7 +28,6 @@ import com.actelion.research.datawarrior.action.DEInteractiveSARDialog;
 import com.actelion.research.datawarrior.action.DEMarkushDialog;
 import com.actelion.research.datawarrior.help.DEHelpFrame;
 import com.actelion.research.datawarrior.help.FXHelpFrame;
-import com.actelion.research.datawarrior.plugin.PluginSpec;
 import com.actelion.research.datawarrior.task.*;
 import com.actelion.research.datawarrior.task.chem.*;
 import com.actelion.research.datawarrior.task.chem.clib.DETaskEnumerateCombinatorialLibrary;
@@ -68,6 +67,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.TreeMap;
 import java.util.prefs.Preferences;
 
 import static com.actelion.research.chem.descriptor.DescriptorConstants.DESCRIPTOR_ShapeAlign;
@@ -125,6 +125,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	private PageFormat          mPageFormat;
 	private double              mMainSplitting,mRightSplitting;
 	private Thread              mMessageThread;
+	private TreeMap<Integer,int[]> mMacroItemCountMap;
 
 	private JMenu jMenuFileNewFrom,jMenuFileOpenSpecial,jMenuFileOpenRecent,jMenuFileSaveSpecial,jMenuEditPasteSpecial,jMenuDataRemoveRows,
 				  jMenuDataSelfOrganizingMap,jMenuDataSetRange,jMenuDataViewLogarithmic,jMenuChemAddMoleculeDescriptor,
@@ -357,9 +358,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		}
 
 	protected void buildMenu() {
-		for (PluginSpec plugin:mApplication.getPluginRegistry().getPlugins())
-			plugin.setMenuFound(false);
-
 		add(buildFileMenu());
 		add(buildEditMenu());
 		add(buildDataMenu());
@@ -370,14 +368,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		add(buildMacroMenu());
 		add(buildHelpMenu());
 
-		// add remaining plugin items that require a new menu
-		for (PluginSpec plugin:mApplication.getPluginRegistry().getPlugins()) {
-			if (!plugin.isMenuFound()) {
-				JMenu menu = new JMenu(plugin.getMenuName());
-				add(menu);
-				addPluginItems(menu);
-				}
-			}
+		mApplication.getPluginRegistry().addPluginMenuItems(this);
 
 		double[][] size = {{TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL},{HiDPIHelper.scale(2), TableLayout.PREFERRED}};
 		JPanel msgPanel = new JPanel();
@@ -386,6 +377,16 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		msgPanel.setLayout(new TableLayout(size));
 		msgPanel.add(mMessageLabel, "1,1");
 		add(msgPanel);
+		}
+
+	private JMenu ensureMenu(JComponent parent, String name) {
+		for (Component c:getComponents())
+			if (c instanceof JMenu && ((JMenu)c).getText().equalsIgnoreCase(name))
+				return (JMenu)c;
+
+		JMenu menu = new JMenu(name);
+		parent.add(menu);
+		return menu;
 		}
 
 	protected JMenu buildFileMenu() {
@@ -532,8 +533,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 //		jMenuFile.add(jMenuFilePreview);
 		jMenuFile.add(jMenuFilePrint);
 
-		addPluginItems(jMenuFile);
-
 		if (!mApplication.isMacintosh()) {
 			jMenuFile.addSeparator();
 			jMenuFile.add(jMenuFileQuit);
@@ -633,8 +632,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
  		jMenuEdit.add(jMenuEditEnableFilters);
  		jMenuEdit.add(jMenuEditResetFilters);
 		jMenuEdit.add(jMenuEditRemoveFilters);
-
-		addPluginItems(jMenuEdit);
 
  		return jMenuEdit;
 		}
@@ -756,8 +753,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuData.add(jMenuDataViewLogarithmic);
 		jMenuData.addSeparator();
 		jMenuData.add(jMenuDataCorrelationMatrix);
-
-		addPluginItems(jMenuData);
 
 		return jMenuData;
 		}
@@ -916,7 +911,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemFromStructure.add(jMenuChemAddLargestFragment);
 		jMenuChemFromStructure.add(jMenuChemAddSubstructureCount);
 		addIdorsiaChemistryMenuOptions(jMenuChemFromStructure);
-		addPluginItems(jMenuChemFromStructure);
 
 		JMenu jMenuChemFromReaction = new JMenu("From Chemical Reaction");
 		jMenuChemFromReaction.add(jMenuChemAddReactionDescriptor);
@@ -934,7 +928,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemFromReaction.add(jMenuChemExtractProducts);
 		jMenuChemFromReaction.add(jMenuChemExtractTransformation);
 		jMenuChemFromReaction.add(jMenuChemClassifyReactions);
-		addPluginItems(jMenuChemFromReaction);
 
 		jMenuChem.add(jMenuChemFromStructure);
 		jMenuChem.add(jMenuChemFromReaction);
@@ -973,8 +966,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChem.addSeparator();
 		jMenuChem.add(jMenuChemSelectDiverse);
 		jMenuChem.add(jMenuChemCluster);
-
-		addPluginItems(jMenuChem);
 
 		if (System.getProperty("development") != null) {
 			jMenuChem.addSeparator();
@@ -1080,8 +1071,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuDBRetrieveSQLData.addActionListener(this);
 		jMenuDB.add(jMenuDBRetrieveSQLData);
 
-		addPluginItems(jMenuDB);
-
 		return jMenuDB;
 		}
 
@@ -1168,8 +1157,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuList.add(jMenuListImport);
 		jMenuList.add(jMenuListExport);
 
-		addPluginItems(jMenuList);
-
 		return jMenuList;
 		}
 
@@ -1213,8 +1200,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuMacro.add(jMenuMacroStopRecording);
  		jMenuMacro.addSeparator();
 		jMenuMacro.add(jMenuMacroRun);
-
-		addPluginItems(jMenuMacro);
 
 		enableMacroItems();
 		return jMenuMacro;
@@ -1438,7 +1423,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	 * @param actionCommand if null, then show menu item as disabled
 	 */
 	private void addMenuItem(JMenu menu, String text, String actionCommand) {
-		addMenuItem(menu, text, actionCommand, null);
+		addMenuItem(menu, text, actionCommand, null, 0, 0);
 		}
 
 	/**
@@ -1448,6 +1433,18 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	 * @param toolTipText may be null
 	 */
 	private void addMenuItem(JMenu menu, String text, String actionCommand, String toolTipText) {
+		addMenuItem(menu, text, actionCommand, null, 0, 0);
+	}
+
+	/**
+	 * @param menu
+	 * @param text
+	 * @param actionCommand if null, then show menu item as disabled
+	 * @param toolTipText may be null
+	 * @param keyCode != 0 if an accelerator key shall be associated
+	 * @param modifiers MENU_MASK or Event.SHIFT_MASK | MENU_MASK
+	 */
+	private void addMenuItem(JMenu menu, String text, String actionCommand, String toolTipText, int keyCode, int modifiers) {
 		JMenuItem item = new JMenuItem(text);
 		if (actionCommand != null) {
 			item.setActionCommand(actionCommand);
@@ -1458,6 +1455,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		else {
 			item.setEnabled(false);
 			}
+		if (keyCode != 0)
+			item.setAccelerator(KeyStroke.getKeyStroke(keyCode, modifiers));
 		menu.add(item);
 		}
 
@@ -2106,27 +2105,31 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		}
 	}
 
-	private void addPluginItems(JMenu parentMenu) {
-		ArrayList<PluginSpec> pluginList = mApplication.getPluginRegistry().getPlugins();
-		if (pluginList == null || pluginList.size() == 0)
+/*	private void addPluginItems(JMenu parentMenu) {
+//		addPluginItems(parentMenu, parentMenu.getText());
+//	}
+
+	private void addPluginItems(JMenu parentMenu, String parentMenuName) {
+		ArrayList<PluginTaskSpec> pluginTasks = mApplication.getPluginRegistry().getPluginTasks();
+		if (pluginTasks == null || pluginTasks.size() == 0)
 			return;
 
 		boolean isSeparated = (parentMenu.getItemCount() == 0);
 
-		for (final PluginSpec plugin:pluginList) {
-			String targetMenuName = plugin.getMenuName() == null ? DEFAULT_PLUGIN_MENU : plugin.getMenuName();
-			if (parentMenu.getText().equalsIgnoreCase(targetMenuName)) {
+		for (final PluginTaskSpec pluginTask:pluginTasks) {
+			String targetMenuName = pluginTask.getMenuName() == null ? DEFAULT_PLUGIN_MENU : pluginTask.getMenuName();
+			if (parentMenuName.equalsIgnoreCase(targetMenuName)) {
 				if (!isSeparated) {
 					parentMenu.addSeparator();
 					isSeparated = true;
 					}
-				JMenuItem item = new JMenuItem(plugin.getTaskName() + "...");
-				item.addActionListener(e -> new DETaskPluginTask(mParentFrame, plugin.getTask()).defineAndRun());
+				JMenuItem item = new JMenuItem(pluginTask.getMenuItemName() + "...");
+				item.addActionListener(e -> new DETaskPluginTask(mParentFrame, pluginTask.getTask()).defineAndRun());
 				parentMenu.add(item);
-				plugin.setMenuFound(true);
+				pluginTask.setMenuExists(true);
 				}
 			}
-		}
+		}*/
 
 // File access via VPN at Idorsia is so slow that we have to involve independent threads for building the macro menu tree
 /*	private void addMacroFileItems(JMenu parentMenu) {
@@ -2200,17 +2203,18 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		}*/
 
 	private void addMacroFileItemsLater(JMenu parentMenu) {
+		mMacroItemCountMap = new TreeMap<>();
 		new Thread(() -> {
 			File directory = mApplication.resolveResourcePath(DataWarrior.MACRO_DIR);
 			if (directory != null && directory.exists()) {
 				SwingUtilities.invokeLater(() -> { if (parentMenu.getItemCount() != 0) parentMenu.addSeparator(); } );
-				addMacroFileItemsLater(parentMenu, DataWarrior.makePathVariable(DataWarrior.MACRO_DIR), directory);
+				addMacroFileItemsLater(parentMenu, DataWarrior.makePathVariable(DataWarrior.MACRO_DIR), directory, 0);
 				}
 
 			directory = new File(System.getProperty("user.home")+File.separator+"datawarrior"+File.separator+"macro");
 			if (directory != null && directory.exists()) {
 				SwingUtilities.invokeLater(() -> { if (parentMenu.getItemCount() != 0) parentMenu.addSeparator(); } );
-				addMacroFileItemsLater(parentMenu, USER_MACRO_DIR, directory);
+				addMacroFileItemsLater(parentMenu, USER_MACRO_DIR, directory, Event.SHIFT_MASK);
 				}
 
 			if (Platform.isWindows()) {
@@ -2218,7 +2222,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				directory = new File(userMacroPath);
 				if (FileHelper.fileExists(directory)) {
 					SwingUtilities.invokeLater(() -> { if (parentMenu.getItemCount() != 0) parentMenu.addSeparator(); } );
-					addMacroFileItemsLater(parentMenu, userMacroPath, directory);
+					addMacroFileItemsLater(parentMenu, userMacroPath, directory, Event.SHIFT_MASK);
 					}
 				}
 
@@ -2230,7 +2234,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				directory = new File(DataWarrior.resolveOSPathVariables(dirname));
 				if (FileHelper.fileExists(directory)) {
 					SwingUtilities.invokeLater(() -> { if (parentMenu.getItemCount() != 0) parentMenu.addSeparator(); } );
-					addMacroFileItemsLater(parentMenu, dirname, directory);
+					addMacroFileItemsLater(parentMenu, dirname, directory, Event.ALT_MASK);
 					}
 				}
 
@@ -2249,7 +2253,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	 * @param dirPath should be based on a path variable if it refers to a standard resource file
 	 * @param parentDir
 	 */
-	private void addMacroFileItemsLater(JMenu parentMenu, String dirPath, File parentDir) {
+	private void addMacroFileItemsLater(JMenu parentMenu, String dirPath, File parentDir, int secondModifier) {
 		File[] dirs = parentDir.listFiles(file -> file.isDirectory() && !file.getName().startsWith(".") );
 		if (dirs != null && dirs.length != 0) {
 			Arrays.sort(dirs);
@@ -2257,7 +2261,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				for (File dir:dirs) {
 					JMenu subMenu = new JMenu(dir.getName());
 					parentMenu.add(subMenu);
-					new Thread(() -> addMacroFileItemsLater(subMenu, dir.getPath(), dir)).start();
+					new Thread(() -> addMacroFileItemsLater(subMenu, dir.getPath(), dir, secondModifier)).start();
 					}
 				} );
 			}
@@ -2272,8 +2276,19 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			for (File file:files) {
 				try {
 					DEMacro macro = new DEMacro(file, null);
-					SwingUtilities.invokeLater(() ->
-						addMenuItem(parentMenu, macro.getName(), RUN_GLOBAL_MACRO + dirPath + File.separator + file.getName(), macro.getDescription()) );
+					SwingUtilities.invokeLater(() -> {
+						int[] countHolder = mMacroItemCountMap.get(secondModifier);
+						if (countHolder == null) {
+							countHolder = new int[1];
+							countHolder[0] = 1; // we start with 2 because Ctrl-1 is 'Add selection to default list'
+							mMacroItemCountMap.put(secondModifier, countHolder);
+						}
+						countHolder[0]++;
+						int keyCode = (countHolder[0] < 10) ? '0' + countHolder[0] : 0;
+						addMenuItem(parentMenu, macro.getName(),
+								RUN_GLOBAL_MACRO + dirPath + File.separator + file.getName(),
+								macro.getDescription(), keyCode, MENU_MASK | secondModifier);
+						} );
 					}
 				catch (IOException ioe) {}
 				}

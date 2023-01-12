@@ -22,22 +22,24 @@ import java.io.File;
 import java.util.Properties;
 
 /**
- * This interface contains an initialization method of a PluginInitializer class, which allows
- * to run any Java code during plugin loading, just after DataWarrior has been launched.
- * Plugins may or may not contain a PluginInitializer class or a plugin may contain nothing else
- * than a PluginInitializer class.
- * If a plugin is loaded that contains a PluginInitializer class, then the class is loaded
- * by the classloader and its initialize() method is called immediately.<br>
- * Since plugins are loaded in alphabetical order, a plugin that is loaded first may be used
- * to update other plugin files if needed.
+ * If an org.openmolecules.datawarrior.plugin.PluginStarter class is found within a plugin,
+ * then it is instantiated before any of its other classes are loaded and its initialize()
+ * method is called immediately. If this method returns false, then this plugin's task are
+ * not loaded and not added to the menu.
+ * Possible use cases for a PluginStarter class are:<br>
+ * - The plugin could check, whether other plugins are out of date and could replace outdated
+ *   plugin jar files with downloaded updates. Note: Plugins are loaded in alphabetical order.
+ *   Thus, a plugin meant to update other plugins should ideally start with 'AAA'.<br>
+ * - Instead of defining menu entries and associated plugin tasks in 'tasknames' in a static way
+ *   at plugin compile time, the PluginStarter class could define menu bar items and associated
+ *   task classes dynamically at launch time.
  */
-@Deprecated
-// Use IPluginStarter instead
-public interface IPluginInitializer {
+public interface IPluginStarter {
 	/**
 	 * This method is called when the plugin is loaded.
+	 * @param startHelper callback object providing task registration and assignment to menu items
 	 * @param pluginDir directory containing the plugin
 	 * @param config the configuration obtained from a config.txt file from the root plugin folder
 	 */
-	void initialize(File pluginDir, Properties config);
+	boolean initialize(IPluginStartHelper startHelper, File pluginDir, Properties config);
 }

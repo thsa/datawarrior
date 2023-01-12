@@ -15,21 +15,24 @@
 package org.openmolecules.comm;
 
 public interface CommunicationConstants {
-    public static final String ERROR_INVALID_SESSION = "Invalid session";
+    String ERROR_INVALID_SESSION = "Invalid session";
 
-    public static final String BODY_MESSAGE = "Message";
-    public static final String BODY_OBJECT = "Object";
-    public static final String BODY_ERROR = "Error";
-    public static final String BODY_ERROR_INVALID_SESSION = BODY_ERROR + ":" + ERROR_INVALID_SESSION;
-    public static final String BODY_IMAGE_PNG = "PNG";
+    String BODY_MESSAGE = "Message";
+    String BODY_OBJECT = "Object";
+    String BODY_ERROR = "Error";
+    String BODY_ERROR_INVALID_SESSION = BODY_ERROR + ":" + ERROR_INVALID_SESSION;
+    String BODY_IMAGE_PNG = "PNG";
 
-    public static final String KEY_SESSION_ID = "sessionID";
-    public static final String KEY_REQUEST = "what";
-    public static final String KEY_QUERY = "query";
-    public static final String KEY_APP_NAME = "appname";
+    String KEY_SESSION_ID = "sessionID";
+    String KEY_REQUEST = "what";
+    String KEY_QUERY = "query";
+    String KEY_APP_NAME = "appname";
+    String KEY_USER = "user";
+    String KEY_PASSWORD = "password";
 
-    public static final String REQUEST_NEW_SESSION = "new";
-    public static final String REQUEST_END_SESSION = "end";
-    public static final String REQUEST_GET_STATUS = "status";
-    public static final String REQUEST_RUN_QUERY = "query";
+    String REQUEST_NEW_SESSION = "new";
+    String REQUEST_END_SESSION = "end";
+    String REQUEST_GET_STATUS = "status";
+    String REQUEST_RUN_QUERY = "query";
+    String REQUEST_LOGIN = "login";
 	}

@@ -137,7 +137,9 @@ public class PluginRegistry implements IPluginStartHelper {
 							if (line.length() != 0 && !line.startsWith("#")) {
 								int index = line.indexOf(','); // we may have one or multiple items per line: <className>[,spec1][,spec2]...
 								String className = (index == -1 ? line : line.substring(0, index)).trim();
-								String menuName = (index == -1) ? "Database" : line.substring(index+1);
+								String menuName = (index == -1) ? "Database" : line.substring(index+1).trim();
+								if (menuName.equals("From Chemical Structure")) // for compatibility with olf format
+									menuName = "Chemistry;From Chemical Structure";
 
 								Class pluginClass = null;
 								try {

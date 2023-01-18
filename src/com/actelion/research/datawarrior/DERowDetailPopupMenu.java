@@ -589,10 +589,14 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 		if (hasExplicitColor)
 			addSubmenuItem(copyMenu, "2D-Structure (as drawn)", COPY_STRUCTURE_DECORATED+structureColumnSpecifier);
 		addSubmenuItem(copyMenu, hasExplicitColor ? "2D-Structure (undecorated)": "2D-Structure", COPY_STRUCTURE+structureColumnSpecifier);
-		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
+		boolean has3D = false;
+		for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 			if (CompoundTableModel.cColumnType3DCoordinates.equals(mTableModel.getColumnSpecialType(column))
-					&& mTableModel.getParentColumn(column) == idcodeColumn)
-				addSubmenuItem(copyMenu, mTableModel.getColumnTitle(column), COPY_STRUCTURE+mTableModel.getColumnTitle(column));
+					&& mTableModel.getParentColumn(column) == idcodeColumn) {
+				addSubmenuItem(copyMenu, mTableModel.getColumnTitle(column), COPY_STRUCTURE + mTableModel.getColumnTitle(column));
+				has3D = true;
+				}
+			}
 		copyMenu.addSeparator();
 		addSubmenuItem(copyMenu, "PGN-Image", COPY_PNG+structureColumnSpecifier);
 		addSubmenuItem(copyMenu, "SVG-Image", COPY_SVG+structureColumnSpecifier);
@@ -601,8 +605,25 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 		addSubmenuItem(copyMenu, "SMILES-String", COPY_SMILES+structureColumnSpecifier);
 		addSubmenuItem(copyMenu, "Standard Inchi", COPY_INCHI+structureColumnSpecifier);
 		addSubmenuItem(copyMenu, "Inchi-Key", COPY_INCHI_KEY+structureColumnSpecifier);
-		addSubmenuItem(copyMenu, "Molfile V2", COPY_MOLFILE2+structureColumnSpecifier);
-		addSubmenuItem(copyMenu, "Molfile V3", COPY_MOLFILE3+structureColumnSpecifier);
+		addMolfileItems(copyMenu, idcodeColumn, structureColumnSpecifier, true, has3D);
+		addMolfileItems(copyMenu, idcodeColumn, structureColumnSpecifier, false, has3D);
+		}
+
+	private void addMolfileItems(JMenu copyMenu, int idcodeColumn, String structureColumnSpecifier, boolean isV2, boolean has3D) {
+		String itemText = isV2 ? "Molfile V2" : "Molfile V3";
+		String copyMolfile = isV2 ? COPY_MOLFILE2 : COPY_MOLFILE3;
+		if (has3D) {
+			JMenu subMenu = new JMenu(itemText);
+			copyMenu.add(subMenu);
+			addSubmenuItem(subMenu, "2D-Structure", copyMolfile + structureColumnSpecifier);
+			for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
+				if (CompoundTableModel.cColumnType3DCoordinates.equals(mTableModel.getColumnSpecialType(column))
+				 && mTableModel.getParentColumn(column) == idcodeColumn)
+					addSubmenuItem(subMenu, mTableModel.getColumnTitle(column), copyMolfile + mTableModel.getColumnTitle(column));
+			}
+		else {
+			addSubmenuItem(copyMenu, itemText, copyMolfile + structureColumnSpecifier);
+			}
 		}
 
 	private void addPasteStructureItems(JMenu pasteMenu, int idcodeColumn, String structureColumnSpecifier) {

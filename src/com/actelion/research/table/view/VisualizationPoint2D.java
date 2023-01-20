@@ -27,4 +27,11 @@ public class VisualizationPoint2D extends VisualizationPoint {
 		super(r);
 		backgroundColorIndex = 0;
 		}
+
+	public void setColorIndex(int type, short index) {
+		if (type == COLOR_TYPE_MARKER_BG)
+			backgroundColorIndex = index;
+		else
+			super.setColorIndex(type, index);
+		}
 	}

@@ -2171,7 +2171,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 					Color color = (vp == mActivePoint) ? Color.red
 								: (isFilter && !vp.record.isFlagSet(mUseAsFilterFlagNo)) ? cUseAsFilterColor
 								: (vp.record.isSelected() && mFocusList != FocusableView.cFocusOnSelection) ?
-										   VisualizationColor.cSelectedColor : mMarkerColor.getColorList()[vp.colorIndex];
+										   VisualizationColor.cSelectedColor : mMarkerColor.getColorList()[vp.markerColorIndex];
 
 					if (vp == mHighlightedPoint && (clipRect != null || mIsAdjusting))
 						color = color.darker().darker();
@@ -2184,9 +2184,12 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 						mComposedMarker[vp.shape].draw(colix);
 
 					if (drawLabels) {
-						Color lc = mIsMarkerLabelsBlackAndWhite ? getContrastGrey(1f, getGraphFaceColor())
+						Color fg = mIsMarkerLabelsBlackAndWhite ? getContrastGrey(1f, getGraphFaceColor())
 								: isDarkBackground ? color : color.darker();
-						mComposedMarker[vp.shape].drawLabels(vp, lc, isTreeView, clipRect);
+						Color bg = mLabelBackgroundColor.getColorForBackground(vp.record, isDarkBackground);
+						if (bg == null)
+							bg = mLabelBackgroundColor.getDefaultDataColor();
+						mComposedMarker[vp.shape].drawLabels(vp, fg, bg, isTreeView, clipRect);
 						}
 					}
 				}
@@ -2365,7 +2368,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		int y2 = Math.round(mContentScaling*vp2.screenY);
 		int z2 = Math.round(mContentScaling*vp2.screenZ);
 
-		Color color1 = mMarkerColor.getColorList()[p1.colorIndex];
+		Color color1 = mMarkerColor.getColorList()[p1.markerColorIndex];
 
 		if (showArrow) {
 			float dx = x2 - x1;
@@ -2394,8 +2397,8 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 				}
 			}
 
-		if (p1.colorIndex != p2.colorIndex || grayOut1 != grayOut2) {
-			Color color2 = mMarkerColor.getColorList()[p2.colorIndex];
+		if (p1.markerColorIndex != p2.markerColorIndex || grayOut1 != grayOut2) {
+			Color color2 = mMarkerColor.getColorList()[p2.markerColorIndex];
 			if (intensity != 1.0) {
 				color1 = ColorHelper.intermediateColor(getViewBackground(), color1, intensity);
 				color2 = ColorHelper.intermediateColor(getViewBackground(), color2, intensity);
@@ -2437,7 +2440,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		int colorCount = basicColorCount * ((focusFlagNo == -1) ? 1 : 2);
 
 		if (mHighlightedPoint != null && (clipRect != null || mIsAdjusting)) {
-			short colix = Graphics3D.getColix(mChartInfo.color[mHighlightedPoint.colorIndex].darker().darker().getRGB());
+			short colix = Graphics3D.getColix(mChartInfo.color[mHighlightedPoint.markerColorIndex].darker().darker().getRGB());
 			getBarFraction((VisualizationPoint3D)mHighlightedPoint).draw(colix);
 			}
 
@@ -2687,19 +2690,19 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 				}
 			}
 
-		private void drawLabels(VisualizationPoint3D vp, Color color, boolean isTreeView, Rectangle clipRect) {
+		private void drawLabels(VisualizationPoint3D vp, Color fg, Color bg, boolean isTreeView, Rectangle clipRect) {
 			if (mLabelColumn[MarkerLabelDisplayer.cMidCenter] != cColumnUnassigned
 			 && (!mLabelsInTreeViewOnly || isTreeView))
-				drawLabel(vp, MarkerLabelDisplayer.cMidCenter, color, isTreeView, clipRect);
+				drawLabel(vp, MarkerLabelDisplayer.cMidCenter, fg, bg, isTreeView, clipRect);
 
 			for (int i=0; i<MarkerLabelDisplayer.cInTableLine1; i++)
 				if (i != MarkerLabelDisplayer.cMidCenter
 				 && mLabelColumn[i] != cColumnUnassigned
 				 && (!mLabelsInTreeViewOnly || isTreeView))
-					drawLabel(vp, i, color, isTreeView, clipRect);
+					drawLabel(vp, i, fg, bg, isTreeView, clipRect);
 			}
 
-		private void drawLabel(VisualizationPoint3D vp, int position, Color color, boolean isTreeView, Rectangle clipRect) {
+		private void drawLabel(VisualizationPoint3D vp, int position, Color fg, Color bg, boolean isTreeView, Rectangle clipRect) {
 			int stereoOffset = (mEyeOffset > 0) ? vp.stereoOffset : -vp.stereoOffset;
 			int column = mLabelColumn[position];
 			boolean isMolecule = mTableModel.isColumnTypeStructure(column);
@@ -2808,13 +2811,13 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			if (clipRect == null || clipRect.intersects(x, y, w, h)) {
 				if (mShowLabelBackground) {
 					border = (int)(0.15f*mAAFactor*mCurrentFontSize3D);
-					short colix = Graphics3D.getColix(mLabelBackground.getRGB());
+					short colix = Graphics3D.getColix(bg.getRGB());
 //					if (mLabelBackgroundTransparency == 0f)	// translucency in JMol doesn't seem to work
 						mG3D.setColix(colix);
 //					else
 //						mG3D.setColix(Graphics3D.getColixTranslucent(colix, true, mLabelBackgroundTransparency));
 					mG3D.fillRect(x-border, y-border, z+1, 0, w+2*border, h+2*border);
-					mG3D.setColix(Graphics3D.getColix(color.getRGB()));
+					mG3D.setColix(Graphics3D.getColix(fg.getRGB()));
 					mG3D.drawRect(x-border, y-border, z, 0, w+2*border, h+2*border);
 					}
 
@@ -2829,7 +2832,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 					Point connectionPoint = getLabelConnectionPoint(vp.screenX*mContentScaling, vp.screenY*mContentScaling,
 							x - border, y - border, x + w + border, y + h + border);
 					if (connectionPoint != null) {
-						mG3D.setColix(Graphics3D.getColix(color.getRGB()));
+						mG3D.setColix(Graphics3D.getColix(fg.getRGB()));
 //						mG3D.drawLine(vp.screenX*mContentScaling, vp.screenY*mContentScaling, vp.screenZ,
 //								connectionPoint.x, connectionPoint.y, z*mContentScaling);
 						int diameter = Math.max(1, Math.round(0.12f*mFontHeight));
@@ -2841,14 +2844,14 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 
 				if (isMolecule) {
 					depictor.applyTransformation(new DepictorTransformation(1.0f, x - molRect.x, y - molRect.y));
-					depictor.setOverruleColor(color, getViewBackground());
+					depictor.setOverruleColor(fg, getViewBackground());
 					depictor.setZ(z);
 					depictor.paint(mG3D);
 
 					mG3D.setFont(mG3D.getFont3D((float)mAAFactor*mCurrentFontSize3D));	// restore font size
 					}
 				else {
-					mG3D.setColix(Graphics3D.getColix(color.getRGB()));
+					mG3D.setColix(Graphics3D.getColix(fg.getRGB()));
 					mG3D.drawString(label, null, x, y+mG3D.getFont3DCurrent().fontMetrics.getAscent(), z, 0);
 					}
 				}

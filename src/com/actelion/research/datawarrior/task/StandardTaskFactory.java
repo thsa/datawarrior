@@ -252,6 +252,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskSetMarkerBackgroundColor.TASK_NAME) ? new DETaskSetMarkerBackgroundColor(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskSetMarkerColor.TASK_NAME) ? new DETaskSetMarkerColor(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskSetMarkerJittering.TASK_NAME) ? new DETaskSetMarkerJittering(frame, mainPane, null)
+			 : codeMatches(taskCode, DETaskSetMarkerLabelBackgroundColor.TASK_NAME) ? new DETaskSetMarkerLabelBackgroundColor(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskSetMarkerLabels.TASK_NAME) ? new DETaskSetMarkerLabels(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskSetMarkerShape.TASK_NAME) ? new DETaskSetMarkerShape(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskSetMarkerSize.TASK_NAME) ? new DETaskSetMarkerSize(frame, mainPane, null)
@@ -472,6 +473,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSetMarkerBackgroundColor.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSetMarkerColor.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSetMarkerJittering.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSetMarkerLabelBackgroundColor.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSetMarkerLabels.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSetMarkerShape.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSetMarkerSize.TASK_NAME));

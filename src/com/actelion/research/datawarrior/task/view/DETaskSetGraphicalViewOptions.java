@@ -426,7 +426,7 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		configuration.setProperty(PROPERTY_DEFAULT_DATA_COLOR, ""+ visualization.getMarkerColor().getDefaultDataColor().getRGB());
 		configuration.setProperty(PROPERTY_MISSING_DATA_COLOR, ""+ visualization.getMarkerColor().getMissingDataColor().getRGB());
 		configuration.setProperty(PROPERTY_BACKGROUND_COLOR, ""+ visualization.getViewBackground().getRGB());
-		configuration.setProperty(PROPERTY_LABEL_BACKGROUND_COLOR, ""+ visualization.getLabelBackground().getRGB());
+		configuration.setProperty(PROPERTY_LABEL_BACKGROUND_COLOR, ""+ visualization.getDefaultLabelBackground().getRGB());
 		configuration.setProperty(PROPERTY_TITLE_BACKGROUND_COLOR, ""+ visualization.getTitleBackground().getRGB());
 		if (visualization instanceof JVisualization3D)
 			configuration.setProperty(PROPERTY_GRAPH_FACE_COLOR, ""+((JVisualization3D) visualization).getGraphFaceColor().getRGB());
@@ -506,7 +506,7 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 			try { v.setViewBackground(Color.decode(bgc)); } catch (NumberFormatException nfe) {}
 		String lbg = configuration.getProperty(PROPERTY_LABEL_BACKGROUND_COLOR);
 		if (lbg != null)
-			try { v.setLabelBackground(Color.decode(lbg)); } catch (NumberFormatException nfe) {}
+			try { v.setDefaultLabelBackground(Color.decode(lbg)); } catch (NumberFormatException nfe) {}
 		String tbc = configuration.getProperty(PROPERTY_TITLE_BACKGROUND_COLOR);
 		if (tbc != null)
 			try { v.setTitleBackground(Color.decode(tbc)); } catch (NumberFormatException nfe) {}

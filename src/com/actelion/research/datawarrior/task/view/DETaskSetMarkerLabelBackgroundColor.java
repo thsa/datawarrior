@@ -26,13 +26,13 @@ import com.actelion.research.table.view.VisualizationPanel;
 import java.awt.*;
 import java.util.Properties;
 
-public class DETaskSetMarkerColor extends DETaskAbstractSetColor {
-	public static final String TASK_NAME = "Set Marker Color";
+public class DETaskSetMarkerLabelBackgroundColor extends DETaskAbstractSetColor {
+	public static final String TASK_NAME = "Set Marker Label Background Color";
 
-	public DETaskSetMarkerColor(Frame owner,
-								DEMainPane mainPane,
-								VisualizationPanel view) {
-		super(owner, mainPane, view, "Set Marker Color");
+	public DETaskSetMarkerLabelBackgroundColor(Frame owner,
+	                                           DEMainPane mainPane,
+	                                           VisualizationPanel view) {
+		super(owner, mainPane, view, "Set Marker Label Background Color");
 		}
 
 	@Override
@@ -42,7 +42,7 @@ public class DETaskSetMarkerColor extends DETaskAbstractSetColor {
 
 	@Override
 	public VisualizationColor getVisualizationColor(CompoundTableView view) {
-		return ((VisualizationPanel)view).getVisualization().getMarkerColor();
+		return ((VisualizationPanel)view).getVisualization().getLabelBackgroundColor();
 		}
 
 	@Override
@@ -52,7 +52,7 @@ public class DETaskSetMarkerColor extends DETaskAbstractSetColor {
 
 	@Override
 	public String getViewQualificationError(CompoundTableView view) {
-		return (view instanceof VisualizationPanel) ? null : "Marker colors can be used in 2D/3D-Views only.";
+		return (view instanceof VisualizationPanel) ? null : "Marker label background colors can be used in 2D/3D-Views only.";
 		}
 
 	@Override

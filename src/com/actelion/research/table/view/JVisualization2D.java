@@ -1024,7 +1024,13 @@ public class JVisualization2D extends JVisualization {
 
 					Color color = (isFilter && !vp.record.isFlagSet(mUseAsFilterFlagNo)) ? cUseAsFilterColor
 							: (vp.record.isSelected() && useSelectionColor) ? VisualizationColor.cSelectedColor
-							: mMarkerColor.getColorList()[vp.colorIndex];
+							: mMarkerColor.getColorList()[vp.markerColorIndex];
+
+					Color labelBG = mLabelBackgroundColor.getColorForBackground(vp.record, isDarkBackground);
+					if (labelBG == null)
+						labelBG = mLabelBackgroundColor.getDefaultDataColor();
+					if (!inFocus)
+						labelBG = VisualizationColor.lowContrastColor(labelBG, getViewBackground());
 
 					Color markerColor = inFocus ? color : VisualizationColor.lowContrastColor(color, getViewBackground());
 					Color outlineColor = isDarkBackground ? markerColor.brighter() : markerColor.darker();
@@ -1050,7 +1056,7 @@ public class JVisualization2D extends JVisualization {
 						}
 
 					if (drawLabels)
-						drawMarkerLabels(mLabelHelper.getLabelInfo(), markerColor, outlineColor, isTreeView, labelComposite);
+						drawMarkerLabels(mLabelHelper.getLabelInfo(), markerColor, labelBG, outlineColor, isTreeView, labelComposite);
 					}
 
 				if (!drawLabels)
@@ -1070,12 +1076,12 @@ public class JVisualization2D extends JVisualization {
 			}
 		}
 
-	private void drawMarkerLabels(MarkerLabelInfo[] labelInfo, Color markerColor, Color outlineColor, boolean isTreeView, Composite composite) {
+	private void drawMarkerLabels(MarkerLabelInfo[] labelInfo, Color labelFG, Color labelBG, Color outlineColor, boolean isTreeView, Composite composite) {
 		if (mMarkerLabelSize != 1.0)
 			setFontHeightAndScaleToSplitView(mMarkerLabelSize * mFontHeight);
 
-		boolean isDarkBackground = (ColorHelper.perceivedBrightness(mLabelBackground) <= 0.5);
-		Color labelColor = mIsMarkerLabelsBlackAndWhite ? getContrastGrey(1f) : isDarkBackground ? markerColor : markerColor.darker();
+		boolean isDarkBackground = (ColorHelper.perceivedBrightness(getViewBackground()) <= 0.5);
+		labelFG = mIsMarkerLabelsBlackAndWhite ? getContrastGrey(1f) : isDarkBackground ? labelFG : labelFG.darker();
 
 		Composite original = null;
 		if (composite != null) {
@@ -1084,14 +1090,14 @@ public class JVisualization2D extends JVisualization {
 			}
 
 		if (mLabelColumn[MarkerLabelDisplayer.cMidCenter] != cColumnUnassigned && (!mLabelsInTreeViewOnly || isTreeView)) {
-			drawMarkerLabel(labelInfo[MarkerLabelDisplayer.cMidCenter], labelColor, outlineColor);
+			drawMarkerLabel(labelInfo[MarkerLabelDisplayer.cMidCenter], labelFG, labelBG, outlineColor);
 			}
 
 		for (int i=0; i<labelInfo.length; i++) {
 			if (i != MarkerLabelDisplayer.cMidCenter
 			 && mLabelColumn[i] != cColumnUnassigned
 			 && (!mLabelsInTreeViewOnly || isTreeView)) {
-				drawMarkerLabel(labelInfo[i], labelColor, outlineColor);
+				drawMarkerLabel(labelInfo[i], labelFG, labelBG, outlineColor);
 				}
 			}
 
@@ -1314,7 +1320,7 @@ public class JVisualization2D extends JVisualization {
 			}
 		}
 
-	private void drawMarkerLabel(MarkerLabelInfo mli, Color labelColor, Color outlineColor) {
+	private void drawMarkerLabel(MarkerLabelInfo mli, Color labelFG, Color labelBG, Color outlineColor) {
 		if (mli.label != null || mli.depictor != null) {
 			if (mShowLabelBackground) {
 				Composite original = null;
@@ -1323,7 +1329,7 @@ public class JVisualization2D extends JVisualization {
 					mG.setComposite(mLabelBackgroundComposite);
 					}
 
-				mG.setColor(mLabelBackground);
+				mG.setColor(labelBG);
 				mG.fillRect(mli.x1, mli.y1, mli.x2-mli.x1, mli.y2-mli.y1);
 				mG.setColor(outlineColor);
 				mG.setStroke(mThinLineStroke);
@@ -1336,11 +1342,11 @@ public class JVisualization2D extends JVisualization {
 			// For custom located labels we may need to draw a line from marker to label edge
 
 			if (mli.depictor != null) {
-				mli.depictor.setOverruleColor(labelColor, getViewBackground());
+				mli.depictor.setOverruleColor(labelFG.getRGB(), getViewBackground().getRGB());
 				mli.depictor.paint(mG);
 				}
 			else {
-				mG.setColor(labelColor);
+				mG.setColor(labelFG);
 				setFontHeightAndScaleToSplitView(mli.fontSize);
 				mG.drawString(mli.label, mli.x, mli.y + mG.getFontMetrics().getAscent());
 				}
@@ -1756,8 +1762,8 @@ public class JVisualization2D extends JVisualization {
 		if (isConnectionLineSuppressed(p1, p2))
 			return;
 
-		Color color = ColorHelper.intermediateColor(mMarkerColor.getColorList()[p1.colorIndex],
-													mMarkerColor.getColorList()[p2.colorIndex], 0.5f);
+		Color color = ColorHelper.intermediateColor(mMarkerColor.getColorList()[p1.markerColorIndex],
+													mMarkerColor.getColorList()[p2.markerColorIndex], 0.5f);
 		if (transparency != 0.0f) {
 			if (!mIsFastRendering || mIsHighResolution)
 				mG.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f - transparency));
@@ -2054,13 +2060,18 @@ public class JVisualization2D extends JVisualization {
 				mG.setComposite(labelComposite);
 				}
 
+			boolean isDarkBackground = (ColorHelper.perceivedBrightness(getViewBackground()) <= 0.5);
+
 			for (int i=0; i<mDataPoints; i++) {
 				VisualizationPoint vp = mPoint[i];
 				if (isVisibleInBarsOrPies(vp) && labelHelper.hasLabels(vp)) {
-					Color color = mChartInfo.color[getColorIndex(vp, colorListLength, focusFlagNo)];
+					Color fg = mChartInfo.color[getColorIndex(vp, colorListLength, focusFlagNo)];
+					Color bg = mLabelBackgroundColor.getColorForBackground(vp.record, isDarkBackground);
+					if (bg == null)
+						bg = mLabelBackgroundColor.getDefaultDataColor();
 					labelHelper.prepareLabels(vp);
-					labelHelper.drawLabelLines(vp, color, labelComposite);
-					drawMarkerLabels(labelHelper.getLabelInfo(), color, color, false, labelComposite);
+					labelHelper.drawLabelLines(vp, fg, labelComposite);
+					drawMarkerLabels(labelHelper.getLabelInfo(), fg, bg, fg, false, labelComposite);
 					}
 				}
 
@@ -3698,12 +3709,12 @@ public class JVisualization2D extends JVisualization {
 				int ymin = bounds.y+vOffset;
 				int ymax = ymin+bounds.height;
 
-				drawInclinedLine(xmin, xmax, ymin, ymax, hv, m[hv][cat], b[hv][cat], dxy);
+				drawInclinedLine(xmin, xmax, ymin, ymax, m[hv][cat], b[hv][cat], dxy);
 				}
 			}
 		}
 
-	private void drawInclinedLine(int xmin, int xmax, int ymin, int ymax, int hv, float m, float b, float stdDev) {
+	private void drawInclinedLine(int xmin, int xmax, int ymin, int ymax, float m, float b, float stdDev) {
 		float sxtop = (ymin-b)/m;
 		float sxbottom = (ymax-b)/m;
 		float syleft = m*xmin+b;
@@ -3767,6 +3778,8 @@ public class JVisualization2D extends JVisualization {
 		setFontHeight(scaledFontHeight);
 		mG.setColor(getContrastGrey(SCALE_STRONG));
 
+		final long mask = mTableModel.getListHandler().getListMask(mCurveRowList);
+
 		mCorrelationCoefficient = new float[mHVCount];
 		if (mHVCount == 1) {
 			float r = (float)new CorrelationCalculator().calculateCorrelation(
@@ -3775,7 +3788,7 @@ public class JVisualization2D extends JVisualization {
 							return mDataPoints;
 							}
 						public double getValueAt(int row) {
-							return isVisibleExcludeNaN(mPoint[row]) ? getAxisValue(mPoint[row].record, 0) : Float.NaN;
+							return isConsideredForCurve(mPoint[row], mask) ? getAxisValue(mPoint[row].record, 0) : Float.NaN;
 							}
 						},
 					new INumericalDataColumn() {
@@ -3783,7 +3796,7 @@ public class JVisualization2D extends JVisualization {
 							return mDataPoints;
 							}
 						public double getValueAt(int row) {
-							return isVisibleExcludeNaN(mPoint[row]) ? getAxisValue(mPoint[row].record, 1) : Float.NaN;
+							return isConsideredForCurve(mPoint[row], mask) ? getAxisValue(mPoint[row].record, 1) : Float.NaN;
 							}
 						},
 					mShownCorrelationType);
@@ -3796,7 +3809,8 @@ public class JVisualization2D extends JVisualization {
 		else {
 			int[] count = new int[mHVCount];
 			for (int i=0; i<mDataPoints; i++)
-				if (isVisibleExcludeNaN(mPoint[i]))
+				if (isConsideredForCurve(mPoint[i], mask))
+//				if (isVisibleExcludeNaN(mPoint[i]))
 					count[mPoint[i].hvIndex]++;
 			float[][][] value = new float[mHVCount][2][];
 			for (int hv=0; hv<mHVCount; hv++) {
@@ -3805,7 +3819,8 @@ public class JVisualization2D extends JVisualization {
 				}
 			count = new int[mHVCount];
 			for (int i=0; i<mDataPoints; i++) {
-				if (isVisibleExcludeNaN(mPoint[i])) {
+				if (isConsideredForCurve(mPoint[i], mask)) {
+//				if (isVisibleExcludeNaN(mPoint[i])) {
 					value[mPoint[i].hvIndex][0][count[mPoint[i].hvIndex]] = getAxisValue(mPoint[i].record, 0);
 					value[mPoint[i].hvIndex][1][count[mPoint[i].hvIndex]] = getAxisValue(mPoint[i].record, 1);
 					count[mPoint[i].hvIndex]++;
@@ -3852,7 +3867,7 @@ public class JVisualization2D extends JVisualization {
 
 		if (mBackgroundColor.getColorColumn() != cColumnUnassigned) {
 			if (mTableModel.isDescriptorColumn(mBackgroundColor.getColorColumn())) {
-				setBackgroundSimilarityColors();
+				setSimilarityColors(mBackgroundColor, VisualizationPoint.COLOR_TYPE_MARKER_BG, -1);
 				mBackgroundValid = false;
 				mOffImageValid = false;
 				}
@@ -4238,7 +4253,8 @@ public class JVisualization2D extends JVisualization {
 	@Override
 	public void colorChanged(VisualizationColor source) {
 		if (source == mBackgroundColor) {
-			updateBackgroundColorIndices();
+			updateColorIndices(mBackgroundColor, VisualizationPoint.COLOR_TYPE_MARKER_BG);
+			mBackgroundValid = false;
 			return;
 			}
 
@@ -4359,105 +4375,6 @@ public class JVisualization2D extends JVisualization {
 			invalidateOffImage(false);
 		}
 	}
-
-	private void updateBackgroundColorIndices() {
-		if (mBackgroundColor.getColorColumn() == cColumnUnassigned)
-			for (int i=0; i<mDataPoints; i++)
-				((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = VisualizationColor.cDefaultDataColorIndex;
-		else if (CompoundTableListHandler.isListColumn(mBackgroundColor.getColorColumn())) {
-			int listIndex = CompoundTableListHandler.convertToListIndex(mBackgroundColor.getColorColumn());
-			int flagNo = mTableModel.getListHandler().getListFlagNo(listIndex);
-			for (int i=0; i<mDataPoints; i++)
-				((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = mPoint[i].record.isFlagSet(flagNo) ?
-						VisualizationColor.cSpecialColorCount : VisualizationColor.cSpecialColorCount + 1;
-			}
-		else if (mTableModel.isDescriptorColumn(mBackgroundColor.getColorColumn()))
-			setBackgroundSimilarityColors();
-		else if (mBackgroundColor.getColorListMode() == VisualizationColor.cColorListModeCategories) {
-			float[] thresholds = mBackgroundColor.getColorThresholds();
-			if (thresholds != null) {
-				for (int i=0; i<mDataPoints; i++) {
-					double value = mPoint[i].record.getDouble(mBackgroundColor.getColorColumn());
-					if (mTableModel.isLogarithmicViewMode(mBackgroundColor.getColorColumn()))
-						value = Math.pow(10, value);
-					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = (short)(VisualizationColor.cSpecialColorCount+thresholds.length);
-					for (int j=0; j<thresholds.length; j++) {
-						if (value<thresholds[j]) {
-							((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = (short)(VisualizationColor.cSpecialColorCount + j);
-							break;
-							}
-						}
-					}
-				}
-			else {
-				for (int i=0; i<mDataPoints; i++)
-					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = VisualizationColor.cSpecialColorCount
-							+ mTableModel.getCategoryIndex(mBackgroundColor.getColorColumn(), mPoint[i].record);
-				}
-			}
-		else if (mTableModel.isColumnTypeDouble(mBackgroundColor.getColorColumn())) {
-			float min = Float.isNaN(mBackgroundColor.getColorMin()) ?
-					mTableModel.getMinimumValue(mBackgroundColor.getColorColumn())
-					   : (mTableModel.isLogarithmicViewMode(mBackgroundColor.getColorColumn())) ?
-							   (float)Math.log10(mBackgroundColor.getColorMin()) : mBackgroundColor.getColorMin();
-			float max = Float.isNaN(mBackgroundColor.getColorMax()) ?
-					mTableModel.getMaximumValue(mBackgroundColor.getColorColumn())
-					   : (mTableModel.isLogarithmicViewMode(mBackgroundColor.getColorColumn())) ?
-							   (float)Math.log10(mBackgroundColor.getColorMax()) : mBackgroundColor.getColorMax();
-
-			//	1. colorMin is explicitly set; max is real max, but lower than min
-			// or 2. colorMax is explicitly set; min is real min, but larger than max
-			// first case is OK, second needs adaption below to be handled as indented
-			if (min >= max)
-				if (!Float.isNaN(mBackgroundColor.getColorMax()))
-					min = Float.MIN_VALUE;
-
-			for (int i=0; i<mDataPoints; i++) {
-				float value = mPoint[i].record.getDouble(mBackgroundColor.getColorColumn());
-				if (Float.isNaN(value))
-					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = VisualizationColor.cMissingDataColorIndex;
-				else if (value <= min)
-					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = VisualizationColor.cSpecialColorCount;
-				else if (value >= max)
-					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = mBackgroundColor.getColorList().length-1;
-				else
-					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = (int)(0.5 + VisualizationColor.cSpecialColorCount
-						+ (float)(mBackgroundColor.getColorList().length-VisualizationColor.cSpecialColorCount-1)
-						* (value - min) / (max - min));
-				}
-			}
-
-		mBackgroundValid = false;
-		invalidateOffImage(true);
-		}
-
-	private void setBackgroundSimilarityColors() {
-		if (mActivePoint == null)
-			for (int i=0; i<mDataPoints; i++)
-				((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = VisualizationColor.cDefaultDataColorIndex;
-		else {
-			for (int i=0; i<mDataPoints; i++) {
-				float similarity = mTableModel.getDescriptorSimilarity(
-										mActivePoint.record, mPoint[i].record, mBackgroundColor.getColorColumn());
-				if (Float.isNaN(similarity))
-					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = VisualizationColor.cMissingDataColorIndex;
-				else if (mBackgroundColor.getColorThresholds() != null) {
-					float[] thresholds = mBackgroundColor.getColorThresholds();
-					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = (short)(VisualizationColor.cSpecialColorCount + thresholds.length);
-					for (int j=0; j<thresholds.length; j++) {
-						if (similarity<thresholds[j]) {
-							((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = (short)(VisualizationColor.cSpecialColorCount + j);
-							break;
-							}
-						}
-					}
-				else
-					((VisualizationPoint2D)mPoint[i]).backgroundColorIndex = (int)(0.5 + VisualizationColor.cSpecialColorCount
-						+ (float)(mBackgroundColor.getColorList().length - VisualizationColor.cSpecialColorCount - 1)
-						* similarity);
-				}
-			}
-		}
 
 	public byte[] getBackgroundImageData() {
 		if (mBackgroundImageData == null
@@ -6091,7 +6008,7 @@ public class JVisualization2D extends JVisualization {
 	private int getSplitCurveCategoryIndex(VisualizationPoint vp) {
 		int colorIndex = 0;
 		if (isEffectiveCurveSplitByColorCategory())
-			colorIndex = vp.colorIndex - VisualizationColor.cSpecialColorCount;
+			colorIndex = vp.markerColorIndex - VisualizationColor.cSpecialColorCount;
 
 		if (isEffectiveCurveSplitBySecondCategory())
 			return colorIndex * mTableModel.getCategoryCount(mCurveSplitCategoryColumn)

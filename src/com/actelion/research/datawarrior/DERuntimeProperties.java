@@ -83,7 +83,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cFastRendering = "fastRendering";
 	private static final String cViewBackground = "background";
 	private static final String cTitleBackground = "titleBackground";
-	private static final String cLabelBackground = "labelBackground";
+	private static final String cDefaultLabelBackground = "labelBackground";
 	private static final String cLabelTransparency = "labelTransparency";
 	private static final String cFaceColor3D = "faceColor3D";
 	private static final String cAxisColumn = "axisColumn";
@@ -109,6 +109,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cSizeProportional = "sizeProportional";
 	private static final String cSizeAdaption = "sizeAdaption";
 	private static final String cLabelSize = "labelSize";
+	private static final String cLabelBackground = "_labelBG";
 	private static final String cLabelColumn = "labelColumn";
 	private static final String cLabelMode = "labelMode";
 	private static final String cLabelShowColumnNameInTable = "labelColumnNameInTable";
@@ -626,9 +627,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 			if (value != null)
 				visualization.setTitleBackground(Color.decode(value));
 
-			value = getProperty(cLabelBackground + viewName);
+			value = getProperty(cDefaultLabelBackground + viewName);
 			if (value != null)
-				visualization.setLabelBackground(Color.decode(value));
+				visualization.setDefaultLabelBackground(Color.decode(value));
 
 			value = getProperty(cLabelTransparency + viewName);
 			if (value != null)
@@ -689,6 +690,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 				}
 
 			applyViewColorProperties(viewName, visualization.getMarkerColor());
+			applyViewColorProperties(cLabelBackground+viewName, visualization.getLabelBackgroundColor());
 
 			value = getProperty(cShapeColumn+viewName);
 			if (value != null) {
@@ -1427,8 +1429,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 					if (!visualization.getViewBackground().equals(Color.WHITE))
 						setProperty(cViewBackground+viewName, ""+visualization.getViewBackground().getRGB());
 
-					if (!visualization.getLabelBackground().equals(JVisualization.DEFAULT_LABEL_BACKGROUND))
-						setProperty(cLabelBackground+viewName, ""+visualization.getLabelBackground().getRGB());
+					if (!visualization.getDefaultLabelBackground().equals(JVisualization.DEFAULT_LABEL_BACKGROUND))
+						setProperty(cDefaultLabelBackground +viewName, ""+visualization.getDefaultLabelBackground().getRGB());
 
 					if (visualization.getLabelTransparency() != DEFAULT_LABEL_TRANSPARENCY)
 						setProperty(cLabelTransparency+viewName, DoubleFormat.toString(visualization.getLabelTransparency()));
@@ -1486,6 +1488,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 						}
 
 					learnViewColorProperties(viewName, visualization.getMarkerColor());
+					learnViewColorProperties(cLabelBackground+viewName, visualization.getLabelBackgroundColor());
 
 					column = visualization.getMarkerShapeColumn();
 					if (column != JVisualization.cColumnUnassigned) {

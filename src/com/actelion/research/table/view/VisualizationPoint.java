@@ -22,18 +22,30 @@ import com.actelion.research.table.model.CompoundRecord;
 
 
 public class VisualizationPoint {
+	public static final int COLOR_TYPE_MARKER_FG = 0;
+	public static final int COLOR_TYPE_MARKER_BG = 1;
+	public static final int COLOR_TYPE_LABEL_BG = 2;
+
 	public float screenX,screenY,widthOrAngle1,heightOrAngle2;
 	protected int chartGroupIndex,hvIndex;
-	protected short colorIndex;
+	protected short markerColorIndex,labelBackgroundColorIndex;
 	protected byte shape,exclusionFlags;
 	protected CompoundRecord record;
 	protected LabelPosition2D labelPosition;
 
 	protected VisualizationPoint(CompoundRecord r) {
 		record = r;
-		colorIndex = 0;
+		markerColorIndex = 0;
+		labelBackgroundColorIndex = 0;
 		shape = 0;
 		hvIndex = 0;
+	}
+
+	public void setColorIndex(int type, short index) {
+		if (type == COLOR_TYPE_MARKER_FG)
+			markerColorIndex = index;
+		else if (type == COLOR_TYPE_LABEL_BG)
+			labelBackgroundColorIndex = index;
 	}
 
 	public LabelPosition2D findLabel(int x, int y) {

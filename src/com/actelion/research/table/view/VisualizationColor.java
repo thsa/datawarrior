@@ -284,31 +284,65 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 	/**
 	 * Determines the color representing the value of <code>record</code> in
 	 * the column that is associated with this VisualisationColor.
+	 * The color will be adapted to the L&F: In a dark L&F it will be much darker;
+	 * in a bright L&F it will be much brighter.
 	 * If this VisualisationColor is associated with no column, then this method
 	 * returns null;
 	 * @param record
 	 * @return null or record's color adapted to be used as background
 	 */
 	public Color getColorForBackground(CompoundRecord record) {
-		Color c = getColor(record);
-		return c == null ? null : LookAndFeelHelper.isDarkLookAndFeel() ?
-				new Color(c.getRed()/3, c.getGreen()/3, c.getBlue()/3)
-			  : new Color(c.getRed()/4+192, c.getGreen()/4+192, c.getBlue()/4+192);
+		return getColorForBackground(record, LookAndFeelHelper.isDarkLookAndFeel());
 		}
 
 	/**
 	 * Determines the color representing the value of <code>record</code> in
 	 * the column that is associated with this VisualisationColor.
+	 * The color will be adapted to the surrounding: For a dark environment it will
+	 * be much darker; for a bright environment it will be much brighter.
+	 * If this VisualisationColor is associated with no column, then this method
+	 * returns null;
+	 * @param forDarkSurrounding
+	 * @param record
+	 * @return null or record's color adapted to be used as background
+	 */
+	public Color getColorForBackground(CompoundRecord record, boolean forDarkSurrounding) {
+		Color c = getColor(record);
+		return c == null ? null : forDarkSurrounding ?
+				new Color(c.getRed()/3, c.getGreen()/3, c.getBlue()/3)
+				: new Color(c.getRed()/4+192, c.getGreen()/4+192, c.getBlue()/4+192);
+		}
+
+	/**
+	 * Determines the color representing the value of <code>record</code> in
+	 * the column that is associated with this VisualisationColor.
+	 * The color will be adapted to the L&F: In a dark L&F it will be brighter;
+	 * in a bright L&F it will be darker.
 	 * If this VisualisationColor is associated with no column, then this method
 	 * returns null;
 	 * @param record
 	 * @return null or record's color adapted to be used as foreground
 	 */
 	public Color getColorForForeground(CompoundRecord record) {
+		return getColorForForeground(record, LookAndFeelHelper.isDarkLookAndFeel());
+		}
+
+	/**
+	 * Determines the color representing the value of <code>record</code> in
+	 * the column that is associated with this VisualisationColor.
+	 * The color will be adapted to the surrounding: For a dark environment it will
+	 * be brighter; for a bright environment it will be darker.
+	 * If this VisualisationColor is associated with no column, then this method
+	 * returns null;
+	 * @param record
+	 * @param forDarkSurrounding
+	 * @return null or record's color adapted to be used as foreground
+	 */
+	public Color getColorForForeground(CompoundRecord record, boolean forDarkSurrounding) {
 		Color c = getColor(record);
-		return c == null ? null : LookAndFeelHelper.isDarkLookAndFeel() ?
+		return c == null ? null : forDarkSurrounding ?
 				ColorHelper.createColor(c, 0.7f)
-			  : c.darker();
+				: c.darker();
 		}
 
 	/**

@@ -66,6 +66,7 @@ public class DEViewConfigPopupMenu extends JPopupMenu implements ActionListener,
 	private static final String TEXT_MARKER_COLOR = DETaskSetMarkerColor.TASK_NAME+"...";
 	private static final String TEXT_MARKER_BG_COLOR = DETaskSetMarkerBackgroundColor.TASK_NAME+"...";
 	private static final String TEXT_MARKER_LABELS = "Set Marker Labels...";
+	private static final String TEXT_LABEL_BACKGROUND_COLOR = DETaskSetMarkerLabelBackgroundColor.TASK_NAME+"...";
 	private static final String TEXT_MARKER_CONNECTION = DETaskSetConnectionLines.TASK_NAME+"...";
 	private static final String TEXT_MARKER_JITTERING = DETaskSetMarkerJittering.TASK_NAME+"...";
 	private static final String TEXT_MARKER_TRANSPARENCY = DETaskSetMarkerTransparency.TASK_NAME+"...";
@@ -136,6 +137,8 @@ public class DEViewConfigPopupMenu extends JPopupMenu implements ActionListener,
 			if (source instanceof VisualizationPanel2D
 			 || chartType == JVisualization.cChartTypeScatterPlot)
 			addMenuItem(TEXT_MARKER_LABELS);
+
+			addMenuItem(TEXT_LABEL_BACKGROUND_COLOR);
 
 			if (chartType != JVisualization.cChartTypeBars
 			 && chartType != JVisualization.cChartTypePies) {
@@ -422,6 +425,8 @@ public class DEViewConfigPopupMenu extends JPopupMenu implements ActionListener,
 		} else if (actionCommand.equals(TEXT_STRUCTURE_LABELS)
 				|| actionCommand.equals(TEXT_MARKER_LABELS)) {
 			new DETaskSetMarkerLabels(getParentFrame(), mMainPane, mSource).defineAndRun();
+		} else if (actionCommand.equals(TEXT_LABEL_BACKGROUND_COLOR)) {
+			new DETaskSetMarkerLabelBackgroundColor(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
 		} else if (actionCommand.equals(TEXT_MARKER_SIZE)) {
 			new DETaskSetMarkerSize(getParentFrame(), mMainPane, (VisualizationPanel) mSource).defineAndRun();
 		} else if (actionCommand.equals(TEXT_MARKER_SHAPE)) {

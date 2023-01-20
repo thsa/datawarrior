@@ -196,7 +196,7 @@ public abstract class JVisualization extends JComponent
 	protected VisualizationPoint[]	mPoint;
 	protected VisualizationPoint 	mHighlightedPoint,mActivePoint;
 	protected LabelPosition2D       mHighlightedLabelPosition;
-	protected VisualizationColor	mMarkerColor;
+	protected VisualizationColor	mMarkerColor,mLabelBackgroundColor;
 	protected VisualizationSplitter	mSplitter;
 	protected VisualizationPoint[]  mConnectionLinePoint;
 	protected TreeMap<byte[],VisualizationPoint>mConnectionLineMap;
@@ -226,7 +226,6 @@ public abstract class JVisualization extends JComponent
 	protected String				mPValueRefCategory,mWarningMessage;
 	protected Random				mRandom;
 	protected StereoMolecule		mLabelMolecule;
-	protected Color					mLabelBackground;
 	protected int[][]				mVisibleCategoryFromCategory;
 
 	private Thread					mPopupThread;
@@ -276,6 +275,7 @@ public abstract class JVisualization extends JComponent
 		mIsDynamicScale = true; // default
 
 		mMarkerColor = new VisualizationColor(mTableModel, this);
+		mLabelBackgroundColor = new VisualizationColor(mTableModel, this);
 
 		mLabelColumn = new int[MarkerLabelDisplayer.cPositionCode.length];
 
@@ -336,7 +336,7 @@ public abstract class JVisualization extends JComponent
 			}
 		mShowNaNValues = true;
 		mTitleBackground = DEFAULT_TITLE_BACKGROUND;
-		mLabelBackground = DEFAULT_LABEL_BACKGROUND;
+		mLabelBackgroundColor.setDefaultDataColor(DEFAULT_LABEL_BACKGROUND);
 		mTreeViewMode = cTreeViewModeNone;
 		mTreeViewRadius = 5;
 		mTreeViewShowAll = true;
@@ -855,7 +855,7 @@ public abstract class JVisualization extends JComponent
 		if (mMarkerShapeColumn != cColumnUnassigned
 		 && mChartType != cChartTypeBars
 		 && mChartType != cChartTypePies
-			// if the marker color and marker shape encode the same categories, the use only one legend
+			// if the marker color and marker shape encode the same categories, then use only one legend
 		 && (mMarkerColor.getColorColumn() != mMarkerShapeColumn
 		  || mMarkerColor.getColorListMode() != VisualizationColor.cColorListModeCategories)) {
 			VisualizationLegend shapeLegend = new VisualizationLegend(this, mTableModel,
@@ -874,6 +874,18 @@ public abstract class JVisualization extends JComponent
 													mMarkerColor.getColorListMode() == VisualizationColor.cColorListModeCategories ?
 													  VisualizationLegend.cLegendTypeColorCategory
 													: VisualizationLegend.cLegendTypeColorDouble);
+			colorLegend.calculate(bounds, fontHeight);
+			bounds.height -= colorLegend.getHeight();
+			mLegendList.add(colorLegend);
+			}
+
+		if (mLabelBackgroundColor.getColorColumn() != cColumnUnassigned) {
+			VisualizationLegend colorLegend = new VisualizationLegend(this, mTableModel,
+					mLabelBackgroundColor.getColorColumn(),
+					mLabelBackgroundColor,
+					mLabelBackgroundColor.getColorListMode() == VisualizationColor.cColorListModeCategories ?
+							VisualizationLegend.cLegendTypeColorCategory
+							: VisualizationLegend.cLegendTypeColorDouble);
 			colorLegend.calculate(bounds, fontHeight);
 			bounds.height -= colorLegend.getHeight();
 			mLegendList.add(colorLegend);
@@ -1218,7 +1230,10 @@ public abstract class JVisualization extends JComponent
 
 	public void colorChanged(VisualizationColor source) {
 		if (source == mMarkerColor) {
-			updateColorIndices();
+			updateColorIndices(mMarkerColor, VisualizationPoint.COLOR_TYPE_MARKER_FG);
+			}
+		else if (source == mLabelBackgroundColor) {
+			updateColorIndices(mLabelBackgroundColor, VisualizationPoint.COLOR_TYPE_LABEL_BG);
 			}
 		}
 
@@ -1233,36 +1248,40 @@ public abstract class JVisualization extends JComponent
 		return mMarkerColor;
 		}
 
-	private void updateColorIndices() {
-		if (mMarkerColor.getColorColumn() == cColumnUnassigned) {
+	public VisualizationColor getLabelBackgroundColor() {
+		return mLabelBackgroundColor;
+		}
+
+	protected void updateColorIndices(VisualizationColor visualizationColor, int colorType) {
+		if (visualizationColor.getColorColumn() == cColumnUnassigned) {
 			for (int i=0; i<mDataPoints; i++)
-				mPoint[i].colorIndex = VisualizationColor.cDefaultDataColorIndex;
+				mPoint[i].setColorIndex(colorType, VisualizationColor.cDefaultDataColorIndex);
 			}
-		else if (CompoundTableListHandler.isListColumn(mMarkerColor.getColorColumn())) {
-			int listIndex = CompoundTableListHandler.convertToListIndex(mMarkerColor.getColorColumn());
+		else if (CompoundTableListHandler.isListColumn(visualizationColor.getColorColumn())) {
+			int listIndex = CompoundTableListHandler.convertToListIndex(visualizationColor.getColorColumn());
 			int flagNo = mTableModel.getListHandler().getListFlagNo(listIndex);
 			for (int i=0; i<mDataPoints; i++)
-				mPoint[i].colorIndex = (short)(mPoint[i].record.isFlagSet(flagNo) ?
-						VisualizationColor.cSpecialColorCount : VisualizationColor.cSpecialColorCount + 1);
+				mPoint[i].setColorIndex(colorType, (short)(mPoint[i].record.isFlagSet(flagNo) ?
+						VisualizationColor.cSpecialColorCount : VisualizationColor.cSpecialColorCount + 1));
 			}
-		else if (mTableModel.isDescriptorColumn(mMarkerColor.getColorColumn())) {
-			setSimilarityColors(-1);
+		else if (mTableModel.isDescriptorColumn(visualizationColor.getColorColumn())) {
+			setSimilarityColors(mMarkerColor, VisualizationPoint.COLOR_TYPE_MARKER_FG, -1);
 			}
-		else if (mMarkerColor.getColorListMode() == VisualizationColor.cColorListModeCategories) {
-			float[] thresholds = mMarkerColor.getColorThresholds();
+		else if (visualizationColor.getColorListMode() == VisualizationColor.cColorListModeCategories) {
+			float[] thresholds = visualizationColor.getColorThresholds();
 			if (thresholds != null) {
 				for (int i=0; i<mDataPoints; i++) {
-					float value = mPoint[i].record.getDouble(mMarkerColor.getColorColumn());
+					float value = mPoint[i].record.getDouble(visualizationColor.getColorColumn());
 					if (Float.isNaN(value)) {
-						mPoint[i].colorIndex = VisualizationColor.cMissingDataColorIndex;
+						mPoint[i].setColorIndex(colorType, VisualizationColor.cMissingDataColorIndex);
 						}
 					else {
-						if (mTableModel.isLogarithmicViewMode(mMarkerColor.getColorColumn()))
+						if (mTableModel.isLogarithmicViewMode(visualizationColor.getColorColumn()))
 							value = (float)Math.pow(10, value);
-						mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount+thresholds.length);
+						mPoint[i].setColorIndex(colorType, (short)(VisualizationColor.cSpecialColorCount+thresholds.length));
 						for (int j=0; j<thresholds.length; j++) {
 							if (value<thresholds[j]) {
-								mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount + j);
+								mPoint[i].setColorIndex(colorType, (short)(VisualizationColor.cSpecialColorCount + j));
 								break;
 								}
 							}
@@ -1271,39 +1290,39 @@ public abstract class JVisualization extends JComponent
 				}
 			else {
 				for (int i=0; i<mDataPoints; i++)
-					mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount
-							+ mTableModel.getCategoryIndex(mMarkerColor.getColorColumn(), mPoint[i].record));
+					mPoint[i].setColorIndex(colorType, (short)(VisualizationColor.cSpecialColorCount
+							+ mTableModel.getCategoryIndex(visualizationColor.getColorColumn(), mPoint[i].record)));
 				}
 			}
-		else if (mTableModel.isColumnTypeDouble(mMarkerColor.getColorColumn())) {
-			float min = Float.isNaN(mMarkerColor.getColorMin()) ?
-									mTableModel.getMinimumValue(mMarkerColor.getColorColumn())
-					   : (mTableModel.isLogarithmicViewMode(mMarkerColor.getColorColumn())) ?
-							   (float)Math.log10(mMarkerColor.getColorMin()) : mMarkerColor.getColorMin();
-			float max = Float.isNaN(mMarkerColor.getColorMax()) ?
-									mTableModel.getMaximumValue(mMarkerColor.getColorColumn())
-					   : (mTableModel.isLogarithmicViewMode(mMarkerColor.getColorColumn())) ?
-							   (float)Math.log10(mMarkerColor.getColorMax()) : mMarkerColor.getColorMax();
+		else if (mTableModel.isColumnTypeDouble(visualizationColor.getColorColumn())) {
+			float min = Float.isNaN(visualizationColor.getColorMin()) ?
+									mTableModel.getMinimumValue(visualizationColor.getColorColumn())
+					   : (mTableModel.isLogarithmicViewMode(visualizationColor.getColorColumn())) ?
+							   (float)Math.log10(visualizationColor.getColorMin()) : visualizationColor.getColorMin();
+			float max = Float.isNaN(visualizationColor.getColorMax()) ?
+									mTableModel.getMaximumValue(visualizationColor.getColorColumn())
+					   : (mTableModel.isLogarithmicViewMode(visualizationColor.getColorColumn())) ?
+							   (float)Math.log10(visualizationColor.getColorMax()) : visualizationColor.getColorMax();
 
 			//	1. colorMin is explicitly set; max is real max, but lower than min
 			// or 2. colorMax is explicitly set; min is real min, but larger than max
 			// first case is OK, second needs adaption below to be handled as indented
 			if (min >= max)  
-				if (!Float.isNaN(mMarkerColor.getColorMax()))
+				if (!Float.isNaN(visualizationColor.getColorMax()))
 					min = Float.MIN_VALUE;
 
 			for (int i=0; i<mDataPoints; i++) {
-				float value = mPoint[i].record.getDouble(mMarkerColor.getColorColumn());
+				float value = mPoint[i].record.getDouble(visualizationColor.getColorColumn());
 				if (Float.isNaN(value))
-					mPoint[i].colorIndex = VisualizationColor.cMissingDataColorIndex;
+					mPoint[i].setColorIndex(colorType, VisualizationColor.cMissingDataColorIndex);
 				else if (value <= min)
-					mPoint[i].colorIndex = (short)VisualizationColor.cSpecialColorCount;
+					mPoint[i].setColorIndex(colorType, (short)VisualizationColor.cSpecialColorCount);
 				else if (value >= max)
-					mPoint[i].colorIndex = (short)(mMarkerColor.getColorList().length-1);
+					mPoint[i].setColorIndex(colorType, (short)(visualizationColor.getColorList().length-1));
 				else
-					mPoint[i].colorIndex = (short)(0.5 + VisualizationColor.cSpecialColorCount
-						+ (float)(mMarkerColor.getColorList().length-VisualizationColor.cSpecialColorCount-1)
-						* (value - min) / (max - min));
+					mPoint[i].setColorIndex(colorType, (short)(0.5 + VisualizationColor.cSpecialColorCount
+						+ (float)(visualizationColor.getColorList().length-VisualizationColor.cSpecialColorCount-1)
+						* (value - min) / (max - min)));
 				}
 			}
 
@@ -1363,7 +1382,7 @@ public abstract class JVisualization extends JComponent
 		else if (rowID != -1) {
 			for (int i=0; i<mDataPoints; i++) {
 				if (mPoint[i].record.getID() == rowID) {
-					mSimilarityMarkerSize[rowID] =	(float)mTableModel.getDescriptorSimilarity(mActivePoint.record, mPoint[i].record, mMarkerSizeColumn);
+					mSimilarityMarkerSize[rowID] =	mTableModel.getDescriptorSimilarity(mActivePoint.record, mPoint[i].record, mMarkerSizeColumn);
 					break;
 					}
 				}
@@ -1386,7 +1405,7 @@ public abstract class JVisualization extends JComponent
 				mSimilarityMarkerSize = new float[mDataPoints];
 				for (int i=0; i<mDataPoints; i++)
 					mSimilarityMarkerSize[mPoint[i].record.getID()] =
-						(float)mTableModel.getDescriptorSimilarity(mActivePoint.record, mPoint[i].record, mMarkerSizeColumn);
+						mTableModel.getDescriptorSimilarity(mActivePoint.record, mPoint[i].record, mMarkerSizeColumn);
 				}
 			}
 		}
@@ -1394,20 +1413,20 @@ public abstract class JVisualization extends JComponent
 	/**
 	 * @param rowID if != -1 then update this row only
 	 */
-	private void setSimilarityColors(int rowID) {
+	protected void setSimilarityColors(VisualizationColor visualizationColor, int colorType, int rowID) {
 		if (mActivePoint == null) {
 			for (int i=0; i<mDataPoints; i++)
-				mPoint[i].colorIndex = VisualizationColor.cDefaultDataColorIndex;
+				mPoint[i].setColorIndex(colorType, VisualizationColor.cDefaultDataColorIndex);
 			}
 		else {
-			float min = Float.isNaN(mMarkerColor.getColorMin()) ? 0.0f : mMarkerColor.getColorMin();
-			float max = Float.isNaN(mMarkerColor.getColorMax()) ? 1.0f : mMarkerColor.getColorMax();
+			float min = Float.isNaN(visualizationColor.getColorMin()) ? 0.0f : visualizationColor.getColorMin();
+			float max = Float.isNaN(visualizationColor.getColorMax()) ? 1.0f : visualizationColor.getColorMax();
 			if (min >= max) {
 				min = 0.0f;
 				max = 1.0f;
 				}
 
-			int column = mMarkerColor.getColorColumn();
+			int column = visualizationColor.getColorColumn();
 			float[] flexophoreSimilarity = null;
 			if (rowID == -1
 			 && DescriptorConstants.DESCRIPTOR_Flexophore.shortName.equals(mTableModel.getColumnSpecialType(column))) {
@@ -1421,7 +1440,7 @@ public abstract class JVisualization extends JComponent
 					String idcode = new String((byte[])mActivePoint.record.getData(mTableModel.getParentColumn(column)));
 					flexophoreSimilarity = createSimilarityListSMP(idcode, descriptor, column);
 					if (flexophoreSimilarity == null) {	// cancelled
-						mMarkerColor.setColor(cColumnUnassigned);
+						visualizationColor.setColor(cColumnUnassigned);
 						return;
 						}
 					}
@@ -1432,26 +1451,26 @@ public abstract class JVisualization extends JComponent
 					float similarity = (flexophoreSimilarity != null) ? flexophoreSimilarity[i]
 									  : mTableModel.getDescriptorSimilarity(mActivePoint.record, mPoint[i].record, column);
 					if (Float.isNaN(similarity))
-						mPoint[i].colorIndex = VisualizationColor.cMissingDataColorIndex;
-					else if (mMarkerColor.getColorThresholds() != null) {
-						float[] thresholds = mMarkerColor.getColorThresholds();
-						mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount + thresholds.length);
+						mPoint[i].setColorIndex(colorType, VisualizationColor.cMissingDataColorIndex);
+					else if (visualizationColor.getColorThresholds() != null) {
+						float[] thresholds = visualizationColor.getColorThresholds();
+						mPoint[i].setColorIndex(colorType, (short)(VisualizationColor.cSpecialColorCount + thresholds.length));
 						for (int j=0; j<thresholds.length; j++) {
 							if (similarity<thresholds[j]) {
-								mPoint[i].colorIndex = (short)(VisualizationColor.cSpecialColorCount + j);
+								mPoint[i].setColorIndex(colorType, (short)(VisualizationColor.cSpecialColorCount + j));
 								break;
 								}
 							}
 						}
 
 					else if (similarity <= min)
-						mPoint[i].colorIndex = (short)VisualizationColor.cSpecialColorCount;
+						mPoint[i].setColorIndex(colorType, (short)VisualizationColor.cSpecialColorCount);
 					else if (similarity >= max)
-						mPoint[i].colorIndex = (short)(mMarkerColor.getColorList().length-1);
+						mPoint[i].setColorIndex(colorType, (short)(visualizationColor.getColorList().length-1));
 					else
-						mPoint[i].colorIndex = (short)(0.5 + VisualizationColor.cSpecialColorCount
-							+ (float)(mMarkerColor.getColorList().length - VisualizationColor.cSpecialColorCount - 1)
-							* (similarity - min) / (max - min));
+						mPoint[i].setColorIndex(colorType, (short)(0.5 + VisualizationColor.cSpecialColorCount
+							+ (float)(visualizationColor.getColorList().length - VisualizationColor.cSpecialColorCount - 1)
+							* (similarity - min) / (max - min)));
 					}
 				}
 			}
@@ -1662,8 +1681,8 @@ public abstract class JVisualization extends JComponent
 		return false;
 		}
 
-	public Color getLabelBackground() {
-		return mLabelBackground;
+	public Color getDefaultLabelBackground() {
+		return mLabelBackgroundColor.getDefaultDataColor();
 		}
 
 	/**
@@ -1671,9 +1690,9 @@ public abstract class JVisualization extends JComponent
 	 * @param c color of background area
 	 * @return whether there was a change
 	 */
-	public boolean setLabelBackground(Color c) {
-		if (!c.equals(mLabelBackground)) {
-			mLabelBackground = c;
+	public boolean setDefaultLabelBackground(Color c) {
+		if (!c.equals(mLabelBackgroundColor.getDefaultDataColor())) {
+			mLabelBackgroundColor.setDefaultDataColor(c);
 			if (showAnyLabels())
 				invalidateOffImage(false);
 			return true;
@@ -2617,7 +2636,7 @@ public abstract class JVisualization extends JComponent
 		int colorIndex = (mUseAsFilterFlagNo != -1 && !mTableModel.isRowFlagSuspended(mUseAsFilterFlagNo)
 						&& !vp.record.isFlagSet(mUseAsFilterFlagNo)) ? colorListLength+1
 					   : (vp.record.isSelected() && mFocusList != FocusableView.cFocusOnSelection) ?
-						 colorListLength : vp.colorIndex;
+						 colorListLength : vp.markerColorIndex;
 
 		if (focusFlagNo != -1 && !vp.record.isFlagSet(focusFlagNo))
 			colorIndex += colorListLength+2;

@@ -63,7 +63,7 @@ public class DETaskSetMarkerBackgroundColor extends DETaskAbstractSetColor {
 
 	@Override
 	public VisualizationColor getVisualizationColor(CompoundTableView view) {
-		return ((JVisualization2D)((VisualizationPanel)view).getVisualization()).getBackgroundColor();
+		return ((JVisualization2D)((VisualizationPanel)view).getVisualization()).getLabelBackgroundColor();
 		}
 
 	@Override
@@ -78,7 +78,7 @@ public class DETaskSetMarkerBackgroundColor extends DETaskAbstractSetColor {
 
 	@Override
 	public String getViewQualificationError(CompoundTableView view) {
-		return (view instanceof VisualizationPanel2D) ? null : "Marker background colors can only be assigned to 2D-Views.";
+		return (view instanceof VisualizationPanel2D) ? null : "Marker background colors can be used in 2D/3D-Views only.";
 		}
 
 	@Override

@@ -627,7 +627,6 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 			}
 
 		enableItems();
-		updateStartGenerationPane();
 
 		mDiableEvents = false;
 		}

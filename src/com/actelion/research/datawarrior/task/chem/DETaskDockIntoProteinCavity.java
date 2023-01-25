@@ -132,7 +132,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 		StereoMolecule ligand = (ligandIDCode == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
 		if (cavity != null) {
 			Platform.runLater(() -> {
-				mConformerPanel.setProteinCavity(cavity, ligand);
+				mConformerPanel.setProteinCavity(cavity, ligand, true);
 				V3DMolecule ligand3D = new V3DMolecule(ligand, 0, V3DMolecule.MoleculeRole.LIGAND);
 				ligand3D.setColor(javafx.scene.paint.Color.CORAL);
 				mConformerPanel.getV3DScene().addMolecule(ligand3D);

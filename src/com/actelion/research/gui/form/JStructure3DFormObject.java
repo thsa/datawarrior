@@ -25,9 +25,7 @@ import com.actelion.research.util.ArrayUtils;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Point3D;
-import javafx.scene.Node;
 import javafx.scene.image.WritableImage;
-import org.openmolecules.fx.viewer3d.V3DMolecule;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -50,7 +48,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
 		}
 
 	public void setCavityMolecule(StereoMolecule cavityMol, StereoMolecule ligandMol) {
-		((JFXConformerPanel)mComponent).setProteinCavity(cavityMol, ligandMol);
+		((JFXConformerPanel)mComponent).setProteinCavity(cavityMol, ligandMol, true);
 		mCavityMol = cavityMol;
 		mLigandMol = ligandMol;
 		}
@@ -69,7 +67,8 @@ public class JStructure3DFormObject extends AbstractFormObject {
 		else if (data instanceof StereoMolecule) {
 			((JFXConformerPanel)mComponent).clear();
 			((JFXConformerPanel)mComponent).addMolecule((StereoMolecule)data, null, null);
-			((JFXConformerPanel)mComponent).optimizeView();
+			if (mCavityMol == null)
+				((JFXConformerPanel)mComponent).optimizeView();
 			}
 		else if (data instanceof String) {
 			((JFXConformerPanel)mComponent).clear();
@@ -97,7 +96,8 @@ public class JStructure3DFormObject extends AbstractFormObject {
 						index = ArrayUtils.indexOf(idcode, (byte)32, index+1);
 						}
 					}
-				((JFXConformerPanel)mComponent).optimizeView();
+				if (mCavityMol == null)
+					((JFXConformerPanel)mComponent).optimizeView();
 				}
 			}
 		}
@@ -110,36 +110,50 @@ public class JStructure3DFormObject extends AbstractFormObject {
     @Override
 	public void printContent(Graphics2D g2D, Rectangle2D.Double r, float scale, Object data, boolean isMultipleRows) {
 	    if (data != null && r.width > 1 && r.height > 1) {
-		    StereoMolecule mol = null;
+		    StereoMolecule[] mols = null;
 		    if (data instanceof StereoMolecule) {
-		        mol = (StereoMolecule)data;
+		    	mols = new StereoMolecule[1];
+		        mols[0] = (StereoMolecule)data;
 		    	}
 		    else if (data instanceof String) {
-				String idcode = (String)data;
-				int index = idcode.indexOf('\t');
+				String idcode = ((String)data);
+				int index = ((String)data).indexOf('\t');
 				String coords = (index == -1) ? null : idcode.substring(index+1);
-				mol = new IDCodeParser().getCompactMolecule(idcode, coords);
+
+			    if (index == -1) {
+				    mols = new StereoMolecule[1];
+				    mols[0] = new IDCodeParser().getCompactMolecule(idcode, null);
+				    }
+				else {
+				    byte[] bytes = idcode.getBytes();
+				    int count = 1;
+				    for (int i=index+1; i<bytes.length; i++)
+					    if (bytes[i] == 32)
+						    count++;
+				    mols = new StereoMolecule[count];
+				    for (int i=0; i<count; i++) {
+					    mols[i] = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(bytes, bytes, 0, index+1);
+					    index = ArrayUtils.indexOf(bytes, (byte)32, index+1);
+					    }
+				    }
 		    	}
 
-		    if (mol != null) {
+		    if (mols != null) {
 				JFXConformerPanel fxp = new JFXConformerPanel(false, (int)(4*r.width), (int)(4*r.height), true, false);
 			    fxp.waitForCompleteConstruction();
 				fxp.setBackground(Color.WHITE);
 				if (mOverlayMol != null)
 					fxp.setOverlayMolecule(mOverlayMol);
 			    if (mCavityMol != null)
-				    fxp.setProteinCavity(mCavityMol, mLigandMol);
+				    fxp.setProteinCavity(mCavityMol, mLigandMol, false);
 
 			    final CountDownLatch latch = new CountDownLatch(1);
+			    final StereoMolecule[] mols_ = mols;
 			    Platform.runLater(() -> {
-				    for (Node node:((JFXConformerPanel)mComponent).getV3DScene().getWorld().getChildren())
-					    if (node instanceof V3DMolecule)
-					    	fxp.addMolecule(((V3DMolecule)node).getMolecule(), null, null);
-				    fxp.optimizeView();
+				    fxp.updateConformers(mols_, -1, null);
 				    latch.countDown();
 			    } );
 			    try { latch.await(); } catch (InterruptedException ie) {}
-
 
 				fxp.getV3DScene().getWorld().setTransform(((JFXConformerPanel)mComponent).getV3DScene().getWorld().getRotation());
 				WritableImage image = fxp.getContentImage();
@@ -149,87 +163,4 @@ public class JStructure3DFormObject extends AbstractFormObject {
 		    	}
 	    	}
 		}
-
-/*	private static ActionProvider<MoleculeViewer> sCopyActionProvider,sRaytraceActionProvider;
-	public static ActionProvider<MoleculeViewer> getCopyActionProvider() {
-		return sCopyActionProvider;
-		}
-	public static ActionProvider<MoleculeViewer> getRaytraceActionProvider() {
-		return sRaytraceActionProvider;
-	}
-
-	public static void setCopyActionProvider(ActionProvider<MoleculeViewer> ap) {
-		sCopyActionProvider = ap;
-		}
-	public static void setRaytraceActionProvider(ActionProvider<MoleculeViewer> ap) {
-		sRaytraceActionProvider = ap;
-	}
-
-	public JStructure3DFormObject(String key, String type) {
-		super(key, type);
-		mComponent = new MoleculeViewer();
-		if (sCopyActionProvider != null)
-			((MoleculeViewer)mComponent).addActionProvider(sCopyActionProvider);
-		if (sRaytraceActionProvider != null)
-			((MoleculeViewer)mComponent).addActionProvider(sRaytraceActionProvider);
-		}
-
-    @Override
-	public Object getData() {
-		return ((MoleculeViewer)mComponent).getMolecule();
-		}
-
-    @Override
-	public void setData(Object data) {
-		if (data == null)
-			((MoleculeViewer)mComponent).setMolecule((FFMolecule)null);
-		else if (data instanceof StereoMolecule) {
-			((MoleculeViewer)mComponent).setMolecule((StereoMolecule)data);
-			((MoleculeViewer)mComponent).resetView();
-			((MoleculeViewer)mComponent).repaint();
-			}
-		else if (data instanceof String) {
-			String idcode = (String)data;
-			int index = idcode.indexOf('\t');
-			String coords = (index == -1) ? null : idcode.substring(index+1);
-			StereoMolecule mol = new IDCodeParser().getCompactMolecule(idcode, coords);
-			((MoleculeViewer)mComponent).setMolecule(mol);
-			((MoleculeViewer)mComponent).resetView();
-			((MoleculeViewer)mComponent).repaint();
-			}
-		}
-
-    @Override
-	public int getRelativeHeight() {
-		return 4;
-		}
-
-    @Override
-	public void printContent(Graphics2D g2D, Rectangle2D.Double r, float scale, Object data, boolean isMultipleRows) {
-	    if (data != null && r.width > 1 && r.height > 1) {
-		    ExtendedMolecule mol = null;
-		    if (data instanceof ExtendedMolecule) {
-		        mol = (ExtendedMolecule)data;
-		    	}
-		    else if (data instanceof String) {
-				String idcode = (String)data;
-				int index = idcode.indexOf('\t');
-				String coords = (index == -1) ? null : idcode.substring(index+1);
-				mol = new IDCodeParser().getCompactMolecule(idcode, coords);
-		    	}
-		    
-		    if (mol != null) {
-		        AffineTransform originalTransform = g2D.getTransform();
-		        g2D.translate(r.x, r.y);
-		        g2D.scale(0.25, 0.25);
-		        MoleculeCanvas moleculeCanvas = new MoleculeCanvas();
-		        moleculeCanvas.setBackground(Color.WHITE);
-		        moleculeCanvas.setMolecule(mol);
-		        moleculeCanvas.setSize((int)(4*r.width), (int)(4*r.height));
-		        moleculeCanvas.resetView();
-		        moleculeCanvas.paint(g2D, (int)(4*r.width), (int)(4*r.height));
-		        g2D.setTransform(originalTransform);
-		    	}
-	    	}
-		}*/
 	}

@@ -205,8 +205,9 @@ public class JFXConformerPanel extends JFXPanel {
 	 * the ligand atom coordinates are used to determine the cavity surface in the ligand's vicinity.
 	 * @param cavity
 	 * @param ligand
+	 * @param optimizeView whether the view shall be centered after adding cavity
 	 */
-	public void setProteinCavity(StereoMolecule cavity, StereoMolecule ligand) {
+	public void setProteinCavity(StereoMolecule cavity, StereoMolecule ligand, boolean optimizeView) {
 		Platform.runLater(() -> {
 			if (ligand != null)
 				markAtomsInCropDistance(cavity, ligand, calculateCOG(ligand));
@@ -219,6 +220,9 @@ public class JFXConformerPanel extends JFXPanel {
 			mScene.addMolecule(mCavityMol);
 
 			mCavityMol.getMolecule().removeAtomMarkers();
+
+			if (optimizeView)
+				mScene.optimizeView();
 			} );
 		}
 

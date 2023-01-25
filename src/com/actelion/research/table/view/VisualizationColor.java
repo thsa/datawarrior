@@ -704,18 +704,17 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 			if (mode == cColorListModeCategories && thresholds == null)
 				mode = cColorListModeHSBLong;
 			}
-		else {
-			if (!((mTableModel.isColumnTypeCategory(column)
-				&& mTableModel.getCategoryCount(column) <= VisualizationColor.cMaxColorCategories)
-			   || mTableModel.isColumnTypeDouble(column))) {
-				column = JVisualization.cColumnUnassigned;
-				thresholds = null;
-				}
-			else if (mode == cColorListModeCategories
-				  && thresholds == null
-				  && !mTableModel.isColumnTypeCategory(column)) {
-				mode = cColorListModeHSBLong;
-				}
+		else if (!((mTableModel.isColumnTypeCategory(column)
+			&& mTableModel.getCategoryCount(column) <= VisualizationColor.cMaxColorCategories)
+		   || mTableModel.isColumnTypeDouble(column))) {
+			mode = cColorListModeHSBLong;
+			column = JVisualization.cColumnUnassigned;
+			thresholds = null;
+			}
+		else if (mode == cColorListModeCategories
+			  && thresholds == null
+			  && !mTableModel.isColumnTypeCategory(column)) {
+			mode = cColorListModeHSBLong;
 			}
 
 		if (colorList == null)

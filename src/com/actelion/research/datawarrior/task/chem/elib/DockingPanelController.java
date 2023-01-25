@@ -166,8 +166,9 @@ public class DockingPanelController implements V3DPopupMenuController {
 			final StereoMolecule _cavity = JFXConformerPanel.cropProtein(mProtein, mLigand, cog);
 			final StereoMolecule _ligand = new StereoMolecule(mLigand);
 
-			_ligand.translate(-cog.x, -cog.y, -cog.z);
-			_cavity.translate(-cog.x, -cog.y, -cog.z);
+// Don't do that to retain original coordinate space, e.g. for exporting
+//			_ligand.translate(-cog.x, -cog.y, -cog.z);
+//			_cavity.translate(-cog.x, -cog.y, -cog.z);
 
 			new AtomAssembler(_ligand).addImplicitHydrogens();
 			new AtomAssembler(_cavity).addImplicitHydrogens();
@@ -175,9 +176,8 @@ public class DockingPanelController implements V3DPopupMenuController {
 			Platform.runLater(() -> {
 				V3DScene scene = mConformerPanel.getV3DScene();
 				scene.clearAll();
-				mConformerPanel.setProteinCavity(_cavity, _ligand);
+				mConformerPanel.setProteinCavity(_cavity, _ligand, true);
 				scene.addMolecule(new V3DMolecule(_ligand, 0, V3DMolecule.MoleculeRole.LIGAND));
-				scene.optimizeView();
 			});
 		}
 		// if we have only the protein, we don't add hydrogen, but surface and just add the protein to the scene

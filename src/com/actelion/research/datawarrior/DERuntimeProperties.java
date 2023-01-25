@@ -1246,6 +1246,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 				}
 			}
 		catch (Exception e) {
+			e.printStackTrace();
 			JOptionPane.showMessageDialog(mParentPane.getParentFrame(), "Invalid color settings");
 			}
 		}

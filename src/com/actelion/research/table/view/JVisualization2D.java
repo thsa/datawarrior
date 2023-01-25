@@ -3810,7 +3810,6 @@ public class JVisualization2D extends JVisualization {
 			int[] count = new int[mHVCount];
 			for (int i=0; i<mDataPoints; i++)
 				if (isConsideredForCurve(mPoint[i], mask))
-//				if (isVisibleExcludeNaN(mPoint[i]))
 					count[mPoint[i].hvIndex]++;
 			float[][][] value = new float[mHVCount][2][];
 			for (int hv=0; hv<mHVCount; hv++) {
@@ -3820,7 +3819,6 @@ public class JVisualization2D extends JVisualization {
 			count = new int[mHVCount];
 			for (int i=0; i<mDataPoints; i++) {
 				if (isConsideredForCurve(mPoint[i], mask)) {
-//				if (isVisibleExcludeNaN(mPoint[i])) {
 					value[mPoint[i].hvIndex][0][count[mPoint[i].hvIndex]] = getAxisValue(mPoint[i].record, 0);
 					value[mPoint[i].hvIndex][1][count[mPoint[i].hvIndex]] = getAxisValue(mPoint[i].record, 1);
 					count[mPoint[i].hvIndex]++;

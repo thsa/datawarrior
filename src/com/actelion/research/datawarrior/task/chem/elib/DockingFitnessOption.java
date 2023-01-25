@@ -90,7 +90,16 @@ public class DockingFitnessOption extends FitnessOption {
 		mol.ensureHelperArrays(Molecule.cHelperNeighbours);
 
 		DockingEngine dockingEngine;
-
+/*
+try {
+	dockingEngine = new DockingEngine(mCavity, mLigand);
+}
+catch (DockingFailedException dfe) {
+	System.out.println(dfe.getMessage());
+	dfe.printStackTrace();
+	return Float.NaN;
+}
+*/
 		synchronized (this) {
 			if (sDockingEngineMap == null)
 				sDockingEngineMap = new ConcurrentHashMap<>();

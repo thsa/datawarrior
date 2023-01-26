@@ -88,11 +88,12 @@ public class JFXConformerPanel extends JFXPanel {
 	}
 
 	/**
-	 * Must be called directly after instantiation
 	 * @param controller
 	 */
 	public void setPopupMenuController(V3DPopupMenuController controller) {
 		mController = controller;
+		if (mScene != null)
+			mScene.setPopupMenuController(controller);
 	}
 
 	// this fixes an issue, where the JFXPanel, if not in focus does not properly handle popup menus

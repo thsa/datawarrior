@@ -20,6 +20,7 @@ package com.actelion.research.datawarrior.task.db;
 
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.SmilesParser;
+import com.actelion.research.chem.SortedStringList;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
@@ -28,6 +29,7 @@ import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.JLoginDialog;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
+import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -70,7 +72,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 	private static TreeMap<String,DatabaseSpec> sKnownDatabaseMap;	// map from database name to connect string
 	private static TreeMap<String,Connection> sConnectionCache;	// map from connect string to connection
 
-	private DEFrame			mTargetFrame;
+	private DEFrame			mSourceFrame,mTargetFrame;
 	private DataWarrior		mApplication;
 	private JComboBox		mComboBoxDatabase;
 	private JTextArea		mTextAreaSQL;
@@ -89,8 +91,9 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		sKnownDatabaseMap.put(spec[0], new DatabaseSpec(spec, connector));
 		}
 
-	public DETaskSQLQuery(Frame owner, DataWarrior application) {
+	public DETaskSQLQuery(DEFrame owner, DataWarrior application) {
 		super(owner, true);
+		mSourceFrame = owner;
 		mApplication = application;
 		}
 
@@ -494,7 +497,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		String[] columnName = null;
 		ArrayList<byte[][]> resultList = new ArrayList<byte[][]>();
 		try {
-			String sql = resolveVariables(configuration.getProperty(PROPERTY_SQL).replace(NEWLINE_STRING, " "));
+			String sql = resolveINClauses(resolveVariables(configuration.getProperty(PROPERTY_SQL).replace(NEWLINE_STRING, " ")));
 			sql = resolveVariables(sql);
 			Statement stmt = connection.createStatement();
 			ResultSet rset = stmt.executeQuery (sql);
@@ -549,6 +552,41 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 							CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnTypeIDCode);
 
 		mTargetFrame.getTableModel().finalizeTable(CompoundTableEvent.cSpecifierDefaultFiltersAndViews, this);
+		}
+
+	private String resolveINClauses(String sql) {
+		String lowerSQL = sql.toLowerCase();
+		CompoundTableModel tableModel = mSourceFrame.getTableModel();
+		for (int column=0; column<tableModel.getTotalColumnCount(); column++) {
+			String key = ("IN($"+tableModel.getColumnTitle(column)+")").toLowerCase();
+			int index = lowerSQL.indexOf(key);
+
+			if (index == -1) {
+				key = ("IN($"+tableModel.getColumnTitleNoAlias(column)+")").toLowerCase();
+				index = lowerSQL.indexOf(key);
+				}
+
+			if (index != -1) {
+				SortedStringList list = new SortedStringList();
+				for (int row=0; row<tableModel.getTotalRowCount(); row++) {
+					String[] entries = tableModel.separateEntries(tableModel.getTotalValueAt(row, column));
+					for (String entry:entries)
+						if (entry.length() != 0)
+							list.addString(entry);
+					}
+				StringBuilder sb = new StringBuilder();
+				sb.append(sql, 0, index);
+				for (int i=0; i<list.getSize(); i++) {
+					sb.append(i == 0 ? "IN('" : "','");
+					sb.append(list.getStringAt(i));
+					}
+				sb.append("')");
+				sb.append(sql, index+key.length(), sql.length());
+				sql = sb.toString();
+				lowerSQL = sql.toLowerCase();
+				}
+			}
+		return sql;
 		}
 
 	@Override

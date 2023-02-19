@@ -140,7 +140,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private volatile int		mDataType,mAction;
 	private volatile TreeMap<String,DataDependentPropertyReader> mDataDependentPropertyReaderMap;
 	private int					mOldVersionIDCodeColumn,mOldVersionCoordinateColumn,mOldVersionCoordinate3DColumn;
-	private boolean				mWithHeaderLine,mAppendRest,mCoordsMayBe3D,mIsGooglePatentsFile,
+	private boolean				mWithHeaderLine,mAppendRest,mCoordsMayBe3D,mIsGooglePatentsFile,mIsFiltersOnly,
 								mMolnameFound,mMolnameIsDifferentFromFirstField,mAssumeChiralFlag;
 	private volatile boolean	mOwnsProgressController;
 	private volatile int		mDelimiter;
@@ -604,8 +604,14 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				if (theLine.equals(cPropertiesStart)) {
 					if ((mAction & APPEND_DATA) == 0
 					 && (mAction & MERGE_DATA) == 0
-					 && mRuntimeProperties != null)
+					 && mRuntimeProperties != null) {
 						mRuntimeProperties.read(theReader);
+						if (RuntimeProperties.cPropertiesUseDefaultFiltersOnly.equals(
+							mRuntimeProperties.get(RuntimeProperties.cPropertiesUseDefault))) {
+							mRuntimeProperties = null;
+							mIsFiltersOnly = true;
+							}
+						}
 
 					runtimePropertiesRead = true;
 					continue;
@@ -2248,7 +2254,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				mTableModel.finalizeTable(mRuntimeProperties != null
 						   && mRuntimeProperties.size() != 0 ?
 								   CompoundTableEvent.cSpecifierNoRuntimeProperties
-								 : mIsGooglePatentsFile || rowCount > 10000 ?
+								 : mIsGooglePatentsFile || mIsFiltersOnly || rowCount > 10000 ?
 								   CompoundTableEvent.cSpecifierDefaultFilters
 								 : CompoundTableEvent.cSpecifierDefaultFiltersAndViews,
 										  mProgressController);

@@ -16,10 +16,12 @@ import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
+import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Properties;
 
 public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
@@ -52,7 +54,9 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 		double[][] size = { {TableLayout.PREFERRED},
 							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
 
-		mConformerPanel = new JFXConformerPanel(false, false, true);
+		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
+		settings.add(V3DScene.ViewerSettings.EDITING);
+		mConformerPanel = new JFXConformerPanel(false, settings);
 		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(400), HiDPIHelper.scale(200)));
 		mConformerPanel.setPopupMenuController(new ConformerViewController(getParentFrame(), mConformerPanel));

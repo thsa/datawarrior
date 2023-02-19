@@ -26,10 +26,12 @@ import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Point3D;
 import javafx.scene.image.WritableImage;
+import org.openmolecules.fx.viewer3d.V3DScene;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.concurrent.CountDownLatch;
 
 public class JStructure3DFormObject extends AbstractFormObject {
@@ -39,7 +41,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
 
 	public JStructure3DFormObject(String key, String type) {
 		super(key, type);
-		mComponent = new JFXConformerPanel(false, false, false);
+		mComponent = new JFXConformerPanel(false, V3DScene.CONFORMER_VIEW_MODE);
 		}
 
 	public void setReferenceMolecule(StereoMolecule refMol) {
@@ -139,7 +141,9 @@ public class JStructure3DFormObject extends AbstractFormObject {
 		    	}
 
 		    if (mols != null) {
-				JFXConformerPanel fxp = new JFXConformerPanel(false, (int)(4*r.width), (int)(4*r.height), true, false);
+			    EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
+			    settings.add(V3DScene.ViewerSettings.EDITING);
+				JFXConformerPanel fxp = new JFXConformerPanel(false, (int)(4*r.width), (int)(4*r.height), settings);
 			    fxp.waitForCompleteConstruction();
 				fxp.setBackground(Color.WHITE);
 				if (mOverlayMol != null)

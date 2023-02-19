@@ -24,10 +24,12 @@ import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.gui.form.JFXConformerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
+import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.EnumSet;
 
 public class ConformerFitnessPanel extends FitnessPanel {
 	private static final long serialVersionUID = 20200218L;
@@ -59,7 +61,9 @@ public class ConformerFitnessPanel extends FitnessPanel {
 		mComboBoxDescriptor = new JComboBox(ConformerFitnessOption.ALGORITHM_TEXT);
 		mComboBoxDescriptor.setSelectedIndex(0);
 
-		mConformerPanel = new JFXConformerPanel(false, false, true);
+		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
+		settings.add(V3DScene.ViewerSettings.EDITING);
+		mConformerPanel = new JFXConformerPanel(false, settings);
 		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(160), HiDPIHelper.scale(120)));
 		mConformerPanel.setPopupMenuController(new ConformerViewController(owner, mConformerPanel));

@@ -34,9 +34,11 @@ import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 import javafx.geometry.Point3D;
 import javafx.scene.paint.Color;
+import org.openmolecules.chem.conf.gen.ConformerDiagnostics;
 import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.chem.conf.so.ConformationSelfOrganizer;
 import org.openmolecules.chem.conf.so.SelfOrganizedConformer;
+import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -50,6 +52,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 
 public class FXConformerDialog extends JDialog implements ActionListener,ChangeListener {
@@ -97,7 +100,9 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 		mMol = new StereoMolecule(mol);
 		mMol.stripSmallFragments(true);
 
-		mConformationPanel = new JFXConformerPanel(true, true, false);
+		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
+		settings.add(V3DScene.ViewerSettings.INDIVIDUAL_ROTATION);
+		mConformationPanel = new JFXConformerPanel(true, V3DScene.CONFORMER_VIEW_MODE);
 
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
@@ -348,7 +353,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 					conformer.setEnergy(cg.getPreviousConformerContribution());
 					conformer.copyTo(mol);
 				} else if (cs != null) {
-					message = " strain:" + DoubleFormat.toString(((SelfOrganizedConformer) conformer).getTotalStrain(), 3);
+					message = "Strain:" + DoubleFormat.toString(((SelfOrganizedConformer) conformer).getTotalStrain(), 3);
 					conformer.setEnergy(((SelfOrganizedConformer) conformer).getTotalStrain());
 					conformer.copyTo(mol);
 				}
@@ -550,8 +555,8 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 		}
 
 	/**
-	 * @param ffmol if not null this is taken as start conformer
-	 * @param result receives energy and possibly error message
+	 * param ffmol if not null this is taken as start conformer
+	 * param result receives energy and possibly error message
 	 *
 	private void minimizeIDFF(FFMolecule ffmol, MinimizationResult result) {
 		try {
@@ -730,10 +735,13 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 		}
 
 	private void writeDataWarriorDebugFile() {
-		ConformerGenerator.WRITE_DW_FRAGMENT_FILE = true;
 		ConformerGenerator cg = new ConformerGenerator(12345L, true);
+		cg.setDiagnosticMode(true);
 		cg.initializeConformers(mMol.getCompactCopy(), ConformerGenerator.STRATEGY_LIKELY_SYSTEMATIC, 10000, false);
 		StereoMolecule conformer = cg.getNextConformerAsMolecule(null);
+		while (conformer != null)
+			conformer = cg.getNextConformerAsMolecule(null);
+
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(DATAWARRIOR_DEBUG_FILE));
 	        bw.write("<column properties>");
@@ -752,24 +760,34 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 	        bw.newLine();
 	        bw.write("Structure\tcoords\ttorsionIndexes\tcollision");
 	        bw.newLine();
-			while (conformer != null) {
-				if (cg.mDiagnosticCollisionAtoms != null) {
-					conformer.setAtomicNo(cg.mDiagnosticCollisionAtoms[0], 5);
-					conformer.setAtomicNo(cg.mDiagnosticCollisionAtoms[1], 5);
+			for (ConformerDiagnostics cd:cg.getDiagnostics()) {
+				String idcode = cd.getIDCode();
+				String coords = cd.getCoords();
+				if (cd.getCollisionAtoms() != null) {
+					StereoMolecule mol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode, coords);
+					for (int atom:cd.getCollisionAtoms())
+						mol.setAtomicNo(atom, 5);
+
+					Canonizer canonizer = new Canonizer(conformer);
+					idcode = canonizer.getIDCode();
+					coords = canonizer.getEncodedCoordinates();
 					}
-				Canonizer canonizer = new Canonizer(conformer);
-				String idcode = canonizer.getIDCode();
-				String coords = canonizer.getEncodedCoordinates();
-				bw.write(idcode+"\t"+coords+"\t"+cg.mDiagnosticTorsionString+"\t"+cg.mDiagnosticCollisionString);
+
+				StringBuilder torsionString = new StringBuilder("ti:");
+				for (int ti:cd.getTorsionIndexes())
+					torsionString.append(" "+ti);
+				torsionString.append(" fi:");
+				for (int fi:cd.getRigidFragmentIndexes())
+					torsionString.append(" "+fi);
+
+				bw.write(idcode+"\t"+coords+"\t"+torsionString+"\t"+cd.getCollisionLog());
 				bw.newLine();
-				conformer = cg.getNextConformerAsMolecule(null);
 				}
 			bw.close();
 			}
 		catch (IOException ioe) {
 			ioe.printStackTrace();
 			}
-		ConformerGenerator.WRITE_DW_FRAGMENT_FILE = false;
 		}
 
 /*	class ConformationPanel extends JPanel {

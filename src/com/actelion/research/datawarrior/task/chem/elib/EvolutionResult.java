@@ -31,7 +31,7 @@ public class EvolutionResult implements Comparable<EvolutionResult> {
 	private StereoMolecule mMol;
 	private String mIDCode;
 	private ArrayList<Mutation> mMutationList;
-	private int mGeneration,mParentGeneration,mID,mParentID,mChildIndex,mRun;
+	private int mGeneration,mParentGeneration,mID,mParentID,mChildIndex,mRun,mCycle;
 	private float[] mProperty,mFitness;
 	private String[][] mCustomColumnValue;
 	private float mOverallFitness;
@@ -46,11 +46,12 @@ public class EvolutionResult implements Comparable<EvolutionResult> {
 	 * @param idcode
 	 */
 	public EvolutionResult(StereoMolecule mol, String idcode, EvolutionResult parent,
-						   FitnessOption[] fitnessOptionList, int id, int run) {
+						   FitnessOption[] fitnessOptionList, int id, int run, int cycle) {
 		mMol = mol;
 		mIDCode = idcode;
 		mID = id;
 		mRun = run;
+		mCycle = cycle;
 		mFitnessOptionList = fitnessOptionList;
 		if (parent != null) {
 			mParentID = parent.mID;
@@ -87,6 +88,10 @@ public class EvolutionResult implements Comparable<EvolutionResult> {
 
 	public String getResultValue(int fitnessOptionIndex, int i) {
 		return mResult[fitnessOptionIndex][i];
+		}
+
+	public int getCycle() {
+		return mCycle;
 		}
 
 	public int getGeneration() {

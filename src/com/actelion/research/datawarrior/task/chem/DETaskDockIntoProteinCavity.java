@@ -33,9 +33,11 @@ import info.clearthought.layout.TableLayout;
 import javafx.application.Platform;
 import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.fx.viewer3d.V3DMolecule;
+import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -80,9 +82,11 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {TableLayout.PREFERRED}, {TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
 
-		mCheckBoxProtonate = new JCheckBox("Assign likely protonation states");
+		mCheckBoxProtonate = new JCheckBox("Use likely ligand protonation states");
 
-		mConformerPanel = new JFXConformerPanel(false, false, true);
+		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
+		settings.add(V3DScene.ViewerSettings.EDITING);
+		mConformerPanel = new JFXConformerPanel(false, settings);
 		mConformerPanel.setPopupMenuController(new DockingPanelController(mConformerPanel));
 		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(320), HiDPIHelper.scale(240)));
@@ -91,7 +95,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 		ep.setLayout(new TableLayout(size));
 		ep.add(mCheckBoxProtonate, "0,0");
 		ep.add(new JLabel("Protein cavity with natural ligand"), "0,2");
-		ep.add(mConformerPanel, "0,4");
+		ep.add(mConformerPanel, "0,5");
 		return ep;
 		}
 

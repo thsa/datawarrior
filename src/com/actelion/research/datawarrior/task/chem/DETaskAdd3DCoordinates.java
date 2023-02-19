@@ -901,7 +901,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		ArrayList<TorsionDescriptor> torsionDescriptorList = null;
 		if (mMaxConformers > 1 && mMinimization != MINIMIZE_NONE) {
 			torsionHelper = new TorsionDescriptorHelper(mol);
-			torsionDescriptorList = new ArrayList<TorsionDescriptor>();
+			torsionDescriptorList = new ArrayList<>();
 			}
 
 		Canonizer canonizer1 = null;

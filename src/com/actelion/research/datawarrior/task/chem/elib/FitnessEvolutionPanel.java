@@ -34,12 +34,12 @@ public class FitnessEvolutionPanel extends JPanel {
 
 	private static int sMinDisplayedGenerations = 32;
 
-	private ArrayList<ArrayList<Fitness>> mFinessList;
+	private ArrayList<ArrayList<Fitness>> mFitnessList;
 	private volatile AtomicBoolean mLock;
 
 	public FitnessEvolutionPanel() {
 		super();
-		mFinessList = new ArrayList<>();
+		mFitnessList = new ArrayList<>();
 		mLock = new AtomicBoolean(false);
 		}
 
@@ -50,7 +50,7 @@ public class FitnessEvolutionPanel extends JPanel {
 
         super.paintComponent(g);
 
-        if (mFinessList.size() != 0) {
+        if (mFitnessList.size() != 0) {
 			Dimension theSize = getSize();
 			Insets insets = getInsets();
 	        int border = Math.round(HiDPIHelper.scale(2));
@@ -79,8 +79,8 @@ public class FitnessEvolutionPanel extends JPanel {
 			float xm = r.x + r.width/2;
 
 			g2.drawString("Fitness Evolution", r.x, r.y - textAreaHeight + scaled12);
-			g2.drawString("generation average", xm, r.y - textAreaHeight + scaled12);
-			g2.drawString("generation maximum", xm, r.y - textAreaHeight + scaled12 + scaled14);
+			g2.drawString("cycle average", xm, r.y - textAreaHeight + scaled12);
+			g2.drawString("cycle maximum", xm, r.y - textAreaHeight + scaled12 + scaled14);
 
 	        g2.setStroke(new BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 	        g2.setFont(g2.getFont().deriveFont(0, scaled8));
@@ -110,17 +110,17 @@ public class FitnessEvolutionPanel extends JPanel {
 	        g2.setColor(maxColor);
 	        g2.draw(new Line2D.Float(xm - scaled24, scaled22, xm - scaled4, scaled22));
 
-	        for (int i=0; i<mFinessList.size(); i++) {
-	        	boolean isCurrentRun = (i == mFinessList.size()-1);
-		        boolean isPreviousRun = (i == mFinessList.size()-2);
+	        for (int i = 0; i<mFitnessList.size(); i++) {
+	        	boolean isCurrentRun = (i == mFitnessList.size()-1);
+		        boolean isPreviousRun = (i == mFitnessList.size()-2);
 
 		        if (isCurrentRun || isPreviousRun) {
 			        g2.setColor(isCurrentRun ? avgColor : avgFadedColor);
-			        drawCurve(g2, r, mFinessList.get(i), displayedGenerations, false);
+			        drawCurve(g2, r, mFitnessList.get(i), displayedGenerations, false);
 		            }
 
 		        g2.setColor(isCurrentRun ? maxColor : isPreviousRun ? maxFadedColor : Color.GRAY);
-		        drawCurve(g2, r, mFinessList.get(i), displayedGenerations, true);
+		        drawCurve(g2, r, mFitnessList.get(i), displayedGenerations, true);
 		        }
 			}
 
@@ -129,8 +129,8 @@ public class FitnessEvolutionPanel extends JPanel {
 
 	private int getDisplayedGenerations() {
 		int displayedGenerations = sMinDisplayedGenerations;
-		for (ArrayList<Fitness> fitnessList:mFinessList) {
-			int neededGenerations = fitnessList.get(fitnessList.size()-1).generation + 1;
+		for (ArrayList<Fitness> fitnessList: mFitnessList) {
+			int neededGenerations = fitnessList.get(fitnessList.size()-1).cycle + 1;
 			if (displayedGenerations < neededGenerations)
 				displayedGenerations = neededGenerations;
 			}
@@ -156,7 +156,7 @@ public class FitnessEvolutionPanel extends JPanel {
         float ly = -1f;
         for (Fitness fitness:fitnessList) {
         	float f = isMax ? fitness.maximum : fitness.average;
-        	float x = r.x + dx * fitness.generation;
+        	float x = r.x + dx * fitness.cycle;
             float y = r.y + r.height - f*f * r.height;
 
             if (lx != -1f)
@@ -167,19 +167,19 @@ public class FitnessEvolutionPanel extends JPanel {
         	}
 		}
 
-	public void updateEvolution(int run, int generation, ConcurrentSkipListSet<EvolutionResult> generationResults) {
-		if (mLock.get() || generationResults.size() == 0 || generation < 1)
+	public void updateEvolution(int run, int cycle, ConcurrentSkipListSet<EvolutionResult> generationResults) {
+		if (mLock.get() || generationResults.size() == 0 || cycle < 1)
 			return;
 
 		if (!mLock.compareAndSet(false, true))	// skip update if we are currently painting
 			return;
 
-		if (run == mFinessList.size()) {
+		if (run == mFitnessList.size()) {
 			ArrayList<Fitness>fitnesses = new ArrayList<>();
-			mFinessList.add(fitnesses);
+			mFitnessList.add(fitnesses);
 			}
 
-		mFinessList.get(run).add(new Fitness(generation, generationResults));
+		mFitnessList.get(run).add(new Fitness(cycle, generationResults));
 
 		repaint();
 		mLock.set(false);
@@ -187,15 +187,15 @@ public class FitnessEvolutionPanel extends JPanel {
 
 	private class Fitness {
 		float average,maximum;
-		int generation;
+		int cycle;
 
-		public Fitness(int generation, ConcurrentSkipListSet<EvolutionResult> generationResults) {
-			for (EvolutionResult r:generationResults) {
+		public Fitness(int cycle, ConcurrentSkipListSet<EvolutionResult> cycleResults) {
+			for (EvolutionResult r:cycleResults) {
 				maximum = Math.max(maximum, r.getOverallFitness());
 				average += r.getOverallFitness();
 				}
-			average /= generationResults.size();
-			this.generation = generation;
+			average /= cycleResults.size();
+			this.cycle = cycle;
 			}
 		}
 	}

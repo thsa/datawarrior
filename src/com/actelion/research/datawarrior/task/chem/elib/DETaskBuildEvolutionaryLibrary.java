@@ -60,6 +60,9 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 	private static final int VIEW_BACKGROUND = 0xFF081068;
 	private static final int AUTOMATIC_HISTORIC_GENERATIONS = 32;
 	private static final String THREAD_NAME_PREFIX = "MT";
+	private static final float FRACTION_OF_DIRECT_DECENDENTS = 0.5f;    // the rest comes of previous best compounds
+	private static final int CYCLE_COUNT_AUTOMATIC = Integer.MAX_VALUE-1;
+	private static final int CYCLE_COUNT_UNLIMITED = Integer.MAX_VALUE;
 
 	private Frame				mParentFrame;
 	private DataWarrior			mApplication;
@@ -75,7 +78,6 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 	private volatile boolean	mKeepData,mStopProcessing;
 	private AtomicFloat			mBestFitness;
 	private AtomicInteger		mCurrentResultID;
-	private volatile ArrayBlockingQueue<MutationQueueEntry> mMutationQueue;
 
 	public DETaskBuildEvolutionaryLibrary(DEFrame owner, DataWarrior application) {
 		super(owner, false);
@@ -255,11 +257,11 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 
 		try {
 			Integer.parseInt(configuration.getProperty(PROPERTY_RUN_COUNT, DEFAULT_RUNS));
-			int survivalCount = Integer.parseInt(configuration.getProperty(PROPERTY_SURVIVAL_COUNT, DEFAULT_SURVIVALS));
-			int generationSize = Integer.parseInt(configuration.getProperty(PROPERTY_GENERATION_SIZE, DEFAULT_COMPOUNDS));
-			String generations = configuration.getProperty(PROPERTY_GENERATION_COUNT, DEFAULT_GENERATIONS);
+			int survivalCount = Integer.parseInt(configuration.getProperty(PROPERTY_SURVIVAL_COUNT, DEFAULT_SURVIVAL_COUNT));
+			int generationSize = Integer.parseInt(configuration.getProperty(PROPERTY_COMPOUND_COUNT, DEFAULT_COMPOUND_COUNT));
+			String generations = configuration.getProperty(PROPERTY_CYCLE_COUNT, DEFAULT_CYCLE_COUNT);
 			if (!generations.equals(GENERATIONS_AUTOMATIC) && !generations.equals(GENERATIONS_UNLIMITED))
-				Integer.parseInt(configuration.getProperty(PROPERTY_GENERATION_COUNT, DEFAULT_GENERATIONS));
+				Integer.parseInt(configuration.getProperty(PROPERTY_CYCLE_COUNT, DEFAULT_CYCLE_COUNT));
 
 			if (survivalCount >= generationSize/2) {
 				showErrorMessage("The number of compounds surviving a generation\nshould be less than half of the generation size.");
@@ -322,14 +324,11 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 	private void runEvolution() {
 		Properties configuration = getTaskConfiguration();
 
-		final int survivalCount = Integer.parseInt(configuration.getProperty(PROPERTY_SURVIVAL_COUNT, DEFAULT_SURVIVALS));
-		int generationSize = Integer.parseInt(configuration.getProperty(PROPERTY_GENERATION_SIZE, DEFAULT_COMPOUNDS));
-		String generationsString = configuration.getProperty(PROPERTY_GENERATION_COUNT, DEFAULT_GENERATIONS);
-		int generationCount = generationsString.equals(GENERATIONS_AUTOMATIC) ? Integer.MAX_VALUE-1
-							: generationsString.equals(GENERATIONS_UNLIMITED) ? Integer.MAX_VALUE : Integer.parseInt(generationsString);
-		if (!isInteractive()
-		 && generationCount == Integer.MAX_VALUE)
-			generationCount = Integer.MAX_VALUE - 1;	// don't allow unlimited processing, if is running a macro
+		final int survivalCount = Integer.parseInt(configuration.getProperty(PROPERTY_SURVIVAL_COUNT, DEFAULT_SURVIVAL_COUNT));
+		int generationSize = Integer.parseInt(configuration.getProperty(PROPERTY_COMPOUND_COUNT, DEFAULT_COMPOUND_COUNT));
+		String generationsString = configuration.getProperty(PROPERTY_CYCLE_COUNT, DEFAULT_CYCLE_COUNT);
+		int cycleCount = generationsString.equals(GENERATIONS_AUTOMATIC) ? CYCLE_COUNT_AUTOMATIC
+							: generationsString.equals(GENERATIONS_UNLIMITED) ? CYCLE_COUNT_UNLIMITED : Integer.parseInt(generationsString);
 
 		int fitnessOptionCount = Integer.parseInt(configuration.getProperty(PROPERTY_FITNESS_PARAM_COUNT));
 		final FitnessOption[] fitnessOption = new FitnessOption[fitnessOptionCount];
@@ -351,15 +350,17 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 		mKeepData = true;	// default if is not cancelled
 
 		for (int run=0; run<runCount; run++) {
-			if (runCount > 1)
-				mLabelRun.setText("Run: "+(run+1));
+			if (runCount > 1) {
+				final String text = "Run: " + (run + 1);
+				SwingUtilities.invokeLater(() -> mLabelRun.setText(text));
+				}
 
 			ConcurrentSkipListSet<String> moleculeHistory = new ConcurrentSkipListSet<>();
 
 			completeResultSet[run] = new TreeSet<>();
 
 			// Compile first parent generation including fitness calculation
-			TreeSet<EvolutionResult> parentGeneration = new TreeSet<>();
+			TreeSet<EvolutionResult> parentCycleResults = new TreeSet<>();
 
 			boolean isDeferred = "true".equals(configuration.getProperty(PROPERTY_START_SET_DEFERRED));
 
@@ -396,8 +397,8 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 					DECompoundProvider.createRandomCompounds(getProgressController(), 4*survivalCount, kind, moleculeQueue);
 					while (!moleculeQueue.isEmpty()) {
 						StereoMolecule compound = moleculeQueue.poll();
-						parentGeneration.add(new EvolutionResult(compound,
-								new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+						parentCycleResults.add(new EvolutionResult(compound,
+								new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run, -1));
 						}
 					}
 				else if (startSetOption == FILE_OPTION) {
@@ -412,8 +413,8 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 					if (file[0] != null && file[0].exists() && file[0].canRead()) {
 						ArrayList<StereoMolecule> compounds = new FileHelper(mParentFrame).readStructuresFromFile(file[0], false);
 						for (StereoMolecule compound:compounds)
-							parentGeneration.add(new EvolutionResult(compound,
-									new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+							parentCycleResults.add(new EvolutionResult(compound,
+									new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run, -1));
 						}
 					}
 				else {
@@ -425,91 +426,107 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 						if (listMask == 0 || (record.getFlags() & listMask) != 0) {
 							StereoMolecule compound = mSourceTableModel.getChemicalStructure(record, startSetColumn, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
 							if (compound != null)
-								parentGeneration.add(new EvolutionResult(compound,
-										new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+								parentCycleResults.add(new EvolutionResult(compound,
+										new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run, -1));
 							}
 						}
 
-					if (parentGeneration.isEmpty())
+					if (parentCycleResults.isEmpty())
 						showMessage("WARNING: No molecules found in deferred start generation. Using random molecules...", WARNING_MESSAGE);
 					}
 				}
 
-			if (parentGeneration.isEmpty()) {
+			if (parentCycleResults.isEmpty()) {
 				String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
 				if (startSet.length() == 0) {
 					ConcurrentLinkedQueue<StereoMolecule> compounds = new ConcurrentLinkedQueue<>();
 					DECompoundProvider.createRandomCompounds(mProgressPanel, 4*survivalCount, kind, compounds);
 					for (StereoMolecule compound:compounds) {
 						if (!mStopProcessing)
-							parentGeneration.add(new EvolutionResult(compound,
-									new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+							parentCycleResults.add(new EvolutionResult(compound,
+									new Canonizer(compound).getIDCode(), null, fitnessOption, mCurrentResultID.incrementAndGet(), run, -1));
 						}
 					}
 				else {
 					for (String idcode : startSet.split("\\t"))
 						if (!mStopProcessing)
-							parentGeneration.add(new EvolutionResult(new IDCodeParser(true).getCompactMolecule(idcode),
-									idcode, null, fitnessOption, mCurrentResultID.incrementAndGet(), run));
+							parentCycleResults.add(new EvolutionResult(new IDCodeParser(true).getCompactMolecule(idcode),
+									idcode, null, fitnessOption, mCurrentResultID.incrementAndGet(), run, -1));
 					}
 				}
 
-			int childCompoundCount = generationSize / (2*survivalCount);
-			mProgressPanel.startProgress("Evolving...", 0, (generationCount>=Integer.MAX_VALUE-1) ? 0 : generationCount*survivalCount*2);
+			mProgressPanel.startProgress("Evolving...", 0,
+					(cycleCount==CYCLE_COUNT_AUTOMATIC || cycleCount==CYCLE_COUNT_UNLIMITED) ? 0 : cycleCount*generationSize);
 
 			// Create the result set for all results starting with the start generation.
-			completeResultSet[run].addAll(parentGeneration);
+			completeResultSet[run].addAll(parentCycleResults);
 
 			mBestFitness = new AtomicFloat(0f);
 
 			float bestFitness = 0;
-			float bestFitnessGeneration = -1;
+			float bestFitnessCycle = -1;
 
-			for (int generation=0; (generation<generationCount) && !mStopProcessing; generation++) {
-				mLabelGeneration.setText("Generation: "+(generation+1));
+			// cycle is not equivalent to generation. A cycle produces next generation molecules from the
+			// survivers of the previous cycle. A cycle's parent molecules are the fittest molecules from
+			// the previous cycle. These can molecules created in the previous cycle and/or(!!!) much earlier
+			// cycle.
+			for (int cycle=0; (cycle<cycleCount) && !mStopProcessing; cycle++) {
+				final String text = "Generation: "+(cycle+1);
+				SwingUtilities.invokeLater(() -> mLabelGeneration.setText(text));
 
 				// use all survived molecules from recent generation as parent structures
-				ConcurrentSkipListSet<EvolutionResult> currentGeneration = new ConcurrentSkipListSet<>();
+				ConcurrentSkipListSet<EvolutionResult> currentCycleResults = new ConcurrentSkipListSet<>();
 
 				// Create and start threads processing new entries from mMutationQueue and creating current generation results
-				Thread[] mutationThread = launchMutationConsumers(currentGeneration, moleculeHistory, survivalCount, fitnessOption, run);
+				Thread[] consumerThread = new Thread[Runtime.getRuntime().availableProcessors()];
+				ArrayBlockingQueue<MutationQueueEntry> mutationQueue = launchMutationConsumers(
+						currentCycleResults, moleculeHistory, consumerThread, survivalCount, fitnessOption, run, cycle);
+
+				int createdChildren = 0;
 
 				int parentIndex = 0;
-				for (EvolutionResult parentResult:parentGeneration) {
+				for (EvolutionResult parentResult:parentCycleResults) {
 					if (mStopProcessing)
 						break;
 
 					parentResult.ensureCoordinates();
-					mCompoundView[0].structureChanged(parentResult.getMolecule());
-					mFitnessLabel[0].setText("Fitness: "+(float)((int)(100000*parentResult.getOverallFitness()))/100000);
+
+					SwingUtilities.invokeLater(() -> {
+						mCompoundView[0].structureChanged(parentResult.getMolecule());
+						mFitnessLabel[0].setText("Fitness: " + (float)((int)(100000 * parentResult.getOverallFitness())) / 100000);
+						} );
 
 					if (parentResult.getMutationList() == null)
 						parentResult.setMutationList(mutator.generateMutationList(parentResult.getMolecule(), Mutator.MUTATION_ANY, false));
 
-					// Create mutated compound and add them into mMutationQueue
-					generateNextGenerationCompounds(childCompoundCount, parentResult, mutator);
+					// Create 50% of new generation by mutated compounds from parent generation and add them into the mutation queue
+					int directChildCount = Math.max(1, Math.round(FRACTION_OF_DIRECT_DECENDENTS * generationSize / parentCycleResults.size()));
+					createdChildren += generateDerivedCompounds(directChildCount, parentResult, mutator, mutationQueue);
 
-					if ((generationCount<Integer.MAX_VALUE-1))
-						mProgressPanel.updateProgress(survivalCount*generation + parentIndex);
+					if ((cycleCount != CYCLE_COUNT_AUTOMATIC || cycleCount != CYCLE_COUNT_UNLIMITED))
+						mProgressPanel.updateProgress(cycle*generationSize + createdChildren);
 
 					parentIndex++;
 					}
 
-				// Generate fitness limits for up to survivalCount structures from older generations.
-				float[] fitnessLimit = new float[survivalCount];
+				// Generate fitness limits for up to 2*survivalCount structures from older generations,
+				// because we only consider older best structures if they are better than the previous cycle's ones.
+				float[] fitnessLimit = new float[2*Math.min(survivalCount, parentCycleResults.size())];
 				parentIndex = 0;
-				for (EvolutionResult parentResult: parentGeneration) {
-					if (parentIndex == survivalCount)
+				for (EvolutionResult parentResult:parentCycleResults) {
+					if (parentIndex == fitnessLimit.length)
 						break;
+					fitnessLimit[parentIndex++] = parentResult.getOverallFitness();
 					fitnessLimit[parentIndex++] = parentResult.getOverallFitness();
 					}
 
 				// now also process previous best ranking molecules as parent structures
-				if (generation != 0) {
+				if (cycle != 0) {
 					int resultIndex = 0;
 					for (EvolutionResult parentResult:completeResultSet[run]) {
 						if (mStopProcessing
-						 || resultIndex == survivalCount
+						 || resultIndex == fitnessLimit.length
+						 || createdChildren >= generationSize
 						 || parentResult.getOverallFitness() < fitnessLimit[resultIndex])
 							break;
 
@@ -517,25 +534,30 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 							continue;
 
 						parentResult.ensureCoordinates();
-						mCompoundView[0].structureChanged(parentResult.getMolecule());
-						mFitnessLabel[0].setText("Fitness: "+(float)((int)(100000*parentResult.getOverallFitness()))/100000);
+						SwingUtilities.invokeLater(() -> {
+							mCompoundView[0].structureChanged(parentResult.getMolecule());
+							mFitnessLabel[0].setText("Fitness: " + (float)((int)(100000 * parentResult.getOverallFitness())) / 100000);
+							} );
 
-						// Create mutated compound and add them into mMutationQueue
-						generateNextGenerationCompounds(childCompoundCount, parentResult, mutator);
+						// Fill current generation with decreasing number of children from previous best compounds
+						int childCount = Math.max(1, Math.round(0.12f * (generationSize - createdChildren)));
+						createdChildren += generateDerivedCompounds(childCount, parentResult, mutator, mutationQueue);
 
-						if ((generationCount<Integer.MAX_VALUE-1))
-							mProgressPanel.updateProgress(survivalCount*generation*2+survivalCount+resultIndex);
+						if ((cycleCount != CYCLE_COUNT_AUTOMATIC && cycleCount != CYCLE_COUNT_UNLIMITED))
+							mProgressPanel.updateProgress(cycle*generationSize + createdChildren);
 
 						resultIndex++;
 						}
 					}
 
-				for (int i=0; i<mutationThread.length; i++)
-					try { mMutationQueue.put(MutationQueueEntry.END_ENTRY); } catch (InterruptedException e) {}
-				for (Thread thread : mutationThread)
+				// TODO create another set of current cycle compounds by a kind of cross-over strategy
+
+				for (int i=0; i<consumerThread.length; i++)
+					try { mutationQueue.put(MutationQueueEntry.END_ENTRY); } catch (InterruptedException e) {}
+				for (Thread thread : consumerThread)
 					try { thread.join(); } catch (InterruptedException e) {}
 
-				if (currentGeneration.size() == 0) {
+				if (currentCycleResults.size() == 0) {
 					if (isInteractive()) {
 						try {
 							SwingUtilities.invokeAndWait(() ->
@@ -547,22 +569,22 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 					}
 
 				int resultNo = 0;
-				parentGeneration.clear();
-				for (EvolutionResult r:currentGeneration) {
+				parentCycleResults.clear();
+				for (EvolutionResult r:currentCycleResults) {
 					r.setChildIndex(resultNo++);
 					completeResultSet[run].add(r);
-					parentGeneration.add(r);
+					parentCycleResults.add(r);
 					}
 
-				mFitnessEvolutionPanel.updateEvolution(run, generation, currentGeneration);
+				mFitnessEvolutionPanel.updateEvolution(run, cycle, currentCycleResults);
 
 				// In automatic mode stop if no improvement over AUTOMATIC_HISTORIC_GENERATIONS generations
-				if (generationCount == Integer.MAX_VALUE-1) {
+				if (cycleCount == CYCLE_COUNT_AUTOMATIC) {
 					if (bestFitness < mBestFitness.floatValue()) {
 						bestFitness = mBestFitness.floatValue();
-						bestFitnessGeneration = generation;
+						bestFitnessCycle = cycle;
 						}
-					else if (generation >= bestFitnessGeneration + AUTOMATIC_HISTORIC_GENERATIONS) {
+					else if (cycle >= bestFitnessCycle + AUTOMATIC_HISTORIC_GENERATIONS) {
 						break;
 						}
 					}
@@ -622,47 +644,51 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 			}
 		}
 
-	private Thread[] launchMutationConsumers(ConcurrentSkipListSet<EvolutionResult> currentGeneration,
-										 ConcurrentSkipListSet<String> moleculeHistory,
-										 int survivalCount,
-										 FitnessOption[] fitnessOption,
-										 int run) {
-		Thread[] mutationThread;
-		int threadCount = Runtime.getRuntime().availableProcessors();
-		mMutationQueue = new ArrayBlockingQueue<>(10 * threadCount);
-		mutationThread = new Thread[threadCount];
-		for (int i = 0; i<threadCount; i++) {
-			mutationThread[i] = new Thread(() -> {
+	private ArrayBlockingQueue<MutationQueueEntry> launchMutationConsumers(
+										ConcurrentSkipListSet<EvolutionResult> currentGeneration,
+										ConcurrentSkipListSet<String> moleculeHistory,
+										Thread[] consumerThread,
+										int survivalCount,
+										FitnessOption[] fitnessOption,
+										int run,
+										int cycle) {
+		final ArrayBlockingQueue<MutationQueueEntry> mutationQueue = new ArrayBlockingQueue<>(10 * consumerThread.length);
+		for (int i = 0; i<consumerThread.length; i++) {
+			consumerThread[i] = new Thread(() -> {
 				while (true) {
 					try {
-						MutationQueueEntry entry = mMutationQueue.take();
+						MutationQueueEntry entry = mutationQueue.take();
 						if (entry.isEnd())
 							break;
 						if (!mStopProcessing)
-							processCandidate(entry, currentGeneration, moleculeHistory, survivalCount, fitnessOption, run);
+							processCandidate(entry, currentGeneration, moleculeHistory, survivalCount, fitnessOption, run, cycle);
 					}
 					catch (InterruptedException ie) {
 						break;
 					}
 				}
 			});
-			mutationThread[i].setPriority(Thread.MIN_PRIORITY);
-			mutationThread[i].setName(THREAD_NAME_PREFIX + i);
-			mutationThread[i].start();
+			consumerThread[i].setPriority(Thread.MIN_PRIORITY);
+			consumerThread[i].setName(THREAD_NAME_PREFIX + i);
+			consumerThread[i].start();
 			}
-		return mutationThread;
+		return mutationQueue;
 		}
 
-	private void generateNextGenerationCompounds(int offspringCompounds, final EvolutionResult parentResult, final Mutator mutator) {
+	private int generateDerivedCompounds(int offspringCompounds, EvolutionResult parentResult,
+	                                      Mutator mutator, ArrayBlockingQueue<MutationQueueEntry> mutationQueue) {
+		int count = 0;
 		int maxCount = Math.min(offspringCompounds, parentResult.getMutationList().size());
 		for (int i=0; i<maxCount && !parentResult.getMutationList().isEmpty() && !mStopProcessing; i++) {
 			StereoMolecule mol = new StereoMolecule(parentResult.getMolecule());
 			mutator.mutate(mol, parentResult.getMutationList());
 			try {
-				mMutationQueue.put(new MutationQueueEntry(mol, parentResult));
+				mutationQueue.put(new MutationQueueEntry(mol, parentResult));
+				count++;
 				}
 			catch (InterruptedException ie) {}
 			}
+		return count;
 		}
 
 	private void processCandidate(MutationQueueEntry candidate,
@@ -670,14 +696,15 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 	                              ConcurrentSkipListSet<String> moleculeHistory,
 	                              int survivalCount,
 	                              FitnessOption[] fitnessOption,
-	                              int run) {
+	                              int run,
+	                              int cycle) {
 
 		String idcode = new Canonizer(candidate.mol).getIDCode();
 
 		if (!moleculeHistory.add(idcode))
 			return;
 
-		EvolutionResult result = new EvolutionResult(candidate.mol, idcode, candidate.parentResult, fitnessOption, mCurrentResultID.incrementAndGet(), run);
+		EvolutionResult result = new EvolutionResult(candidate.mol, idcode, candidate.parentResult, fitnessOption, mCurrentResultID.incrementAndGet(), run, cycle);
 		currentGeneration.add(result);
 		if (currentGeneration.size() > survivalCount)
 			currentGeneration.remove(currentGeneration.last());
@@ -736,6 +763,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 		columnNameList.add("Parent ID");
 		if (hasMultipleRuns)
 			columnNameList.add("Run");
+		columnNameList.add("Cycle");
 		columnNameList.add("Generation");
 		columnNameList.add("Parent Generation");
 		columnNameList.add("Child No");
@@ -781,6 +809,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 			tableModel.setTotalValueAt(""+r.getParentID(), row, column++);
 			if (hasMultipleRuns)
 				tableModel.setTotalValueAt(""+(1+r.getRun()), row, column++);
+			tableModel.setTotalValueAt(""+(1+r.getCycle()), row, column++);
 			tableModel.setTotalValueAt(""+(1+r.getGeneration()), row, column++);
 			tableModel.setTotalValueAt(""+(1+r.getParentGeneration()), row, column++);
 			tableModel.setTotalValueAt(""+(1+r.getChildIndex()), row, column++);

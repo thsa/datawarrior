@@ -18,7 +18,7 @@
 
 package com.actelion.research.datawarrior.task.chem.elib;
 
-import com.actelion.research.calc.ProgressListener;
+import com.actelion.research.calc.ProgressController;
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.Molecule;
@@ -43,10 +43,12 @@ public class ConformerFitnessOption extends FitnessOption {
 
 	private static final int PHESA_CONFORMER_COUNT = 64;
 	private String mAlgorithm;
+	private ProgressController mProcessController;
 	private StereoMolecule[] mRefConformer;
 	private static ConcurrentHashMap<String,DescriptorHandlerFlexophore> sFlexophoreHandlerMap;
 
-	public ConformerFitnessOption(String params, ProgressListener pl) {
+	public ConformerFitnessOption(String params, ProgressController pc) {
+		mProcessController = pc;
 		String[] param = params.split("\\t");
 		if (param.length >= 3) {
 			mAlgorithm = param[0];
@@ -154,6 +156,7 @@ public class ConformerFitnessOption extends FitnessOption {
 			double bestFit = 0.0f;
 			for (StereoMolecule refMol:mRefConformer) {
 				ConformerGenerator generator = new ConformerGenerator(true);
+				generator.setThreadMaster(mProcessController);
 				generator.initializeConformers(conformer);
 
 				for (int i = 0; i<PHESA_CONFORMER_COUNT; i++) {
@@ -217,6 +220,7 @@ System.out.println(c.getIDCode()+" "+c.getEncodedCoordinates());
 		mol.copyMolecule(conformer);
 
 		ConformerGenerator generator = new ConformerGenerator(true);
+		generator.setThreadMaster(mProcessController);
 		generator.initializeConformers(conformer);
 
 		double bestFit = 0.0;

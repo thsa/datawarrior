@@ -33,7 +33,10 @@ import java.util.TreeMap;
 public class RuntimeProperties extends AbstractConfiguration implements CompoundTableConstants {
     private static final long serialVersionUID = 0x20061101;
 
-    public static final String cColumnAlias = "columnAlias";
+	public static final String cPropertiesUseDefault = "useDefault";
+	public static final String cPropertiesUseDefaultFiltersOnly = "filtersOnly";
+
+	public static final String cColumnAlias = "columnAlias";
     public static final String cColumnAliasCount = "columnAliasCount";
 
     private static final String cLogarithmicViewMode = "logarithmicView";

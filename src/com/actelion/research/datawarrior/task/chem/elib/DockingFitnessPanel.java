@@ -8,15 +8,20 @@ import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
 import javafx.application.Platform;
 import org.openmolecules.fx.viewer3d.V3DMolecule;
+import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.EnumSet;
 import java.util.List;
 
 public class DockingFitnessPanel extends FitnessPanel {
 	private static final long serialVersionUID = 20211021L;
 
+	protected static final String CODE_SKIP_PROTONATION = "protonate=false";
+
 	protected JFXConformerPanel mConformerPanel;
+	protected JCheckBox mCheckBoxProtonateLigand;
 
 	/**
 	 * Creates a new DockingFitnessPanel, which is configured according to the given configuration.
@@ -27,11 +32,20 @@ public class DockingFitnessPanel extends FitnessPanel {
 		this(owner, delegate);
 
 		String[] param = configuration.split("\\t");
-		if (param.length == 3) {
-			mSlider.setValue(Integer.parseInt(param[0]));
+		int index = 0;
 
-			StereoMolecule cavity = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(param[1]);
-			StereoMolecule ligand = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(param[2]);
+		boolean protonateLigand = true;
+		if (param.length - index > 3 && param[0].equals(DockingFitnessPanel.CODE_SKIP_PROTONATION)) {
+			protonateLigand = false;
+			index++;
+		}
+		mCheckBoxProtonateLigand.setSelected(protonateLigand);
+
+		if (param.length - index == 3) {
+			mSlider.setValue(Integer.parseInt(param[index++]));
+
+			StereoMolecule cavity = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(param[index++]);
+			StereoMolecule ligand = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(param[index++]);
 			if (cavity != null && ligand != null) {
 				Platform.runLater(() -> {
 					mConformerPanel.setProteinCavity(cavity, ligand, true);
@@ -46,20 +60,24 @@ public class DockingFitnessPanel extends FitnessPanel {
 	protected DockingFitnessPanel(Frame owner, UIDelegateELib delegate) {
 		super();
 
-		mConformerPanel = new JFXConformerPanel(false, false, true);
+		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
+		settings.add(V3DScene.ViewerSettings.EDITING);
+		mConformerPanel = new JFXConformerPanel(false, settings);
 		mConformerPanel.setPopupMenuController(new DockingPanelController(mConformerPanel));
 		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(240), HiDPIHelper.scale(180)));
+		mCheckBoxProtonateLigand = new JCheckBox("Use likely ligand protonation states", true);
 
 		int gap = HiDPIHelper.scale(4);
 		double[][] cpsize = {
 				{gap, TableLayout.PREFERRED, TableLayout.PREFERRED, 4*gap, TableLayout.FILL, 4*gap, TableLayout.PREFERRED, gap},
-				{gap, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL, gap} };
+				{gap, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, gap} };
 		setLayout(new TableLayout(cpsize));
 
 		add(new JLabel("Create molecules with high docking scores"), "1,1,2,1");
-		add(mConformerPanel, "4,1,4,4");
+		add(mConformerPanel, "4,1,4,5");
 		add(mSliderPanel, "1,3,2,3");
+		add(mCheckBoxProtonateLigand, "1,5,2,5");
 		add(createCloseButton(), "6,1");
 	}
 
@@ -70,6 +88,8 @@ public class DockingFitnessPanel extends FitnessPanel {
 	protected String getConfiguration() {
 		StringBuilder sb = new StringBuilder(DOCKING_OPTION_CODE);
 		sb.append('\t').append(mSlider.getValue());
+		if (!mCheckBoxProtonateLigand.isSelected())
+			sb.append('\t').append(CODE_SKIP_PROTONATION);
 
 		List<StereoMolecule> protein = mConformerPanel.getMolecules(V3DMolecule.MoleculeRole.MACROMOLECULE);
 		List<StereoMolecule> ligand = mConformerPanel.getMolecules(V3DMolecule.MoleculeRole.LIGAND);

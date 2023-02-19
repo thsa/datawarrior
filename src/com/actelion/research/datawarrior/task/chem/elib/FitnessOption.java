@@ -18,7 +18,7 @@
 
 package com.actelion.research.datawarrior.task.chem.elib;
 
-import com.actelion.research.calc.ProgressListener;
+import com.actelion.research.calc.ProgressController;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.prediction.MolecularPropertyHelper;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -26,17 +26,17 @@ import com.actelion.research.table.model.CompoundTableModel;
 public abstract class FitnessOption {
 	protected int mSliderValue;
 
-	protected static FitnessOption createFitnessOption(String params, ProgressListener pl) {
+	protected static FitnessOption createFitnessOption(String params, ProgressController pc) {
 		int index = (params == null) ? -1 : params.indexOf('\t');
 		if (index == -1)
 			return null;
 		String optionCode = params.substring(0, index);
 		if (optionCode.equals(FitnessPanel.DOCKING_OPTION_CODE))
-			return new DockingFitnessOption(params.substring(index+1), pl);
+			return new DockingFitnessOption(params.substring(index+1), pc);
 		if (optionCode.equals(FitnessPanel.CONFORMER_OPTION_CODE))
-			return new ConformerFitnessOption(params.substring(index+1), pl);
+			return new ConformerFitnessOption(params.substring(index+1), pc);
 		if (optionCode.equals(FitnessPanel.STRUCTURE_OPTION_CODE))
-			return new StructureFitnessOption(params.substring(index+1), pl);
+			return new StructureFitnessOption(params.substring(index+1), pc);
 		int type = MolecularPropertyHelper.getTypeFromCode(optionCode);
 		return (type == -1) ? null : new PropertyFitnessOption(type, params.substring(index+1));
 		}

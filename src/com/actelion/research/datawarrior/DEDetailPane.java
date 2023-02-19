@@ -38,6 +38,7 @@ import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.SeparatorMenuItem;
 import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
+import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
 import java.awt.*;
@@ -212,7 +213,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				continue;
 			}
 			if (CompoundTableModel.cColumnType3DCoordinates.equals(specialType)) {
-				final JFXConformerPanel view = new JFXConformerPanel(false, false, false);
+				final JFXConformerPanel view = new JFXConformerPanel(false, V3DScene.CONFORMER_VIEW_MODE);
 				view.setBackground(new java.awt.Color(24, 24, 96));
 				String overlay = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);
 				StereoMolecule overlayMol = (overlay == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(overlay);

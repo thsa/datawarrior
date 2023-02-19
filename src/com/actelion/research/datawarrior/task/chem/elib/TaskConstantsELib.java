@@ -32,13 +32,13 @@ public interface TaskConstantsELib {
 
 	String GENERATIONS_AUTOMATIC = "automatic";
 	String GENERATIONS_UNLIMITED = "unlimited";
-	String DEFAULT_GENERATIONS = GENERATIONS_AUTOMATIC;
+	String DEFAULT_CYCLE_COUNT = GENERATIONS_AUTOMATIC;
 	String[] GENERATION_OPTIONS = {GENERATIONS_AUTOMATIC, "10", "25", "50", "75", "100", "150", "200", "300", "400", GENERATIONS_UNLIMITED };
 
-	String DEFAULT_COMPOUNDS = "128";
+	String DEFAULT_COMPOUND_COUNT = "128";
 	String[] COMPOUND_OPTIONS = {"8", "16", "32", "64", "128", "256", "512", "1024", "2048", "4096"};
 
-	String DEFAULT_SURVIVALS = "8";
+	String DEFAULT_SURVIVAL_COUNT = "8";
 	String[] SURVIVAL_OPTIONS = {"1", "2", "4", "8", "16", "32", "64", "128", "256"};
 
 	String DEFAULT_RUNS = "1";
@@ -57,8 +57,8 @@ public interface TaskConstantsELib {
 	String PROPERTY_START_SET_LIST = "startSetList";
 	String PROPERTY_START_COMPOUNDS = "startSet";
 	String PROPERTY_SURVIVAL_COUNT = "survivalCount";
-	String PROPERTY_GENERATION_COUNT = "generationCount";
-	String PROPERTY_GENERATION_SIZE = "generationSize";
+	String PROPERTY_CYCLE_COUNT = "generationCount";
+	String PROPERTY_COMPOUND_COUNT = "generationSize";
 	String PROPERTY_COMPOUND_KIND = "kind";
 	String PROPERTY_FITNESS_PARAM_COUNT = "paramCount";
 	String PROPERTY_FITNESS_PARAM_CONFIG = "paramConfig";

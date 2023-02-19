@@ -223,6 +223,13 @@ JOIN keyword and after the WHERE keyword some conditions are defined that specif
 <p>Note that one of the retrieval columns contains chemical structures in SMILES format. These are
 automatically recognized by <span class="keyword">DataWarrior</span> and an additional column containing
 the corresponding chemical structures is generated.</p>
+<p>Note also: If DataWarrior has an open document window when an SQL query is performed, and if a column of
+DataWarrior's data table contains identifiers used in the database, then one may construct an SQL statement
+using those identifiers as retrieval condition in the SQL statement's WHERE-clause as in
+"WHERE my_table.compound_id IN($IDNUMBER)". In this example the DataWarrior document would contain a column
+named 'IDNUMBER' containing identifiers used in the database column 'compound_id' of table 'my_table'.
+Before processing the SQL statement, DataWarrior would resolve 'IN($IDNUMBER)' to IN('ID1','ID2','ID3')
+assuming that the IDNUMBER column would contain the entries 'ID1', 'ID2', and 'ID3'.</p>
 <br>
 
 <h3><a name="Synthesis"></a>Synthesis Planning</h3>

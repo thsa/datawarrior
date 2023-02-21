@@ -189,7 +189,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskNewCardsView.TASK_NAME) ? new DETaskNewCardsView(frame, mainPane,null)
 			 : codeMatches(taskCode, DETaskNewColumnWithListNames.TASK_NAME) ? new DETaskNewColumnWithListNames(frame)
 			 : codeMatches(taskCode, DETaskNewFile.TASK_NAME) ? new DETaskNewFile(application)
-			 : codeMatches(taskCode, DETaskNewFileFromCorrelationCoefficients.TASK_NAME) ? new DETaskNewFileFromCorrelationCoefficients(frame, -1)
+			 : codeMatches(taskCode, DETaskNewFileFromCorrelationCoefficients.TASK_NAME) ? new DETaskNewFileFromCorrelationCoefficients(frame, -1, -1, null)
 			 : codeMatches(taskCode, DETaskNewFileFromList.TASK_NAME) ? new DETaskNewFileFromList(frame, application, -1)
 			 : codeMatches(taskCode, DETaskNewFileFromPivoting.TASK_NAME) ? new DETaskNewFileFromPivoting(frame, application)
 			 : codeMatches(taskCode, DETaskNewFileFromReversePivoting.TASK_NAME) ? new DETaskNewFileFromReversePivoting(frame, application)

@@ -21,25 +21,60 @@ package com.actelion.research.table.model;
 import com.actelion.research.calc.INumericalDataColumn;
 
 public class NumericalCompoundTableColumn implements INumericalDataColumn {
+	public static final int MODE_ALL_ROWS = 0;
+	public static final int MODE_CUSTOM_ROWS = 1;
+	public static final int MODE_VISIBLE_ROWS = 2;
+
 	private CompoundTableModel	mTableModel;
-	private int					mColumn;
+	private int					mColumn,mMode;
+	private int[]               mCustomRow;
 
 	public NumericalCompoundTableColumn(CompoundTableModel tableModel, int column) {
+		this(tableModel, column, MODE_ALL_ROWS, null);
+		}
+
+	public NumericalCompoundTableColumn(CompoundTableModel tableModel, int column, int mode, int[] customRows) {
 		mTableModel = tableModel;
 		mColumn = column;
+		mMode = mode;
+		mCustomRow = customRows;
 		}
 
 	@Override
 	public double getValueAt(int row) {
-        return mTableModel.getTotalDoubleAt(row, mColumn);
+        return mMode == MODE_ALL_ROWS ?
+		        mTableModel.getTotalDoubleAt(row, mColumn)
+		     : mMode == MODE_VISIBLE_ROWS ?
+		        mTableModel.getDoubleAt(row, mColumn)
+		     : mTableModel.getTotalDoubleAt(mCustomRow[row], mColumn);
 		}
 
 	@Override
 	public int getValueCount() {
-        return mTableModel.getTotalRowCount();
+        return mMode == MODE_ALL_ROWS ?
+		        mTableModel.getTotalRowCount()
+		     : mMode == MODE_VISIBLE_ROWS ?
+		        mTableModel.getRowCount()
+		     : mCustomRow.length;
 		}
 
 	public int getColumn() {
 		return mColumn;
+		}
+
+	public static int[] compileCustomRows(int listIndex, CompoundTableModel tableModel) {
+		CompoundTableListHandler listHandler = tableModel.getListHandler();
+		long flag = listHandler.getListMask(listIndex);
+		int count = 0;
+		for (int row=0; row<tableModel.getTotalRowCount(); row++)
+			if ((tableModel.getTotalRecord(row).getFlags() & flag) != 0)
+				count++;
+		int[] customRows = new int[count];
+		count = 0;
+		for (int row=0; row<tableModel.getTotalRowCount(); row++)
+			if ((tableModel.getTotalRecord(row).getFlags() & flag) != 0)
+				customRows[count++] = row;
+
+		return customRows;
 		}
 	}

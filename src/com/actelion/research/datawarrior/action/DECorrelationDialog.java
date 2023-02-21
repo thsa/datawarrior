@@ -18,21 +18,22 @@
 
 package com.actelion.research.datawarrior.action;
 
+import com.actelion.research.calc.CorrelationCalculator;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.file.DETaskNewFileFromCorrelationCoefficients;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.model.NumericalCompoundTableColumn;
+import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Arrays;
-import javax.swing.*;
-
-import com.actelion.research.calc.*;
-import com.actelion.research.util.DoubleFormat;
 
 
 public class DECorrelationDialog extends JDialog implements ActionListener {
@@ -40,16 +41,25 @@ public class DECorrelationDialog extends JDialog implements ActionListener {
 
 	private static final int FONT_SIZE = 14;
 
-	private JComboBox			mComboBoxCorrelationType;
+	public static final String[] ROW_MODE_TEXT = { "<All rows>", "<Visible rows>", "<Selected rows>" };
+	public static final String[] ROW_MODE_CODE = { "<all>", "<visible>", "<selected>" };
+	public static final int ROWS_ALL = 0;
+	public static final int ROWS_VISIBLE = 1;
+	public static final int ROWS_SELECTED = 2;
+	public static final int ROWS_ROWLIST = 3;
+
+	private JComboBox			mComboBoxCorrelationType, mComboBoxRowList;
 	private DEFrame				mParentFrame;
-	private CompoundTableModel mTableModel;
-	private int[]				mNumericalColumn;
-	private double[][][]		mMatrix;
+	private CompoundTableModel  mTableModel;
+	private int                 mRowListMode;
+	private int[]				mNumericalColumn,mCustomRows;
+	private double[][][][]		mMatrix;
 
     public DECorrelationDialog(DEFrame parent, CompoundTableModel tableModel) {
 		super(parent, "Correlation Matrix", true);
 		mParentFrame = parent;
 		mTableModel = tableModel;
+	    mRowListMode = ROWS_ALL;
 
 		mNumericalColumn = getNumericalColumns(mTableModel);
 		if (mNumericalColumn.length < 2) {
@@ -57,23 +67,34 @@ public class DECorrelationDialog extends JDialog implements ActionListener {
                                                  +"in order to calculate a correlation matrix.");
 		    return;
 		    }
-		mMatrix = new double[CorrelationCalculator.TYPE_NAME.length][][];
 
 		int gap1 = HiDPIHelper.scale(8);
 		int gap2 = HiDPIHelper.scale(12);
 		JPanel p = new JPanel();
         double[][] size = { {gap1, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL, gap1},
-                            {gap1, TableLayout.PREFERRED, gap1, TableLayout.FILL, gap2, TableLayout.PREFERRED, gap1 } };
+                            {gap1, TableLayout.PREFERRED, gap2, TableLayout.FILL, gap2, TableLayout.PREFERRED, gap1 } };
         p.setLayout(new TableLayout(size));
 
 		JPanel cbp = new JPanel();
-		cbp.add(new JLabel("Correlation Coefficient:"));
+	    double[][] cpsize = { {TableLayout.PREFERRED, gap1, TableLayout.PREFERRED},
+			                  {TableLayout.PREFERRED, gap1, TableLayout.PREFERRED} };
+	    cbp.setLayout(new TableLayout(cpsize));
+		cbp.add(new JLabel("Correlation Coefficient:"), "0,0");
 		mComboBoxCorrelationType = new JComboBox(CorrelationCalculator.TYPE_LONG_NAME);
 		mComboBoxCorrelationType.addActionListener(this);
-		cbp.add(mComboBoxCorrelationType);
-		p.add(cbp, "1,1,3,1");
+		cbp.add(mComboBoxCorrelationType, "2,0");
+		cbp.add(new JLabel("Considered Rows:"), "0,2");
+	    mComboBoxRowList = new JComboBox(ROW_MODE_TEXT);
+	    for (int i = 0; i<tableModel.getListHandler().getListCount(); i++)
+		    mComboBoxRowList.addItem(tableModel.getListHandler().getListName(i));
+	    mComboBoxRowList.setSelectedIndex(ROWS_ALL);
+	    mComboBoxRowList.addActionListener(this);
+	    cbp.add(mComboBoxRowList, "2,2");
+	    p.add(cbp, "1,1,3,1");
 
-		JPanel matrixPanel = new JPanel() {
+	    mMatrix = new double[CorrelationCalculator.TYPE_NAME.length][mComboBoxRowList.getItemCount()][][];
+
+	    JPanel matrixPanel = new JPanel() {
 		    private static final long serialVersionUID = 0x20080507;
 
 		    private final int SPACING = HiDPIHelper.scale(4);
@@ -125,23 +146,24 @@ public class DECorrelationDialog extends JDialog implements ActionListener {
                     }
 
                 int type = mComboBoxCorrelationType.getSelectedIndex();
-                if (mMatrix[type] == null) {
+                int list = mComboBoxRowList.getSelectedIndex();
+                if (mMatrix[type][list] == null) {
                 	NumericalCompoundTableColumn[] nc = new NumericalCompoundTableColumn[mNumericalColumn.length];
             		for (int i=0; i<mNumericalColumn.length; i++)
-            			nc[i] = new NumericalCompoundTableColumn(mTableModel, mNumericalColumn[i]);
-                    mMatrix[type] = new CorrelationCalculator().calculateMatrix(nc, type);
+            			nc[i] = new NumericalCompoundTableColumn(mTableModel, mNumericalColumn[i], mRowListMode, mCustomRows);
+                    mMatrix[type][list] = new CorrelationCalculator().calculateMatrix(nc, type);
                 	}
 
                 int xOffset = NUM_CELL_WIDTH+2*SPACING+titleWidth;
                 int yOffset = CELL_HEIGHT;
 		        for (int i=1; i<mNumericalColumn.length; i++) {
 		            for (int j=0; j<i; j++) {
-		                g.setColor(new Color(Color.HSBtoRGB((float)0.4, (float)Math.abs(mMatrix[type][i][j]), (float)0.8)));
+		                g.setColor(new Color(Color.HSBtoRGB((float)0.4, (float)Math.abs(mMatrix[type][list][i][j]), (float)0.8)));
 		                g.fillRect(xOffset+i*CELL_WIDTH+1, yOffset+j*CELL_HEIGHT+1, CELL_WIDTH-2, CELL_HEIGHT-2);
                         g.fillRect(xOffset+j*CELL_WIDTH+1, yOffset+i*CELL_HEIGHT+1, CELL_WIDTH-2, CELL_HEIGHT-2);
 		                g.setColor(Color.BLACK);
-		                g.drawString(DoubleFormat.toString(mMatrix[type][i][j], 3), xOffset+i*CELL_WIDTH+SPACING, yOffset+CELL_HEIGHT+j*CELL_HEIGHT-3);
-                        g.drawString(DoubleFormat.toString(mMatrix[type][i][j], 3), xOffset+j*CELL_WIDTH+SPACING, yOffset+CELL_HEIGHT+i*CELL_HEIGHT-3);
+		                g.drawString(DoubleFormat.toString(mMatrix[type][list][i][j], 3), xOffset+i*CELL_WIDTH+SPACING, yOffset+CELL_HEIGHT+j*CELL_HEIGHT-3);
+                        g.drawString(DoubleFormat.toString(mMatrix[type][list][i][j], 3), xOffset+j*CELL_WIDTH+SPACING, yOffset+CELL_HEIGHT+i*CELL_HEIGHT-3);
 		                }
 		            }
 		        }
@@ -149,7 +171,13 @@ public class DECorrelationDialog extends JDialog implements ActionListener {
 		matrixPanel.setSize(matrixPanel.getPreferredSize());
         if (mNumericalColumn.length > 10) {
             JScrollPane scrollPane = new JScrollPane(matrixPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-            scrollPane.setPreferredSize(new Dimension(HiDPIHelper.scale(720), HiDPIHelper.scale(192)));
+            int maxWidth = HiDPIHelper.scale(960);
+	        int maxHeight = HiDPIHelper.scale(240);
+	        int borderWidth = HiDPIHelper.scale(matrixPanel.getHeight() < maxHeight ? 4 : 20);
+	        int borderHeight = HiDPIHelper.scale(matrixPanel.getWidth() < maxWidth ? 4 : 20);
+            scrollPane.setPreferredSize( new Dimension(
+		            Math.min(borderWidth + matrixPanel.getWidth(), maxWidth),
+		            Math.min(borderHeight + matrixPanel.getHeight(), maxHeight)));
             p.add(scrollPane, "1,3,3,3");
             }
         else {
@@ -213,8 +241,15 @@ public class DECorrelationDialog extends JDialog implements ActionListener {
 			return;
 	    	}
 
+	    if (e.getSource() == mComboBoxRowList) {
+	    	updateRowListMode();
+		    repaint();
+		    return;
+		    }
+
 	    if (e.getActionCommand().equals("copy")) {
             int type = mComboBoxCorrelationType.getSelectedIndex();
+		    int list = mComboBoxRowList.getSelectedIndex();
 
             StringBuilder buf = new StringBuilder("r ("+CorrelationCalculator.TYPE_LONG_NAME[type]+")\t");
 	        for (int i=0; i<mNumericalColumn.length; i++)
@@ -226,9 +261,9 @@ public class DECorrelationDialog extends JDialog implements ActionListener {
 	            for (int j=0; j<mNumericalColumn.length; j++) {
 	                buf.append('\t');
 	                if (i<j)
-	                    buf.append(DoubleFormat.toString(mMatrix[type][j][i], 3));
+	                    buf.append(DoubleFormat.toString(mMatrix[type][list][j][i], 3));
 	                else if (i>j)
-                        buf.append(DoubleFormat.toString(mMatrix[type][i][j], 3));
+                        buf.append(DoubleFormat.toString(mMatrix[type][list][i][j], 3));
 	                }
 	            buf.append('\n');
 	            }
@@ -245,12 +280,36 @@ public class DECorrelationDialog extends JDialog implements ActionListener {
 			setVisible(false);
 			dispose();
 
-			new DETaskNewFileFromCorrelationCoefficients(mParentFrame, type).defineAndRun();
+			int rows = Math.min(ROWS_ROWLIST, mComboBoxRowList.getSelectedIndex());
+			String listName = (rows == ROWS_ROWLIST) ? (String)mComboBoxRowList.getSelectedItem() : null;
+
+			new DETaskNewFileFromCorrelationCoefficients(mParentFrame, type, rows, listName).defineAndRun();
 			return;
 			}
 
 		setVisible(false);
 	    dispose();
 		return;
+		}
+
+	private void updateRowListMode() {
+    	switch (mComboBoxRowList.getSelectedIndex()) {
+    	case ROWS_ALL:
+    		mRowListMode = NumericalCompoundTableColumn.MODE_ALL_ROWS;
+    		mCustomRows = null;
+    		break;
+		case ROWS_VISIBLE:
+			mRowListMode = NumericalCompoundTableColumn.MODE_VISIBLE_ROWS;
+		    mCustomRows = null;
+		    break;
+	    default:
+	    	CompoundTableListHandler listHandler = mTableModel.getListHandler();
+		    mRowListMode = NumericalCompoundTableColumn.MODE_CUSTOM_ROWS;
+		    int listIndex = mComboBoxRowList.getSelectedIndex() == ROWS_SELECTED ?
+				    CompoundTableListHandler.LISTINDEX_SELECTION
+				    : listHandler.getListIndex((String)mComboBoxRowList.getSelectedItem());
+	    	mCustomRows = NumericalCompoundTableColumn.compileCustomRows(listIndex, mTableModel);
+		    break;
+		    }
 		}
 	}

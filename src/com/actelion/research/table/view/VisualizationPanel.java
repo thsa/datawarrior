@@ -26,7 +26,6 @@ import info.clearthought.layout.TableLayout;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.util.ArrayList;
@@ -47,9 +46,9 @@ public abstract class VisualizationPanel extends JPanel
 	private JPruningBar[]		mPruningBar;
 	private JComboBox[]			mComboBoxColumn;
 	private JWindow				mControls,mMessagePopup,mVisiblePopup;
-	private int					mQualifyingColumns,mAutoZoomColumn;
-	private int[]				mQualifyingColumn;
-	private float               mAutoZoomFactor;
+	private int					mQualifyingColumns;
+	private int[]				mQualifyingColumn,mAutoZoomColumn;
+	private float[]             mAutoZoomFactor;
 	private float[][]           mPruningBarCache;
 	private boolean				mDisableEvents,mIsProgrammaticChange;
 	private VisualizationPanel	mMasterPanel;
@@ -57,7 +56,7 @@ public abstract class VisualizationPanel extends JPanel
 	private ArrayList<VisualizationPanel> mSynchronizationChildList;
 	private ArrayList<VisualizationListener> mListenerList;
 
-	private static final float MAX_AUTO_ZOOM_VALUE = 0.005f;
+	private static final float MAX_AUTO_ZOOM_VALUE = 0.001f;
 	private static final int ZOOM_ANIMATION_LIMIT = 50000;
 	private static final int ZOOM_ANIMATION_TOTAL_MILLIS = 1000;
 	private static final int ZOOM_ANIMATION_FRAME_MILLIS = 10;
@@ -66,8 +65,8 @@ public abstract class VisualizationPanel extends JPanel
 		mParentFrame = parent;
 		mTableModel = tableModel;
 		mMasterPanel = this;
-		mAutoZoomFactor = 0f;
-		mAutoZoomColumn = -1;
+		mAutoZoomFactor = null;
+		mAutoZoomColumn = null;
 		addMouseWheelListener(this);
 		}
 
@@ -421,17 +420,28 @@ public abstract class VisualizationPanel extends JPanel
 		mPruningBarCache[1][axis] = high;
 		}
 
-	public int getAutoZoomColumn() {
+	public int[] getAutoZoomColumn() {
 		return mAutoZoomColumn;
 	}
 
-	public float getAutoZoomFactor() {
+	public float[] getAutoZoomFactor() {
 		return mAutoZoomFactor;
 	}
 
-	public void setAutoZoom(float factor, int column, boolean zoomImmediately) {
-		if (mAutoZoomFactor != factor
-		 || (mAutoZoomColumn != column && factor != 0f)) {
+	public void setAutoZoom(float[] factor, int[] column, boolean zoomImmediately) {
+		if (factor != null) {
+			boolean found = false;
+			for (int i=0; i<factor.length; i++)
+				if (factor[i] != 0f)
+					found = true;
+
+			if (factor.length != mDimensions || !found) {
+				factor = null;
+				column = null;
+				}
+			}
+
+		if (factor != null || mAutoZoomFactor != null) {
 			mAutoZoomFactor = factor;
 			mAutoZoomColumn = column;
 			if (zoomImmediately)
@@ -446,51 +456,42 @@ public abstract class VisualizationPanel extends JPanel
 		float[] low = new float[mDimensions];
 		float[] high = new float[mDimensions];
 		CompoundRecord ref = mTableModel.getActiveRow();
-		if (ref == null || mAutoZoomFactor == 0f) {
+		if (ref == null || mAutoZoomFactor == null) {
 			for (int i=0; i<mDimensions; i++) {
 				low[i] = mPruningBarCache[0][i];
 				high[i] = mPruningBarCache[1][i];
 				}
 			}
 		else {
-			float zoom = 1f/mAutoZoomFactor;
+			float[] zoom = new float[mDimensions];
+			for (int i=0; i<mDimensions; i++) {
+				zoom[i] = 1f/mAutoZoomFactor[i];
 
-			float whFactor = 1f;
-			if (mDimensions == 2) { // if we have a background picture, we keep width/height ratio
-				BufferedImage bgi = ((JVisualization2D)mVisualization).getBackgroundImage();
-				if (bgi != null && bgi.getWidth() != 0 && mVisualization.getHeight() != 0)
-					whFactor = (float)Math.sqrt((double)(bgi.getHeight()*mVisualization.getWidth())
-											  / (double)(bgi.getWidth()*mVisualization.getHeight()));
-				}
-
-			if (mAutoZoomColumn != -1) {
-				float value = ref.getDouble(mAutoZoomColumn);
-				if (!Float.isNaN(value)) {
-					float average = 0.5f * (mTableModel.getMinimumValue(mAutoZoomColumn) + mTableModel.getMaximumValue(mAutoZoomColumn));
-					zoom *= Math.abs(value / average);
+				if (mAutoZoomColumn[i] != -1) {
+					float value = ref.getDouble(mAutoZoomColumn[i]);
+					if (!Float.isNaN(value)) {
+						float average = 0.5f * (mTableModel.getMinimumValue(mAutoZoomColumn[i]) + mTableModel.getMaximumValue(mAutoZoomColumn[i]));
+						zoom[i] *= Math.abs(value / average);
+						}
 					}
+				if (zoom[i] > 1f)
+					zoom[i] = 1f;
+				else if (zoom[i] < MAX_AUTO_ZOOM_VALUE)
+					zoom[i] = MAX_AUTO_ZOOM_VALUE;
 				}
-			if (zoom > 1f)
-				zoom = 1f;
-			else if (zoom < MAX_AUTO_ZOOM_VALUE)
-				zoom = MAX_AUTO_ZOOM_VALUE;
 
 			for (int i=0; i<mDimensions; i++) {
-				float value = mVisualization.calcPruningBarMappedValue(ref, i);
+				float value = mVisualization.getAxisValue(ref, i);
 				if (Float.isNaN(value)) {
 					low[i] = 0f;
 					high[i] = 1f;
 					}
 				else {
-					float factor = 0.5f;
-					if (whFactor != 1f) {
-						if (i == 0)
-							factor *= whFactor;
-						else
-							factor /= whFactor;
-						}
-					low[i] = Math.max(0f, value-zoom*factor);
-					high[i] = Math.min(1f, value+zoom*factor);
+					JVisualization.AxisDataRange adr = mVisualization.calculateDataMinAndMax(i);
+					float dif = 0.5f * adr.fullRange() * zoom[i];
+					float[] lowAndHigh = mVisualization.calculatePruningBarLowAndHigh(i, value-dif, value+dif);
+					low[i] = lowAndHigh[0];
+					high[i] = lowAndHigh[1];
 					}
 				}
 			}
@@ -722,9 +723,10 @@ public abstract class VisualizationPanel extends JPanel
 					initializePruningBar(axis, JVisualization.cColumnUnassigned);
 					}
 				}
-			if (mAutoZoomColumn != JVisualization.cColumnUnassigned) {
-				mAutoZoomColumn = columnMapping[mAutoZoomColumn];
-				}
+			if (mAutoZoomColumn != null)
+				for (int i=0; i<mDimensions; i++)
+					if (mAutoZoomColumn[i] != JVisualization.cColumnUnassigned)
+						mAutoZoomColumn[i] = columnMapping[mAutoZoomColumn[i]];
 			}
 		else if (e.getType() == CompoundTableEvent.cChangeColumnName) {
 			int column = e.getColumn();
@@ -739,7 +741,7 @@ public abstract class VisualizationPanel extends JPanel
 				}
 			}
 		else if (e.getType() == CompoundTableEvent.cChangeActiveRow) {
-			if (mAutoZoomFactor != 0)
+			if (mAutoZoomFactor != null)
 				doAutoZoom();
 			}
 

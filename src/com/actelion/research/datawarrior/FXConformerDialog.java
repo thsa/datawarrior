@@ -349,8 +349,8 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 
 			if (minimization == MINIMIZE_NONE) {
 				if (cg != null) {
-					message = DoubleFormat.toString(cg.getPreviousConformerContribution() * 100, 3) + "%";
-					conformer.setEnergy(cg.getPreviousConformerContribution());
+					message = DoubleFormat.toString(100*conformer.getLikelihood(), 3) + "%";
+					conformer.setEnergy(conformer.getLikelihood());
 					conformer.copyTo(mol);
 				} else if (cs != null) {
 					message = "Strain:" + DoubleFormat.toString(((SelfOrganizedConformer) conformer).getTotalStrain(), 3);
@@ -760,7 +760,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 	        bw.newLine();
 	        bw.write("Structure\tcoords\ttorsionIndexes\tcollision");
 	        bw.newLine();
-			for (ConformerDiagnostics cd:cg.getDiagnostics()) {
+			for (ConformerDiagnostics cd:cg.getDiagnostics().getDiagnostics()) {
 				String idcode = cd.getIDCode();
 				String coords = cd.getCoords();
 				if (cd.getCollisionAtoms() != null) {

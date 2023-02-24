@@ -38,7 +38,9 @@ import com.actelion.research.util.DoubleFormat;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static com.actelion.research.table.MarkerLabelConstants.cOnePerCategoryMode;
 import static com.actelion.research.table.view.JVisualization.DEFAULT_LABEL_TRANSPARENCY;
@@ -807,16 +809,6 @@ public class DERuntimeProperties extends RuntimeProperties {
 					}
 				}
 
-			value = getProperty(cAutoZoomFactor+viewName);
-			if (value != null) {
-				float azf = Float.parseFloat(value);
-				int column = JVisualization.cColumnUnassigned;
-				value = getProperty(cAutoZoomColumn+viewName);
-				if (value != null)
-					column = mTableModel.findColumn(value);
-				vpanel.setAutoZoom(azf, column, false);
-				}
-
 			value = getProperty(cUsedAsFilter+viewName);
 			visualization.setUseAsFilter(value != null && value.equals("true"));
 
@@ -1089,6 +1081,52 @@ public class DERuntimeProperties extends RuntimeProperties {
 					}
 				if (count == 9)
 					((JVisualization3D)visualization).setRotationMatrix(rotation);
+				}
+
+			// Must be after background image, because legacy autozoom (not multi dimensional) used background image w/h ratio
+			value = getProperty(cAutoZoomFactor+viewName);
+			if (value != null) {
+				float[] azf = null;
+				int[] column = null;
+				if (value.indexOf(';') != -1) {
+					String[] entry = value.split(";");
+					if (entry.length == dimensions) {
+						azf = new float[dimensions];
+						for (int j=0; j<dimensions; j++)
+							try { azf[j] = Float.parseFloat(entry[j]); } catch (NumberFormatException nfe) {}
+						column = new int[dimensions];
+						Arrays.fill(column, -1);
+						value = getProperty(cAutoZoomColumn+viewName);
+						if (value != null) {
+							entry = value.split(";");
+							if (entry.length == dimensions) {
+								for (int j=0; j<dimensions; j++)
+									column[j] = mTableModel.findColumn(entry[j].replaceAll("&#59", ";"));
+								}
+							}
+						}
+					}
+				else {  // for compatibility with original, where there was the same value for all dimensions
+					azf = new float[dimensions];
+					azf[0] = Float.parseFloat(value);
+					column = new int[dimensions];
+					column[0] = mTableModel.findColumn(getProperty(cAutoZoomColumn+viewName));
+					for (int j=1; j<dimensions; j++) {
+						azf[j] = azf[j-1];
+						column[j] = column[j-1];
+						}
+					if (dimensions == 2) {
+						float whFactor = 1f;
+						BufferedImage bgi = ((JVisualization2D)visualization).getBackgroundImage();
+						if (bgi != null && bgi.getWidth() != 0 && bgi.getHeight() != 0)
+							whFactor = (float)Math.sqrt((double)(bgi.getHeight()*bgi.getWidth())
+									/ (double)(bgi.getWidth()*bgi.getHeight()));
+						azf[0] *= whFactor;
+						azf[1] /= whFactor;
+						}
+					}
+				if (azf != null)
+					vpanel.setAutoZoom(azf, column, false);
 				}
 			}
 		else if (view instanceof DEFormView) {
@@ -1403,7 +1441,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 									value = (float)Math.pow(10, value);
 								setProperty(key, ""+value);
 								}
-							if (vpanel.getAutoZoomFactor() != 0f) {
+							if (vpanel.getAutoZoomFactor() != null) {
 								key = cCachedAxisMin + viewName + "_" + j;
 								setProperty(key, ""+vpanel.getCachedPruningBarLow(j));
 								key = cCachedAxisMax + viewName + "_" + j;
@@ -1581,12 +1619,23 @@ public class DERuntimeProperties extends RuntimeProperties {
 							}
 						}
 
-					float azf = vpanel.getAutoZoomFactor();
-					if (azf != 0) {
-						setProperty(cAutoZoomFactor+viewName, Float.toString(azf));
-						int azc = vpanel.getAutoZoomColumn();
-						if (azc != -1)
-							setProperty(cAutoZoomColumn+viewName, mTableModel.getColumnTitleNoAlias(azc));
+					float[] azf = vpanel.getAutoZoomFactor();
+					if (azf != null) {
+						StringBuilder sb = new StringBuilder(Float.toString(azf[0]));
+						for (int j=1; j<vpanel.getDimensionCount(); j++)
+							sb.append(";").append(azf[j]);
+						setProperty(cAutoZoomFactor+viewName, sb.toString());
+						int[] azc = vpanel.getAutoZoomColumn();
+						if (azc != null) {
+							sb.setLength(0);
+							for (int j=0; j<vpanel.getDimensionCount(); j++) {
+								if (j != 0)
+									sb.append(";");
+								if (azc[j] != -1)
+									sb.append(mTableModel.getColumnTitleNoAlias(azc[j]).replaceAll(";", "&#59"));
+								}
+							setProperty(cAutoZoomColumn+viewName, sb.toString());
+							}
 						}
 
 					if (visualization.isUsedAsFilter())

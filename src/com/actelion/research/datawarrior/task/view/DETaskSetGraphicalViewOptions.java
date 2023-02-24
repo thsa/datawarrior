@@ -31,6 +31,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Arrays;
 import java.util.Properties;
 
 
@@ -65,14 +66,16 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 	private static final String ITEM_AUTO_ZOOM_NONE = "<none>";
 
 	private JComboBox       mComboBoxScaleMode,mComboBoxGridMode,mComboBoxCrossHairMode,mComboBoxExclusionList,
-							mComboBoxAutoZoomColumn,mComboBoxFontSizeMode;
+							mComboBoxFontSizeMode;
+	private JCheckBox[]     mCheckBoxAutoZoom;
+	private JComboBox[]     mComboBoxAutoZoomColumn;
 	private JSlider			mSliderScaleFontSize;
 	private JCheckBox	    mCheckBoxHideLegend,mCheckBoxShowNaN,mCheckBoxGlobalExclusion,mCheckBoxFastRendering,
 							mCheckBoxShowArrowTips,mCheckBoxIgnoreFilters,mCheckBoxDrawBoxOutline,mCheckBoxDrawMarkerOutline,
-							mCheckBoxDynamicScale,mCheckBoxScatterplotMargin,mCheckBoxAutoZoom;
+							mCheckBoxDynamicScale,mCheckBoxScatterplotMargin;
 	private DEColorPanel    mDefaultDataColorPanel,mMissingDataColorPanel,mBackgroundColorPanel,mLabelBackgroundColorPanel,
 							mGraphFaceColorPanel,mTitleBackgroundPanel;
-	private JTextField      mTextFieldAutoZoomFactor;
+	private JTextField[]    mTextFieldAutoZoomFactor;
 
 	/**
 	 * @param owner
@@ -196,26 +199,33 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		rowHidingPanel.add(mComboBoxExclusionList, "3,5");
 
 		JPanel autoZoomPanel = new JPanel();
-		double[][] sizeAutoZoomPanel = { {gap, TableLayout.FILL, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.PREFERRED, gap},
-				{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
+		double[][] sizeAutoZoomPanel = { {gap, TableLayout.FILL, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL, gap},
+				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
 		autoZoomPanel.setLayout(new TableLayout(sizeAutoZoomPanel));
-		mCheckBoxAutoZoom = new JCheckBox("Automatically zoom view towards reference row");
-		mCheckBoxAutoZoom.addActionListener(this);
-		mTextFieldAutoZoomFactor = new JTextField(4);
-		mTextFieldAutoZoomFactor.addKeyListener(this);
-		mComboBoxAutoZoomColumn = new JComboBox<String>();
-		if (!isInteractive())
-			mComboBoxAutoZoomColumn.setEditable(true);
-		mComboBoxAutoZoomColumn.addItem(ITEM_AUTO_ZOOM_NONE);
-		for (int i=0; i<getTableModel().getTotalColumnCount(); i++)
-			if (getTableModel().isColumnTypeDouble(i) && !getTableModel().isColumnTypeDate(i))
-				mComboBoxAutoZoomColumn.addItem(getTableModel().getColumnTitle(i));
-		mComboBoxAutoZoomColumn.addActionListener(this);
-		autoZoomPanel.add(mCheckBoxAutoZoom, "1,1,5,1");
-		autoZoomPanel.add(new JLabel("Zoom-in factor:", JLabel.RIGHT), "2,3");
-		autoZoomPanel.add(mTextFieldAutoZoomFactor, "4,3");
-		autoZoomPanel.add(new JLabel("Also zoom by:", JLabel.RIGHT), "2,5");
-		autoZoomPanel.add(mComboBoxAutoZoomColumn, "4,5,5,5");
+		autoZoomPanel.add(new JLabel("Define axes to automatically zoom to center the reference row"), "1,1,7,1");
+		autoZoomPanel.add(new JLabel("Zoom-factor:"), "4,3");
+		autoZoomPanel.add(new JLabel("Also zoom by:"), "6,3");
+		int dimensions = hasInteractiveView() ? getInteractiveVisualization().getDimensionCount() : 3;
+		mCheckBoxAutoZoom = new JCheckBox[dimensions];
+		mTextFieldAutoZoomFactor = new JTextField[dimensions];
+		mComboBoxAutoZoomColumn = new JComboBox[dimensions];
+		for (int i=0; i<dimensions; i++) {
+			mCheckBoxAutoZoom[i] = new JCheckBox(dimensions==3 ? (i==0?"X:":i==1?"Y:":"Z:") : (i==0?"Horizontal:":"Vertical:"));
+			mCheckBoxAutoZoom[i].addActionListener(this);
+			mTextFieldAutoZoomFactor[i] = new JTextField(4);
+			mTextFieldAutoZoomFactor[i].addKeyListener(this);
+			mComboBoxAutoZoomColumn[i] = new JComboBox<String>();
+			if (!isInteractive())
+				mComboBoxAutoZoomColumn[i].setEditable(true);
+			mComboBoxAutoZoomColumn[i].addItem(ITEM_AUTO_ZOOM_NONE);
+			for (int j=0; j<getTableModel().getTotalColumnCount(); j++)
+				if (getTableModel().isColumnTypeDouble(j) && !getTableModel().isColumnTypeDate(j))
+					mComboBoxAutoZoomColumn[i].addItem(getTableModel().getColumnTitle(j));
+			mComboBoxAutoZoomColumn[i].addActionListener(this);
+			autoZoomPanel.add(mCheckBoxAutoZoom[i], "2,"+(5+i*2));
+			autoZoomPanel.add(mTextFieldAutoZoomFactor[i], "4,"+(5+i*2));
+			autoZoomPanel.add(mComboBoxAutoZoomColumn[i], "6,"+(5+i*2));
+			}
 
 		JPanel renderPanel = new JPanel();
 		double[][] sizeRenderPanel = { {gap, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL, gap},
@@ -294,9 +304,12 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 			mTitleBackgroundPanel.setColor(JVisualization.DEFAULT_TITLE_BACKGROUND);
 		mComboBoxExclusionList.setSelectedIndex(0);
 
-		mCheckBoxAutoZoom.setSelected(false);
-		mTextFieldAutoZoomFactor.setText("2.0");
-		mComboBoxAutoZoomColumn.setSelectedItem(ITEM_AUTO_ZOOM_NONE);
+		for (JCheckBox cb:mCheckBoxAutoZoom)
+			cb.setSelected(false);
+		for (JTextField tf:mTextFieldAutoZoomFactor)
+			tf.setText("2.0");
+		for (JComboBox cb:mComboBoxAutoZoomColumn)
+			cb.setSelectedItem(ITEM_AUTO_ZOOM_NONE);
 		}
 
 	@Override
@@ -345,12 +358,16 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		String exclusionListName =  configuration.getProperty(PROPERTY_EXCLUSION_LIST, "");
 		mComboBoxExclusionList.setSelectedItem(exclusionListName.length() == 0 ? CompoundTableListHandler.LISTNAME_NONE : exclusionListName);
 
-		String azf = configuration.getProperty(PROPERTY_AUTO_ZOOM_FACTOR, "");
-		mCheckBoxAutoZoom.setSelected(azf.length() != 0);
-		mTextFieldAutoZoomFactor.setText(azf.length() == 0 ? "2.0" : azf);
-		String azc = configuration.getProperty(PROPERTY_AUTO_ZOOM_COLUMN, "");
-		mComboBoxAutoZoomColumn.setSelectedItem(azc.length() == 0 ? ITEM_AUTO_ZOOM_NONE
-				: isInteractive() ? getTableModel().getColumnTitle(getTableModel().findColumn(azc)) : azc);
+		String[] azf = configuration.getProperty(PROPERTY_AUTO_ZOOM_FACTOR, "").split(";", -1);
+		String[] azc = configuration.getProperty(PROPERTY_AUTO_ZOOM_COLUMN, "").split(";", -1);
+		for (int i=0; i<mTextFieldAutoZoomFactor.length; i++) {
+			String text = azf[i<azf.length ? i : 0];
+			mCheckBoxAutoZoom[i].setSelected(text.length() != 0);
+			mTextFieldAutoZoomFactor[i].setText(text.length() == 0 ? "2.0" : text);
+			text = azc[i<azc.length ? i : 0].replaceAll("&#59", ";");
+			mComboBoxAutoZoomColumn[i].setSelectedItem(text.length() == 0 ? ITEM_AUTO_ZOOM_NONE
+				: isInteractive() ? getTableModel().getColumnTitle(getTableModel().findColumn(text)) : text);
+			}
 		}
 
 	@Override
@@ -393,10 +410,25 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		if (mComboBoxExclusionList.getSelectedIndex() != 0)
 			configuration.setProperty(PROPERTY_EXCLUSION_LIST, (String)mComboBoxExclusionList.getSelectedItem());
 
-		if (mCheckBoxAutoZoom.isSelected()) {
-			configuration.setProperty(PROPERTY_AUTO_ZOOM_FACTOR, mTextFieldAutoZoomFactor.getText());
-			if (!ITEM_AUTO_ZOOM_NONE.equals(mComboBoxAutoZoomColumn.getSelectedItem()))
-				configuration.setProperty(PROPERTY_AUTO_ZOOM_COLUMN, getTableModel().getColumnTitleNoAlias((String)mComboBoxAutoZoomColumn.getSelectedItem()));
+		StringBuilder sb = new StringBuilder();
+		for (int i=0; i<mCheckBoxAutoZoom.length; i++) {
+			if (i != 0)
+				sb.append(";");
+			if (mCheckBoxAutoZoom[i].isSelected())
+				sb.append(mTextFieldAutoZoomFactor[i].getText());
+			}
+		if (sb.length() > 2) {
+			configuration.setProperty(PROPERTY_AUTO_ZOOM_FACTOR, sb.toString());
+			sb.setLength(0);
+			for (int i=0; i<mComboBoxAutoZoomColumn.length; i++) {
+				if (i != 0)
+					sb.append(";");
+				if (mCheckBoxAutoZoom[i].isSelected()
+				 && !ITEM_AUTO_ZOOM_NONE.equals(mComboBoxAutoZoomColumn[i].getSelectedItem()))
+					sb.append(getTableModel().getColumnTitleNoAlias((String)mComboBoxAutoZoomColumn[i].getSelectedItem()).replaceAll(";", "&#59"));
+				}
+			if (sb.length() > 2)
+				configuration.setProperty(PROPERTY_AUTO_ZOOM_COLUMN, sb.toString());
 			}
 		}
 
@@ -433,12 +465,28 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		if (visualization.getLocalExclusionList() != CompoundTableListHandler.LISTINDEX_NONE)
 			configuration.setProperty(PROPERTY_EXCLUSION_LIST, getTableModel().getListHandler().getListName(visualization.getLocalExclusionList()));
 
-		float azf = ((VisualizationPanel)view).getAutoZoomFactor();
-		if (azf != 0f) {
-			configuration.setProperty(PROPERTY_AUTO_ZOOM_FACTOR, Float.toString(azf));
-			int azc = ((VisualizationPanel)view).getAutoZoomColumn();
-			if (azc != -1)
-				configuration.setProperty(PROPERTY_AUTO_ZOOM_COLUMN, getTableModel().getColumnTitleNoAlias(azc));
+		float[] azf = ((VisualizationPanel)view).getAutoZoomFactor();
+		if (azf != null) {
+			StringBuilder sb = new StringBuilder();
+			for (int i=0; i<azf.length; i++) {
+				if (i != 0)
+					sb.append(";");
+				if (azf[i] != 0f)
+					sb.append(azf[i]);
+				}
+			configuration.setProperty(PROPERTY_AUTO_ZOOM_FACTOR, sb.toString());
+			int[] azc = ((VisualizationPanel)view).getAutoZoomColumn();
+			if (azc != null) {
+				sb.setLength(0);
+				for (int i=0; i<azc.length; i++) {
+					if (i != 0)
+						sb.append(";");
+					if (azc[i] != -1)
+						sb.append(getTableModel().getColumnTitleNoAlias(azc[i]).replaceAll(";", "&#59"));
+					}
+				if (sb.length() > 2)
+					configuration.setProperty(PROPERTY_AUTO_ZOOM_COLUMN, sb.toString());
+				}
 			}
 		}
 
@@ -515,11 +563,30 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 			try { ((JVisualization3D)v).setGraphFaceColor(Color.decode(gfc)); } catch (NumberFormatException nfe) {}
 		v.setLocalExclusionList(getTableModel().getListHandler().getListIndex(configuration.getProperty(PROPERTY_EXCLUSION_LIST)));
 
-		float azf = 0;
-		try {
-			azf = Float.parseFloat(configuration.getProperty(PROPERTY_AUTO_ZOOM_FACTOR, "0"));
-			} catch (NumberFormatException nfe) {}
-		int azc = (azf == 0) ? -1 : getTableModel().findColumn(configuration.getProperty(PROPERTY_AUTO_ZOOM_COLUMN));
+		float[] azf = null;
+		int[] azc = null;
+		String azfText = configuration.getProperty(PROPERTY_AUTO_ZOOM_FACTOR);
+		if (azfText != null) {
+			String[] azft = azfText.split(";", -1);
+			int dimensions = ((VisualizationPanel)view).getDimensionCount();
+			azf = new float[dimensions];
+			for (int i=0; i<dimensions; i++) {
+				String text = azft[i<azft.length ? i : 0];
+				if (text.length() != 0)
+					try { azf[i] = Float.parseFloat(text); } catch (NumberFormatException nfe) {}
+				}
+			azc = new int[dimensions];
+			Arrays.fill(azc, -1);
+			String azcText = configuration.getProperty(PROPERTY_AUTO_ZOOM_COLUMN);
+			if (azcText != null) {
+				String[] azct = azcText.split(";", -1);
+				for (int i=0; i<dimensions; i++) {
+					String text = azct[i<azct.length ? i : 0];
+					if (text.length() != 0)
+						azc[i] = getTableModel().findColumn(text.replaceAll("&#59", ";"));
+					}
+				}
+			}
 		((VisualizationPanel)view).setAutoZoom(azf, azc, true);
 		}
 
@@ -574,17 +641,30 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 	public void keyReleased(KeyEvent e) {
 		float value = Float.NaN;
 		JTextField source = (JTextField)e.getSource();
-		try { value = Float.parseFloat(source.getText()); } catch (NumberFormatException nfe) {}
-		boolean isValidZoomValue = !Float.isNaN(value)
-				&& (mComboBoxAutoZoomColumn.getSelectedIndex() != 0 || (value > 1f));
+		int index = -1;
+		for (int i=0; i<mTextFieldAutoZoomFactor.length; i++) {
+			if (source == mTextFieldAutoZoomFactor[i]) {
+				index = i;
+				break;
+				}
+			}
+		if (index != -1) {
+			try { value = Float.parseFloat(source.getText()); } catch (NumberFormatException nfe) {}
+			boolean isValidZoomValue = !Float.isNaN(value)
+					&& (mComboBoxAutoZoomColumn[index].getSelectedIndex() != 0 || (value > 1f));
 
-		source.setBackground(isValidZoomValue ? UIManager.getColor("TextField.background") : Color.RED);
+			source.setBackground(isValidZoomValue ? UIManager.getColor("TextField.background") : Color.RED);
 
-		if (isValidZoomValue)
-			update(false);
+			if (isValidZoomValue)
+				update(false);
+			}
 		}
 
 	@Override
 	public void enableItems() {
+		for (int i=0; i<mCheckBoxAutoZoom.length; i++) {
+			mTextFieldAutoZoomFactor[i].setEnabled(mCheckBoxAutoZoom[i].isSelected());
+			mComboBoxAutoZoomColumn[i].setEnabled(mCheckBoxAutoZoom[i].isSelected());
+			}
 		}
 	}

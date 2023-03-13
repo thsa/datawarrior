@@ -63,7 +63,7 @@ public class DETaskSetMarkerBackgroundColor extends DETaskAbstractSetColor {
 
 	@Override
 	public VisualizationColor getVisualizationColor(CompoundTableView view) {
-		return ((JVisualization2D)((VisualizationPanel)view).getVisualization()).getLabelBackgroundColor();
+		return ((JVisualization2D)((VisualizationPanel)view).getVisualization()).getBackgroundColor();
 		}
 
 	@Override

@@ -178,7 +178,7 @@ public class JVisualization2D extends JVisualization {
 	private int[]			mScaleTextMode,mScaleDepictorOffset,mSplittingMolIndex,mMultiValueMarkerColumns;
 	private int[]           mScaleSize; // 0: label area height beneath X-axis; 1: label area width left of y-axis
 	private int[]           mNaNSize;   // 0: NaN area width left of Y-axis; 1: NaN area height beneath X-axis
-	protected VisualizationColor	mBackgroundColor;
+	private VisualizationColor	mBackgroundColor;
 	private LabelHelper     mLabelHelper;
 	private Color[]			mMultiValueMarkerColor;
 	private Color[][][]		mBackground;

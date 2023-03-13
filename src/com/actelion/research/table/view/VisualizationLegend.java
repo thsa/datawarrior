@@ -45,6 +45,7 @@ public class VisualizationLegend {
 	public static final int cLegendTypeBackgroundColorDouble = 5;
 	public static final int cLegendTypeBackgroundColorCategory = 6;
 	public static final int cLegendTypeMultiValueMarker = 7;
+	public static final int cLegendTypeLabelBackgroundCategory = 8;
 
 	private CompoundTableModel	mTableModel;
 	private VisualizationColor	mVisualizationColor;
@@ -270,6 +271,7 @@ public class VisualizationLegend {
 		case cLegendTypeColorCategory:
 		case cLegendTypeBackgroundColorCategory:
 		case cLegendTypeShapeCategory:
+		case cLegendTypeLabelBackgroundCategory:
 		case cLegendTypeMultiValueMarker:
 			// three options to position column title:
 			// -top: starting just above first marker; mColumnNameOnTop=true, mTitleCells=0
@@ -291,10 +293,13 @@ public class VisualizationLegend {
 				x += mCellWidth * mTitleCells;
 
 			for (int i=0; i<mCategoryList.length; i++) {
-				if (mType == cLegendTypeColorCategory || mType == cLegendTypeShapeCategory) {
-					int shape = (mColumn == mVisualization.getMarkerShapeColumn()) ? i : 0;
-					Color color = (mType == cLegendTypeColorCategory && i<mVisualizationColor.getColorCount()) ?
-							mVisualizationColor.getColor(i) : Color.lightGray;
+				if (mType == cLegendTypeColorCategory
+				 || mType == cLegendTypeShapeCategory
+				 || mType == cLegendTypeLabelBackgroundCategory) {
+					int shape = (mColumn == mVisualization.getMarkerShapeColumn()) ? i
+							  : (mType == cLegendTypeLabelBackgroundCategory) ? 1 : 0;
+					Color color = ((mType == cLegendTypeColorCategory || mType == cLegendTypeLabelBackgroundCategory)
+							&& i<mVisualizationColor.getColorCount()) ? mVisualizationColor.getColor(i) : Color.lightGray;
 					mVisualization.drawMarker(color, shape, mFontHeight*8/10, x+mFontHeight*2/3-1, y);
 					}
 				else if (mType == cLegendTypeMultiValueMarker) {
@@ -366,6 +371,7 @@ public class VisualizationLegend {
 		case cLegendTypeColorCategory:
 		case cLegendTypeShapeCategory:
 		case cLegendTypeBackgroundColorCategory:
+		case cLegendTypeLabelBackgroundCategory:
 		case cLegendTypeMultiValueMarker:
 			return mCategoryList.length == categoryCount;
 		default:
@@ -444,7 +450,8 @@ public class VisualizationLegend {
 			break;
 		case cLegendTypeColorCategory:
 		case cLegendTypeShapeCategory:
-		case cLegendTypeBackgroundColorCategory:
+	    case cLegendTypeBackgroundColorCategory:
+	    case cLegendTypeLabelBackgroundCategory:
 			if (mType != cLegendTypeShapeCategory
 			 && mVisualizationColor.getColorThresholds() != null) {
 				mCategoryList = mVisualizationColor.createCustomThresholdCategoryNames();

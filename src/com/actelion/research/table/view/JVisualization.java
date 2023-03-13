@@ -879,17 +879,20 @@ public abstract class JVisualization extends JComponent
 			mLegendList.add(colorLegend);
 			}
 
+/* Don't add a legend for label background colors!
+   If we want that later, we should adapt the legend painter to apply the proper label transparency!
 		if (mLabelBackgroundColor.getColorColumn() != cColumnUnassigned) {
 			VisualizationLegend colorLegend = new VisualizationLegend(this, mTableModel,
 					mLabelBackgroundColor.getColorColumn(),
 					mLabelBackgroundColor,
 					mLabelBackgroundColor.getColorListMode() == VisualizationColor.cColorListModeCategories ?
-							VisualizationLegend.cLegendTypeColorCategory
+							VisualizationLegend.cLegendTypeLabelBackgroundCategory
 							: VisualizationLegend.cLegendTypeColorDouble);
 			colorLegend.calculate(bounds, fontHeight);
 			bounds.height -= colorLegend.getHeight();
 			mLegendList.add(colorLegend);
 			}
+ */
 		}
 
 	protected void paintLegend(Rectangle bounds, boolean transparentBG) {

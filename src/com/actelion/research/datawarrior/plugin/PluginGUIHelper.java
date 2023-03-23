@@ -16,13 +16,13 @@ import java.util.Arrays;
 
 public class PluginGUIHelper implements IUserInterfaceHelper {
 	private DataWarrior mApplication;
-	private Dialog mDialog;
+	private JDialog mDialog;
 	private DETaskPluginTask mPluginTask;
 	private CompoundTableModel mTableModel;
 	private boolean mIsInteractive;
 	private String mDefaultButtonText;
 
-	public PluginGUIHelper(DataWarrior application, Dialog dialog, DETaskPluginTask task, boolean isInteractive) {
+	public PluginGUIHelper(DataWarrior application, JDialog dialog, DETaskPluginTask task, boolean isInteractive) {
 		mApplication = application;
 		mDialog = dialog;
 		mPluginTask = task;
@@ -34,7 +34,12 @@ public class PluginGUIHelper implements IUserInterfaceHelper {
 	}
 
 	@Override
-	public Dialog getParentDialog() {
+	public Component getParentComponent() {
+		return mDialog != null ? mDialog : mApplication.getActiveFrame();
+	}
+
+	@Override
+	public JDialog getParentDialog() {
 		return mDialog;
 	}
 

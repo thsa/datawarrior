@@ -20,11 +20,9 @@ package com.actelion.research.datawarrior.task.db;
 import com.actelion.research.calc.ProgressController;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.datawarrior.plugin.PluginGUIHelper;
 import com.actelion.research.datawarrior.plugin.PluginHelper;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
-import com.actelion.research.datawarrior.plugin.PluginGUIHelper;
-import com.actelion.research.datawarrior.task.ITableRowTask;
-import com.actelion.research.table.model.CompoundRecord;
 import org.openmolecules.datawarrior.plugin.IPluginTask;
 
 import javax.swing.*;
@@ -33,7 +31,7 @@ import java.util.Properties;
 /**
  * This is a facade for any plugin task
  */
-public class DETaskPluginTask extends ConfigurableTask implements ITableRowTask {
+public class DETaskPluginTask extends ConfigurableTask {
 	private IPluginTask mDelegate;
 	private PluginHelper mPluginHelper;
 	private PluginGUIHelper mGUIHelper;
@@ -45,9 +43,9 @@ public class DETaskPluginTask extends ConfigurableTask implements ITableRowTask 
 		mDelegate = delegate;
 		}
 
-//	public IPluginTask getDelegate() {
-//		return mDelegate;
-//		}
+	public IPluginTask getDelegate() {
+		return mDelegate;
+		}
 
 	@Override
 	public boolean isConfigurable() {
@@ -100,22 +98,11 @@ public class DETaskPluginTask extends ConfigurableTask implements ITableRowTask 
 
 	@Override
 	public void setDialogConfigurationToDefault() {
-		//
+		// IPluginTask has no method for this. Instead createDialogContent() should already fill with default values.
 		}
 
 	@Override
 	public String getDefaultButtonText() {
 		return mGUIHelper.getDefaultButtonText();
 		}
-
-	// Implement ITableRowTask interface for all DETaskPluginTasks, because we don't know which of the delegates use it...
-	@Override
-	public void setTableRow(CompoundRecord row) {
-		((ITableRowTask)mDelegate).setTableRow(row);
-		}
-
-	@Override
-	public void initConfiguration(Properties configuration) {
-		((ITableRowTask)mDelegate).initConfiguration(configuration);
-	}
 }

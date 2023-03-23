@@ -19,6 +19,7 @@
 package com.actelion.research.datawarrior.plugin;
 
 import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.datawarrior.task.ITableRowTask;
 import com.actelion.research.datawarrior.task.db.DETaskPluginTask;
 import org.openmolecules.datawarrior.plugin.IPluginInitializer;
 import org.openmolecules.datawarrior.plugin.IPluginStartHelper;
@@ -247,7 +248,12 @@ public class PluginRegistry implements IPluginStartHelper {
 			}
 			else {
 				JMenuItem item = new JMenuItem(pts.getMenuItemName());
-				item.addActionListener(e -> new DETaskPluginTask(mApplication, pts.getTask()).defineAndRun());
+				IPluginTask delegate = pts.getTask();
+				item.addActionListener(e -> {
+					if (delegate instanceof ITableRowTask)
+						((ITableRowTask)delegate).setTableRow(null, null);
+					new DETaskPluginTask(mApplication, delegate).defineAndRun();
+					} );
 				menu.add(item);
 			}
 		}

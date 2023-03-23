@@ -2,6 +2,7 @@ package com.actelion.research.datawarrior;
 
 import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.ITableRowTask;
+import com.actelion.research.datawarrior.task.db.DETaskPluginTask;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 
@@ -9,6 +10,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Properties;
 
+/**
+ * The runtime properties section of a DataWarrior file may define specific tasks,
+ * which can be triggered from the row popup menu and use data from the chosen row to perform the task.
+ * This class defines invoking menu item, optionally a parent menu item that groups multiple tasks,
+ * the task code, and optionally a task configuration taken from the runtime properties.
+ * It also provides the popup menu item's ActionListener that creates and invokes the task.
+ */
 public class DETableRowTaskDef implements ActionListener {
 	private DEFrame mParentFrame;
 	private CompoundRecord mRecord;
@@ -19,7 +27,7 @@ public class DETableRowTaskDef implements ActionListener {
 	 * @param taskCode
 	 * @param taskConfig null or task configuration as one line of key1=value1[&key2=value2]...
 	 * @param parentMenu null or parent menu name that groups this task with others
-	 * @param menuItem menu item name shown to lauch this task
+	 * @param menuItem menu item name shown in the row pupup menu to lauch this task
 	 */
 	public DETableRowTaskDef(DEFrame parent, String taskCode, String taskConfig, String parentMenu, String menuItem) {
 		mParentFrame = parent;
@@ -40,12 +48,20 @@ public class DETableRowTaskDef implements ActionListener {
 			task.defineAndRun();
 	}
 
-	public AbstractTask createTask() {
+	private AbstractTask createTask() {
 		AbstractTask task = mParentFrame.getApplication().getTaskFactory().createTaskFromCode(mParentFrame, mTaskCode);
 		if (task != null) {
-			((ITableRowTask)task).setTableRow(mRecord);
-			if (mTaskConfig != null)
-				((ITableRowTask)task).initConfiguration(createProperties());
+			// The task may implement ITableRowTask itself or
+			// if it is a DETaskPluginTask, then its delegate may implement ITableRowTask.
+			ITableRowTask tableRowTask;
+			if (task instanceof ITableRowTask)
+				tableRowTask = (ITableRowTask)task;
+			else if (task instanceof DETaskPluginTask && ((DETaskPluginTask)task).getDelegate() instanceof ITableRowTask)
+				tableRowTask = (ITableRowTask)((DETaskPluginTask)task).getDelegate();
+			else
+				return null;
+
+			tableRowTask.setTableRow(mRecord, createConfig());
 		}
 		return task;
 	}
@@ -53,7 +69,10 @@ public class DETableRowTaskDef implements ActionListener {
 	/**
 	 * @return Properties constructed from mTaskConfig
 	 */
-	private Properties createProperties() {
+	private Properties createConfig() {
+		if (mTaskConfig == null)
+			return null;
+
 		Properties configuration = new Properties();
 		for (String propertyline:mTaskConfig.split(ITableRowTask.CONFIG_DELIMITER)) {
 			int index = propertyline.indexOf('=');
@@ -74,7 +93,7 @@ public class DETableRowTaskDef implements ActionListener {
 		// if task is associated with a table column and if that column is deleted, then the task is meaningless
 		if (e.getType() == CompoundTableEvent.cRemoveColumns) {
 			if (mTaskConfig != null) {
-				String keyColumn = createProperties().getProperty(ITableRowTask.CONFIG_KEY_COLUMN);
+				String keyColumn = createConfig().getProperty(ITableRowTask.CONFIG_KEY_COLUMN);
 				if (keyColumn != null) {
 					int[] columnMap = e.getMapping();
 					int column = mParentFrame.getTableModel().findColumn(keyColumn);
@@ -92,7 +111,7 @@ public class DETableRowTaskDef implements ActionListener {
 	 */
 	public boolean isValid() {
 		if (mTaskConfig != null) {
-			String keyColumn = createProperties().getProperty(ITableRowTask.CONFIG_KEY_COLUMN);
+			String keyColumn = createConfig().getProperty(ITableRowTask.CONFIG_KEY_COLUMN);
 			if (keyColumn != null && mParentFrame.getTableModel().findColumn(keyColumn) == -1)
 				return false;
 		}

@@ -79,9 +79,14 @@ public interface IUserInterfaceHelper {
 	IPluginHelper getPluginHelper();
 
 	/**
-	 * @return the parent dialog
+	 * @return the parent dialog, which may be null, if dialog is not visible
 	 */
-	Dialog getParentDialog();
+	JDialog getParentDialog();
+
+	/**
+	 * @return the parent dialog, if it is visible; otherwise the DataWarrior's front most window
+	 */
+	Component getParentComponent();
 
 	/**
 	 * @param text text shown on the OK-button (default is 'OK')

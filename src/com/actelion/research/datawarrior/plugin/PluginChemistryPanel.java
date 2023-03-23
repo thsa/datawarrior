@@ -38,7 +38,8 @@ public class PluginChemistryPanel extends JEditableStructureView implements IChe
 	}
 
 	@Override public String getMoleculeAsIDCode() {
-		return new Canonizer(getMolecule()).getIDCode();
+		Canonizer canonizer = new Canonizer(getMolecule());
+		return canonizer.getIDCode().concat(" ").concat(canonizer.getEncodedCoordinates());
 		}
 
 	@Override public String getMoleculeAsMolfileV2() {

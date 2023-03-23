@@ -23,7 +23,7 @@ public class PluginTaskDefinition {
 		return mTask == null ? null : mTask.getTaskCode();
 	}
 
-	public String getTaskGroupNamer() {
+	public String getTaskGroupName() {
 		return mTaskGroupName;
 	}
 }

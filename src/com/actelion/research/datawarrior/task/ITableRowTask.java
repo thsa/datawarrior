@@ -8,6 +8,5 @@ public interface ITableRowTask {
 	String CONFIG_DELIMITER = "&";
 	String CONFIG_KEY_COLUMN = "keyColumn";
 
-	void setTableRow(CompoundRecord row);
-	void initConfiguration(Properties configuration);
+	void setTableRow(CompoundRecord row, Properties configuration);
 }

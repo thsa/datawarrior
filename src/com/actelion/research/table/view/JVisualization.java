@@ -137,8 +137,8 @@ public abstract class JVisualization extends JComponent
 	public static final String[] TREE_VIEW_MODE_NAME = { "<none>", "Layered Graph with root at top", "Layered Graph with root at bottom", "Layered Graph with root at left side", "Layered Graph with root at right side", "Radial Graph with root in center" };
 	public static final String[] TREE_VIEW_MODE_CODE = { "none", "hTree", "hTree2", "vTree", "vTree2", "radial" };
 
-	public static final int cMaxChartCategoryCount = 256;			// this is for one axis
-	public static final int cMaxTotalChartCategoryCount = 32768;	// this is the product of all axis
+	public static final int cMaxChartCategoryCount = 10000;			// this is for one axis
+	public static final int cMaxTotalChartCategoryCount = 100000;	// this is the product of all axis
 	public static final float cAnchoredBarSpacing = 0.08f;  // for bars that touch one end of bar area this spacing is added to the other end
 	public static final float cCenteredBarSpacing = 0.05f;  // for centered bars we add this spacing on both ends of bar area
 	private static final float cLogBarMinSizeFactor = 0.10f;    // bars on logarithic data have this as base height

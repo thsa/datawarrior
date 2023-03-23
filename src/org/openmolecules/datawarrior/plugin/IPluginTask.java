@@ -24,7 +24,7 @@ import java.util.Properties;
 /**
  * This interface defines the methods needed to fulfill a DataWarrior PluginTask.
  * A PluginTask is an externally defined DataWarrior task that is represented by an additional
- * menu item, which if selected shows a configuration dialog. When the dialog is closed, it
+ * menu item, which, if selected shows a configuration dialog. When the dialog is closed, it
  * creates a configuration object, which DataWarrior may pass to the PluginTask's run() method
  * or store as part of a macro.
  * A PluginTask's class is stored within a jar file that resides in DataWarrior's 'plugin' directory.

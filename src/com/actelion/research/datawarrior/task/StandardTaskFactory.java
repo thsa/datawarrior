@@ -24,7 +24,6 @@ import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.DEPruningPanel;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.help.DETaskSetExplanationHTML;
-import com.actelion.research.datawarrior.plugin.PluginMenuEntry;
 import com.actelion.research.datawarrior.plugin.PluginTaskDefinition;
 import com.actelion.research.datawarrior.task.chem.*;
 import com.actelion.research.datawarrior.task.chem.clib.DETaskEnumerateCombinatorialLibrary;
@@ -41,7 +40,6 @@ import com.actelion.research.datawarrior.task.list.*;
 import com.actelion.research.datawarrior.task.macro.*;
 import com.actelion.research.datawarrior.task.table.*;
 import com.actelion.research.datawarrior.task.view.*;
-import org.openmolecules.datawarrior.plugin.IPluginStartHelper;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -289,7 +287,7 @@ public class StandardTaskFactory {
 			 : createPluginTaskFromCode(application, taskCode);
 		}
 
-	private AbstractTask createPluginTaskFromCode(DataWarrior application, String taskCode) {
+	private DETaskPluginTask createPluginTaskFromCode(DataWarrior application, String taskCode) {
 		ArrayList<PluginTaskDefinition> pluginTaskList = application.getPluginRegistry().getPluginTasks();
 		for (PluginTaskDefinition def:pluginTaskList)
 			if (taskCode.equals(def.getTaskCode()))
@@ -509,7 +507,7 @@ public class StandardTaskFactory {
 
 			ArrayList<PluginTaskDefinition> pluginList = frame.getApplication().getPluginRegistry().getPluginTasks();
 			for (PluginTaskDefinition pluginTask:pluginList) {
-				String category = pluginTask.getTaskGroupNamer();
+				String category = pluginTask.getTaskGroupName();
 				if (category == null)
 					mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, pluginTask.getTaskName()));
 				else {

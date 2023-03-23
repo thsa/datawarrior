@@ -20,7 +20,10 @@ package com.actelion.research.datawarrior;
 
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.datawarrior.task.view.DETaskChangeDividerLocation;
-import com.actelion.research.gui.dock.*;
+import com.actelion.research.gui.dock.Dockable;
+import com.actelion.research.gui.dock.ShadowBorder;
+import com.actelion.research.gui.dock.TreeElement;
+import com.actelion.research.gui.dock.TreeFork;
 import com.actelion.research.table.DetailPopupProvider;
 import com.actelion.research.table.RuntimePropertyEvent;
 import com.actelion.research.table.RuntimePropertyListener;
@@ -28,7 +31,11 @@ import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.view.CompoundTableView;
 
 import javax.swing.*;
+import javax.swing.plaf.SplitPaneUI;
+import javax.swing.plaf.basic.BasicSplitPaneUI;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 public class DEParentPane extends JComponent implements DetailPopupProvider  {
@@ -66,18 +73,20 @@ public class DEParentPane extends JComponent implements DetailPopupProvider  {
 		mPruningPanel = new DEPruningPanel(mParentFrame, this, mTableModel);
 		mPruningPanel.setBorder(new ShadowBorder(4,1,3,6));
 
-		mMainSplitPane = new JSplitPane();
+		mMainSplitPane = new JSplitPaneWithUserTracking();
 	    mMainSplitPane.setBorder(null);
 		mMainSplitPane.setOneTouchExpandable(true);
 	    mMainSplitPane.setContinuousLayout(true);
 	    mMainSplitPane.setResizeWeight(0.75);
 	    mMainSplitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, e -> {
-		    DETaskChangeDividerLocation task = new DETaskChangeDividerLocation(parent,
-				    DETaskChangeDividerLocation.VIEW_AREA, DETaskChangeDividerLocation.DETAIL_AREA, getMainSplitting());
-		    DEMacroRecorder.record(task, task.getPredefinedConfiguration());
+	    	if (((JSplitPaneWithUserTracking)e.getSource()).isDragged()) {
+			    DETaskChangeDividerLocation task = new DETaskChangeDividerLocation(parent,
+					    DETaskChangeDividerLocation.VIEW_AREA, DETaskChangeDividerLocation.DETAIL_AREA, getMainSplitting());
+			    DEMacroRecorder.record(task, task.getPredefinedConfiguration());
+		        }
 	        } );
 
-		mRightSplitPane = new JSplitPane();
+		mRightSplitPane = new JSplitPaneWithUserTracking();
 		mRightSplitPane.setBorder(null);
 	    mRightSplitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
 	    mRightSplitPane.setMinimumSize(new Dimension(100, 200));
@@ -86,9 +95,11 @@ public class DEParentPane extends JComponent implements DetailPopupProvider  {
 	    mRightSplitPane.setContinuousLayout(true);
 	    mRightSplitPane.setResizeWeight(0.7);
 		mRightSplitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, e -> {
-			DETaskChangeDividerLocation task = new DETaskChangeDividerLocation(parent,
-					DETaskChangeDividerLocation.FILTER_AREA, DETaskChangeDividerLocation.DETAIL_AREA, getRightSplitting());
-			DEMacroRecorder.record(task, task.getPredefinedConfiguration());
+			if (((JSplitPaneWithUserTracking)e.getSource()).isDragged()) {
+				DETaskChangeDividerLocation task = new DETaskChangeDividerLocation(parent,
+						DETaskChangeDividerLocation.FILTER_AREA, DETaskChangeDividerLocation.DETAIL_AREA, getRightSplitting());
+				DEMacroRecorder.record(task, task.getPredefinedConfiguration());
+				}
 			} );
 
 	    add(mMainSplitPane, BorderLayout.CENTER);
@@ -188,5 +199,28 @@ public class DEParentPane extends JComponent implements DetailPopupProvider  {
 		Component component = treeElement.getComponent();
 		Dockable dockable = (Dockable)(component instanceof JTabbedPane ? ((JTabbedPane)component).getSelectedComponent() : component);
 		return dockable.getTitle();
+		}
+	}
+
+class JSplitPaneWithUserTracking extends JSplitPane {
+	private boolean mMouseDown;
+
+	public JSplitPaneWithUserTracking() {
+		super();
+		SplitPaneUI spui = getUI();
+		if (spui instanceof BasicSplitPaneUI) {
+			((BasicSplitPaneUI) spui).getDivider().addMouseListener(new MouseAdapter() {
+				public void mousePressed(MouseEvent e) {
+					mMouseDown = true;
+				}
+				public void mouseReleased(MouseEvent e) {
+					mMouseDown = false;
+				}
+			} );
+		}
+	}
+
+	public boolean isDragged() {
+		return mMouseDown;
 		}
 	}

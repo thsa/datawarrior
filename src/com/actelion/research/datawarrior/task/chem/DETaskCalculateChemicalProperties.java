@@ -489,7 +489,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 			if ((predictorFlags & flag) != 0 && mPredictor[i] == null) {
 				mPredictor[i] = (flag == PREDICTOR_FLAG_LOGP) ? new CLogPPredictor()
 							  : (flag == PREDICTOR_FLAG_LOGS) ? new SolubilityPredictor()
-							  : (flag == PREDICTOR_FLAG_PKA) ? new PKaPredictor()
+							  : (flag == PREDICTOR_FLAG_PKA && mParentFrame.getApplication().isCapkaAvailable()) ? new PKaPredictor()
 							  : (flag == PREDICTOR_FLAG_SURFACE) ? new TotalSurfaceAreaPredictor()
 							  : (flag == PREDICTOR_FLAG_DRUGLIKENESS) ? new DruglikenessPredictorWithIndex()
 							  : (flag == PREDICTOR_FLAG_TOXICITY) ? new ToxicityPredictor()
@@ -570,8 +570,8 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		addProperty(ACIDIC_PKA, 5, "acidic pKa", "lowest acidic pKa; ChemAxon method", null, null, PREDICTOR_FLAG_PKA);
 		addProperty(BASIC_PKA, 5, "basic pKa", "highest basic pKa; ChemAxon method", null, null, PREDICTOR_FLAG_PKA);
 
-		addProperty(FRACTION_IA, 5, "Fraction Ionized Acid", "Fraction Ionized Acid (based on ChemAxon pKa)", null, null, PREDICTOR_FLAG_PKA);
-		addProperty(FRACTION_IB, 5, "Fraction Ionized Base", "Fraction Ionized Base (based on ChemAxon pKa)", null, null, PREDICTOR_FLAG_PKA);
+		addProperty(FRACTION_IA, 5, "Fraction Ionized Acid", "Fraction Ionized Acid (Henderson–Hasselbalch, ChemAxon pKa)", null, null, PREDICTOR_FLAG_PKA);
+		addProperty(FRACTION_IB, 5, "Fraction Ionized Base", "Fraction Ionized Base (Henderson–Hasselbalch, ChemAxon pKa)", null, null, PREDICTOR_FLAG_PKA);
 		addProperty(FRACTION_ZI, 5, "Fraction Zwitter Ions", "Fraction Zwitter Ions (based on ChemAxon pKa)", null, null, PREDICTOR_FLAG_PKA);
 		addProperty(FRACTION_CHARGED, 5, "Fraction Charged", "Fraction Charged (based on ChemAxon pKa)", null, null, PREDICTOR_FLAG_PKA);
 		addProperty(FRACTION_UNCHARGED, 5, "Fraction Uncharged", "Fraction Uncharged (based on ChemAxon pKa)", null, null, PREDICTOR_FLAG_PKA);
@@ -1328,70 +1328,86 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 						value++;
 				break;
 			case ACIDIC_PKA:
-				if (camol == null)
-					throw new Exception("molecule conversion error");
-
-				value = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).getMostAcidicPKas(camol)[0];
+				if (mPredictor[PREDICTOR_PKA] != null) {
+					if (camol == null)
+						throw new Exception("molecule conversion error");
+					value = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).getMostAcidicPKas(camol)[0];
+					}
 				break;
 			case BASIC_PKA:
-				if (camol == null)
-					throw new Exception("molecule conversion error");
-
-				value = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).getMostBasicPKas(camol)[0];
+				if (mPredictor[PREDICTOR_PKA] != null) {
+					if (camol == null)
+						throw new Exception("molecule conversion error");
+					value = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).getMostBasicPKas(camol)[0];
+					}
 				break;
 			case FRACTION_IA:
-				double acidicpKa = predictNumerical(row, ACIDIC_PKA, dependentColumn, rowInfo);
-				value = Double.isNaN(acidicpKa) ? 0.0 : Math.pow(10, 7.4-acidicpKa)/(1.0+Math.pow(10, 7.4-acidicpKa));
+				if (mPredictor[PREDICTOR_PKA] != null) {
+					double acidicpKa = predictNumerical(row, ACIDIC_PKA, dependentColumn, rowInfo);
+					value = Double.isNaN(acidicpKa) ? 0.0 : Math.pow(10, 7.4 - acidicpKa) / (1.0 + Math.pow(10, 7.4 - acidicpKa));
+					}
 				break;
 			case FRACTION_IB:
-				double basicpKa = predictNumerical(row, BASIC_PKA, dependentColumn, rowInfo);
-				value = Double.isNaN(basicpKa) ? 0.0 : Math.pow(10, basicpKa-7.4)/(1.0+Math.pow(10, basicpKa-7.4));
+				if (mPredictor[PREDICTOR_PKA] != null) {
+					double basicpKa = predictNumerical(row, BASIC_PKA, dependentColumn, rowInfo);
+					value = Double.isNaN(basicpKa) ? 0.0 : Math.pow(10, basicpKa - 7.4) / (1.0 + Math.pow(10, basicpKa - 7.4));
+					}
 				break;
 			case FRACTION_ZI:
-				fia = predictNumerical(row, FRACTION_IA, dependentColumn, rowInfo);
-				fib = predictNumerical(row, FRACTION_IB, dependentColumn, rowInfo);
-				if (!Double.isNaN(fia) && !Double.isNaN(fib))
-					value = fia * fib;
+				if (mPredictor[PREDICTOR_PKA] != null) {
+					fia = predictNumerical(row, FRACTION_IA, dependentColumn, rowInfo);
+					fib = predictNumerical(row, FRACTION_IB, dependentColumn, rowInfo);
+					if (!Double.isNaN(fia) && !Double.isNaN(fib))
+						value = fia * fib;
+					}
 				break;
 			case FRACTION_CHARGED:
-				double fuc = predictNumerical(row, FRACTION_UNCHARGED, dependentColumn, rowInfo);
-				if (!Double.isNaN(fuc))
-					value = 1.0 - fuc;
+				if (mPredictor[PREDICTOR_PKA] != null) {
+					double fuc = predictNumerical(row, FRACTION_UNCHARGED, dependentColumn, rowInfo);
+					if (!Double.isNaN(fuc))
+						value = 1.0 - fuc;
+					}
 				break;
 			case FRACTION_UNCHARGED:
-				fia = predictNumerical(row, FRACTION_IA, dependentColumn, rowInfo);
-				if (Double.isNaN(fia))
-					fia = 0.0;
-				fib = predictNumerical(row, FRACTION_IB, dependentColumn, rowInfo);
-				if (Double.isNaN(fib))
-					fib = 0.0;
-				value = (1.0-fia)*(1.0-fib);
+				if (mPredictor[PREDICTOR_PKA] != null) {
+					fia = predictNumerical(row, FRACTION_IA, dependentColumn, rowInfo);
+					if (Double.isNaN(fia))
+						fia = 0.0;
+					fib = predictNumerical(row, FRACTION_IB, dependentColumn, rowInfo);
+					if (Double.isNaN(fib))
+						fib = 0.0;
+					value = (1.0 - fia) * (1.0 - fib);
+					}
 				break;
 			case CHARGE74:
-				if (camol == null)
-					throw new Exception("molecule conversion error");
+				if (mPredictor[PREDICTOR_PKA] != null) {
+					if (camol == null)
+						throw new Exception("molecule conversion error");
 
-				double[] acidicPKa = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).getMostAcidicPKas(camol);
-				double[] basicPKa = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).getMostBasicPKas(camol);
-				value = 0;
-				for (int i=0; i<3; i++) {
-					if (!Double.isNaN(acidicPKa[i]) && acidicPKa[i] < 7.4)
-						value--;
-					if (!Double.isNaN(basicPKa[i]) && basicPKa[i] > 7.4)
-						value++;
+					double[] acidicPKa = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).getMostAcidicPKas(camol);
+					double[] basicPKa = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).getMostBasicPKas(camol);
+					value = 0;
+					for (int i = 0; i<3; i++) {
+						if (!Double.isNaN(acidicPKa[i]) && acidicPKa[i]<7.4)
+							value--;
+						if (!Double.isNaN(basicPKa[i]) && basicPKa[i]>7.4)
+							value++;
+						}
 					}
 				break;
 			case PERMEABILITY:
-				double mw = predictNumerical(row, FRAGMENT_WEIGHT, dependentColumn, rowInfo);
-				double donors = predictNumerical(row, DONORS, dependentColumn, rowInfo);
-				double rotBonds = predictNumerical(row, ROTATABLE_BONDS, dependentColumn, rowInfo);
-				logP = predictNumerical(row, LOGP, dependentColumn, rowInfo);
-				double tpsa = predictNumerical(row, TPSA, dependentColumn, rowInfo);
-				double charge = predictNumerical(row, CHARGE74, dependentColumn, rowInfo);
-				double fc = predictNumerical(row, FRACTION_CHARGED, dependentColumn, rowInfo);
-				if (!Double.isNaN(mw) && !Double.isNaN(donors) && !Double.isNaN(rotBonds) && !Double.isNaN(logP)
-						&& !Double.isNaN(tpsa) && !Double.isNaN(charge) && !Double.isNaN(fc))
-					value = Math.pow(10, 1.0 - 0.0038*tpsa + 0.0009*mw - 0.092*donors - 0.019*rotBonds - 0.11*fc + 0.0061*charge + 0.075*logP);
+				if (mPredictor[PREDICTOR_PKA] != null) {
+					double mw = predictNumerical(row, FRAGMENT_WEIGHT, dependentColumn, rowInfo);
+					double donors = predictNumerical(row, DONORS, dependentColumn, rowInfo);
+					double rotBonds = predictNumerical(row, ROTATABLE_BONDS, dependentColumn, rowInfo);
+					logP = predictNumerical(row, LOGP, dependentColumn, rowInfo);
+					double tpsa = predictNumerical(row, TPSA, dependentColumn, rowInfo);
+					double charge = predictNumerical(row, CHARGE74, dependentColumn, rowInfo);
+					double fc = predictNumerical(row, FRACTION_CHARGED, dependentColumn, rowInfo);
+					if (!Double.isNaN(mw) && !Double.isNaN(donors) && !Double.isNaN(rotBonds) && !Double.isNaN(logP)
+							&& !Double.isNaN(tpsa) && !Double.isNaN(charge) && !Double.isNaN(fc))
+						value = Math.pow(10, 1.0 - 0.0038 * tpsa + 0.0009 * mw - 0.092 * donors - 0.019 * rotBonds - 0.11 * fc + 0.0061 * charge + 0.075 * logP);
+					}
 				break;
 			case GLOBULARITY_SVD:
 				value = GlobularityCalculator.assessGlobularity(rowInfo.getConformerSet());

@@ -18,19 +18,13 @@
 
 package com.actelion.research.datawarrior.task.macro;
 
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import info.clearthought.layout.TableLayout;
 
-import java.awt.Frame;
+import javax.swing.*;
+import java.awt.*;
 import java.util.Properties;
-
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-
-import com.actelion.research.datawarrior.DEFrame;
 
 public class DETaskShowMessage extends ConfigurableTask {
     public static final String TASK_NAME = "Show Message";
@@ -100,7 +94,7 @@ public class DETaskShowMessage extends ConfigurableTask {
 
 	@Override
 	public void runTask(Properties configuration) {
-		JOptionPane.showMessageDialog(getParentFrame(), configuration.getProperty(PROPERTY_MESSAGE, ""),
+		JOptionPane.showMessageDialog(getParentFrame(), resolveVariables(configuration.getProperty(PROPERTY_MESSAGE, "")),
 									  "Show Message Task", JOptionPane.INFORMATION_MESSAGE);
 		}
 

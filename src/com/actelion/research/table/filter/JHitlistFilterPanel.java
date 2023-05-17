@@ -21,7 +21,6 @@ package com.actelion.research.table.filter;
 import com.actelion.research.table.model.*;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -57,7 +56,7 @@ public class JHitlistFilterPanel extends JFilterPanel implements ActionListener,
 			mComboBox.setEditable(true);
 		p1.add(mComboBox);
 
-		add(p1, BorderLayout.CENTER);
+		addPanel(p1);
 
 		mIsUserChange = true;
 		}

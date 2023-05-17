@@ -25,6 +25,7 @@ import com.actelion.research.chem.reaction.ReactionEncoder;
 import com.actelion.research.chem.reaction.mapping.ChemicalRuleEnhancedReactionMapper;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.chem.DETaskAbstractFromReaction;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.util.ByteArrayComparator;
 import info.clearthought.layout.TableLayout;
 
@@ -33,15 +34,14 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DETaskMapReactions extends DETaskAbstractFromReaction {
-	public static final String TASK_NAME = "Map Reactions";
-
-	private static final boolean CREATE_SCORE_AND_RULE_COLUMNS = true;
+	public static final String TASK_NAME = "Map Reaction Atoms";
 
 	private static final String PROPERTY_NEW_COLUMN = "newColumn";
+	private static final String PROPERTY_RULE_AND_SCORE = "ruleAndScore";
 
-	private JCheckBox mCheckBoxCreateNewReaction;
+	private JCheckBox mCheckBoxCreateNewReaction, mCheckBoxAddRuleAndScore;
 	private int mMappingColumn;
-	private boolean mCreateNewColumn;
+	private boolean mCreateReactionColumns,mAddRuleAndScore,mAddMappingColumn;
 
 	public DETaskMapReactions(DEFrame parent) {
 		super(parent, DESCRIPTOR_NONE, false, true);
@@ -49,9 +49,8 @@ public class DETaskMapReactions extends DETaskAbstractFromReaction {
 
 	@Override
 	protected int getNewColumnCount() {
-		return mCreateNewColumn ? (CREATE_SCORE_AND_RULE_COLUMNS ? 6 : 3)
-				: getTableModel().getChildColumn(getChemistryColumn(),
-				CompoundTableConstants.cColumnTypeReactionMapping) == -1 ? 1 : 0;
+		return (mAddRuleAndScore ? 3 : 0)
+			 + (mCreateReactionColumns ? 4 : mAddMappingColumn ? 1 : 0);
 	}
 
 	@Override
@@ -67,15 +66,17 @@ public class DETaskMapReactions extends DETaskAbstractFromReaction {
 
 	@Override
 	public JPanel getExtendedDialogContent() {
-//		int gap = HiDPIHelper.scale(8);
+		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {TableLayout.PREFERRED},
-							{TableLayout.PREFERRED} };
+							{TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
 
 		mCheckBoxCreateNewReaction = new JCheckBox("Create new reaction column");
+		mCheckBoxAddRuleAndScore = new JCheckBox("Add columns with rule and score");
 
 		JPanel ep = new JPanel();
 		ep.setLayout(new TableLayout(size));
 		ep.add(mCheckBoxCreateNewReaction, "0,0");
+		ep.add(mCheckBoxAddRuleAndScore, "0,2");
 		return ep;
 	}
 
@@ -83,6 +84,7 @@ public class DETaskMapReactions extends DETaskAbstractFromReaction {
 	public Properties getDialogConfiguration() {
 		Properties configuration = super.getDialogConfiguration();
 		configuration.setProperty(PROPERTY_NEW_COLUMN, mCheckBoxCreateNewReaction.isSelected() ? "true" : "false");
+		configuration.setProperty(PROPERTY_RULE_AND_SCORE, mCheckBoxAddRuleAndScore.isSelected() ? "true" : "false");
 		return configuration;
 	}
 
@@ -90,12 +92,14 @@ public class DETaskMapReactions extends DETaskAbstractFromReaction {
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
 		mCheckBoxCreateNewReaction.setSelected("true".equals(configuration.getProperty(PROPERTY_NEW_COLUMN)));
+		mCheckBoxAddRuleAndScore.setSelected("true".equals(configuration.getProperty(PROPERTY_RULE_AND_SCORE)));
 	}
 
 	@Override
 	public void setDialogConfigurationToDefault() {
 		super.setDialogConfigurationToDefault();
-		mCheckBoxCreateNewReaction.setSelected(true);
+		mCheckBoxCreateNewReaction.setSelected(false);
+		mCheckBoxAddRuleAndScore.setSelected(false);
 	}
 
 	@Override
@@ -106,26 +110,32 @@ public class DETaskMapReactions extends DETaskAbstractFromReaction {
 	@Override
 	protected void setNewColumnProperties(int firstNewColumn) {
 		String sourceColumnName = getTableModel().getColumnTitle(getChemistryColumn());
-		if (mCreateNewColumn) {
+		int firstRuleColumn = firstNewColumn;
+		if (mCreateReactionColumns) {
 			getTableModel().prepareReactionColumns(firstNewColumn, "Mapped " + sourceColumnName, false,
-					true, false, false, true, false, false, false);
-			if (CREATE_SCORE_AND_RULE_COLUMNS) {
-				getTableModel().setColumnName("Mapping Score", firstNewColumn+3);
-				getTableModel().setColumnName("Chemical Rule", firstNewColumn+4);
-				getTableModel().setColumnName("Rule History", firstNewColumn+5);
-				}
-			}
-		else  {
+					true, true, false, true, false, false, false);
+			firstRuleColumn += 4;
+		}
+		else if (mAddMappingColumn) {
 			getTableModel().setColumnName(CompoundTableConstants.cColumnTypeReactionMapping, firstNewColumn);
 			getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnTypeReactionMapping);
 			getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertyParentColumn, sourceColumnName);
+			firstRuleColumn++;
+		}
+
+		if (mAddRuleAndScore) {
+			getTableModel().setColumnName("Mapping Score", firstRuleColumn++);
+			getTableModel().setColumnName("Chemical Rule", firstRuleColumn++);
+			getTableModel().setColumnName("Rule History", firstRuleColumn++);
 		}
 	}
 
 	@Override
 	protected boolean preprocessRows(Properties configuration) {
-		mCreateNewColumn = "true".equals(configuration.getProperty(PROPERTY_NEW_COLUMN));
+		mCreateReactionColumns = "true".equals(configuration.getProperty(PROPERTY_NEW_COLUMN));
+		mAddRuleAndScore = "true".equals(configuration.getProperty(PROPERTY_RULE_AND_SCORE));
 		mMappingColumn = getTableModel().getChildColumn(getChemistryColumn(), CompoundTableConstants.cColumnTypeReactionMapping);
+		mAddMappingColumn = !mCreateReactionColumns && mMappingColumn == -1;
 		return super.preprocessRows(configuration);
 	}
 
@@ -149,26 +159,30 @@ b.set(true);
 
 			String[] encoding = ReactionEncoder.encode(rxn, false);
 			if (encoding != null) {
-				if (mCreateNewColumn) {
+				int firstRuleColumn = firstNewColumn;
+				if (mCreateReactionColumns) {
 					getTableModel().setTotalValueAt(encoding[0], row, firstNewColumn);
 					getTableModel().setTotalValueAt(encoding[1], row, firstNewColumn + 1);
-					if (CREATE_SCORE_AND_RULE_COLUMNS) {
-						String ruleName = mapper.getAppliedRule() == null ? "" : mapper.getAppliedRule().getName();
-						getTableModel().setTotalValueAt(Float.toString(mapper.getScore()), row, firstNewColumn + 3);
-						getTableModel().setTotalValueAt(ruleName, row, firstNewColumn + 4);
-						getTableModel().setTotalValueAt(mapper.getHistory(), row, firstNewColumn + 5);
-						}
+					getTableModel().setTotalValueAt(encoding[2], row, firstNewColumn + 2);
+					firstRuleColumn += 4;
 					}
 				else {
 					byte[] rxnCode = (byte[])getTableModel().getTotalRecord(row).getData(getChemistryColumn());
 					if (new ByteArrayComparator().compare(encoding[0].getBytes(), rxnCode) == 0) {
 						getTableModel().setTotalValueAt(encoding[1], row, mMappingColumn == -1 ? firstNewColumn : mMappingColumn);
-					}
+						}
 					else {
 						System.out.println("rxnCode mismatch:");
 						System.out.println("old:"+new String(rxnCode));
 						System.out.println("new:"+encoding[0]);
 					}
+				}
+
+				if (mAddRuleAndScore) {
+					String ruleName = mapper.getAppliedRule() == null ? "" : mapper.getAppliedRule().getName();
+					getTableModel().setTotalValueAt(Float.toString(mapper.getScore()), row, firstRuleColumn++);
+					getTableModel().setTotalValueAt(ruleName, row, firstRuleColumn++);
+					getTableModel().setTotalValueAt(mapper.getHistory(), row, firstRuleColumn++);
 				}
 			}
 		}
@@ -179,7 +193,9 @@ b.set(true);
 
 	@Override
 	protected void postprocess(int firstNewColumn) {
-		if (!mCreateNewColumn)
-			getTableModel().setHiliteMode(getTableModel().getParentColumn(mMappingColumn), CompoundTableConstants.cReactionHiliteModeReactionCenter);
+		if (!mCreateReactionColumns) {
+			int reactionColumn = getTableModel().getParentColumn(mAddMappingColumn ? firstNewColumn : mMappingColumn);
+			getTableModel().setHiliteMode(reactionColumn, CompoundTableConstants.cReactionHiliteModeReactionCenter);
+			}
 		}
 	}

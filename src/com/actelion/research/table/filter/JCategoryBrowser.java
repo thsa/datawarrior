@@ -108,7 +108,7 @@ public class JCategoryBrowser extends JFilterPanel
 
 		updateComboBox();
 
-		add(contentPanel, BorderLayout.CENTER);
+		addPanel(contentPanel);
 
 		mIsUserChange = true;
 		}

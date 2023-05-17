@@ -19,7 +19,10 @@
 package com.actelion.research.table.filter;
 
 import com.actelion.research.chem.AbstractDepictor;
+import com.actelion.research.chem.ExtendedDepictor;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.chem.reaction.ReactionEncoder;
+import com.actelion.research.gui.JChemistryView;
 import com.actelion.research.gui.JStructureView;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -42,6 +45,9 @@ public class JCategoryFilterPanel extends JFilterPanel
 
 	public static final int cPreferredCheckboxCount = 16;
 	public static final int cMaxCheckboxCount = 128;
+
+	private static final int MINIMUM_CHECKBOX_WIDTH = HiDPIHelper.scale(100);
+	private static final int STRUCTURE_HEIGHT = HiDPIHelper.scale(48);
 
 	private String[]	mCategoryList;
 	private JCheckBox[]	mCheckBox;
@@ -68,17 +74,18 @@ public class JCategoryFilterPanel extends JFilterPanel
 		else {
 			addTextField();
 			}
-		add(mCategoryOptionPanel, BorderLayout.CENTER);
+		addPanel(mCategoryOptionPanel);
 
 		mIsUserChange = true;
 		}
 
 	private void addTextField() {
-		double[][] size = { {4, TableLayout.PREFERRED, 4},
-							{TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 4} };
+		int gap = HiDPIHelper.scale(4);
+		double[][] size = { {gap, TableLayout.PREFERRED, gap},
+							{TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap} };
 		mCategoryOptionPanel.setLayout(new TableLayout(size));
 		mTextArea = new JTextArea();
-		mTextArea.setPreferredSize(new Dimension(300, 128));
+		mTextArea.setPreferredSize(new Dimension(HiDPIHelper.scale(300), HiDPIHelper.scale(128)));
 		JScrollPane scrollPane = new JScrollPane(mTextArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
 		mCategoryOptionPanel.add(new JLabel("Excluded categories:"), "1,0");
@@ -86,49 +93,73 @@ public class JCategoryFilterPanel extends JFilterPanel
 		}
 
 	private void addCheckBoxes() {
-		boolean isIDCode = mTableModel.isColumnTypeStructure(mColumnIndex);
+		boolean isRxn = mTableModel.isColumnTypeReaction(mColumnIndex);
+		boolean isChem = isRxn || mTableModel.isColumnTypeStructure(mColumnIndex);
 		mCategoryList = mTableModel.getCategoryList(mColumnIndex);
 		mCheckBox = new JCheckBox[mCategoryList.length];
 
 		double[] sizeV = new double[mCategoryList.length+1];
 		for (int i=0; i<mCategoryList.length; i++)
-			sizeV[i] = HiDPIHelper.scale(isIDCode && !CompoundTableConstants.cTextMultipleCategories.equals(mCategoryList[i]) ?
+			sizeV[i] = HiDPIHelper.scale(isChem && !CompoundTableConstants.cTextMultipleCategories.equals(mCategoryList[i]) ?
 					Math.max(36, Math.min(100, (int)Math.sqrt(200*mCategoryList[i].length()))) : 18);
-		sizeV[mCategoryList.length] = 4;
-		double[] sizeH = isIDCode ? new double[2] : new double[1];
-		sizeH[0] = isIDCode ? HiDPIHelper.scale(24) : TableLayout.PREFERRED;
-		if (isIDCode)
-			sizeH[1] = TableLayout.PREFERRED;
+		sizeV[mCategoryList.length] = HiDPIHelper.scale(4);
+		double[] sizeH = isChem ? new double[2] : new double[1];
+		sizeH[0] = isChem ? HiDPIHelper.scale(24) : TableLayout.FILL;
+		if (isChem)
+			sizeH[1] = TableLayout.FILL;
 		double[][] size = { sizeH, sizeV };
 		mCategoryOptionPanel.setLayout(new TableLayout(size));
 
 		for (int i=0; i<mCategoryList.length; i++) {
-			String categoryName = isIDCode ? "" : mCategoryList[i];
+			String categoryName = isChem ? "" : mCategoryList[i];
 			if (categoryName.length() > 32)
 				categoryName = categoryName.substring(0, 30) + " ...";
-			mCheckBox[i] = new JCheckBox(categoryName, true);
+			mCheckBox[i] = new JCheckBox(categoryName, true) {
+				@Override public Dimension getPreferredSize() {
+					Dimension size = super.getPreferredSize();
+					size.width = Math.min(size.width, MINIMUM_CHECKBOX_WIDTH);
+					return size;
+				}
+			};
 			// Change font to allow displaying rare unicode characters
 			mCheckBox[i].setFont(new Font(Font.SANS_SERIF, Font.PLAIN, mCheckBox[i].getFont().getSize()));
 			mCheckBox[i].addMouseListener(this);
 			mCheckBox[i].setActionCommand("cat"+i);
 			mCheckBox[i].addActionListener(this);
 			mCategoryOptionPanel.add(mCheckBox[i], "0,"+i);
-			if (isIDCode) {
+			if (isChem) {
 				String idcode = mCategoryList[i];
 				if (idcode != null && idcode.length() != 0) {
 					if (idcode.equals(CompoundTableConstants.cTextMultipleCategories)) {
-						mCategoryOptionPanel.add(new JLabel("multiple structures"), "1,"+i);
+						mCategoryOptionPanel.add(new JLabel("multiple "+(isRxn ? "reactions" : "structures")), "1,"+i);
 						}
 					else {
-						int index = idcode.indexOf(' ');
-						JStructureView view = new JStructureView(DnDConstants.ACTION_COPY_OR_MOVE, 0);
-						view.setDisplayMode(AbstractDepictor.cDModeHiliteAllQueryFeatures | AbstractDepictor.cDModeSuppressChiralText);
-						view.setClipboardHandler(new ClipboardHandler());
-						if (index == -1)
-							view.setIDCode(idcode);
-						else
-							view.setIDCode(idcode.substring(0, index), idcode.substring(index+1));
-						view.setPreferredSize(new Dimension(HiDPIHelper.scale(120), HiDPIHelper.scale(48)));
+						Component view;
+						if (isRxn) {
+							view = new JChemistryView(ExtendedDepictor.TYPE_REACTION, DnDConstants.ACTION_COPY_OR_MOVE, 0) {
+								@Override public Dimension getPreferredSize() {
+									Dimension size = super.getPreferredSize();
+									size.width = Math.min(size.width, MINIMUM_CHECKBOX_WIDTH);
+									return new Dimension(STRUCTURE_HEIGHT, STRUCTURE_HEIGHT);
+									}
+								};
+							((JChemistryView)view).setDisplayMode(AbstractDepictor.cDModeHiliteAllQueryFeatures | AbstractDepictor.cDModeSuppressChiralText);
+							((JChemistryView)view).setContent(ReactionEncoder.decode(idcode, true));
+//							view.setPreferredSize(new Dimension(HiDPIHelper.scale(200), HiDPIHelper.scale(48)));
+							}
+						else {
+							view = new JStructureView(DnDConstants.ACTION_COPY_OR_MOVE, 0) {
+								@Override public Dimension getPreferredSize() {
+									Dimension size = super.getPreferredSize();
+									size.width = Math.min(size.width, MINIMUM_CHECKBOX_WIDTH);
+									return new Dimension(STRUCTURE_HEIGHT, STRUCTURE_HEIGHT);
+									}
+								};
+							((JStructureView)view).setDisplayMode(AbstractDepictor.cDModeHiliteAllQueryFeatures | AbstractDepictor.cDModeSuppressChiralText);
+							((JStructureView)view).setClipboardHandler(new ClipboardHandler());
+							((JStructureView)view).setIDCode(idcode);
+//							view.setPreferredSize(new Dimension(HiDPIHelper.scale(120), HiDPIHelper.scale(48)));
+							}
 						mCategoryOptionPanel.add(view, "1, "+i);
 						}
 					}

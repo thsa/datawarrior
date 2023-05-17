@@ -64,11 +64,12 @@ public abstract class JFilterPanel extends JPanel
 	private static final String DISABLED_CODE = "#disabled#";
 
 	private static final int ALLOWED_DRAG_ACTIONS = DnDConstants.ACTION_COPY_OR_MOVE;
+	private static final int MINIMUM_WIDTH = HiDPIHelper.scale(120);
 
 	protected CompoundTableModel mTableModel;
 	protected int mColumnIndex, mExclusionFlag;
 	protected boolean mIsUserChange;    // Is set from derived classes once the UI is complete
-	// and is temporarily disabled, whenever a programmatic change occurs.
+										// and is temporarily disabled, whenever a programmatic change occurs.
 	private JLabel mColumnNameLabel;
 	private JPanel mTitlePanel;
 	private HiDPIIconButton mAnimationButton;
@@ -98,24 +99,20 @@ public abstract class JFilterPanel extends JPanel
 		mTitlePanel = new JPanel();
 		int gap = HiDPIHelper.scale(4);
 		double[][] size = {{gap, TableLayout.FILL, gap, TableLayout.PREFERRED, TableLayout.PREFERRED, gap, TableLayout.PREFERRED},
-				{TableLayout.PREFERRED, gap/2}};
+							{TableLayout.PREFERRED, gap/2}};
 		mTitlePanel.setLayout(new TableLayout(size));
 		mTitlePanel.setOpaque(false);
 		mColumnNameLabel = new JLabel(getTitle()) {
 			private static final long serialVersionUID = 0x20080128;
 
-			@Override public Dimension getMaximumSize() {
-				Dimension size = super.getMaximumSize();
-				size.width = Math.min(size.width, HiDPIHelper.scale(50));
-				return size;
-				}
+			// Together with the TableLayout.FILL above, this allows both, abreviated and long full text labels!
 			@Override public Dimension getPreferredSize() {
 				Dimension size = super.getPreferredSize();
 				size.width = Math.min(size.width, HiDPIHelper.scale(50));
 				return size;
-			}
+				}
 			};
-//		mColumnNameLabel.setMaximumSize(new Dimension(HiDPIHelper.scale(50), mColumnNameLabel.getMaximumSize().height));
+
 		mTitlePanel.add(mColumnNameLabel, "1,0");
 		if (useProgressBar) {
 			mProgressPanel = new JProgressPanel(false);
@@ -181,6 +178,26 @@ public abstract class JFilterPanel extends JPanel
 		if (showAnimationOptions)
 			mAnimator = new Animator(getDefaultFrameMillis());
 		}
+
+	protected void addPanel(JPanel panel) {
+		add(panel, BorderLayout.CENTER);
+		}
+
+	@Override public Dimension getPreferredSize() {
+		return new Dimension(MINIMUM_WIDTH, super.getPreferredSize().height);
+		}
+
+	@Override public Dimension getMinimumSize() {
+		return new Dimension(MINIMUM_WIDTH, super.getPreferredSize().height);
+	}
+
+//	@Override public Dimension getMaximumSize() {
+//		return new Dimension(mPreferredWidth, super.getPreferredSize().height);
+//	}
+
+//	public void setPreferredWidth(int width) {
+//		mPreferredWidth = width;
+//		}
 
 	public boolean isPotentiallyDragged() {
 		return mIsMouseDown;

@@ -81,7 +81,7 @@ public class JRetronFilterPanel extends JFilterPanel implements DescriptorConsta
 
 		enableItems(isEnabled());
 
-		add(contentPanel, BorderLayout.CENTER);
+		addPanel(contentPanel);
 
 		if (mol != null)
 			updateExclusion(false);

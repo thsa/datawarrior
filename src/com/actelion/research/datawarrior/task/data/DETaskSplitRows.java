@@ -38,7 +38,7 @@ public class DETaskSplitRows extends AbstractSingleColumnTask {
 
 	@Override
 	public boolean isCompatibleColumn(int column) {
-		return getTableModel().isMultiEntryColumn(column);
+		return getTableModel().isMultiEntryColumn(column); // TODO || getTableModel().isColumnTypeStructure(column);
 	}
 
 	@Override
@@ -55,12 +55,18 @@ public class DETaskSplitRows extends AbstractSingleColumnTask {
 	public void runTask(Properties configuration) {
 		int column = getColumn(configuration);
 
+		boolean isStructure = getTableModel().isColumnTypeStructure(column);
+
+		String[][] entries = new String[getTableModel().getTotalRowCount()][];
+
 		String regex = getTableModel().isMultiLineColumn(column) ? "\\n" : "; ";
 
 		int newRowCount = 0;
 		startProgress("Analysing column...", 0, getTableModel().getTotalRowCount());
-		for (int row=0; row<getTableModel().getTotalRowCount(); row++)
-			newRowCount += separateEntries(getTableModel().getTotalValueAt(row, column), regex).length - 1;
+		for (int row=0; row<getTableModel().getTotalRowCount(); row++) {
+			entries[row] = separateEntries(getTableModel().getTotalValueAt(row, column), regex);
+			newRowCount += entries[row].length - 1;
+			}
 
 		if (newRowCount == 0) {
 			showMessage("No rows were split, because column '"+getTableModel().getColumnTitle(column)+"' doesn't contain multiple values.", JOptionPane.INFORMATION_MESSAGE);
@@ -92,7 +98,7 @@ public class DETaskSplitRows extends AbstractSingleColumnTask {
 		int newRow = oldRowCount + newRowCount - 1;
 		int rowID = oldRowCount;
 		for (int oldRow=oldRowCount-1; oldRow>=0; oldRow--) {
-			String[] entry = separateEntries(getTableModel().getTotalValueAt(oldRow, column), regex);
+			String[] entry = entries[oldRow];
 			getTableModel().moveRow(oldRow, newRow--);
 			if (entry.length > 1) {
 				for (int i=1; i<entry.length; i++)
@@ -125,5 +131,4 @@ public class DETaskSplitRows extends AbstractSingleColumnTask {
 
 		return data.split(regex, -1);
 	}
-
 }

@@ -86,7 +86,7 @@ public class JTextFilterPanel extends JFilterPanel implements ActionListener,Ite
 			});
  		contentPanel.add(mTextField, "2,0,2,2");
 
-		add(contentPanel, BorderLayout.CENTER);
+		addPanel(contentPanel);
 
 		mIsUserChange = true;
 		}

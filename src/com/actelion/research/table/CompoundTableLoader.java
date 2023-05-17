@@ -29,6 +29,7 @@ import com.actelion.research.chem.io.RDFileParser;
 import com.actelion.research.chem.io.SDFileParser;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.chem.reaction.ReactionEncoder;
+import com.actelion.research.chem.reaction.mapping.ChemicalRuleEnhancedReactionMapper;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.JProgressDialog;
 import com.actelion.research.io.BOMSkipper;
@@ -141,7 +142,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private volatile TreeMap<String,DataDependentPropertyReader> mDataDependentPropertyReaderMap;
 	private int					mOldVersionIDCodeColumn,mOldVersionCoordinateColumn,mOldVersionCoordinate3DColumn;
 	private boolean				mWithHeaderLine,mAppendRest,mCoordsMayBe3D,mIsGooglePatentsFile,mIsFiltersOnly,
-								mMolnameFound,mMolnameIsDifferentFromFirstField,mAssumeChiralFlag;
+								mMolnameFound,mMolnameIsDifferentFromFirstField,mAssumeChiralFlag,mAddAtomMapping;
 	private volatile boolean	mOwnsProgressController;
 	private volatile int		mDelimiter;
 	private String				mNewWindowTitle,mVersion;
@@ -1121,13 +1122,24 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					break;
 					}
 				}
-			boolean mappingFound = false;
+			int rxnCount = 0;
+			int unmapped = 0;
 			for (int row=0; row<mFieldData.length; row++) {
-				if (mFieldData[row][smilesColumn+1] != null) {
-					mappingFound = true;
-					break;
+				if (mFieldData[row][smilesColumn] != null) {
+					rxnCount++;
+					if (mFieldData[row][smilesColumn+1] == null) {
+						unmapped++;
+						}
+					}
 				}
-			}
+
+			if (rxnCount != 0 && unmapped != 0 && askOnEDT((rxnCount == unmapped ? "Y" : "Some of y")
+							+ "our reactions don't contain atom mapping information.\n"
+							+ "Do you want DataWarrior to create plausible atom mapping?", "Warning",
+					JOptionPane.WARNING_MESSAGE)) {
+				insertReactionMappingSMP(smilesColumn, smilesColumn+2, smilesColumn+1, unmapped);
+				}
+
 			if (!catalystsFound) {
 				newColumnName = Arrays.copyOf(reactionColumnName, reactionColumnName.length-3);
 				for (int row=0; row<mFieldData.length; row++) {
@@ -1354,6 +1366,53 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		catch (Exception e) {}
 
 		return null;
+		}
+
+	private void insertReactionMappingSMP(int rxnColumn, int coordsColumn, int mappingColumn, int unmappedCount) {
+		Thread st = new Thread("Mapping Supervisor") {
+			public void run() {
+				int threadCount = Runtime.getRuntime().availableProcessors();
+				final AtomicInteger mSMPIndex = new AtomicInteger(mFieldData.length);
+				final AtomicInteger mMapCount = new AtomicInteger(0);
+				mProgressController.startProgress("Mapping atoms of "+unmappedCount+" reactions...", 0, unmappedCount);
+				Thread[] t = new Thread[threadCount];
+				for (int i=0; i<threadCount; i++) {
+					t[i] = new Thread("Mapping Calculator "+(i+1)) {
+						public void run() {
+							int row = mSMPIndex.decrementAndGet();
+							while (row >= 0) {
+								if (mFieldData[row][mappingColumn] == null) {
+									Object[] rowData = mFieldData[row];
+									Reaction rxn = ReactionEncoder.decode((byte[])rowData[rxnColumn], null, (byte[])rowData[coordsColumn], null, null, false);
+									ChemicalRuleEnhancedReactionMapper mapper = new ChemicalRuleEnhancedReactionMapper();
+									mapper.map(rxn);
+									String[] encoding = ReactionEncoder.encode(rxn, false);
+									if (encoding != null)
+										rowData[mappingColumn] = encoding[1].getBytes();
+
+									mProgressController.updateProgress(mMapCount.incrementAndGet());
+									}
+
+								row = mSMPIndex.decrementAndGet();
+								}
+							}
+						};
+					t[i].setPriority(Thread.MIN_PRIORITY);
+					t[i].start();
+					}
+				for (int i = 0; i < threadCount; i++)
+					try {
+						t[i].join();
+						}
+					catch (InterruptedException ie) {
+					}
+				}
+			};
+		st.start();
+		try {
+			st.join();
+			}
+		catch (InterruptedException ie) {}
 		}
 
 	private void deduceColumnTitles() {
@@ -1876,6 +1935,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 
 		rdParser = new RDFileParser(mFile);
 		int errors = 0;
+		int rxnCount = 0;
+		int unmapped = 0;
 		String name = null;
 		boolean nameFound = false;
 
@@ -1896,6 +1957,9 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 						fieldData[1] = getBytes(encoded[0]);
 						fieldData[2] = getBytes(encoded[2]);    // coords
 						fieldData[3] = getBytes(encoded[1]);    // mapping
+						rxnCount++;
+						if (fieldData[3] == null)
+							unmapped++;
 						}
 					}
 				else {
@@ -1961,6 +2025,14 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		if (errors > 0) {
 			final String message = ""+errors+" compound structures could not be generated because of molfile parsing errors.";
 			showMessageOnEDT(message, "Import Errors", JOptionPane.WARNING_MESSAGE);
+			}
+
+		if (rxnCount != 0 && unmapped != 0 && (mAddAtomMapping || askOnEDT((rxnCount == unmapped ? "Some" : "All")
+						+ " of your reactions miss atom mapping information.\n"
+						+ "Do you want DataWarrior to create plausible atom mapping?", "Warning",
+				JOptionPane.WARNING_MESSAGE))) {
+			mAddAtomMapping = true;
+			insertReactionMappingSMP(1, 2, 3, unmapped);
 			}
 
 		if (!isReactions) {
@@ -2837,6 +2909,14 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 
 	public void setAssumeChiralFlag(boolean b) {
 		mAssumeChiralFlag = b;
+		}
+
+	public boolean isAddAtomMapping() {
+		return mAddAtomMapping;
+		}
+
+	public void setAddAtomMapping(boolean b) {
+		mAddAtomMapping = b;
 		}
 
 	public int getCSVDelimiter() {

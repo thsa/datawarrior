@@ -163,6 +163,7 @@ public class JVisualization2D extends JVisualization {
 	private volatile boolean mSkipPaintDetails;
 	private volatile Thread	mFullDetailPaintThread;
 
+	private Rectangle       mBoundsWithoutLegend;
 	private Graphics2D		mG;
 	private Composite		mLabelBackgroundComposite;
 	private Stroke          mThinLineStroke,mNormalLineStroke,mFatLineStroke,mVeryFatLineStroke,mConnectionStroke;
@@ -181,7 +182,6 @@ public class JVisualization2D extends JVisualization {
 	private VisualizationColor	mBackgroundColor;
 	private LabelHelper     mLabelHelper;
 	private Color[]			mMultiValueMarkerColor;
-	private Color[][][]		mBackground;
 	private Depictor2D[][]	mScaleDepictor,mSplittingDepictor;
 	private VolatileImage	mOffImage;
 	private BufferedImage   mBackgroundImage;		// primary data
@@ -375,24 +375,24 @@ public class JVisualization2D extends JVisualization {
 		if (!mCrossHairList.isEmpty()) {
 			if (isSplitView()) {
 				for (int hv = 0; hv<mHVCount; hv++) {
-					Rectangle bounds = getGraphBounds(mSplitter.getSubViewBounds(hv));
+					Rectangle graphBounds = getGraphBounds(mSplitter.getSubViewBounds(hv));
 					for (GraphPoint p:mCrossHairList)
-						drawCrossHair((Graphics2D)g, (float)p.getRelativeX(), (float)p.getRelativeY(), bounds);
+						drawCrossHair((Graphics2D)g, (float)p.getRelativeX(), (float)p.getRelativeY(), graphBounds);
 					}
 				}
 			else {
-				Rectangle bounds = getGraphBounds(getFullGraphBounds());
+				Rectangle graphBounds = getGraphBounds(mBoundsWithoutLegend);
 				for (GraphPoint p:mCrossHairList)
-					drawCrossHair((Graphics2D)g, (float)p.getRelativeX(), (float)p.getRelativeY(), bounds);
+					drawCrossHair((Graphics2D)g, (float)p.getRelativeX(), (float)p.getRelativeY(), graphBounds);
 				}
 			}
 
 		// draw interactive cross hair if mouse is in area
 		if (showCrossHair()) {
-			Rectangle bounds = getGraphBounds(mMouseX1, mMouseY1, true);
-			if (bounds != null)
-				drawCrossHair((Graphics2D)g, (mMouseX1-bounds.x)/(float)bounds.width,
-						(bounds.y+bounds.height-mMouseY1)/(float)bounds.height, bounds);
+			Rectangle graphBounds = getGraphBounds(mMouseX1, mMouseY1, true);
+			if (graphBounds != null)
+				drawCrossHair((Graphics2D)g, (mMouseX1-graphBounds.x)/(float)graphBounds.width,
+						(graphBounds.y+graphBounds.height-mMouseY1)/(float)graphBounds.height, graphBounds);
 			}
 
 		drawSelectionOutline(g);
@@ -600,19 +600,20 @@ public class JVisualization2D extends JVisualization {
 		mLabelHelper = null;
 
 		calculateMarkerSize(bounds);    // marker sizes are needed for size legend
-		calculateLegend(bounds, (int)scaleIfSplitView(mFontHeight));
+		mBoundsWithoutLegend = new Rectangle(bounds);
+		calculateLegend(mBoundsWithoutLegend, (int)scaleIfSplitView(mFontHeight));
 
 		if (isSplitView()) {
 			int scaledFontHeight = Math.round(scaleIfSplitView(mFontHeight));
 			if (mLegendList.size() != 0)
-				bounds.height -= scaledFontHeight / 2;
+				mBoundsWithoutLegend.height -= scaledFontHeight / 2;
 			compileSplittingHeaderMolecules();
 			int count1 = mShowEmptyInSplitView ? mTableModel.getCategoryCount(mSplittingColumn[0]) : calculateVisibleCategoryCount(mSplittingColumn[0]);
 			int count2 = (mSplittingColumn[1] == cColumnUnassigned) ? -1
 					: mShowEmptyInSplitView ? mTableModel.getCategoryCount(mSplittingColumn[1]) : calculateVisibleCategoryCount(mSplittingColumn[1]);
 			boolean largeHeader = (mSplittingDepictor[0] != null
 					|| mSplittingDepictor[1] != null);
-			mSplitter = new VisualizationSplitter(bounds, count1, count2, scaledFontHeight, largeHeader, mSplittingAspectRatio);
+			mSplitter = new VisualizationSplitter(mBoundsWithoutLegend, count1, count2, scaledFontHeight, largeHeader, mSplittingAspectRatio);
 			}
 
 		switch (mChartType) {
@@ -622,7 +623,7 @@ public class JVisualization2D extends JVisualization {
 				break;
 			case cChartTypeBars:
 			case cChartTypePies:
-				double widthHeightRatio = (bounds.height <= 0) ? 1.0 : (double)bounds.width / (double)bounds.height;
+				double widthHeightRatio = (mBoundsWithoutLegend.height <= 0) ? 1.0 : (double)mBoundsWithoutLegend.width / (double)mBoundsWithoutLegend.height;
 				if (mSplitter != null)
 					widthHeightRatio *= (double)mSplitter.getVCount() / (double)mSplitter.getHCount();
 				calculateBarsOrPies(widthHeightRatio);
@@ -630,7 +631,7 @@ public class JVisualization2D extends JVisualization {
 			}
 
 		// total bounds of first split (or total unsplit) graphical including scales
-		Rectangle baseBounds = isSplitView() ? mSplitter.getSubViewBounds(0) : bounds;
+		Rectangle baseBounds = isSplitView() ? mSplitter.getSubViewBounds(0) : mBoundsWithoutLegend;
 
 		boolean hasFreshCoords = false;
 		if (!mCoordinatesValid) {
@@ -688,7 +689,7 @@ public class JVisualization2D extends JVisualization {
 																		 : getTitleBackground().brighter().brighter();
 			mSplitter.paintGrid(mG, borderColor, getTitleBackground());
 			for (int hv=0; hv<mHVCount; hv++)
-				paintGraph(getGraphBounds(mSplitter.getSubViewBounds(hv)), hv, transparentBG);
+				paintGraph(getGraphBounds(mSplitter.getSubViewBounds(hv)), hv);
 
 			mG.setColor(getContrastGrey(SCALE_STRONG, getTitleBackground()));
 			mG.setFont(new Font(Font.SANS_SERIF, Font.BOLD, scaledFontHeight));
@@ -772,7 +773,7 @@ public class JVisualization2D extends JVisualization {
 			}
 		else {
 			mSplitter = null;
-			paintGraph(baseGraphRect, 0, transparentBG);
+			paintGraph(baseGraphRect, 0);
 			}
 
 		switch (mChartType) {
@@ -792,10 +793,10 @@ public class JVisualization2D extends JVisualization {
 			break;
 			}
 
-		paintLegend(bounds, transparentBG);
+		paintLegend(mBoundsWithoutLegend, transparentBG);
 
 		if (!mIsHighResolution)
-			paintMessages(mG, bounds.x, bounds.width);
+			paintMessages(mG, mBoundsWithoutLegend.x, mBoundsWithoutLegend.width);
 		}
 
 	/**
@@ -834,14 +835,13 @@ public class JVisualization2D extends JVisualization {
 				}
 			}
 		else {
-			Rectangle allBounds = getFullGraphBounds();
-			Rectangle bounds = getGraphBounds(allBounds);
+			Rectangle bounds = getGraphBounds(mBoundsWithoutLegend);
 			if (tolerant) {
 				int gap = Math.min(mBorder, mFontHeight);
-				if (screenX > allBounds.x + gap
-				 && screenX < allBounds.x + allBounds.width - mBorder
-				 && screenY > allBounds.y + mBorder
-				 && screenY < allBounds.y + allBounds.height - gap)
+				if (screenX > mBoundsWithoutLegend.x + gap
+				 && screenX < mBoundsWithoutLegend.x + mBoundsWithoutLegend.width - mBorder
+				 && screenY > mBoundsWithoutLegend.y + mBorder
+				 && screenY < mBoundsWithoutLegend.y + mBoundsWithoutLegend.height - gap)
 					return bounds;
 				}
 			else {
@@ -855,17 +855,19 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	/**
-	 * @return
+	 * In case of a split view this method returns the bounds of that rectangle, which contains P(x,y).
+	 * This includes NaN area, border, scales and axis text. If the view is not split, then the full view
+	 * bounds are returned.
+	 * @param x
+	 * @param y
+	 * @return may be null, if x,y is not within a view area
 	 */
-	private Rectangle getFullGraphBounds() {
-		int width = getWidth();
-		int height = getHeight();
-		Insets insets = getInsets();
-		Rectangle allBounds = new Rectangle(insets.left, insets.top, width-insets.left-insets.right, height-insets.top-insets.bottom);
-		for (VisualizationLegend legend:mLegendList)
-			allBounds.height -= legend.getHeight();
-
-		return allBounds;
+	public Rectangle getViewBounds(int x, int y) {
+		if (isSplitView()) {
+			int hv = mSplitter.getHVIndex(x, y, true);
+			return (hv != -1) ? mSplitter.getSubViewBounds(hv) : null;
+			}
+		return mBoundsWithoutLegend;
 		}
 
 	/**
@@ -914,7 +916,7 @@ public class JVisualization2D extends JVisualization {
 		return graphBounds;
 		}
 
-	private void paintGraph(Rectangle graphRect, int hvIndex, boolean transparentBG) {
+	private void paintGraph(Rectangle graphRect, int hvIndex) {
 		setFontHeightAndScaleToSplitView(mFontHeight);
 
 		if (hasColorBackground()) {
@@ -2855,17 +2857,17 @@ public class JVisualization2D extends JVisualization {
 			&& (mSplitter == null || mSplitter.getHVIndex(mMouseX1, mMouseY1, false) != -1);
 		}
 
-	private void drawCrossHair(Graphics2D g, float positionX, float positionY, Rectangle bounds) {
+	private void drawCrossHair(Graphics2D g, float positionX, float positionY, Rectangle graphRect) {
 		g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, (int)scaleIfSplitView(mFontHeight)));
 		if (positionX >= 0 && qualifiesAsCrossHairAxis(0)) {
 			Object label = calculateDynamicScaleLabel(0, positionX);
 			if (label != null)
-				drawScaleLine(g, bounds, 0, label, positionX, true, false);
+				drawScaleLine(g, graphRect, 0, label, positionX, true, false);
 			}
 		if (positionY >= 0 && qualifiesAsCrossHairAxis(1)) {
 			Object label = calculateDynamicScaleLabel(1, positionY);
 			if (label != null)
-				drawScaleLine(g, bounds, 1, label, positionY, true, false);
+				drawScaleLine(g, graphRect, 1, label, positionY, true, false);
 			}
 		}
 
@@ -5862,20 +5864,9 @@ public class JVisualization2D extends JVisualization {
 		if (isCrossHair) {
 			int crossHairBorder = Math.round(CROSSHAIR_LABEL_BORDER * scaledFontHeight);
 			if (axis == 0) {
+				Rectangle bounds = getViewBounds(graphRect.x, graphRect.y);
 				x = Math.max(graphRect.x, Math.min(graphRect.x+graphRect.width-w, x));
-				if (showScale(axis)) {
-					y += crossHairBorder;
-					}
-				else if (mLegendList.size() == 0) {
-					y -= h + crossHairBorder;
-					}
-				else {
-					int legendSize = 0;
-					for (VisualizationLegend legend:mLegendList)
-						legendSize += legend.getHeight();
-
-					y = Math.min(y+crossHairBorder, y-h-crossHairBorder+legendSize);
-					}
+				y = Math.min(y+crossHairBorder, bounds.y+bounds.height-h-crossHairBorder);
 				}
 			else {
 				x = !showScale(axis) ? x+w+crossHairBorder : Math.max(crossHairBorder, x-crossHairBorder);
@@ -6238,9 +6229,9 @@ public class JVisualization2D extends JVisualization {
 		d.paint(mG);
 		}
 
-	protected void paintLegend(Rectangle bounds, boolean transparentBG) {
+	protected void paintLegend(boolean transparentBG) {
 		mG.setStroke(mThinLineStroke);
-		super.paintLegend(bounds, transparentBG);
+		super.paintLegend(mBoundsWithoutLegend, transparentBG);
 		}
 
 	@Override

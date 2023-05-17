@@ -95,7 +95,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 		ep.setLayout(new TableLayout(size));
 		ep.add(mCheckBoxProtonate, "0,0");
 		ep.add(new JLabel("Protein cavity with natural ligand"), "0,2");
-		ep.add(mConformerPanel, "0,5");
+		ep.add(mConformerPanel, "0,4");
 		return ep;
 		}
 

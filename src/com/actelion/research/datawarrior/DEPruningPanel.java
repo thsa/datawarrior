@@ -72,74 +72,74 @@ public class DEPruningPanel extends JScrollPane
 	private ScrollPaneAutoScrollerWhenDragging mScroller;
 
     public DEPruningPanel(Frame owner, DEParentPane parentPane, CompoundTableModel tableModel) {
-		mContent = new JPanel() {
+	    mContent = new JPanel() {
 		    private static final long serialVersionUID = 0x20100729;
 
 		    @Override
 		    public void paintComponent(Graphics g) {
-		    	super.paintComponent(g);
+			    super.paintComponent(g);
 
 			    Color dividerColor = LookAndFeelHelper.isDarkLookAndFeel() ?
 					    ColorHelper.brighter(getBackground(), 0.85f) : ColorHelper.darker(getBackground(), 0.85f);
 			    int lines = HiDPIHelper.scale(2);
 			    int width = mContent.getWidth();
-		    	for (int c=0; c<=mContent.getComponentCount(); c++) {
+			    for (int c = 0; c<=mContent.getComponentCount(); c++) {
 				    int y = 0;
 				    if (c != 0) {
 					    JFilterPanel filter = (JFilterPanel)getComponent(c - 1);
-						y = filter.getY() + filter.getHeight();
+					    y = filter.getY() + filter.getHeight();
 
-						if (filter.isPotentiallyDragged()) {
-							Rectangle bounds = filter.getBounds();
-							Color highlightColor = LookAndFeelHelper.isDarkLookAndFeel() ?
-									ColorHelper.brighter(getBackground(), 0.7f) : ColorHelper.darker(getBackground(), 0.7f);
-							g.setColor(highlightColor);
-							int thickness = HiDPIHelper.scale(1);
-							for (int i=0; i<thickness; i++) {
-								bounds.grow(1,1);
-								((Graphics2D) g).draw(bounds);
-								}
-							}
-				        }
+					    if (filter.isPotentiallyDragged()) {
+						    Rectangle bounds = filter.getBounds();
+						    Color highlightColor = LookAndFeelHelper.isDarkLookAndFeel() ?
+								    ColorHelper.brighter(getBackground(), 0.7f) : ColorHelper.darker(getBackground(), 0.7f);
+						    g.setColor(highlightColor);
+						    int thickness = HiDPIHelper.scale(1);
+						    for (int i = 0; i<thickness; i++) {
+							    bounds.grow(1, 1);
+							    ((Graphics2D)g).draw(bounds);
+						    }
+					    }
+				    }
 
 				    // draw normal divider in background color or a stronger one if drop possible
-				    if (c == mDropIndex || (c >= 1 && c < mContent.getComponentCount())) {
-						g.setColor(c == mDropIndex ? HiDPIHelper.getThemeColor(0) : dividerColor);
-						int pos = (GAP - lines) / 2;
-				    	int ex = (c == mDropIndex) ? 1 : 0;
-			            for (int i=pos-ex; i<pos+lines+ex; i++)
-				            g.drawLine(GAP-ex, y+i, width+2*ex-GAP-1, y+i);
-					    }
-		    		}
-		    	}
+				    if (c == mDropIndex || (c>=1 && c<mContent.getComponentCount())) {
+					    g.setColor(c == mDropIndex ? HiDPIHelper.getThemeColor(0) : dividerColor);
+					    int pos = (GAP - lines) / 2;
+					    int ex = (c == mDropIndex) ? 1 : 0;
+					    for (int i = pos - ex; i<pos + lines + ex; i++)
+						    g.drawLine(GAP - ex, y + i, width + 2 * ex - GAP - 1, y + i);
+				    }
+			    }
+		    }
 
 		    @Override
 		    public void remove(Component comp) {
-		    	super.remove(comp);
-		    	if (!mDisableEvents)
-			    	mParentPane.fireRuntimePropertyChanged(
-			    			new RuntimePropertyEvent(this, RuntimePropertyEvent.TYPE_REMOVE_FILTER, -1));
-		    	}
-			};
+			    super.remove(comp);
+			    if (!mDisableEvents)
+				    mParentPane.fireRuntimePropertyChanged(
+						    new RuntimePropertyEvent(this, RuntimePropertyEvent.TYPE_REMOVE_FILTER, -1));
+		    }
+	    };
 
-		setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		setMinimumSize(new Dimension(100, 100));
-		setPreferredSize(new Dimension(100, 100));
-		setBorder(BorderFactory.createEmptyBorder());
-        mContent.setLayout(new VerticalFlowLayout(VerticalFlowLayout.LEFT, VerticalFlowLayout.TOP, GAP, GAP, true));
-		setViewportView(mContent);
+	    setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+	    setMinimumSize(new Dimension(100, 100));
+	    setPreferredSize(new Dimension(100, 100));
+	    setBorder(BorderFactory.createEmptyBorder());
+	    mContent.setLayout(new VerticalFlowLayout(VerticalFlowLayout.LEFT, VerticalFlowLayout.TOP, GAP, GAP, true));
+	    setViewportView(mContent);
 	    getVerticalScrollBar().setUnitIncrement(HiDPIHelper.scale(16));
 
-		mScroller = new ScrollPaneAutoScrollerWhenDragging(this, true);
+	    mScroller = new ScrollPaneAutoScrollerWhenDragging(this, true);
 
-		initializeDrop(ALLOWED_DROP_ACTIONS);
+	    initializeDrop(ALLOWED_DROP_ACTIONS);
 	    mDropIndex = -1;
 
-		mOwner = owner;
-		mParentPane = parentPane;
-        mTableModel = tableModel;
-        tableModel.addCompoundTableListener(this);
-        tableModel.getListHandler().addCompoundTableListListener(this);
+	    mOwner = owner;
+	    mParentPane = parentPane;
+	    mTableModel = tableModel;
+	    tableModel.addCompoundTableListener(this);
+	    tableModel.getListHandler().addCompoundTableListListener(this);
         }
 
     public DEParentPane getParentPane() {
@@ -833,4 +833,3 @@ public class DEPruningPanel extends JScrollPane
 		return null;
 		}
 	}
-

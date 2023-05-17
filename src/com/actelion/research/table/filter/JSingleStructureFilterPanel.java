@@ -93,7 +93,7 @@ public class JSingleStructureFilterPanel extends JStructureFilterPanel implement
 		updateComboBox(mol==null ? cItemContains : cItemIsSimilarTo);
 		enableItems(isEnabled());
 
-		add(contentPanel, BorderLayout.CENTER);
+		addPanel(contentPanel);
 
 		if (mol != null)
 			updateExclusion(false);

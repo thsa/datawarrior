@@ -540,10 +540,13 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		return jMenuFile;
 		}
 
-	protected void addIdorsiaOpenFileMenuOptions(JMenu jMenuFileOpenSpecial) {}	// override to add Idorsia specific items
-	protected void addIdorsiaSaveFileMenuOptions(JMenu jMenuFileOpenSpecial) {}	// override to add Idorsia specific items
+	// override to add Idorsia specific items
+	protected void addIdorsiaOpenFileMenuOptions(JMenu jMenuFileOpenSpecial) {}
+	protected void addIdorsiaSaveFileMenuOptions(JMenu jMenuFileOpenSpecial) {}
+	protected void addIdorsiaResourceFileMenus(JMenu parentMenu) {}
 
-	protected JMenu buildEditMenu() {
+
+		protected JMenu buildEditMenu() {
 		jMenuEditCut = new JMenuItem();
 		jMenuEditCopy = new JMenuItem();
 		jMenuEditPaste = new JMenuItem();
@@ -877,7 +880,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemCreateGenericTautomers.addActionListener(this);
 		jMenuChemCheckIDCodes.setText("Check IDCode Correctness");
 		jMenuChemCheckIDCodes.addActionListener(this);
-		jMenuChemMapReactions.setText("Map Reactions");
+		jMenuChemMapReactions.setText("Map Reaction Atoms");
 		jMenuChemMapReactions.addActionListener(this);
 		jMenuChemCompareReactionMapping.setText("Compare Reaction Mapping");
 		jMenuChemCompareReactionMapping.addActionListener(this);
@@ -927,6 +930,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemFromReaction.add(jMenuChemExtractCatalysts);
 		jMenuChemFromReaction.add(jMenuChemExtractProducts);
 		jMenuChemFromReaction.add(jMenuChemExtractTransformation);
+		jMenuChemFromReaction.add(jMenuChemMapReactions);
 		jMenuChemFromReaction.add(jMenuChemClassifyReactions);
 
 		jMenuChem.add(jMenuChemFromStructure);
@@ -970,7 +974,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		if (System.getProperty("development") != null) {
 			jMenuChem.addSeparator();
 			jMenuChem.add(jMenuChemCheckIDCodes);
-			jMenuChem.add(jMenuChemMapReactions);
 			jMenuChem.add(jMenuChemCompareReactionMapping);
 			jMenuChem.add(jMenuChemCompareDescriptorSimilarityDistribution);
 			jMenuChem.add(jMenuChemExtractPairwiseCompoundSimilarities);
@@ -2012,6 +2015,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		//   getClass().getProtectionDomain().getCodeSource().getLocation();
 
 		parentMenu.addSeparator();
+		addIdorsiaResourceFileMenus(parentMenu);
 		for (String resDir:DataWarrior.RESOURCE_DIR) {
 			File directory = mApplication.resolveResourcePath(resDir);
 			if (directory != null)
@@ -2038,7 +2042,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	 * @param dirPath should be based on a path variable if it refers to a standard resource file
 	 * @param directory
 	 */
-	private void addResourceFileMenu(JMenu parentMenu, String itemString, String dirPath, File directory) {
+	public void addResourceFileMenu(JMenu parentMenu, String itemString, String dirPath, File directory) {
 		File[] file = directory.listFiles((File f) -> {
 			if (f.isDirectory())
 				return false;

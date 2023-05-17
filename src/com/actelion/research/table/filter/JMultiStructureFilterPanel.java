@@ -87,7 +87,7 @@ public class JMultiStructureFilterPanel extends JStructureFilterPanel
 		mStructurePane.getModel().addCompoundCollectionListener(this);
 		contentPanel.add(mStructurePane, isSSS ? "1,2,3,2" : "1,2");
 
-		add(contentPanel, BorderLayout.CENTER);
+		addPanel(contentPanel);
 
 		mIsUserChange = true;
 		}

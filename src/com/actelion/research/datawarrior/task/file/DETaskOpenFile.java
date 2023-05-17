@@ -38,6 +38,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	public static final String TASK_NAME = "Open File";
 
 	private static final String PROPERTY_ASSUME_CHIRAL = "assumeChiral";
+	private static final String PROPERTY_ADD_MAPPING = "addMapping";
 	private static final String PROPERTY_CSV_DELIMITER = "csvDelimiter";
 
 	private static final String[] DELIMITER_TEXT = { "Comma (default)", "Semicolon", "Vertical line" };
@@ -45,7 +46,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 
 	private DataWarrior mApplication;
 	private JComboBox mComboBoxCSVDelimiter;
-    private JCheckBox mCheckBoxAssumeChiralTrue;
+    private JCheckBox mCheckBoxAssumeChiralTrue,mCheckBoxAddMapping;
 
     public DETaskOpenFile(DataWarrior application) {
 		super(application, "Open DataWarrior-, SD-, gzipped SD- or Text-File", FileHelper.cFileTypeDataWarriorCompatibleData);
@@ -66,7 +67,8 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	public JPanel createInnerDialogContent() {
 		JPanel p = new JPanel();
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {TableLayout.PREFERRED, gap, TableLayout.PREFERRED}, {TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+		double[][] size = { {TableLayout.PREFERRED, gap, TableLayout.PREFERRED},
+							{TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		p.setLayout(new TableLayout(size));
 
 		mComboBoxCSVDelimiter = new JComboBox(DELIMITER_TEXT);
@@ -77,6 +79,10 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 		mCheckBoxAssumeChiralTrue = new JCheckBox("For V2000 SD-files assume molecules to be pure enantiomers");
 		mCheckBoxAssumeChiralTrue.setEnabled(false);
 		p.add(mCheckBoxAssumeChiralTrue, "0,2,2,2");
+
+		mCheckBoxAddMapping = new JCheckBox("Create atom mapping for unmapped reactions (SMILES, RD-files)");
+		mCheckBoxAddMapping.setEnabled(false);
+		p.add(mCheckBoxAddMapping, "0,4,2,4");
 
 		return p;
 		}
@@ -96,6 +102,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 		int fileType = getFilePath() == null ? 0 : FileHelper.getFileType(getFilePath());
 		mComboBoxCSVDelimiter.setEnabled((isChooseFileDuringMacro() || (fileType & FileHelper.cFileTypeTextCommaSeparated) != 0));
 		mCheckBoxAssumeChiralTrue.setEnabled(isChooseFileDuringMacro() || (fileType & FileHelper.cFileTypeSD) != 0);
+		mCheckBoxAddMapping.setEnabled(isChooseFileDuringMacro() || (fileType & (FileHelper.cFileTypeRD | FileHelper.cFileTypeTextAny)) != 0);
 		}
 
 	@Override
@@ -105,6 +112,8 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 			configuration.setProperty(PROPERTY_CSV_DELIMITER, CompoundTableLoader.DELIMITER_STRING[mComboBoxCSVDelimiter.getSelectedIndex()]);
 		if (mCheckBoxAssumeChiralTrue.isEnabled())
 			configuration.setProperty(PROPERTY_ASSUME_CHIRAL, mCheckBoxAssumeChiralTrue.isSelected() ? "true" : "false");
+		if (mCheckBoxAddMapping.isEnabled())
+			configuration.setProperty(PROPERTY_ADD_MAPPING, mCheckBoxAddMapping.isSelected() ? "true" : "false");
 		return configuration;
         }
 
@@ -113,6 +122,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 		super.setDialogConfiguration(configuration);
 		mComboBoxCSVDelimiter.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_CSV_DELIMITER), CompoundTableLoader.DELIMITER_STRING, 0));
 		mCheckBoxAssumeChiralTrue.setSelected("true".equals(configuration.getProperty(PROPERTY_ASSUME_CHIRAL)));
+		mCheckBoxAddMapping.setSelected("true".equals(configuration.getProperty(PROPERTY_ADD_MAPPING)));
 		enableLocalItems();
 		}
 
@@ -121,6 +131,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
     	super.setDialogConfigurationToDefault();
     	mComboBoxCSVDelimiter.setSelectedIndex(0);
 		mCheckBoxAssumeChiralTrue.setSelected(false);
+		mCheckBoxAddMapping.setSelected(false);
 		enableLocalItems();
 		}
 
@@ -150,9 +161,12 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 		loader.addDataDependentPropertyReader(CustomLabelPositionWriter.PROPERTY_NAME, new CustomLabelPositionReader(emptyFrame));
 		loader.addDataDependentPropertyReader(CardViewPositionWriter.PROPERTY_NAME, new CardViewPositionReader(emptyFrame));
 		loader.setAssumeChiralFlag("true".equals(configuration.getProperty(PROPERTY_ASSUME_CHIRAL)));
+		loader.setAddAtomMapping("true".equals(configuration.getProperty(PROPERTY_ADD_MAPPING)));
 		loader.readFile(file, new DERuntimeProperties(emptyFrame.getMainFrame()), filetype);
 		if (loader.isAssumeChiralFlag())
 			configuration.setProperty(PROPERTY_ASSUME_CHIRAL, "true");
+		if (loader.isAddAtomMapping())
+			configuration.setProperty(PROPERTY_ADD_MAPPING, "true");
 		if ((filetype & FileHelper.cFileTypeTextAnyCSV) != 0)
 			configuration.setProperty(PROPERTY_CSV_DELIMITER, CompoundTableLoader.DELIMITER_STRING[loader.getCSVDelimiter()]);
 		return emptyFrame;

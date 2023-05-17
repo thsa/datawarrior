@@ -149,7 +149,7 @@ public class JReactionFilterPanel extends JFilterPanel implements ChangeListener
 		mReactionView.addStructureListener(this);
 		p.add(mReactionView, "0,5,2,5");
 
-		add(p, BorderLayout.CENTER);
+		addPanel(p);
 
 		matchSearchTypeToReactionFragmentState();
 

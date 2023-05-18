@@ -1387,7 +1387,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 									ChemicalRuleEnhancedReactionMapper mapper = new ChemicalRuleEnhancedReactionMapper();
 									mapper.map(rxn);
 									String[] encoding = ReactionEncoder.encode(rxn, false);
-									if (encoding != null)
+									if (encoding != null && encoding[1] != null)
 										rowData[mappingColumn] = encoding[1].getBytes();
 
 									mProgressController.updateProgress(mMapCount.incrementAndGet());

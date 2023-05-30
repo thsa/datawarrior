@@ -1133,10 +1133,11 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					}
 				}
 
-			if (rxnCount != 0 && unmapped != 0 && askOnEDT((rxnCount == unmapped ? "Y" : "Some of y")
+			if (rxnCount != 0 && unmapped != 0 && (mAddAtomMapping || askOnEDT((rxnCount == unmapped ? "Y" : "Some of y")
 							+ "our reactions don't contain atom mapping information.\n"
 							+ "Do you want DataWarrior to create plausible atom mapping?", "Warning",
-					JOptionPane.WARNING_MESSAGE)) {
+					JOptionPane.WARNING_MESSAGE))) {
+				mAddAtomMapping = true;
 				insertReactionMappingSMP(smilesColumn, smilesColumn+2, smilesColumn+1, unmapped);
 				}
 
@@ -1381,6 +1382,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 						public void run() {
 							int row = mSMPIndex.decrementAndGet();
 							while (row >= 0) {
+try {
 								if (mFieldData[row][mappingColumn] == null) {
 									Object[] rowData = mFieldData[row];
 									Reaction rxn = ReactionEncoder.decode((byte[])rowData[rxnColumn], null, (byte[])rowData[coordsColumn], null, null, false);
@@ -1394,6 +1396,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 									}
 
 								row = mSMPIndex.decrementAndGet();
+} catch (Exception e) { for (Object c:mFieldData[row]) if (c instanceof byte[]) System.out.println(new String((byte[])c)); e.printStackTrace(); System.exit(0); }
 								}
 							}
 						};

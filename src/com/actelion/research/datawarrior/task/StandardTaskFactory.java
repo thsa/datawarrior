@@ -161,6 +161,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskEnableAllFilters.TASK_NAME) ? new DETaskEnableAllFilters(frame)
 			 : codeMatches(taskCode, DETaskBuildingBlockQuery.TASK_NAME) ? new DETaskBuildingBlockQuery(frame, application)
 			 : codeMatches(taskCode, DETaskEnumerateCombinatorialLibrary.TASK_NAME) ? new DETaskEnumerateCombinatorialLibrary(frame, application)
+			 : codeMatches(taskCode, DETaskExecuteProgram.TASK_NAME) ? new DETaskExecuteProgram(frame)
 			 : codeMatches(taskCode, DETaskExitProgram.TASK_NAME) ? new DETaskExitProgram(frame, application)
 			 : codeMatches(taskCode, DETaskExportHitlist.TASK_NAME) ? new DETaskExportHitlist(frame, false)
 			 : codeMatches(taskCode, DETaskExportMacro.TASK_NAME) ? new DETaskExportMacro(frame, null)
@@ -383,6 +384,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskEnableAllFilters.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskBuildingBlockQuery.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskEnumerateCombinatorialLibrary.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskExecuteProgram.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskExitProgram.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskExportHitlist.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskExportMacro.TASK_NAME));

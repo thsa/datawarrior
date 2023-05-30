@@ -18,23 +18,20 @@
 
 package com.actelion.research.datawarrior.task.macro;
 
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.util.BrowserControl;
 import info.clearthought.layout.TableLayout;
 
-import java.awt.Frame;
+import javax.swing.*;
+import java.awt.*;
 import java.util.Properties;
 
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
-import com.actelion.research.datawarrior.DEFrame;
-
 public class DETaskOpenWebBrowser extends ConfigurableTask {
-    public static final String TASK_NAME = "OpenWebBrowser";
+    public static final String TASK_NAME = "Open Web Browser";
 
 	private static final String PROPERTY_URL = "url";
 	private static final String DEFAULT_URL = "openmolecules.org/datawarrior/";
@@ -57,8 +54,9 @@ public class DETaskOpenWebBrowser extends ConfigurableTask {
 
 	@Override
     public JPanel createDialogContent() {
-		double[][] size = { {8, TableLayout.PREFERRED, 8},
-							{8, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 8} };
+		int gap = HiDPIHelper.scale(8);
+		double[][] size = { {gap, TableLayout.PREFERRED, gap},
+							{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));

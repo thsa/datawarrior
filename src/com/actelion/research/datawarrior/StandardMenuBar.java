@@ -107,7 +107,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	private static final String LOOK_AND_FEEL = "laf_";
 	private static final String EXPORT_MACRO = "export_";
 	private static final String COPY_MACRO = "copyMacro_";
-	private static final String RUN_GLOBAL_MACRO = "runGlobal_";
+	public static final String RUN_GLOBAL_MACRO = "runGlobal_";
 	private static final String RUN_INTERNAL_MACRO = "runInternal_";
 
 	private static final String DEFAULT_LIST_NAME = "Default List";
@@ -1425,7 +1425,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	 * @param text
 	 * @param actionCommand if null, then show menu item as disabled
 	 */
-	private void addMenuItem(JMenu menu, String text, String actionCommand) {
+	public void addMenuItem(JMenu menu, String text, String actionCommand) {
 		addMenuItem(menu, text, actionCommand, null, 0, 0);
 		}
 
@@ -2042,7 +2042,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	 * @param dirPath should be based on a path variable if it refers to a standard resource file
 	 * @param directory
 	 */
-	public void addResourceFileMenu(JMenu parentMenu, String itemString, String dirPath, File directory) {
+	private void addResourceFileMenu(JMenu parentMenu, String itemString, String dirPath, File directory) {
 		File[] file = directory.listFiles((File f) -> {
 			if (f.isDirectory())
 				return false;

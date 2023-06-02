@@ -1824,10 +1824,9 @@ public class JVisualization2D extends JVisualization {
 		float spacing = cellHeight * getBarChartEmptyLabelAreaSpacing();
 		float labelSize = calculateStatisticsLabelSize(mChartInfo.barAxis == 0, spacing);
 
-		mChartInfo.barWidth = mRelativeMarkerSize * Math.min(0.2f * cellHeight, (mCaseSeparationCategoryCount == 1) ?
-				0.6f * cellWidth : 0.5f * cellWidth / mCaseSeparationCategoryCount);
-		if (mChartInfo.barWidth < 1)
-			mChartInfo.barWidth = 1;
+		mChartInfo.barWidth = Math.max(1, Math.max(0.05f * cellWidth / mCaseSeparationCategoryCount,
+				mRelativeMarkerSize * Math.min(0.2f * cellHeight, (mCaseSeparationCategoryCount == 1) ?
+				0.6f * cellWidth : 0.5f * cellWidth / mCaseSeparationCategoryCount)));
 
 		int focusFlagNo = getFocusFlag();
 		int colorListLength = mMarkerColor.getColorList().length;

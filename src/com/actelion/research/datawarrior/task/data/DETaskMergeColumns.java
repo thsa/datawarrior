@@ -380,16 +380,15 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 			String transformation = configuration.getProperty(PROPERTY_TRANSFORMATION, "");
 			Reaction rxn = (transformation.length() == 0) ? null : ReactionEncoder.decode(transformation, true);
 
-			StereoMolecule[] mol = new StereoMolecule[column.length];
 			startProgress("Merging structures...", 0, mTableModel.getTotalRowCount());
 			for (int row = 0; row<mTableModel.getTotalRowCount(); row++) {
 				if ((row & 255) == 255)
 					updateProgress(row);
 
 				if (rxn == null)
-					mergeStructureCells(mTableModel.getTotalRecord(row), column, result[row], mol);
+					mergeStructureCells(mTableModel.getTotalRecord(row), column, result[row]);
 				else
-					mergeCellsByTransformation(mTableModel.getTotalRecord(row), column, result[row], mol, new Reactor(rxn));
+					mergeCellsByTransformation(mTableModel.getTotalRecord(row), column, result[row], new Reactor(rxn));
 				}
 			}
 		else {
@@ -540,7 +539,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		result[1] = detail;
 		}
 
-	private void mergeStructureCells(CompoundRecord record, int[] sourceColumn, Object[] result, StereoMolecule[] mol) {
+	private void mergeStructureCells(CompoundRecord record, int[] sourceColumn, Object[] result) {
 		boolean[] isRGroup = new boolean[sourceColumn.length];
 		boolean[] wasAdded = new boolean[sourceColumn.length];
 		int[] rGroupIndex = getRGroupIndexes(sourceColumn, isRGroup);
@@ -548,6 +547,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		int largestMoleculeIndex = -1;
 		int largestMoleculeSize = 0;
 
+		StereoMolecule[] mol = new StereoMolecule[sourceColumn.length];
 		StereoMolecule[] rGroup = new StereoMolecule[sourceColumn.length];    // we need to cache R-groups, before starting to replace Rn atoms
 		for (int i=0; i<sourceColumn.length; i++) {
 			mol[i] = mTableModel.getChemicalStructure(record, sourceColumn[i], CompoundTableModel.ATOM_COLOR_MODE_NONE, mol[i]);
@@ -580,8 +580,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 						int rGroupNo1 = (atomicNo1 >= 142) ? atomicNo1 - 141 : atomicNo1 - 125;
 						if (rGroupIndex[rGroupNo1] != -1 && rGroupIndex[rGroupNo1] != i) {
 							if (rGroup[rGroupIndex[rGroupNo1]] == null) {
-								mol[i].markAtomForDeletion(atom1);
-								needsDeletion = true;
+								mol[i].setAtomicNo(atom1, 1);
 								}
 							else {
 								int atomStart = mol[i].getAllAtoms();
@@ -702,7 +701,8 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		return -1;
 		}
 
-	private void mergeCellsByTransformation(CompoundRecord record, int[] sourceColumn, Object[] result, StereoMolecule[] mol, Reactor reactor) {
+	private void mergeCellsByTransformation(CompoundRecord record, int[] sourceColumn, Object[] result, Reactor reactor) {
+		StereoMolecule[] mol = new StereoMolecule[sourceColumn.length];
 		for (int i=0; i<sourceColumn.length; i++) {
 			mol[i] = mTableModel.getChemicalStructure(record, sourceColumn[i], CompoundTableModel.ATOM_COLOR_MODE_NONE, mol[i]);
 			if (mol[i] == null || mol[i].getAllAtoms() == 0)

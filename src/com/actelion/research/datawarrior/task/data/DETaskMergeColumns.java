@@ -50,6 +50,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 	private static final String PROPERTY_REMOVE_SOURCE_COLUMNS = "remove";
 	private static final String PROPERTY_COLUMN_LIST = "columnList";
 	private static final String PROPERTY_TRANSFORMATION = "transformation";
+	private static final String PROPERTY_KEEP_COORDS = "keepCoords";
 
 	public static final String TASK_NAME = "Merge Columns";
 
@@ -57,7 +58,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 	private JList<String>		mListColumns;
 	private JComboBox			mComboBoxTargetColumn;
 	private JTextArea			mTextArea;
-	private JCheckBox			mCheckBoxRemove,mCheckBoxUseTransformation;
+	private JCheckBox			mCheckBoxRemove,mCheckBoxKeepCoords,mCheckBoxUseTransformation;
 	private DETable				mTable;
 	private JEditableChemistryView mTransformationView;
 
@@ -73,8 +74,9 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap},
 							{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, HiDPIHelper.scale(20),
-								  TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
-							 gap, TableLayout.PREFERRED, gap/2, HiDPIHelper.scale(72), gap } };
+								  TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap,
+								  TableLayout.PREFERRED, TableLayout.PREFERRED,
+							      TableLayout.PREFERRED, gap/2, HiDPIHelper.scale(72), gap } };
 		content.setLayout(new TableLayout(size));
 
 		content.add(new JLabel("Name of target column (new or existing):"), "1,1");
@@ -111,7 +113,10 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		mCheckBoxRemove = new JCheckBox("Remove source columns after merging");
 		content.add(mCheckBoxRemove, "1,9");
 
-		mCheckBoxUseTransformation = new JCheckBox("Use reaction for structure merge");
+		mCheckBoxKeepCoords = new JCheckBox("Keep atom coords of largest molecule");
+		content.add(mCheckBoxKeepCoords, "1,10");
+
+		mCheckBoxUseTransformation = new JCheckBox("Use reaction for merging structures:");
 		mCheckBoxUseTransformation.addActionListener(this);
 		content.add(mCheckBoxUseTransformation, "1,11");
 
@@ -136,6 +141,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 	private void enableItems() {
 		boolean structureColumnsOnly = structureColumnsOnly();
 		mCheckBoxUseTransformation.setEnabled(structureColumnsOnly);
+		mCheckBoxKeepCoords.setEnabled(structureColumnsOnly & !mCheckBoxUseTransformation.isSelected());
 		mTransformationView.setEnabled(structureColumnsOnly && mCheckBoxUseTransformation.isSelected());
 		}
 
@@ -172,6 +178,8 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 			p.setProperty(PROPERTY_COLUMN_LIST, columnNames);
 
 		p.setProperty(PROPERTY_REMOVE_SOURCE_COLUMNS, mCheckBoxRemove.isSelected() ? "true" : "false");
+
+		p.setProperty(PROPERTY_KEEP_COORDS, mCheckBoxKeepCoords.isSelected() ? "true" : "false");
 
 		if (mCheckBoxUseTransformation.isSelected()) {
 			Reaction transformation = mTransformationView.getReaction();
@@ -346,6 +354,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		String targetColumnName = configuration.getProperty(PROPERTY_TARGET_COLUMN);
 		String[] columnName = configuration.getProperty(PROPERTY_COLUMN_LIST).split("\\t");
 		boolean removeSourceColumns = "true".equals(configuration.getProperty(PROPERTY_REMOVE_SOURCE_COLUMNS, "true"));
+		boolean keepCoords = "true".equals(configuration.getProperty(PROPERTY_KEEP_COORDS, "true"));
 
 		int[] column = new int[columnName.length];
 		for (int i=0; i<columnName.length; i++)
@@ -386,7 +395,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 					updateProgress(row);
 
 				if (rxn == null)
-					mergeStructureCells(mTableModel.getTotalRecord(row), column, result[row]);
+					mergeStructureCells(mTableModel.getTotalRecord(row), column, result[row], keepCoords);
 				else
 					mergeCellsByTransformation(mTableModel.getTotalRecord(row), column, result[row], new Reactor(rxn));
 				}
@@ -457,6 +466,8 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 
 		mCheckBoxRemove.setSelected("true".equals(configuration.getProperty(PROPERTY_REMOVE_SOURCE_COLUMNS, "true")));
 
+		mCheckBoxKeepCoords.setSelected("true".equals(configuration.getProperty(PROPERTY_KEEP_COORDS, "true")));
+
 		String transformation = configuration.getProperty(PROPERTY_TRANSFORMATION, "");
 		mCheckBoxUseTransformation.setSelected(transformation.length() != 0);
 		if (transformation.length() != 0)
@@ -475,6 +486,8 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 			mTextArea.setText("");
 
 		mCheckBoxRemove.setSelected(false);
+
+		mCheckBoxKeepCoords.setSelected(true);
 
 		mCheckBoxUseTransformation.setSelected(false);
 
@@ -539,13 +552,14 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		result[1] = detail;
 		}
 
-	private void mergeStructureCells(CompoundRecord record, int[] sourceColumn, Object[] result) {
+	private void mergeStructureCells(CompoundRecord record, int[] sourceColumn, Object[] result, boolean keepCoords) {
 		boolean[] isRGroup = new boolean[sourceColumn.length];
 		boolean[] wasAdded = new boolean[sourceColumn.length];
 		int[] rGroupIndex = getRGroupIndexes(sourceColumn, isRGroup);
 
 		int largestMoleculeIndex = -1;
 		int largestMoleculeSize = 0;
+		int rGroupCount = 0;
 
 		StereoMolecule[] mol = new StereoMolecule[sourceColumn.length];
 		StereoMolecule[] rGroup = new StereoMolecule[sourceColumn.length];    // we need to cache R-groups, before starting to replace Rn atoms
@@ -553,8 +567,10 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 			mol[i] = mTableModel.getChemicalStructure(record, sourceColumn[i], CompoundTableModel.ATOM_COLOR_MODE_NONE, mol[i]);
 			if (mol[i] != null) {
 				mol[i].ensureHelperArrays(Molecule.cHelperNeighbours);
-				if (isRGroup[i])
+				if (isRGroup[i]) {
 					rGroup[i] = mol[i].getCompactCopy();
+					rGroupCount++;
+					}
 				else if (largestMoleculeSize < mol[i].getAtoms()) {
 					largestMoleculeSize = mol[i].getAtoms();
 					largestMoleculeIndex = i;
@@ -562,115 +578,191 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 				}
 			}
 
-		// If some columns contain R-groups, then merge the R-groups into any molecule, which has a respective Rn substituent!
-		// Mark R-groups that have been merged one or multiple times. All other R-groups will be added as unconnected molecules later.
-		// We don't resolve multiple layers of R-grouping, e.g. R1 contains R2 and R2 contains R1. However, an R-group may contain
-		// additional connection points, which link back to the core atom (atomicNo==0 and custom labels '1','2',...
-		for (int i=0; i<sourceColumn.length; i++) {
-			if (mol[i] != null) {
-				int originalAtomCount = mol[i].getAllAtoms();
-				boolean needsDeletion = false;
-				boolean needsArrangement = false;
-				for (int atom1=0; atom1<originalAtomCount; atom1++) {
-					int atomicNo1 = mol[i].getAtomicNo(atom1);
-					mol[i].setAtomMarker(atom1, true);  // marker to keep this atom's coordinates
-					// The Rn atom should exactly have one neighbour, but mol may have been edited by an evil user
-					if (atomicNo1 >= 129 && atomicNo1 <= 144 && mol[i].getConnAtoms(atom1) >= 1) {
-						int coreAtom = mol[i].getConnAtom(atom1, 0);
-						int rGroupNo1 = (atomicNo1 >= 142) ? atomicNo1 - 141 : atomicNo1 - 125;
-						if (rGroupIndex[rGroupNo1] != -1 && rGroupIndex[rGroupNo1] != i) {
-							if (rGroup[rGroupIndex[rGroupNo1]] == null) {
-								mol[i].setAtomicNo(atom1, 1);
+		/* We check for all R-groups, which of them contain other R-groups that we can resolve, because they are known.
+		 * Then we repeatedly go through all R-group structures and replace all Rn-atoms, of which we know the structure
+		 * and where the structure doesn't contain other known R-groups, with the structure.
+		 * This, of course, implies that we don't have cyclic R-group inclusion, but it allows recursive R-group inclusion:
+		 * R1 contains R2 and R2 contains R3 is allowed, while R1 contains R2 and R2 contains R1 is not allowed.
+		 */
+		if (rGroupCount != 0) {
+			int notFullyResolvedRGroupCount = 0;
+			int[] referencedKnownRGroups = new int[sourceColumn.length];
+			for (int i=0; i<sourceColumn.length; i++) {
+				if (mol[i] != null && isRGroup[i]) {
+					for (int atom=0; atom<mol[i].getAllAtoms(); atom++) {
+						int atomicNo = mol[i].getAtomicNo(atom);
+						if (atomicNo >= 129 && atomicNo <= 144) {
+							int rgi = rGroupIndex[(atomicNo>=142) ? atomicNo - 141 : atomicNo - 125];
+							if (rgi == i) {
+								showErrorMessage("Self referencing R-group: "+Molecule.cAtomLabel[atomicNo]);
+								return;
 								}
-							else {
-								int atomStart = mol[i].getAllAtoms();
-								int bondStart = mol[i].getAllBonds();
-								mol[i].addMolecule(rGroup[rGroupIndex[rGroupNo1]]);
-								wasAdded[rGroupIndex[rGroupNo1]] = true;
-								needsArrangement = true;
-								for (int atom2=atomStart; atom2<mol[i].getAllAtoms(); atom2++) {
-									if (mol[i].getAtomicNo(atom2) == 0) {
-										if (mol[i].getAtomCustomLabel(atom2) == null) {
-											// Primary attachment points are atomicNo==0 with no custom label.
-											for (int bond2=bondStart; bond2<mol[i].getAllBonds(); bond2++) {
-												for (int j=0; j<2; j++) {
-													if (mol[i].getBondAtom(j, bond2) == atom2) {
-														mol[i].setBondAtom(j, bond2, coreAtom);
-														}
-													}
+							if (rgi != -1)
+								referencedKnownRGroups[i] |= (1 << rgi);
+							}
+						}
+					if (referencedKnownRGroups[i] != 0)
+						notFullyResolvedRGroupCount++;
+					}
+				}
+			while (notFullyResolvedRGroupCount != 0) {
+				boolean hasResolvedRGroups = false;
+				for (int i=0; i<sourceColumn.length; i++) {
+					// For every R-group resolve those R-groups, which don't include other R-groups
+					if (referencedKnownRGroups[i] != 0) {
+						int resolvedRGroupIndexes = resolveRGroups(mol[i], rGroup, rGroupIndex, wasAdded, referencedKnownRGroups, keepCoords);
+						if (resolvedRGroupIndexes != 0) {
+							rGroup[i] = mol[i].getCompactCopy();
+							referencedKnownRGroups[i] &= ~resolvedRGroupIndexes;
+							hasResolvedRGroups = true;
+							}
+						if (referencedKnownRGroups[i] == 0)
+							notFullyResolvedRGroupCount--;
+						}
+					}
+				if (!hasResolvedRGroups) {
+					showErrorMessage("Couldn't resilve R-groups within R-groups because of cyclic references.");
+					return;
+					}
+				}
+			}
+
+		StereoMolecule merged;
+
+		if (largestMoleculeSize != 0) {
+			merged = mol[largestMoleculeIndex];
+			wasAdded[largestMoleculeIndex] = true;
+			}
+		else {
+			merged = new StereoMolecule();
+			}
+
+		if (keepCoords)
+			for (int atom=0; atom<merged.getAllAtoms(); atom++)
+				merged.setAtomMarker(atom, true);  // marker to keep this atom's coordinates
+
+		boolean needsCoordinateUpdate = (rGroupCount != 0)
+				&& (resolveRGroups(merged, rGroup, rGroupIndex, wasAdded, null, keepCoords) != 0);
+
+		for (int i=0; i<sourceColumn.length; i++) {
+			if (mol[i] != null && !wasAdded[i]) {
+				merged.addMolecule(mol[i]);
+				needsCoordinateUpdate = true;
+				}
+			}
+
+		if (needsCoordinateUpdate)
+			new CoordinateInventor(keepCoords ? CoordinateInventor.MODE_KEEP_MARKED_ATOM_COORDS : 0).invent(merged);
+
+		Canonizer canonizer = new Canonizer(merged);
+		result[0] = canonizer.getIDCode().getBytes();
+		result[1] = canonizer.getEncodedCoordinates().getBytes();
+		}
+
+	/**
+	 * If the molecule mol contains Rn atoms and if the respective Rn group exists (rGroupIndex[n] != -1),
+	 * then the Rn-atom is replaced by respective R-group structure taken from rGroup[rGroupIndex[n]].
+	 * If that R-group structure contains an atom labelled '1','2',... ('x') indicating a ring closure
+	 * connection back to the molecule and if mol contains a Rx atom, then the Rx atom and the labelled
+	 * atom are replaced by a bond connecting their neighbours and closing the ring.
+	 * If referencedKnownRGroups is given, then only those R-groups may be resolved, which don't reference
+	 * other R-groups.
+	 * @param mol
+	 * @param rGroup
+	 * @param rGroupIndex
+	 * @param wasAdded
+	 * @param referencedKnownRGroups if not null, then
+	 * @param keepCoords of largest fragment
+	 * @return bits representing all in mol resolved R-group indexes
+	 */
+	private int resolveRGroups(StereoMolecule mol, StereoMolecule[] rGroup, int[] rGroupIndex, boolean[] wasAdded, int[] referencedKnownRGroups, boolean keepCoords) {
+		int rGroupIndexesResolved = 0;
+
+		int originalAtomCount = mol.getAllAtoms();
+		boolean needsDeletion = false;
+		boolean needsArrangement = false;
+		for (int atom1=0; atom1<originalAtomCount; atom1++) {
+			int atomicNo1 = mol.getAtomicNo(atom1);
+
+			// The Rn atom should exactly have one neighbour, but mol may have been edited by an evil user
+			if (atomicNo1 >= 129 && atomicNo1 <= 144 && mol.getConnAtoms(atom1) >= 1) {
+				int coreAtom = mol.getConnAtom(atom1, 0);
+				int rGroupIndex1 = rGroupIndex[atomicNo1 >= 142 ? atomicNo1 - 141 : atomicNo1 - 125];
+				if (rGroupIndex1 != -1
+				 && (referencedKnownRGroups == null
+				  || referencedKnownRGroups[rGroupIndex1] == 0)) {  // if the R-group does not include other known (=resolvable) R-groups
+					if (rGroup[rGroupIndex1] == null) {
+						mol.setAtomicNo(atom1, 1);
+						}
+					else {
+						int atomStart = mol.getAllAtoms();
+						int bondStart = mol.getAllBonds();
+						mol.addMolecule(rGroup[rGroupIndex1]);
+						wasAdded[rGroupIndex1] = true;
+						needsArrangement = true;
+						for (int atom2=atomStart; atom2<mol.getAllAtoms(); atom2++) {
+							if (mol.getAtomicNo(atom2) == 0) {
+								if (mol.getAtomCustomLabel(atom2) == null) {
+									// Primary attachment points are atomicNo==0 with no custom label.
+									for (int bond2=bondStart; bond2<mol.getAllBonds(); bond2++) {
+										for (int j=0; j<2; j++) {
+											if (mol.getBondAtom(j, bond2) == atom2) {
+												mol.setBondAtom(j, bond2, coreAtom);
 												}
-											mol[i].markAtomForDeletion(atom2);
-											mol[i].markAtomForDeletion(atom1);
-											needsDeletion = true;
 											}
-										else {
-											// Atoms with atomicNo==0 and customs labels '1','2',etc encode links back to core,
-											// when R-groups have multiple attachments to the core fragment.
-											try {
-												int backLinkRGroupIndex = Integer.parseInt(mol[i].getAtomCustomLabel(atom2));
-												if (backLinkRGroupIndex >= 1 && backLinkRGroupIndex <= 16) {
-													for (int atom3=0; atom3<atomStart; atom3++) {
-														int atomicNo3 = mol[i].getAtomicNo(atom3);
-														if (atomicNo3 >= 129 && atomicNo3 <= 144 && mol[i].getConnAtoms(atom3) >= 1) {
-															int rGroupNo3 = (atomicNo3 >= 142) ? atomicNo3 - 141 : atomicNo3 - 125;
-															if (rGroupNo3 == backLinkRGroupIndex) {
-																for (int bond2=bondStart; bond2<mol[i].getAllBonds(); bond2++) {
-																	for (int j=0; j<2; j++) {
-																		if (mol[i].getBondAtom(j, bond2) == atom2) {
-																			mol[i].setBondAtom(j, bond2, mol[i].getConnAtom(atom3, 0));
-																			}
-																		}
+										}
+									mol.markAtomForDeletion(atom2);
+									mol.markAtomForDeletion(atom1);
+									needsDeletion = true;
+									}
+								else {
+									// Atoms with atomicNo==0 and customs labels '1','2',etc encode links back to core,
+									// when R-groups have multiple attachments to the core fragment.
+									try {
+										int backLinkRGroupIndex = Integer.parseInt(mol.getAtomCustomLabel(atom2));
+										if (backLinkRGroupIndex >= 1 && backLinkRGroupIndex <= 16) {
+											for (int atom3=0; atom3<atomStart; atom3++) {
+												int atomicNo3 = mol.getAtomicNo(atom3);
+												if (atomicNo3 >= 129 && atomicNo3 <= 144 && mol.getConnAtoms(atom3) >= 1) {
+													int rGroupNo3 = (atomicNo3 >= 142) ? atomicNo3 - 141 : atomicNo3 - 125;
+													if (rGroupNo3 == backLinkRGroupIndex) {
+														for (int bond2=bondStart; bond2<mol.getAllBonds(); bond2++) {
+															for (int j=0; j<2; j++) {
+																if (mol.getBondAtom(j, bond2) == atom2) {
+																	mol.setBondAtom(j, bond2, mol.getConnAtom(atom3, 0));
 																	}
-																mol[i].markAtomForDeletion(atom2);
-																mol[i].markAtomForDeletion(atom3);
-																needsDeletion = true;
-																if (rGroupIndex[rGroupNo3] != -1)
-																	wasAdded[rGroupIndex[rGroupNo3]] = true;
-																break;
 																}
 															}
+														mol.markAtomForDeletion(atom2);
+														mol.markAtomForDeletion(atom3);
+														needsDeletion = true;
+														if (rGroupIndex[rGroupNo3] != -1)
+															wasAdded[rGroupIndex[rGroupNo3]] = true;
+														break;
 														}
 													}
 												}
-											catch (NumberFormatException nfe) {}
 											}
+										}
+									catch (NumberFormatException nfe) {
+										nfe.printStackTrace();
 										}
 									}
 								}
 							}
 						}
+					rGroupIndexesResolved |= (1 << rGroupIndex1);
 					}
-
-				if (needsDeletion)
-					mol[i].deleteMarkedAtomsAndBonds();
-
-				if (needsArrangement)
-					new CoordinateInventor(CoordinateInventor.MODE_KEEP_MARKED_ATOM_COORDS).invent(mol[i]);
 				}
 			}
 
-		if (largestMoleculeSize != 0) {
-			StereoMolecule merged = mol[largestMoleculeIndex];
-			wasAdded[largestMoleculeIndex] = true;
+		if (needsDeletion)
+			mol.deleteMarkedAtomsAndBonds();
 
-			boolean needsCoordinateUpdate = false;
-			for (int i=0; i<sourceColumn.length; i++) {
-				if (mol[i] != null && !wasAdded[i]) {
-					merged.addMolecule(mol[i]);
-					needsCoordinateUpdate = true;
-					}
-				}
+		if (needsArrangement)
+			new CoordinateInventor(keepCoords ? CoordinateInventor.MODE_KEEP_MARKED_ATOM_COORDS : 0).invent(mol);
 
-			if (needsCoordinateUpdate) {
-				for (int atom=0; atom<merged.getAllAtoms(); atom++)
-					merged.setAtomMarker(atom, atom<largestMoleculeSize);
-				new CoordinateInventor(CoordinateInventor.MODE_KEEP_MARKED_ATOM_COORDS).invent(merged);
-				}
-
-			Canonizer canonizer = new Canonizer(merged);
-			result[0] = canonizer.getIDCode().getBytes();
-			result[1] = canonizer.getEncodedCoordinates().getBytes();
-			}
+		return rGroupIndexesResolved;
 		}
 
 	private int[] getRGroupIndexes(int[] sourceColumn, boolean[] isRGroup) {

@@ -132,6 +132,11 @@ public class PluginHelper implements IPluginHelper {
 	}
 
 	@Override
+	public String getColumnTitle(int column) {
+		return mSourceTableModel.getColumnTitle(column);
+	}
+
+	@Override
 	public HashMap<String, String> getColumnProperties(int column) {
 		return mSourceTableModel.getColumnProperties(column);
 	}

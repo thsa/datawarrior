@@ -61,6 +61,16 @@ public interface IPluginHelper {
 	int findColumn(String columnTitle);
 
 	/**
+	 * Use this method whenever you need to display a column title.
+	 * For displayable columns this method returns the alias (if existing) or the
+	 * original column name. For non-displayable columns a title is constructed from type and
+	 * parent title like <i>Structure [2D-Coordinates]</i> or <i>Reaction [ReactionFp]</i>.
+	 * findColumn(String columnName) is guaranteed to correctly return the column index from this title.
+	 * @return
+	 */
+	String getColumnTitle(int column);
+
+	/**
 	 * @param column
 	 * @return all column properties of the specified column
 	 */

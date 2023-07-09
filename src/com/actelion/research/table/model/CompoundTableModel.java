@@ -1968,7 +1968,7 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	/**
-	 * Convenience method that returns the a related column given column and relation type, e.g. finds the catalyst column for a given reaction column.
+	 * Convenience method that returns the related column given column and relation type, e.g. finds the catalyst column for a given reaction column.
 	 * @param column
 	 * @param relation e.g. cColumnPropertyIdentifierColumn or cColumnPropertyCatalystColumn
 	 * @return related column for given type or -1

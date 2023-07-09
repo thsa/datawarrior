@@ -1579,6 +1579,10 @@ try {
 		return mColumnProperties == null ? null : mColumnProperties.get(columnName + "\t" + cColumnPropertySpecialType);
 		}
 
+	public String getColumnProperty(String columnName, String property) {
+		return mColumnProperties == null ? null : mColumnProperties.get(columnName + "\t" + property);
+		}
+
 	private void readHitlistData(BufferedReader theReader) {
 		mHitlists = new ArrayList<String>();
 		try {

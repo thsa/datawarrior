@@ -19,6 +19,7 @@
 package com.actelion.research.datawarrior.action;
 
 import com.actelion.research.chem.SortedStringList;
+import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.CompoundTableLoader;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -277,7 +278,8 @@ public class DEAppendFileDialog extends JDialog
                              || visibleDestColumn[j] == CompoundTableLoader.NO_COLUMN)
                                 destColumn[i] = visibleDestColumn[j];
                             else {
-                                int column = mTableModel.getChildColumn(visibleDestColumn[j], specialType);
+								String reactionPart = mLoader.getColumnProperty(mTotalFieldName[i], CompoundTableConstants.cColumnPropertyReactionPart);
+                                int column = mTableModel.getChildColumn(visibleDestColumn[j], specialType, reactionPart);
                                 if (column != -1)
                                     destColumn[i] = column;
                                 else

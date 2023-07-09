@@ -500,7 +500,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 		Thread[] t = new Thread[threadCount];
 		for (int i=0; i<threadCount; i++) {
 			final int treadIndex = i;
-			t[i] = new Thread("Abstract ChemProp Calculator "+(i+1)) {
+			t[i] = new Thread("Abstract Chemistry Calculator "+(i+1)) {
 				public void run() {
 					StereoMolecule containerMol = new StereoMolecule();
 					int recordIndex = mSMPRecordIndex.decrementAndGet();

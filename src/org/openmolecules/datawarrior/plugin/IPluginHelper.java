@@ -103,6 +103,19 @@ public interface IPluginHelper {
 	String[] getCellData(int row, int column);
 
 	/**
+	 * If all cells of one column can be numerically interpreted or if the columns is defined
+	 * to contain numerical values, then this method gets the numerical interpretation of a
+	 * cell from this column. If that cell contrains multiple values, then this method returns
+	 * a mean,median,sum,min,max value depending on the summary mode defined for that column.
+	 * If a column is defined to treat values logarithmically, the the logarithm of the (summarized)
+	 * value is returned. For empty cells and cells with non numerical content NaN is returned.
+	 * @param row total row index, which includes invisible rows
+	 * @param column total column index, which includes invisible columns
+	 * @return numerical cell content interpretation of active DataWarrior window
+	 */
+	double getCellDataNumerical(int row, int column);
+
+	/**
 	 * Assuming that the given column contains chemical structures, the cell's structure
 	 * is converted into molfile version 2, which is then returned.
 	 * @param row

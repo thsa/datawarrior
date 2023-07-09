@@ -152,6 +152,11 @@ public class PluginHelper implements IPluginHelper {
 	}
 
 	@Override
+	public double getCellDataNumerical(int row, int column) {
+		return mSourceTableModel.getTotalDoubleAt(row, column);
+	}
+
+	@Override
 	public String getCellDataAsSmiles(int row, int column) {
 		if (!mSourceTableModel.isColumnTypeStructure(column))
 			return null;

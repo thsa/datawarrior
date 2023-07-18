@@ -53,6 +53,13 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 	private static final String PROPERTY_TRANSFORMATION = "transformation";
 	private static final String PROPERTY_KEEP_COORDS = "keepCoords";
 
+	private static final int WARNING_CYCLIC_REFERENCE = 1;
+	private static final int WARNING_SELF_REFERENCE = 2;
+	private static final String[] WARNING_TEXT = {
+		"Couldn't resolve R-groups within R-groups\nbecause of cyclic references",
+		"Self referencing R-group(s) found",
+		};
+
 	public static final String TASK_NAME = "Merge Columns";
 
 	private CompoundTableModel	mTableModel;
@@ -62,6 +69,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 	private JCheckBox			mCheckBoxRemove,mCheckBoxKeepCoords,mCheckBoxUseTransformation;
 	private DETable				mTable;
 	private JEditableChemistryView mTransformationView;
+	private int                 mWarnings;
 
 	public DETaskMergeColumns(DEFrame owner) {
 		super(owner, true);
@@ -400,6 +408,10 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 				else
 					mergeCellsByTransformation(mTableModel.getTotalRecord(row), column, result[row], new Reactor(rxn));
 				}
+
+			for (int i=0; i<WARNING_TEXT.length; i++)
+				if ((mWarnings & (1 << i)) != 0)
+					showErrorMessage(WARNING_TEXT[i]+" in some row(s).");
 			}
 		else {
 			for (int row = 0; row<mTableModel.getTotalRowCount(); row++)
@@ -595,7 +607,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 						if (atomicNo >= 129 && atomicNo <= 144) {
 							int rgi = rGroupIndex[(atomicNo>=142) ? atomicNo - 141 : atomicNo - 125];
 							if (rgi == i) {
-								showErrorMessage("Self referencing R-group: "+Molecule.cAtomLabel[atomicNo]);
+								mWarnings |= WARNING_SELF_REFERENCE;
 								return;
 								}
 							if (rgi != -1)
@@ -622,7 +634,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 						}
 					}
 				if (!hasResolvedRGroups) {
-					showErrorMessage("Couldn't resilve R-groups within R-groups because of cyclic references.");
+					mWarnings |= WARNING_CYCLIC_REFERENCE;
 					return;
 					}
 				}
@@ -698,21 +710,15 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 					else {
 						int atomStart = mol.getAllAtoms();
 						int bondStart = mol.getAllBonds();
-						mol.addMolecule(rGroup[rGroupIndex1]);
 						wasAdded[rGroupIndex1] = true;
 						needsArrangement = true;
 						for (int atom2=atomStart; atom2<mol.getAllAtoms(); atom2++) {
 							if (mol.getAtomicNo(atom2) == 0) {
 								if (mol.getAtomCustomLabel(atom2) == null) {
 									// Primary attachment points are atomicNo==0 with no custom label.
-									for (int bond2=bondStart; bond2<mol.getAllBonds(); bond2++) {
-										for (int j=0; j<2; j++) {
-											if (mol.getBondAtom(j, bond2) == atom2) {
-												mol.setBondAtom(j, bond2, coreAtom);
-												}
-											}
-										}
-									mol.markAtomForDeletion(atom2);
+									double angle = mol.getBondAngle(coreAtom, atom1);
+									int bondType = mol.getBondType(mol.getConnBond(atom1, 0));
+									mol.addSubstituent(rGroup[rGroupIndex1], coreAtom, angle, bondType);
 									mol.markAtomForDeletion(atom1);
 									needsDeletion = true;
 									}
@@ -720,6 +726,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 									// Atoms with atomicNo==0 and customs labels '1','2',etc encode links back to core,
 									// when R-groups have multiple attachments to the core fragment.
 									try {
+										// TODO improve stereo chemistry handling
 										int backLinkRGroupIndex = Integer.parseInt(mol.getAtomCustomLabel(atom2));
 										if (backLinkRGroupIndex >= 1 && backLinkRGroupIndex <= 16) {
 											for (int atom3=0; atom3<atomStart; atom3++) {

@@ -50,11 +50,10 @@ public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
 
 	private DefaultCompoundCollectionModel.Molecule mScaffoldQueryModel;
 	private JCheckBox			mCheckBoxDistinguishStereocenters,mCheckBoxUseExistingColumns;
-	private CoreBasedSARAnalyzer mSARAnalyzer;
 	private boolean             mIs2ndStepSAR;
-	private boolean[]           mScaffoldAssigned;
 	private int					mFirstRGroup,mStructureColumn,mScaffoldColumn,mScaffoldCoordsColumn,mMultipleMatches,mNewColumnCount;
 	private int[]				mSubstituentColumn;
+	private SARMoleculeData[]   mMoleculeData;
 
     public DETaskCoreBasedSAR(DEFrame parent) {
 		super(parent, DESCRIPTOR_NONE, false, false);
@@ -212,7 +211,6 @@ public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
 		boolean distinguishStereoCenters = "true".equals(configuration.getProperty(PROPERTY_DISTINGUISH_STEREO_ISOMERS));
 
 		int rowCount = getTableModel().getTotalRowCount();
-		mScaffoldAssigned = new boolean[rowCount];
 		mStructureColumn = getChemistryColumn(configuration);
 
 		// If we run a SAR deconvolution from a scaffold column that is the result of a previous SAR deconvolution, then
@@ -234,14 +232,20 @@ public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
 				mFirstRGroup = Math.max(mFirstRGroup, 1 + getRGoupNoFromColumnName(getTableModel(), column));
 			}
 
+		mMoleculeData = new SARMoleculeData[rowCount];
+		int substituentCount = 0;
 		String[] queryIDCode = configuration.getProperty(PROPERTY_SCAFFOLD_LIST, "").split("\\t");
 
 		for (String idcode:queryIDCode) {
 try {   // TODO remove
 			StereoMolecule query = new IDCodeParser(true).getCompactMolecule(idcode);
-			mSARAnalyzer = new CoreBasedSARAnalyzer(query);
-			if (!processScaffoldGroup())
+			CoreBasedSARAnalyzer analyzer = new CoreBasedSARAnalyzer(query, rowCount);
+			if (!processScaffoldGroup(analyzer))
 				notFoundCount++;
+
+			if (substituentCount < analyzer.getRGroupCount())
+				substituentCount = analyzer.getRGroupCount();
+
 } catch (Exception e) { e.printStackTrace(); }
 			}
 
@@ -250,8 +254,6 @@ try {   // TODO remove
 			showInteractiveTaskMessage(message, JOptionPane.INFORMATION_MESSAGE);
 			return false;
 			}
-
-		int substituentCount = mSARAnalyzer.getRGroupCount();
 
 		mScaffoldColumn = cTableColumnNew;
 		mScaffoldCoordsColumn = cTableColumnNew;
@@ -301,9 +303,10 @@ try {   // TODO remove
 	 * - For core exit vector with changing substituents, the substituent of every row is created and put into mSubstituent.<br>
 	 * - For core exit vector with no or a constant substituent, mSubstituent is set to null and a constant substituent is attached to the core structure.<br>
 	 * - The decorated scaffold structure is written into mScaffold for these rows.<br>
+	 * @param analyzer
 	 * @return false if the scaffold could not be found in any row or an error accurrs
 	 */
-	private boolean processScaffoldGroup() {
+	private boolean processScaffoldGroup(CoreBasedSARAnalyzer analyzer) {
 		mMultipleMatches = 0;
 
 		startProgress("Analyzing substituents...", 0, getTableModel().getTotalRowCount());
@@ -315,36 +318,35 @@ try {   // TODO remove
 			if (threadMustDie())
 				break;
 
-			if (mScaffoldAssigned[row])
+			if (mMoleculeData[row] != null)
 				continue;
 
-System.out.println("processScaffoldGroup() row:"+row);
 			updateProgress(row+1);
 
 			byte[] idcode = (byte[])getTableModel().getTotalRecord(row).getData(mStructureColumn);
 			if (idcode != null) {
 				byte[] coords = (byte[])getTableModel().getTotalRecord(row).getData(coordinateColumn);
 				long[] ffp = (long[])getTableModel().getTotalRecord(row).getData(fingerprintColumn);
-				int matchCount = mSARAnalyzer.addMolecule(idcode, coords, ffp);
+				int matchCount = analyzer.setMolecule(idcode, coords, ffp, row);
 				if (matchCount > 1)
 					mMultipleMatches++;
 				}
 			}
 
-		if (mSARAnalyzer.getScaffolds().size() == 0)
+		if (analyzer.getScaffolds().size() == 0)
 			return false;
 
 		if (threadMustDie())
 			return false;
 
-		if (!mSARAnalyzer.analyze(mFirstRGroup)) {
+		if (!analyzer.analyze(mFirstRGroup)) {
 			final String message = "Some scaffolds could not be processed, because\rthe maximum number of allowed R-groups was exceeded.";
 			showInteractiveTaskMessage(message, JOptionPane.INFORMATION_MESSAGE);
 			}
 
 		for (int row=0; row<getTableModel().getTotalRowCount(); row++)
-			if (mSARAnalyzer.getMoleculeData().get(row) != null)
-				mScaffoldAssigned[row] = true;
+			if (analyzer.getMoleculeData(row) != null)
+				mMoleculeData[row] = analyzer.getMoleculeData(row);
 
 		return true;
 		}
@@ -375,14 +377,13 @@ System.out.println("processScaffoldGroup() row:"+row);
 
 	@Override
 	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
-		SARMoleculeData moleculeData = mSARAnalyzer.getMoleculeData().get(row);
-		if (moleculeData != null) {
+		if (mMoleculeData[row] != null) {
 			getTableModel().removeChildDescriptorsAndCoordinates(row, mScaffoldColumn);
-			getTableModel().setTotalValueAt(moleculeData.getScaffoldData().getIDCodeWithRGroups(), row, mScaffoldColumn);
-			getTableModel().setTotalValueAt(moleculeData.getScaffoldData().getIDCoordsWithRGroups(), row, mScaffoldCoordsColumn);
+			getTableModel().setTotalValueAt(mMoleculeData[row].getScaffoldData().getIDCodeWithRGroups(), row, mScaffoldColumn);
+			getTableModel().setTotalValueAt(mMoleculeData[row].getScaffoldData().getIDCoordsWithRGroups(), row, mScaffoldCoordsColumn);
 
-			String[] substituent = moleculeData.getSubstituents();
-			ScaffoldData scaffoldData = moleculeData.getScaffoldData();
+			String[] substituent = mMoleculeData[row].getSubstituents();
+			ScaffoldData scaffoldData = mMoleculeData[row].getScaffoldData();
 			for (int exitVectorIndex=0; exitVectorIndex<scaffoldData.getExitVectorCount(); exitVectorIndex++) {
 				ExitVector exitVector = scaffoldData.getExitVector(exitVectorIndex);
 				if (exitVector.getRGroupNo() != 0) {

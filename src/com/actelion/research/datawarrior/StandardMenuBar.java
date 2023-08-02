@@ -148,7 +148,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuChemExtractReactants,jMenuChemExtractCatalysts,jMenuChemExtractProducts,jMenuChemExtractTransformation,
 					  jMenuChemCCLibrary,jMenuChemEALibrary,jMenuChemEnumerateMarkush,jMenuChemAddProperties,jMenuChemAddFormula,jMenuChemAddSmiles,
 					  jMenuChemAddInchi,jMenuChemAddInchiKey,jMenuChemAddCanonicalCode,jMenuChemCreate2DCoords,jMenuChemCreate3DCoords,
-					  jMenuChemSuperpose,jMenuChemDock,jMenuChemAddLargestFragment,
+					  jMenuChemSuperpose,jMenuChemDock, jMenuChemExtractFragment,
 					  jMenuChemAddSubstructureCount,jMenuChemAddStructureFromName,jMenuChemAutomaticSARTable,jMenuChemCoreBasedSARTable,jMenuChemInteractiveSARTable,
 					  jMenuChemAnalyzeScaffolds,jMenuChemAnalyzeCliffs,jMenuChemMatchFile,jMenuChemSelectDiverse,
 					  jMenuChemCluster,jMenuChemExtract3DFragments,jMenuChemMapReactions,jMenuChemCompareReactionMapping,
@@ -778,7 +778,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemAddInchi = new JMenuItem();
 		jMenuChemAddInchiKey = new JMenuItem();
 		jMenuChemAddCanonicalCode = new JMenuItem();
-		jMenuChemAddLargestFragment = new JMenuItem();
+		jMenuChemExtractFragment = new JMenuItem();
 		jMenuChemAddSubstructureCount = new JMenuItem();
 		jMenuChemAddStructureFromName = new JMenuItem();
 		jMenuChemCreate2DCoords = new JMenuItem();
@@ -839,10 +839,10 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemAddInchiKey.addActionListener(this);
 		jMenuChemAddCanonicalCode.setText("Add Canonical Code...");
 		jMenuChemAddCanonicalCode.addActionListener(this);
-		jMenuChemAddLargestFragment.setText("Add Largest Fragment...");
-		jMenuChemAddLargestFragment.addActionListener(this);
 		jMenuChemAddSubstructureCount.setText("Add Substructure Count...");
 		jMenuChemAddSubstructureCount.addActionListener(this);
+		jMenuChemExtractFragment.setText("Extract Fragment...");
+		jMenuChemExtractFragment.addActionListener(this);
 		jMenuChemAddStructureFromName.setText("Add Structures From Name...");
 		jMenuChemAddStructureFromName.addActionListener(this);
 		jMenuChemCreate2DCoords.setText("Generate 2D Atom Coordinates...");
@@ -911,8 +911,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemFromStructure.add(jMenuChemAddInchi);
 		jMenuChemFromStructure.add(jMenuChemAddInchiKey);
 		jMenuChemFromStructure.add(jMenuChemAddCanonicalCode);
-		jMenuChemFromStructure.add(jMenuChemAddLargestFragment);
 		jMenuChemFromStructure.add(jMenuChemAddSubstructureCount);
+		jMenuChemFromStructure.add(jMenuChemExtractFragment);
 		addIdorsiaChemistryMenuOptions(jMenuChemFromStructure);
 
 		JMenu jMenuChemFromReaction = new JMenu("From Chemical Reaction");
@@ -1645,10 +1645,10 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskAddInchiKey(mParentFrame).defineAndRun();
 			else if (source == jMenuChemAddCanonicalCode)
 				new DETaskAddCanonicalCode(mParentFrame).defineAndRun();
-			else if (source == jMenuChemAddLargestFragment)
-				new DETaskAddLargestFragment(mParentFrame).defineAndRun();
 			else if (source == jMenuChemAddSubstructureCount)
 				new DETaskAddSubstructureCount(mParentFrame).defineAndRun();
+			else if (source == jMenuChemExtractFragment)
+				new DETaskExtractFragment(mParentFrame).defineAndRun();
 			else if (source == jMenuChemAddStructureFromName)
 				new DETaskAddStructureFromName(mParentFrame).defineAndRun();
 			else if (source == jMenuChemExtractReactants)

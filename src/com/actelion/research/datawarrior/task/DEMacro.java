@@ -20,6 +20,7 @@ package com.actelion.research.datawarrior.task;
 
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.task.chem.DETaskClusterCompounds;
+import com.actelion.research.datawarrior.task.chem.DETaskExtractFragment;
 import com.actelion.research.datawarrior.task.chem.elib.DETaskBuildEvolutionaryLibrary;
 import com.actelion.research.datawarrior.task.data.*;
 import com.actelion.research.datawarrior.task.data.fuzzy.DETaskCalculateFuzzyScore;
@@ -30,12 +31,7 @@ import com.actelion.research.datawarrior.task.view.*;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.io.BOMSkipper;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -381,6 +377,8 @@ public class DEMacro implements CompoundTableConstants {
 			}
 		else if (taskCode.equals("addFuzzyScore"))
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskCalculateFuzzyScore.TASK_NAME);
+		else if (taskCode.equals("addLargestFragment"))
+			return StandardTaskFactory.constructTaskCodeFromName(DETaskExtractFragment.TASK_NAME);
 		else if (taskCode.equals("copy"))
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskCopyTableCells.TASK_NAME);
 		else if (taskCode.equals("createBinsFromNumbers"))

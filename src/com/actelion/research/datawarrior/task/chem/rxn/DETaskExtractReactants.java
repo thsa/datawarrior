@@ -111,7 +111,7 @@ public class DETaskExtractReactants extends DETaskAbstractFromReaction {
 	@Override
 	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		Reaction rxn = getChemicalReaction(row);
-		if (rxn != null & rxn.getReactants() != 0) {
+		if (rxn != null && rxn.getReactants() != 0) {
 			StereoMolecule reactants = rxn.getReactant(0);
 			for (int i=1; i<rxn.getReactants(); i++)
 				reactants.addMolecule(rxn.getReactant(i));

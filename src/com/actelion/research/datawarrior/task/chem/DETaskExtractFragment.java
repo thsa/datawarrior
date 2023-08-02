@@ -243,22 +243,30 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 
 	private void handleMolecule(StereoMolecule mol, int row, int threadIndex) {
 		if (mExtractOption == OPTION_SUBSTRUCTURE) {
-			int rootAtom = -1;
+			int[] matchList = null;
 			if (mSearcherWithIndex != null) {
 				mSearcherWithIndex[threadIndex].setMolecule(mol, (long[])getTableModel().getTotalRecord(row).getData(mFFPColumn));
-				if (mSearcherWithIndex[threadIndex].findFragmentInMolecule(SSSearcher.cCountModeFirstMatch, SSSearcher.cDefaultMatchMode) != 0)
-					rootAtom = mSearcherWithIndex[threadIndex].getGraphMatcher().getMatchList().get(0)[0];
+				if (mSearcherWithIndex[threadIndex].findFragmentInMolecule(SSSearcher.cCountModeFirstMatch, SSSearcher.cDefaultMatchMode) != 0) {
+					matchList = mSearcherWithIndex[threadIndex].getGraphMatcher().getMatchList().get(0);
+					}
 				}
 			else {
 				mSearcher[threadIndex].setMolecule(mol);
 				if (mSearcher[threadIndex].findFragmentInMolecule(SSSearcher.cCountModeFirstMatch, SSSearcher.cDefaultMatchMode) != 0)
-					rootAtom = mSearcher[threadIndex].getMatchList().get(0)[0];
+					matchList = mSearcher[threadIndex].getMatchList().get(0);
 				}
 
-			if (rootAtom == -1) {
+			if (matchList == null) {
 				mol.clear();
 				}
 			else {
+				int rootAtom = -1;
+				for (int atom:matchList) {
+					if (atom != -1) {
+						rootAtom = atom;
+						break;
+						}
+					}
 				boolean[] isFragmentMember = new boolean[mol.getAllAtoms()];
 				mol.getFragmentAtoms(rootAtom, false, isFragmentMember);
 				for (int i=0; i<isFragmentMember.length; i++)

@@ -101,23 +101,29 @@ construct a normalized tautomer, make a canonical representation from it and fin
 This way different stereo isomers and different tautomers would end up in the same structure and, therefore, produce
 the same hash code.</p>
 
-<p><a name="AddLargestFragment"></a><b>Add Largest Fragment...:</b> This removes counter ions from salts,
-removes water molecules, and removes other potentially not important small molecules from the largest
-and supposedly relevant molecule. The cleaned largest structure is then written into a new structure column.
-If the option <b>Neutralize charges</b> is selected, then <span class="keyword">DataWarrior</span> tries
-to remove charges to neutralize the overall molecule. If <b>Convert to sub-structure</b> is selected, then the
-generated fragments as well as the new column itself are marked to be/contain sub-structures instead of molecules.
-Therefore, the fragments do not have implicit hydrogen atoms and a double click opens the structure editor in
-sub-structure mode, which lets you define atom and bond query features. When selecting a few sub-structures
-before starting a database query, you may choose in the query dialog to search the database agains any of the
-selected sub-structures in one search.
-</p>
-
 <p><a name="AddSubstructureCount"></a><b>Add Substructure Count...:</b> This function determines for every molecule in a
 table column, how many times a given substructure can be found inside the molecule's structure. In addition to the
 substructure fragment itself, one may define whether the substructure search algorithm should only count separate
 matches or whether matches shall be considered, which include atoms being part of an earlier counted match.
 When counting benzene rings, then it would be found one or two times in naphtalene, depending on this setting.</p>
+
+<p><a name="ExtractFragment"></a><b>Extract Fragment...:</b> If a molecular structure consists of multiple
+disconnected fragments, this function can be used to put a copy of the relevant fragment into a new column.
+Typically, this is used to remove counter ions from salts, to remove water molecules, or to remove otherwise
+not important small molecules from the largest and supposedly relevant molecule. Therefore, the default option is
+to extract the <b>largest fragment</b>, but one may also provide a <b>substructure</b>, which a fragment must
+contain in order to be recognized as the relevant fragment.<br>
+If the option <b>Neutralize charges</b> is selected, then <span class="keyword">DataWarrior</span> tries
+to remove charges to neutralize the new fragment. If <b>Convert to sub-structure</b> is selected, then the
+extracted fragments are put as sub-structures instead of molecules into the new column.
+Substructures differ from molecules in two ways: First, atoms with open valences are not assumed to be filled
+with implicit hydrogen atoms. Second, a double click opens the structure editor in sub-structure mode, which lets
+you define atom and bond query features as well as define exclude groups. Obviously, substructures can be used
+as criteria in a substructure search, e.g. to query a database. In <span class="keyword">DataWarrior</span>
+database queries may contain multiple substructures at once. Often, you can select multiple rows before opening
+a database query dialog (e.g. for building block search). After opening the search dialog then, you may select
+an option to search the database for all these selected (sub-)structures at once.
+</p>
 
 <p align="center"><img src="help/img/chem/substructureCount.jpeg" width=251 height=255></p>
 <p><center><i>Dialog configured to count hydroxy groups in molecules.</i></center></p>

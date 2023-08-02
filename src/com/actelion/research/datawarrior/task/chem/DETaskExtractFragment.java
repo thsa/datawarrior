@@ -104,7 +104,7 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 
 	@Override
 	public String getHelpURL() {
-		return "/html/help/chemistry.html#AddLargestFragment";
+		return "/html/help/chemistry.html#ExtractFragment";
 		}
 
 	@Override

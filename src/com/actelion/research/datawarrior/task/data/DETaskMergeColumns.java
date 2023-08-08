@@ -710,51 +710,49 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 					else {
 						int atomStart = mol.getAllAtoms();
 						int bondStart = mol.getAllBonds();
+
+						double angle = mol.getBondAngle(coreAtom, atom1);
+						int bondType = mol.getBondType(mol.getConnBond(atom1, 0));
+						mol.addSubstituent(rGroup[rGroupIndex1], coreAtom, angle, bondType);
+						mol.markAtomForDeletion(atom1);
+						needsDeletion = true;
+
 						wasAdded[rGroupIndex1] = true;
 						needsArrangement = true;
 						for (int atom2=atomStart; atom2<mol.getAllAtoms(); atom2++) {
-							if (mol.getAtomicNo(atom2) == 0) {
-								if (mol.getAtomCustomLabel(atom2) == null) {
-									// Primary attachment points are atomicNo==0 with no custom label.
-									double angle = mol.getBondAngle(coreAtom, atom1);
-									int bondType = mol.getBondType(mol.getConnBond(atom1, 0));
-									mol.addSubstituent(rGroup[rGroupIndex1], coreAtom, angle, bondType);
-									mol.markAtomForDeletion(atom1);
-									needsDeletion = true;
-									}
-								else {
-									// Atoms with atomicNo==0 and customs labels '1','2',etc encode links back to core,
-									// when R-groups have multiple attachments to the core fragment.
-									try {
-										// TODO improve stereo chemistry handling
-										int backLinkRGroupIndex = Integer.parseInt(mol.getAtomCustomLabel(atom2));
-										if (backLinkRGroupIndex >= 1 && backLinkRGroupIndex <= 16) {
-											for (int atom3=0; atom3<atomStart; atom3++) {
-												int atomicNo3 = mol.getAtomicNo(atom3);
-												if (atomicNo3 >= 129 && atomicNo3 <= 144 && mol.getConnAtoms(atom3) >= 1) {
-													int rGroupNo3 = (atomicNo3 >= 142) ? atomicNo3 - 141 : atomicNo3 - 125;
-													if (rGroupNo3 == backLinkRGroupIndex) {
-														for (int bond2=bondStart; bond2<mol.getAllBonds(); bond2++) {
-															for (int j=0; j<2; j++) {
-																if (mol.getBondAtom(j, bond2) == atom2) {
-																	mol.setBondAtom(j, bond2, mol.getConnAtom(atom3, 0));
-																	}
+							if (mol.getAtomicNo(atom2) == 0
+							 && mol.getAtomCustomLabel(atom2) != null) {
+								// Atoms with atomicNo==0 and customs labels '1','2',etc encode links back to core,
+								// when R-groups have multiple attachments to the core fragment.
+								try {
+									// TODO improve stereo chemistry handling
+									int backLinkRGroupIndex = Integer.parseInt(mol.getAtomCustomLabel(atom2));
+									if (backLinkRGroupIndex >= 1 && backLinkRGroupIndex <= 16) {
+										for (int atom3=0; atom3<atomStart; atom3++) {
+											int atomicNo3 = mol.getAtomicNo(atom3);
+											if (atomicNo3 >= 129 && atomicNo3 <= 144 && mol.getConnAtoms(atom3) >= 1) {
+												int rGroupNo3 = (atomicNo3 >= 142) ? atomicNo3 - 141 : atomicNo3 - 125;
+												if (rGroupNo3 == backLinkRGroupIndex) {
+													for (int bond2=bondStart; bond2<mol.getAllBonds(); bond2++) {
+														for (int j=0; j<2; j++) {
+															if (mol.getBondAtom(j, bond2) == atom2) {
+																mol.setBondAtom(j, bond2, mol.getConnAtom(atom3, 0));
 																}
 															}
-														mol.markAtomForDeletion(atom2);
-														mol.markAtomForDeletion(atom3);
-														needsDeletion = true;
-														if (rGroupIndex[rGroupNo3] != -1)
-															wasAdded[rGroupIndex[rGroupNo3]] = true;
-														break;
 														}
+													mol.markAtomForDeletion(atom2);
+													mol.markAtomForDeletion(atom3);
+													needsDeletion = true;
+													if (rGroupIndex[rGroupNo3] != -1)
+														wasAdded[rGroupIndex[rGroupNo3]] = true;
+													break;
 													}
 												}
 											}
 										}
-									catch (NumberFormatException nfe) {
-										nfe.printStackTrace();
-										}
+									}
+								catch (NumberFormatException nfe) {
+									nfe.printStackTrace();
 									}
 								}
 							}

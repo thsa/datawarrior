@@ -591,9 +591,9 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 				}
 			}
 
-		/* We check for all R-groups, which of them contain other R-groups that we can resolve, because they are known.
-		 * Then we repeatedly go through all R-group structures and replace all Rn-atoms, of which we know the structure
-		 * and where the structure doesn't contain other known R-groups, with the structure.
+		/* We determine for all R-groups, whether they contain other R-groups, which we can resolve, because they are known.
+		 * Then we repeatedly go through all R-group structures and replace those Rn-atoms with the known structure
+		 * where this structure doesn't contain another known R-group.
 		 * This, of course, implies that we don't have cyclic R-group inclusion, but it allows recursive R-group inclusion:
 		 * R1 contains R2 and R2 contains R3 is allowed, while R1 contains R2 and R2 contains R1 is not allowed.
 		 */
@@ -673,8 +673,8 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		}
 
 	/**
-	 * If the molecule mol contains Rn atoms and if the respective Rn group exists (rGroupIndex[n] != -1),
-	 * then the Rn-atom is replaced by respective R-group structure taken from rGroup[rGroupIndex[n]].
+	 * If the molecule mol contains Rn atoms, then every Rn atom for which an R-group exists (rGroupIndex[n] != -1)
+	 * is replaced by the given rGroup[rGroupIndex[n]], provided that this R-group does not contain other R-groups.
 	 * If that R-group structure contains an atom labelled '1','2',... ('x') indicating a ring closure
 	 * connection back to the molecule and if mol contains a Rx atom, then the Rx atom and the labelled
 	 * atom are replaced by a bond connecting their neighbours and closing the ring.
@@ -692,13 +692,16 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		int rGroupIndexesResolved = 0;
 
 		int originalAtomCount = mol.getAllAtoms();
+		mol.removeAtomMarkers();
 		boolean needsDeletion = false;
 		boolean needsArrangement = false;
 		for (int atom1=0; atom1<originalAtomCount; atom1++) {
 			int atomicNo1 = mol.getAtomicNo(atom1);
-
-			// The Rn atom should exactly have one neighbour, but mol may have been edited by an evil user
-			if (atomicNo1 >= 129 && atomicNo1 <= 144 && mol.getConnAtoms(atom1) >= 1) {
+			if (atomicNo1 < 129 || atomicNo1 > 144) {
+				mol.setAtomMarker(atom1, true);
+				}
+			else if (mol.getConnAtoms(atom1) >= 1) {
+				// The Rn atom should exactly have one neighbour, but mol may have been edited by an evil user
 				int coreAtom = mol.getConnAtom(atom1, 0);
 				int rGroupIndex1 = rGroupIndex[atomicNo1 >= 142 ? atomicNo1 - 141 : atomicNo1 - 125];
 				if (rGroupIndex1 != -1
@@ -726,13 +729,13 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 								// when R-groups have multiple attachments to the core fragment.
 								try {
 									// TODO improve stereo chemistry handling
-									int backLinkRGroupIndex = Integer.parseInt(mol.getAtomCustomLabel(atom2));
-									if (backLinkRGroupIndex >= 1 && backLinkRGroupIndex <= 16) {
+									int backLinkRGroupNo = Integer.parseInt(mol.getAtomCustomLabel(atom2));
+									if (backLinkRGroupNo >= 1 && backLinkRGroupNo <= 16) {
 										for (int atom3=0; atom3<atomStart; atom3++) {
 											int atomicNo3 = mol.getAtomicNo(atom3);
 											if (atomicNo3 >= 129 && atomicNo3 <= 144 && mol.getConnAtoms(atom3) >= 1) {
 												int rGroupNo3 = (atomicNo3 >= 142) ? atomicNo3 - 141 : atomicNo3 - 125;
-												if (rGroupNo3 == backLinkRGroupIndex) {
+												if (rGroupNo3 == backLinkRGroupNo) {
 													for (int bond2=bondStart; bond2<mol.getAllBonds(); bond2++) {
 														for (int j=0; j<2; j++) {
 															if (mol.getBondAtom(j, bond2) == atom2) {
@@ -745,6 +748,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 													needsDeletion = true;
 													if (rGroupIndex[rGroupNo3] != -1)
 														wasAdded[rGroupIndex[rGroupNo3]] = true;
+													rGroupIndexesResolved |= (1 << rGroupIndex[rGroupNo3]);
 													break;
 													}
 												}
@@ -765,8 +769,15 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		if (needsDeletion)
 			mol.deleteMarkedAtomsAndBonds();
 
-		if (needsArrangement)
-			new CoordinateInventor(keepCoords ? CoordinateInventor.MODE_KEEP_MARKED_ATOM_COORDS : 0).invent(mol);
+		if (needsArrangement) {
+			mol.ensureHelperArrays(Molecule.cHelperParities);
+
+			int mode = CoordinateInventor.MODE_REMOVE_HYDROGEN;
+			if (keepCoords)
+				mode |= CoordinateInventor.MODE_KEEP_MARKED_ATOM_COORDS;
+
+			new CoordinateInventor(mode).invent(mol);
+			}
 
 		return rGroupIndexesResolved;
 		}

@@ -2021,8 +2021,13 @@ public class CompoundTableModel extends AbstractTableModel
 
 						String parent = getColumnProperty(j, cColumnPropertyParentColumn);
 						if (parent != null && parent.equals(mColumnInfo[i].name)) {
-							removeColumn[j] = true;
-							removalCount++;
+							if (isColumnDisplayable(j)) {
+								setColumnProperty(j, cColumnPropertyParentColumn, null);
+								}
+							else {
+								removeColumn[j] = true;
+								removalCount++;
+								}
 							}
 						}
 					}

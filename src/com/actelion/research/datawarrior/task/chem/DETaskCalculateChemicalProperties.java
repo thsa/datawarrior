@@ -507,7 +507,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 
 	   	addProperty(TOTAL_WEIGHT, 0, "Total Molweight", "Total average molweight in g/mol; natural abundance");
 		addProperty(FRAGMENT_WEIGHT, 0, "Molweight", "Average molweight of largest fragment in g/mol; natural abundance");
-		addProperty(FRAGMENT_ABS_WEIGHT, 0, "Monoisotopic Mass", "Monoisotopic mass of largest fragment in g/mol; most abundant isomers");
+		addProperty(FRAGMENT_ABS_WEIGHT, 0, "Monoisotopic Mass", "Monoisotopic mass of largest fragment in g/mol; most abundant isotopes");
 		addProperty(LOGP, 0, "cLogP", "cLogP; P: conc(octanol)/conc(water)", null, null, PREDICTOR_FLAG_LOGP);
 		addProperty(LOGS, 0, "cLogS", "cLogS; S: water solubility in mol/l, pH=7.5, 25C", null, null, PREDICTOR_FLAG_LOGS);
 		addProperty(LOGD, 0, "cLogD (pH=7.4)", "cLogD at pH=7.4; via logP and ChemAxon pKa", null, null, PREDICTOR_FLAG_LOGP | PREDICTOR_FLAG_PKA);

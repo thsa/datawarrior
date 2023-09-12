@@ -4143,7 +4143,7 @@ public class CompoundTableModel extends AbstractTableModel
 				mColumnInfo[column].mCategoryCustomOrder.add(s);
 			}
 		mColumnInfo[column].categoryList = setupCategoryList(column);
-		assignRecordsToCategories(column, 0);
+		assignRecordsToCategories(column);
 		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column), null);
 		}
 
@@ -4640,11 +4640,8 @@ public class CompoundTableModel extends AbstractTableModel
 					mColumnInfo[column].categoryList = null;
 				}
 
-			if (mColumnInfo[column].categoryList != null) {
-				boolean countChanged = (mColumnInfo[column].categoryList.getSize() != categoryCountBeforeChange);
-				if (countChanged || !isAfterDeletion)	// if we deleted and count is unchanged we don't need to assign
-					assignRecordsToCategories(column, countChanged ? 0 : firstRow);	// if append and count is unchanged we just assign new rows
-				}
+			if (mColumnInfo[column].categoryList != null)
+				assignRecordsToCategories(column);
 			}
 		}
 
@@ -4728,16 +4725,13 @@ public class CompoundTableModel extends AbstractTableModel
 	 * (min, max and values remain untouched in float- or date-categories)
 	 * @param column
 	 */
-	private void assignRecordsToCategories(int column, int firstRow) {
+	private void assignRecordsToCategories(int column) {
 		if ((mColumnInfo[column].type & (cColumnTypeCategory | cColumnTypeDouble | cColumnTypeDate)) == cColumnTypeCategory) {
-			if (firstRow == 0) {
-				int categoryCount = mColumnInfo[column].categoryList.getSize();
-				mColumnInfo[column].minValue = 0.0f;
-				mColumnInfo[column].maxValue = mColumnInfo[column].belongsToMultipleCategories ?
-												categoryCount+1 : categoryCount;
-				}
+			int categoryCount = mColumnInfo[column].categoryList.getSize();
+			mColumnInfo[column].minValue = 0.0f;
+			mColumnInfo[column].maxValue = mColumnInfo[column].belongsToMultipleCategories ? categoryCount+1 : categoryCount;
 
-			for (int row=firstRow; row<mRecord.length; row++)
+			for (int row=0; row<mRecord.length; row++)
 				mRecord[row].mFloat[column] = 0.5f + calcCategoryIndex(column, mRecord[row]);
 			}
 		}

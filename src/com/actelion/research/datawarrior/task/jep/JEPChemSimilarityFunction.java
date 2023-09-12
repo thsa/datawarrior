@@ -18,17 +18,16 @@
 
 package com.actelion.research.datawarrior.task.jep;
 
-import java.util.Stack;
-
-import org.nfunk.jep.ParseException;
-import org.nfunk.jep.function.PostfixMathCommand;
-
 import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.descriptor.DescriptorHandler;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.chem.reaction.ReactionEncoder;
 import com.actelion.research.table.model.CompoundTableModel;
+import org.nfunk.jep.ParseException;
+import org.nfunk.jep.function.PostfixMathCommand;
+
+import java.util.Stack;
 
 /**
  * An Actelion custom function class for JEP
@@ -76,7 +75,7 @@ public class JEPChemSimilarityFunction extends PostfixMathCommand {
 
             // calculate the result
             JEPParameter jepParam1 = (JEPParameter)param1;
-            DescriptorHandler handler1 = mTableModel.getDescriptorHandler(jepParam1.column);
+            DescriptorHandler handler1 = (jepParam1 == null) ? null : mTableModel.getDescriptorHandler(jepParam1.column);
             if (handler1 == null)
                 throw new ParseException("1st parameter of chemsim() is not a descriptor column.");
 

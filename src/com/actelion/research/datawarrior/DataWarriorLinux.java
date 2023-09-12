@@ -160,8 +160,6 @@ public class DataWarriorLinux extends DataWarrior {
 	public static void main(final String[] args) {
 		SwingUtilities.invokeLater(() -> {
 			try {
-				sDataExplorer = new DataWarriorLinux();
-
 				Thread.setDefaultUncaughtExceptionHandler((final Thread t, final Throwable e) ->
 					SwingUtilities.invokeLater(() -> {
 						e.printStackTrace();
@@ -170,14 +168,19 @@ public class DataWarriorLinux extends DataWarrior {
 						} )
 					);
 
+				sDataExplorer = new DataWarriorLinux();
+
 				if (args != null && args.length != 0) {
 					String[] filename = sDataExplorer.deduceFileNamesFromArgs(args);
 					for (String f:filename)
 						sDataExplorer.readFile(f);
 					}
-				if (sPendingDocumentList != null)
+
+				if (sPendingDocumentList != null) {
 					for (String doc:sPendingDocumentList)
 						sDataExplorer.readFile(doc);
+					sPendingDocumentList.clear();
+					}
 				}
 			catch(Exception e) {
 				e.printStackTrace();

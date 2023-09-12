@@ -88,6 +88,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask implements Actio
 		parser.addStandardFunctions();
 		parser.addStandardConstants();
 		parser.addFunction(JEPChemSimilarityFunction.FUNCTION_NAME, new JEPChemSimilarityFunction(mTableModel));
+		parser.addFunction(JEPChemSSSFunction.FUNCTION_NAME, new JEPChemSSSFunction(mTableModel));
 		parser.addFunction("row", new JEPRowFunction(this));
 		parser.addFunction("numvalue", new JEPNumValueFunction(this, mTableModel));
 		parser.addFunction("entry", new JEPEntryFunction());

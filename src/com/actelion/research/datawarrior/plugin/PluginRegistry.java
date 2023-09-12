@@ -45,9 +45,9 @@ public class PluginRegistry implements IPluginStartHelper {
 	private ArrayList<PluginMenuEntry> mMenuEntryList;
 	private ArrayList<PluginTaskDefinition> mTaskDefinitionList;
 
-	public PluginRegistry(DataWarrior application) {
+	public PluginRegistry(DataWarrior application, ClassLoader parent) {
 		mApplication = application;
-		loadPlugins();
+		loadPlugins(parent);
 	}
 
 	public ArrayList<PluginTaskDefinition> getPluginTasks() {
@@ -61,7 +61,7 @@ public class PluginRegistry implements IPluginStartHelper {
 		return null;
 	}
 
-	private void loadPlugins() {
+	private void loadPlugins(ClassLoader parent) {
 		mMenuEntryList = new ArrayList<>();
 		mTaskDefinitionList = new ArrayList<>();
 
@@ -78,7 +78,7 @@ public class PluginRegistry implements IPluginStartHelper {
 
 		// Load plugins from standard plugin directory
 		if (rootPluginDir != null && rootPluginDir.isDirectory())
-			loadPlugins(rootPluginDir, config);
+			loadPlugins(rootPluginDir, config, parent);
 
 		// Load plugins from defined custom plugin directories
 		String customPaths = config.getProperty(KEY_CUSTOM_PLUGIN_DIRS);
@@ -86,12 +86,12 @@ public class PluginRegistry implements IPluginStartHelper {
 			for (String customPath:customPaths.split(",")) {
 				File customPluginDir = new File(mApplication.resolvePathVariables(customPath.trim()));
 				if (customPluginDir.exists() && customPluginDir.isDirectory())
-					loadPlugins(customPluginDir, config);
+					loadPlugins(customPluginDir, config, parent);
 			}
 		}
 	}
 
-	private void loadPlugins(File directory, Properties config) {
+	private void loadPlugins(File directory, Properties config, ClassLoader parent) {
 		try {
 			// First we try instantiating the starter class using the standard class loader, which should only succeed,
 			// if it was added to the DataWarrior source code for the purpose of plugin development & debugging.
@@ -110,7 +110,7 @@ public class PluginRegistry implements IPluginStartHelper {
 			for (File file : files) {
 				try {
 //					ClassLoader loader = URLClassLoader.newInstance(new URL[] { file.toURI().toURL() }, getClass().getClassLoader());
-					ClassLoader loader = new URLClassLoader(new URL[] { file.toURI().toURL() });
+					ClassLoader loader = new URLClassLoader(new URL[] { file.toURI().toURL() }, parent);
 
 					// Since Dec2022 plugins may contain an PluginStarter class. We try to load and run it...
 					try {

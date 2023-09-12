@@ -18,17 +18,19 @@
 
 package com.actelion.research.datawarrior;
 
+import com.actelion.research.gui.JImagePanelFixedSize;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
+
+import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import javax.swing.JDialog;
-
-import com.actelion.research.datawarrior.task.file.DETaskAbstractOpenFile;
-import com.actelion.research.gui.*;
-import com.actelion.research.util.Platform;
 
 public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
 	private static final long serialVersionUID = 20140219L;
@@ -37,7 +39,7 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
     public DEAboutDialog(DEFrame owner) {
 		super(owner, "About OSIRIS DataWarrior", true);
 
-		getContentPane().add(createImagePanel(owner.getApplication().isIdorsia()));
+		getContentPane().add(createImagePanel());
 
 		addMouseListener(this);
 
@@ -49,7 +51,7 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
     public DEAboutDialog(DEFrame owner, int millis) {
 		super(owner, "About OSIRIS DataWarrior", true);
 
-		getContentPane().add(createImagePanel(owner.getApplication().isIdorsia()));
+		getContentPane().add(createImagePanel());
 
 		pack();
 		setLocationRelativeTo(owner);
@@ -60,9 +62,9 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
 		setVisible(true);
 		}
 
-	private JImagePanelFixedSize createImagePanel(boolean showDate) {
-    	if (!showDate)
-			return new JImagePanelFixedSize("/images/about.jpg");
+	private JImagePanelFixedSize createImagePanel() {
+//    	if (!showDate)
+//			return new JImagePanelFixedSize("/images/about.jpg");
 
     	return new JImagePanelFixedSize("/images/about.jpg") {
 			@Override public void paintComponent(Graphics g) {
@@ -72,9 +74,11 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
 //						+File.separator+(Platform.isWindows() ? "x64\\DataWarrior64.exe" : "datawarrior.jar"));
 //				String dateString = jarFile == null ? "development" : dateString(jarFile.lastModified());
 				((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				g.setFont(g.getFont().deriveFont(Font.BOLD, 10f));
+				int fontSize = HiDPIHelper.scale(10);
+				String text = builtDate();
+				g.setFont(g.getFont().deriveFont(Font.BOLD, (float)fontSize));
 				g.setColor(Color.BLUE);
-				g.drawString(builtDate(), 430, 10);
+				g.drawString(text, getWidth() - (int)getFont().getStringBounds(text, ((Graphics2D)g).getFontRenderContext()).getWidth(), fontSize);
 				}
 			};
 		}
@@ -84,19 +88,17 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
 		}
 
 	private String builtDate() {
-		String date = "development";
 		URL url = getClass().getResource("/resources/builtDate.txt");
 		if(url != null) {
 			try {
 				BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-				date = reader.readLine();
+				String version = DEUpdateHandler.DATAWARRIOR_VERSION + " (built " + reader.readLine() + ")";
 				reader.close();
+				return version;
 				}
-			catch (IOException e) {
-				date = "exception";
-				}
+			catch (IOException e) {}
 			}
-		return date;
+		return DEUpdateHandler.DATAWARRIOR_VERSION;
 		}
 
 	public void run() {

@@ -800,6 +800,14 @@ The expression syntax, all operators and available functions are explained below
     <td><font face="sans-serif"><small>Highest Chemical Similarity</small></font></td>
     <td><font face="sans-serif"><small>maxsim(descriptor)</small></font></td>
   </tr>
+  <tr bgcolor="#ffffff">
+    <td><font face="sans-serif"><small>Substructure Count (A)</small></font></td>
+    <td><font face="sans-serif"><small>chemsss(structure, idcode, mode)</small></font></td>
+  </tr>
+  <tr bgcolor="#ffffff">
+    <td><font face="sans-serif"><small>Substructure Count (B)</small></font></td>
+    <td><font face="sans-serif"><small>chemsss(structure, substructure, mode)</small></font></td>
+  </tr>
   </tbody>
 </table>
 
@@ -866,6 +874,26 @@ The expression syntax, all operators and available functions are explained below
   and on the descriptor used. As a rule of thumb values below 0.6 (SkelSpheres), 0.55 (SphereFp), 0.45 (PathFp),
   0.4 (FragFp), and 0.2 (Flexophore) ensure that all other molecules in the data set are pretty dissimilar in
   the eyes of the descriptor. Example: maxsim(SkelSpheres_of_Structure)</p>
+<p>The <b>chemsss()</b> function runs a substructure search of the second argument in the first one
+  and returns the number distinct substructure matches. The <i>mode</i> parameter defines whether multiple
+  distinct matches are counted and what is considered a distinct match:
+<li>0: Matches are not counted. If a match is found, 1 is returned, otherwise 0 is returned.</li>
+<li>1: Matches don't share any atoms, which means that any two matches must not overlap.
+  Note that match counting with mode=1 is not deterministic and depends on atom orders.</li>
+<li>2: Matches may partially overlap; any two matches may share some atoms, but not all atoms.</li>
+<li>3: Any match is counted including symmetrically flipped and rotated permutations, which match on
+  the same atoms just with a different order.</li>
+  <br>This function is available in two variations:
+  <br><br><b>A </b>Use syntax A to determine the substructure count of one predefined substructure
+  for all structures within a given structure columns. The first parameter of this function is the variable
+  holding the current row's structure. The second parameter must be an idcode of the substructure.
+  To determine the number of distinct, but potentially overlapping pyridin rings within all the structures
+  of the column 'Structure' one would use the following syntax (gFx@@eJf`@@@ is
+  the idcode of pyridin).<br><br>Example: chemsss(Structure,"gFx@@eJf`@@@", 2)<br><br>
+  <b>B </b>Alternatively, if your table contains multiple structure columns, then you may use syntax B
+  to count substructure matches of one column's (sub)substructure within the structure of another column.
+  <br><br>Example: chemsss(Structure, Fragment, 2)</p>
+<br>
 
 <p><b>Macro related Functions</b></p>
 <p>These functions are typically used in expressions that are evaluated as part of a macro.</p>

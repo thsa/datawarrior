@@ -99,6 +99,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	private static final String OPEN_FILE = "open_";
 	private static final String NEW_FROM_LIST = "newFromList_";
 	private static final String SET_RANGE = "range_";
+	private static final String UPDATE = "update_";
 	private static final String LIST_ADD = "add_";
 	private static final String LIST_REMOVE = "remove_";
 	private static final String LIST_SELECT = "select_";
@@ -129,7 +130,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 	private JMenu jMenuFileNewFrom,jMenuFileOpenSpecial,jMenuFileOpenRecent,jMenuFileSaveSpecial,jMenuEditPasteSpecial,jMenuDataRemoveRows,
 				  jMenuDataSelfOrganizingMap,jMenuDataSetRange,jMenuDataViewLogarithmic,jMenuChemAddMoleculeDescriptor,
-				  jMenuChemAddReactionDescriptor,jMenuListCreate,jMenuMacroExport,jMenuMacroCopy,jMenuMacroRun,jMenuHelpLaF, jMenuChemMachineLearning;
+				  jMenuChemAddReactionDescriptor,jMenuListCreate,jMenuMacroExport,jMenuMacroCopy,jMenuMacroRun,jMenuHelpLaF,jMenuHelpUpdate,jMenuChemMachineLearning;
 
 	private JMenuItem jMenuFileNew,jMenuFileNewFromVisible,jMenuFileNewFromSelection,jMenuFileNewFromPivoting,jMenuFileNewFromReversePivoting,jMenuFileNewFromTransposition,
 					  jMenuFileOpen,jMenuFileOpenMacro,jMenuFileOpenTemplate,jMenuFileOpenMDLReactions,jMenuFileMerge,
@@ -160,11 +161,10 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuListCreateDuplicate,jMenuListCreateUnique,jMenuListCreateDistinct,
 					  jMenuListCreateMerge,jMenuListDeleteAll,jMenuListNewColumn,jMenuListListsFromColumn,jMenuListImport,
 					  jMenuListExport,jMenuMacroImport,jMenuMacroPaste,jMenuMacroStartRecording,jMenuMacroContinueRecording,
-					  jMenuMacroStopRecording,jMenuHelpHelp,jMenuHelpShortcuts,jMenuHelpMoreData,jMenuHelpForum,jMenuHelpAbout,jMenuHelpCheckForUpdate;
+					  jMenuMacroStopRecording,jMenuHelpHelp,jMenuHelpShortcuts,jMenuHelpMoreData,jMenuHelpForum,jMenuHelpAbout;
 
 	private DEScrollableMenu jMenuFileNewFromList,jMenuListAddSelectedTo,jMenuListRemoveSelectedFrom,
 			jMenuListSelectFrom,jMenuListDeselectFrom,jMenuListDelete;
-	private JCheckBoxMenuItem jMenuHelpAutomaticUpdateCheck;
 	private JLabel mMessageLabel;
 
 	public StandardMenuBar(DEFrame parentFrame) {
@@ -1223,10 +1223,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuHelpHelp = new JMenuItem();
 		jMenuHelpShortcuts = new JMenuItem();
 		jMenuHelpAbout = new JMenuItem();
-		jMenuHelpAutomaticUpdateCheck = new JCheckBoxMenuItem();
-		jMenuHelpCheckForUpdate = new JMenuItem();
 		if (!mApplication.isMacintosh()) {
-			jMenuHelpAbout.setText("About...");
+			jMenuHelpAbout.setText("About DataWarrior...");
 			jMenuHelpAbout.addActionListener(this);
 			}
 		jMenuHelpHelp.setText(MENU_NAME_HELP);
@@ -1250,9 +1248,47 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuHelp.addSeparator();
 		jMenuHelp.add(jMenuHelpLaF);
 
-		addUpdateCheckItem(jMenuHelp);
+		addUpdateMenu(jMenuHelp);
 
 		return jMenuHelp;
+		}
+
+	public void addUpdateMenu(JMenu jMenuHelp) {
+		jMenuHelpUpdate = new JMenu();
+
+		Preferences prefs = DataWarrior.getPreferences();
+		String modeString = prefs.get(DEUpdateHandler.PREFERENCES_KEY_UPDATE_MODE, "");
+		if (modeString.length() == 0) // happens once after update, because mode is now stored in new setting
+			prefs.put(DEUpdateHandler.PREFERENCES_KEY_UPDATE_MODE, DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE[DEUpdateHandler.PREFERENCES_UPDATE_MODE_ASK]);
+		int mode = AbstractTask.findListIndex(modeString, DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE, DEUpdateHandler.PREFERENCES_UPDATE_MODE_ASK);
+
+		jMenuHelpUpdate.setText("Update Mode");
+		for (int i=0; i<DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE.length; i++) {
+			JCheckBoxMenuItem item = new JCheckBoxMenuItem();
+			item.setActionCommand(UPDATE+DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE[i]);
+			item.setText(DEUpdateHandler.PREFERENCES_UPDATE_MODE_TEXT[i]);
+			item.setSelected(mode == i);
+			item.addActionListener(this);
+			jMenuHelpUpdate.add(item);
+			}
+
+//		Preferences prefs = DataWarrior.getPreferences();
+//		boolean check = prefs.getBoolean(DEUpdateHandler.PREFERENCES_KEY_LEGACY_UPDATE_CHECK, true);
+//		jMenuHelpAutomaticUpdateCheck = new JCheckBoxMenuItem();
+//		jMenuHelpCheckForUpdate = new JMenuItem();
+//
+//		jMenuHelpUpdate.setText("Update Checking");
+//		jMenuHelpAutomaticUpdateCheck.setText("Automatically Check For Updates");
+//		jMenuHelpAutomaticUpdateCheck.setSelected(check);
+//		jMenuHelpAutomaticUpdateCheck.addActionListener(this);
+//		jMenuHelpCheckForUpdate.setText("Check For Update Now...");
+//		jMenuHelpCheckForUpdate.addActionListener(this);
+//
+//		jMenuHelpUpdate.add(jMenuHelpAutomaticUpdateCheck);
+//		jMenuHelpUpdate.add(jMenuHelpCheckForUpdate);
+
+		jMenuHelp.addSeparator();
+		jMenuHelp.add(jMenuHelpUpdate);
 		}
 
 	public void addForumItem(JMenu jMenuHelp) {
@@ -1261,21 +1297,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuHelpForum.setText("Open Forum in Browser...");
 		jMenuHelpForum.addActionListener(this);
 		jMenuHelp.add(jMenuHelpForum);
-		}
-
-	public void addUpdateCheckItem(JMenu jMenuHelp) {
-		Preferences prefs = DataWarrior.getPreferences();
-		boolean check = prefs.getBoolean(DataWarrior.PREFERENCES_KEY_AUTO_UPDATE_CHECK, true);
-
-		jMenuHelpAutomaticUpdateCheck.setText("Automatically Check For Updates");
-		jMenuHelpAutomaticUpdateCheck.setSelected(check);
-		jMenuHelpAutomaticUpdateCheck.addActionListener(this);
-		jMenuHelpCheckForUpdate.setText("Check For Update Now...");
-		jMenuHelpCheckForUpdate.addActionListener(this);
-
-		jMenuHelp.addSeparator();
-		jMenuHelp.add(jMenuHelpAutomaticUpdateCheck);
-		jMenuHelp.add(jMenuHelpCheckForUpdate);
 		}
 
 	private void ensurePageFormat(PrinterJob job) {
@@ -1830,12 +1851,15 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				DEHelpFrame.updateLookAndFeel();
 				FXHelpFrame.updateLookAndFeel();
 				}
-			else if (source == jMenuHelpAutomaticUpdateCheck) {
+			else if (actionCommand.startsWith(UPDATE)) {
+				for (int i=0; i<jMenuHelpUpdate.getItemCount(); i++) {
+					JCheckBoxMenuItem item = (JCheckBoxMenuItem)jMenuHelpUpdate.getItem(i);
+					if (item != source)
+						item.setSelected(false);
+					}
+				int mode = AbstractTask.findListIndex(actionCommand.substring(UPDATE.length()), DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE, 0);
 				Preferences prefs = DataWarrior.getPreferences();
-				prefs.putBoolean(DataWarrior.PREFERENCES_KEY_AUTO_UPDATE_CHECK, jMenuHelpAutomaticUpdateCheck.isSelected());
-				}
-			else if (source == jMenuHelpCheckForUpdate) {
-				mApplication.checkVersion(true);
+				prefs.put(DEUpdateHandler.PREFERENCES_KEY_UPDATE_MODE, DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE[mode]);
 				}
 			else if (actionCommand.startsWith(SET_RANGE)) {
 				int column = mTableModel.findColumn(actionCommand.substring(SET_RANGE.length()));

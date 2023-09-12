@@ -97,75 +97,70 @@ public class DataWarriorOSX extends DataWarrior {
 		return false;
 		}
 
+	private void registerAppleEvents() {
+		Application app = new Application();
+		app.addApplicationListener(new ApplicationAdapter() {
+			public void handleAbout(ApplicationEvent event) {
+//							JOptionPane.showMessageDialog(null, "com.apple.eawt.ApplicationEvent: about");
+				new DEAboutDialog(getActiveFrame());
+				event.setHandled(true);
+				}
+
+			public void handleOpenFile(ApplicationEvent event) {
+//							JOptionPane.showMessageDialog(null, "com.apple.eawt.ApplicationEvent: open");
+				readFile(event.getFilename());
+				event.setHandled(true);
+				}
+
+			public void handlePrintFile(ApplicationEvent event) {
+//							JOptionPane.showMessageDialog(null, "com.apple.eawt.ApplicationEvent: print");
+				getActiveFrame().getDEMenuBar().menuFilePrint();
+				event.setHandled(true);
+				}
+
+			public void handleQuit(ApplicationEvent event) {
+//							JOptionPane.showMessageDialog(null, "com.apple.eawt.ApplicationEvent: quit");
+				closeApplication(true);
+				event.setHandled(true);
+				}
+
+//          public void handleOpenApplication(ApplicationEvent event) {}
+//          public void handlePreferences(ApplicationEvent event) {}
+//          public void handleReOpenApplication(ApplicationEvent event) {}
+			} );
+		}
+
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-				try {
-					System.setProperty("com.apple.macos.use-file-dialog-packages", "true");
-		            System.setProperty("apple.laf.useScreenMenuBar", "true");
+		SwingUtilities.invokeLater(() -> {
+						try {
+							System.setProperty("com.apple.macos.use-file-dialog-packages", "true");
+							System.setProperty("apple.laf.useScreenMenuBar", "true");
 
-					final DataWarriorOSX explorer = new DataWarriorOSX();
+							final DataWarriorOSX explorer = new DataWarriorOSX();
 
-					Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-						@Override
-						public void uncaughtException(final Thread t, final Throwable e) {
-							SwingUtilities.invokeLater(new Runnable() {
-								public void run() {
-									if (e.getStackTrace()[0].getClassName().startsWith("org.pushingpixels")) {
-										if (!sSubstanceExceptionOccurred) {
-											sSubstanceExceptionOccurred = true;
-											e.printStackTrace();
-											JOptionPane.showMessageDialog(explorer.getActiveFrame(), "Uncaught L&F Exception: Please quit and start again.");
-											}
-										}
-									else {
+							Thread.setDefaultUncaughtExceptionHandler((t, e) -> SwingUtilities.invokeLater(() -> {
+								if (e.getStackTrace()[0].getClassName().startsWith("org.pushingpixels")) {
+									if (!sSubstanceExceptionOccurred) {
+										sSubstanceExceptionOccurred = true;
 										e.printStackTrace();
-										JOptionPane.showMessageDialog(explorer.getActiveFrame(), "Uncaught Exception:" + e.getMessage());
+										JOptionPane.showMessageDialog(explorer.getActiveFrame(), "Uncaught L&F Exception: Please quit and start again.");
 										}
 									}
-								});
+								else {
+									e.printStackTrace();
+									JOptionPane.showMessageDialog(explorer.getActiveFrame(), "Uncaught Exception:" + e.getMessage());
+									}
+								}));
+
+		// They may be deprecated, but still with Bellsoft JRE 1.8 232 on OSX 10.15.7 Catalina
+		// opening doucuments by icon double click works over these events!!! TLS 21Jan2021
+
+							explorer.registerAppleEvents();
 							}
-						});
-
-// They may be deprecated, but still with Bellsoft JRE 1.8 232 on OSX 10.15.7 Catalina
-// opening doucuments by icon double click works over these events!!! TLS 21Jan2021
-
-		            Application app = new Application();
-		            app.addApplicationListener(new ApplicationAdapter() {
-		                public void handleAbout(ApplicationEvent event) {
-//							JOptionPane.showMessageDialog(null, "com.apple.eawt.ApplicationEvent: about");
-		                    new DEAboutDialog(explorer.getActiveFrame());
-		                    event.setHandled(true);
-		                    }
-		                    
-		                public void handleOpenFile(ApplicationEvent event) {
-//							JOptionPane.showMessageDialog(null, "com.apple.eawt.ApplicationEvent: open");
-		                    explorer.readFile(event.getFilename());
-		                    event.setHandled(true);
-		                    }
-		                    
-		                public void handlePrintFile(ApplicationEvent event) {
-//							JOptionPane.showMessageDialog(null, "com.apple.eawt.ApplicationEvent: print");
-		                    explorer.getActiveFrame().getDEMenuBar().menuFilePrint();
-		                    event.setHandled(true);
-		                    }
-
-		                public void handleQuit(ApplicationEvent event) {
-//							JOptionPane.showMessageDialog(null, "com.apple.eawt.ApplicationEvent: quit");
-		                    explorer.closeApplication(true);
-		                    event.setHandled(true);
-		                    }
-
-		//            public void handleOpenApplication(ApplicationEvent event) {}
-		//            public void handlePreferences(ApplicationEvent event) {}
-		//            public void handleReOpenApplication(ApplicationEvent event) {}
-		                } );
-					}
-				catch(Exception e) {
-					JOptionPane.showMessageDialog(null, "Unexpected Exception: "+e);
-					e.printStackTrace();
-					}
-            	}
-			} );
+						catch(Exception e) {
+							JOptionPane.showMessageDialog(null, "Unexpected Exception: "+e);
+							e.printStackTrace();
+							}
+			});
         }
 	}

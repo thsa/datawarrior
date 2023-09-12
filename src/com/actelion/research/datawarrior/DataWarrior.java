@@ -40,7 +40,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.security.CodeSource;
 import java.util.ArrayList;
@@ -52,7 +55,6 @@ public abstract class DataWarrior implements WindowFocusListener {
 	private static final String PREFERENCES_ROOT = "org.openmolecules.datawarrior";
 	public static final String PREFERENCES_KEY_FIRST_LAUNCH = "first_launch";
 	public static final String PREFERENCES_KEY_LAST_VERSION_ERROR = "last_version_error";
-	public static final String PREFERENCES_KEY_AUTO_UPDATE_CHECK = "automatic_update_check";
 	public static final String PREFERENCES_KEY_LAF_NAME = "laf_name";
 	public static final String PREFERENCES_KEY_SPAYA_SERVER = "spaya_server";
 
@@ -205,7 +207,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 
 	public DataWarrior() {
-		mPluginRegistry = new PluginRegistry(this);
+		mPluginRegistry = new PluginRegistry(this, Thread.currentThread().getContextClassLoader());
 		setInitialLookAndFeel();
 
 		mFrameList = new ArrayList<>();
@@ -214,20 +216,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 
 		initialize();
 
-		if (!isIdorsia() && System.getProperty("development") == null) {
-			try {
-				Preferences prefs = getPreferences();
-
-				long firstLaunchMillis = prefs.getLong(PREFERENCES_KEY_FIRST_LAUNCH, 0L);
-				if (firstLaunchMillis == 0L) {
-					prefs.putLong(PREFERENCES_KEY_FIRST_LAUNCH, System.currentTimeMillis());
-					}
-
-				if (prefs.getBoolean(PREFERENCES_KEY_AUTO_UPDATE_CHECK, true))
-					checkVersion(false);
-				}
-			catch (Exception e) {}
-			}
+		DEUpdateHandler.getPostInstallInfoAndHandleUpdates(mFrameOnFocus, isIdorsia());
 
 		mTaskFactory = createTaskFactory();
 		DEMacroRecorder.getInstance().setTaskFactory(mTaskFactory);
@@ -252,6 +241,11 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 
 	public void initialize() {
+		Preferences prefs = getPreferences();
+		long firstLaunchMillis = prefs.getLong(PREFERENCES_KEY_FIRST_LAUNCH, 0L);
+		if (firstLaunchMillis == 0L)
+			prefs.putLong(PREFERENCES_KEY_FIRST_LAUNCH, System.currentTimeMillis());
+
 		javafx.application.Platform.setImplicitExit(false);
 		ToolTipManager.sharedInstance().setDismissDelay(600000);    // 10 min
 		Molecule.setDefaultAverageBondLength(HiDPIHelper.scale(24));
@@ -311,10 +305,6 @@ public abstract class DataWarrior implements WindowFocusListener {
 		template[0] = line.substring(0, index).trim();
 		template[1] = line.substring(index+1).trim();
 		return template;
-		}
-
-	public void checkVersion(boolean showUpToDateMessage) {
-		DEVersionChecker.checkVersion(mFrameOnFocus, showUpToDateMessage);
 		}
 
 	public StandardMenuBar createMenuBar(DEFrame frame) {

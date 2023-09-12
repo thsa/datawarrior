@@ -3,5 +3,5 @@ cp -r ./src/html ./bin/
 cp -r ./src/images ./bin/
 javac -d ./bin -sourcepath ./src:./stubs -classpath "./lib/*":./lib/osx/AppleJavaExtensions.jar src/com/actelion/research/datawarrior/DataWarriorOSX.java
 rm -r bin/chemaxon
-jar -cfm datawarrior.jar manifest_additionsOSX.txt -C ./bin .
+jar -cfm datawarrior_all.jar manifest_additionsOSX.txt -C ./bin .
 rm -r bin

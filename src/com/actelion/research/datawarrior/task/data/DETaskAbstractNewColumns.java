@@ -36,14 +36,15 @@ import java.util.Properties;
 public abstract class DETaskAbstractNewColumns extends ConfigurableTask implements ActionListener {
     private static final String PROPERTY_COLUMN_NAME_LIST = "columnNames";
 
-    private static final String[] COLUMN_TYPE_NAME = { "Text", "Structure", "Reaction", "Transformation", "Weblink" };
+    private static final String[] COLUMN_TYPE_NAME = { "Text", "Structure", "Substructure", "Reaction", "Transformation", "Weblink" };
 
 	private static final int COLUMN_TYPE_TEXT = 0;
     private static final int COLUMN_TYPE_STRUCTURE = 1;
-    private static final int COLUMN_TYPE_REACTION = 2;
-	private static final int COLUMN_TYPE_TRANSFORMATION = 3;
-	private static final int COLUMN_TYPE_WEBLINK = 4;
-	private static final String[] DEFAULT_COLUMN_NAME = { "Column", "Structure", "Reaction", "Transformation", "Weblink" };
+	private static final int COLUMN_TYPE_SUBSTRUCTURE = 2;
+    private static final int COLUMN_TYPE_REACTION = 3;
+	private static final int COLUMN_TYPE_TRANSFORMATION = 4;
+	private static final int COLUMN_TYPE_WEBLINK = 5;
+	private static final String[] DEFAULT_COLUMN_NAME = { "Column", "Structure", "Substructure", "Reaction", "Transformation", "Weblink" };
 
     private DataWarrior			mApplication;
 	private JComboBox           mComboBox;
@@ -186,7 +187,8 @@ public abstract class DETaskAbstractNewColumns extends ConfigurableTask implemen
 		String[] title = titles.split("\\t");
 		int columnCount = title.length;
 		for (String t:title) {
-			if (t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_STRUCTURE] + "]"))
+			if (t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_STRUCTURE] + "]")
+			 || t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_SUBSTRUCTURE] + "]"))
 				columnCount += 2;
 			else if (t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_REACTION] + "]"))
 				columnCount += 5;
@@ -212,8 +214,11 @@ public abstract class DETaskAbstractNewColumns extends ConfigurableTask implemen
 		for (String t:title) {
             int index = t.lastIndexOf(" [");
             String columnName = t.substring(0, index);
-            if (t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_STRUCTURE]+"]")) {
+            if (t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_STRUCTURE]+"]")
+             || t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_SUBSTRUCTURE]+"]")) {
                 column += tableModel.prepareStructureColumns(column, columnName, true, true);
+				if (t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_SUBSTRUCTURE]+"]"))
+					tableModel.setColumnProperty(column, CompoundTableModel.cColumnPropertyIsFragment, "true");
                 }
 			else if (t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_REACTION]+"]")) {
 				column += tableModel.prepareReactionColumns(column, columnName,false,true, true, false, true, true, true, false);

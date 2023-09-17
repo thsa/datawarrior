@@ -37,7 +37,7 @@ public class DataWarriorLauncher {
 
 				if (appJar == null) {
 					String path = isWindows() ? "C:\\Program Files\\DataWarrior\\datawarrior_all.jar"
-								: isMacintosh() ? "/Applications/DataWarrior.app/Contents/Java/datawarrior_all.jar"
+								: isMacintosh() ? "/Applications/DataWarrior.app/Contents/Java/update/datawarrior_all.jar"
 								: "/opt/datawarrior/datawarrior_all.jar";
 					appJar = new File(path);
 					if (!appJar.exists()) {

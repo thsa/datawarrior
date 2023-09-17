@@ -216,9 +216,9 @@ public abstract class DETaskAbstractNewColumns extends ConfigurableTask implemen
             String columnName = t.substring(0, index);
             if (t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_STRUCTURE]+"]")
              || t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_SUBSTRUCTURE]+"]")) {
-                column += tableModel.prepareStructureColumns(column, columnName, true, true);
 				if (t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_SUBSTRUCTURE]+"]"))
 					tableModel.setColumnProperty(column, CompoundTableModel.cColumnPropertyIsFragment, "true");
+	            column += tableModel.prepareStructureColumns(column, columnName, true, true);
                 }
 			else if (t.endsWith(COLUMN_TYPE_NAME[COLUMN_TYPE_REACTION]+"]")) {
 				column += tableModel.prepareReactionColumns(column, columnName,false,true, true, false, true, true, true, false);

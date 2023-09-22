@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DataWarrior File Formats</title>
+    <base href="../">
+    <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+<body>
+
+<hr align="left" size="2" width="550">
+<h2><a name="FileFormats"></a>DataWarrior File Formats</h2>
+<hr align="left" size="2" width="550">
+
+<h3><a name="dwar"></a>The <i>.dwar</i> File Format</h3>
+
+<p>DataWarrior supports standard formats as TAB-delimited or comma-separated text files to import or export
+plain table data. Moreover, it can read and write SD-files to transfer chemical structures along with
+alpha-numerical information from and to other chemistry related applications.<p>
+
+<p>However, an open DataWarrior window may contain much more that just a plain data table of which one column
+may contain chemical structures. In DataWarrior multiple columns may contains chemical structures, substructures,
+or reactions. Columns may have assigned properties. Invisible columns may contain chemical descriptors or 2D
+or 3D atom coordinates. Additional views may show scatter plots, bar or pie charts, etc. Filters may exist and
+may be configured to hide parts of the data. Macros may be defined to automate certain tasks. And additional
+information, e.g. pictures, may be associated with individual table cells.</p>
+
+<p>The ‘.dwar’ file format was designed to safely store the data itself along with all information needed for
+DataWarrior to recreate everything within an open DataWarrior window. Its design principles were to combine
+compactness, extensibility, backwards compatibility, and modularity within an interpretable text file.
+Therefore, it contains the data as TAB-delimited table and multiple XML-like sections, which contain
+information about the data itself or about how the data shall be presented. These sections contain general
+file properties, column related information, view and filter settings, macros, and row lists. None of these
+sections are mandatory, neither must a '.dwar' file contains data rows, but as a very minimum it must contain
+one TAB delimited line with column names. Except for the data table, all sections typically consist of
+some sort of key-value pairs. Within a ‘.dwar’ file sections appear in the following order:</p>
+
+<h4>File header</h4>
+
+<p>The file header section starts and ends with <span class="code">datawarrior-fileinfo</span> tags.
+    In between are key-value pairs defining file version, creation time in milliseconds elapsed since 1-Jan-1970 UTC,
+    and the number of table rows. None of these tags are mandatory.</p>
+
+<div class="code box">
+    &lt;datawarrior-fileinfo&gt;<br>
+    &lt;version="3.3"&gt;<br>
+    &lt;created="1594393113241"&gt;<br>
+    &lt;rowcount="12"&gt;<br>
+    &lt;/datawarrior-fileinfo&gt;<br>
+</div>
+
+<h4>Column Properties</h4>
+
+<p>The next section embraced by <span class="code">column properties</span> tags provides information
+regarding the data within specific table columns. Data columns, which are not described by this section,
+are treated as alpha-numerical and DataWarrior will analyse, whether their content is numerical, whether
+the column contains numerical categories. Where column properties exist, they may declare a column to
+contain chemical structures, reactions, descriptors, identifiers. Column properties may define relationships
+between such as to assign multiple logically related column to one column group. Or a column that contains
+3D-atom coordinates may be assigns to a parent column that contains chemical structures. In such a case
+the data from both columns together are combined to dislay 3-dimensional chemical structures. If these
+structures are the result of a docking procedure, then a column property may supply the protein pocket
+structure used during the docking. This would allow DataWarrior to display optimized ligand poses of every
+row together with the shared protein structure.</p>
+
+<p>Column properties may also be used to define the data range for numerical columns. For columns that
+contain identifiers which can be used to retrieve further information, a lookup URL may be defined.
+For columns that contain results of evaluated expressions, column properties may define the formula
+that is needed to re-evaluate the column content if rows were changed or added. The complete list
+of available column properties can be found in the
+<a href="https://github.com/Actelion/openchemlib/blob/master/src/main/java/com/actelion/research/chem/io/CompoundTableConstants.java">
+source code</a> (look for all Strings named cColumnProperty...).</p>
+
+<p>A simple and typical column property section for a file that contains one column with chemical structures,
+a column with associated 2D-atom coordinates, a 'FragFp' descriptor column, and some more alpha-numerical
+columns is shown in the example below. In a column property sections a column name is always followed by all
+properties assigned to that column. Thus, the following example defines the column named 'Structure' to have a
+special type 'idcode', which means that this column contains ID-Codes, which are DataWarrior's way to encode
+chemical structures as canonical, very compact, text strings that cover aromaticity and enhanced stereochemistry.
+If an ID-Code describes a substructure, then it also may cover atom and bond query features and exclude groups.
+Since ID-Codes are canonical, they cannot contain atom coordinates. Therefore, if specific atom coordinates shall
+be stored in a '.dwar' file, then they must be stored in an additional column. The example declares a column
+named 'coords' to contain a special data type 'idcoordinates2D'. It also defined for that column that its parent
+column is the column named 'Structure'. For a third column named 'FragFp' we read that it contains special
+information of type 'FragFp', its parent column is the 'Structure' column and the version of its 'FragFp'
+entries is '1.2.1'.</p>
+
+<div class="code box">
+    &lt;column properties&gt;<br>
+    &lt;columnName="Structure"&gt;<br>
+    &lt;columnProperty="specialType	idcode"&gt;<br>
+    &lt;columnName="coords"&gt;<br>
+    &lt;columnProperty="parent	Structure"&gt;<br>
+    &lt;columnProperty="specialType	idcoordinates2D"&gt;<br>
+    &lt;columnName="FragFp"&gt;<br>
+    &lt;columnProperty="parent	Structure"&gt;<br>
+    &lt;columnProperty="specialType	FragFp"&gt;<br>
+    &lt;columnProperty="version	1.2.1"&gt;<br>
+    &lt;/column properties&gt;<br>
+</div>
+
+
+
+</body>
+</html>

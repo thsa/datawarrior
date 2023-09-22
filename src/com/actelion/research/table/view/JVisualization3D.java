@@ -1575,8 +1575,8 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			if (mAxisIndex[axis] != cColumnUnassigned) {
 				String specialType = mTableModel.getColumnSpecialType(mAxisIndex[axis]);
 				if (specialType != null && specialType.equals(CompoundTableModel.cColumnTypeIDCode)) {
-					 if (mScaleMolecule[axis] == null) {
-						int moleculeCount = mTableModel.getCategoryCount(mAxisIndex[axis]);
+					int moleculeCount = mTableModel.getCategoryCount(mAxisIndex[axis]);
+					 if (mScaleMolecule[axis] == null || mScaleMolecule[axis].length != moleculeCount) {
 						mMoleculeOffsetX[axis] = new float[moleculeCount];
 						mMoleculeOffsetY[axis] = new float[moleculeCount];
 						mScaleMolecule[axis] = new StereoMolecule[moleculeCount];

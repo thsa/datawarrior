@@ -2,11 +2,13 @@ body { font-family:Verdana,Arial,Helvetica,sans-serif; font-size:12pt; color:#00
 h1 { font-size: 18pt; font-weight : bold; color: #C06020; margin-top: 13px; margin-bottom: 10px; }
 h2 { font-size: 16pt; font-weight: bold; color: #8080FF }
 h3 { font-size: 13pt; font-style: italic; font-weight: bold; color: #3030AA }
+h4 { font-size: 12pt; font-weight: bold; }
 td { font-size: 12pt }
 .menu { font-weight: bold }
 .keyword { font-style: italic }
-.code { font-family: Courier; color: #408040; font-weight: bold; font-size: 11pt; }
+.code { font-family: Courier,System-ui; color: #408040; font-weight: bold; font-size: 10pt; }
 .box { background-color: #D0D0FF; margin:0 5% 0 5%; center }
+.tab { color: #FFFFFF; background-color: #808080; font-weight: bold; }
 a:link { color: #000099; font-weight: bold; text-decoration:none; }
 a:visited { color: #660066; font-weight: bold; text-decoration:none; }
 a:hover { color: #990000; font-weight: bold; text-decoration:none; }

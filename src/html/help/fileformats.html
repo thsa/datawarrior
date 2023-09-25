@@ -18,24 +18,24 @@
 plain table data. Moreover, it can read and write SD-files to transfer chemical structures along with
 alpha-numerical information from and to other chemistry related applications.<p>
 
-<p>However, an open DataWarrior window may contain much more that just a plain data table of which one column
-may contain chemical structures. In DataWarrior multiple columns may contains chemical structures, substructures,
-or reactions. Columns may have assigned properties. Invisible columns may contain chemical descriptors or 2D
-or 3D atom coordinates. Additional views may show scatter plots, bar or pie charts, etc. Filters may exist and
-may be configured to hide parts of the data. Macros may be defined to automate certain tasks. And additional
+<p>However, an open DataWarrior window contains much more that just a plain data table that may contain chemical
+structures in one column. DataWarrior allows multiple columns to contain chemical structures, substructures,
+or reactions. Columns may have assigned properties. Invisible columns may contain chemical descriptors or 2D-
+or 3D-atom-coordinates. Additional views may show scatter plots, bar or pie charts, etc. Filters may exist and
+may be configured to hide parts of the data. Macros may be defined to automate complex tasks. And additional
 information, e.g. pictures, may be associated with individual table cells.</p>
 
-<p>The ‘.dwar’ file format was designed to safely store the data itself along with all information needed for
-DataWarrior to recreate everything within an open DataWarrior window. Its design principles were to combine
+<p>The ‘.dwar’ file format was designed to safely store the data itself along with all information needed
+to recreate everything within an open DataWarrior window. Its design principles were to combine
 compactness, extensibility, backwards compatibility, and modularity within an interpretable text file.
-Therefore, it contains the data as TAB-delimited table and multiple XML-like sections, which contain
+Therefore, it contains the data as TAB-delimited table plus multiple XML-like sections, which contain
 information about the data itself or about how the data shall be presented. These sections contain general
 file properties, column related information, view and filter settings, macros, and row lists. None of these
-sections are mandatory, neither must a '.dwar' file contains data rows, but as a very minimum it must contain
+sections are mandatory, neither must a '.dwar' file contain data rows, but as a very minimum it must contain
 one TAB delimited line with column names. Except for the data table, all sections typically consist of
-some sort of key-value pairs. Within a ‘.dwar’ file sections appear in the following order:</p>
+some sort of key-value pairs. Within a ‘.dwar’ file all sections, if they exist, appear in the following order:</p>
 
-<h4>File header</h4>
+<h4>File Header</h4>
 
 <p>The file header section starts and ends with <span class="code">datawarrior-fileinfo</span> tags.
     In between are key-value pairs defining file version, creation time in milliseconds elapsed since 1-Jan-1970 UTC,
@@ -49,27 +49,82 @@ some sort of key-value pairs. Within a ‘.dwar’ file sections appear in the f
     &lt;/datawarrior-fileinfo&gt;<br>
 </div>
 
+<p><center><i>Example file header section</i></center></p>
+
+<h4>Explanation Section</h4>
+
+<p>This section, if present, is supposed to contain a description in HTML format
+of the '.dwar' file's data, the source of the data, and interesting aspects of the data.
+It may describe what can be seen in configured graphical view, or how to interact with fiters
+to gain insights into subsets of the data. It also may describe the purpose of embedded macros
+or how to connect to referenced external data. Within a DataWarrior window the content of the
+explanation section is displayed inside an 'Explanation View'.</p>
+
+<div class="code box">
+    &lt;datawarrior explanation&gt;<br>
+    &lt;html dir="ltr"&gt;&lt;head&gt;&lt;/head&gt;<br>
+    &lt;body contenteditable="true"&gt;<br>
+    &lt;p&gt;This file contains data about...&lt;/p&gt;<br>
+    &lt;p&gt;The original source of the data is ...&lt;/p&gt;<br>
+    &lt;p&gt;Views visualize... Use filters to drill down...&lt;/p&gt;<br>
+    &lt;/body>&lt;/html&gt;<br>
+    &lt;/datawarrior explanation&gt;<br>
+</div>
+
+<p><center><i>Example explanation section</i></center></p>
+
+<h4>Embedded Macros</h4>
+
+<p>Macros are used to automate task sequences in DataWarrior. They can be either globally defined or exist
+just within the scope of a document window. Such macros with local scope are saved within the macro section
+of a '.dwar' file. Since there may be multiple macros within one file, the section starts and ends with
+<span class="code">datawarrior macroList</span> tags. Inside are one or more macro definitions,
+which themselfes are surrounded by <span class="code">macro</span> tags. These contain one or more task
+definitions indicated by <span class="code">task</span> tags, which finally contain the task's configuration
+as zero or more key-value pairs.
+</p>
+
+<div class="code box">
+    &lt;datawarrior macroList&gt;<br>
+    &lt;macro name="ImportAllListsOfFolder"&gt;<br>
+    &lt;task name="repeatNextTasks"&gt;<br>
+            dir=/home/thomas/testLists<br>
+            filetype=text<br>
+            all=false<br>
+    &lt;/task&gt;<br>
+    &lt;task name="importRowList"&gt;<br>
+            caseSensitive=true<br>
+            listName=<br>
+            fileName=$FILENAME<br>
+    &lt;/task&gt;<br>
+    &lt;/macro&gt;<br>
+    &lt;/datawarrior macroList&gt;<br>
+</div>
+
+<p><center><i>Example macro section with a macro that imports all row list files from a given directory</i></center></p>
+
 <h4>Column Properties</h4>
 
-<p>The next section embraced by <span class="code">column properties</span> tags provides information
-regarding the data within specific table columns. Data columns, which are not described by this section,
-are treated as alpha-numerical and DataWarrior will analyse, whether their content is numerical, whether
-the column contains numerical categories. Where column properties exist, they may declare a column to
+<p>The next section surrounded by <span class="code">column properties</span> tags provides information
+regarding the data itself. Individual column properties always refer to a single table column, but
+not every column must have associated column properties. Table columns, which are not described by this section,
+are treated as containing alpha-numerical data. For them DataWarrior will analyse, whether the content is numerical,
+whether and which categories the column contains, and more. Where column properties exist, they may declare a column to
 contain chemical structures, reactions, descriptors, identifiers. Column properties may define relationships
-between such as to assign multiple logically related column to one column group. Or a column that contains
-3D-atom coordinates may be assigns to a parent column that contains chemical structures. In such a case
-the data from both columns together are combined to dislay 3-dimensional chemical structures. If these
-structures are the result of a docking procedure, then a column property may supply the protein pocket
-structure used during the docking. This would allow DataWarrior to display optimized ligand poses of every
-row together with the shared protein structure.</p>
+between columns, e.g. may assign logically related columns to one column group. Or a column that contains
+3D-atom coordinates may be assigned to a parent column, which contains the corresponding chemical structures.
+In such a case the data from both columns together are used to build and display row specific conformers.
+If the conformers are the result of a docking procedure, then another column property may define the structure
+and orientation of the protein pocket used during the docking. Then DataWarrior would display ligand poses of every
+row always together with the same shared protein structure.</p>
 
 <p>Column properties may also be used to define the data range for numerical columns. For columns that
 contain identifiers which can be used to retrieve further information, a lookup URL may be defined.
 For columns that contain results of evaluated expressions, column properties may define the formula
 that is needed to re-evaluate the column content if rows were changed or added. The complete list
-of available column properties can be found in the
+of available column properties can be found in the Java source code of the
 <a href="https://github.com/Actelion/openchemlib/blob/master/src/main/java/com/actelion/research/chem/io/CompoundTableConstants.java">
-source code</a> (look for all Strings named cColumnProperty...).</p>
+CompoundTableConstants</a> interface (look for all Strings named cColumnProperty...).</p>
 
 <p>A simple and typical column property section for a file that contains one column with chemical structures,
 a column with associated 2D-atom coordinates, a 'FragFp' descriptor column, and some more alpha-numerical
@@ -88,18 +143,241 @@ entries is '1.2.1'.</p>
 <div class="code box">
     &lt;column properties&gt;<br>
     &lt;columnName="Structure"&gt;<br>
-    &lt;columnProperty="specialType	idcode"&gt;<br>
+    &lt;columnProperty="specialType<span class="tab">TAB</span>idcode"&gt;<br>
     &lt;columnName="coords"&gt;<br>
-    &lt;columnProperty="parent	Structure"&gt;<br>
-    &lt;columnProperty="specialType	idcoordinates2D"&gt;<br>
+    &lt;columnProperty="parent<span class="tab">TAB</span>Structure"&gt;<br>
+    &lt;columnProperty="specialType<span class="tab">TAB</span>idcoordinates2D"&gt;<br>
     &lt;columnName="FragFp"&gt;<br>
-    &lt;columnProperty="parent	Structure"&gt;<br>
-    &lt;columnProperty="specialType	FragFp"&gt;<br>
-    &lt;columnProperty="version	1.2.1"&gt;<br>
+    &lt;columnProperty="parent<span class="tab">TAB</span>Structure"&gt;<br>
+    &lt;columnProperty="specialType<span class="tab">TAB</span>FragFp"&gt;<br>
+    &lt;columnProperty="version<span class="tab">TAB</span>1.2.1"&gt;<br>
     &lt;/column properties&gt;<br>
 </div>
 
+<p><center><i>Example of column properties section declaring one structure column<br>
+    and two associated columns for 2D-atom coordinates and FragFp descriptor</i></center></p>
 
+<h4>The Data Table</h4>
+
+<p>The column property section is followed by the data table itself, which usually is the largest section in the file
+unless the data consists of a small number of rows only. The table starts with one line defining table column titles
+and continues with zero or more lines defining one data row each. Column names and column content within every row
+are separates by TAB symbol (ASCII-code:9), which are depicted in the examples as <span class="tab">TAB</span>.</p>
+
+<p>Column titles serve as case-sensitive keys to address their respective columns. They cannot be changed by users
+and are used in the column properties section as well as the template (datawarrior properties) section, whenever
+something refers to or is assigned to a column. Users may assign a column alias to a column, which would then be
+displayed instead of the column title, while the original column title still serves as the column identifier under
+the hood.</p>
+
+<div class="code box">
+    coords<span class="tab">TAB</span>FragFp<span class="tab">TAB</span>Structure<span class="tab">TAB</span>logP<span class="tab">TAB</span>logS<br>
+    !B?g~w@k_}m?vw@`<span class="tab">TAB</span>0F0F/#8////)<span class="tab">TAB</span>gFp@DiTt@@@<span class="tab">TAB</span>3.23<span class="tab">TAB</span>0.73<br>
+    !B?g|_Fa}eTv\<span class="tab">TAB</span>Nc$V$2//,4//&<span class="tab">TAB</span>gKP@Di\Zj@@<span class="tab">TAB</span>2.45<span class="tab">TAB</span>0.02<br>
+    .<br>
+    .<br>
+    .<br>
+</div>
+
+<p><center><i>Example data table section with column titles and two rows</i></center></p>
+
+<p>If defined in the column properies section, then some columns may contain non-alphanumerical information
+as for instance molecules, chemical reactions, chemical
+descriptors, or 2D- or 3D-coordinates. Within a DataWarrior file these special data types are always encoded as text
+strings. Molecular structure, substructure, and reaction encoding uses a unique and very efficient algorithm that
+produces a canonical representation of the original chemical object, which means that the same structure, when
+encoded, will always be represented by the same text string, independent of the original atom order, atom coordinates,
+or how stereo centers were defined. If two structure represent the same stereo isomer or the same epimer mixture,
+then the created string is the same. Likewise, if two chemical representing strings (called idcodes) are equal, then
+they represent the same chemical entity. Since canonical representations are independent of atom coordinates, these
+are not part of the idcode itself. Chemists, however, expect drawn structures to be shown with their original atom
+coordinates. Therefore, the encoding algorithm may produce a second string that contains original atom coordinates
+in a compact way. Typically, but not necessarily, structure columns (specialType=idcode) are associated with a second
+column that contains 2-dimensional atom coordinates. In addition, there may be one or more columns containing 3-dimensional
+atom coordinates, which together with the associated idcode would represent conformers.</p>
+
+<p>The algorithm to canonicalize and string-encode chemical structures involves ring and aromaticity detection,
+recursive enhanced stereo perception, meso fragment perception, and more. Conceptually, it is similar to the SEMA
+(Stereo-enhanced Morgan Algorithm) algorithm and format used my MACCS, REACCS, and Isis-Base originally developed by MDL Information
+Systems. A detailled description of the algorithm would be beyond the scope of this document, but the interested reader
+may study the Java source code of the <a href="https://github.com/Actelion/openchemlib/blob/master/src/main/java/com/actelion/research/chem/Canonizer.java">
+Canonizer</a> class, which contains the main part of the algorithm.</p>
+<p>The basic idea of the algorithm is to first rank all atoms using atom properties like the atomic number, charge,
+pi-electron count, ring membership, and more. Atoms sharing the same properties have the same rank. In a next step
+a sorted list of all neighbour ranks is built for every atom. Atoms with the same previous rank, but with a different
+neighbour rank list are now assigned different ranks, while the ranking order of the previous step is retained.
+An updated list of neighbour ranks is built and equal ranks are again split where neighbour ranks differ. This is
+repeated no equally ranked atoms can be distinguished anymore. Then, stereo centers and stereo bonds are perceived
+and stereo configurations are used to distinguish otherwise equally ranked atoms. Since stereo feature assignment may
+depend on other stereo features, the process is done repeatedly until no new stereo features can be detected.
+In a next step called tie-breaking remaining equally ranked atoms are assigned different ranks in a reproducible way,
+such that we finally end up with a reproducible sorting of all atoms. Now the molecular canonical graph is written
+into a string using as little bits as possible.</p>
+
+<h4>Detail Section</h4>
+
+<p>Individual table cells may reference external binary or text objects like images or HTML-formatted text information,
+which in the DataWarrior application are displayed inside the detail area if the corresponding row is highlighted.
+A table cell may point to zero or one object of a defined kind, while an object may be accessed by many table cells
+at the same time. These objects may either be stored as part of the 'dwar' file, or they may reside in external files.
+If objects are part of a '.dwar' file, then they are located ionm the 'detail' section that looks like this:</p>
+
+<div class="code box">
+    &lt;detail data&gt;<br>
+    &lt;detailID="-222"&gt;<br>
+    @@@BzeAK@pPT@@`@B@AxSDdr@@@@@@@@@@@@@@@@@P@@@GiUTtuOvt@PoU<br>
+    EJ@tH@z}k^Nqozuzuyw]CQV␡okMv@␡Qbr_OqYmz[m␡MvL|WwqnTlAh~XjV<br>
+    Eu␡Q{fiBfWm]sScRYY]swcWgZIwzuPxJS{lZKDhMR{Rrtb_]C|K@~tY]yd<br>
+    @@@@@@@@@GiPRpTF@@@@@@D@@P@o@@@@iPH@@@@@<br>
+    &lt;/detailID&gt;<br>
+    &lt;detailID="92"&gt;<br>
+    @@@_vO␡X␡~@@DDiFRTX@@PDA@Kz@mp@@␡}l@Pp@FA@TFAPPFA`TFApsFB@<br>
+    EAXVFateGqh[HqpVEb@lHBLfIrdjJQd_KS@mJC@eJBdh␡}l@PpDGApyJB@<br>
+    JB`hJB`hJB`hJB`hJB`hJB`hJB`hJB`hJB`hJB`hJB`hJB`hJB`hJB`h␡|<br>
+    @_␡D@A|@@@DE@PDA@PDA@@@@@@@@@@@A@`LDAPXGB@dJB␡␡D@KTP@@HA@p<br>
+    DPTRHSEAAaMQXPbQPr`YFaBBMBluDUTmGpICMbhco2HIBaXWFAdZIRXgJB<br>
+    ]SZ@BgTvgT@Mhhhh@amCTKPu@CZJJJ@GTvgTv`@iuMiu@CZ<br>
+    &lt;/detailID&gt;<br>
+    &lt;/detail data&gt;<br>
+</div>
+
+<p><center><i>Example detail section with two encoded objects</i></center></p>
+
+<p>Three sections must play together for this mechanism to work:
+<ul>
+<li>In the column properties section a name, the mime-type, and the source location needs to be defined for every
+detail object type that shall be referenced by cells of a particular column. If details are stored within th '.dwar'
+file itself, then the detail source is defined as 'embedded'.</li>
+<li>Detail references must be concatenated to some table cells in the defined column within the table data section.
+The reference consists of a '|#|' indicator, followed by a digit indicating the detail type index, followed by a colon ':',
+followed finally by the detail-ID, which is the unique detail name in the detail section. If a cell references
+multiple detail types, then these are concatenated one after another.</li>
+<li>Detail-IDs referencing '.dwar' file embedded detail objects must be represented in the detail area.
+Binary object use a simple encoding with 6 bits per character added to ASCII value 64. Text detail objects
+are zipped before the encoding, which is indicated by negative detail-IDs.</li>
+</ul>
+
+The example below shows column properties and concatenated detail references corresponding to the detail area example above.
+</p>
+
+<div class="code box">
+    &lt;column properties&gt;<br>
+    &lt;columnName="Name"&gt;<br>
+    &lt;columnProperty="detailType0<span class="tab">TAB</span>image/jpeg"&gt;<br>
+    &lt;columnProperty="detailName0<span class="tab">TAB</span>Picture"&gt;<br>
+    &lt;columnProperty="detailName1<span class="tab">TAB</span>Description"&gt;<br>
+    &lt;columnProperty="detailType1<span class="tab">TAB</span>text/html"&gt;<br>
+    &lt;columnProperty="detailSource1<span class="tab">TAB</span>embedded"&gt;<br>
+    &lt;columnProperty="detailSource0<span class="tab">TAB</span>embedded"&gt;<br>
+    &lt;columnProperty="detailCount<span class="tab">TAB</span>2"&gt;<br>
+    &lt;/column properties&gt;<br>
+    Name<span class="tab">TAB</span>Type<span class="tab">TAB</span>Engine<br>
+    ...<br>
+    Logo 16|#|0:92|#|1:-222<span class="tab">TAB</span>Helicopter<span class="tab">TAB</span>Electro<br>
+    ME 109|#|0:93|#|1:-223<span class="tab">TAB</span>Warbird<span class="tab">TAB</span>Fuel<br>
+    ...<br>
+</div>
+
+<p><center><i>Example column properties and data table corresponding to detail example above</i></center></p>
+
+
+
+<h4>Row Selection and Row Lists</h4>
+
+<p>In DataWarrior one may define row lists, which are nothing more than a named subset of all rows.
+Typically, row lists are created ofter applying one a more filters that hide parts of the data and
+by assigning a name to the remaining visible set of rows. Alternatively, one may interactively select
+rows, e.g. markers in a scatter plot or chemical structures in a structure view, and then assign a
+name to the selection. When a '.dwar' file with defined row lists is saved, then a <span class="code">hitlist data</span>
+section is created that contains two entries for every list, first the list name, then the list data.
+If rows are selected, then the row selection is also saved as a pseudo list using the predefined name
+"&lt;selection&gt;". The list data itself contains one character for every six rows, of which the
+ASCII code is 64 plus a binary 6-digit number that encodes the membership of those rows.</p>
+
+<div class="code box">
+    &lt;hitlist data&gt;<br>
+    &lt;hitlistName="&lt;selection&gt;"&gt;<br>
+    &lt;hitlistData="icX@t@PDATDaLB@@`aCDL^F{zGPCAHB@H@psN]]@H@VP"&gt;<br>
+    &lt;hitlistName="Subset A"&gt;<br>
+    &lt;hitlistData="n`uIb]TFKgR@Gams_dO|fUWDGt]tt}Ul^Q_Tx@ITuRS^"&gt;<br>
+    &lt;/hitlist data&gt;<br>
+</div>
+
+<p><center><i>Example row list section defining selected rows and one row list</i></center></p>
+
+<h4>The Template Section</h4>
+
+<p>Apart from the data table itself, the template section is usually the largest section of a '.dwar' file.
+It defines how the data is presented within a DataWarrior window. It defines which views are visible,
+their sizes and relative orientations; it describes the nature and configuration of every view like
+which chart type is used, which categories are presented in which color, which columns are assigned
+to which axes, where labels are shown, zoom states, etc... It also defines which filters exist,
+on which columns they operate, and how they are configured. Therefore, indirectly it also defines,
+which part of the data is currently visible.</p>
+
+<p>Since the template section is not part of the data itself and just describes how the data is presented,
+this section can be useful outside the context of a particular '.dwar' file. In the case where multiple
+datasets share a similar structure, i.e. use the same column titles, one may easily apply a template to all
+datasets after it was designed for the first one. Typically, this is done, if there are frequent updates of
+a dataset and one wants to re-use a template created for an earlier version of the data. In DataWarrior
+this is done with 'Apply Template' from the 'File' menu. This task opens a '.dwar' or '.dwat' file and
+applies the contained template to the current data window.
+'.dwat' files are meant for this purpose, because they contain a template section only.</p>
+
+<p>The following simple example shows a template for a small '.dwar' file containing just a structure column
+and two numerical columns ('logP' and 'logS'). In addition to the mandatory table view, it defines two more views,
+an explanation view and a 2-dimensional graphical view with a scatter plot. Three filters are defined,
+a structure filter in substructure mode, and two numerical slider filters. Explaining each individual
+setting would exceed the scope of this document. Again, the interested reader is pointed to the Java source code of the
+<a href="https://github.com/thsa/datawarrior/blob/master/src/com/actelion/research/datawarrior/DERuntimeProperties.java">
+DERuntimeProperties</a> class, which works in both directions: It either applies a template to an open DataWarrior window
+and creates views and filters accordingly; or it constructs a new template from all components of an open DataWarrior window.</p>
+
+<div class="code box">
+    &lt;datawarrior properties&gt;<br>
+    &lt;axisColumn_2D View_0="logP"&gt;<br>
+    &lt;axisColumn_2D View_1="logS"&gt;<br>
+    &lt;chartType_2D View="scatter"&gt;<br>
+    &lt;colorColumn_2D View="FragFp"&gt;<br>
+    &lt;colorListMode_2D View="HSBLong"&gt;<br>
+    &lt;color_2D View_0="-65536"&gt;<br>
+    &lt;color_2D View_1="-16776961"&gt;<br>
+    &lt;columnFilter_Table=""&gt;<br>
+    &lt;columnWidth_Table_Structure="99"&gt;<br>
+    &lt;columnWidth_Table_logP="80"&gt;<br>
+    &lt;columnWidth_Table_logS="80"&gt;<br>
+    &lt;crosshairList_2D View=""&gt;<br>
+    &lt;currentRecord="1"&gt;<br>
+    &lt;defaultColor_labelBG_2D View="-2039584"&gt;<br>
+    &lt;detailView="height[Data]=0.5;height[Structure]=0.5"&gt;<br>
+    &lt;fastRendering_2D View="false"&gt;<br>
+    &lt;filter0="#structure#<span class="tab">TAB</span>Structure"&gt;<br>
+    &lt;filter1="#double#<span class="tab">TAB</span>logP"&gt;<br>
+    &lt;filter2="#double#<span class="tab">TAB</span>logS"&gt;<br>
+    &lt;filterAnimation1="state=stopped low2=80% high1=20% time=10"&gt;<br>
+    &lt;filterAnimation2="state=stopped low2=80% high1=20% time=10"&gt;<br>
+    &lt;headerLines_Table="2"&gt;<br>
+    &lt;mainSplitting="0.72634"&gt;<br>
+    &lt;mainView="2D View"&gt;<br>
+    &lt;mainViewCount="3"&gt;<br>
+    &lt;mainViewDockInfo0="root"&gt;<br>
+    &lt;mainViewDockInfo1="Table<span class="tab">TAB</span>bottom<span class="tab">TAB</span>0.356"&gt;<br>
+    &lt;mainViewDockInfo2="Table<span class="tab">TAB</span>right<span class="tab">TAB</span>0.5"&gt;<br>
+    &lt;mainViewName0="Table"&gt;<br>
+    &lt;mainViewName1="2D View"&gt;<br>
+    &lt;mainViewName2="Explanation"&gt;<br>
+    &lt;mainViewType0="tableView"&gt;<br>
+    &lt;mainViewType1="2Dview"&gt;<br>
+    &lt;mainViewType2="explanationView"&gt;<br>
+    &lt;rightSplitting="0.66926"&gt;<br>
+    &lt;rowHeight_Table="80"&gt;<br>
+    &lt;scaleStyle_2D View="frame"&gt;<br>
+    &lt;scatterplotMargin_2D View="0.025"&gt;<br>
+    &lt;showNaNValues_2D View="true"&gt;<br>
+    &lt;/datawarrior properties&gt;<br>
+</div>
+
+<p><center><i>Simple template section example </i></center></p>
 
 </body>
 </html>

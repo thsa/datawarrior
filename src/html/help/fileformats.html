@@ -55,7 +55,7 @@ some sort of key-value pairs. Within a ‘.dwar’ file all sections, if they ex
 
 <p>This section, if present, is supposed to contain a description in HTML format
 of the '.dwar' file's data, the source of the data, and interesting aspects of the data.
-It may describe what can be seen in configured graphical view, or how to interact with fiters
+It may describe what can be seen in configured graphical view, or how to interact with filters
 to gain insights into subsets of the data. It also may describe the purpose of embedded macros
 or how to connect to referenced external data. Within a DataWarrior window the content of the
 explanation section is displayed inside an 'Explanation View'.</p>
@@ -135,7 +135,7 @@ chemical structures as canonical, very compact, text strings that cover aromatic
 If an ID-Code describes a substructure, then it also may cover atom and bond query features and exclude groups.
 Since ID-Codes are canonical, they cannot contain atom coordinates. Therefore, if specific atom coordinates shall
 be stored in a '.dwar' file, then they must be stored in an additional column. The example declares a column
-named 'coords' to contain a special data type 'idcoordinates2D'. It also defined for that column that its parent
+named 'coords' to contain a special data type 'idcoordinates2D'. It also defines for that column that its parent
 column is the column named 'Structure'. For a third column named 'FragFp' we read that it contains special
 information of type 'FragFp', its parent column is the 'Structure' column and the version of its 'FragFp'
 entries is '1.2.1'.</p>
@@ -162,7 +162,7 @@ entries is '1.2.1'.</p>
 <p>The column property section is followed by the data table itself, which usually is the largest section in the file
 unless the data consists of a small number of rows only. The table starts with one line defining table column titles
 and continues with zero or more lines defining one data row each. Column names and column content within every row
-are separates by TAB symbol (ASCII-code:9), which are depicted in the examples as <span class="tab">TAB</span>.</p>
+are separated by TAB symbols (ASCII-code:9), which are depicted in the examples as <span class="tab">TAB</span>.</p>
 
 <p>Column titles serve as case-sensitive keys to address their respective columns. They cannot be changed by users
 and are used in the column properties section as well as the template (datawarrior properties) section, whenever
@@ -187,8 +187,8 @@ descriptors, or 2D- or 3D-coordinates. Within a DataWarrior file these special d
 strings. Molecular structure, substructure, and reaction encoding uses a unique and very efficient algorithm that
 produces a canonical representation of the original chemical object, which means that the same structure, when
 encoded, will always be represented by the same text string, independent of the original atom order, atom coordinates,
-or how stereo centers were defined. If two structure represent the same stereo isomer or the same epimer mixture,
-then the created string is the same. Likewise, if two chemical representing strings (called idcodes) are equal, then
+or how stereo centers were defined. If two structures represent the same stereo isomer or the same epimeric mixture,
+then the created string is the same. Likewise, if two chemical structure representing strings (called idcodes) are equal, then
 they represent the same chemical entity. Since canonical representations are independent of atom coordinates, these
 are not part of the idcode itself. Chemists, however, expect drawn structures to be shown with their original atom
 coordinates. Therefore, the encoding algorithm may produce a second string that contains original atom coordinates
@@ -199,15 +199,15 @@ atom coordinates, which together with the associated idcode would represent conf
 <p>The algorithm to canonicalize and string-encode chemical structures involves ring and aromaticity detection,
 recursive enhanced stereo perception, meso fragment perception, and more. Conceptually, it is similar to the SEMA
 (Stereo-enhanced Morgan Algorithm) algorithm and format used my MACCS, REACCS, and Isis-Base originally developed by MDL Information
-Systems. A detailled description of the algorithm would be beyond the scope of this document, but the interested reader
+Systems. A detailed description of the algorithm would be beyond the scope of this document, but the interested reader
 may study the Java source code of the <a href="https://github.com/Actelion/openchemlib/blob/master/src/main/java/com/actelion/research/chem/Canonizer.java">
 Canonizer</a> class, which contains the main part of the algorithm.</p>
 <p>The basic idea of the algorithm is to first rank all atoms using atom properties like the atomic number, charge,
-pi-electron count, ring membership, and more. Atoms sharing the same properties have the same rank. In a next step
+pi-electron count, ring membership, and more. Atoms sharing the same properties have the same rank. In the next step
 a sorted list of all neighbour ranks is built for every atom. Atoms with the same previous rank, but with a different
 neighbour rank list are now assigned different ranks, while the ranking order of the previous step is retained.
 An updated list of neighbour ranks is built and equal ranks are again split where neighbour ranks differ. This is
-repeated no equally ranked atoms can be distinguished anymore. Then, stereo centers and stereo bonds are perceived
+repeated until no equally ranked atoms can be distinguished anymore. Then, stereo centers and stereo bonds are perceived
 and stereo configurations are used to distinguish otherwise equally ranked atoms. Since stereo feature assignment may
 depend on other stereo features, the process is done repeatedly until no new stereo features can be detected.
 In a next step called tie-breaking remaining equally ranked atoms are assigned different ranks in a reproducible way,
@@ -220,7 +220,7 @@ into a string using as little bits as possible.</p>
 which in the DataWarrior application are displayed inside the detail area if the corresponding row is highlighted.
 A table cell may point to zero or one object of a defined kind, while an object may be accessed by many table cells
 at the same time. These objects may either be stored as part of the 'dwar' file, or they may reside in external files.
-If objects are part of a '.dwar' file, then they are located ionm the 'detail' section that looks like this:</p>
+If objects are part of a '.dwar' file, then they are located in the 'detail' section that looks like this:</p>
 
 <div class="code box">
     &lt;detail data&gt;<br>
@@ -245,15 +245,15 @@ If objects are part of a '.dwar' file, then they are located ionm the 'detail' s
 
 <p>Three sections must play together for this mechanism to work:
 <ul>
-<li>In the column properties section a name, the mime-type, and the source location needs to be defined for every
-detail object type that shall be referenced by cells of a particular column. If details are stored within th '.dwar'
+<li>In the column properties section a name, the mime-type, and the source location need to be defined for every
+detail object type that shall be referenced by cells of a particular column. If details are stored within the '.dwar'
 file itself, then the detail source is defined as 'embedded'.</li>
 <li>Detail references must be concatenated to some table cells in the defined column within the table data section.
 The reference consists of a '|#|' indicator, followed by a digit indicating the detail type index, followed by a colon ':',
 followed finally by the detail-ID, which is the unique detail name in the detail section. If a cell references
 multiple detail types, then these are concatenated one after another.</li>
 <li>Detail-IDs referencing '.dwar' file embedded detail objects must be represented in the detail area.
-Binary object use a simple encoding with 6 bits per character added to ASCII value 64. Text detail objects
+Binary objects use a simple encoding with 6 bits per character added to ASCII value 64. Text detail objects
 are zipped before the encoding, which is indicated by negative detail-IDs.</li>
 </ul>
 
@@ -285,7 +285,7 @@ The example below shows column properties and concatenated detail references cor
 <h4>Row Selection and Row Lists</h4>
 
 <p>In DataWarrior one may define row lists, which are nothing more than a named subset of all rows.
-Typically, row lists are created ofter applying one a more filters that hide parts of the data and
+Typically, row lists are created after applying one or more filters that hide parts of the data and
 by assigning a name to the remaining visible set of rows. Alternatively, one may interactively select
 rows, e.g. markers in a scatter plot or chemical structures in a structure view, and then assign a
 name to the selection. When a '.dwar' file with defined row lists is saved, then a <span class="code">hitlist data</span>
@@ -330,7 +330,7 @@ an explanation view and a 2-dimensional graphical view with a scatter plot. Thre
 a structure filter in substructure mode, and two numerical slider filters. Explaining each individual
 setting would exceed the scope of this document. Again, the interested reader is pointed to the Java source code of the
 <a href="https://github.com/thsa/datawarrior/blob/master/src/com/actelion/research/datawarrior/DERuntimeProperties.java">
-DERuntimeProperties</a> class, which works in both directions: It either applies a template to an open DataWarrior window
+DERuntimeProperties</a> class, which works in both directions: it either applies a template to an open DataWarrior window
 and creates views and filters accordingly; or it constructs a new template from all components of an open DataWarrior window.</p>
 
 <div class="code box">

@@ -23,7 +23,6 @@ import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableListEvent;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.config.ViewConfiguration;
 import javafx.application.Platform;
 import javafx.concurrent.Worker;
 import javafx.embed.swing.JFXPanel;
@@ -42,8 +41,6 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 
 import static javafx.geometry.Orientation.HORIZONTAL;
 import static javafx.geometry.Orientation.VERTICAL;
@@ -107,12 +104,13 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 	@Override
 	public void compoundTableChanged(CompoundTableEvent e) {
 		if (e.getType() == CompoundTableEvent.cChangeExtensionData
-				&& cExtensionNameFileExplanation.equals(mTableModel.getExtensionHandler().getName(e.getSpecifier()))) {
+		 && cExtensionNameFileExplanation.equals(mTableModel.getExtensionHandler().getName(e.getSpecifier()))) {
 			String explanation = (String)mTableModel.getExtensionData(cExtensionNameFileExplanation);
 			setText(explanation == null ? "" : explanation);
 		}
 		if (e.getType() == CompoundTableEvent.cNewTable) {
-			setText("");
+			String explanation = (String)mTableModel.getExtensionData(cExtensionNameFileExplanation);
+			setText(explanation == null ? "" : explanation);
 		}
 	}
 

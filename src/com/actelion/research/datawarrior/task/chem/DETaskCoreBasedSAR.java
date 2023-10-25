@@ -25,8 +25,8 @@ import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.sar.CoreBasedSARAnalyzer;
 import com.actelion.research.chem.sar.ExitVector;
-import com.actelion.research.chem.sar.SARMoleculeData;
-import com.actelion.research.chem.sar.ScaffoldData;
+import com.actelion.research.chem.sar.SARMolecule;
+import com.actelion.research.chem.sar.SARScaffold;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.gui.CompoundCollectionPane;
 import com.actelion.research.gui.DefaultCompoundCollectionModel;
@@ -53,7 +53,7 @@ public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
 	private boolean             mIs2ndStepSAR;
 	private int					mFirstRGroup,mStructureColumn,mScaffoldColumn,mScaffoldCoordsColumn,mMultipleMatches,mNewColumnCount;
 	private int[]				mSubstituentColumn;
-	private SARMoleculeData[]   mMoleculeData;
+	private SARMolecule[]   mMoleculeData;
 
     public DETaskCoreBasedSAR(DEFrame parent) {
 		super(parent, DESCRIPTOR_NONE, false, false);
@@ -232,7 +232,7 @@ public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
 				mFirstRGroup = Math.max(mFirstRGroup, 1 + getRGoupNoFromColumnName(getTableModel(), column));
 			}
 
-		mMoleculeData = new SARMoleculeData[rowCount];
+		mMoleculeData = new SARMolecule[rowCount];
 		int substituentCount = 0;
 		String[] queryIDCode = configuration.getProperty(PROPERTY_SCAFFOLD_LIST, "").split("\\t");
 
@@ -333,7 +333,7 @@ try {   // TODO remove
 				}
 			}
 
-		if (analyzer.getScaffolds().size() == 0)
+		if (analyzer.getScaffoldGroup().getScaffoldList().size() == 0)
 			return false;
 
 		if (threadMustDie())
@@ -379,13 +379,13 @@ try {   // TODO remove
 	public void processRow(int row, int firstNewColumn, StereoMolecule containerMol, int threadIndex) {
 		if (mMoleculeData[row] != null) {
 			getTableModel().removeChildDescriptorsAndCoordinates(row, mScaffoldColumn);
-			getTableModel().setTotalValueAt(mMoleculeData[row].getScaffoldData().getIDCodeWithRGroups(), row, mScaffoldColumn);
-			getTableModel().setTotalValueAt(mMoleculeData[row].getScaffoldData().getIDCoordsWithRGroups(), row, mScaffoldCoordsColumn);
+			getTableModel().setTotalValueAt(mMoleculeData[row].getScaffold().getIDCodeWithRGroups(), row, mScaffoldColumn);
+			getTableModel().setTotalValueAt(mMoleculeData[row].getScaffold().getIDCoordsWithRGroups(), row, mScaffoldCoordsColumn);
 
 			String[] substituent = mMoleculeData[row].getSubstituents();
-			ScaffoldData scaffoldData = mMoleculeData[row].getScaffoldData();
-			for (int exitVectorIndex=0; exitVectorIndex<scaffoldData.getExitVectorCount(); exitVectorIndex++) {
-				ExitVector exitVector = scaffoldData.getExitVector(exitVectorIndex);
+			SARScaffold scaffold = mMoleculeData[row].getScaffold();
+			for (int exitVectorIndex = 0; exitVectorIndex<scaffold.getExitVectorCount(); exitVectorIndex++) {
+				ExitVector exitVector = scaffold.getExitVector(exitVectorIndex);
 				if (exitVector.getRGroupNo() != 0) {
 					int index = exitVector.getRGroupNo()-mFirstRGroup;
 					getTableModel().setTotalValueAt(substituent[exitVectorIndex], row, mSubstituentColumn[index]);

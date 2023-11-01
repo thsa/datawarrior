@@ -232,9 +232,9 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 
 	private JComponent createSimilaritySlider() {
 		Hashtable<Integer,JLabel> labels = new Hashtable<Integer,JLabel>();
-		labels.put(new Integer(MIN_SIMILARITY), new JLabel(""+MIN_SIMILARITY+"%"));
-		labels.put(new Integer((100+MIN_SIMILARITY)/2), new JLabel(""+((100+MIN_SIMILARITY)/2)+"%"));
-		labels.put(new Integer(100), new JLabel("100%"));
+		labels.put(Integer.valueOf(MIN_SIMILARITY), new JLabel(""+MIN_SIMILARITY+"%"));
+		labels.put(Integer.valueOf((100+MIN_SIMILARITY)/2), new JLabel(""+((100+MIN_SIMILARITY)/2)+"%"));
+		labels.put(Integer.valueOf(100), new JLabel("100%"));
 		mSimilaritySlider = new JSlider(JSlider.HORIZONTAL, MIN_SIMILARITY, 100, DEFAULT_SIMILARITY);
 		mSimilaritySlider.setMinorTickSpacing(1);
 		mSimilaritySlider.setMajorTickSpacing(10);
@@ -622,7 +622,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 
 			mSortedID = new Integer[rowCount];
 			for (int row=0; row<rowCount; row++)
-				mSortedID[row] = new Integer(row);
+				mSortedID[row] = Integer.valueOf(row);
 
 			int zero = Float.floatToIntBits(0.0f);
 

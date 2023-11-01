@@ -261,7 +261,7 @@ public class JEPValueInCategoryFunction extends PostfixMathCommand {
 
 		boolean isDoubleCategory = mTableModel.isColumnTypeDouble(categoryColumn);
 		Object category = isDoubleCategory ?
-				new Double(mTableModel.getTotalOriginalDoubleAt(mParentTask.getCurrentRow(), categoryColumn))
+				Double.valueOf(mTableModel.getTotalOriginalDoubleAt(mParentTask.getCurrentRow(), categoryColumn))
 			  : mTableModel.getTotalValueAt(mParentTask.getCurrentRow(), categoryColumn);
 
 		if (isDoubleCategory && !mTableModel.isColumnTypeDouble(categoryColumn))

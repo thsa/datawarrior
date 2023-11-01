@@ -4342,7 +4342,7 @@ public class JCardPane extends JPanel implements  CompoundTableListener , MouseL
         //int ci=0;
         for(CardElement cedi : newCardElements ){
             int cei = reorderer.getOrder().get(cedi);
-            rp.addSnapArea( new SnapArea( reorderer.getPositions().get(cei) , reorderer.getSnapAreas().get(cei) , (cex) -> reorderer.fReorder(cex, cei ) , new Integer(cei) ));
+            rp.addSnapArea( new SnapArea( reorderer.getPositions().get(cei) , reorderer.getSnapAreas().get(cei) , (cex) -> reorderer.fReorder(cex, cei ) , Integer.valueOf(cei) ));
         }
 
         double vpx = (0.5* (nCardsToShow+1.5) ) * (cw*conf_DX );
@@ -4423,7 +4423,7 @@ public class JCardPane extends JPanel implements  CompoundTableListener , MouseL
 
                 for(CardElement cedi : newCardElements ){
                     int cei = reorderer.getOrder().get(cedi);
-                    mReorderingPane.addSnapArea( new SnapArea( reorderer.getPositions().get(cei) , reorderer.getSnapAreas().get(cei) , (cex) -> reorderer.fReorder(cex, cei ) , new Integer(cei) ));
+                    mReorderingPane.addSnapArea( new SnapArea( reorderer.getPositions().get(cei) , reorderer.getSnapAreas().get(cei) , (cex) -> reorderer.fReorder(cex, cei ) , Integer.valueOf(cei) ));
                 }
 
                 mReorderingPane.removeAllCardPaneListeners( ReorderingPaneListener.class );

@@ -60,7 +60,7 @@ public class JEPReplaceEmptyFunction extends PostfixMathCommand {
 			else
 				try { p2 = Double.parseDouble((String)param2); } catch (NumberFormatException nfe) {}
 
-			inStack.push(new Double(Double.isNaN(p1) ? p2 : p1));
+			inStack.push(Double.valueOf(Double.isNaN(p1) ? p2 : p1));
 			}
 		else if (param1 instanceof String) {
 			String p1 = (String)param1;

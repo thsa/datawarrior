@@ -95,9 +95,9 @@ public abstract class FitnessPanel extends JPanel implements ActionListener,Chan
 
 	private void createWeightSlider() {
 		Hashtable<Integer,JLabel> labels = new Hashtable<Integer,JLabel>();
-		labels.put(new Integer(-100), new JLabel("0.25"));
-		labels.put(new Integer(0), new JLabel("1.0"));
-		labels.put(new Integer(100), new JLabel("4.0"));
+		labels.put(Integer.valueOf(-100), new JLabel("0.25"));
+		labels.put(Integer.valueOf(0), new JLabel("1.0"));
+		labels.put(Integer.valueOf(100), new JLabel("4.0"));
 		mSlider = new JSlider(JSlider.HORIZONTAL, -100, 100, 0);
 		mSlider.setMinorTickSpacing(10);
 		mSlider.setMajorTickSpacing(100);

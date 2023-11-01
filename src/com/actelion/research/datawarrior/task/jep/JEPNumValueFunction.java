@@ -67,6 +67,6 @@ public class JEPNumValueFunction extends PostfixMathCommand {
 				Double.NaN : mTableModel.getTotalRecord(row-1).getDouble(column);
 
 		// push the result on the inStack
-		inStack.push(new Double(value));
+		inStack.push(Double.valueOf(value));
 	}
 }

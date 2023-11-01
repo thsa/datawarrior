@@ -93,12 +93,12 @@ public class JEPNormalizeFunction extends PostfixMathCommand {
 		double value = ((Double)param1).doubleValue();
 
 		if (Double.isNaN(value)) {
-			inStack.push(new Double(Double.NaN));
+			inStack.push(Double.valueOf(Double.NaN));
 			}
 		else {
 			double[] params = getSkalingParams(column);
 			value = (value - params[0]) / params[1];
-			inStack.push(new Double(value));
+			inStack.push(Double.valueOf(value));
 			}
 		}
 	}

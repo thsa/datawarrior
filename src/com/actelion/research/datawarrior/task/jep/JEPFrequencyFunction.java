@@ -56,9 +56,9 @@ public class JEPFrequencyFunction extends PostfixMathCommand {
 				if (key != null) {
 					Integer count = byteArrayMap.get(key);
 					if (count == null)
-						byteArrayMap.put(key, new Integer(1));
+						byteArrayMap.put(key, Integer.valueOf(1));
 					else
-						byteArrayMap.put(key, new Integer(count.intValue()+1));
+						byteArrayMap.put(key, Integer.valueOf(count.intValue()+1));
 					}
 				}
 			mByteArrayMaps.put(column, byteArrayMap);
@@ -74,14 +74,14 @@ public class JEPFrequencyFunction extends PostfixMathCommand {
 		if (doubleMap == null) {
 			doubleMap = new TreeMap<>();
 			for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
-				Double key = new Double(mTableModel.getTotalRecord(row).getDouble(column));
+				Double key = Double.valueOf(mTableModel.getTotalRecord(row).getDouble(column));
 //				if (!Double.isNaN(key)) {
 					Integer count = doubleMap.get(key);
 					if (count == null)
-						doubleMap.put(key, new Integer(1));
+						doubleMap.put(key, Integer.valueOf(1));
 					else
 						//count++;
-						doubleMap.put(key, new Integer(count.intValue()+1));
+						doubleMap.put(key, Integer.valueOf(count.intValue()+1));
 //					}
 				}
 			mDoubleMaps.put(column, doubleMap);
@@ -114,7 +114,7 @@ public class JEPFrequencyFunction extends PostfixMathCommand {
 					if (param1 instanceof Double) {
 						Integer co = createDoubleMap(column).get((Double)param1);
 						int count = (co == null) ? 0 : co.intValue();
-						inStack.push(new Double(count));
+						inStack.push(Double.valueOf(count));
 						}
 					else {
 						throw new ParseException("1st parameter is not numerical.");
@@ -133,7 +133,7 @@ public class JEPFrequencyFunction extends PostfixMathCommand {
 							}
 						Integer co = createByteArrayMap(column).get(bytes);
 						int count = (co == null) ? 0 : co.intValue();
-						inStack.push(new Double(count));
+						inStack.push(Double.valueOf(count));
 						}
 					else {
 						throw new ParseException("1st parameter is not type 'String'.");

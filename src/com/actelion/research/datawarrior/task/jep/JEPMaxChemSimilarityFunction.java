@@ -76,7 +76,7 @@ public class JEPMaxChemSimilarityFunction extends PostfixMathCommand {
 						}
 					}
 				}
-			inStack.push(new Double(maxSim));
+			inStack.push(Double.valueOf(maxSim));
 			}
 		else {
 			throw new ParseException("Invalid parameter type");

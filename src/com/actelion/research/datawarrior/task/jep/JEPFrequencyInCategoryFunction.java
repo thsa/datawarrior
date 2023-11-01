@@ -62,9 +62,9 @@ public class JEPFrequencyInCategoryFunction extends PostfixMathCommand {
 				String key = value.concat("@#").concat(category);
 				Integer count = countMap.get(key);
 				if (count == null)
-					countMap.put(key, new Integer(1));
+					countMap.put(key, Integer.valueOf(1));
 				else
-					countMap.put(key, new Integer(count.intValue()+1));
+					countMap.put(key, Integer.valueOf(count.intValue()+1));
 				}
 			mCountMaps.put(categoryColumn + 0x00010000 * valueColumn, countMap);
 			}
@@ -114,6 +114,6 @@ public class JEPFrequencyInCategoryFunction extends PostfixMathCommand {
 
 		Integer co = createMap(valueColumn, categoryColumn).get(key);
 		int count = (co == null) ? 0 : co.intValue();
-		inStack.push(new Double(count));
+		inStack.push(Double.valueOf(count));
 		}
 	}

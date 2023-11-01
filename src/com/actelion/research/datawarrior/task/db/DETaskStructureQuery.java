@@ -676,10 +676,10 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 
     protected JComponent createSimilaritySlider() {
         Hashtable<Integer,JLabel> labels = new Hashtable<Integer,JLabel>();
-	    labels.put(new Integer(70), new JLabel("70%"));
-        labels.put(new Integer(80), new JLabel("80%"));
-        labels.put(new Integer(90), new JLabel("90%"));
-        labels.put(new Integer(100), new JLabel("100%"));
+	    labels.put(Integer.valueOf(70), new JLabel("70%"));
+        labels.put(Integer.valueOf(80), new JLabel("80%"));
+        labels.put(Integer.valueOf(90), new JLabel("90%"));
+        labels.put(Integer.valueOf(100), new JLabel("100%"));
         mSimilaritySlider = new JSlider(JSlider.VERTICAL, 70, 100, 90);
         mSimilaritySlider.setMinorTickSpacing(1);
         mSimilaritySlider.setMajorTickSpacing(10);

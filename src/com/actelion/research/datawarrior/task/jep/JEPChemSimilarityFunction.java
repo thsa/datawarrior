@@ -136,7 +136,7 @@ public class JEPChemSimilarityFunction extends PostfixMathCommand {
             	}
 
             double similarity = handler1.getSimilarity(value1, value2);
-            inStack.push(new Double(similarity));
+            inStack.push(Double.valueOf(similarity));
 		    }
         else {
             throw new ParseException("Invalid parameter type");

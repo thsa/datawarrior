@@ -374,24 +374,24 @@ public class DETaskAddRowNumbers extends ConfigurableTask implements ActionListe
 					Integer index = map.get(entry);
 					if (sameInCategory) {
 						if (index == null) {
-							index = new Integer(map.size());
+							index = Integer.valueOf(map.size());
 							map.put(entry, index);
 							}
 						}
 					else {
 						if (index == null)
-							index = new Integer(0);
+							index = Integer.valueOf(0);
 						else
-							index = new Integer(index+1);
+							index = Integer.valueOf(index+1);
 						map.put(entry, index);
 						}
 
 					if (sb.length() != 0)
 						sb.append(CompoundTableModel.cEntrySeparator);
 					if (countMode == COUNT_MODE_RANDOM)
-						index = new Integer(sameInCategory ? randomMapOrCount[index] : categoryRandomOrCountMap.get(entry)[index]);
+						index = Integer.valueOf(sameInCategory ? randomMapOrCount[index] : categoryRandomOrCountMap.get(entry)[index]);
 					else if (countMode == COUNT_MODE_DECREASING)
-						index = new Integer(sameInCategory ? randomMapOrCount[0]-index-1 : categoryRandomOrCountMap.get(entry)[0]-index-1);
+						index = Integer.valueOf(sameInCategory ? randomMapOrCount[0]-index-1 : categoryRandomOrCountMap.get(entry)[0]-index-1);
 
 					sb.append(firstNo+index);
 					}

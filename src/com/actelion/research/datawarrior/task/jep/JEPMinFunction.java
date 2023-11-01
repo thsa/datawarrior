@@ -58,6 +58,6 @@ public class JEPMinFunction extends PostfixMathCommand {
 		double p2 = ((Double)param2).doubleValue();
 
 		// push the result on the inStack
-		inStack.push(new Double(Math.min(p1, p2)));
+		inStack.push(Double.valueOf(Math.min(p1, p2)));
 		}
 	}

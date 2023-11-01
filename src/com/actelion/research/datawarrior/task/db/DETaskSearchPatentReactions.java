@@ -293,10 +293,10 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 
 	private JSlider createSimilaritySlider1() {
 		Hashtable<Integer,JLabel> labels = new Hashtable<>();
-		labels.put(new Integer(70), new JLabel("70%"));
-		labels.put(new Integer(80), new JLabel("80%"));
-		labels.put(new Integer(90), new JLabel("90%"));
-		labels.put(new Integer(100), new JLabel("100%"));
+		labels.put(Integer.valueOf(70), new JLabel("70%"));
+		labels.put(Integer.valueOf(80), new JLabel("80%"));
+		labels.put(Integer.valueOf(90), new JLabel("90%"));
+		labels.put(Integer.valueOf(100), new JLabel("100%"));
 		JSlider slider = new JSlider(JSlider.HORIZONTAL, 70, 100, 90);
 		slider.setMinorTickSpacing(1);
 		slider.setMajorTickSpacing(10);
@@ -312,9 +312,9 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 
 	private JSlider createSimilaritySlider2() {
 		Hashtable<Integer,JLabel> labels = new Hashtable<>();
-		labels.put(new Integer(0), new JLabel("0%"));
-		labels.put(new Integer(50), new JLabel("50%"));
-		labels.put(new Integer(100), new JLabel("100%"));
+		labels.put(Integer.valueOf(0), new JLabel("0%"));
+		labels.put(Integer.valueOf(50), new JLabel("50%"));
+		labels.put(Integer.valueOf(100), new JLabel("100%"));
 		JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
 		slider.setMinorTickSpacing(5);
 		slider.setMajorTickSpacing(25);

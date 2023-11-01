@@ -112,6 +112,6 @@ public class JEPOrderDependentFunction extends PostfixMathCommand {
 		if (!mTableModel.isColumnTypeDouble(valueColumn))
 			throw new ParseException("Column '"+param+"' does not contain numerical values.");
 
-		inStack.push(new Double(getResult(valueColumn)));
+		inStack.push(Double.valueOf(getResult(valueColumn)));
 		}
 	}

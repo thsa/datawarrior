@@ -130,13 +130,13 @@ public class JEPChemSSSFunction extends PostfixMathCommand {
 				SSSearcherWithIndex searcher = new SSSearcherWithIndex();
 				searcher.setMolecule(molecule, moleculeFFP);
 				searcher.setFragment(fragment, fragmentFFP);
-				inStack.push(new Double(searcher.findFragmentInMolecule(countMode, SSSearcher.cDefaultMatchMode)));
+				inStack.push(Double.valueOf(searcher.findFragmentInMolecule(countMode, SSSearcher.cDefaultMatchMode)));
 				}
 			else {
 				SSSearcher searcher = new SSSearcher();
 				searcher.setMolecule(molecule);
 				searcher.setFragment(fragment);
-				inStack.push(new Double(searcher.findFragmentInMolecule(countMode, SSSearcher.cDefaultMatchMode)));
+				inStack.push(Double.valueOf(searcher.findFragmentInMolecule(countMode, SSSearcher.cDefaultMatchMode)));
 				}
 			}
 		else {

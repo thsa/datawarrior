@@ -393,7 +393,7 @@ public class DETaskArrangeGraphNodes extends ConfigurableTask implements ActionL
 
 			mSortedID = new Integer[rowCount];
 			for (int row=0; row<rowCount; row++)
-				mSortedID[row] = new Integer(row);
+				mSortedID[row] = Integer.valueOf(row);
 
 			int zero = Float.floatToIntBits(0.0f);
 

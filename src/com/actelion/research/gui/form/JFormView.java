@@ -439,14 +439,14 @@ public class JFormView extends JPanel implements FormObjectListener,Printable {
 		if (desc.startsWith("TableLayout")) {
 			StringTokenizer st = new StringTokenizer(desc, ",");
 			st.nextToken();
-			int width = new Integer(st.nextToken()).intValue();
+			int width = Integer.valueOf(st.nextToken()).intValue();
 			double[] horizontal = new double[width];
 			for (int i=0; i<width; i++)
-				horizontal[i] = new Double(st.nextToken()).doubleValue();
-			int height = new Integer(st.nextToken()).intValue();
+				horizontal[i] = Double.valueOf(st.nextToken()).doubleValue();
+			int height = Integer.valueOf(st.nextToken()).intValue();
 			double[] vertical = new double[height];
 			for (int i=0; i<height; i++)
-				vertical[i] = new Double(st.nextToken()).doubleValue();
+				vertical[i] = Double.valueOf(st.nextToken()).doubleValue();
 			double[][] size = { horizontal, vertical };
 			return size;
 			}

@@ -544,7 +544,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 					int column = convertTotalColumnIndexFromView(viewColumn);
 					String key = tableModel.getColumnTitleNoAlias(column);
 					int oldWidth = getColumnModel().getColumn(viewColumn).getPreferredWidth();
-					mNonExpandedColumnSizes.put(key, new Integer(oldWidth));
+					mNonExpandedColumnSizes.put(key, Integer.valueOf(oldWidth));
 					String name = tableModel.getColumnTitle(column);
 					int width = getFont().getSize() + SwingUtilities.computeStringWidth(getFontMetrics(getFont()), name);
 					getColumnModel().getColumn(viewColumn).setPreferredWidth(Math.max(oldWidth, width));
@@ -1278,7 +1278,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			if (column != -1) {
 				int displayableColumn = tableModel.convertToDisplayableColumnIndex(column);
 				if (displayableColumn != -1) {
-					Integer object = new Integer(column);
+					Integer object = Integer.valueOf(column);
 					mIntendedColumnOrder.remove(object);
 					mIntendedColumnOrder.add(dispIndex++, object);
 

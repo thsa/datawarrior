@@ -107,9 +107,9 @@ public class JReactionFilterPanel extends JFilterPanel implements ChangeListener
 		mComboBox.addItemListener(this);
 
 		Hashtable<Integer,JLabel> labels = new Hashtable<Integer,JLabel>();
-		labels.put(new Integer(0), new JLabel("0"));
-		labels.put(new Integer(50), new JLabel("\u00BD"));
-		labels.put(new Integer(100), new JLabel("1"));
+		labels.put(Integer.valueOf(0), new JLabel("0"));
+		labels.put(Integer.valueOf(50), new JLabel("\u00BD"));
+		labels.put(Integer.valueOf(100), new JLabel("1"));
 
 		mSliderRectionCenter = new JSlider(JSlider.HORIZONTAL, 0, 100, 80);
 		mSliderRectionCenter.setMinorTickSpacing(10);

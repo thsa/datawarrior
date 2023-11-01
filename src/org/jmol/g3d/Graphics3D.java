@@ -2656,7 +2656,7 @@ final public class Graphics3D implements JmolRendererInterface {
   private static final Hashtable mapJavaScriptColors = new Hashtable();
   static {
     for (int i = colorNames.length; --i >= 0; )
-      mapJavaScriptColors.put(colorNames[i], new Integer(colorArgbs[i]));
+      mapJavaScriptColors.put(colorNames[i], Integer.valueOf(colorArgbs[i]));
   }
 
   /**

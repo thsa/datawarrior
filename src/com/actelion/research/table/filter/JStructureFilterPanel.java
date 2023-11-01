@@ -71,9 +71,9 @@ public abstract class JStructureFilterPanel extends JFilterPanel implements Chan
 	protected JSlider getSimilaritySlider() {
 		if (mSimilaritySlider == null) {
 			Hashtable<Integer,JLabel> labels = new Hashtable<Integer,JLabel>();
-			labels.put(new Integer(0), new JLabel("0"));
-			labels.put(new Integer(50), new JLabel("\u00BD"));
-			labels.put(new Integer(100), new JLabel("1"));
+			labels.put(Integer.valueOf(0), new JLabel("0"));
+			labels.put(Integer.valueOf(50), new JLabel("\u00BD"));
+			labels.put(Integer.valueOf(100), new JLabel("1"));
 			mSimilaritySlider = new JSlider(JSlider.VERTICAL, 0, 100, 80);
 			mSimilaritySlider.setOpaque(false);
 			mSimilaritySlider.setMinorTickSpacing(10);

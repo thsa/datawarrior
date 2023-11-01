@@ -19,6 +19,8 @@
 package com.actelion.research.datawarrior;
 
 import com.actelion.research.gui.LookAndFeelHelper;
+import org.pushingpixels.substance.api.fonts.FontPolicy;
+import org.pushingpixels.substance.api.fonts.FontSet;
 
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
@@ -34,15 +36,15 @@ public class DataWarriorLinux extends DataWarrior {
 	protected static DataWarriorLinux sDataExplorer;
 	protected static ArrayList<String> sPendingDocumentList;
 
-	private static class NewSubstanceFontSet implements org.pushingpixels.substance.api.fonts.FontSet {
+	private static class NewSubstanceFontSet implements FontSet {
 		private float factor;
-		private org.pushingpixels.substance.api.fonts.FontSet delegate;
+		private FontSet delegate;
 
 		/**
 		 * @param delegate The base Substance font set.
 		 * @param factor Extra size in pixels. Can be positive or negative.
 		 */
-		public NewSubstanceFontSet(org.pushingpixels.substance.api.fonts.FontSet delegate, float factor) {
+		public NewSubstanceFontSet(FontSet delegate, float factor) {
 			super();
 			this.delegate = delegate;
 			this.factor = factor;
@@ -128,14 +130,26 @@ public class DataWarriorLinux extends DataWarrior {
 		org.pushingpixels.substance.api.SubstanceLookAndFeel.setFontPolicy(null);
 
 		// reduce the default font size a little
-		final org.pushingpixels.substance.api.fonts.FontSet substanceCoreFontSet = org.pushingpixels.substance.api.SubstanceLookAndFeel.getFontPolicy().getFontSet("Substance", null);
-		org.pushingpixels.substance.api.fonts.FontPolicy newFontPolicy = new org.pushingpixels.substance.api.fonts.FontPolicy() {
-			public org.pushingpixels.substance.api.fonts.FontSet getFontSet(String lafName, UIDefaults table) {
+		final FontSet substanceCoreFontSet = org.pushingpixels.substance.api.SubstanceLookAndFeel.getFontPolicy().getFontSet("Substance", null);
+		FontPolicy newFontPolicy = new FontPolicy() {
+			public FontSet getFontSet(String lafName, UIDefaults table) {
 				return new NewSubstanceFontSet(substanceCoreFontSet, factor);
 				}
 			};
 		org.pushingpixels.substance.api.SubstanceLookAndFeel.setFontPolicy(newFontPolicy);
-		}
+
+// Use the following for JRE 18 and Radiance port!!!
+//		RadianceThemingCortex.GlobalScope.setFontPolicy(null);
+
+		// reduce the default font size a little
+//		final FontSet substanceCoreFontSet = RadianceThemingCortex.GlobalScope.getFontPolicy().getFontSet();
+//		FontPolicy newFontPolicy = new FontPolicy() {
+//			public FontSet getFontSet() {
+//				return new NewSubstanceFontSet(substanceCoreFontSet, factor);
+//			}
+//		};
+//		RadianceThemingCortex.GlobalScope.setFontPolicy(newFontPolicy);
+	}
 
 	@Override
 	public boolean setLookAndFeel(LookAndFeel laf) {

@@ -531,7 +531,7 @@ public class CompoundTableSOM implements SOMController {
 							String dataKey = SelfOrganizedMap.extractValue(theLine);
 							if (mCompatibilityError == null && !keySet.contains(dataKey))
 								mCompatibilityError = "Missing data key '"+dataKey+"' in current dataset.";
-							mPivotDataMap.put(dataKey, new Integer(i));
+							mPivotDataMap.put(dataKey, Integer.valueOf(i));
 							}
 
 						theLine = reader.readLine();

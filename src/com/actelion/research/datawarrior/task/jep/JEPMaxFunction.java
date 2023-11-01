@@ -58,6 +58,6 @@ public class JEPMaxFunction extends PostfixMathCommand {
 		double p2 = ((Double)param2).doubleValue();
 
 		// push the result on the inStack
-		inStack.push(new Double(Math.max(p1, p2)));
+		inStack.push(Double.valueOf(Math.max(p1, p2)));
 		}
 	}

@@ -210,9 +210,9 @@ public class FussyParameterPanel extends JPanel implements ActionListener,Change
 		public SliderPanel(String name, double factor) {
 			this.factor = factor;
 			Hashtable<Integer,JLabel> labels = new Hashtable<Integer,JLabel>();
-			labels.put(new Integer(-100), new JLabel(Double.toString(1.0/factor)));
-			labels.put(new Integer(0), new JLabel("1.0"));
-			labels.put(new Integer(100), new JLabel(Double.toString(1.0*factor)));
+			labels.put(Integer.valueOf(-100), new JLabel(Double.toString(1.0/factor)));
+			labels.put(Integer.valueOf(0), new JLabel("1.0"));
+			labels.put(Integer.valueOf(100), new JLabel(Double.toString(1.0*factor)));
 			slider = new JSlider(JSlider.HORIZONTAL, -100, 100, 0);
 			slider.setMinorTickSpacing(10);
 			slider.setMajorTickSpacing(100);

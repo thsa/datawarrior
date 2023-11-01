@@ -41,6 +41,6 @@ public class JEPRowFunction extends PostfixMathCommand {
 		checkStack(inStack);
 
 		// push the result on the inStack
-		inStack.push(new Double(mParentTask.getCurrentRow()+1));
+		inStack.push(Double.valueOf(mParentTask.getCurrentRow()+1));
 		}
 	}

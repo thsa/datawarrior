@@ -81,7 +81,7 @@ public class JEPLigEffFunction extends PostfixMathCommand {
                 }
 
 			// push the result on the inStack
-			inStack.push(new Double(deltaG_rel));
+			inStack.push(Double.valueOf(deltaG_rel));
 		    }
 		else {
 			throw new ParseException("Invalid parameter type");

@@ -52,7 +52,7 @@ public class JEPIntFunction extends PostfixMathCommand {
 			// calculate the result
 			double r = (int)((Double)param).doubleValue();
 			// push the result on the inStack
-			inStack.push(new Double(r));
+			inStack.push(Double.valueOf(r));
 		} else {
 			throw new ParseException("Invalid parameter type");
 		}

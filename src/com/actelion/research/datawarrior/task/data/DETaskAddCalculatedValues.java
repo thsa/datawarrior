@@ -264,19 +264,19 @@ public class DETaskAddCalculatedValues extends ConfigurableTask implements Actio
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 			if (mTableModel.isColumnDisplayable(column)) {
 				String varName = removeConflictingChars(mTableModel.getColumnTitle(column));
-				columnMap.put(ensureUniqueness(varName, varNameList), new Integer(column));
+				columnMap.put(ensureUniqueness(varName, varNameList), Integer.valueOf(column));
 				}
 			else if (mTableModel.isDescriptorColumn(column)) {
 				String specialType = mTableModel.getColumnSpecialType(column);
 				String parentName = mTableModel.getColumnTitle(mTableModel.getParentColumn(column));
 				String varName = specialType+"_of_"+removeConflictingChars(parentName);
-				columnMap.put(ensureUniqueness(varName, varNameList), new Integer(column));
+				columnMap.put(ensureUniqueness(varName, varNameList), Integer.valueOf(column));
 				}
 			}
 
 		for (int i = 0; i<mTableModel.getListHandler().getListCount(); i++) {
 			String varName = IS_MEMBER_OF + removeConflictingChars(mTableModel.getListHandler().getListName(i));
-			columnMap.put(ensureUniqueness(varName, varNameList), new Integer(CompoundTableListHandler.getColumnFromList(i)));
+			columnMap.put(ensureUniqueness(varName, varNameList), Integer.valueOf(CompoundTableListHandler.getColumnFromList(i)));
 			}
 
 

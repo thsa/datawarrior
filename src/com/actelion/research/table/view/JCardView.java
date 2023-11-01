@@ -155,7 +155,7 @@ public class JCardView extends JPanel implements CompoundTableView, HighlightLis
 
 //		JPanel sizer = new JPanel();
 //		sizer.setPreferredSize(new Dimension(4000,4000));
-//		mLayeredPane.add(sizer,new Integer(100));
+//		mLayeredPane.add(sizer,Integer.valueOf(100));
 
 		//this.add(mLayeredPane,BorderLayout.CENTER);
 //		JPanel test = new JPanel();
@@ -1174,7 +1174,7 @@ public class JCardView extends JPanel implements CompoundTableView, HighlightLis
 		public void setMainComponent(JComponent c){
 			if(mMainComponent!=null){this.remove(mMainComponent);}
 			this.mMainComponent = c;
-			this.add( c , new Integer(1) );
+			this.add( c , Integer.valueOf(1) );
 			this.layoutComponents();
 		}
 

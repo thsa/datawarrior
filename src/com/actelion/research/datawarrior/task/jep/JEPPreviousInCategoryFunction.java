@@ -59,7 +59,7 @@ public class JEPPreviousInCategoryFunction extends PostfixMathCommand {
 				Object value;
 				if (mTableModel.isColumnTypeDouble(valueColumn)) {
 					float v = mTableModel.getTotalRecord(row).getDouble(valueColumn);
-					value = new Double(mTableModel.isLogarithmicViewMode(valueColumn) ? Math.pow(10, v) : v);
+					value = Double.valueOf(mTableModel.isLogarithmicViewMode(valueColumn) ? Math.pow(10, v) : v);
 					}
 				else {
 					value = mTableModel.getTotalRecord(row).getData(valueColumn);

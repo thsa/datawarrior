@@ -381,7 +381,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 			if (!isRedundantConformer(torsionHelper, torsionDescriptorList)) {
 				StereoMolecule uniqueConformer = conformer.toMolecule(null);
 				uniqueConformer.setName("Conf" + (i + 1) + (message == null ? "" : NAME_ENERGY_SEPARATOR + message));
-				uniqueConformer.setUserData(new Double(conformer.getEnergy()));
+				uniqueConformer.setUserData(Double.valueOf(conformer.getEnergy()));
 				conformerList.add(uniqueConformer);
 			}
 		}

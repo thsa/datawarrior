@@ -76,7 +76,7 @@ public class JEPValueOfDateFunction extends PostfixMathCommand {
 			else if (week > 50 && month == 0)
 				value--;
 			}
-		inStack.push(new Double(value));
+		inStack.push(Double.valueOf(value));
 		}
 	}
 

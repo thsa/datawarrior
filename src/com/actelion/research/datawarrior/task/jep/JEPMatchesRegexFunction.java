@@ -53,6 +53,6 @@ public class JEPMatchesRegexFunction extends PostfixMathCommand {
 
 		String regex = ((String)param2).replace("\\", "\\\\");
 
-		inStack.push(new Double(((String)param1).matches(regex) ? 1 : 0));
+		inStack.push(Double.valueOf(((String)param1).matches(regex) ? 1 : 0));
 	}
 }

@@ -131,7 +131,7 @@ public class JEPMovingInCategoryFunction extends PostfixMathCommand {
 		if (n1<0 || n2<0 || n1 + n2 == 0)
 			throw new ParseException("Neither n1 nor n2 must be negative. The sum n1+n2 must be larger than 0.");
 
-		inStack.push(new Double(getResult(valueColumn, categoryColumn, n1, n2)));
+		inStack.push(Double.valueOf(getResult(valueColumn, categoryColumn, n1, n2)));
 		}
 
 	private class MovingWindow {

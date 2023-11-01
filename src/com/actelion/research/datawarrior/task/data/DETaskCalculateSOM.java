@@ -135,7 +135,7 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
             if (mTableModel.isColumnDataComplete(column)
              && ((specialType == null && mTableModel.hasNumericalVariance(column))
               || (mTableModel.isDescriptorColumn(column) && CompoundTableSOM.isDescriptorSupported(specialType))))
-                mColumnMap.put(mTableModel.getColumnTitle(column), new Integer(column));
+                mColumnMap.put(mTableModel.getColumnTitle(column), Integer.valueOf(column));
         	}
 
         String[] columnList = mColumnMap.keySet().toArray(new String[0]);

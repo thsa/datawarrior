@@ -60,6 +60,6 @@ public class JEPEmptyFunction extends PostfixMathCommand {
 			throw new ParseException("Invalid parameter type");
 		}
 
-		inStack.push(new Double(isEmpty ? 1 : 0));
+		inStack.push(Double.valueOf(isEmpty ? 1 : 0));
 	}
 }

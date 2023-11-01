@@ -59,7 +59,7 @@ public class DEColumnOrder extends ArrayList<Integer> implements TableColumnMode
 		clear();
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
 			if (mTableModel.isColumnDisplayable(column))
-				add(new Integer(column));
+				add(Integer.valueOf(column));
 		}
 
 	/**
@@ -83,7 +83,7 @@ public class DEColumnOrder extends ArrayList<Integer> implements TableColumnMode
 		else if (e.getType() == CompoundTableEvent.cAddColumns) {
 			for (int column=e.getColumn(); column<mTableModel.getTotalColumnCount(); column++)
 				if (mTableModel.isColumnDisplayable(column))
-					add(new Integer(column));
+					add(Integer.valueOf(column));
 			}
 		else if (e.getType() == CompoundTableEvent.cRemoveColumns) {
 			int[] map = e.getMapping();
@@ -92,7 +92,7 @@ public class DEColumnOrder extends ArrayList<Integer> implements TableColumnMode
 				if (newIndex == -1)
 					remove(i);
 				else
-					set(i, new Integer(newIndex));
+					set(i, Integer.valueOf(newIndex));
 				}
 			}
 		}
@@ -116,7 +116,7 @@ public class DEColumnOrder extends ArrayList<Integer> implements TableColumnMode
 				return;
 
 			int movedModelColumn = mTableModel.convertFromDisplayableColumnIndex(mColumnModel.getColumn(toIndex).getModelIndex());
-			remove(new Integer(movedModelColumn));
+			remove(Integer.valueOf(movedModelColumn));
 
 			// If we move to the very left of the table, then add the removed model column index at the start of the list
 			int insertIndex = 0;
@@ -127,7 +127,7 @@ public class DEColumnOrder extends ArrayList<Integer> implements TableColumnMode
 				insertIndex = indexOf(leftModelColumn) + 1;
 				}
 
-			add(insertIndex, new Integer(movedModelColumn));
+			add(insertIndex, Integer.valueOf(movedModelColumn));
 
 //printOrder("moved: ");
 			}
@@ -145,11 +145,11 @@ public class DEColumnOrder extends ArrayList<Integer> implements TableColumnMode
 	public void columnSelectionChanged(ListSelectionEvent e) {}
 
 	protected int getColumnIndexForInsertion(int modelColumn) {
-		int listIndex = indexOf(new Integer(modelColumn));	// index in ordered displayable column list
+		int listIndex = indexOf(Integer.valueOf(modelColumn));	// index in ordered displayable column list
 		int insertIndex = mColumnModel.getColumnCount(); // default is after the last entry
 		for (int i=0; i<mColumnModel.getColumnCount(); i++) {
 			int mc = mTableModel.convertFromDisplayableColumnIndex(mColumnModel.getColumn(i).getModelIndex());
-			int li = indexOf(new Integer(mc));	// index in ordered displayable column list
+			int li = indexOf(Integer.valueOf(mc));	// index in ordered displayable column list
 			if (listIndex < li) {
 				insertIndex = i;
 				break;

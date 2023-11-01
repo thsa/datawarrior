@@ -4,15 +4,14 @@ import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.card.CardElement;
 import com.actelion.research.table.view.card.CardPaneModel;
-import com.actelion.research.table.view.card.cardsurface.gui.JCardWizard2;
 import com.actelion.research.table.view.card.cardsurface.gui.JMyOptionsTable;
 import com.actelion.research.table.view.card.tools.ColWithType;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Point2D;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public class CardStackPositioner extends CardPositionerWithGUI  {
 
@@ -123,7 +122,7 @@ public class CardStackPositioner extends CardPositionerWithGUI  {
             int bin_xi = 0;
             for(List<CardElement> celi : stacks){
                 int bin_xii = bin_xi;
-                celi.stream().forEach( cxi -> pos_x.put(cxi,new Double(bin_xii) ) );
+                celi.stream().forEach( cxi -> pos_x.put(cxi,Double.valueOf(bin_xii) ) );
                 bin_xi++;
             }
         }
@@ -141,7 +140,7 @@ public class CardStackPositioner extends CardPositionerWithGUI  {
             int bin_yi = 0;
             for(List<CardElement> celi : stacks){
                 int bin_yii = bin_yi;
-                celi.stream().forEach( cxi -> pos_y.put(cxi,new Double(bin_yii)) );
+                celi.stream().forEach( cxi -> pos_y.put(cxi,Double.valueOf(bin_yii)) );
                 bin_yi++;
             }
         }

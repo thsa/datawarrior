@@ -187,7 +187,7 @@ public abstract class AbstractCardPositioner implements CardPositionerInterface{
                 zi=0;
                 for(CardElement ce : ces){
                     if(Thread.currentThread().isInterrupted()){throw new InterruptedException();}
-                    result.put(new IdentityHashedObject<>(ce), new Double(order[zi].intValue() ));
+                    result.put(new IdentityHashedObject<>(ce), Double.valueOf(order[zi].intValue() ));
                     zi++;
                 }
                 System.out.println("extractValues finished: time= "+ (System.currentTimeMillis()-timestamp)+" ms");
@@ -200,7 +200,7 @@ public abstract class AbstractCardPositioner implements CardPositionerInterface{
                 zi=0;
                 for(CardElement ce : ces){
                     if(Thread.currentThread().isInterrupted()){throw new InterruptedException();}
-                    result.put(new IdentityHashedObject<>(ce), new Double(order[zi].intValue() ));
+                    result.put(new IdentityHashedObject<>(ce), Double.valueOf(order[zi].intValue() ));
                     result_inv.put( order[zi], new IdentityHashedObject<>(ce) );
                     zi++;
                 }
@@ -221,7 +221,7 @@ public abstract class AbstractCardPositioner implements CardPositionerInterface{
                         double next_value = result.get( result_inv.get(oi) ).doubleValue();
                         if(last_value==next_value){
                             // overwrite entry in result..
-                            result.put( result_inv.get(oi) , new Double(last_index) );
+                            result.put( result_inv.get(oi) , Double.valueOf(last_index) );
                         }
                     }
                 }

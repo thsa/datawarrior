@@ -911,15 +911,23 @@ after pressing the <span class="menu">Choose</span> button.</p>
 
 <h3><a name="SARTables"></a>Creating SAR-Tables</h3>
 
-<p><i>Structure-Activity Relationship (SAR)</i> Tables are frequently used to
-correlate biological properties with the substitution patterns of compound sets
-that share the same or a few similar scaffolds. Often such compounds sets have been
-synthesised in a combinatorial fashion. If a dataset contains chemical structures,
-<i>DataWarrior</i> may decompose the structures by analysing scaffold and substituents
-and putting them into new dedicated columns.
-This can be done either fully automatic or a little more flexible with some user guidance.
-Similar functionality of this kind is sometime called <i>R-group-decomposition</i> or
-<i>R-group-deconvolution</i>.</p>
+<p>Relating chemical structures with their biological effects is a fundamental and frequent
+task in drug discovery projects. Typically, the influence of individual scaffolds
+and in particular of their substituents on the target binding affinity are investigated.
+For this analysis many compounds with similar scaffolds, but changing substituents
+are synthesized and their biological activity is measured. Then a data table is generated
+that contains the chemical structures of scaffold, sometimes linker(s), and substituents
+in separated columns. This way the influence of different substituents at one position,
+also called R-group, can easily be correlated with the corresponding biological effects.
+The hope is that the influences of different R-groups at one scaffold position doesn't
+change much if the scaffold is slightly changed or if its substitution pattern changes.
+Of course, this implies that the general binding mode of the compound to the target molecule
+stays unchanged.</p>
+<p><span class="keyword">DataWarrior</span> can perform a so-called <span class="keyword">
+R-group deconvolution</span> or <span class="keyword">R-group decomposition</span>
+to generate a <i>Structure Activity Relationship (SAR)</i> Table directly from a table
+of chemical structures. This can be done either fully automatically or more flexibly
+with some user guidance.</p>
 
 <p>To automatically create a <span class="keyword">SAR-Table</span> from your dataset,
 select <span class="menu">Automatic SAR-Analysis...</span> from the
@@ -937,34 +945,41 @@ their cells remain empty.</p>
 
 <p>If you want more flexibility in defining, which sub-structures should be considered
 a common scaffold, then you should select <span class="menu">Core based SAR-Analysis...</span>
-from the <span class="menu">Chemistry</span> menu. The dialog lets you draw a scaffold as
-sub-structure which may or may not include atom or bond query features. By, for instance,
-using atom wild cards or variable bond bridges, a drawn sub-structure may detect multiple
-similar, but still different scaffolds at once.
-<!--Is not yet true:    Defining a sub-structure to cover multiple
-structurally scaffolds in one run has the advantage that R-group positioning and numbering
+from the <span class="menu">Chemistry</span> menu. The dialog lets you define scaffold(s) as
+sub-structure(s), which may or may not include atom or bond query features. By, for instance,
+using atom wildcards or variable bond bridges, a drawn sub-structure may detect multiple
+similar, but still different scaffolds at once. Defining a sub-structure with wildcards to cover multiple
+structurally related scaffolds in one run has the advantage that R-group positioning and numbering
 will be consistent for all scaffolds of that run.
--->
-If your data set contains multiple substancially different scaffold, then you need to run
-the <span class="menu">Core based SAR-Analysis...</span> task multiple times until all
-distinct scaffolds have been processed.</p>
+If your data set contains multiple substancially different scaffolds, then you may define
+multiple substructures to cover all scaffolds in one SAR-analysis. Alternatively,
+you may run the <span class="menu">Core based SAR-Analysis...</span> task multiple times
+until all distinct scaffolds have been processed.</p>
 
-<p>Whatever mode you use to generating a <span class="keyword">SAR-Table</span>,
-for every different scaffold, the entire dataset is processed to find those scaffold atoms,
-which have variations concerning their substituents they carry. For all of these, a
-generic R-group is attached to the scaffold. If a scaffold atom is always carrying the
-same substituent, this substituent is attached to the scaffold. The scaffold with attached
-R-groups and substituents is called <span class="keyword">core-fragment</span> and
-put into the first new table column. New R-group columns are added according to the needs.</p>
+<p>Whatever mode you use for generating a <span class="keyword">SAR-Table</span>,
+in a first step the task will analyse the entire dataset to identify all unsubstituted, raw
+scaffold structures that are present in the dataset. These are either identified central ring
+systems or located matches of the defined substructure(s). In a next step the entire dataset
+is processed again to determine for every identified raw scaffold structure, which positions
+carry varying substituents within troughout the entire the dataset. At all exit vectors,
+for which multiple different substituents are found, a numbered R-group is attached to the
+formerly unsubstituted raw scaffold. In addition, if a scaffold atom is always carrying the
+same substituent, e.g. a methyl-group, then this substituent is attached to the raw scaffold.
+After attaching R-groups and constant substituents to all scaffolds found in the dataset,
+a new column is added and filled with the corresponding scaffold for every row.
+Then for every varying scaffold position a numbered R-group is added, filled with the
+proper substituent's structure for every row. Where R-groups are attached to a stereo center
+or to an exocyclic double bond, the stereo topicities are determined and correctly represented
+in the scaffold structures used.</p>
 
 <p align="center"><img src="help/img/chem/SARResult.jpeg"></p>
 <p><center><i>Table view with new columns added after SAR-Analysis</i></center></p>
 
-<p>After a SAR-analysis, this means after the separation of numbered substituents (R-groups)
-from the scaffold structure, it may be useful to re-unite some of the R-group columns
-with the scaffold. This may allows better investigate or visualize the influence of
-the remaining substituents. This can be done using the
-</span><a href="help/data.html#MergeColumns">Merging Columns</a> functionality.</p>
+<p>After a SAR-analysis, when chemical structures are split into multiple columns containing
+scaffold and R-group structures, it may be useful to re-unite, i.e. merge, some R-group columns
+with the scaffold structure. This reduces dimensions and may be useful to better investigate,
+visualize, or focus on the influence of the remaining substituents. Scaffold and R-group columns
+can merged with </span><a href="help/data.html#MergeColumns">Merging Columns</a> functionality.</p>
 <br>
 
 <h3><a name="SimAnalysis"></a>Similarity Analysis</h3>

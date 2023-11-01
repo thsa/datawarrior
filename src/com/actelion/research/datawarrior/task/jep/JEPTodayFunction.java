@@ -27,6 +27,6 @@ public class JEPTodayFunction extends PostfixMathCommand {
 		checkStack(inStack);
 		long currentMillis = System.currentTimeMillis();
 		double days = currentMillis / 86400000L;
-		inStack.push(new Double(days));
+		inStack.push(Double.valueOf(days));
 	}
 }

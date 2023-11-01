@@ -192,12 +192,12 @@ public class JSVGDetailView extends JResultDetailView {
             Graphics2D g2d = (Graphics2D)g;
             PrintTranscoder transcoder = new PrintTranscoder();
             TranscoderInput ti = new TranscoderInput(doc);
-            transcoder.addTranscodingHint(PrintTranscoder.KEY_WIDTH, new Float(r.width));
-            transcoder.addTranscodingHint(PrintTranscoder.KEY_HEIGHT, new Float(r.height));
-            transcoder.addTranscodingHint(PrintTranscoder.KEY_MARGIN_BOTTOM, new Float(1.0));
-            transcoder.addTranscodingHint(PrintTranscoder.KEY_MARGIN_TOP, new Float(1.0));
-            transcoder.addTranscodingHint(PrintTranscoder.KEY_MARGIN_LEFT, new Float(1.0));
-            transcoder.addTranscodingHint(PrintTranscoder.KEY_MARGIN_RIGHT, new Float(1.0));
+            transcoder.addTranscodingHint(PrintTranscoder.KEY_WIDTH, Float.valueOf((float)r.width));
+            transcoder.addTranscodingHint(PrintTranscoder.KEY_HEIGHT, Float.valueOf((float)r.height));
+            transcoder.addTranscodingHint(PrintTranscoder.KEY_MARGIN_BOTTOM, Float.valueOf(1.0f));
+            transcoder.addTranscodingHint(PrintTranscoder.KEY_MARGIN_TOP, Float.valueOf(1.0f));
+            transcoder.addTranscodingHint(PrintTranscoder.KEY_MARGIN_LEFT, Float.valueOf(1.0f));
+            transcoder.addTranscodingHint(PrintTranscoder.KEY_MARGIN_RIGHT, Float.valueOf(1.0f));
             transcoder.transcode(ti, null);
 
             PageFormat pageFormat = new PageFormat();

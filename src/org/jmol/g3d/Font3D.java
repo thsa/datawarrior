@@ -127,7 +127,7 @@ final public class Font3D {
       fontMap.put(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD);
     if ((idFontStyle & 2) == 2)
       fontMap.put(TextAttribute.POSTURE, TextAttribute.POSTURE_OBLIQUE);
-    fontMap.put(TextAttribute.SIZE, new Float(fontSize));
+    fontMap.put(TextAttribute.SIZE, Float.valueOf(fontSize));
     return fontMap;
   }
   

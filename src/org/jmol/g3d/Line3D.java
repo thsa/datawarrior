@@ -94,7 +94,7 @@ final class Line3D {
   Hashtable lineCache = new Hashtable();
   Float slopeKey;
   boolean getCachedLine() {
-    slopeKey = new Float(slope);
+    slopeKey = Float.valueOf(slope);
     if (!lineCache.containsKey(slopeKey))
       return false;
     lineBits = (BitSet) lineCache.get(slopeKey);

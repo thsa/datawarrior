@@ -32,10 +32,10 @@ public class DoubleCategoryNormalizer implements CategoryNormalizer<Float> {
 	@Override
 	public Float normalizeIn(String s) {
 		try {
-			return new Float(s);
+			return Float.valueOf(s);
 			}
 		catch (NumberFormatException nfe) {
-			return new Float(Float.NaN);
+			return Float.valueOf(Float.NaN);
 			}
 		}
 

@@ -411,7 +411,7 @@ public class Geodesic {
     newVertexVector.add(vertexVectors[v2]);
     newVertexVector.scale(0.5f);
     newVertexVector.normalize();
-    htVertex.put(hashKey, new Short(vertexNext));
+    htVertex.put(hashKey, Short.valueOf(vertexNext));
     return vertexNext++;
   }
 }

@@ -1,2 +1,2 @@
-java -classpath "datawarrior.jar:./lib/*:./lib/osx/AppleJavaExtensions.jar" com.actelion.research.datawarrior.DataWarriorOSX
+java -jar datawarrior_all.jar
 

@@ -20,6 +20,7 @@ package com.actelion.research.datawarrior.task.chem;
 
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.IDCodeParser;
+import com.actelion.research.chem.ScaffoldHelper;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.io.CompoundTableConstants;
@@ -37,25 +38,37 @@ import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
 import java.util.Properties;
+import java.util.TreeMap;
 
-public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
-	public static final String TASK_NAME = "Core-Based SAR Analysis";
+public class DETaskDecomposeRGroups extends DETaskAbstractFromStructure {
+	public static final String TASK_NAME = "Decompose R-Groups";
 
+	private static final String PROPERTY_SCAFFOLD_MODE = "scaffoldMode";
 	private static final String PROPERTY_SCAFFOLD_LIST = "scaffoldList";
 	private static final String PROPERTY_USE_EXISTING_COLUMNS = "useExistingColumns";
-	private static final String PROPERTY_DISTINGUISH_STEREO_ISOMERS = "considerStereo";
+
+	private static final int SCAFFOLD_CENTRAL_RING = 0;
+	private static final int SCAFFOLD_MURCKO = 1;
+	private static final int SCAFFOLD_CUSTOM = 2;
+	private static final int DEFAULT_SCAFFOLD_MODE = SCAFFOLD_CUSTOM;
+
+	private static final String[] SCAFFOLD_TEXT = { "Most central ring system", "Murcko scaffold", "Custom sub-structure(s)" };
+	private static final String[] SCAFFOLD_CODE = { "centralRing", "murcko", "custom" };
 
 	private static final String SCAFFOLD_COLUMN_NAME = "Scaffold";
 	private static final int cTableColumnNew = -2;
 
 	private DefaultCompoundCollectionModel.Molecule mScaffoldQueryModel;
-	private JCheckBox			mCheckBoxDistinguishStereocenters,mCheckBoxUseExistingColumns;
-	private boolean             mIs2ndStepSAR;
-	private int					mFirstRGroup,mStructureColumn,mScaffoldColumn,mScaffoldCoordsColumn,mMultipleMatches,mNewColumnCount;
-	private int[]				mSubstituentColumn;
-	private SARMolecule[]   mMoleculeData;
+	private CompoundCollectionPane<StereoMolecule> mScaffoldQueryPane;
+	private JLabel          mScaffoldQueryLabel;
+	private JComboBox       mComboBoxScaffoldMode;
+	private JCheckBox		mCheckBoxUseExistingColumns;
+	private boolean			mIs2ndStepSAR;
+	private int				mFirstRGroup,mStructureColumn,mScaffoldColumn,mScaffoldCoordsColumn,mMultipleMatches,mNewColumnCount;
+	private int[]			mSubstituentColumn;
+	private SARMolecule[]	mMoleculeData;
 
-    public DETaskCoreBasedSAR(DEFrame parent) {
+    public DETaskDecomposeRGroups(DEFrame parent) {
 		super(parent, DESCRIPTOR_NONE, false, false);
 	    }
 
@@ -102,28 +115,32 @@ public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
 
 	@Override
 	public JPanel getExtendedDialogContent() {
+		int width = HiDPIHelper.scale(480);
 		JPanel ep = new JPanel();
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {HiDPIHelper.scale(480)},
-							{gap, TableLayout.PREFERRED, gap/2, HiDPIHelper.scale(96), gap, TableLayout.PREFERRED, TableLayout.PREFERRED} };
+		double[][] size = { {width/2, gap/2, width/2},
+							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, HiDPIHelper.scale(96), 2*gap, TableLayout.PREFERRED} };
 		ep.setLayout(new TableLayout(size));
-		ep.add(new JLabel("Define scaffold structures:"), "0,1");
 
+		ep.add(new JLabel("Determine scaffold as:"), "0,1");
+		mComboBoxScaffoldMode = new JComboBox(SCAFFOLD_TEXT);
+		mComboBoxScaffoldMode.addActionListener(e -> enableItems() );
+		ep.add(mComboBoxScaffoldMode, "2,1");
+
+		mScaffoldQueryLabel = new JLabel("Define custom scaffold sub-structures:");
 		mScaffoldQueryModel = new DefaultCompoundCollectionModel.Molecule();
-		CompoundCollectionPane<StereoMolecule> scaffoldQueryPane = new CompoundCollectionPane<>(mScaffoldQueryModel, false);
-		scaffoldQueryPane.setCreateFragments(true);
-		scaffoldQueryPane.setEditable(true);
-		scaffoldQueryPane.setClipboardHandler(new ClipboardHandler());
-		scaffoldQueryPane.setShowValidationError(true);
-		ep.add(scaffoldQueryPane, "0,3");
+		mScaffoldQueryPane = new CompoundCollectionPane<>(mScaffoldQueryModel, false);
+		mScaffoldQueryPane.setCreateFragments(true);
+		mScaffoldQueryPane.setEditable(true);
+		mScaffoldQueryPane.setClipboardHandler(new ClipboardHandler());
+		mScaffoldQueryPane.setShowValidationError(true);
+		ep.add(mScaffoldQueryLabel, "0,3,2,3");
+		ep.add(mScaffoldQueryPane, "0,5,2,5");
 
-        mCheckBoxDistinguishStereocenters = new JCheckBox("Distinguish stereoisomers", true);
-		ep.add(mCheckBoxDistinguishStereocenters, "0,5");
-
-		mCheckBoxUseExistingColumns = new JCheckBox("Use existing columns for scaffold and substituents", true);
+		mCheckBoxUseExistingColumns = new JCheckBox("Use existing columns for scaffold and R-groups", true);
 		if (isInteractive() && getTableModel().findColumn(SCAFFOLD_COLUMN_NAME) == -1)
 			mCheckBoxUseExistingColumns.setEnabled(false);
-		ep.add(mCheckBoxUseExistingColumns, "0,6");
+		ep.add(mCheckBoxUseExistingColumns, "0,7,2,7");
 
 		return ep;
 		}
@@ -132,16 +149,19 @@ public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
 	public Properties getDialogConfiguration() {
 		Properties configuration = super.getDialogConfiguration();
 
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i<mScaffoldQueryModel.getSize(); i++) {
-			if (sb.length() != 0)
-				sb.append('\t');
-			Canonizer canonizer = new Canonizer(mScaffoldQueryModel.getMolecule(i));
-			sb.append(canonizer.getIDCode()+" "+canonizer.getEncodedCoordinates());
-			}
-		configuration.setProperty(PROPERTY_SCAFFOLD_LIST, sb.toString());
+		configuration.setProperty(PROPERTY_SCAFFOLD_MODE, SCAFFOLD_CODE[mComboBoxScaffoldMode.getSelectedIndex()]);
 
-		configuration.setProperty(PROPERTY_DISTINGUISH_STEREO_ISOMERS, mCheckBoxDistinguishStereocenters.isSelected() ? "true" : "false");
+		if (mComboBoxScaffoldMode.getSelectedIndex() == SCAFFOLD_CUSTOM) {
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i<mScaffoldQueryModel.getSize(); i++) {
+				if (sb.length() != 0)
+					sb.append('\t');
+				Canonizer canonizer = new Canonizer(mScaffoldQueryModel.getMolecule(i));
+				sb.append(canonizer.getIDCode() + " " + canonizer.getEncodedCoordinates());
+				}
+			configuration.setProperty(PROPERTY_SCAFFOLD_LIST, sb.toString());
+			}
+
 		configuration.setProperty(PROPERTY_USE_EXISTING_COLUMNS, mCheckBoxUseExistingColumns.isSelected() ? "true" : "false");
 
 		return configuration;
@@ -151,18 +171,29 @@ public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
 
-		for (String idcode:configuration.getProperty(PROPERTY_SCAFFOLD_LIST, "").split("\\t"))
-			mScaffoldQueryModel.addCompound(new IDCodeParser(true).getCompactMolecule(idcode));
+		mComboBoxScaffoldMode.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_SCAFFOLD_MODE), SCAFFOLD_CODE, SCAFFOLD_CUSTOM));
 
-		mCheckBoxDistinguishStereocenters.setSelected("true".equals(configuration.getProperty(PROPERTY_DISTINGUISH_STEREO_ISOMERS)));
+		String scaffoldList = configuration.getProperty(PROPERTY_SCAFFOLD_LIST, "");
+		if (scaffoldList.length() != 0)
+			for (String idcode:scaffoldList.split("\\t"))
+				mScaffoldQueryModel.addCompound(new IDCodeParser(true).getCompactMolecule(idcode));
+
 		mCheckBoxUseExistingColumns.setSelected("true".equals(configuration.getProperty(PROPERTY_USE_EXISTING_COLUMNS)));
 		}
 
 	@Override
 	public void setDialogConfigurationToDefault() {
 		super.setDialogConfigurationToDefault();
+		mComboBoxScaffoldMode.setSelectedIndex(DEFAULT_SCAFFOLD_MODE);
+		enableItems();
 		if (!isInteractive() || getTableModel().findColumn(SCAFFOLD_COLUMN_NAME) != -1)
 			mCheckBoxUseExistingColumns.setSelected(true);
+		}
+
+	private void enableItems() {
+		boolean enabled = (mComboBoxScaffoldMode.getSelectedIndex() == SCAFFOLD_CUSTOM);
+		mScaffoldQueryLabel.setEnabled(enabled);
+		mScaffoldQueryPane.setEnabled(enabled);
 		}
 
 	@Override
@@ -188,18 +219,22 @@ public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
 
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
-		String scaffoldList = configuration.getProperty(PROPERTY_SCAFFOLD_LIST, "");
-		if (scaffoldList.length() == 0) {
-			showErrorMessage("No scaffolds defined.");
-			return false;
-			}
-		for (String idcode:scaffoldList.split("\\t")) {
-			try {
-				new IDCodeParser(true).getCompactMolecule(idcode).validate();
-				}
-			catch (Exception e) {
-				showErrorMessage("Some of the scaffold structures are not valid:\n"+e);
+		int scaffoldMode = findListIndex(configuration.getProperty(PROPERTY_SCAFFOLD_MODE), SCAFFOLD_CODE, SCAFFOLD_CUSTOM);
+
+		if (scaffoldMode == SCAFFOLD_CUSTOM) {
+			String scaffoldList = configuration.getProperty(PROPERTY_SCAFFOLD_LIST, "");
+			if (scaffoldList.length() == 0) {
+				showErrorMessage("No scaffolds defined.");
 				return false;
+				}
+			for (String idcode:scaffoldList.split("\\t")) {
+				try {
+					new IDCodeParser(true).getCompactMolecule(idcode).validate();
+					}
+				catch (Exception e) {
+					showErrorMessage("Some of the scaffold structures are not valid:\n"+e);
+					return false;
+					}
 				}
 			}
 
@@ -208,8 +243,6 @@ public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
 
 	@Override
 	public boolean preprocessRows(Properties configuration) {
-		boolean distinguishStereoCenters = "true".equals(configuration.getProperty(PROPERTY_DISTINGUISH_STEREO_ISOMERS));
-
 		int rowCount = getTableModel().getTotalRowCount();
 		mStructureColumn = getChemistryColumn(configuration);
 
@@ -232,12 +265,34 @@ public class DETaskCoreBasedSAR extends DETaskAbstractFromStructure {
 				mFirstRGroup = Math.max(mFirstRGroup, 1 + getRGoupNoFromColumnName(getTableModel(), column));
 			}
 
+		int scaffoldMode = findListIndex(configuration.getProperty(PROPERTY_SCAFFOLD_MODE), SCAFFOLD_CODE, SCAFFOLD_CUSTOM);
+
+		String[] queryIDCode;
+		if (scaffoldMode == SCAFFOLD_CUSTOM) {
+			queryIDCode = configuration.getProperty(PROPERTY_SCAFFOLD_LIST, "").split("\\t");
+			}
+		else {
+			queryIDCode = compileAutomaticScaffoldList(scaffoldMode);
+			if (queryIDCode.length == 0) {
+				if (isInteractive()) {
+					final String message = "None of your scaffolds were found in the '" + getTableModel().getColumnTitle(mStructureColumn) + "' column.";
+					showInteractiveTaskMessage(message, JOptionPane.INFORMATION_MESSAGE);
+					}
+				return false;
+				}
+			}
+
 		mMoleculeData = new SARMolecule[rowCount];
 		int substituentCount = 0;
-		String[] queryIDCode = configuration.getProperty(PROPERTY_SCAFFOLD_LIST, "").split("\\t");
+
+		startProgress("Processing query structures...", 0, rowCount);
 
 		for (String idcode:queryIDCode) {
 try {   // TODO remove
+			if (threadMustDie())
+				break;
+			updateProgress(-1);
+
 			StereoMolecule query = new IDCodeParser(true).getCompactMolecule(idcode);
 			CoreBasedSARAnalyzer analyzer = new CoreBasedSARAnalyzer(query, rowCount);
 			if (!processScaffoldGroup(analyzer))
@@ -249,9 +304,11 @@ try {   // TODO remove
 } catch (Exception e) { e.printStackTrace(); }
 			}
 
-		if (notFoundCount == queryIDCode.length && isInteractive()) {
-			final String message = "None of your scaffolds were found in the '"+getTableModel().getColumnTitle(mStructureColumn)+"' column.";
-			showInteractiveTaskMessage(message, JOptionPane.INFORMATION_MESSAGE);
+		if (notFoundCount == queryIDCode.length) {
+			if (isInteractive()) {
+				final String message = "None of your scaffolds were found in the '" + getTableModel().getColumnTitle(mStructureColumn) + "' column.";
+				showInteractiveTaskMessage(message, JOptionPane.INFORMATION_MESSAGE);
+				}
 			return false;
 			}
 
@@ -292,6 +349,41 @@ try {   // TODO remove
 				mNewColumnCount++;
 
 		return true;
+		}
+
+	private String[] compileAutomaticScaffoldList(int scaffoldMode) {
+		int rowCount = getTableModel().getTotalRowCount();
+		startProgress("Analyzing scaffolds...", 0, rowCount);
+
+		StereoMolecule core = new StereoMolecule();
+		StereoMolecule container = new StereoMolecule();
+		TreeMap<String,String> idcodeMap = new TreeMap<>();
+
+		for (int row=0; row<rowCount; row++) {
+			if ((row % 16) == 15) {
+				if (threadMustDie())
+					break;
+				updateProgress(row);
+			}
+
+			StereoMolecule mol = getChemicalStructure(row, container);
+			if (mol != null) {
+				mol.stripSmallFragments();
+				boolean[] isCoreAtom = (scaffoldMode == SCAFFOLD_MURCKO) ?
+						ScaffoldHelper.findMurckoScaffold(mol) : ScaffoldHelper.findMostCentralRingSystem(mol);
+				if (isCoreAtom != null) {
+					int[] molToCoreAtom = new int[mol.getAllAtoms()];
+					mol.copyMoleculeByAtoms(core, isCoreAtom, true, molToCoreAtom);
+					core.setFragment(true);
+					Canonizer canonizer = new Canonizer(core);
+					String idcode = canonizer.getIDCode();
+					String coords = canonizer.getEncodedCoordinates();
+					idcodeMap.put(idcode, idcode.concat(" ").concat(coords));
+					}
+				}
+			}
+
+		return idcodeMap.values().toArray(new String[0]);
 		}
 
 	/**

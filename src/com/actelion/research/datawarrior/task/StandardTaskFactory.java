@@ -138,7 +138,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskCopyStatisticalValues.TASK_NAME) ? new DETaskCopyStatisticalValues(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskCopyViewContent.TASK_NAME) ? new DETaskCopyViewContent(frame)
 			 : codeMatches(taskCode, DETaskCopyViewImage.TASK_NAME) ? new DETaskCopyViewImage(frame, mainPane, null)
-			 : codeMatches(taskCode, DETaskCoreBasedSAR.TASK_NAME) ? new DETaskCoreBasedSAR(frame)
+			 : codeMatches(taskCode, DETaskDecomposeRGroups.TASK_NAME) ? new DETaskDecomposeRGroups(frame)
 			 : codeMatches(taskCode, DETaskCreateGenericTautomer.TASK_NAME) ? new DETaskCreateGenericTautomer(frame)
 			 : codeMatches(taskCode, DETaskCreateListsFromCategories.TASK_NAME) ? new DETaskCreateListsFromCategories(frame)
 			 : codeMatches(taskCode, DETaskCreateTSNEVisualization.TASK_NAME) ? new DETaskCreateTSNEVisualization(frame, false)
@@ -361,7 +361,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TABLE, DETaskCopyTableCells.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_EDIT, DETaskCopyViewContent.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_EDIT, DETaskCopyViewImage.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskCoreBasedSAR.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskDecomposeRGroups.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskCreateGenericTautomer.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskCreateListsFromCategories.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskCreateTSNEVisualization.TASK_NAME));

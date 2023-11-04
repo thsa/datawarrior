@@ -101,18 +101,6 @@ public abstract class AbstractTask implements ProgressController {
 		}
 
 	/**
-	 * Returns a unique task code that serves as task identification in macro files.
-	 * In the default implementation this is constructed from the task name.
-	 * The task name must stay unchanged over time to identify the task.
-	 * If the associated task name is renamed for whatever reason, then getTaskCode()
-	 * must be overridden to return the original task code.
-	 * @return unique task name
-	 */
-/*	public String getTaskCode() {
-		return constructTaskCodeFromName(getTaskName());
-	}*/
-
-	/**
 	 * Returns a unique task name that serves as task identification for the user.
 	 * In the default implementation this is also used to construct the unique task code,
 	 * which serves as unique name in a task sequence file.

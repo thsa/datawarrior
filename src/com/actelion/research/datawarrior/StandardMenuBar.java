@@ -150,7 +150,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuChemCCLibrary,jMenuChemEALibrary,jMenuChemEnumerateMarkush,jMenuChemAddProperties,jMenuChemAddFormula,jMenuChemAddSmiles,
 					  jMenuChemAddInchi,jMenuChemAddInchiKey,jMenuChemAddCanonicalCode,jMenuChemCreate2DCoords,jMenuChemCreate3DCoords,
 					  jMenuChemSuperpose,jMenuChemDock, jMenuChemExtractFragment,
-					  jMenuChemAddSubstructureCount,jMenuChemAddStructureFromName,jMenuChemAutomaticSARTable,jMenuChemCoreBasedSARTable,jMenuChemInteractiveSARTable,
+					  jMenuChemAddSubstructureCount,jMenuChemAddStructureFromName, jMenuChemDecomposeRGroups,jMenuChemInteractiveSARTable,
 					  jMenuChemAnalyzeScaffolds,jMenuChemAnalyzeCliffs,jMenuChemMatchFile,jMenuChemSelectDiverse,
 					  jMenuChemCluster,jMenuChemExtract3DFragments,jMenuChemMapReactions,jMenuChemCompareReactionMapping,
 					  jMenuChemCreateGenericTautomers,jMenuChemCompareDescriptorSimilarityDistribution,jMenuChemGenerateRandomMolecules,
@@ -789,8 +789,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemMachineLearning = new JMenu();
 		jMenuChemAssessPredictionQuality = new JMenuItem();
 		jMenuChemPredictMissingValues = new JMenuItem();
-		jMenuChemAutomaticSARTable = new JMenuItem();
-		jMenuChemCoreBasedSARTable = new JMenuItem();
+		jMenuChemDecomposeRGroups = new JMenuItem();
 		jMenuChemInteractiveSARTable = new JMenuItem();
 		jMenuChemAnalyzeScaffolds = new JMenuItem();
 		jMenuChemAnalyzeCliffs = new JMenuItem();
@@ -860,10 +859,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemAssessPredictionQuality.addActionListener(this);
 		jMenuChemPredictMissingValues.setText("Predict Missing Values...");
 		jMenuChemPredictMissingValues.addActionListener(this);
-		jMenuChemAutomaticSARTable.setText("Automatic SAR Analysis...");
-		jMenuChemAutomaticSARTable.addActionListener(this);
-		jMenuChemCoreBasedSARTable.setText("Core based SAR Analysis...");
-		jMenuChemCoreBasedSARTable.addActionListener(this);
+		jMenuChemDecomposeRGroups.setText("Decompose R-Groups...");
+		jMenuChemDecomposeRGroups.addActionListener(this);
 		jMenuChemInteractiveSARTable.setText("Interactive SAR Analysis...");
 		jMenuChemInteractiveSARTable.addActionListener(this);
 		jMenuChemAnalyzeScaffolds.setText("Analyse Scaffolds...");
@@ -958,8 +955,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemMachineLearning.add(jMenuChemAssessPredictionQuality);
 		jMenuChemMachineLearning.add(jMenuChemPredictMissingValues);
 		jMenuChem.addSeparator();
-		jMenuChem.add(jMenuChemAutomaticSARTable);
-		jMenuChem.add(jMenuChemCoreBasedSARTable);
+		jMenuChem.add(jMenuChemDecomposeRGroups);
 		if (mApplication.isIdorsia() || System.getProperty("development") != null)
 			jMenuChem.add(jMenuChemInteractiveSARTable);
 		jMenuChem.add(jMenuChemAnalyzeScaffolds);
@@ -1690,10 +1686,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskDockIntoProteinCavity(mParentFrame).defineAndRun();
 			else if (source == jMenuChemExtract3DFragments)
 				new DETaskBuild3DFragmentLibrary(mParentFrame).defineAndRun();
-			else if (source == jMenuChemAutomaticSARTable)
-				new DETaskAutomaticSAR(mParentFrame).defineAndRun();
-			else if (source == jMenuChemCoreBasedSARTable)
-				new DETaskCoreBasedSAR(mParentFrame).defineAndRun();
+			else if (source == jMenuChemDecomposeRGroups)
+				new DETaskDecomposeRGroups(mParentFrame).defineAndRun();
 			else if (source == jMenuChemInteractiveSARTable) {
 				JOptionPane.showMessageDialog(mParentFrame, "Nobody ever asked to complete this.\nTherefore, this functionality is not final yet.\nSuggestions and sample data are welcome.");
 				int idcodeColumn = getStructureColumn(true);

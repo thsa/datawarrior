@@ -30,7 +30,7 @@ import com.actelion.research.chem.reaction.Reactor;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETable;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
-import com.actelion.research.datawarrior.task.chem.DETaskCoreBasedSAR;
+import com.actelion.research.datawarrior.task.chem.DETaskDecomposeRGroups;
 import com.actelion.research.gui.JEditableChemistryView;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
@@ -787,7 +787,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		Arrays.fill(rGroupIndex, -1);
 
 		for (int i=0; i<sourceColumn.length; i++) {
-			int rGroup = DETaskCoreBasedSAR.getRGoupNoFromColumnName(mTableModel, sourceColumn[i]);
+			int rGroup = DETaskDecomposeRGroups.getRGoupNoFromColumnName(mTableModel, sourceColumn[i]);
 			if (rGroup != -1 && rGroup <= 16 && rGroupIndex[rGroup] == -1) {
 				rGroupIndex[rGroup] = i;
 				isRGroup[i] = true;

@@ -909,9 +909,9 @@ after pressing the <span class="menu">Choose</span> button.</p>
 
 <br>
 
-<h3><a name="SARTables"></a>Creating SAR-Tables</h3>
+<h3><a name="SARTables"></a>Decomposing R-Groups - Creating SAR-Tables</h3>
 
-<p>Relating chemical structures with their biological effects is a fundamental and frequent
+<p>Relating chemical structures to their biological effects is a fundamental and frequent
 task in drug discovery projects. Typically, the influence of individual scaffolds
 and in particular of their substituents on the target binding affinity are investigated.
 For this analysis many compounds with similar scaffolds, but changing substituents
@@ -919,67 +919,99 @@ are synthesized and their biological activity is measured. Then a data table is 
 that contains the chemical structures of scaffold, sometimes linker(s), and substituents
 in separated columns. This way the influence of different substituents at one position,
 also called R-group, can easily be correlated with the corresponding biological effects.
-The hope is that the influences of different R-groups at one scaffold position doesn't
-change much if the scaffold is slightly changed or if its substitution pattern changes.
+The hope is that the influences of different R-groups at one scaffold position is more or
+less independent of R-groups at other positions and of minor changes of the scaffold itself.
 Of course, this implies that the general binding mode of the compound to the target molecule
 stays unchanged.</p>
 <p><span class="keyword">DataWarrior</span> can perform a so-called <span class="keyword">
 R-group deconvolution</span> or <span class="keyword">R-group decomposition</span>
 to generate a <i>Structure Activity Relationship (SAR)</i> Table directly from a table
-of chemical structures. This can be done either fully automatically or more flexibly
+of chemical structures. This can be done either automatically or more flexibly
 with some user guidance.</p>
 
-<p>To automatically create a <span class="keyword">SAR-Table</span> from your dataset,
-select <span class="menu">Automatic SAR-Analysis...</span> from the
-<span class="menu">Chemistry</span> menu. A dialog lets you choose the mechanism
-that is used to determine the scaffold.
+<p>To create a <span class="keyword">SAR-Table</span> from your dataset,
+select <span class="menu">Decompose R-Groups...</span> from the
+<span class="menu">Chemistry</span> menu. A dialog lets you choose the structure
+column to be analysed. It also asks you to define the mechanism that is applied
+for every molecule from the structure column to determine the scaffold or core structure:
 <ul><li><span class="menu">Most central ring system</span>: As the name implies, with
 this option that ring system of the molecule, which is closest to the topological center
-of the molecule, is taken as the scaffold.</li>
+of the molecule, is considered that molecule's scaffold. Compounds without rings are
+neglected in this mode and their cells remain empty in the new columns.</li>
 <li><span class="menu">Murcko scaffold</span>: The <i>Murcko scaffold</i> of a molecule
-is determined by locating all ring systems of the molecule and all direct connections
-between them. Everything else is considered a substituent.</li>
-</ul>
-Compounds without any rings are not subjected to the analysis and in the new columns
-their cells remain empty.</p>
-
-<p>If you want more flexibility in defining, which sub-structures should be considered
-a common scaffold, then you should select <span class="menu">Core based SAR-Analysis...</span>
-from the <span class="menu">Chemistry</span> menu. The dialog lets you define scaffold(s) as
-sub-structure(s), which may or may not include atom or bond query features. By, for instance,
-using atom wildcards or variable bond bridges, a drawn sub-structure may detect multiple
-similar, but still different scaffolds at once. Defining a sub-structure with wildcards to cover multiple
-structurally related scaffolds in one run has the advantage that R-group positioning and numbering
-will be consistent for all scaffolds of that run.
+is determined by locating all ring systems of the molecule and all atom chains that directly
+connect these ring systems. Everything else is considered a substituent. As with the previous mode,
+compounds without rings have no Murcko scaffold and are not processed.</li>
+<li><span class="menu">Custom sub-structure(s)</span>: For more flexibility in defining,
+which sub-structures should be considered a molecule's scaffold, use this mode.
+It requires a little more work, because you need to define substructure fragments,
+which, when found in a molecule, exactly define those atoms that constitute the scaffold
+in the following analysis. Of course, these substructures may include atom or bond query
+features. For instance, by using atom wildcards or variable bond bridges, a drawn
+sub-structure may detect multiple similar scaffold structures at once.
+This has the advantage that R-group positioning and numbering
+will be consistent for all scaffolds found by the same substructure query.
 If your data set contains multiple substancially different scaffolds, then you may define
 multiple substructures to cover all scaffolds in one SAR-analysis. Alternatively,
-you may run the <span class="menu">Core based SAR-Analysis...</span> task multiple times
-until all distinct scaffolds have been processed.</p>
+you may run the <i>Decompose R-Groups...</i> task multiple times
+until all distinct scaffolds have been processed.</li>
+</ul></p>
+
+<p align="center"><img src="help/img/chem/sarDialog.jpeg" width="490" height="366"></p>
+<p><center><i>"Decompose R-Groups" dialog with custom scaffold using atom list and bridge bond.</i></center></p>
 
 <p>Whatever mode you use for generating a <span class="keyword">SAR-Table</span>,
 in a first step the task will analyse the entire dataset to identify all unsubstituted, raw
-scaffold structures that are present in the dataset. These are either identified central ring
-systems or located matches of the defined substructure(s). In a next step the entire dataset
-is processed again to determine for every identified raw scaffold structure, which positions
-carry varying substituents within troughout the entire the dataset. At all exit vectors,
-for which multiple different substituents are found, a numbered R-group is attached to the
-formerly unsubstituted raw scaffold. In addition, if a scaffold atom is always carrying the
-same substituent, e.g. a methyl-group, then this substituent is attached to the raw scaffold.
-After attaching R-groups and constant substituents to all scaffolds found in the dataset,
-a new column is added and filled with the corresponding scaffold for every row.
-Then for every varying scaffold position a numbered R-group is added, filled with the
-proper substituent's structure for every row. Where R-groups are attached to a stereo center
-or to an exocyclic double bond, the stereo topicities are determined and correctly represented
-in the scaffold structures used.</p>
+scaffold structures that are present in the dataset. These may either consist of simple or more complex
+ring systems or may be basically any structure as result of a substructure match.
+Once a list of all distinct scaffold structures that exist in the dataset, is compiled,
+the entire dataset is processed again to determine for every one of these raw scaffold structures,
+which positions carry substituents in at least some of the matching molecules. At all exit vectors,
+for which different substituents were found, a numbered R-group is attached to the
+formerly unsubstituted raw scaffold. In addition, if a scaffold atom always carries the
+same substituent, e.g. a methyl-group, then this substituent is not considered an R-group and
+is also directly attached to the raw scaffold.
+After all R-groups and constant substituents have been attached to all scaffolds found,
+a new column is added and filled with the correct scaffold for every row.
+Then, for every varying scaffold position a numbered R-group column is added, properly filled
+with that R-group structure that any row's molecule carries at the corresponding exit vector position.
+Where R-groups are attached to a stereo center or to an exocyclic double bond, stereo topicities
+are determined and correctly represented in the scaffold structures used.</p>
 
-<p align="center"><img src="help/img/chem/SARResult.jpeg"></p>
+<p>The picture below shows a data table with original <i>Structure</i> column on the left and
+new <i>Scaffold</i> and <i>R-Group</i> columns generated by an <span class="keyword">R-Group Decomposition</span>
+using the custom substructure shown above. Worth to mention are:
+<ul><li>The query structure contains two wild card elements, a <i>bridge bond</i> with 0...2 atoms
+and an atom list with nitrogen and oxygen. Because of these, that single query structure matches onto
+three different scaffold structures, piperidine (rows 1,2), tetrahydrofuran (row 3), and tetrahydropyran
+(rows 4,5,6). Every one of these scaffold structures is analyzed independently concerning variation of
+substituents in all the matching rows. At exit vectors with differing substituents, an R-group is attached.
+The same decorated scaffold structure is then shown in all matching rows, e.g. the decorated tetrahydropyran
+in rows 4,5, and 6.</li>
+<li>All decorated scaffold structures that result from the same query, use the same R-group numbering, even
+if the ring sizes are not the same, see scaffolds in rows 1 to 6.</li>
+<li>When exit vectors at scaffold substructures are checked for substituents, in case of potentially
+created stereo centers (or double bond stereo configurations) stereo topicities are tracked and
+correctly handled, e.g. substituents at the R2 and R3 positions are correctly distinguished.</li>
+<li>Detached substituent structures in the R-group columns carry an attachment point where they have
+been attached to the original molecule. Attachment points have an atomic number of 0 and are shown as
+with a '?' as atom label.</li>
+<li>If a substituent at an R-group position connects back to the original molecule, i.e. if we have
+a ring closure and the substituent is actually a chain connecting two R-group positions, then the
+back-connection is indicated by another pseudo atom with atomic number 0, which instead of an atom label
+shows the R-group number of the back-connection, e.g. R2 and R3 in row 6.</li>
+</ul></p>
+
+<p align="center"><img src="help/img/chem/sarResult.jpeg" width="680" height="501"></p>
 <p><center><i>Table view with new columns added after SAR-Analysis</i></center></p>
 
-<p>After a SAR-analysis, when chemical structures are split into multiple columns containing
+<p><b>Note:</b> After a SAR-analysis, when chemical structures are split into multiple columns containing
 scaffold and R-group structures, it may be useful to re-unite, i.e. merge, some R-group columns
 with the scaffold structure. This reduces dimensions and may be useful to better investigate,
 visualize, or focus on the influence of the remaining substituents. Scaffold and R-group columns
-can merged with </span><a href="help/data.html#MergeColumns">Merging Columns</a> functionality.</p>
+can be merged in a chemically correct way with the
+</span><a href="help/data.html#MergeColumns">Merging Columns</a> functionality.
+</p>
 <br>
 
 <h3><a name="SimAnalysis"></a>Similarity Analysis</h3>

@@ -20,6 +20,7 @@ package com.actelion.research.datawarrior.task;
 
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.task.chem.DETaskClusterCompounds;
+import com.actelion.research.datawarrior.task.chem.DETaskDecomposeRGroups;
 import com.actelion.research.datawarrior.task.chem.DETaskExtractFragment;
 import com.actelion.research.datawarrior.task.chem.elib.DETaskBuildEvolutionaryLibrary;
 import com.actelion.research.datawarrior.task.data.*;
@@ -401,6 +402,8 @@ public class DEMacro implements CompoundTableConstants {
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskSetMarkerLabels.TASK_NAME);
 		else if (taskCode.equals("searchEnamineBuildingBlocks"))
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskBuildingBlockQuery.TASK_NAME);
+		else if (taskCode.equals("automaticSARAnalysis") || taskCode.equals("coreBasedSARAnalysis"))
+			return StandardTaskFactory.constructTaskCodeFromName(DETaskDecomposeRGroups.TASK_NAME);
 
 		return taskCode;
 		}

@@ -39,6 +39,7 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
     public DEAboutDialog(DEFrame owner) {
 		super(owner, "About OSIRIS DataWarrior", true);
 
+	    setUndecorated(true);
 		getContentPane().add(createImagePanel());
 
 		addMouseListener(this);
@@ -51,6 +52,7 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
     public DEAboutDialog(DEFrame owner, int millis) {
 		super(owner, "About OSIRIS DataWarrior", true);
 
+	    setUndecorated(true);
 		getContentPane().add(createImagePanel());
 
 		pack();
@@ -63,22 +65,18 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
 		}
 
 	private JImagePanelFixedSize createImagePanel() {
-//    	if (!showDate)
-//			return new JImagePanelFixedSize("/images/about.jpg");
-
-    	return new JImagePanelFixedSize("/images/about.jpg") {
+		final double scale = 0.5;
+    	return new JImagePanelFixedSize("/images/about.jpg", scale) {
 			@Override public void paintComponent(Graphics g) {
 				super.paintComponent(g);
-//				File installDir = DataWarrior.resolveResourcePath("");
-//				File jarFile = installDir == null ? null : new File(installDir.getPath()
-//						+File.separator+(Platform.isWindows() ? "x64\\DataWarrior64.exe" : "datawarrior.jar"));
-//				String dateString = jarFile == null ? "development" : dateString(jarFile.lastModified());
 				((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				int fontSize = HiDPIHelper.scale(10);
+				int fontSize = HiDPIHelper.scale(12);
 				String text = builtDate();
+				int x = HiDPIHelper.scale((int)(12 * scale));
+				int y = HiDPIHelper.scale((int)(750 * scale));
 				g.setFont(g.getFont().deriveFont(Font.BOLD, (float)fontSize));
-				g.setColor(Color.BLUE);
-				g.drawString(text, getWidth() - (int)getFont().getStringBounds(text, ((Graphics2D)g).getFontRenderContext()).getWidth(), fontSize);
+				g.setColor(Color.WHITE);
+				g.drawString(text, x, y);
 				}
 			};
 		}

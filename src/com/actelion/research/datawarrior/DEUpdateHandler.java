@@ -47,7 +47,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 	private static final String URL2 = "http://datawarrior.org:8084";
 	private static final String DEFAULT_UPDATE_URL = "https://openmolecules.org/datawarrior/update";
 
-	public static final String DATAWARRIOR_VERSION = "v05.06.00";	// format must be v00.00.00
+	public static final String DATAWARRIOR_VERSION = "v05.07.00";	// format must be v00.00.00
 
 	private static final String PREFERENCES_2ND_POST_INSTALL_INFO_SERVER = "2nd_post_install_info_server";
 	public static final String PREFERENCES_POST_INSTALL_INFO_FAILURE_MILLIS = "post_install_info_failure_time";
@@ -71,8 +71,12 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 20230822;
 	private static final String BROKEN_FILE_NAME = "broken_datawarrior.jar";
 
-	private static volatile boolean sOK;
+	private static volatile boolean sOK,sIsUpdating;
 	private static volatile Properties sPostInstallInfo;
+
+	public static boolean isUpdating() {
+		return sIsUpdating;
+		}
 
 	private static void handlePostInstallMessages() {
 		Preferences prefs = DataWarrior.getPreferences();
@@ -194,6 +198,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 					}
 
 				try {
+					sIsUpdating = true;
 					URL url = new URL(updateURL+"/"+updateName);
 					ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
 					FileOutputStream fileOutputStream = new FileOutputStream(path);
@@ -218,6 +223,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 											"Deletion Failed", JOptionPane.ERROR_MESSAGE));
 									}
 								}
+							sIsUpdating = false;
 							return;
 							}
 						}
@@ -230,6 +236,10 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 							"DataWarrior could not download or write file '"+path+"'.\nMessage: "+ioe.getMessage(),
 							"Download Failed", JOptionPane.ERROR_MESSAGE));
 					}
+				catch (Throwable t) {
+
+					}
+				sIsUpdating = false;
 				}
 			} ).start();
 		}

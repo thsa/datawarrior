@@ -153,7 +153,10 @@ public class PluginHelper implements IPluginHelper {
 
 	@Override
 	public double getCellDataNumerical(int row, int column) {
-		return mSourceTableModel.getTotalDoubleAt(row, column);
+		double value = mSourceTableModel.getTotalDoubleAt(row, column);
+		if (!Double.isNaN(value) && mSourceTableModel.isLogarithmicViewMode(column))
+			value = Math.pow(10, value);
+		return value;
 	}
 
 	@Override

@@ -107,8 +107,9 @@ public interface IPluginHelper {
 	 * to contain numerical values, then this method gets the numerical interpretation of a
 	 * cell from this column. If that cell contrains multiple values, then this method returns
 	 * a mean,median,sum,min,max value depending on the summary mode defined for that column.
-	 * If a column is defined to treat values logarithmically, the the logarithm of the (summarized)
-	 * value is returned. For empty cells and cells with non numerical content NaN is returned.
+	 * If a column is defined to treat values logarithmically, then summary values mean and median
+	 * are calculated on the logarithms of the original data (geometric means), returned values,
+	 * however, are not logarithmic.For empty cells and cells with non numerical content NaN is returned.
 	 * @param row total row index, which includes invisible rows
 	 * @param column total column index, which includes invisible columns
 	 * @return numerical cell content interpretation of active DataWarrior window

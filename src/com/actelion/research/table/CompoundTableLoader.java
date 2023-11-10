@@ -1382,8 +1382,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 						public void run() {
 							int row = mSMPIndex.decrementAndGet();
 							while (row >= 0) {
-try {
 								if (mFieldData[row][mappingColumn] == null) {
+try {
 									Object[] rowData = mFieldData[row];
 									Reaction rxn = ReactionEncoder.decode((byte[])rowData[rxnColumn], null, (byte[])rowData[coordsColumn], null, null, false);
 									ChemicalRuleEnhancedReactionMapper mapper = new ChemicalRuleEnhancedReactionMapper();
@@ -1391,12 +1391,12 @@ try {
 									String[] encoding = ReactionEncoder.encode(rxn, false);
 									if (encoding != null && encoding[1] != null)
 										rowData[mappingColumn] = encoding[1].getBytes();
+} catch (Exception e) { for (Object c:mFieldData[row]) if (c instanceof byte[]) System.out.println(new String((byte[])c)); e.printStackTrace(); /* System.exit(0); */ }
 
 									mProgressController.updateProgress(mMapCount.incrementAndGet());
 									}
 
 								row = mSMPIndex.decrementAndGet();
-} catch (Exception e) { for (Object c:mFieldData[row]) if (c instanceof byte[]) System.out.println(new String((byte[])c)); e.printStackTrace(); System.exit(0); }
 								}
 							}
 						};

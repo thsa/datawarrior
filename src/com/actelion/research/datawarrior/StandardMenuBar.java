@@ -27,6 +27,8 @@ import com.actelion.research.datawarrior.action.DEFileLoader;
 import com.actelion.research.datawarrior.action.DEInteractiveSARDialog;
 import com.actelion.research.datawarrior.action.DEMarkushDialog;
 import com.actelion.research.datawarrior.help.DEHelpFrame;
+import com.actelion.research.datawarrior.help.DENews;
+import com.actelion.research.datawarrior.help.DEUpdateHandler;
 import com.actelion.research.datawarrior.help.FXHelpFrame;
 import com.actelion.research.datawarrior.task.*;
 import com.actelion.research.datawarrior.task.chem.*;
@@ -110,6 +112,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	private static final String COPY_MACRO = "copyMacro_";
 	public static final String RUN_GLOBAL_MACRO = "runGlobal_";
 	private static final String RUN_INTERNAL_MACRO = "runInternal_";
+	private static final String SHOW_NEWS = "showNews_";
 
 	private static final String DEFAULT_LIST_NAME = "Default List";
 
@@ -127,10 +130,11 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	private double              mMainSplitting,mRightSplitting;
 	private Thread              mMessageThread;
 	private TreeMap<Integer,int[]> mMacroItemCountMap;
+	private TreeMap<String,DENews> mNewsMap;
 
 	private JMenu jMenuFileNewFrom,jMenuFileOpenSpecial,jMenuFileOpenRecent,jMenuFileSaveSpecial,jMenuEditPasteSpecial,jMenuDataRemoveRows,
 				  jMenuDataSelfOrganizingMap,jMenuDataSetRange,jMenuDataViewLogarithmic,jMenuChemAddMoleculeDescriptor,
-				  jMenuChemAddReactionDescriptor,jMenuListCreate,jMenuMacroExport,jMenuMacroCopy,jMenuMacroRun,jMenuHelpLaF,jMenuHelpUpdate,jMenuChemMachineLearning;
+				  jMenuChemAddReactionDescriptor,jMenuListCreate,jMenuMacroExport,jMenuMacroCopy,jMenuMacroRun,jMenuHelpNews,jMenuHelpLaF,jMenuHelpUpdate,jMenuChemMachineLearning;
 
 	private JMenuItem jMenuFileNew,jMenuFileNewFromVisible,jMenuFileNewFromSelection,jMenuFileNewFromPivoting,jMenuFileNewFromReversePivoting,jMenuFileNewFromTransposition,
 					  jMenuFileOpen,jMenuFileOpenMacro,jMenuFileOpenTemplate,jMenuFileOpenMDLReactions,jMenuFileMerge,
@@ -181,6 +185,21 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 	public DEFrame getParentFrame() {
 		return mParentFrame;
+		}
+
+	public void updateNewsMenu(TreeMap<String,DENews> newsMap) {
+		mNewsMap = newsMap;
+		jMenuHelpNews.removeAll();
+		try {
+			for (String newsID : newsMap.keySet())
+				addMenuItem(jMenuHelpNews, newsMap.get(newsID).getTitle(), SHOW_NEWS+newsID);
+
+			if (jMenuHelpNews.getItemCount() == 0)
+				addMenuItem(jMenuHelpNews, "<no news yet>", null);
+			}
+		catch (Exception e) {
+			e.printStackTrace();
+			}
 		}
 
 	private void addOtherActionKeys() {
@@ -1205,6 +1224,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		}
 
 	protected JMenu buildHelpMenu() {
+		jMenuHelpNews = new JMenu();
+		jMenuHelpNews.setText("Recent News");
+
 		jMenuHelpLaF = new JMenu();
 		jMenuHelpLaF.setText("Look & Feel");
 		for (DataWarrior.LookAndFeel laf:mApplication.getAvailableLAFs()) {
@@ -1239,7 +1261,13 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuHelp.add(jMenuHelpHelp);
 		jMenuHelp.add(jMenuHelpShortcuts);
 
-		addForumItem(jMenuHelp);
+		jMenuHelp.addSeparator();
+		jMenuHelp.add(jMenuHelpNews);
+
+		jMenuHelpForum = new JMenuItem();
+		jMenuHelpForum.setText("Open Forum in Browser...");
+		jMenuHelpForum.addActionListener(this);
+		jMenuHelp.add(jMenuHelpForum);
 
 		jMenuHelp.addSeparator();
 		jMenuHelp.add(jMenuHelpLaF);
@@ -1285,14 +1313,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 		jMenuHelp.addSeparator();
 		jMenuHelp.add(jMenuHelpUpdate);
-		}
-
-	public void addForumItem(JMenu jMenuHelp) {
-		jMenuHelp.addSeparator();
-		jMenuHelpForum = new JMenuItem();
-		jMenuHelpForum.setText("Open Forum in Browser...");
-		jMenuHelpForum.addActionListener(this);
-		jMenuHelp.add(jMenuHelpForum);
 		}
 
 	private void ensurePageFormat(PrinterJob job) {
@@ -1833,6 +1853,11 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuMacroStopRecording) {
 				DEMacroRecorder.getInstance().stopRecording();
 				enableMacroItems();
+				}
+			else if (actionCommand.startsWith(SHOW_NEWS)) {
+				DENews news = mNewsMap.get(actionCommand.substring(SHOW_NEWS.length()));
+				if (news != null)
+					news.show();
 				}
 			else if (actionCommand.startsWith(LOOK_AND_FEEL)) {
 				for (int i=0; i<jMenuHelpLaF.getItemCount(); i++) {

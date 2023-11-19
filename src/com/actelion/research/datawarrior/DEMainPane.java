@@ -19,6 +19,7 @@
 package com.actelion.research.datawarrior;
 
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.help.DENews;
 import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.datawarrior.task.view.*;
@@ -26,11 +27,13 @@ import com.actelion.research.gui.JProgressPanel;
 import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.gui.dock.Dockable;
 import com.actelion.research.gui.dock.JDockingPanel;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.hidpi.HiDPIIconButton;
 import com.actelion.research.table.CompoundTableColorHandler;
 import com.actelion.research.table.RuntimePropertyEvent;
 import com.actelion.research.table.model.*;
 import com.actelion.research.table.view.*;
+import com.actelion.research.util.BrowserControl;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -39,6 +42,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
@@ -84,6 +89,9 @@ public class DEMainPane extends JDockingPanel
 	private DEStatusPanel				mStatusPanel;
 	private CompoundTableColorHandler	mColorHandler;
 	private ArrayList<DETableRowTaskDef> mRowTaskList;
+	private DENews                      mPermanentNews;
+	private Rectangle                   mNewsButtonRect;
+	private boolean                     mNewsButtonActive;
 
 	public DEMainPane(DEFrame parent,
 					  DECompoundTableModel tableModel,
@@ -121,6 +129,28 @@ public class DEMainPane extends JDockingPanel
 
 	public DEParentPane getParentPane() {
 		return mParentPane;
+		}
+
+	public void setPermanentNews(DENews news) {
+		addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (mNewsButtonActive)
+					BrowserControl.displayURL(mPermanentNews.getMoreURL());
+			}
+		});
+		addMouseMotionListener(new MouseMotionAdapter() {
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				boolean inside = getDockableCount() == 0 && mNewsButtonRect != null && mNewsButtonRect.contains(e.getX(), e.getY());
+				if (inside != mNewsButtonActive) {
+					mNewsButtonActive = inside;
+					repaint();
+				}
+			}
+		});
+		mPermanentNews = news;
+		repaint();
 		}
 
 	public void setApplicationViewFactory(ApplicationViewFactory factory) {
@@ -941,9 +971,32 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 //			cv.getCardPane().getCardPaneModel().setRowHiding( !isVisible && cv.getCardPane().getCardPaneModel().isRowHiding() );
 //			getTableModel().updateExternalExclusion( cv.getCardPane().getCardPaneModel().getFlagExclusion(),true,true);
 //		}
-
 	}
 
+	@Override
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+
+		if (getDockableCount() == 0 && mPermanentNews != null) {
+			BufferedImage image = mPermanentNews.getImage();
+			if (image != null) {
+				int x = getInsets().left + (getWidth() - getInsets().left - getInsets().right - image.getWidth()) / 2;
+				int y = getInsets().top + (getHeight() - getInsets().top - getInsets().bottom - image.getHeight()) / 2;
+				g.drawImage(image, x, y, null);
+				int rw = HiDPIHelper.scale(120);
+				int rh = HiDPIHelper.scale(30);
+				int rx = x+(image.getWidth()-rw)/2;
+				int ry = y+image.getHeight()+rh/2;
+				mNewsButtonRect = new Rectangle(rx, ry, rw, rh);
+				final String text = "More...";
+				g.setColor(mNewsButtonActive ? new Color(0, 160, 0) : Color.GREEN);
+				g.fillRoundRect(rx, ry, rw, rh, rh/4, rh/3);
+				g.setFont(g.getFont().deriveFont(Font.BOLD, 0.8f*rh));
+				g.setColor(Color.BLACK);
+				g.drawString(text, rx + (rw - g.getFontMetrics().stringWidth(text))/2, ry+rh*4/5);
+			}
+		}
+	}
 
 	public String validateTitle(String name) {
 		Set<String> titleSet = getDockableTitles();

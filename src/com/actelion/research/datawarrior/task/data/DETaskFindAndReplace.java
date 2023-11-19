@@ -26,6 +26,7 @@ import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETable;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.JEditableStructureView;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
@@ -142,9 +143,10 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			}
 
 		mDialogPanel = new JPanel();
-		double[][] size = { {8, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 8},
-							{8, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 4,
-								TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 8} };
+		int gap = HiDPIHelper.scale(8);
+		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
+							{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2,
+								  TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		mDialogPanel.setLayout(new TableLayout(size));
 
 		mDialogPanel.add(new JLabel("Column:", SwingConstants.RIGHT), "1,1");

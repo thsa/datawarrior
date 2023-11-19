@@ -51,7 +51,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 	private static final String URL2 = "http://datawarrior.org:8084";
 	private static final String DEFAULT_UPDATE_URL = "https://openmolecules.org/datawarrior/update";
 
-	public static final String DATAWARRIOR_VERSION = "v05.07.00";	// format must be v00.00.00
+	public static final String DATAWARRIOR_VERSION = "v05.08.00";	// format must be v00.00.00
 
 	private static final String PREFERENCES_2ND_POST_INSTALL_INFO_SERVER = "2nd_post_install_info_server";
 	public static final String PREFERENCES_POST_INSTALL_INFO_FAILURE_MILLIS = "post_install_info_failure_time";

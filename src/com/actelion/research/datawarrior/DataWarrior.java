@@ -21,6 +21,7 @@ package com.actelion.research.datawarrior;
 import com.actelion.research.chem.Molecule;
 import com.actelion.research.chem.name.StructureNameResolver;
 import com.actelion.research.chem.reaction.mapping.ChemicalRuleEnhancedReactionMapper;
+import com.actelion.research.datawarrior.help.DEAboutDialog;
 import com.actelion.research.datawarrior.help.DEUpdateHandler;
 import com.actelion.research.datawarrior.plugin.PluginRegistry;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;

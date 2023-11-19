@@ -16,9 +16,9 @@
  * @author Thomas Sander
  */
 
-package com.actelion.research.datawarrior;
+package com.actelion.research.datawarrior.help;
 
-import com.actelion.research.datawarrior.help.DEUpdateHandler;
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.gui.JImagePanelFixedSize;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 

@@ -214,56 +214,84 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 					return;
 				}
 
-			String updateName = "datawarrior_"+availableVersion+".jar";
 			String updatePath = getUpdatePath(parent);
 			if (updatePath != null) {
 				String md5sum = sPostInstallInfo.getProperty(PROPERTY_AUTO_UPDATE_MD5SUM);
-				final String path = updatePath.concat(File.separator).concat(updateName);
+				final String updateName = "datawarrior_"+availableVersion;
+				final String tempFilePath = updatePath.concat(File.separator).concat(updateName).concat(".temp");
+				final String finalFilePath = updatePath.concat(File.separator).concat(updateName).concat(".jar");
 
 				// Don't download, if we have that file already
-				if (new File(path).exists()) {
-					if (md5sum == null || md5sum.equals(md5sum(path)))
+				File finalFile = new File(finalFilePath);
+				if (finalFile.exists()) {
+					if (md5sum == null || md5sum.equalsIgnoreCase(md5sum(finalFilePath)))
 						return;
+
 					// If we have an older file with unexpected md5sum, then delete that.
 					try {
-						new File(path).delete();
+						finalFile.delete();
 						}
 					catch (SecurityException e) {
 						SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-								"DataWarrior could not delete existing '"+path+"'.\nMessage: "+e.getMessage(),
+								"DataWarrior could not delete broken file '"+finalFilePath+"'.\nTry deleting it manually!\nMessage: "+e.getMessage(),
 								"Deletion Failed", JOptionPane.ERROR_MESSAGE));
+						return;
+						}
+					}
+
+				File tempFile = new File(tempFilePath);
+				if (tempFile.exists()) {
+					if (md5sum == null || md5sum.equalsIgnoreCase(md5sum(tempFilePath))) {
+						try {
+							tempFile.renameTo(finalFile);
+							}
+						catch (SecurityException e) {
+							SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+									"DataWarrior could not rename successfully downloaded '"+tempFilePath+"'.\nMessage: "+e.getMessage(),
+									"File Rename Failed", JOptionPane.ERROR_MESSAGE));
+							}
+						return;
+						}
+
+					// If we have an older file with unexpected md5sum, then delete that.
+					try {
+						tempFile.delete();
+						}
+					catch (SecurityException e) {
+						SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+								"DataWarrior could not delete broken file '"+tempFilePath+"'.\nTry deleting it manually!\nMessage: "+e.getMessage(),
+								"Deletion Failed", JOptionPane.ERROR_MESSAGE));
+						return;
 						}
 					}
 
 				try {
 					sIsUpdating = true;
-					URL url = new URL(updateURL+"/"+updateName);
+					URL url = new URL(updateURL+"/"+updateName+".jar");
 					ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-					FileOutputStream fileOutputStream = new FileOutputStream(path);
+					FileOutputStream fileOutputStream = new FileOutputStream(tempFilePath);
 					FileChannel fileChannel = fileOutputStream.getChannel();
 					fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
 					if (md5sum != null) {
-						String checksum = md5sum(path);
+						String checksum = md5sum(tempFilePath);
 						if (!md5sum.equalsIgnoreCase(checksum)) {
 							SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-									"DataWarrior could download and write file '"+path
+									"DataWarrior could download and write file '"+tempFilePath
 											+ "', but its md5sum\n"+checksum+" does not match the expected one "+md5sum,
 									"MD5 Mismatch", JOptionPane.ERROR_MESSAGE));
-							File brokenFile = new File(updatePath.concat(File.separator).concat(BROKEN_FILE_NAME));
-							if (brokenFile.exists()) {
-								try {
-									brokenFile.delete();
-									new File(path).renameTo(brokenFile);
-									}
-								catch (Exception e) {
-									SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-											"DataWarrior could not delete existing '"+path+"'.\nMessage: "+e.getMessage(),
-											"Deletion Failed", JOptionPane.ERROR_MESSAGE));
-									}
-								}
 							sIsUpdating = false;
 							return;
 							}
+						}
+					try {
+						tempFile.renameTo(finalFile);
+						}
+					catch (SecurityException e) {
+						SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+								"DataWarrior could not rename successfully downloaded '"+tempFilePath+"'.\nMessage: "+e.getMessage(),
+								"File Rename Failed", JOptionPane.ERROR_MESSAGE));
+						sIsUpdating = false;
+						return;
 						}
 					SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
 							"DataWarrior has successfully updated to version '"+availableVersion+"'.\nNext time you start DataWarrior, this version will be used.",
@@ -271,11 +299,13 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 					}
 				catch (IOException ioe) {
 					SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-							"DataWarrior could not download or write file '"+path+"'.\nMessage: "+ioe.getMessage(),
+							"DataWarrior could not download or write file '"+tempFilePath+"'.\nMessage: "+ioe.getMessage(),
 							"Download Failed", JOptionPane.ERROR_MESSAGE));
 					}
 				catch (Throwable t) {
-
+					SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+							"Unexpected failure in DataWarrior update procedure\nMessage: "+t.getMessage(),
+							"DataWarrior Update Failed", JOptionPane.ERROR_MESSAGE));
 					}
 				sIsUpdating = false;
 				}

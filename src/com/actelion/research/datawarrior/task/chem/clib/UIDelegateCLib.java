@@ -65,6 +65,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 			{ "1,2,4-Triazole from acetohydrazide", "gJU@DPdru@XIFTs` eM`AIxLH@!gO|@ABeKNLuRA@#s@gop Ss` s}uKHl#!REpI~@A\\}bOrckDH !RJCt@PzMRO@ !RTv\\`iTqg_g}hSJT_hqj\\##" },
 			{ "1,2,4-Triazole from carboxylic acid", "gC``@dfZ@pb@ eM`AIxLH@!gO|@ABeKNLuRA@#s@`l Ss` s@EKHl#!RY?r~@F_]hrJB !RJMt@@zMJo@ !RTv]@IPqgog|hCBT_hwj\\##" },
 			{ "1,2,4-Triazole from carboxylic ester", "gNp`@df^Zj@rd^t_d\\hqca`\u007FuU` eM`AIxLH@!gO|@ABeKNLuRA@#s@`l@@ Ss` s@EKHl#!RY?r~@F_]rLI~pLb]hvHb !RJMt@@zOJo@ !RTv]@IPqgog|hCBT_hwj\\##" },
+			{ "Amide formation", "gCh@AGj@vb}ADXhXMjSO\u007FUD gC``@dfZ@pb@!gJY@DDfVhB#s`p@ sRpp sRxpp#!R_`CWWXa]LqK| !R_g~w?_C}Lti\\ !R_g}w_Pb}MpHsnnp##" },
 			{ "Benzimidazol with acid or ester", "gGP`@dfYj`Mi_PcFVFC?TZ die@@@iJ[gxZB@@CA@jIDcApLcAp\\cApBcAp@!dmM@@@iJYe_JEYB`b@CDbQ`xNQ`xAQ`xEQ`x@#K@hFP@ Kgw[XCj`h KFuWZss@nt@#!Rog~wW[A]mpJA_zLdw@ !RlGvwO[y?lCrwO[A}lGvpOJObw@ !RXFicFKx@bCtlFE~~bOrH?BU`bCvcVdH##" },
 			{ "Benzimidazol with aldehyde", "eMHAIXLJ@ die@@@iJ[gxZB@@CA@jIDcApLcAp\\cApBcAp@!dmM@@@iJYe_JEYB`b@CDbQ`xNQ`xAQ`xEQ`x@#K@kH Kgw[XCj`h KFuWZss@nt@#!R?g~HwZNbO@ !RbOvw__y?b@Jw_Xc}bOvH@jOlw@ !RXAiSFOx@bGtlFG?~b@JH@fU`bGvcFlH##" },
 			{ "Benzofuran", "eM@H~CB` daDH@@RYe[hB@@LHBLTfIV@!detH@@rQQQHyPsPLA@A@#KfIX s}HmpOP Kzb\\JbVtnP#!R@AL_[JNB?@ !Rb@K~@Hc}b@Jw@h`BbOvc}DH !RXAiSFOx@bOtlFG?~b@JH@ha}h~kB##" },

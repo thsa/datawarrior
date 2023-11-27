@@ -29,6 +29,7 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 	private static float sAmount = 0.1f;
 	private static float sPrice = 80f;
 	private static int sMaxCount = 50;
+	private static boolean sSingleMatchOnly = true;
 	private static String sPruningMode = sPruningModes[0];
 	private static String sProviders;
 
@@ -37,6 +38,7 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 	private Frame		mParentFrame;
 	private JTextField	mTextFieldAmount,mTextFieldPrice,mTextFieldMax;
 	private JComboBox	mComboBoxPruningMode,mComboBoxProviders;
+	private JCheckBox   mCheckBoxSingleMatchOnly;
 	private JLabel      mLabelCustomProviders;
 	private String		mIDCode;
 	private String[]    mProviderList;
@@ -52,7 +54,7 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 		JPanel p = new JPanel();
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, HiDPIHelper.scale(160), gap},
 							{gap, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2,
-									TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap } };
+									TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap } };
 		p.setLayout(new TableLayout(size));
 
 		mProviderList = new BBCommunicator(null, "datawarrior").getProviderList();
@@ -96,6 +98,9 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 		p.add(new JLabel("If maximum count is exceeded get"), "1,9");
 		p.add(mComboBoxPruningMode, "3,9");
 		p.add(new JLabel("subset"), "5,9");
+
+		mCheckBoxSingleMatchOnly = new JCheckBox("Avoid multiple substructure matches", sSingleMatchOnly);
+		p.add(mCheckBoxSingleMatchOnly, "3,11,5,11");
 
 		JPanel p2 = new JPanel();
 		p2.setLayout(new BorderLayout());
@@ -153,6 +158,7 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 					}
 				}
 
+			sSingleMatchOnly = mCheckBoxSingleMatchOnly.isSelected();
 			sAmount = amount;
 			sPrice = price;
 			sMaxCount = maxbb;
@@ -212,9 +218,10 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 		query.put(QUERY_ONE_PRODUCT_ONLY, "true");
 		query.put(QUERY_RESULT_FORMAT, QUERY_RESULT_FORMAT_VALUE_SHORT);
 
+		int type = StructureSearchSpecification.TYPE_SUBSTRUCTURE + (sSingleMatchOnly ? StructureSearchSpecification.MODE_SINGLE_MATCH_ONLY : 0 );
 		byte[][] idcode = new byte[1][];
 		idcode[0] = mIDCode.getBytes();
-		StructureSearchSpecification ssSpec = new StructureSearchSpecification(StructureSearchSpecification.TYPE_SUBSTRUCTURE, idcode, null, null, 0);
+		StructureSearchSpecification ssSpec = new StructureSearchSpecification(type, idcode, null, null, 0);
 		query.put("ssspec", ssSpec);
 
 		byte[][][] resultTable = new BBCommunicator(mProgressDialog, "datawarrior").search(query);

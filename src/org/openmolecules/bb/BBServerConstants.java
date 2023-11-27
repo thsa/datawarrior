@@ -45,6 +45,7 @@ public interface BBServerConstants {
 	String QUERY_RESULT_FORMAT = "format";
 	String QUERY_RESULT_FORMAT_VALUE_SHORT = "short";
 	String QUERY_PRUNING_MODE = "mode";
+	String QUERY_SINGLE_MATCH_ONLY = "singlematch";
 
 	int PRUNING_MODE_RANDOM = 0;
 	int PRUNING_MODE_CHEAPEST = 1;

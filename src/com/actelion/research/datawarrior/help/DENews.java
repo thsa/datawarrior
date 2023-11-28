@@ -15,12 +15,13 @@ import java.net.URL;
 public class DENews {
 	private final static String TYPE_PERMANENT = "permanent";
 
-	private String mTitle, mImageURL, mMoreURL, mType;
+	private String mTitle, mText, mImageURL, mMoreURL, mType;
 	private BufferedImage mImage;
 	private boolean mImageFailed;
 
-	public DENews(String title, String imageURL, String moreURL, String type) {
+	public DENews(String title, String text, String imageURL, String moreURL, String type) {
 		mTitle = title;
+		mText = text.replace("<NL>", "\n");
 		mImageURL = (imageURL == null) ? null : imageURL.startsWith("http") ? imageURL : "https://".concat(imageURL);
 		mMoreURL = (moreURL == null) ? null : moreURL.startsWith("http") ? moreURL : "https://".concat(moreURL);
 		mType = type;
@@ -44,7 +45,7 @@ public class DENews {
 	 * @return the UI-scaled image
 	 */
 	public BufferedImage getImage() {
-		if (mImage == null && !mImageFailed) {
+		if (mImageURL != null && mImage == null && !mImageFailed) {
 			try {
 				BufferedImage image = ImageIO.read(new URL(mImageURL));
 				if (image != null)
@@ -61,9 +62,14 @@ public class DENews {
 	}
 
 	public void show() {
-		if (mImageURL != null) {
-			getImage();
-			if (mImage != null) {
+		if (mText != null) {
+			if (SwingUtilities.isEventDispatchThread())
+				showInEDT();
+			else
+				try { SwingUtilities.invokeAndWait(() -> showInEDT() ); } catch (Exception e) {}
+		}
+		else if (mImageURL != null) {
+			if (getImage() != null) {
 				if (SwingUtilities.isEventDispatchThread())
 					showInEDT();
 				else
@@ -71,17 +77,17 @@ public class DENews {
 			}
 		}
 
-		if (mImage == null && mMoreURL != null) {
+		if (mText == null && mImage == null && mMoreURL != null) {
 			BrowserControl.displayURL(mMoreURL);
 		}
 	}
 
 	private void showInEDT() {
-		JDialog imageDialog = new JDialog();
+		JDialog newsDialog = new JDialog();
 
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = {{gap, TableLayout.PREFERRED, gap, TableLayout.FILL, gap, TableLayout.PREFERRED, gap},
-				{gap, TableLayout.PREFERRED, gap}};
+		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.FILL, gap, TableLayout.PREFERRED, gap},
+							{gap, TableLayout.PREFERRED, gap} };
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new TableLayout(size));
 
@@ -89,7 +95,7 @@ public class DENews {
 			JButton moreButton = new JButton("More...");
 			moreButton.addActionListener(e -> {
 				BrowserControl.displayURL(mMoreURL);
-				imageDialog.dispose();
+				newsDialog.dispose();
 			});
 			buttonPanel.add(moreButton, "1,1");
 		}
@@ -97,16 +103,25 @@ public class DENews {
 		buttonPanel.add(new JLabel("News are accessible from the Help menu!", JLabel.CENTER), "3,1");
 
 		JButton closeButton = new JButton("Close");
-		closeButton.addActionListener(e -> imageDialog.dispose());
+		closeButton.addActionListener(e -> newsDialog.dispose());
 		buttonPanel.add(closeButton, "5,1");
 
-		imageDialog.setModalityType(JDialog.DEFAULT_MODALITY_TYPE);
-		imageDialog.setUndecorated(true);
-		imageDialog.getContentPane().setLayout(new BorderLayout());
-		imageDialog.getContentPane().add(new JImagePanelFixedSize(mImage), BorderLayout.CENTER);
-		imageDialog.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-		imageDialog.pack();
-		imageDialog.setLocationRelativeTo(DataWarrior.getApplication().getActiveFrame());
-		imageDialog.setVisible(true);
+		newsDialog.setModalityType(JDialog.DEFAULT_MODALITY_TYPE);
+		newsDialog.setUndecorated(true);
+		newsDialog.getContentPane().setLayout(new BorderLayout());
+		if (mText != null) {
+			double[][] tsize = { {gap, TableLayout.PREFERRED, gap},	{gap, TableLayout.PREFERRED, gap} };
+			JPanel textPanel = new JPanel();
+			textPanel.setLayout(new TableLayout(tsize));
+			textPanel.add(new JLabel(mText), "1,1");
+			newsDialog.getContentPane().add(textPanel, BorderLayout.CENTER);
+		}
+		else {
+			newsDialog.getContentPane().add(new JImagePanelFixedSize(mImage), BorderLayout.CENTER);
+		}
+		newsDialog.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+		newsDialog.pack();
+		newsDialog.setLocationRelativeTo(DataWarrior.getApplication().getActiveFrame());
+		newsDialog.setVisible(true);
 	}
 }

@@ -51,7 +51,9 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 	private static final String URL2 = "http://datawarrior.org:8084";
 	private static final String DEFAULT_UPDATE_URL = "https://openmolecules.org/datawarrior/update";
 
-	public static final String DATAWARRIOR_VERSION = "v05.08.00";	// format must be v00.00.00
+	// IMPORTANT: When creating a new manual(!!!) installer (not an update for automatic deployment),
+	// then DataWarriorLauncher.BASE_VERSION must also be changed to match this DATAWARRIOR_VERSION!
+	public static final String DATAWARRIOR_VERSION = "v05.09.00";	// format must be v00.00.00
 
 	private static final String PREFERENCES_2ND_POST_INSTALL_INFO_SERVER = "2nd_post_install_info_server";
 	public static final String PREFERENCES_POST_INSTALL_INFO_FAILURE_MILLIS = "post_install_info_failure_time";
@@ -74,12 +76,13 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 	private static final String PROPERTY_MANUAL_UPDATE_URL = "manual_update_url";
 
 	private static final String PROPERTY_NEWS_TITLE = "news_title_";
+	private static final String PROPERTY_NEWS_TEXT = "news_text_";
 	private static final String PROPERTY_NEWS_IMAGE = "news_image_";
 	private static final String PROPERTY_NEWS_URL = "news_url_";
 	private static final String PROPERTY_NEWS_TYPE = "news_type_";
 
 	private static final long serialVersionUID = 20230822;
-	private static final String BROKEN_FILE_NAME = "broken_datawarrior.jar";
+//	private static final String BROKEN_FILE_NAME = "broken_datawarrior.jar";
 
 	private static volatile boolean sOK,sIsUpdating;
 	private static volatile Properties sPostInstallInfo;
@@ -109,10 +112,11 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 			if (propertyName.startsWith(PROPERTY_NEWS_TITLE)) {
 				String newsID = propertyName.substring(PROPERTY_NEWS_TITLE.length());
 				String title = sPostInstallInfo.getProperty(propertyName);
+				String text = sPostInstallInfo.getProperty(PROPERTY_NEWS_TEXT.concat(newsID));
 				String image = sPostInstallInfo.getProperty(PROPERTY_NEWS_IMAGE.concat(newsID));
 				String url = sPostInstallInfo.getProperty(PROPERTY_NEWS_URL.concat(newsID));
 				String type = sPostInstallInfo.getProperty(PROPERTY_NEWS_TYPE.concat(newsID));
-				newsMap.put(newsID, new DENews(title, image, url, type));
+				newsMap.put(newsID, new DENews(title, text, image, url, type));
 				}
 			}
 

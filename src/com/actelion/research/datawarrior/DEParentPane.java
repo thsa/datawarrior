@@ -58,7 +58,7 @@ public class DEParentPane extends JComponent implements DetailPopupProvider  {
 
 	    setLayout(new BorderLayout());
 
-	    DEStatusPanel statusPanel = new DEStatusPanel(mTableModel, mTabbedMainViews);
+	    DEStatusPanel statusPanel = new DEStatusPanel(mTableModel);
 		add(statusPanel, BorderLayout.SOUTH);
 
 		mTabbedDetailViews = detailPane;

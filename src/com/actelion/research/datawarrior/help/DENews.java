@@ -9,6 +9,8 @@ import info.clearthought.layout.TableLayout;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.net.URL;
 
@@ -21,7 +23,7 @@ public class DENews {
 
 	public DENews(String title, String text, String imageURL, String moreURL, String type) {
 		mTitle = title;
-		mText = text.replace("<NL>", "\n");
+		mText = text;
 		mImageURL = (imageURL == null) ? null : imageURL.startsWith("http") ? imageURL : "https://".concat(imageURL);
 		mMoreURL = (moreURL == null) ? null : moreURL.startsWith("http") ? moreURL : "https://".concat(moreURL);
 		mType = type;
@@ -105,6 +107,15 @@ public class DENews {
 		JButton closeButton = new JButton("Close");
 		closeButton.addActionListener(e -> newsDialog.dispose());
 		buttonPanel.add(closeButton, "5,1");
+
+		closeButton.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				super.keyPressed(e);
+				if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+					newsDialog.dispose();
+			}
+		});
 
 		newsDialog.setModalityType(JDialog.DEFAULT_MODALITY_TYPE);
 		newsDialog.setUndecorated(true);

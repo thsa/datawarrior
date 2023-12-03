@@ -69,6 +69,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 
 	private static final String PROPERTY_2ND_POST_INSTALL_INFO_SERVER = "2nd_post_install_info_server";
 	private static final String PROPERTY_AUTO_UPDATE_VERSION = "auto_update_version"; // format v00.00.00
+	private static final String PROPERTY_AUTO_UPDATE_REQUIRED_BASE_VERSION = "auto_base_version"; // format v00.00.00
 	private static final String PROPERTY_AUTO_UPDATE_URL = "auto_update_url";
 	private static final String PROPERTY_AUTO_UPDATE_MD5SUM = "auto_update_md5sum";
 	private static final String PROPERTY_MANUAL_UPDATE_VERSION = "manual_update_version"; // format v00.00.00
@@ -201,6 +202,16 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 			 || !availableVersion.matches("v\\d\\d\\.\\d\\d\\.\\d\\d")
 			 || availableVersion.compareTo(DATAWARRIOR_VERSION) <= 0)
 				return;
+
+			String requiredBaseVersion = sPostInstallInfo.getProperty(PROPERTY_AUTO_UPDATE_REQUIRED_BASE_VERSION);
+			if (requiredBaseVersion != null
+			 && requiredBaseVersion.matches("v\\d\\d\\.\\d\\d\\.\\d\\d")
+			 || requiredBaseVersion.compareTo(DATAWARRIOR_VERSION) > 0) {
+				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+						"DataWarrior couldn't update automatically, because the installed version '"+DATAWARRIOR_VERSION+"'\nis too old. Required is at least '"+requiredBaseVersion+"'.\nTry updating manually by using either the official installer or the development\npatch files from https://openmolecules.org/datawarrior/download.html",
+						"Update Failed", JOptionPane.ERROR_MESSAGE));
+				return;
+				}
 
 			String updateURL = sPostInstallInfo.getProperty(PROPERTY_AUTO_UPDATE_URL, DEFAULT_UPDATE_URL);
 			if (updateURL == null)

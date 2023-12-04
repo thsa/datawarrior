@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright 2023, openmolecules.org. All rights reserved.
+
+This file contains the script to bundle the DataWarrior application for OSX.
+-->
+
+<project name="datawarrior_osx" default="bundle">
+    <property environment="env"/>
+
+<!-- don't use external properties
+    <property file="build.properties"/>
+-->
+
+    <property name="dist" value="dist"/>
+    <property name="bundle.name" value="DataWarrior"/>
+    <property name="bundle.displayname" value="DataWarrior"/>
+    <property name="bundle.icon" value="datawarrior.icns"/>
+    <property name="version.public" value="6.0"/>
+    <property name="version.internal" value="6.0.0"/>
+    <property name="icons.path" value="icons"/>
+    <property name="icons.dwam" value="dwam.icns"/>
+    <property name="icons.dwaq" value="dwaq.icns"/>
+    <property name="icons.dwar" value="dwar.icns"/>
+    <property name="icons.dwas" value="dwas.icns"/>
+    <property name="icons.dwat" value="dwat.icns"/>
+    <property name="icons.sdf" value="sdf.icns"/>
+    <property name="runtime" value="jre/universal-jre/Contents/Home"/>
+
+    <path id="runclasspathref">
+        <fileset dir=".." includes="datawarriorlauncher.jar" />
+    </path>
+
+    <!-- Bundle target -->
+    <target name="bundle">
+
+      <!-- Obtain path to the selected JRE ->
+      We don't copy the default JRE to the bundle. We use a custom built universal JRE defined in 'runtime' above
+      <exec executable="/usr/libexec/java_home"
+             failonerror="true"
+             outputproperty="runtime">
+        <arg value="-v"/>
+        <arg value="21"/>
+      </exec>
+      -->
+
+      <taskdef name="bundleapp" 
+        classpath="appbundler-1.0ea.jar"
+        classname="com.oracle.appbundler.AppBundlerTask"/>
+
+        <bundleapp 
+          classpathref="runclasspathref"
+          outputdirectory="${dist}"
+          name="${bundle.name}"
+          displayname="${bundle.displayname}"
+          signature="DaWa"
+          executableName="DataWarrior"
+          identifier="org.openmolecules.datawarrior"
+          shortversion="${version.public}"
+          version="${version.internal}"
+          icon="${icons.path}/${bundle.icon}"
+          mainclassname="org.openmolecules.datawarrior.DataWarriorLauncher"
+          copyright="2023 Openmolecules.org"
+          applicationCategory="public.app-category.productivity">
+
+          <!-- Embed complete JRE, for JRE>8 better use jlink syntax with modules -->          
+          <runtime dir="${runtime}"/>
+
+<!-- doesn't seem to be needed anymore, we want a universal binary!
+          <arch name="x86_64"/>
+          <arch name="i386"/>
+-->
+
+          <bundledocument extensions="txt,csv"
+            name="Tabular Text Data"
+            role="editor"
+            handlerRank="owner">
+          </bundledocument> 
+
+          <bundledocument extensions="dwam"
+            icon="${icons.path}/${icons.dwam}"
+            name="DataWarrior macro files"
+            role="editor"
+            handlerRank="owner">
+          </bundledocument>
+
+          <bundledocument extensions="dwaq"
+            icon="${icons.path}/${icons.dwaq}"
+            name="DataWarrior query files"
+            role="editor"
+            handlerRank="owner">
+          </bundledocument>
+
+          <bundledocument extensions="dwar"
+            icon="${icons.path}/${icons.dwar}"
+            name="DataWarrior files"
+            role="editor"
+            handlerRank="owner">
+          </bundledocument>
+
+          <bundledocument extensions="dwas"
+            icon="${icons.path}/${icons.dwas}"
+            name="DataWarrior SOM files"
+            role="editor"
+            handlerRank="owner">
+          </bundledocument>
+
+          <bundledocument extensions="dwat"
+            icon="${icons.path}/${icons.dwat}"
+            name="DataWarrior template files"
+            role="editor"
+            handlerRank="owner">
+          </bundledocument>
+
+          <bundledocument extensions="sdf"
+            icon="${icons.path}/${icons.sdf}"
+            name="SD-files"
+            role="editor"
+            handlerRank="owner">
+          </bundledocument>
+
+          <!-- Workaround as com.apple.mrj.application.apple.menu.about.name property may no longer work -->
+          <option value="-Xdock:name=${bundle.name}"/>
+
+          <option value="-Dapple.laf.useScreenMenuBar=true"/>
+          <option value="-Dcom.apple.macos.use-file-dialog-packages=true"/>
+          <option value="-Dcom.apple.macos.useScreenMenuBar=true"/>
+          <option value="-Dcom.apple.mrj.application.apple.menu.about.name=${bundle.name}"/>
+          <option value="-Dcom.apple.smallTabs=true"/>
+          <option value="-Dfile.encoding=UTF-8"/>
+
+          <option value="-Xmx4096M" name="Xmx"/>
+      </bundleapp>
+    </target>
+
+</project>

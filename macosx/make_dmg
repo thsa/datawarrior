@@ -1,0 +1,27 @@
+rm datawarrior.dmg
+cp dw_master.dmg dw_uncompressed.dmg
+mkdir -p dmg
+hdiutil attach dw_uncompressed.dmg -noautoopen -quiet -mountpoint dmg
+mkdir dmg/DataWarrior.app/Contents/Java
+mkdir dmg/DataWarrior.app/Contents/PlugIns
+mkdir dmg/DataWarrior.app/reference
+mkdir dmg/DataWarrior.app/example
+mkdir dmg/DataWarrior.app/macro
+mkdir dmg/DataWarrior.app/tutorial
+mkdir dmg/DataWarrior.app/plugin
+cp ./dist/DataWarrior.app/Contents/Info.plist dmg/DataWarrior.app/Contents/
+cp ./dist/DataWarrior.app/Contents/pkgInfo dmg/DataWarrior.app/Contents/
+cp ./dist/DataWarrior.app/Contents/MacOS/* dmg/DataWarrior.app/Contents/MacOS/
+cp -r ./dist/DataWarrior.app/Contents/PlugIns/* dmg/DataWarrior.app/Contents/PlugIns/
+cp -r ./dist/DataWarrior.app/Contents/Resources/* dmg/DataWarrior.app/Contents/Resources/
+cp ../loading.png dmg/DataWarrior.app/Contents/Resources/
+cp ../../../../local/datawarrior/lib/*.jar dmg/DataWarrior.app/Contents/Java/
+cp ../external_data/example/* dmg/DataWarrior.app/example/
+cp ../external_data/reference/* dmg/DataWarrior.app/reference/
+cp ../external_data/macro/* dmg/DataWarrior.app/macro/
+cp ../external_data/tutorial/* dmg/DataWarrior.app/tutorial/
+cp ../datawarrior_ext.jar dmg/DataWarrior.app/Contents/Java/datawarrior.jar
+hdiutil detach dmg -quiet -force
+hdiutil convert dw_uncompressed.dmg -quiet -format UDZO -imagekey zlib-level=9 -o datawarrior.dmg
+rm dw_uncompressed.dmg
+rm -rf dmg

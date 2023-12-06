@@ -38,6 +38,8 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DEMacro implements CompoundTableConstants {
+	public static final String VARIABLE_NAME_FILENAME = "FILENAME";
+
 	public static final String MACRO_START = "<macro name=\"";
 	private static final String MACRO_END = "</macro";
 	private static final String DESCRIPTION_START = "<description";
@@ -514,10 +516,10 @@ public class DEMacro implements CompoundTableConstants {
 		private void updateFileVariable() {
 			if (filelist.size() > 0) {
 				File file = filelist.remove(0);
-				variableMap.put("FILENAME", file.getAbsolutePath());
+				variableMap.put(VARIABLE_NAME_FILENAME, file.getAbsolutePath());
 				}
 			else {
-				variableMap.remove("FILENAME");
+				variableMap.remove(VARIABLE_NAME_FILENAME);
 				}
 			}
 		}

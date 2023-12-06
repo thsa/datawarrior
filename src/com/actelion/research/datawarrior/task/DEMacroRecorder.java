@@ -144,10 +144,38 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 		}
 
 	public String resolveVariables(String text) {
-		if (text != null)
-			for (String name:mVariableMap.keySet())
+		if (text != null) {
+			for (String name:mVariableMap.keySet()) {
+				// Special case predefined FILENAME variable: we remove extension, if there is another extension at the text end
+				if (name.equals(DEMacro.VARIABLE_NAME_FILENAME)
+				 && text.startsWith("$"+name)) {
+					int textExtLen = extensionLength(text);
+					if (textExtLen != -1) {
+						String filename = mVariableMap.get(name);
+						int nameExtLen = extensionLength(filename);
+						if (nameExtLen != -1) {
+							text = filename.substring(0, filename.length() - nameExtLen).concat(text.substring(1+name.length()));
+							continue;
+							}
+						}
+					}
+
 				text = text.replace("$".concat(name), mVariableMap.get(name));
+				}
+			}
 		return text;
+		}
+
+	/**
+	 * @param filename
+	 * @return extension length including dot
+	 */
+	private int extensionLength(String filename) {
+		for (int i=1; i<=5; i++)
+			if (filename.length() > i && filename.charAt(filename.length()-i) == '.')
+				return i;
+
+		return -1;
 		}
 
 	private void recordTask(AbstractTask task, Properties configuration) {

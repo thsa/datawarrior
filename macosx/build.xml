@@ -25,6 +25,7 @@ This file contains the script to bundle the DataWarrior application for OSX.
     <property name="icons.dwas" value="dwas.icns"/>
     <property name="icons.dwat" value="dwat.icns"/>
     <property name="icons.sdf" value="sdf.icns"/>
+    <property name="runclasspath" value="../datawarriorlauncher.jar"/>
     <property name="runtime" value="jre/universal-jre/Contents/Home"/>
 
     <path id="runclasspathref">
@@ -48,7 +49,7 @@ This file contains the script to bundle the DataWarrior application for OSX.
         classpath="appbundler-1.0ea.jar"
         classname="com.oracle.appbundler.AppBundlerTask"/>
 
-        <bundleapp 
+        <bundleapp
           classpathref="runclasspathref"
           outputdirectory="${dist}"
           name="${bundle.name}"
@@ -62,6 +63,8 @@ This file contains the script to bundle the DataWarrior application for OSX.
           mainclassname="org.openmolecules.datawarrior.DataWarriorLauncher"
           copyright="2023 Openmolecules.org"
           applicationCategory="public.app-category.productivity">
+
+          <classpath file="${runclasspath}"/>
 
           <!-- Embed complete JRE, for JRE>8 better use jlink syntax with modules -->          
           <runtime dir="${runtime}"/>

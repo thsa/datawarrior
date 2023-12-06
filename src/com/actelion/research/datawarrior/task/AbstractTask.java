@@ -807,23 +807,25 @@ public abstract class AbstractTask implements ProgressController {
 				showErrorMessage("File not found:\n"+filename);
 				return false;
 				}
-			File parent = file.getParentFile();
-			if (parent == null) {
-				showErrorMessage("Parent directory not defined:\n"+filename);
-				return false;
-				}
-			if (!parent.exists()) {
-				showErrorMessage("Directory does not exist:\n"+parent.getPath());
-				return false;
-				}
-			try {
-				// Create and delete a dummy file in order to check file permissions.
-				file.createNewFile();
-				file.delete();
-				}
-			catch(IOException e) {
-				showErrorMessage("No privileges to write in directory.");
-				return false;
+			if (!filename.startsWith("$"+DEMacro.VARIABLE_NAME_FILENAME)) {    // in case it is in a macro loop using
+				File parent = file.getParentFile();
+				if (parent == null) {
+					showErrorMessage("Parent directory not defined:\n"+filename);
+					return false;
+					}
+				if (!parent.exists()) {
+					showErrorMessage("Directory does not exist:\n"+parent.getPath());
+					return false;
+					}
+				try {
+					// Create and delete a dummy file in order to check file permissions.
+					file.createNewFile();
+					file.delete();
+					}
+				catch(IOException e) {
+					showErrorMessage("No privileges to write in directory.");
+					return false;
+					}
 				}
 			}
 		else {

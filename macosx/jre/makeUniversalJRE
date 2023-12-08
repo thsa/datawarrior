@@ -1,0 +1,109 @@
+#!/bin/sh
+
+#Derived from github.com/CristopherBruno78/Universal_jre/blob/main/create.sh
+
+#This script creates a universal binary for MacOS from Liberica JREs for ARM (Apple Silicon) and Intel architectures
+#The resulting package is a JRE only
+
+JRE_ARM=bellsoft-jre21.0.1+12-macos-aarch64-full
+JRE_AMD=bellsoft-jre21.0.1+12-macos-amd64-full
+TARGET=universal.jre
+
+UNI_DIR=$TARGET/Contents/Home
+ARM_DIR=$JRE_ARM/Contents/Home
+INTEL_DIR=$JRE_AMD/Contents/Home
+
+#clean
+rm -rf $TARGET
+rm -rf $JRE_ARM
+rm -rf $JRE_AMD
+
+# Extract proper folder structure for ARM JRE from pkg
+pkgutil --expand $JRE_ARM.pkg tmp
+mkdir $JRE_ARM
+cd $JRE_ARM
+cat ../tmp/component.pkg/Payload | gunzip -dc | cpio -i
+cd ..
+rm -rf tmp
+
+# Extract proper folder structure for Intel JRE from pkg
+pkgutil --expand $JRE_AMD.pkg tmp
+mkdir $JRE_AMD
+cd $JRE_AMD
+cat ../tmp/component.pkg/Payload | gunzip -dc | cpio -i
+cd ..
+rm -rf tmp
+
+#create the folders
+mkdir $TARGET
+mkdir $TARGET/Contents
+mkdir $TARGET/Contents/MacOS
+mkdir $UNI_DIR
+
+#copy Info.plist
+cp $ARM_DIR/../Info.plist $UNI_DIR/../
+
+COPY() {
+	cp -r $ARM_DIR/$1 $UNI_DIR/$1
+}
+
+LIPO() {
+	lipo -create -output $UNI_DIR/$1 $ARM_DIR/$1 $INTEL_DIR/$1
+}
+
+#copy over these folders
+COPY_FOLDERS=(conf legal LICENSE readme.txt release)
+
+# shellcheck disable=SC2068
+for FOLDER in ${COPY_FOLDERS[@]};
+do
+	COPY "$FOLDER"
+done
+
+#lipo the needed binaries in the bin folder
+mkdir $UNI_DIR/bin
+BIN_FILES=(java jfr jrunscript jwebserver keytool rmiregistry)
+# shellcheck disable=SC2068
+for FILE in ${BIN_FILES[@]};
+do
+    LIPO "bin/$FILE"
+done
+
+#lib folder
+mkdir $UNI_DIR/lib
+
+#copy the non-binary files
+shopt -s extglob
+for FILE_PATH in $ARM_DIR/lib/!(*.dylib)
+do
+	FILE="$(basename -- $FILE_PATH)"
+    COPY "lib/$FILE"
+done
+
+#lipo the binaries in the lib folder
+LIPO "lib/jspawnhelper"
+
+for FILE_PATH in $ARM_DIR/lib/*.dylib
+do
+	FILE="$(basename -- $FILE_PATH)"
+    LIPO "lib/$FILE"
+done
+
+for FILE_PATH in $ARM_DIR/lib/client/*.dylib
+do
+	FILE="$(basename -- $FILE_PATH)"
+    LIPO "lib/client/$FILE"
+done
+
+for FILE_PATH in $ARM_DIR/lib/server/*.dylib
+do
+	FILE="$(basename -- $FILE_PATH)"
+    LIPO "lib/server/$FILE"
+done
+
+rm -rf $JRE_AMD
+rm -rf $JRE_ARM
+
+cd $TARGET/Contents/MacOS
+ln -s ../Home/lib/libjli.dylib .
+cd ../../..

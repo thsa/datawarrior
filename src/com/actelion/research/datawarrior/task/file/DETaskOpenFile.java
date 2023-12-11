@@ -37,6 +37,8 @@ import java.util.Properties;
 public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	public static final String TASK_NAME = "Open File";
 
+	private static final String PROPERTY_DEFAULT_FILTERS = "defaultFilters";
+	private static final String PROPERTY_DEFAULT_VIEWS = "defaultViews";
 	private static final String PROPERTY_ASSUME_CHIRAL = "assumeChiral";
 	private static final String PROPERTY_ADD_MAPPING = "addMapping";
 	private static final String PROPERTY_CSV_DELIMITER = "csvDelimiter";
@@ -46,7 +48,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 
 	private DataWarrior mApplication;
 	private JComboBox mComboBoxCSVDelimiter;
-    private JCheckBox mCheckBoxAssumeChiralTrue,mCheckBoxAddMapping;
+    private JCheckBox mCheckBoxCreateDefaultFilters,mCheckBoxCreateDefaultViews,mCheckBoxAssumeChiralTrue,mCheckBoxAddMapping;
 
     public DETaskOpenFile(DataWarrior application) {
 		super(application, "Open DataWarrior-, SD-, gzipped SD- or Text-File", FileHelper.cFileTypeDataWarriorCompatibleData);
@@ -68,7 +70,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 		JPanel p = new JPanel();
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {TableLayout.PREFERRED, gap, TableLayout.PREFERRED},
-							{TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+							{TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.PREFERRED, gap} };
 		p.setLayout(new TableLayout(size));
 
 		mComboBoxCSVDelimiter = new JComboBox(DELIMITER_TEXT);
@@ -76,13 +78,21 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 		p.add(new JLabel("CSV-File delimiter:", JLabel.RIGHT), "0,0");
 		p.add(mComboBoxCSVDelimiter, "2,0");
 
+		mCheckBoxCreateDefaultFilters = new JCheckBox("Create default filters (if not a dwar file)");
+		mCheckBoxCreateDefaultFilters.setEnabled(false);
+		p.add(mCheckBoxCreateDefaultFilters, "0,2,2,2");
+
+		mCheckBoxCreateDefaultViews = new JCheckBox("Create default views (if not a dwar file)");
+		mCheckBoxCreateDefaultViews.setEnabled(false);
+		p.add(mCheckBoxCreateDefaultViews, "0,3,2,3");
+
 		mCheckBoxAssumeChiralTrue = new JCheckBox("For V2000 SD-files assume molecules to be pure enantiomers");
 		mCheckBoxAssumeChiralTrue.setEnabled(false);
-		p.add(mCheckBoxAssumeChiralTrue, "0,2,2,2");
+		p.add(mCheckBoxAssumeChiralTrue, "0,5,2,5");
 
 		mCheckBoxAddMapping = new JCheckBox("Create atom mapping for unmapped reactions (SMILES, RD-files)");
 		mCheckBoxAddMapping.setEnabled(false);
-		p.add(mCheckBoxAddMapping, "0,4,2,4");
+		p.add(mCheckBoxAddMapping, "0,6,2,6");
 
 		return p;
 		}
@@ -101,6 +111,8 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	private void enableLocalItems() {
 		int fileType = getFilePath() == null ? 0 : FileHelper.getFileType(getFilePath());
 		mComboBoxCSVDelimiter.setEnabled((isChooseFileDuringMacro() || (fileType & FileHelper.cFileTypeTextCommaSeparated) != 0));
+		mCheckBoxCreateDefaultFilters.setEnabled(isChooseFileDuringMacro() || (fileType & (FileHelper.cFileTypeTextAny | FileHelper.cFileTypeSD | FileHelper.cFileTypeRD)) != 0);
+		mCheckBoxCreateDefaultViews.setEnabled(isChooseFileDuringMacro() || (fileType & (FileHelper.cFileTypeTextAny | FileHelper.cFileTypeSD | FileHelper.cFileTypeRD)) != 0);
 		mCheckBoxAssumeChiralTrue.setEnabled(isChooseFileDuringMacro() || (fileType & FileHelper.cFileTypeSD) != 0);
 		mCheckBoxAddMapping.setEnabled(isChooseFileDuringMacro() || (fileType & (FileHelper.cFileTypeRD | FileHelper.cFileTypeTextAny)) != 0);
 		}
@@ -110,6 +122,10 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 		Properties configuration = super.getDialogConfiguration();
 		if (mComboBoxCSVDelimiter.isEnabled())
 			configuration.setProperty(PROPERTY_CSV_DELIMITER, CompoundTableLoader.DELIMITER_STRING[mComboBoxCSVDelimiter.getSelectedIndex()]);
+		if (mCheckBoxCreateDefaultFilters.isEnabled())
+			configuration.setProperty(PROPERTY_DEFAULT_FILTERS, mCheckBoxCreateDefaultFilters.isSelected() ? "true" : "false");
+		if (mCheckBoxCreateDefaultViews.isEnabled())
+			configuration.setProperty(PROPERTY_DEFAULT_VIEWS, mCheckBoxCreateDefaultViews.isSelected() ? "true" : "false");
 		if (mCheckBoxAssumeChiralTrue.isEnabled())
 			configuration.setProperty(PROPERTY_ASSUME_CHIRAL, mCheckBoxAssumeChiralTrue.isSelected() ? "true" : "false");
 		if (mCheckBoxAddMapping.isEnabled())
@@ -121,6 +137,8 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
 		mComboBoxCSVDelimiter.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_CSV_DELIMITER), CompoundTableLoader.DELIMITER_STRING, 0));
+		mCheckBoxCreateDefaultFilters.setSelected(!"false".equals(configuration.getProperty(PROPERTY_DEFAULT_FILTERS)));
+		mCheckBoxCreateDefaultViews.setSelected(!"false".equals(configuration.getProperty(PROPERTY_DEFAULT_VIEWS)));
 		mCheckBoxAssumeChiralTrue.setSelected("true".equals(configuration.getProperty(PROPERTY_ASSUME_CHIRAL)));
 		mCheckBoxAddMapping.setSelected("true".equals(configuration.getProperty(PROPERTY_ADD_MAPPING)));
 		enableLocalItems();
@@ -130,6 +148,8 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	public void setDialogConfigurationToDefault() {
     	super.setDialogConfigurationToDefault();
     	mComboBoxCSVDelimiter.setSelectedIndex(0);
+		mCheckBoxCreateDefaultFilters.setSelected(true);
+		mCheckBoxCreateDefaultViews.setSelected(true);
 		mCheckBoxAssumeChiralTrue.setSelected(false);
 		mCheckBoxAddMapping.setSelected(false);
 		enableLocalItems();
@@ -160,6 +180,8 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 			};
 		loader.addDataDependentPropertyReader(CustomLabelPositionWriter.PROPERTY_NAME, new CustomLabelPositionReader(emptyFrame));
 		loader.addDataDependentPropertyReader(CardViewPositionWriter.PROPERTY_NAME, new CardViewPositionReader(emptyFrame));
+		loader.setDefaultFilters(!"false".equals(configuration.getProperty(PROPERTY_DEFAULT_FILTERS)));
+		loader.setDefaultViews(!"false".equals(configuration.getProperty(PROPERTY_DEFAULT_VIEWS)));
 		loader.setAssumeChiralFlag("true".equals(configuration.getProperty(PROPERTY_ASSUME_CHIRAL)));
 		loader.setAddAtomMapping("true".equals(configuration.getProperty(PROPERTY_ADD_MAPPING)));
 		loader.readFile(file, new DERuntimeProperties(emptyFrame.getMainFrame()), filetype);

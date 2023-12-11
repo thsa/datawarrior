@@ -48,6 +48,7 @@ public class CompoundTableEvent extends EventObject {
 	public static final int cSpecifierNoRuntimeProperties = 1;		// used as specifier if type = cNewTable
 	public static final int cSpecifierDefaultFiltersAndViews = 2;	// used as specifier if type = cNewTable
 	public static final int cSpecifierDefaultFilters = 3;			// used as specifier if type = cNewTable
+	public static final int cSpecifierDefaultViews = 4; 			// used as specifier if type = cNewTable
 
 	private int		mType,mColumn,mSpecifier;
 	private int[]	mMapping;    // maps new to original columns/rows after column/row removal

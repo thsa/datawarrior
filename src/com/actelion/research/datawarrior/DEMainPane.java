@@ -268,7 +268,8 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		if (e.getType() == CompoundTableEvent.cNewTable) {
 			removeAllViews();
 			addTableView("Table", "root");
-			if (e.getSpecifier() == CompoundTableEvent.cSpecifierDefaultFiltersAndViews) {
+			if (e.getSpecifier() == CompoundTableEvent.cSpecifierDefaultViews
+			 || e.getSpecifier() == CompoundTableEvent.cSpecifierDefaultFiltersAndViews) {
 				add2DView("2D View", "Table\tbottom").setDefaultColumns();
 				add3DView("3D View", "2D View\tright").setDefaultColumns();
 				for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {

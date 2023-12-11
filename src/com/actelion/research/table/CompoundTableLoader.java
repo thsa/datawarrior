@@ -140,7 +140,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private volatile Reader		mDataReader;
 	private volatile int		mDataType,mAction;
 	private volatile TreeMap<String,DataDependentPropertyReader> mDataDependentPropertyReaderMap;
-	private int					mOldVersionIDCodeColumn,mOldVersionCoordinateColumn,mOldVersionCoordinate3DColumn;
+	private int					mOldVersionIDCodeColumn,mOldVersionCoordinateColumn,mOldVersionCoordinate3DColumn,
+								mAddDefaultFilters,mAddDefaultViews;
 	private boolean				mWithHeaderLine,mAppendRest,mCoordsMayBe3D,mIsGooglePatentsFile,mIsFiltersOnly,
 								mMolnameFound,mMolnameIsDifferentFromFirstField,mAssumeChiralFlag,mAddAtomMapping;
 	private volatile boolean	mOwnsProgressController;
@@ -175,6 +176,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		mParentFrame = parent;
 		mTableModel = tableModel;
 		mProgressController = pc;
+		mAddDefaultFilters = -1;  // unspecified
+		mAddDefaultViews = -1;  // unspecified
 		}
 
 	public void addDataDependentPropertyReader(String name, DataDependentPropertyReader ddpr) {
@@ -2330,13 +2333,17 @@ try {
 				if (mParentFrame != null)
 					mParentFrame.setTitle(mNewWindowTitle);
 
-				mTableModel.finalizeTable(mRuntimeProperties != null
-						   && mRuntimeProperties.size() != 0 ?
-								   CompoundTableEvent.cSpecifierNoRuntimeProperties
-								 : mIsGooglePatentsFile || mIsFiltersOnly || rowCount > 10000 ?
-								   CompoundTableEvent.cSpecifierDefaultFilters
-								 : CompoundTableEvent.cSpecifierDefaultFiltersAndViews,
-										  mProgressController);
+				int specifier = CompoundTableEvent.cSpecifierNoRuntimeProperties;   // if we have read them from the file
+				if (mRuntimeProperties == null || mRuntimeProperties.size() == 0) {
+					boolean addDefaultFilters = (mAddDefaultFilters != 0);
+					boolean addDefaultViews = (mAddDefaultViews == 1) ? true
+							: (mAddDefaultViews == 0) ? false
+							: !mIsGooglePatentsFile && !mIsFiltersOnly && rowCount<=10000;
+					specifier = addDefaultFilters && addDefaultViews ? CompoundTableEvent.cSpecifierDefaultFiltersAndViews
+							  : addDefaultFilters ? CompoundTableEvent.cSpecifierDefaultFilters
+							  : addDefaultViews ? CompoundTableEvent.cSpecifierDefaultViews : CompoundTableEvent.cSpecifierNoRuntimeProperties;
+					}
+				mTableModel.finalizeTable(specifier, mProgressController);
 
 				if (mDataType == FileHelper.cFileTypeDataWarrior)
 					sIdentifierHandler.setIdentifierAliases(mTableModel);
@@ -2908,6 +2915,14 @@ try {
 					}
 				}
 			}
+		}
+
+	public void setDefaultFilters(boolean b) {
+		mAddDefaultFilters = b ? 1 : 0;
+		}
+
+	public void setDefaultViews(boolean b) {
+		mAddDefaultViews = b ? 1 : 0;
 		}
 
 	public boolean isAssumeChiralFlag() {

@@ -25,11 +25,11 @@ This file contains the script to bundle the DataWarrior application for OSX.
     <property name="icons.dwas" value="dwas.icns"/>
     <property name="icons.dwat" value="dwat.icns"/>
     <property name="icons.sdf" value="sdf.icns"/>
-    <property name="runclasspath" value="../datawarriorlauncher.jar"/>
-    <property name="runtime" value="jre/universal-jre/Contents/Home"/>
+<!--    <property name="runclasspath" value="../datawarriorlauncher.jar"/>   -->
+    <property name="runtime" value="jre/universal.jre/Contents/Home"/>
 
     <path id="runclasspathref">
-        <fileset dir=".." includes="datawarriorlauncher.jar" />
+        <fileset dir="/Users/thomas/dev/datawarrior" includes="datawarriorlauncher.jar" />
     </path>
 
     <!-- Bundle target -->
@@ -60,7 +60,7 @@ This file contains the script to bundle the DataWarrior application for OSX.
           shortversion="${version.public}"
           version="${version.internal}"
           icon="${icons.path}/${bundle.icon}"
-          mainclassname="org.openmolecules.datawarrior.DataWarriorLauncher"
+          mainclassname="org.openmolecules.datawarrior.launcher.DataWarriorLauncher"
           copyright="2023 Openmolecules.org"
           applicationCategory="public.app-category.productivity">
 
@@ -68,11 +68,6 @@ This file contains the script to bundle the DataWarrior application for OSX.
 
           <!-- Embed complete JRE, for JRE>8 better use jlink syntax with modules -->          
           <runtime dir="${runtime}"/>
-
-<!-- doesn't seem to be needed anymore, we want a universal binary!
-          <arch name="x86_64"/>
-          <arch name="i386"/>
--->
 
           <bundledocument extensions="txt,csv"
             name="Tabular Text Data"

@@ -3,6 +3,7 @@ cp dw_master.dmg dw_uncompressed.dmg
 mkdir -p dmg
 hdiutil attach dw_uncompressed.dmg -noautoopen -quiet -mountpoint dmg
 mkdir dmg/DataWarrior.app/Contents/Java
+mkdir dmg/DataWarrior.app/Contents/Java/update
 mkdir dmg/DataWarrior.app/Contents/PlugIns
 mkdir dmg/DataWarrior.app/reference
 mkdir dmg/DataWarrior.app/example
@@ -15,7 +16,8 @@ cp ./dist/DataWarrior.app/Contents/MacOS/* dmg/DataWarrior.app/Contents/MacOS/
 cp -r ./dist/DataWarrior.app/Contents/PlugIns/* dmg/DataWarrior.app/Contents/PlugIns/
 cp -r ./dist/DataWarrior.app/Contents/Resources/* dmg/DataWarrior.app/Contents/Resources/
 cp ../loading.png dmg/DataWarrior.app/Contents/Resources/
-cp ../../../../local/datawarrior/lib/*.jar dmg/DataWarrior.app/Contents/Java/
+cp ../datawarriorlauncher.jar dmg/DataWarrior.app/Contents/Java/
+cp ../datawarrior_all.jar dmg/DataWarrior.app/Contents/Java/update/
 cp ../external_data/example/* dmg/DataWarrior.app/example/
 cp ../external_data/reference/* dmg/DataWarrior.app/reference/
 cp ../external_data/macro/* dmg/DataWarrior.app/macro/

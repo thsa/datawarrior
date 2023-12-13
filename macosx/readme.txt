@@ -1,8 +1,10 @@
 This describes the complete process to make DataWarrior.dmg with embedded universal JRE21 for OSX.
 
 NOTE: In order to natively support Intel and Apple Silicon based architectures we need to use a recent appbundler.
-      Unfortunately, it seems that binary launchers created by recent appbundler crash on MacOS Sonoma,
-      when used with aa JRE 1.8 (both x86_64 or aarch64; tested with liberica 1.8-392 and Zulu 1.8-392):
+      Unfortunately, it seems that binary launchers created by a recent appbundler crash on MacOS Sonoma
+      when using JVM option "apple.laf.useScreenMenuBar=true", no matter whether the option is defined in
+      Info.plist or whether it is defined in the main() method of the launching class
+      (tested with liberica 1.8-392 and Zulu 1.8-392):
       "References to Carbon menus are disallowed with AppKit menu system (see rdar://101002625).
        Use instances of NSMenu and NSMenuItem directly instead."
 
@@ -13,7 +15,7 @@ NOTE: We use the latest theinfinitekind/appbundler (GitHub) to build the DataWar
             > sudo mv apache-ant-1.10.14 /usr/local/
             > cd /usr/local
             > sudo ln -s apache-ant-1.10.14 ant
-          add these lines to /etc/zshrc:
+          add these lines to ~/.zshrc
             > export ANT_HOME=/usr/local/ant
             > export PATH=${PATH}:${ANT_HOME}/bin
         - Download the project from github.com

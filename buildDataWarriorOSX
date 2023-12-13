@@ -2,16 +2,16 @@ mkdir ./bin
 cp -r ./src/html ./bin/
 cp -r ./src/images ./bin/
 echo "Compiling DataWarrior source code..."
-javac -nowarn -d ./bin -sourcepath ./src:./stubs -classpath "./lib/*":./lib/osx/AppleJavaExtensions.jar src/com/actelion/research/datawarrior/DataWarriorOSX.java
+javac --add-exports java.desktop/com.apple.eawt=ALL-UNNAMED -nowarn -d ./bin -sourcepath ./src:./stubs -classpath "./lib/*" src/com/actelion/research/datawarrior/DataWarriorLinux.java src/com/actelion/research/datawarrior/DataWarriorOSX.java
 rm -r bin/chemaxon
 cd bin
 for JAR in ../lib/*.jar ; do (echo "Unpacking $JAR"; jar -xf "$JAR"); done
-jar -xf ../lib/osx/AppleJavaExtensions.jar
+# jar -xf ../lib/osx/AppleJavaExtensions.jar
 rm -f META-INF/*.SF
 rm -f META-INF/*.RSA
 rm -f META-INF/*.DSA
 cd ..
 echo "Building fat JAR file..."
-jar -cfm datawarrior_all.jar manifest_additionsOSX.txt -C ./bin .
+jar -cfm datawarrior_osx_all.jar manifest_additionsOSX.txt -C ./bin .
 rm -r bin
 echo "Done."

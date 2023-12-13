@@ -16,10 +16,10 @@ import org.openmolecules.fx.surface.SurfaceMesh;
 import org.openmolecules.fx.viewer3d.*;
 import org.openmolecules.mesh.MoleculeSurfaceAlgorithm;
 import org.openmolecules.render.MoleculeArchitect;
-import sun.awt.AppContext;
-import sun.awt.SunToolkit;
+//import sun.awt.AppContext;
+//import sun.awt.SunToolkit;
 
-import java.awt.event.MouseEvent;
+//import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.concurrent.CountDownLatch;
@@ -94,7 +94,7 @@ public class JFXConformerPanel extends JFXPanel {
 			mScene.setPopupMenuController(controller);
 	}
 
-	// this fixes an issue, where the JFXPanel, if not in focus does not properly handle popup menus
+	/* this fixes an issue, where the JFXPanel, if not in focus does not properly handle popup menus
 	// This is supposed to be fixed in Java9. Thus remove this when moving to Java9 or later. TODO
 	@Override
 	protected void processMouseEvent(MouseEvent e) {
@@ -110,7 +110,7 @@ public class JFXConformerPanel extends JFXPanel {
 			}
 		} catch (Exception ex) {}
 		super.processMouseEvent(e);
-	}
+	}	*/
 
 	/**
 	 * Removes all except the reference molecule from the scene

@@ -28,7 +28,6 @@ import info.clearthought.layout.TableLayout;
 import org.openmolecules.comm.ServerErrorException;
 
 import javax.swing.*;
-import javax.xml.bind.DatatypeConverter;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
@@ -81,6 +80,8 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 	private static final String PROPERTY_NEWS_IMAGE = "news_image_";
 	private static final String PROPERTY_NEWS_URL = "news_url_";
 	private static final String PROPERTY_NEWS_TYPE = "news_type_";
+
+	private static final char[] DIGITS = { '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 
 	private static final long serialVersionUID = 20230822;
 //	private static final String BROKEN_FILE_NAME = "broken_datawarrior.jar";
@@ -331,12 +332,21 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 		try {
 			MessageDigest md = MessageDigest.getInstance("MD5");
 			md.update(Files.readAllBytes(Paths.get(path)));
-			return DatatypeConverter.printHexBinary(md.digest());
+			return encodeHex(md.digest());
 			}
 		catch (Exception e) {
 			e.printStackTrace();
 			return "";
 			}
+		}
+
+	private static String encodeHex(final byte[] data) {
+		StringBuilder sb = new StringBuilder();
+		for (byte b:data) {
+			sb.append(DIGITS[(0xF0 & b) >>> 4]);
+			sb.append(DIGITS[0x0F & b]);
+			}
+		return sb.toString();
 		}
 
 	private static String getPostInstallInfo(final String url) {

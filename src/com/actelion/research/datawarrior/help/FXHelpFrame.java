@@ -20,7 +20,7 @@ package com.actelion.research.datawarrior.help;
 
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.hidpi.HiDPIIconButton;
-import com.sun.webkit.WebPage;
+//import com.sun.webkit.WebPage;
 import info.clearthought.layout.TableLayout;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -169,8 +169,10 @@ public class FXHelpFrame extends JFrame {
 				Field pageField = sEngine.getClass().getDeclaredField("page");
 				pageField.setAccessible(true);
 
+/* TODO find other solution
 				WebPage page = (com.sun.webkit.WebPage)pageField.get(sEngine);
 				page.find(query, forward, true, false);
+ */
 				}
 			catch (Exception e) {}
 			});

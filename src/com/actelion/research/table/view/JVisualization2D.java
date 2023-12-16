@@ -282,6 +282,7 @@ public class JVisualization2D extends JVisualization {
 		GraphicsConfiguration gc = ge.getDefaultScreenDevice().getDefaultConfiguration();
 
 		float retinaFactor = HiDPIHelper.getRetinaScaleFactor();
+
 		if (mOffImage == null
 		 || mOffImage.getWidth(null) != width*retinaFactor
 		 || mOffImage.getHeight(null) != height*retinaFactor) {
@@ -363,6 +364,7 @@ public class JVisualization2D extends JVisualization {
 			mOffImageValid = true;
 			}
 
+System.out.println("JVis2D paintComponent() w:"+width+" h:"+height+" oiw:"+mOffImage.getWidth()+" oih:"+mOffImage.getHeight());
 		g.drawImage(mOffImage, 0, 0, width, height, this);
 
 		if (mActivePoint != null && isVisible(mActivePoint))

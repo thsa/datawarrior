@@ -7,6 +7,7 @@ NOTE: In order to natively support Intel and Apple Silicon based architectures w
       (tested with liberica 1.8-392 and Zulu 1.8-392):
       "References to Carbon menus are disallowed with AppKit menu system (see rdar://101002625).
        Use instances of NSMenu and NSMenuItem directly instead."
+       THIS BUG WAS FIXED IN Sonoma 14.2!!!
 
 NOTE: We use the latest theinfinitekind/appbundler (GitHub) to build the DataWarrior.app that goes into the dmg.
       The needed compiled appbundler-1.0ea.jar is part of the project, but if you want to build it yourself,
@@ -36,6 +37,22 @@ NOTE: We use the latest theinfinitekind/appbundler (GitHub) to build the DataWar
 
 3. build this project to create the DataWarrior.app without sample/reference/macro files in macosx/dist
    > ant
+
+3b. EXPERIMENTAL: Add the following to the created Info.plist to define custom URI handling
+
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleURLName</key>
+        <string>org.openmolecules.datawarrior</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>datawarrior</string>
+        </array>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+    </dict>
+</array>
 
 4. create dw_master.dmg, if not done before or if JRE was updated (see howToCreateMasterDMG.txt)
 

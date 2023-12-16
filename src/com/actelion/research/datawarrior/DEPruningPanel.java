@@ -104,7 +104,7 @@ public class DEPruningPanel extends JScrollPane
 
 				    // draw normal divider in background color or a stronger one if drop possible
 				    if (c == mDropIndex || (c>=1 && c<mContent.getComponentCount())) {
-					    g.setColor(c == mDropIndex ? HiDPIHelper.getThemeColor(0) : dividerColor);
+					    g.setColor(c == mDropIndex ? new Color(HiDPIHelper.getThemeSpotRGBs()[0]) : dividerColor);
 					    int pos = (GAP - lines) / 2;
 					    int ex = (c == mDropIndex) ? 1 : 0;
 					    for (int i = pos - ex; i<pos + lines + ex; i++)

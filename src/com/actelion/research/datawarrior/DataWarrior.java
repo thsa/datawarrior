@@ -70,30 +70,53 @@ public abstract class DataWarrior implements WindowFocusListener {
 	private boolean mIsCapkaAvailable;
 
 	public enum LookAndFeel {
-		GRAPHITE("Graphite", "org.pushingpixels.substance.api.skin.SubstanceGraphiteAquaLookAndFeel", new Color(0x3838C0), new Color(0x252560)),
-		GRAY("Gray", "org.pushingpixels.substance.api.skin.SubstanceOfficeBlack2007LookAndFeel", new Color(0xAEDBFF), new Color(0x0060FF)),
-		CREME("Creme Coffee", "org.pushingpixels.substance.api.skin.SubstanceCremeCoffeeLookAndFeel", new Color(0xDEC59D), new Color(0xAA784F)),
-		MODERATE("Moderate", "org.pushingpixels.substance.api.skin.SubstanceModerateLookAndFeel", new Color(0x6D96B3), new Color(0x1E4C6F)),
-		NEBULA("Nebula", "org.pushingpixels.substance.api.skin.SubstanceNebulaLookAndFeel", new Color(0xA7BBCD), new Color(0x55585E)),
-		SAHARA("Sahara", "org.pushingpixels.substance.api.skin.SubstanceSaharaLookAndFeel", new Color(0xA6B473), new Color(0x6E7841)),
-	//	CLASSIC("Classic", "org.jvnet.substance.SubstanceLookAndFeel"),	causes long delays when opening large files with many selected rows, because it draws the background of even invisible cells
-	//	VAQUA("VAqua", "org.violetlib.aqua.AquaLookAndFeel"),
-		AQUA("Aqua", "com.apple.laf.AquaLookAndFeel", new Color(0xAEDBFF), new Color(0x0060FF));
+		NIGHT("Night", "org.pushingpixels.radiance.theming.api.skin.RadianceNightShadeLookAndFeel", true, 0x592090, 0x2e0951, 0xbc8beb),
+		GRAPHITE("Graphite", "org.pushingpixels.radiance.theming.api.skin.RadianceGraphiteLookAndFeel", true, 0x3838C0, 0x252560, 0xa6a6fa),
+		GRAY("Gray", "org.pushingpixels.radiance.theming.api.skin.RadianceMistSilverLookAndFeel", false, 0xAEDBFF, 0x0060FF, 0x003bdb),
+		CREME("Creme Coffee", "org.pushingpixels.radiance.theming.api.skin.RadianceCremeCoffeeLookAndFeel", false, 0xDEC59D, 0xAA784F, 0xb9590a),
+		MODERATE("Moderate", "org.pushingpixels.radiance.theming.api.skin.RadianceModerateLookAndFeel", false, 0x6D96B3, 0x1E4C6F, 0x126194),
+		CERULEAN("Cerulean", "org.pushingpixels.radiance.theming.api.skin.RadianceCeruleanLookAndFeel", false, 0xAEDBFF, 0x0060FF, 0xa372d2),
+		NEBULA("Nebula", "org.pushingpixels.radiance.theming.api.skin.RadianceNebulaLookAndFeel", false, 0xA7BBCD, 0x55585E, 0x48729c),
+		SAHARA("Sahara", "org.pushingpixels.radiance.theming.api.skin.RadianceSaharaLookAndFeel", false, 0xA6B473, 0x6E7841, 0x69801a),
+//		VAQUA("VAqua", "org.violetlib.aqua.AquaLookAndFeel", false, 0xAEDBFF, 0x0060FF),
+		AQUA("Aqua", "com.apple.laf.AquaLookAndFeel", false, 0xAEDBFF, 0x0060FF, 0xa372d2);
 
 		private final String displayName;
 		private String className;
-		private Color c1,c2;
+		private boolean isDark;
+		private int rgb1,rgb2,rgb3;
 
-		LookAndFeel(String displayName, String className, Color c1, Color c2) {
+		/**
+		 *
+		 * @param displayName
+		 * @param className
+		 * @param isDark
+		 * @param rgb1 lighter header gradient at top
+		 * @param rgb2 darker header gradient at bottom
+		 * @param rgb3 icon spot color
+		 */
+		LookAndFeel(String displayName, String className, boolean isDark, int rgb1, int rgb2, int rgb3) {
 			this.displayName = displayName;
 			this.className = className;
-			this.c1 = c1;
-			this.c2 = c2;
+			this.isDark = isDark;
+			this.rgb1 = rgb1;
+			this.rgb2 = rgb2;
+			this.rgb3 = rgb3;
 			}
+
 		public String displayName() { return displayName; }
 		public String className() { return className; }
-		public Color getColor1() { return c1; }
-		public Color getColor2() { return c2; }
+		public int getRGB1() {
+			if (System.getProperty("development") != null)
+				return isDark ? 0xC0C000 : 0xFFFFCD;
+			return rgb1;
+			}
+
+		public int getRGB2() {
+			if (System.getProperty("development") != null)
+				return isDark ? 0x404000 : 0xAD9C00;
+			return rgb2;
+			}
 		}
 
 	private static DataWarrior	sApplication;
@@ -390,13 +413,15 @@ public abstract class DataWarrior implements WindowFocusListener {
 
 	/**
 	 * @param isInteractive
+	 * @return true, if all windows could be closed
 	 */
-	public void closeApplication(boolean isInteractive) {
+	public boolean closeApplication(boolean isInteractive) {
 		while (mFrameList.size() != 0) {
 			DEFrame frame = getActiveFrame();
 			if (disposeFrameSafely(frame, isInteractive) == 0)
-				return;
+				return false;
 			}
+		return true;
 		}
 
 	private void exit() {
@@ -550,9 +575,26 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 * @return false, if the look&feel could not be found or activated
 	 */
 	public boolean setLookAndFeel(LookAndFeel laf) {
+		final int[] DEV_SPOT_COLORS_DARK_LAF = { 0xE0E000, 0xE0E0E0 };
+		final int[] DEV_SPOT_COLORS_BRIGHT_LAF = { 0x707000, 0x000000 };
 		try {
 			UIManager.setLookAndFeel(laf.className);
-			HeaderPaintHelper.setSpotColors(laf.getColor1(), laf.getColor2());
+			int[] rgb = new int[2];
+			rgb[0] = laf.getRGB1();
+			rgb[1] = laf.getRGB2();
+			HeaderPaintHelper.setThemeColors(rgb);
+			if (System.getProperty("development") != null) {
+				if (laf.isDark)
+					HiDPIHelper.setIconSpotColors(DEV_SPOT_COLORS_DARK_LAF);
+				else
+					HiDPIHelper.setIconSpotColors(DEV_SPOT_COLORS_BRIGHT_LAF);
+				}
+			else {
+				int[] spotColorRGB = new int[2];
+				spotColorRGB[0] = laf.rgb3;
+				spotColorRGB[1] = laf.isDark ? DEV_SPOT_COLORS_DARK_LAF[1] : DEV_SPOT_COLORS_BRIGHT_LAF[1];
+				HiDPIHelper.setIconSpotColors(spotColorRGB);
+				}
 			makeTooltipsTranslucent();
 			return true;
 			}

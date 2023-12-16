@@ -24,7 +24,6 @@ import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.hidpi.HiDPIIconButton;
 import com.actelion.research.gui.hidpi.ScaledEditorKit;
-import com.sun.webkit.WebPage;
 import info.clearthought.layout.TableLayout;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -333,8 +332,10 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 				Field pageField = mEngine.getClass().getDeclaredField("page");
 				pageField.setAccessible(true);
 
-				WebPage page = (com.sun.webkit.WebPage)pageField.get(mEngine);
+/* TODO find other solution
+				WebPage page = (WebPage)pageField.get(mEngine);
 				page.find(query, forward, true, false);
+ */
 				}
 			catch (Exception e) {}
 			});

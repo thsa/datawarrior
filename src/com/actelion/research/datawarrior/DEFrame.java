@@ -38,7 +38,7 @@ import java.util.Properties;
 
 public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTableListener,CompoundTableListListener,RuntimePropertyListener {
 	private static final long serialVersionUID = 0x20070227;
-	private static final String DEFAULT_TITLE = "OSIRIS DataWarrior";
+	private static final String DEFAULT_TITLE = "DataWarrior";
 
 	private StandardMenuBar	mMenuBar;
 	private DEParentPane	mParentPane;
@@ -76,6 +76,7 @@ public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTa
 
 			mMenuBar = datawarrior.createMenuBar(this);
 			setJMenuBar(mMenuBar);
+
 			mIsDirty = false;	// an empty document is not dirty
 			}
 		catch(Exception e) {

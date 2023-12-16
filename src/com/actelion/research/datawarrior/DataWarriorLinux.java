@@ -19,8 +19,9 @@
 package com.actelion.research.datawarrior;
 
 import com.actelion.research.gui.LookAndFeelHelper;
-import org.pushingpixels.substance.api.fonts.FontPolicy;
-import org.pushingpixels.substance.api.fonts.FontSet;
+import org.pushingpixels.radiance.common.api.font.FontPolicy;
+import org.pushingpixels.radiance.common.api.font.FontSet;
+import org.pushingpixels.radiance.theming.api.RadianceThemingCortex;
 
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
@@ -29,7 +30,7 @@ import java.util.ArrayList;
 import static com.actelion.research.datawarrior.DataWarrior.LookAndFeel.*;
 
 public class DataWarriorLinux extends DataWarrior {
-	private static final LookAndFeel[] LOOK_AND_FEELS = { GRAPHITE, GRAY, MODERATE, CREME, SAHARA, NEBULA };
+	private static final LookAndFeel[] LOOK_AND_FEELS = { NIGHT, GRAPHITE, GRAY, MODERATE, CREME, SAHARA, NEBULA };
 
 	private static final LookAndFeel DEFAULT_LAF = GRAPHITE;
 
@@ -127,29 +128,13 @@ public class DataWarriorLinux extends DataWarrior {
 	private void setFontSetNewSubstance(final float factor) {
 		// reset the base font policy to null - this
 		// restores the original font policy (default size).
-		org.pushingpixels.substance.api.SubstanceLookAndFeel.setFontPolicy(null);
+		RadianceThemingCortex.GlobalScope.setFontPolicy(null);
 
 		// reduce the default font size a little
-		final FontSet substanceCoreFontSet = org.pushingpixels.substance.api.SubstanceLookAndFeel.getFontPolicy().getFontSet("Substance", null);
-		FontPolicy newFontPolicy = new FontPolicy() {
-			public FontSet getFontSet(String lafName, UIDefaults table) {
-				return new NewSubstanceFontSet(substanceCoreFontSet, factor);
-				}
-			};
-		org.pushingpixels.substance.api.SubstanceLookAndFeel.setFontPolicy(newFontPolicy);
-
-// Use the following for JRE 18 and Radiance port!!!
-//		RadianceThemingCortex.GlobalScope.setFontPolicy(null);
-
-		// reduce the default font size a little
-//		final FontSet substanceCoreFontSet = RadianceThemingCortex.GlobalScope.getFontPolicy().getFontSet();
-//		FontPolicy newFontPolicy = new FontPolicy() {
-//			public FontSet getFontSet() {
-//				return new NewSubstanceFontSet(substanceCoreFontSet, factor);
-//			}
-//		};
-//		RadianceThemingCortex.GlobalScope.setFontPolicy(newFontPolicy);
-	}
+		final FontSet substanceCoreFontSet = RadianceThemingCortex.GlobalScope.getFontPolicy().getFontSet();
+		FontPolicy newFontPolicy = () -> new NewSubstanceFontSet(substanceCoreFontSet, factor);
+		RadianceThemingCortex.GlobalScope.setFontPolicy(newFontPolicy);
+		}
 
 	@Override
 	public boolean setLookAndFeel(LookAndFeel laf) {

@@ -38,7 +38,7 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
 	private int mMillis;
 
     public DEAboutDialog(DEFrame owner) {
-		super(owner, "About OSIRIS DataWarrior", true);
+		super(owner, "About DataWarrior", true);
 
 	    setUndecorated(true);
 		getContentPane().add(createImagePanel());
@@ -51,7 +51,7 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
 		}
 
     public DEAboutDialog(DEFrame owner, int millis) {
-		super(owner, "About OSIRIS DataWarrior", true);
+		super(owner, "About DataWarrior", true);
 
 	    setUndecorated(true);
 		getContentPane().add(createImagePanel());

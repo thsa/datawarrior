@@ -32,7 +32,7 @@ import com.actelion.research.table.CompoundTableLoader;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.util.BrowserControl;
 import info.clearthought.layout.TableLayout;
-import org.pushingpixels.substance.internal.utils.border.SubstanceTextComponentBorder;
+import org.pushingpixels.radiance.theming.internal.utils.border.RadianceTextComponentBorder;
 
 import javax.swing.*;
 import java.awt.*;
@@ -145,7 +145,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 		mStructureView = new JEditableStructureView(mol);
 		mStructureView.setMinimumSize(new Dimension(2*scaled100, scaled100));
 		mStructureView.setPreferredSize(new Dimension(2*scaled100, scaled100));
-		mStructureView.setBorder(new SubstanceTextComponentBorder(new Insets(2,2,2,2)));
+		mStructureView.setBorder(new RadianceTextComponentBorder(new Insets(2,2,2,2)));
 //		mStructureView.setOpaqueBackground(true);
 		mStructureView.setClipboardHandler(new ClipboardHandler());
 		content.add(mStructureView, "3,1,4,5");

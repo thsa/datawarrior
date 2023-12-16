@@ -11,8 +11,8 @@ www.openmolecules.org/datawarrior.
 *DataWarrior* is built on the open-source projects *OpenChemLib* and *FXMolViewer*. 
 
 ### Dependencies
-Apart from a working JDK8 with JavaFX, *DataWarrior* needs various free-to-use/open-source dependencies.
-All required dependency files are provided as part of this project in the ./lib folder.
+Apart from a working JDK11 or higher that includes JavaFX, *DataWarrior* needs various free-to-use/open-source
+dependencies. All required dependency files are provided as part of this project in the ./lib folder.
 The most important ones are:
 * OpenChemLib: Cheminformatics base functionality to handle molecules and reactions
 * FXMolViewer: 3D-molecule & protein visualization, editing, interaction using JavaFX
@@ -55,7 +55,7 @@ Contact the author under the e-mail shown on www.openmolecules.org
 
 
 ### License
-*DataWarrior*. Copyright (C) 2021 Idorsia Pharmaceuticals Ltd.
+*DataWarrior*. Copyright (C) 2023 Thomas Sander & Idorsia Pharmaceuticals Ltd.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

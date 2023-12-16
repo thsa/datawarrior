@@ -85,7 +85,7 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 	@Override
 	public void paintComponent(Graphics g) {
 		// Substance Graphite LaF does not consider the defined background
-		if (LookAndFeelHelper.isNewSubstance()) {
+		if (LookAndFeelHelper.isNewSubstance() || LookAndFeelHelper.isRadiance()) {
 			Rectangle r = new Rectangle(new java.awt.Point(0,0), getSize());
 			g.setColor(getBackground());
 			((Graphics2D) g).fill(r);

@@ -121,7 +121,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 			@Override public void paintComponent(Graphics g) {
 				super.paintComponent(g);
 				Dimension size = getSize();
-				if (size.width > 0 && size.height > 0 & LookAndFeelHelper.isNewSubstance()) {
+				if (size.width > 0 && size.height > 0 & (LookAndFeelHelper.isNewSubstance() || LookAndFeelHelper.isRadiance())) {
 					g.setColor(ColorHelper.darker(getBackground(), 0.9f));
 					g.fillRect(0, 0, size.width, size.height);
 					}

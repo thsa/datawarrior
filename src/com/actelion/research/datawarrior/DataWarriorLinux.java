@@ -19,6 +19,7 @@
 package com.actelion.research.datawarrior;
 
 import com.actelion.research.gui.LookAndFeelHelper;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import org.pushingpixels.radiance.common.api.font.FontPolicy;
 import org.pushingpixels.radiance.common.api.font.FontSet;
 import org.pushingpixels.radiance.theming.api.RadianceThemingCortex;
@@ -125,7 +126,7 @@ public class DataWarriorLinux extends DataWarrior {
 		return DEFAULT_LAF;
 		}
 
-	private void setFontSetNewSubstance(final float factor) {
+	private void setNewRadianceFontSet(final float factor) {
 		// reset the base font policy to null - this
 		// restores the original font policy (default size).
 		RadianceThemingCortex.GlobalScope.setFontPolicy(null);
@@ -138,17 +139,12 @@ public class DataWarriorLinux extends DataWarrior {
 
 	@Override
 	public boolean setLookAndFeel(LookAndFeel laf) {
-		float fontFactor = 1f;
-		String dpiFactor = System.getProperty("dpifactor");
-		if (dpiFactor != null) {
-			try { fontFactor = Float.parseFloat(dpiFactor); } catch (NumberFormatException nfe) {}
-			System.getProperties().remove("dpifactor");  // prevent HiDPIHelper from applying factor a second time
-			}
-
 		if (super.setLookAndFeel(laf)) {
+			float fontFactor = HiDPIHelper.getUIScaleFactor();
 			if (fontFactor != 1f) {
-				if (LookAndFeelHelper.isNewSubstance()) {
-					setFontSetNewSubstance(fontFactor);
+				if (LookAndFeelHelper.isNewSubstance()
+				 || LookAndFeelHelper.isRadiance()) {
+					setNewRadianceFontSet(fontFactor);
 					}
 				}
 			return true;

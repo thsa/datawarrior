@@ -73,13 +73,13 @@ public abstract class DataWarrior implements WindowFocusListener {
 		NIGHT("Night", "org.pushingpixels.radiance.theming.api.skin.RadianceNightShadeLookAndFeel", true, 0x592090, 0x2e0951, 0xbc8beb),
 		GRAPHITE("Graphite", "org.pushingpixels.radiance.theming.api.skin.RadianceGraphiteLookAndFeel", true, 0x3838C0, 0x252560, 0xa6a6fa),
 		GRAY("Gray", "org.pushingpixels.radiance.theming.api.skin.RadianceMistSilverLookAndFeel", false, 0xAEDBFF, 0x0060FF, 0x003bdb),
-		CREME("Creme Coffee", "org.pushingpixels.radiance.theming.api.skin.RadianceCremeCoffeeLookAndFeel", false, 0xDEC59D, 0xAA784F, 0xb9590a),
+		CREME("Creme Coffee", "org.pushingpixels.radiance.theming.api.skin.RadianceCremeCoffeeLookAndFeel", false, 0xDEC59D, 0xAA784F, 0x754a06),
 		MODERATE("Moderate", "org.pushingpixels.radiance.theming.api.skin.RadianceModerateLookAndFeel", false, 0x6D96B3, 0x1E4C6F, 0x126194),
-		CERULEAN("Cerulean", "org.pushingpixels.radiance.theming.api.skin.RadianceCeruleanLookAndFeel", false, 0xAEDBFF, 0x0060FF, 0xa372d2),
 		NEBULA("Nebula", "org.pushingpixels.radiance.theming.api.skin.RadianceNebulaLookAndFeel", false, 0xA7BBCD, 0x55585E, 0x48729c),
 		SAHARA("Sahara", "org.pushingpixels.radiance.theming.api.skin.RadianceSaharaLookAndFeel", false, 0xA6B473, 0x6E7841, 0x69801a),
 //		VAQUA("VAqua", "org.violetlib.aqua.AquaLookAndFeel", false, 0xAEDBFF, 0x0060FF),
-		AQUA("Aqua", "com.apple.laf.AquaLookAndFeel", false, 0xAEDBFF, 0x0060FF, 0xa372d2);
+		AQUA("Aqua", "com.apple.laf.AquaLookAndFeel", false, 0xAEDBFF, 0x0060FF, 0x006aff);
+//		AQUA("Aqua", "com.apple.laf.AquaLookAndFeel", false, 0xAEDBFF, 0x0060FF, 0x1285ff);
 
 		private final String displayName;
 		private String className;

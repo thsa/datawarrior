@@ -29,7 +29,7 @@ import java.io.File;
 import static com.actelion.research.datawarrior.DataWarrior.LookAndFeel.*;
 
 public class DataWarriorOSX extends DataWarrior {
-	private static final LookAndFeel[] LOOK_AND_FEELS = { AQUA, NIGHT, GRAPHITE, GRAY, NEBULA };
+	private static final LookAndFeel[] LOOK_AND_FEELS = { AQUA, NIGHT, GRAPHITE, GRAY, MODERATE, NEBULA, CREME, SAHARA };
 
 	private static final LookAndFeel DEFAULT_LAF = NIGHT;
 

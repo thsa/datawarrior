@@ -33,6 +33,7 @@ import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.HeaderPaintHelper;
 import com.actelion.research.gui.editor.GenericEditorArea;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.gui.hidpi.HiDPIIcon;
 import com.actelion.research.table.model.CompoundTableDetailHandler;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.JVisualization;
@@ -79,7 +80,6 @@ public abstract class DataWarrior implements WindowFocusListener {
 		SAHARA("Sahara", "org.pushingpixels.radiance.theming.api.skin.RadianceSaharaLookAndFeel", false, 0xA6B473, 0x6E7841, 0x69801a),
 //		VAQUA("VAqua", "org.violetlib.aqua.AquaLookAndFeel", false, 0xAEDBFF, 0x0060FF),
 		AQUA("Aqua", "com.apple.laf.AquaLookAndFeel", false, 0xAEDBFF, 0x0060FF, 0x006aff);
-//		AQUA("Aqua", "com.apple.laf.AquaLookAndFeel", false, 0xAEDBFF, 0x0060FF, 0x1285ff);
 
 		private final String displayName;
 		private String className;
@@ -585,15 +585,15 @@ public abstract class DataWarrior implements WindowFocusListener {
 			HeaderPaintHelper.setThemeColors(rgb);
 			if (System.getProperty("development") != null) {
 				if (laf.isDark)
-					HiDPIHelper.setIconSpotColors(DEV_SPOT_COLORS_DARK_LAF);
+					HiDPIIcon.setIconSpotColors(DEV_SPOT_COLORS_DARK_LAF);
 				else
-					HiDPIHelper.setIconSpotColors(DEV_SPOT_COLORS_BRIGHT_LAF);
+					HiDPIIcon.setIconSpotColors(DEV_SPOT_COLORS_BRIGHT_LAF);
 				}
 			else {
 				int[] spotColorRGB = new int[2];
 				spotColorRGB[0] = laf.rgb3;
 				spotColorRGB[1] = laf.isDark ? DEV_SPOT_COLORS_DARK_LAF[1] : DEV_SPOT_COLORS_BRIGHT_LAF[1];
-				HiDPIHelper.setIconSpotColors(spotColorRGB);
+				HiDPIIcon.setIconSpotColors(spotColorRGB);
 				}
 			makeTooltipsTranslucent();
 			return true;

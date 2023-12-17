@@ -29,6 +29,7 @@ import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.gui.ScrollPaneAutoScrollerWhenDragging;
 import com.actelion.research.gui.VerticalFlowLayout;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.gui.hidpi.HiDPIIcon;
 import com.actelion.research.table.RuntimePropertyEvent;
 import com.actelion.research.table.filter.*;
 import com.actelion.research.table.model.*;
@@ -104,7 +105,7 @@ public class DEPruningPanel extends JScrollPane
 
 				    // draw normal divider in background color or a stronger one if drop possible
 				    if (c == mDropIndex || (c>=1 && c<mContent.getComponentCount())) {
-					    g.setColor(c == mDropIndex ? new Color(HiDPIHelper.getThemeSpotRGBs()[0]) : dividerColor);
+					    g.setColor(c == mDropIndex ? new Color(HiDPIIcon.getThemeSpotRGBs()[0]) : dividerColor);
 					    int pos = (GAP - lines) / 2;
 					    int ex = (c == mDropIndex) ? 1 : 0;
 					    for (int i = pos - ex; i<pos + lines + ex; i++)

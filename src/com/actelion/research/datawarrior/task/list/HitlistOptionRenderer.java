@@ -48,7 +48,7 @@ public class HitlistOptionRenderer extends JPanel implements /*ImageObserver,*/L
 
 	public HitlistOptionRenderer() {
 		SwingImage image = HiDPIIcon.createIconImage(IMAGE_NAME);
-		HiDPIHelper.adaptForLookAndFeel(image);
+		HiDPIIcon.adaptForLookAndFeel(image);
 		sImage = (Image)HiDPIIcon.scale(image).get();
 
 		setPreferredSize(new Dimension(cItemWidth, cItemHeight));

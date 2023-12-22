@@ -278,16 +278,17 @@ public class JVisualization2D extends JVisualization {
 		int width = getWidth();
 		int height = getHeight();
 
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		GraphicsConfiguration gc = ge.getDefaultScreenDevice().getDefaultConfiguration();
-
 		float retinaFactor = HiDPIHelper.getRetinaScaleFactor();
 
 		if (mOffImage == null
 		 || mOffImage.getWidth(null) != width*retinaFactor
 		 || mOffImage.getHeight(null) != height*retinaFactor) {
-			mOffImage = gc.createCompatibleVolatileImage(Math.round(width*retinaFactor), Math.round(height*retinaFactor), Transparency.OPAQUE);
+			mOffImage = ((Graphics2D)g).getDeviceConfiguration().createCompatibleVolatileImage(Math.round(width*retinaFactor), Math.round(height*retinaFactor), Transparency.OPAQUE);
 			mCoordinatesValid = false;
+			}
+		else if (mOffImage.validate(((Graphics2D)g).getDeviceConfiguration()) == VolatileImage.IMAGE_INCOMPATIBLE) {
+			mOffImage = ((Graphics2D) g).getDeviceConfiguration().createCompatibleVolatileImage(Math.round(width * retinaFactor), Math.round(height * retinaFactor), Transparency.OPAQUE);
+			mOffImageValid = false;
 			}
 
 		if (!mCoordinatesValid) {
@@ -297,9 +298,6 @@ public class JVisualization2D extends JVisualization {
 
 		if (!mOffImageValid) {
 			do  {
-				if (mOffImage.validate(gc) == VolatileImage.IMAGE_INCOMPATIBLE)
-					mOffImage = gc.createCompatibleVolatileImage(Math.round(width*retinaFactor), Math.round(height*retinaFactor), Transparency.OPAQUE);
-
 				mOffG = null;
 				try {
 					mOffG = mOffImage.createGraphics();
@@ -364,7 +362,6 @@ public class JVisualization2D extends JVisualization {
 			mOffImageValid = true;
 			}
 
-System.out.println("JVis2D paintComponent() w:"+width+" h:"+height+" oiw:"+mOffImage.getWidth()+" oih:"+mOffImage.getHeight());
 		g.drawImage(mOffImage, 0, 0, width, height, this);
 
 		if (mActivePoint != null && isVisible(mActivePoint))

@@ -36,6 +36,7 @@ public class JFXConformerPanel extends JFXPanel {
 	private V3DMolecule mCavityMol,mOverlayMol;
 	private V3DPopupMenuController mController;
 	private FutureTask<Object> mConstructionTask;
+	private volatile int mCurrentUpdateID;
 
 	public JFXConformerPanel(boolean withSidePanel) {
 		this(withSidePanel, 512, 384, V3DScene.CONFORMER_VIEW_MODE);
@@ -172,7 +173,7 @@ public class JFXConformerPanel extends JFXPanel {
 
 	public void setConollySurfaceMode(int mode) {
 		Platform.runLater(() -> {
-			for (Node node:mScene.getWorld().getAllAttachedMolGroups())
+			for (Node node:mScene.getWorld().getAllAttachedRotatableGroups())
 				if (node instanceof V3DMolecule)
 					((V3DMolecule)node).setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.values()[mode]);
 		} );
@@ -300,7 +301,7 @@ public class JFXConformerPanel extends JFXPanel {
 	/**
 	 * If the panel is supposed to show a protein cavity created by cropping a larger protein,
 	 * and if the cavity surface shall be shown in the area of the natural ligand, then this
-	 * method can be used to mark all cavity atoms that shall covered by the surface.
+	 * method can be used to mark all cavity atoms that shall be covered by the surface.
 	 * @param cavity
 	 * @param ligand
 	 */
@@ -347,7 +348,7 @@ public class JFXConformerPanel extends JFXPanel {
 		}
 
 	/**
-	 * Removes all molecules except the cavity and overlay molecules, if they exists.
+	 * Removes all molecules except the cavity and overlay molecules, if they exist.
 	 * A cavity, natural ligand or PheSA query conformer, which need to be shown statically,
 	 * are not touched by this update, if they are defined with setProteinCavity() or setOverlayMolecule().
 	 * Then, adds the passed conformer(s) or docked ligand.
@@ -358,32 +359,36 @@ public class JFXConformerPanel extends JFXPanel {
 	 * @param refConformer optional second conformer or ligand structure for comparison (not the natural ligand or PheSA query)
 	 */
 	public void updateConformers(StereoMolecule[] conformers, int rowID, StereoMolecule refConformer) {
+		mCurrentUpdateID++;
+		final int updateID = mCurrentUpdateID;
 		Platform.runLater(() -> {
 			boolean isTorsionStrainVisible = false;
 			for (V3DMolecule fxmol:mScene.getMolsInScene())
 				if (fxmol != mOverlayMol
-				 && fxmol != mCavityMol) {
+				 && fxmol != mCavityMol
+				 && updateID == mCurrentUpdateID) {
 					isTorsionStrainVisible |= (fxmol.getTorsionStrainVis() != null);
 					mScene.delete(fxmol);
 				}
 
 			if (conformers != null) {
 				if (conformers.length == 1) {
-					addMoleculeNow(conformers[0], CarbonAtomColorPalette.getColor(rowID), null, isTorsionStrainVisible);
+					if (updateID == mCurrentUpdateID)
+						addMoleculeNow(conformers[0], CarbonAtomColorPalette.getColor(rowID), null, isTorsionStrainVisible);
 				}
 				else {
 					Point3D cor = new Point3D(0, 0, 0);
-					for (int i = 0; i < conformers.length; i++) {
+					for (int i=0; i<conformers.length && updateID == mCurrentUpdateID; i++) {
 						Color c = Color.hsb(360f * i / conformers.length, 0.75, 0.6);
 						addMoleculeNow(conformers[i], c, cor, false);
 					}
 				}
 			}
 
-			if (refConformer != null)
+			if (refConformer != null && updateID == mCurrentUpdateID)
 				addMoleculeNow(refConformer, REFERENCE_MOLECULE_COLOR, null, isTorsionStrainVisible);
 
-			if ((conformers != null || refConformer != null) && mOverlayMol == null && mCavityMol == null)
+			if ((conformers != null || refConformer != null) && mOverlayMol == null && mCavityMol == null && updateID == mCurrentUpdateID)
 				mScene.optimizeView();
 		} );
 	}

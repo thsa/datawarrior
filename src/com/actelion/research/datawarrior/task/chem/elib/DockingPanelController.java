@@ -32,12 +32,12 @@ public class DockingPanelController implements V3DPopupMenuController {
 		Platform.runLater(() ->
 			mConformerPanel.getV3DScene().addSceneListener(new V3DSceneListener() {
 				@Override
-				public void addMolecule(V3DMolGroup fxmol) {}
+				public void addGroup(V3DRotatableGroup group) {}
 
 				@Override
-				public void removeMolecule(V3DMolGroup fxmol) {
-					if (fxmol instanceof V3DMolecule) {
-						if (((V3DMolecule)fxmol).getRole() == V3DMolecule.MoleculeRole.MACROMOLECULE)
+				public void removeGroup(V3DRotatableGroup group) {
+					if (group instanceof V3DMolecule) {
+						if (((V3DMolecule)group).getRole() == V3DMolecule.MoleculeRole.MACROMOLECULE)
 							mProtein = null;
 						else
 							mLigand = null;

@@ -371,35 +371,37 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 	}
 
 	private void update3DView(DetailViewInfo viewInfo, boolean isSuperpose, boolean isAlign) {
-		StereoMolecule[] rowMol = null;
-		if (mCurrentRecord != null)
-			rowMol = getConformers(mCurrentRecord, true, viewInfo);
+		new Thread(() -> {
+			StereoMolecule[] rowMol = null;
+			if (mCurrentRecord != null)
+				rowMol = getConformers(mCurrentRecord, true, viewInfo);
 
-		StereoMolecule[] refMol = null;
-		if (isSuperpose && mTableModel.getActiveRow() != null && mTableModel.getActiveRow() != mCurrentRecord)
-			refMol = getConformers(mTableModel.getActiveRow(), false, viewInfo);
+			StereoMolecule[] refMol = null;
+			if (isSuperpose && mTableModel.getActiveRow() != null && mTableModel.getActiveRow() != mCurrentRecord)
+				refMol = getConformers(mTableModel.getActiveRow(), false, viewInfo);
 
-		if (rowMol != null) {
-			StereoMolecule best = null;
-			if (isAlign && refMol != null) {
-				double maxFit = 0;
-				for (int i = 0; i < rowMol.length; i++) {
-					double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol[0], rowMol[i]);
-					if (fit > maxFit) {
-						maxFit = fit;
-						best = rowMol[i];
+			if (rowMol != null) {
+				StereoMolecule best = null;
+				if (isAlign && refMol != null) {
+					double maxFit = 0;
+					for (int i=0; i<rowMol.length; i++) {
+						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol[0], rowMol[i]);
+						if (fit > maxFit) {
+							maxFit = fit;
+							best = rowMol[i];
+							}
+						}
+
+					rowMol = new StereoMolecule[1];
+					rowMol[0] = best;
 					}
 				}
 
-				rowMol = new StereoMolecule[1];
-				rowMol[0] = best;
-			}
+			JFXConformerPanel view = (JFXConformerPanel)viewInfo.view;
+			int rowID = (mCurrentRecord == null || isSuperpose || view.getOverlayMolecule() != null) ? -1 : mCurrentRecord.getID();
+			view.updateConformers(rowMol, rowID, refMol == null ? null : refMol[0]);
+			}).start();
 		}
-
-		JFXConformerPanel view = (JFXConformerPanel)viewInfo.view;
-		int rowID = (mCurrentRecord == null || isSuperpose || view.getOverlayMolecule() != null) ? -1 : mCurrentRecord.getID();
-		view.updateConformers(rowMol, rowID, refMol == null ? null : refMol[0]);
-	}
 
 	private StereoMolecule[] getConformers(CompoundRecord record, boolean allowMultiple, DetailViewInfo viewInfo) {
 		byte[] idcode = (byte[]) record.getData(viewInfo.column);
@@ -419,7 +421,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 					index = -1;
 				}
 				StereoMolecule[] mol = new StereoMolecule[count];
-				for (int i = 0; i < count; i++) {
+				for (int i=0; i<count; i++) {
 					mol[i] = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode, coords, 0, index + 1);
 					index = ArrayUtils.indexOf(coords, (byte) 32, index + 1);
 				}

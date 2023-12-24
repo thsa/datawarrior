@@ -6,7 +6,7 @@ cheminformatics functionality.
 
 *DataWarrior* runs on all major platforms. Pre-built installers exist for Linux, Macintosh and Windows.
 Software installers, documentation, sample data, and a support forum are available on
-www.openmolecules.org/datawarrior.
+https://openmolecules.org/datawarrior.
 
 *DataWarrior* is built on the open-source projects *OpenChemLib* and *FXMolViewer*. 
 
@@ -35,7 +35,8 @@ After building the project just run the 'runDataWarrior' shell script.
 ### Platform Integration
 Ideally, *DataWarrior* should be installed in a platform specific way that registers its file
 extentions and causes proper file icon display. Installers for Linux, Macintosh, and Windows,
-which include proper platform integration, can be downloaded from www.openmolecules.org.
+which include proper platform integration, can be downloaded from
+https://openmolecules.org/datawarrior/download.html.
 
 This platform integration is not (yet) part of this project. Thus, if you intend to run *DataWarrior*
 from self compiled source code and if you don't do the platform integration yourself, then
@@ -51,7 +52,7 @@ to reduce the datawarrior.jar file size significantly be the removal of unused c
 from the byte code.
 
 ### How to contribute
-Contact the author under the e-mail shown on www.openmolecules.org
+Contact the author under the e-mail shown on https://openmolecules.org/about.html
 
 
 ### License

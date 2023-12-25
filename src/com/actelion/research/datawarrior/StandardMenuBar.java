@@ -88,12 +88,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	private static final String MENU_NAME_LIST = "List";
 	private static final String MENU_NAME_MACRO = "Macro";
 	private static final String MENU_NAME_HELP = "Help";
-	private static final String DEFAULT_PLUGIN_MENU = MENU_NAME_DATABASE;
-
 	public static final String USER_MACRO_DIR = "$HOME/datawarrior/macro";
 
-	public static final String PREFERENCES_KEY_RECENT_FILE = "recentFile";
-	public static final int MAX_RECENT_FILE_COUNT = 24;
 
 	private static final String OPEN_FILE = "open_";
 	private static final String NEW_FROM_LIST = "newFromList_";
@@ -110,12 +106,13 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	public static final String RUN_GLOBAL_MACRO = "runGlobal_";
 	private static final String RUN_INTERNAL_MACRO = "runInternal_";
 	private static final String SHOW_NEWS = "showNews_";
+	private static final String SCALE_DPI = "scaleDPI_";
 
 	private static final String DEFAULT_LIST_NAME = "Default List";
 
 	private static final String MORE_DATA_URL = "http://www.openmolecules.org/datawarrior/datafiles.html";
 	private static final String FORUM_URL = "http://www.openmolecules.org/forum/index.php";
-
+	private static final String[] DPI_OPTIONS = { "Default", "1.0", "1.25", "1.5", "1.75", "2.0" };
 	final static int MENU_MASK = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
 	private DataWarrior			mApplication;
@@ -131,7 +128,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 	private JMenu jMenuFileNewFrom,jMenuFileOpenSpecial,jMenuFileOpenRecent,jMenuFileSaveSpecial,jMenuEditPasteSpecial,jMenuDataRemoveRows,
 				  jMenuDataSelfOrganizingMap,jMenuDataSetRange,jMenuDataViewLogarithmic,jMenuChemAddMoleculeDescriptor,
-				  jMenuChemAddReactionDescriptor,jMenuListCreate,jMenuMacroExport,jMenuMacroCopy,jMenuMacroRun,jMenuHelpNews,jMenuHelpLaF,jMenuHelpUpdate,jMenuChemMachineLearning;
+				  jMenuChemAddReactionDescriptor,jMenuListCreate,jMenuMacroExport,jMenuMacroCopy,jMenuMacroRun,jMenuHelpNews,jMenuHelpLaF,
+				  jMenuHelpDPIScaling,jMenuHelpUpdate,jMenuChemMachineLearning;
 
 	private JMenuItem jMenuFileNew,jMenuFileNewFromVisible,jMenuFileNewFromSelection,jMenuFileNewFromPivoting,jMenuFileNewFromReversePivoting,jMenuFileNewFromTransposition,
 					  jMenuFileOpen,jMenuFileOpenMacro,jMenuFileOpenTemplate,jMenuFileOpenMDLReactions,jMenuFileMerge,
@@ -1235,6 +1233,20 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			jMenuHelpLaF.add(item);
 			}
 
+		Preferences prefs = DataWarrior.getPreferences();
+		String dpiScaling = prefs.get(DataWarrior.PREFERENCES_KEY_DPI_SCALING, DPI_OPTIONS[0]);
+
+		jMenuHelpDPIScaling = new JMenu();
+		jMenuHelpDPIScaling.setText("User Interface Scaling");
+		for (String dpi:DPI_OPTIONS) {
+			JCheckBoxMenuItem item = new JCheckBoxMenuItem();
+			item.setActionCommand(SCALE_DPI+dpi);
+			item.setText(dpi);
+			item.setSelected(dpi.equals(dpiScaling));
+			item.addActionListener(this);
+			jMenuHelpDPIScaling.add(item);
+			}
+
 		jMenuHelpHelp = new JMenuItem();
 		jMenuHelpShortcuts = new JMenuItem();
 		jMenuHelpAbout = new JMenuItem();
@@ -1268,6 +1280,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 		jMenuHelp.addSeparator();
 		jMenuHelp.add(jMenuHelpLaF);
+		jMenuHelp.add(jMenuHelpDPIScaling);
 
 		addUpdateMenu(jMenuHelp);
 
@@ -1867,6 +1880,15 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				DEHelpFrame.updateLookAndFeel();
 				FXHelpFrame.updateLookAndFeel();
 				}
+			else if (actionCommand.startsWith(SCALE_DPI)) {
+				String dpiFactor = actionCommand.substring(SCALE_DPI.length());
+				Preferences prefs = DataWarrior.getPreferences();
+				if (dpiFactor.equals(DPI_OPTIONS[0]))
+					prefs.remove(DataWarrior.PREFERENCES_KEY_DPI_SCALING);
+				else
+					prefs.put(DataWarrior.PREFERENCES_KEY_DPI_SCALING, dpiFactor);
+				JOptionPane.showMessageDialog(mParentFrame, "When DataWarrior is lauched the next time, it will use\nthe new scaling factor for all user interface elements.");
+				}
 			else if (actionCommand.startsWith(UPDATE)) {
 				for (int i=0; i<jMenuHelpUpdate.getItemCount(); i++) {
 					JCheckBoxMenuItem item = (JCheckBoxMenuItem)jMenuHelpUpdate.getItem(i);
@@ -2032,8 +2054,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		try {
 			Preferences prefs = DataWarrior.getPreferences();
 
-			for (int i=1; i<=MAX_RECENT_FILE_COUNT; i++) {
-				String path = prefs.get(PREFERENCES_KEY_RECENT_FILE + i, "");
+			for (int i=1; i<=DataWarrior.MAX_RECENT_FILE_COUNT; i++) {
+				String path = prefs.get(DataWarrior.PREFERENCES_KEY_RECENT_FILE + i, "");
 				if (path == null || path.length() == 0)
 					break;
 

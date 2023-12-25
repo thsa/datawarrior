@@ -58,8 +58,11 @@ public abstract class DataWarrior implements WindowFocusListener {
 	private static final String PREFERENCES_ROOT = "org.openmolecules.datawarrior";
 	public static final String PREFERENCES_KEY_FIRST_LAUNCH = "first_launch";
 	public static final String PREFERENCES_KEY_LAST_VERSION_ERROR = "last_version_error";
+	public static final String PREFERENCES_KEY_DPI_SCALING = "dpiScaling";
 	public static final String PREFERENCES_KEY_LAF_NAME = "laf_name";
 	public static final String PREFERENCES_KEY_SPAYA_SERVER = "spaya_server";
+	public static final String PREFERENCES_KEY_RECENT_FILE = "recentFile";
+	public static final int MAX_RECENT_FILE_COUNT = 24;
 
 	public static boolean USE_CARDS_VIEW = false;
 
@@ -550,6 +553,11 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 */
 	public void setInitialLookAndFeel() {
 		Preferences prefs = Preferences.userRoot().node(PREFERENCES_ROOT);
+
+		String dpiScaling = prefs.get(PREFERENCES_KEY_DPI_SCALING, "");
+		if (!dpiScaling.isEmpty())
+			HiDPIHelper.setUIScaleFactor(Float.parseFloat(dpiScaling));
+
 		String lafClass = prefs.get(PREFERENCES_KEY_LAF_NAME, "");
 
 		// we don't support the old substance LaF anymore. Use NEBULA instead
@@ -783,20 +791,20 @@ public abstract class DataWarrior implements WindowFocusListener {
 		try {
 			Preferences prefs = getPreferences();
 
-			String[] recentFileName = new String[StandardMenuBar.MAX_RECENT_FILE_COUNT+1];
-			for (int i=1; i<=StandardMenuBar.MAX_RECENT_FILE_COUNT; i++)
-				recentFileName[i] = prefs.get(StandardMenuBar.PREFERENCES_KEY_RECENT_FILE+i, "");
+			String[] recentFileName = new String[MAX_RECENT_FILE_COUNT+1];
+			for (int i=1; i<=MAX_RECENT_FILE_COUNT; i++)
+				recentFileName[i] = prefs.get(PREFERENCES_KEY_RECENT_FILE+i, "");
 
 			recentFileName[0] = file.getCanonicalPath();
-			for (int i=1; i<StandardMenuBar.MAX_RECENT_FILE_COUNT; i++) {
+			for (int i=1; i<MAX_RECENT_FILE_COUNT; i++) {
 				if (recentFileName[0].equals(recentFileName[i])) {
-					for (int j=i+1; j<=StandardMenuBar.MAX_RECENT_FILE_COUNT; j++)
+					for (int j=i+1; j<=MAX_RECENT_FILE_COUNT; j++)
 						recentFileName[j-1] = recentFileName[j];
 					}
 				}
 
-			for (int i=0; i<StandardMenuBar.MAX_RECENT_FILE_COUNT && recentFileName[i].length() != 0; i++)
-				prefs.put(StandardMenuBar.PREFERENCES_KEY_RECENT_FILE+(i+1), recentFileName[i]);
+			for (int i=0; i<MAX_RECENT_FILE_COUNT && recentFileName[i].length() != 0; i++)
+				prefs.put(PREFERENCES_KEY_RECENT_FILE+(i+1), recentFileName[i]);
 
 			for (DEFrame frame:getFrameList())
 				frame.getDEMenuBar().updateRecentFileMenu();

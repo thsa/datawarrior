@@ -22,7 +22,6 @@ cp ../external_data/example/* dmg/DataWarrior.app/example/
 cp ../external_data/reference/* dmg/DataWarrior.app/reference/
 cp ../external_data/macro/* dmg/DataWarrior.app/macro/
 cp ../external_data/tutorial/* dmg/DataWarrior.app/tutorial/
-cp ../datawarrior_ext.jar dmg/DataWarrior.app/Contents/Java/datawarrior.jar
 hdiutil detach dmg -quiet -force
 hdiutil convert dw_uncompressed.dmg -quiet -format UDZO -imagekey zlib-level=9 -o datawarrior.dmg
 rm dw_uncompressed.dmg

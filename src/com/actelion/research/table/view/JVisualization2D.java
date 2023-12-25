@@ -287,7 +287,6 @@ public class JVisualization2D extends JVisualization {
 			mCoordinatesValid = false;
 			}
 		else if (mOffImage.validate(((Graphics2D)g).getDeviceConfiguration()) == VolatileImage.IMAGE_INCOMPATIBLE) {
-			mOffImage = ((Graphics2D) g).getDeviceConfiguration().createCompatibleVolatileImage(Math.round(width * retinaFactor), Math.round(height * retinaFactor), Transparency.OPAQUE);
 			mOffImageValid = false;
 			}
 
@@ -298,6 +297,9 @@ public class JVisualization2D extends JVisualization {
 
 		if (!mOffImageValid) {
 			do  {
+				if (mOffImage.validate(((Graphics2D)g).getDeviceConfiguration()) == VolatileImage.IMAGE_INCOMPATIBLE)
+					mOffImage = ((Graphics2D) g).getDeviceConfiguration().createCompatibleVolatileImage(Math.round(width * retinaFactor), Math.round(height * retinaFactor), Transparency.OPAQUE);
+
 				mOffG = null;
 				try {
 					mOffG = mOffImage.createGraphics();

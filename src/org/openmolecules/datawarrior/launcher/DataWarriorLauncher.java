@@ -13,12 +13,12 @@ public class DataWarriorLauncher {
 	// IMPORTANT: This must match DEUpdateHandler.DATAWARRIOR_VERSION within datawarrior_all.jar
 	//            included in the manual(!!!) installer package, which also contains this launcher.
 	//            Automatic updates are considered only, if their version is newer than this one.
-	private static final String BASE_VERSION = "v05.09.00";
+	private static final String BASE_VERSION = "v06.00.00";
 
 	// These settings are copies from the DataWarrior class:
 	private static final String PREFERENCES_ROOT = "org.openmolecules.datawarrior";
 	private static final String PREFERENCES_KEY_UPDATE_PATH = "update_path";
-	private static Class sDatawarriorClass;
+	private static Class<?> sDatawarriorClass;
 
 	public static void main(final String[] args) {
 		SwingUtilities.invokeLater(() -> {
@@ -52,7 +52,7 @@ public class DataWarriorLauncher {
 					return;
 					}
 
-System.out.println("Loading "+appJar.getPath()+" ...");
+//System.out.println("Loading "+appJar.getPath()+" ...");
 				ClassLoader loader = new URLClassLoader(new URL[]{appJar.toURI().toURL()}, Thread.currentThread().getContextClassLoader());
 				Thread.currentThread().setContextClassLoader(loader);
 
@@ -93,7 +93,6 @@ System.out.println("Loading "+appJar.getPath()+" ...");
 	 */
 	public static void initSingleApplication(String[] args) {
 		try {
-//			final Class datawarriorClass = Thread.currentThread().getContextClassLoader().loadClass(getAppClassName());
 			final Method method = sDatawarriorClass.getMethod("initSingleApplication", String[].class);
 			final Object[] argsHolder = new Object[1];
 			argsHolder[0] = args;

@@ -777,6 +777,13 @@ public abstract class DataWarrior implements WindowFocusListener {
 			}
 		}
 
+	public void handleCustomURI(String[] args) {
+		// For testing purposes we just display the URI data...
+		System.out.println("Custom URI:");
+		for (String arg:args)
+			System.out.println(arg);
+		}
+
 	public void updateRecentFiles(File file) {
 		if (file == null || !file.exists())
 			return;

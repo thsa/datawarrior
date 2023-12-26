@@ -93,20 +93,31 @@ public class DataWarriorLinux extends DataWarrior {
 	 */
 	public static void initSingleApplication(String[] args) {
 		if (args != null && args.length != 0) {
-			String[] filename = sDataExplorer.deduceFileNamesFromArgs(args);
-			if (sDataExplorer == null) {
-				if (sPendingDocumentList == null)
-					sPendingDocumentList = new ArrayList<>();
-
-				for (String f:filename)
-					sPendingDocumentList.add(f);
+			if (args[0].toLowerCase().startsWith("datawarrior:")) {
+				try {
+					SwingUtilities.invokeAndWait(() -> {
+						if (sDataExplorer != null)
+							sDataExplorer.handleCustomURI(args);
+						} );
+					}
+				catch(Exception e) {}
 				}
 			else {
-				for (final String f:filename) {
-					try {
-						SwingUtilities.invokeAndWait(() -> sDataExplorer.readFile(f) );
+				String[] filename = sDataExplorer.deduceFileNamesFromArgs(args);
+				if (sDataExplorer == null) {
+					if (sPendingDocumentList == null)
+						sPendingDocumentList = new ArrayList<>();
+
+					for (String f:filename)
+						sPendingDocumentList.add(f);
+					}
+				else {
+					for (final String f:filename) {
+						try {
+							SwingUtilities.invokeAndWait(() -> sDataExplorer.readFile(f) );
+							}
+						catch(Exception e) {}
 						}
-					catch(Exception e) {}
 					}
 				}
 			}
@@ -166,9 +177,14 @@ public class DataWarriorLinux extends DataWarrior {
 				sDataExplorer = new DataWarriorLinux();
 
 				if (args != null && args.length != 0) {
-					String[] filename = sDataExplorer.deduceFileNamesFromArgs(args);
-					for (String f:filename)
-						sDataExplorer.readFile(f);
+					if (args[0].toLowerCase().startsWith("datawarrior:")) {
+						sDataExplorer.handleCustomURI(args);
+						}
+					else {
+						String[] filename = sDataExplorer.deduceFileNamesFromArgs(args);
+						for (String f:filename)
+							sDataExplorer.readFile(f);
+						}
 					}
 
 				if (sPendingDocumentList != null) {

@@ -36,7 +36,7 @@ This file contains the script to bundle the DataWarrior application for OSX.
     <target name="bundle">
 
       <!-- Obtain path to the selected JRE ->
-      We don't copy the default JRE to the bundle. We use a custom built universal JRE defined in 'runtime' above
+      We don't copy the default JRE to the bundle. We use a custom-built universal JRE defined in 'runtime' above
       <exec executable="/usr/libexec/java_home"
              failonerror="true"
              outputproperty="runtime">
@@ -63,8 +63,6 @@ This file contains the script to bundle the DataWarrior application for OSX.
           mainclassname="org.openmolecules.datawarrior.launcher.DataWarriorLauncher"
           copyright="2023 Openmolecules.org"
           applicationCategory="public.app-category.productivity">
-
-          <classpath file="${runclasspath}"/>
 
           <!-- Embed complete JRE, for JRE>8 better use jlink syntax with modules -->          
           <runtime dir="${runtime}"/>

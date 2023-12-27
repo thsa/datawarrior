@@ -190,7 +190,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 			String availableInstaller = sPostInstallInfo.getProperty(PROPERTY_MANUAL_UPDATE_VERSION);
 			if (availableInstaller != null
 			 && availableInstaller.matches("v\\d\\d\\.\\d\\d\\.\\d\\d")
-			 && availableInstaller.compareTo(DATAWARRIOR_VERSION) >= 0) {
+			 && availableInstaller.compareTo(DATAWARRIOR_VERSION) > 0) {
 				String url = prefs.get(PROPERTY_MANUAL_UPDATE_URL, "URL unexpectedly not available.");
 				String detail = prefs.get(PROPERTY_MANUAL_UPDATE_DETAIL, "Update detail information not available.");
 				SwingUtilities.invokeLater(() ->

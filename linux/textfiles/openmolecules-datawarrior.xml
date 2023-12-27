@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+ <mime-type type="application/vnd.openmolecules.dwar">
+  <comment xml:lang="en">DataWarrior Document</comment>
+  <glob pattern="*.dwar"/>
+  <glob pattern="*.ode"/>
+ </mime-type>
+
+ <mime-type type="application/vnd.openmolecules.dwat">
+  <comment xml:lang="en">DataWarrior Template</comment>
+  <magic priority="50">
+   <match type="string" value="datawarrior properties" offset="1"/>
+  </magic>
+  <glob pattern="*.dwat"/>
+  <glob pattern="*.odt"/>
+ </mime-type>
+
+ <mime-type type="application/vnd.openmolecules.dwaq">
+  <comment xml:lang="en">DataWarrior OSIRIS Query</comment>
+  <magic priority="50">
+   <match type="string" value="osiris query" offset="1"/>
+  </magic>
+  <glob pattern="*.dwaq"/>
+  <glob pattern="*.odq"/>
+ </mime-type>
+
+ <mime-type type="application/vnd.openmolecules.dwas">
+  <comment xml:lang="en">DataWarrior Self Organized Map</comment>
+  <magic priority="50">
+   <match type="string" value="datawarrior SOM" offset="1"/>
+  </magic>
+  <glob pattern="*.dwas"/>
+  <glob pattern="*.som"/>
+ </mime-type>
+
+ <mime-type type="application/vnd.openmolecules.dwam">
+  <comment xml:lang="en">DataWarrior Task Sequence</comment>
+  <magic priority="50">
+   <match type="string" value="datawarrior macro" offset="1"/>
+  </magic>
+  <glob pattern="*.dwam"/>
+ </mime-type>
+
+ <mime-type type="application/vnd.openmolecules.sdf">
+  <comment xml:lang="en">MDL Substance Definition File</comment>
+  <magic priority="50">
+   <match type="string" value="M  " offset="0:180"/>
+  </magic>
+  <glob pattern="*.sdf"/>
+ </mime-type>
+</mime-info>

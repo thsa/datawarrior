@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+MimeType=application/vnd.openmolecules.dwam;application/vnd.openmolecules.dwaq;application/vnd.openmolecules.dwar;application/vnd.openmolecules.dwas;application/vnd.openmolecules.dwat;application/vnd.openmolecules.sdf;x-scheme-handler/datawarrior;
+Comment=Analyse and visualize alphanumerical and chemical data
+Name=DataWarrior
+GenericName=Data Visualizer
+Keywords=Data;Interactive;Analysis;Visualization;Chemistry;Plots;Charts
+TryExec=/opt/datawarrior/datawarrior
+Exec=/opt/datawarrior/datawarrior %F
+Icon=openmolecules-datawarrior
+Type=Application
+Terminal=false
+Categories=Office;Science;Chemistry;DataVisualization
+

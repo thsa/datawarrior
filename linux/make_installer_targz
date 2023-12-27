@@ -1,0 +1,61 @@
+#
+# IMPORTANT: Update JRE path before running script!
+#
+mkdir datawarrior_linux
+mkdir datawarrior_linux/datawarrior
+mkdir datawarrior_linux/datawarrior/example
+mkdir datawarrior_linux/datawarrior/reference
+mkdir datawarrior_linux/datawarrior/macro
+mkdir datawarrior_linux/datawarrior/tutorial
+mkdir datawarrior_linux/datawarrior/plugin
+mkdir datawarrior_linux/datawarrior/update
+mkdir datawarrior_linux/resources
+mkdir datawarrior_linux/resources/48x48
+mkdir datawarrior_linux/resources/64x64
+mkdir datawarrior_linux/resources/96x96
+mkdir datawarrior_linux/resources/128x128
+mkdir datawarrior_linux/datawarrior/jre
+cp -r /opt/openjava/jre-21.0.1-full/* datawarrior_linux/datawarrior/jre/
+cp ./textfiles/install.sh ./datawarrior_linux/
+cp ./textfiles/uninstall.sh ./datawarrior_linux/
+cp ./textfiles/readme.txt ./datawarrior_linux/
+cp ./textfiles/openmolecules-datawarrior.xml ./datawarrior_linux/resources/
+cp ./textfiles/openmolecules-datawarrior.desktop ./datawarrior_linux/resources/
+cp ./textfiles/datawarrior ./datawarrior_linux/datawarrior/
+cp ./icons/datawarrior48.png ./datawarrior_linux/resources/48x48/openmolecules-datawarrior.png
+cp ./icons/datawarrior64.png ./datawarrior_linux/resources/64x64/openmolecules-datawarrior.png
+cp ./icons/datawarrior96.png ./datawarrior_linux/resources/96x96/openmolecules-datawarrior.png
+cp ./icons/datawarrior.png ./datawarrior_linux/resources/128x128/openmolecules-datawarrior.png
+cp ./icons/dwam48.png ./datawarrior_linux/resources/48x48/application-vnd.openmolecules.dwam.png
+cp ./icons/dwaq48.png ./datawarrior_linux/resources/48x48/application-vnd.openmolecules.dwaq.png
+cp ./icons/dwar48.png ./datawarrior_linux/resources/48x48/application-vnd.openmolecules.dwar.png
+cp ./icons/dwas48.png ./datawarrior_linux/resources/48x48/application-vnd.openmolecules.dwas.png
+cp ./icons/dwat48.png ./datawarrior_linux/resources/48x48/application-vnd.openmolecules.dwat.png
+cp ./icons/sdf48.png ./datawarrior_linux/resources/48x48/application-vnd.openmolecules.sdf.png
+cp ./icons/dwam64.png ./datawarrior_linux/resources/64x64/application-vnd.openmolecules.dwam.png
+cp ./icons/dwaq64.png ./datawarrior_linux/resources/64x64/application-vnd.openmolecules.dwaq.png
+cp ./icons/dwar64.png ./datawarrior_linux/resources/64x64/application-vnd.openmolecules.dwar.png
+cp ./icons/dwas64.png ./datawarrior_linux/resources/64x64/application-vnd.openmolecules.dwas.png
+cp ./icons/dwat64.png ./datawarrior_linux/resources/64x64/application-vnd.openmolecules.dwat.png
+cp ./icons/sdf64.png ./datawarrior_linux/resources/64x64/application-vnd.openmolecules.sdf.png
+cp ./icons/dwam96.png ./datawarrior_linux/resources/96x96/application-vnd.openmolecules.dwam.png
+cp ./icons/dwaq96.png ./datawarrior_linux/resources/96x96/application-vnd.openmolecules.dwaq.png
+cp ./icons/dwar96.png ./datawarrior_linux/resources/96x96/application-vnd.openmolecules.dwar.png
+cp ./icons/dwas96.png ./datawarrior_linux/resources/96x96/application-vnd.openmolecules.dwas.png
+cp ./icons/dwat96.png ./datawarrior_linux/resources/96x96/application-vnd.openmolecules.dwat.png
+cp ./icons/sdf96.png ./datawarrior_linux/resources/96x96/application-vnd.openmolecules.sdf.png
+cp ./icons/dwam.png ./datawarrior_linux/resources/128x128/application-vnd.openmolecules.dwam.png
+cp ./icons/dwaq.png ./datawarrior_linux/resources/128x128/application-vnd.openmolecules.dwaq.png
+cp ./icons/dwar.png ./datawarrior_linux/resources/128x128/application-vnd.openmolecules.dwar.png
+cp ./icons/dwas.png ./datawarrior_linux/resources/128x128/application-vnd.openmolecules.dwas.png
+cp ./icons/dwat.png ./datawarrior_linux/resources/128x128/application-vnd.openmolecules.dwat.png
+cp ./icons/sdf.png ./datawarrior_linux/resources/128x128/application-vnd.openmolecules.sdf.png
+cp ../datawarriorlauncher.jar ./datawarrior_linux/datawarrior/
+cp ../datawarrior_all.jar ./datawarrior_linux/datawarrior/
+cp ../loading.png ./datawarrior_linux/datawarrior/
+cp ../external_data/example/* ./datawarrior_linux/datawarrior/example/
+cp ../external_data/reference/* ./datawarrior_linux/datawarrior/reference/
+cp ../external_data/macro/* ./datawarrior_linux/datawarrior/macro/
+cp ../external_data/tutorial/* ./datawarrior_linux/datawarrior/tutorial/
+tar -zcvf datawarrior_linux.tar.gz datawarrior_linux
+rm -rf ./datawarrior_linux

@@ -17,7 +17,7 @@ cp -r ./dist/DataWarrior.app/Contents/PlugIns/* dmg/DataWarrior.app/Contents/Plu
 cp -r ./dist/DataWarrior.app/Contents/Resources/* dmg/DataWarrior.app/Contents/Resources/
 cp ../loading.png dmg/DataWarrior.app/Contents/Resources/
 cp ../datawarriorlauncher.jar dmg/DataWarrior.app/Contents/Java/
-cp ../datawarrior_all.jar dmg/DataWarrior.app/Contents/Java/update/
+cp ../datawarrior_osx_all.jar dmg/DataWarrior.app/Contents/Java/update/datawarrior_all.jar
 cp ../external_data/example/* dmg/DataWarrior.app/example/
 cp ../external_data/reference/* dmg/DataWarrior.app/reference/
 cp ../external_data/macro/* dmg/DataWarrior.app/macro/

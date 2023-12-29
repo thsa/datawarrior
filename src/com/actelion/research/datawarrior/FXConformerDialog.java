@@ -33,11 +33,14 @@ import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 import javafx.geometry.Point3D;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.paint.Color;
 import org.openmolecules.chem.conf.gen.ConformerDiagnostics;
 import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.chem.conf.so.ConformationSelfOrganizer;
 import org.openmolecules.chem.conf.so.SelfOrganizedConformer;
+import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
 import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
@@ -103,12 +106,35 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
 		settings.add(V3DScene.ViewerSettings.INDIVIDUAL_ROTATION);
 		mConformationPanel = new JFXConformerPanel(true, V3DScene.CONFORMER_VIEW_MODE);
+		mConformationPanel.setPopupMenuController(new V3DPopupMenuController() {
+			@Override
+			public void addExternalMenuItems(ContextMenu contextMenu, int type) {
+				if (type == V3DPopupMenuController.TYPE_FILE) {
+					javafx.scene.control.MenuItem itemSaveDWAR = new javafx.scene.control.MenuItem("Save As DataWarrior File...");
+					itemSaveDWAR.setOnAction(e -> saveConformers(FileHelper.cFileTypeDataWarrior));
+					contextMenu.getItems().add(itemSaveDWAR);
+
+					javafx.scene.control.MenuItem itemSaveSDV2 = new javafx.scene.control.MenuItem("Save As SD-File (V2)...");
+					itemSaveSDV2.setOnAction(e -> saveConformers(FileHelper.cFileTypeSDV2));
+					contextMenu.getItems().add(itemSaveSDV2);
+
+					javafx.scene.control.MenuItem itemSaveSDV3 = new javafx.scene.control.MenuItem("Save As SD-File (V3)...");
+					itemSaveSDV3.setOnAction(e -> saveConformers(FileHelper.cFileTypeSDV3));
+					contextMenu.getItems().add(itemSaveSDV3);
+
+					if (System.getProperty("development") != null) {
+						javafx.scene.control.MenuItem itemSaveDebug = new javafx.scene.control.MenuItem("Write DW Files");
+						itemSaveDebug.setOnAction(e -> writeDataWarriorDebugFile());
+						contextMenu.getItems().add(itemSaveDebug);
+					}
+				}
+			}
+		});
 
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
+		double[][] size = { {TableLayout.FILL, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
 				gap, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.PREFERRED, gap,
-				TableLayout.PREFERRED, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL,
-				TableLayout.PREFERRED, gap},
+				TableLayout.PREFERRED, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL},
 							{gap, TableLayout.PREFERRED, gap} };
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new TableLayout(size));
@@ -144,29 +170,6 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 		JButton superposeButton = new JButton("Superpose...");
 		superposeButton.addActionListener(this);
 		buttonPanel.add(superposeButton, "15,1");
-
-		JMenu saveMenu = new JMenu("Save");
-		JMenuItem saveNativeItem = new JMenuItem("As DataWarrior File...");
-		saveNativeItem.addActionListener(this);
-		saveMenu.add(saveNativeItem);
-
-		JMenuItem saveSDF2Item = new JMenuItem("As SD-File (V2)...");
-		saveSDF2Item.addActionListener(this);
-		saveMenu.add(saveSDF2Item);
-
-		JMenuItem saveSDF3Item = new JMenuItem("As SD-File (V3)...");
-		saveSDF3Item.addActionListener(this);
-		saveMenu.add(saveSDF3Item);
-
-		if (System.getProperty("development") != null) {
-			JMenuItem debugItem = new JMenuItem("Write DW Files");
-			debugItem.addActionListener(this);
-			saveMenu.add(debugItem);
-			}
-
-		JMenuBar menuBar = new JMenuBar();
-		menuBar.add(saveMenu);
-		buttonPanel.add(menuBar, "17,1");
 
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(mConformationPanel, BorderLayout.CENTER);
@@ -239,26 +242,6 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 			int minimization = mComboBoxMinimization.getSelectedIndex();
 			int count = (1 << mComboBoxCount.getSelectedIndex());
 			generateConformers(algo, minimization, count);
-			return;
-			}
-
-		if (e.getActionCommand().equals("As DataWarrior File...")) {
-			saveConformers(FileHelper.cFileTypeDataWarrior);
-			return;
-			}
-
-		if (e.getActionCommand().equals("As SD-File (V2)...")) {
-			saveConformers(FileHelper.cFileTypeSDV2);
-			return;
-			}
-
-		if (e.getActionCommand().equals("As SD-File (V3)...")) {
-			saveConformers(FileHelper.cFileTypeSDV3);
-			return;
-			}
-
-		if (e.getActionCommand().equals("Write DW Files")) {
-			writeDataWarriorDebugFile();
 			return;
 			}
 		}
@@ -651,27 +634,105 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 		}
 
 	private void saveConformers(int fileType) {
-		String filename = new FileHelper(this).selectFileToSave("Save Conformers", fileType, "Conformers");
-		if (filename == null)
-			return;
+		SwingUtilities.invokeLater(() -> {
+			String filename = new FileHelper(this).selectFileToSave("Save Conformers", fileType, "Conformers");
+			if (filename == null)
+				return;
 
-		File file = new File(filename);
-		if (file.exists() && !file.canWrite())
-			return;
+			File file = new File(filename);
+			if (file.exists() && !file.canWrite())
+				return;
 
-		String energyTitle = (mPreviousMinimization != MINIMIZE_NONE) ? "Energy in kcal/mol"
-				: (mPreviousAlgo == SELF_ORGANIZED) ? "Strain"
-				: (mPreviousAlgo == ACTELION3D) ? "" : "Percent Contribution";
+			String energyTitle = (mPreviousMinimization != MINIMIZE_NONE) ? "Energy in kcal/mol"
+					: (mPreviousAlgo == SELF_ORGANIZED) ? "Strain"
+					: (mPreviousAlgo == ACTELION3D) ? "" : "Percent Contribution";
 
-		ArrayList<StereoMolecule> conformerList = mConformationPanel.getMolecules(null);
+			ArrayList<StereoMolecule> conformerList = mConformationPanel.getMolecules(null);
 
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+			try {
+				BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 
-			if (fileType == FileHelper.cFileTypeDataWarrior) {
+				if (fileType == FileHelper.cFileTypeDataWarrior) {
+					bw.write("<column properties>");
+					bw.newLine();
+					bw.write("<columnName=\"Conformer\">");
+					bw.newLine();
+					bw.write("<columnProperty=\"specialType\tidcode\">");
+					bw.newLine();
+					bw.write("<columnName=\"coords\">");
+					bw.newLine();
+					bw.write("<columnProperty=\"specialType\tidcoordinates3D\">");
+					bw.newLine();
+					bw.write("<columnProperty=\"parent\tConformer\">");
+					bw.newLine();
+					bw.write("</column properties>");
+					bw.newLine();
+					bw.write("Conformer\tcoords\tName");
+					if (energyTitle.length() != 0)
+						bw.write("\t"+energyTitle);
+					bw.newLine();
+					for (StereoMolecule conformer:conformerList) {
+						Canonizer canonizer = new Canonizer(conformer);
+						bw.write(canonizer.getIDCode());
+						bw.write('\t');
+						bw.write(canonizer.getEncodedCoordinates());
+						bw.write('\t');
+						bw.write(conformer.getName());
+						bw.write('\t');
+						if (energyTitle.length() != 0) {
+							bw.write(DoubleFormat.toString(((Double)conformer.getUserData()).doubleValue()));
+							bw.newLine();
+							}
+						}
+					}
+				else {
+					for (StereoMolecule conformer:conformerList) {
+						if (fileType == FileHelper.cFileTypeSDV2)
+							new MolfileCreator(conformer).writeMolfile(bw);
+						else
+							new MolfileV3Creator(conformer).writeMolfile(bw);
+
+						bw.write(">  <Conformer Name>");
+						bw.newLine();
+						bw.write(conformer.getName());
+						bw.newLine();
+						bw.newLine();
+
+						if (energyTitle.length() != 0) {
+							bw.write(">  <"+energyTitle+">");
+							bw.newLine();
+							bw.write(DoubleFormat.toString(((Double)conformer.getUserData()).doubleValue()));
+							bw.newLine();
+							bw.newLine();
+							}
+
+						bw.write("$$$$");
+						bw.newLine();
+						}
+					}
+
+				bw.close();
+				}
+			catch (IOException ioe) {
+				ioe.printStackTrace();
+				}
+			} );
+		}
+
+	private void writeDataWarriorDebugFile() {
+		SwingUtilities.invokeLater(() -> {
+			ConformerGenerator cg = new ConformerGenerator(12345L, true);
+			cg.setDiagnosticMode(true);
+			cg.initializeConformers(mMol.getCompactCopy(), ConformerGenerator.STRATEGY_LIKELY_SYSTEMATIC, 10000, false);
+			StereoMolecule conformer = cg.getNextConformerAsMolecule(null);
+			while (conformer != null)
+				conformer = cg.getNextConformerAsMolecule(null);
+
+			try {
+				BufferedWriter bw = new BufferedWriter(new FileWriter(DATAWARRIOR_DEBUG_FILE));
 				bw.write("<column properties>");
 				bw.newLine();
-				bw.write("<columnName=\"Conformer\">");
+				bw.write("<columnName=\"Structure\">");
 				bw.newLine();
 				bw.write("<columnProperty=\"specialType\tidcode\">");
 				bw.newLine();
@@ -679,115 +740,41 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 				bw.newLine();
 				bw.write("<columnProperty=\"specialType\tidcoordinates3D\">");
 				bw.newLine();
-				bw.write("<columnProperty=\"parent\tConformer\">");
+				bw.write("<columnProperty=\"parent\tStructure\">");
 				bw.newLine();
 				bw.write("</column properties>");
 				bw.newLine();
-				bw.write("Conformer\tcoords\tName");
-				if (energyTitle.length() != 0)
-					bw.write("\t"+energyTitle);
+				bw.write("Structure\tcoords\ttorsionIndexes\tcollision");
 				bw.newLine();
-				for (StereoMolecule conformer:conformerList) {
-					Canonizer canonizer = new Canonizer(conformer);
-					bw.write(canonizer.getIDCode());
-					bw.write('\t');
-					bw.write(canonizer.getEncodedCoordinates());
-					bw.write('\t');
-					bw.write(conformer.getName());
-					bw.write('\t');
-					if (energyTitle.length() != 0) {
-						bw.write(DoubleFormat.toString(((Double)conformer.getUserData()).doubleValue()));
-						bw.newLine();
-						}
-					}
-				}
-			else {
-				for (StereoMolecule conformer:conformerList) {
-					if (fileType == FileHelper.cFileTypeSDV2)
-						new MolfileCreator(conformer).writeMolfile(bw);
-					else
-						new MolfileV3Creator(conformer).writeMolfile(bw);
+				for (ConformerDiagnostics cd:cg.getDiagnostics().getDiagnostics()) {
+					String idcode = cd.getIDCode();
+					String coords = cd.getCoords();
+					if (cd.getCollisionAtoms() != null) {
+						StereoMolecule mol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode, coords);
+						for (int atom:cd.getCollisionAtoms())
+							mol.setAtomicNo(atom, 5);
 
-					bw.write(">  <Conformer Name>");
-					bw.newLine();
-					bw.write(conformer.getName());
-					bw.newLine();
-					bw.newLine();
-
-					if (energyTitle.length() != 0) {
-						bw.write(">  <"+energyTitle+">");
-						bw.newLine();
-						bw.write(DoubleFormat.toString(((Double)conformer.getUserData()).doubleValue()));
-						bw.newLine();
-						bw.newLine();
+						Canonizer canonizer = new Canonizer(conformer);
+						idcode = canonizer.getIDCode();
+						coords = canonizer.getEncodedCoordinates();
 						}
 
-					bw.write("$$$$");
+					StringBuilder torsionString = new StringBuilder("ti:");
+					for (int ti:cd.getTorsionIndexes())
+						torsionString.append(" "+ti);
+					torsionString.append(" fi:");
+					for (int fi:cd.getRigidFragmentIndexes())
+						torsionString.append(" "+fi);
+
+					bw.write(idcode+"\t"+coords+"\t"+torsionString+"\t"+cd.getCollisionLog());
 					bw.newLine();
 					}
+				bw.close();
 				}
-
-			bw.close();
-			}
-		catch (IOException ioe) {
-			ioe.printStackTrace();
-			}
-		}
-
-	private void writeDataWarriorDebugFile() {
-		ConformerGenerator cg = new ConformerGenerator(12345L, true);
-		cg.setDiagnosticMode(true);
-		cg.initializeConformers(mMol.getCompactCopy(), ConformerGenerator.STRATEGY_LIKELY_SYSTEMATIC, 10000, false);
-		StereoMolecule conformer = cg.getNextConformerAsMolecule(null);
-		while (conformer != null)
-			conformer = cg.getNextConformerAsMolecule(null);
-
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(DATAWARRIOR_DEBUG_FILE));
-	        bw.write("<column properties>");
-	        bw.newLine();
-	        bw.write("<columnName=\"Structure\">");
-	        bw.newLine();
-	        bw.write("<columnProperty=\"specialType\tidcode\">");
-	        bw.newLine();
-	        bw.write("<columnName=\"coords\">");
-	        bw.newLine();
-	        bw.write("<columnProperty=\"specialType\tidcoordinates3D\">");
-	        bw.newLine();
-	        bw.write("<columnProperty=\"parent\tStructure\">");
-	        bw.newLine();
-	        bw.write("</column properties>");
-	        bw.newLine();
-	        bw.write("Structure\tcoords\ttorsionIndexes\tcollision");
-	        bw.newLine();
-			for (ConformerDiagnostics cd:cg.getDiagnostics().getDiagnostics()) {
-				String idcode = cd.getIDCode();
-				String coords = cd.getCoords();
-				if (cd.getCollisionAtoms() != null) {
-					StereoMolecule mol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode, coords);
-					for (int atom:cd.getCollisionAtoms())
-						mol.setAtomicNo(atom, 5);
-
-					Canonizer canonizer = new Canonizer(conformer);
-					idcode = canonizer.getIDCode();
-					coords = canonizer.getEncodedCoordinates();
-					}
-
-				StringBuilder torsionString = new StringBuilder("ti:");
-				for (int ti:cd.getTorsionIndexes())
-					torsionString.append(" "+ti);
-				torsionString.append(" fi:");
-				for (int fi:cd.getRigidFragmentIndexes())
-					torsionString.append(" "+fi);
-
-				bw.write(idcode+"\t"+coords+"\t"+torsionString+"\t"+cd.getCollisionLog());
-				bw.newLine();
+			catch (IOException ioe) {
+				ioe.printStackTrace();
 				}
-			bw.close();
-			}
-		catch (IOException ioe) {
-			ioe.printStackTrace();
-			}
+			} );
 		}
 
 /*	class ConformationPanel extends JPanel {

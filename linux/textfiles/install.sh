@@ -8,7 +8,6 @@ fi
 cp -r datawarrior /opt/
 cp uninstall.sh /opt/datawarrior/
 cp resources/openmolecules-datawarrior.xml /opt/datawarrior/
-mkdir /opt/datawarrior/update
 chmod 755 /opt/datawarrior
 chmod 755 /opt/datawarrior/datawarrior
 chmod 777 /opt/datawarrior/update

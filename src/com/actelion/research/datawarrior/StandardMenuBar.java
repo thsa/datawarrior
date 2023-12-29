@@ -1233,18 +1233,20 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			jMenuHelpLaF.add(item);
 			}
 
-		Preferences prefs = DataWarrior.getPreferences();
-		String dpiScaling = prefs.get(DataWarrior.PREFERENCES_KEY_DPI_SCALING, DPI_OPTIONS[0]);
+		if (!Platform.isMacintosh()) {
+			Preferences prefs = DataWarrior.getPreferences();
+			String dpiScaling = prefs.get(DataWarrior.PREFERENCES_KEY_DPI_SCALING, DPI_OPTIONS[0]);
 
-		jMenuHelpDPIScaling = new JMenu();
-		jMenuHelpDPIScaling.setText("User Interface Scaling");
-		for (String dpi:DPI_OPTIONS) {
-			JCheckBoxMenuItem item = new JCheckBoxMenuItem();
-			item.setActionCommand(SCALE_DPI+dpi);
-			item.setText(dpi);
-			item.setSelected(dpi.equals(dpiScaling));
-			item.addActionListener(this);
-			jMenuHelpDPIScaling.add(item);
+			jMenuHelpDPIScaling = new JMenu();
+			jMenuHelpDPIScaling.setText("User Interface Scaling");
+			for (String dpi : DPI_OPTIONS) {
+				JCheckBoxMenuItem item = new JCheckBoxMenuItem();
+				item.setActionCommand(SCALE_DPI + dpi);
+				item.setText(dpi);
+				item.setSelected(dpi.equals(dpiScaling));
+				item.addActionListener(this);
+				jMenuHelpDPIScaling.add(item);
+				}
 			}
 
 		jMenuHelpHelp = new JMenuItem();
@@ -1280,7 +1282,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 		jMenuHelp.addSeparator();
 		jMenuHelp.add(jMenuHelpLaF);
-		jMenuHelp.add(jMenuHelpDPIScaling);
+		if (!Platform.isMacintosh())
+			jMenuHelp.add(jMenuHelpDPIScaling);
 
 		addUpdateMenu(jMenuHelp);
 

@@ -38,21 +38,22 @@ NOTE: We use the latest theinfinitekind/appbundler (GitHub) to build the DataWar
 3. build this project to create the DataWarrior.app without sample/reference/macro files in macosx/dist
    > ant
 
-3b. EXPERIMENTAL: Add the following to the created Info.plist to define custom URI handling
+   Then, just before the line "<key>CFBundleDocumentTypes</key>" add the following to the created Info.plist
+   to define custom URI handling:
 
-<key>CFBundleURLTypes</key>
-<array>
-    <dict>
-        <key>CFBundleURLName</key>
-        <string>org.openmolecules.datawarrior</string>
-        <key>CFBundleURLSchemes</key>
+        <key>CFBundleURLTypes</key>
         <array>
-            <string>datawarrior</string>
+            <dict>
+                <key>CFBundleURLName</key>
+                <string>org.openmolecules.datawarrior</string>
+                <key>CFBundleURLSchemes</key>
+                <array>
+                    <string>datawarrior</string>
+                </array>
+                <key>CFBundleTypeRole</key>
+                <string>Editor</string>
+            </dict>
         </array>
-        <key>CFBundleTypeRole</key>
-        <string>Editor</string>
-    </dict>
-</array>
 
 4. create dw_master.dmg, if not done before or if JRE was updated (see howToCreateMasterDMG.txt)
 

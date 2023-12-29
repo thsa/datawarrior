@@ -2,19 +2,20 @@ Procedure to create master_dmg:
 
 - make sure no device named 'DataWarrior' is mounted
 - create empty dmg "dw_master.dmg" with 'Disk Utility'
-  (500MB, name: DataWarrior, no encryption, r/w)
+  ("New Image->Blank Image...", 600MB, name: DataWarrior, no encryption, r/w)
 - close Disk Utility and mount dw_master.dmg if it is not mounted yet!!!
 - run something like the following in a shell:
   mkdir /Volumes/DataWarrior/.background
-  cp ~/Documents/dev/git/DataWarrior/dataexplorer/macosx/dmg_background.png /Volumes/DataWarrior/.background/background.png
-  cp ~/Documents/dev/git/DataWarrior/dataexplorer/macosx/dmg_background@2x.png /Volumes/DataWarrior/.background/background@2x.png
+  cp dmg_background.png /Volumes/DataWarrior/.background/background.png
+  cp dmg_background@2x.png /Volumes/DataWarrior/.background/background@2x.png
 - Open Finder window of dw_master, select icon view, hide Sidebar and Toolbar,
   show view option dialog: set icon size to 72, select background picture,
   open new finder window and shift-cmd-G to "/Volumes/DataWarrior/.background/",
   drag&drop picture from .background folder, size and move window accordingly
-- Copy DataWarrior.app from the maxosx folder and an alias of the Applications folder (cmd-alt d&d) to the dmg window.
+- Copy DataWarrior.app from the maxosx/dist folder and an alias
+  of the Applications folder (command-option d&d) to the dmg window.
 - run this in a shell to make the Finder window automatically open on mount:
-  bless --openfolder /Volumes/DataWarrior
+  bless --openfolder /Volumes/DataWarrior  (skip this on Apple silicon)
 - make DataWarrior executable
   chmod +x /Volumes/DataWarrior/DataWarrior.app/Contents/MacOS/*
-- Close Finder window and unmount the disk image.
+- Unmount the disk image.

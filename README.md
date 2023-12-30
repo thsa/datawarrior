@@ -73,8 +73,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 ### Supported by
-<img alt="YourKit-logo" src="https://www.yourkit.com/images/yklogo.png" width="185"/>
-YourKit supports open source projects with innovative and intelligent tools 
+<img alt="YourKit-logo" src="https://www.yourkit.com/images/yklogo.png" width="67%"/> YourKit
+supports open source projects with innovative and intelligent tools 
 for monitoring and profiling Java and .NET applications.
 YourKit is the creator of [YourKit Java Profiler](https://www.yourkit.com/java/profiler/),
 [YourKit .NET Profiler](https://www.yourkit.com/dotnet-profiler/),

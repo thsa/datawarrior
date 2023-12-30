@@ -70,3 +70,12 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+##### Supported by
+![YourKit-logo](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALkAAAAsBAMAAADLKASfAAAAD1BMVEUAAAA7Pit5TSflaCD///9M0XeLAAAAAXRSTlMAQObYZgAAAi1JREFUWMPdlttxAyEMRaUOkDcN2FuBTQWecf81hYfQA7D3I+yHw2T8iMXhIi7SAvBA87p8IJU3CqfQqXLpFDzuBYv7lc6Ax3vGUnycIP4SK3aLaZXVeIppJGraQoyrc1OgmYqRl1mcl5hTwh/Wpp4alLb2QWxaHZrfP1+WEoclrgbzv/LcWDNCJUMpRR1dIg/oNbyjI2u+yx7CqCl8voo5oEqHfg6Lf2yddKsJjuh2DTenid9ZuqPTX+mSeZYePP0wMSBhNNsv8nnWs6XJNDimkxNh98umLK63Oo3F3tZ+7MJGuor3Otu0Zubg9lOSgPkvjZY/+UW3gk28l15D1W5lZRXKvxZ6GBZXw9PPk8U/7Km2KDaEnFdQBiqr7rqjp9dXGpL5eLPHTWSly22xDPkxuKOqwT+vMp5qG600Qieh43s6vKe/NqVHV2nkQnm6LDnRLncEG32mHQbBYaDLmQidHVY3P9K1+5G93ko33wFM2oar2ujPKd1d787pYG2Cczo0utSxXGtW00shu+7+UCd9oT/arswM9HKstUxea0WY001j87Wzp9syk03zpEanm7WM605z59t2So7eLJnhxGUmVZy7r/ABuqs6oYeu0yidCvzS6HTRQx1Md0APjm5ujNJtF7C2MPNcVzmmB2B6QNcFvARROqEz0BhTJgYQum90trWTPukjmUC0TjdVvc3L3zd9yKOVz6m1Xxo6LH+Ex239A+o/ofdO/0I6fRH9F/QFn5WZ2jM+AAAAAElFTkSuQmCC)
+YourKit supports open source projects with innovative and intelligent tools 
+for monitoring and profiling Java and .NET applications.
+YourKit is the creator of [YourKit Java Profiler](https://www.yourkit.com/java/profiler/),
+[YourKit .NET Profiler](https://www.yourkit.com/dotnet-profiler/),
+and [YourKit YouMonitor](https://www.yourkit.com/youmonitor/).

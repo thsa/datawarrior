@@ -1,0 +1,5 @@
+rm -rf src/org/openmolecules/datawarrior/plugin/I*.java
+cp ../src/org/openmolecules/datawarrior/plugin/* src/org/openmolecules/datawarrior/plugin/
+rm src/org/openmolecules/datawarrior/plugin/IPluginInitializer.java
+./buildAll
+jar -cvfM datawarriorPluginSDK_2.2.zip src buildAll readme.txt manifest_additions.txt examplePlugin.jar

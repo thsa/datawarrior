@@ -1,3 +1,5 @@
+package com.mycompany;
+
 import org.openmolecules.datawarrior.plugin.IChemistryPanel;
 import org.openmolecules.datawarrior.plugin.IPluginHelper;
 import org.openmolecules.datawarrior.plugin.IPluginTask;

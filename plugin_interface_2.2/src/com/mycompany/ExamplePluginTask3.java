@@ -1,3 +1,5 @@
+package com.mycompany;
+
 import org.openmolecules.datawarrior.plugin.IPluginHelper;
 import org.openmolecules.datawarrior.plugin.IPluginTask;
 import org.openmolecules.datawarrior.plugin.IUserInterfaceHelper;

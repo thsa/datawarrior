@@ -1,0 +1,18 @@
+mkdir bin
+
+# Compile PluginInfo,PluginStarter and all referenced plugin task classes and interfaces
+javac -sourcepath ./src -d ./bin -Xlint:unchecked src/org/openmolecules/datawarrior/plugin/*.java
+
+# If your plugin uses classes that are part of DataWarrior itself or OpenChemLib (which is part of DataWarrior),
+# then you should not include these classes into your final plugin.jar, because
+# under runtime conditions the plugin has full access to all classes included in datawarrior.jar.
+# When building the plugin, however, you need to include datawarrior.jar in the classpath, e.g.:
+# javac -Xlint:unchecked -sourcepath ./src -classpath datawarrior.jar:. org/openmolecules/datawarrior/plugin/*.java
+
+# Remove all interfaces that are part of DataWarrior anyway
+rm bin/org/openmolecules/datawarrior/plugin/I*.class
+
+# Build plugin jar file and add a manifest to show message when jar is double clicked
+jar -cfm examplePlugin.jar manifest_additions.txt -C ./bin .
+
+rm -r ./bin

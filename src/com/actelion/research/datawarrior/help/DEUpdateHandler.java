@@ -191,8 +191,8 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 			if (availableInstaller != null
 			 && availableInstaller.matches("v\\d\\d\\.\\d\\d\\.\\d\\d")
 			 && availableInstaller.compareTo(DATAWARRIOR_VERSION) > 0) {
-				String url = prefs.get(PROPERTY_MANUAL_UPDATE_URL, "URL unexpectedly not available.");
-				String detail = prefs.get(PROPERTY_MANUAL_UPDATE_DETAIL, "Update detail information not available.");
+				String url = sPostInstallInfo.getProperty(PROPERTY_MANUAL_UPDATE_URL, "URL unexpectedly not available.");
+				String detail = sPostInstallInfo.getProperty(PROPERTY_MANUAL_UPDATE_DETAIL, "Update detail information not available.");
 				SwingUtilities.invokeLater(() ->
 					new DEUpdateHandler(parent, availableInstaller, url, detail).setVisible(true) );
 				return;
@@ -479,11 +479,16 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 		getContentPane().setLayout(new TableLayout(size));
 		getContentPane().add(new JLabel("A DataWarrior update is available, which requires manual installation.", JLabel.CENTER), "1,1");
 		getContentPane().add(new JLabel("Available version: "+version+" (Currently installed version: "+DATAWARRIOR_VERSION+")", JLabel.CENTER), "1,3");
-		
-		JEditorPane ep = new JEditorPane();
-		ep.setEditable(false);
-		ep.setContentType("text/plain");
+
+//		JEditorPane ep = new JEditorPane();
+//		ep.setEditable(false);
+//		ep.setContentType("text/plain");
+//		ep.setText(text);
+		JTextArea ep = new JTextArea();
+		ep.setLineWrap(true);
+		ep.setWrapStyleWord(true);
 		ep.setText(text);
+
 		JScrollPane sp = new JScrollPane(ep, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		sp.setPreferredSize(new Dimension(HiDPIHelper.scale(540), HiDPIHelper.scale(240)));
 		SwingUtilities.invokeLater(() -> sp.getVerticalScrollBar().setValue(sp.getVerticalScrollBar().getMinimum()));

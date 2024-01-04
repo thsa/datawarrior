@@ -765,7 +765,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 		case FileHelper.cFileTypeDataWarrior:
 		case FileHelper.cFileTypeSD:
 		case FileHelper.cFileTypeTextTabDelimited:
-		case FileHelper.cFileTypeTextCommaSeparated:
+		case FileHelper.cFileTypeTextAnyCSV:
 		    new DETaskOpenFile(this, filename).defineAndRun();
 			return;
 		case FileHelper.cFileTypeDataWarriorMacro:

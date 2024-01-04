@@ -5,7 +5,7 @@ batik-all.jar created with script, contains:
 (capka.jar)
 Contains at least the needed subset of the ChemAxon pKa-plugin software needed to calculate pKa values.
 If you have licensed the ChemAxon pKa-plugin, then you may be build a 'capka.jar' file yourself.
-If you build with a capka.jar file, then don't use the chemaxon stubs directory as part of the source code!
+If you build DataWarrior with your capka.jar file, then remove the chemaxon stubs directory from the datawarrior source code!
 
 commons-math-2.2.jar
 
@@ -37,11 +37,9 @@ opsin-core-2.8.0-jar-with-dependencies from https://github.com/dan2097/opsin/rel
 
 postgresql-42.2.6.jar
 
-substancelaf.jar contains a merge of these 4 files:
-substance-7.31.jar
-trident-7.3-swing.jar
-laf-plugin-7.31.jar
-laf-widget-7.31.jar
+radiance-animation-6.5.0.jar
+radiance-common-6.5.0.jar
+radiance-theming-6.5.0.jar
 
 tsne_small.jar: original file, but using EJML 0.38 instead of 0.26 (because Debian uses 0.38)
 and used proguard to remove unused dependencies

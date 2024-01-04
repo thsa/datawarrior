@@ -11,6 +11,7 @@ rm -f META-INF/*.RSA
 rm -f META-INF/*.DSA
 cd ..
 echo "Building fat JAR file..."
+echo $(date +%e-%b-%Y) > ./bin/resources/builtDate.txt
 jar -cfm datawarrior_all.jar manifest_additions.txt -C ./bin .
 rm -r bin
 echo "Done."

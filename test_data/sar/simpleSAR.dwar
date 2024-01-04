@@ -1,0 +1,54 @@
+<datawarrior-fileinfo>
+<version="3.3">
+<created="1689326572197">
+<rowcount="8">
+</datawarrior-fileinfo>
+<datawarrior macroList>
+<macro name="coreBasedSAR">
+<task name="coreBasedSARAnalysis">
+considerStereo=true
+scaffoldList=gKY@LDi\Zj@` !B?g|_Fa}eTv\
+structureColumn=Structure
+useExistingColumns=true
+</task>
+</macro>
+</datawarrior macroList>
+<column properties>
+<columnName="Structure">
+<columnProperty="specialType	idcode">
+<columnName="idcoordinates2D">
+<columnProperty="parent	Structure">
+<columnProperty="specialType	idcoordinates2D">
+<columnName="FragFp">
+<columnProperty="parent	Structure">
+<columnProperty="specialType	FragFp">
+<columnProperty="version	1.2.1">
+</column properties>
+idcoordinates2D	FragFp	Structure
+!BFa}`YUMg?g|lYp	zbbBQK1X0o20ZX#V04+V/2%4/)VV%2V8F0	gFyHJaHILimUTb@
+!Bza|`iUMg_g}LYp	zbbBQK1X0o20ZX#V04+V/2%4/)VV%2V4F0	gFyHJabILimUTd@
+!B_c~_Va|Udz]?`P	zjbDQG1X0q20ZH!VV(V$V0V/$4!V/%VV%2V0F0	gFy@LDi_FjjE@
+!BFa}`YUMg?g|lYqaS	zbbBQS1X0o20ZXk!V04F014&V)8%2%4/)VV%2V8F0	gOyDJ`DNPRYTvjjTQP@
+!ByQ}_iRqg@W|sYp	zbbBQK1X0o20ZX#V04+V/2%4/)VV%2V8F0	gFyHJaHILimUTb@
+!BEQ|?IRqg`W}sYp	zbbBQK1X0o20ZX#V04+V/2%4/)VV%2V4F0	gFyHJabILimUTd@
+!B`S~`ffCekJ\@@P	zjbDQG1X0q20ZH!VV(V$V0V/$4!V/%VV%2V0F0	gFy@LDi_FjjE@
+!ByQ}_iRqg@W|sYq]S	zbbBQS1X0o20ZXk!V04F014&V)8%2%4/)VV%2V8F0	gOyDJ`DNPRYTvjjTQP@
+<hitlist data>
+<hitlistName="<selection>">
+<hitlistData="@B">
+</hitlist data>
+<datawarrior properties>
+<columnFilter_Table="">
+<columnWidth_Table_Structure="99">
+<currentRecord="3">
+<detailView="height[Data]=0.5;height[Structure]=0.5">
+<headerLines_Table="2">
+<mainSplitting="0.72634">
+<mainView="Table">
+<mainViewCount="1">
+<mainViewDockInfo0="root">
+<mainViewName0="Table">
+<mainViewType0="tableView">
+<rightSplitting="0.66926">
+<rowHeight_Table="80">
+</datawarrior properties>

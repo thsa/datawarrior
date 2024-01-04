@@ -1,0 +1,56 @@
+<datawarrior-fileinfo>
+<version="3.3">
+<created="1688760974734">
+<rowcount="7">
+</datawarrior-fileinfo>
+<datawarrior macroList>
+<macro name="SARTest">
+<task name="coreBasedSARAnalysis">
+considerStereo=true
+scaffoldList=gOp@DjukZj`Mh` !Bo`Bh?Y^}oe~~Wy^}
+structureColumn=Structure
+useExistingColumns=false
+</task>
+</macro>
+</datawarrior macroList>
+<column properties>
+<columnName="idcoordinates2D">
+<columnProperty="parent	Structure">
+<columnProperty="specialType	idcoordinates2D">
+<columnName="FragFp">
+<columnProperty="parent	Structure">
+<columnProperty="specialType	FragFp">
+<columnProperty="version	1.2.1">
+<columnName="Structure">
+<columnProperty="specialType	idcode">
+</column properties>
+idcoordinates2D	FragFp	Structure
+!BmpK~_?x@m?vw?X`B?g~H_P	zxx_GZs4WX4T40488BV42808VVF0880V0N!180F0VF8%X!8%F#H*4*2010	didD@@EJYWkjZj`aD
+!BupI~Owx@uwwW_X`BMpI~Oxb}	zxxbGZs4WX4T4048cBV42808VVF0880V0N!180F0VF8%X808#F0F#H*4*2010	deTD@@eJYYzFfjjBDP
+!BupI~Owx@uwwW_S\B_c?~Os]}Mwtw_S\B	:xjtis4li4y50CNeBsB2828qtFVN84W0N10Q80FFco8#60X80c#F0FV0FH3%8F14.	dklD@@eJYUUZzfjZjcdbWP
+!B_?JAtL]BvJIAtL^]P]CXhcy`qxKGg\^B	:xjtis4li4y50CNeBsB2828qtFVN86W0N10Q80FFco8#60X80c#F0FV0FH302#8F14.	dklD`NtHcHeEDbdnFZjfjcHdPh
+!BxaAG_FbBbgo~hD_m?jAh`ix@	vzUfvvzirS6D2ylN@4UNL908uG4WXF05890M06!F0HJ8087B022#V0XJ#2!4V0F0G4F8%V!V8F0	deV@`NBPrJQQX|MUULdIH@
+!BVMuN@Ibb~EJ~T@DPfBJXH`DPGd@	vzUfvfzDpSDyGJ9N@CRs3@2cqOFYcV4189G2@C!F8q84W070VV0VV0VFHJV!2204!10F508!F!V!V0F0	dmM@@@eJUUTjFVijfhJ@@
+!B^wrAg~x@E?tW?XF_^zt	vzUfvft4lR4D0J1N84FF2808m10WV!18802$F0F$3(V02J#2(F4+V0F0	daF@@@Rf_ijZjad@
+<hitlist data>
+<hitlistName="<selection>">
+<hitlistData="@A">
+</hitlist data>
+<datawarrior properties>
+<columnFilter_Table="">
+<columnWidth_Table_Structure="99">
+<currentRecord="3">
+<detailView="height[Data]=0.5;height[Structure]=0.5">
+<headerLines_Table="2">
+<mainSplitting="0.72581">
+<mainView="Table">
+<mainViewCount="2">
+<mainViewDockInfo0="root">
+<mainViewDockInfo1="Table	bottom	0.883">
+<mainViewName0="Table">
+<mainViewName1="Macro Editor">
+<mainViewType0="tableView">
+<mainViewType1="macroEditor">
+<rightSplitting="0.66693">
+<rowHeight_Table="80">
+</datawarrior properties>

@@ -1,0 +1,50 @@
+<datawarrior-fileinfo>
+<version="3.3">
+<created="1698162402596">
+<rowcount="2">
+</datawarrior-fileinfo>
+<datawarrior macroList>
+<macro name="SAR" auto-start="true">
+<task name="coreBasedSARAnalysis">
+considerStereo=true
+scaffoldList=eOJHBHyjCNP` !B`W?W_P
+structureColumn=Structure
+useExistingColumns=true
+</task>
+</macro>
+</datawarrior macroList>
+<column properties>
+<columnName="idcoordinates2D">
+<columnProperty="parent	Structure">
+<columnProperty="specialType	idcoordinates2D">
+<columnName="FragFp">
+<columnProperty="parent	Structure">
+<columnProperty="specialType	FragFp">
+<columnProperty="version	1.2.1">
+<columnName="Structure">
+<columnProperty="specialType	idcode">
+</column properties>
+idcoordinates2D	FragFp	Structure
+!BP@E~Owx?@Gy~Owx?	zjbDvM_eFy20Zq4!V2J04#V01V#V!7V!N&409!2%2.V$2$2W0F0	dnFH`B`@aJ^TrfjjjL`@
+!B@Ghz_si?tHL	zjW6FJ0X0V!Z&404/#8)1//%1#	gKQHH@aJ]Zjih@
+<hitlist data>
+<hitlistName="<selection>">
+<hitlistData="B">
+</hitlist data>
+<datawarrior properties>
+<columnFilter_Table="">
+<columnWidth_Table_Structure="99">
+<detailView="height[Data]=0.5;height[Structure]=0.5">
+<headerLines_Table="2">
+<mainSplitting="0.72634">
+<mainView="Table">
+<mainViewCount="2">
+<mainViewDockInfo0="root">
+<mainViewDockInfo1="Table	bottom	0.697">
+<mainViewName0="Table">
+<mainViewName1="Macro Editor">
+<mainViewType0="tableView">
+<mainViewType1="macroEditor">
+<rightSplitting="0.6677">
+<rowHeight_Table="80">
+</datawarrior properties>

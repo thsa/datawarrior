@@ -1,0 +1,353 @@
+<datawarrior-fileinfo>
+<version="3.3">
+<created="1612083407335">
+<rowcount="30">
+</datawarrior-fileinfo>
+Cat	A	B	C	D	E
+x	6	-6	-6	6	m
+x	2	-2	2	2	m
+x	3	-3	-3	3	m
+x	5	-5	5	5	m
+x	7	-7	-7	7	m
+y	4	-4	4	4	m
+y	1	-1	-1	1	m
+y	3	-3	3	3	m
+y	2	-2	-2	2	m
+y	2	-2	2	2	m
+z	4	-4	-4	4	m
+z	8	-8	8	8	m
+z	11	-11	-11	11	m
+z	2	-2	2	2	m
+z	6	-6	-6	6	m
+x	5	-5	-5	5	n
+x	2	-2	2	2	n
+x	4	-4	-4	4	n
+x	4	-4	4	4	n
+x	8	-8	-8	8	n
+y	6	-6	6	6	n
+y	2	-2	-2	2	n
+y	2	-2	2	2	n
+y	3	-3	-3	3	n
+y	4	-4	4	4	n
+z	5	-5	-5	5	n
+z	9	-9	9	9	n
+z	13	-13	-13	13	n
+z	1	-1	1	1	n
+z	7	-7	-7	7	n
+<datawarrior properties>
+<axisColumn_A (pos)_0="Cat">
+<axisColumn_A (pos)_1="<unassigned>">
+<axisColumn_B (neg)_0="Cat">
+<axisColumn_B (neg)_1="E">
+<axisColumn_C (pos&neg)_0="Cat">
+<axisColumn_C (pos&neg)_1="E">
+<axisColumn_Copy of C (pos&neg)_0="Cat">
+<axisColumn_Copy of C (pos&neg)_1="<unassigned>">
+<axisColumn_D (log)_0="Cat">
+<axisColumn_D (log)_1="E">
+<axisColumn_Split View C (pos&neg)_0="<unassigned>">
+<axisColumn_Split View C (pos&neg)_1="Cat">
+<axisColumn_horiz A (pos)_0="<unassigned>">
+<axisColumn_horiz A (pos)_1="Cat">
+<axisColumn_horiz B (neg)_0="E">
+<axisColumn_horiz B (neg)_1="Cat">
+<axisColumn_horiz C (pos&neg)_0="<unassigned>">
+<axisColumn_horiz C (pos&neg)_1="Cat">
+<axisColumn_horiz D (log)_0="<unassigned>">
+<axisColumn_horiz D (log)_1="Cat">
+<axisColumn_pies A (pos)_0="E">
+<axisColumn_pies A (pos)_1="Cat">
+<axisColumn_pies D (log)_0="Cat">
+<axisColumn_pies D (log)_1="E">
+<background_A (pos)="-4211778">
+<background_B (neg)="-4211778">
+<background_C (pos&neg)="-4211778">
+<background_Copy of C (pos&neg)="-4211778">
+<background_D (log)="-4211778">
+<background_Split View C (pos&neg)="-4211778">
+<background_horiz A (pos)="-4211778">
+<background_horiz B (neg)="-4211778">
+<background_horiz C (pos&neg)="-4211778">
+<background_horiz D (log)="-4211778">
+<background_pies A (pos)="-4211778">
+<background_pies D (log)="-4211778">
+<boxPlotShowCount_A (pos)="true">
+<boxPlotShowCount_B (neg)="true">
+<boxPlotShowCount_C (pos&neg)="true">
+<boxPlotShowCount_Copy of C (pos&neg)="true">
+<boxPlotShowCount_D (log)="true">
+<boxPlotShowCount_Split View C (pos&neg)="true">
+<boxPlotShowCount_horiz A (pos)="true">
+<boxPlotShowCount_horiz B (neg)="true">
+<boxPlotShowCount_horiz C (pos&neg)="true">
+<boxPlotShowCount_horiz D (log)="true">
+<boxPlotShowCount_pies A (pos)="true">
+<boxPlotShowCount_pies D (log)="true">
+<boxPlotShowStdDev_A (pos)="true">
+<boxPlotShowStdDev_B (neg)="true">
+<boxPlotShowStdDev_C (pos&neg)="true">
+<boxPlotShowStdDev_Copy of C (pos&neg)="true">
+<boxPlotShowStdDev_D (log)="true">
+<boxPlotShowStdDev_Split View C (pos&neg)="true">
+<boxPlotShowStdDev_horiz A (pos)="true">
+<boxPlotShowStdDev_horiz B (neg)="true">
+<boxPlotShowStdDev_horiz C (pos&neg)="true">
+<boxPlotShowStdDev_horiz D (log)="true">
+<boxPlotShowStdDev_pies A (pos)="true">
+<boxPlotShowStdDev_pies D (log)="true">
+<caseSeparationColumn_Copy of C (pos&neg)="E">
+<caseSeparationColumn_horiz A (pos)="E">
+<caseSeparationValue_Copy of C (pos&neg)="0.88">
+<caseSeparationValue_horiz A (pos)="0.74">
+<chartColumn_A (pos)="A">
+<chartColumn_B (neg)="B">
+<chartColumn_C (pos&neg)="C">
+<chartColumn_Copy of C (pos&neg)="C">
+<chartColumn_D (log)="D">
+<chartColumn_Split View C (pos&neg)="C">
+<chartColumn_horiz A (pos)="A">
+<chartColumn_horiz B (neg)="B">
+<chartColumn_horiz C (pos&neg)="C">
+<chartColumn_horiz D (log)="D">
+<chartColumn_pies A (pos)="A">
+<chartColumn_pies D (log)="D">
+<chartMode_A (pos)="sum">
+<chartMode_B (neg)="sum">
+<chartMode_C (pos&neg)="sum">
+<chartMode_Copy of C (pos&neg)="sum">
+<chartMode_D (log)="sum">
+<chartMode_Split View C (pos&neg)="sum">
+<chartMode_horiz A (pos)="sum">
+<chartMode_horiz B (neg)="sum">
+<chartMode_horiz C (pos&neg)="sum">
+<chartMode_horiz D (log)="sum">
+<chartMode_pies A (pos)="sum">
+<chartMode_pies D (log)="sum">
+<chartType_A (pos)="bars">
+<chartType_B (neg)="bars">
+<chartType_C (pos&neg)="bars">
+<chartType_Copy of C (pos&neg)="bars">
+<chartType_D (log)="bars">
+<chartType_Split View C (pos&neg)="bars">
+<chartType_horiz A (pos)="bars">
+<chartType_horiz B (neg)="bars">
+<chartType_horiz C (pos&neg)="bars">
+<chartType_horiz D (log)="bars">
+<chartType_pies A (pos)="pies">
+<chartType_pies D (log)="pies">
+<colorColumn_A (pos)="A">
+<colorColumn_B (neg)="A">
+<colorColumn_C (pos&neg)="A">
+<colorColumn_Copy of C (pos&neg)="A">
+<colorColumn_D (log)="A">
+<colorColumn_Split View C (pos&neg)="A">
+<colorColumn_horiz A (pos)="A">
+<colorColumn_horiz B (neg)="A">
+<colorColumn_horiz C (pos&neg)="A">
+<colorColumn_horiz D (log)="A">
+<colorColumn_pies A (pos)="A">
+<colorColumn_pies D (log)="A">
+<colorListMode_A (pos)="straight">
+<colorListMode_B (neg)="straight">
+<colorListMode_C (pos&neg)="straight">
+<colorListMode_Copy of C (pos&neg)="straight">
+<colorListMode_D (log)="straight">
+<colorListMode_Split View C (pos&neg)="straight">
+<colorListMode_horiz A (pos)="straight">
+<colorListMode_horiz B (neg)="straight">
+<colorListMode_horiz C (pos&neg)="straight">
+<colorListMode_horiz D (log)="straight">
+<colorListMode_pies A (pos)="straight">
+<colorListMode_pies D (log)="straight">
+<color_A (pos)_0="-1852923">
+<color_A (pos)_1="-15920195">
+<color_B (neg)_0="-1852923">
+<color_B (neg)_1="-15920195">
+<color_C (pos&neg)_0="-6192891">
+<color_C (pos&neg)_1="-5893611">
+<color_Copy of C (pos&neg)_0="-1852923">
+<color_Copy of C (pos&neg)_1="-15920195">
+<color_D (log)_0="-1852923">
+<color_D (log)_1="-15920195">
+<color_Split View C (pos&neg)_0="-1852923">
+<color_Split View C (pos&neg)_1="-15920195">
+<color_horiz A (pos)_0="-1852923">
+<color_horiz A (pos)_1="-15920195">
+<color_horiz B (neg)_0="-1852923">
+<color_horiz B (neg)_1="-15920195">
+<color_horiz C (pos&neg)_0="-1852923">
+<color_horiz C (pos&neg)_1="-15920195">
+<color_horiz D (log)_0="-1852923">
+<color_horiz D (log)_1="-15920195">
+<color_pies A (pos)_0="-1852923">
+<color_pies A (pos)_1="-15920195">
+<color_pies D (log)_0="-1852923">
+<color_pies D (log)_1="-15920195">
+<columnFilter_Table="">
+<columnWidth_Table_A="39">
+<columnWidth_Table_B="42">
+<columnWidth_Table_C="40">
+<columnWidth_Table_Cat="36">
+<columnWidth_Table_D="45">
+<columnWidth_Table_E="48">
+<detailView="height[Data]=1">
+<fastRendering_A (pos)="false">
+<fastRendering_B (neg)="false">
+<fastRendering_C (pos&neg)="false">
+<fastRendering_Copy of C (pos&neg)="false">
+<fastRendering_D (log)="false">
+<fastRendering_Split View C (pos&neg)="false">
+<fastRendering_horiz A (pos)="false">
+<fastRendering_horiz B (neg)="false">
+<fastRendering_horiz C (pos&neg)="false">
+<fastRendering_horiz D (log)="false">
+<fastRendering_pies A (pos)="false">
+<fastRendering_pies D (log)="false">
+<filter0="#browser#	#disabled#	Cat	x">
+<filter1="#category#	Cat">
+<filter2="#double#	A">
+<filter3="#double#	B">
+<filter4="#double#	C">
+<filter5="#double#	D	#disabled#">
+<filter6="#string#	E">
+<filterAnimation0="state=stopped">
+<filterAnimation2="state=stopped low2=80% high1=20% time=10">
+<filterAnimation3="state=stopped low2=80% high1=20% time=10">
+<filterAnimation4="state=stopped low2=80% high1=20% time=10">
+<filterAnimation5="state=stopped low2=80% high1=20% time=10">
+<fontSize_A (pos)="2.2705">
+<fontSize_B (neg)="2.2705">
+<fontSize_C (pos&neg)="1.6487212">
+<fontSize_Copy of C (pos&neg)="2.2705">
+<fontSize_D (log)="2.2705">
+<fontSize_Split View C (pos&neg)="2.2705">
+<fontSize_horiz A (pos)="2.2705">
+<fontSize_horiz B (neg)="2.2705">
+<fontSize_horiz C (pos&neg)="2.2705">
+<fontSize_horiz D (log)="2.2705">
+<fontSize_pies A (pos)="2.2705">
+<fontSize_pies D (log)="2.2705">
+<headerLines_Table="2">
+<logarithmicView="D">
+<mainSplitting="0.84194">
+<mainView="Split View C (pos&neg)">
+<mainViewCount="13">
+<mainViewDockInfo0="root">
+<mainViewDockInfo1="Table	center">
+<mainViewDockInfo10="A (pos)	right	0.474">
+<mainViewDockInfo11="A (pos)	right	0.488">
+<mainViewDockInfo12="Copy of C (pos&neg)	right	0.433">
+<mainViewDockInfo2="Split View C (pos&neg)	bottom	0.655">
+<mainViewDockInfo3="Split View C (pos&neg)	right	0.605">
+<mainViewDockInfo4="Split View C (pos&neg)	right	0.649">
+<mainViewDockInfo5="Split View C (pos&neg)	bottom	0.655">
+<mainViewDockInfo6="pies D (log)	right	0.599">
+<mainViewDockInfo7="horiz A (pos)	bottom	0.514">
+<mainViewDockInfo8="horiz A (pos)	bottom	0.529">
+<mainViewDockInfo9="horiz C (pos&neg)	bottom	0.492">
+<mainViewInFront1="true">
+<mainViewName0="Table">
+<mainViewName1="Split View C (pos&neg)">
+<mainViewName10="Copy of C (pos&neg)">
+<mainViewName11="B (neg)">
+<mainViewName12="D (log)">
+<mainViewName2="A (pos)">
+<mainViewName3="horiz A (pos)">
+<mainViewName4="pies A (pos)">
+<mainViewName5="pies D (log)">
+<mainViewName6="C (pos&neg)">
+<mainViewName7="horiz C (pos&neg)">
+<mainViewName8="horiz B (neg)">
+<mainViewName9="horiz D (log)">
+<mainViewType0="tableView">
+<mainViewType1="2Dview">
+<mainViewType10="2Dview">
+<mainViewType11="2Dview">
+<mainViewType12="2Dview">
+<mainViewType2="2Dview">
+<mainViewType3="2Dview">
+<mainViewType4="2Dview">
+<mainViewType5="2Dview">
+<mainViewType6="2Dview">
+<mainViewType7="2Dview">
+<mainViewType8="2Dview">
+<mainViewType9="2Dview">
+<markersize_C (pos&neg)="1.69">
+<markersize_pies D (log)="0.64">
+<rightSplitting="0.68794">
+<rowHeight_Table="16">
+<scaleStyle_A (pos)="frame">
+<scaleStyle_B (neg)="frame">
+<scaleStyle_C (pos&neg)="frame">
+<scaleStyle_Copy of C (pos&neg)="frame">
+<scaleStyle_D (log)="frame">
+<scaleStyle_Split View C (pos&neg)="frame">
+<scaleStyle_horiz A (pos)="frame">
+<scaleStyle_horiz B (neg)="frame">
+<scaleStyle_horiz C (pos&neg)="frame">
+<scaleStyle_horiz D (log)="frame">
+<scaleStyle_pies A (pos)="frame">
+<scaleStyle_pies D (log)="frame">
+<scatterplotMargin_A (pos)="0.025">
+<scatterplotMargin_B (neg)="0.025">
+<scatterplotMargin_C (pos&neg)="0.025">
+<scatterplotMargin_Copy of C (pos&neg)="0.025">
+<scatterplotMargin_D (log)="0.025">
+<scatterplotMargin_Split View C (pos&neg)="0.025">
+<scatterplotMargin_horiz A (pos)="0.025">
+<scatterplotMargin_horiz B (neg)="0.025">
+<scatterplotMargin_horiz C (pos&neg)="0.025">
+<scatterplotMargin_horiz D (log)="0.025">
+<scatterplotMargin_pies A (pos)="0.025">
+<scatterplotMargin_pies D (log)="0.025">
+<showBarOrPieSizeValue_A (pos)="true">
+<showBarOrPieSizeValue_B (neg)="true">
+<showBarOrPieSizeValue_C (pos&neg)="true">
+<showBarOrPieSizeValue_Copy of C (pos&neg)="true">
+<showBarOrPieSizeValue_D (log)="true">
+<showBarOrPieSizeValue_Split View C (pos&neg)="true">
+<showBarOrPieSizeValue_horiz A (pos)="true">
+<showBarOrPieSizeValue_horiz B (neg)="true">
+<showBarOrPieSizeValue_horiz C (pos&neg)="true">
+<showBarOrPieSizeValue_horiz D (log)="true">
+<showBarOrPieSizeValue_pies A (pos)="true">
+<showBarOrPieSizeValue_pies D (log)="true">
+<showNaNValues_A (pos)="true">
+<showNaNValues_B (neg)="true">
+<showNaNValues_C (pos&neg)="true">
+<showNaNValues_Copy of C (pos&neg)="true">
+<showNaNValues_D (log)="true">
+<showNaNValues_Split View C (pos&neg)="true">
+<showNaNValues_horiz A (pos)="true">
+<showNaNValues_horiz B (neg)="true">
+<showNaNValues_horiz C (pos&neg)="true">
+<showNaNValues_horiz D (log)="true">
+<showNaNValues_pies A (pos)="true">
+<showNaNValues_pies D (log)="true">
+<splitViewAspect_Split View C (pos&neg)="10.0">
+<splitViewColumn1_Split View C (pos&neg)="E">
+<splitViewShowEmpty_Split View C (pos&neg)="false">
+<suppressGrid_A (pos)="horizontal">
+<suppressGrid_B (neg)="horizontal">
+<suppressGrid_Copy of C (pos&neg)="horizontal">
+<suppressGrid_D (log)="horizontal">
+<suppressGrid_Split View C (pos&neg)="vertical">
+<suppressGrid_horiz A (pos)="vertical">
+<suppressGrid_horiz B (neg)="vertical">
+<suppressGrid_horiz C (pos&neg)="vertical">
+<suppressGrid_horiz D (log)="vertical">
+<suppressGrid_pies A (pos)="vertical">
+<suppressLegend_A (pos)="true">
+<suppressLegend_B (neg)="true">
+<suppressLegend_C (pos&neg)="true">
+<suppressLegend_Copy of C (pos&neg)="true">
+<suppressLegend_D (log)="true">
+<suppressLegend_Split View C (pos&neg)="true">
+<suppressLegend_horiz A (pos)="true">
+<suppressLegend_horiz B (neg)="true">
+<suppressLegend_horiz C (pos&neg)="true">
+<suppressLegend_horiz D (log)="true">
+<suppressLegend_pies A (pos)="true">
+<suppressLegend_pies D (log)="true">
+<titleBackground_Split View C (pos&neg)="-8487798">
+</datawarrior properties>

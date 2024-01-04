@@ -1,0 +1,85 @@
+<datawarrior-fileinfo>
+<version="3.3">
+<created="1688390719364">
+<rowcount="12">
+</datawarrior-fileinfo>
+<datawarrior macroList>
+<macro name="SAR step 1">
+<task name="coreBasedSARAnalysis">
+considerStereo=true
+scaffoldList=dmL@@DjUgZFUBBbbcHFLLg@HScPP !BbOq~O}_|bGvH_Wx@u{u~O}_|u?p
+structureColumn=Structure
+useExistingColumns=true
+</task>
+</macro>
+<macro name="SAR step 2">
+<task name="coreBasedSARAnalysis">
+considerStereo=true
+scaffoldList=daD@P@\R`TfYvzB@@B !B@PAp_@|B|GvA`HF@CpH
+structureColumn=Scaffold
+useExistingColumns=true
+</task>
+</macro>
+<macro name="merge all">
+<task name="mergeColumns">
+remove=false
+keepCoords=true
+newColumn=Merged Data
+columnList=R1	R2	R3	R4	R5	R6	R7	Scaffold 2
+</task>
+</macro>
+<macro name="merge step 1">
+<task name="mergeColumns">
+remove=false
+keepCoords=true
+newColumn=Merged Data
+columnList=R1	R2	R3	R4	R5	R6	Scaffold
+</task>
+</macro>
+</datawarrior macroList>
+<column properties>
+<columnName="idcoordinates2D">
+<columnProperty="parent	Structure">
+<columnProperty="specialType	idcoordinates2D">
+<columnName="FragFp">
+<columnProperty="parent	Structure">
+<columnProperty="specialType	FragFp">
+<columnProperty="version	1.2.1">
+<columnName="Structure">
+<columnProperty="specialType	idcode">
+</column properties>
+idcoordinates2D	FragFp	Structure
+!BmxHAPK]}mpJw@k]}mpI~@K]}mpJw@k]}mwvw``E@u{t	:UvzvrtzRsntRdmFnFNW9M4r40vZV90s8120G#GG!4690N08642V43R#202041B!8$1!F!V4F0	fhiaB@A^AbILklj{TYht@EUULRNST@@
+!Br@K~PLb}r@KH@lb}r@JA@Lb}r@KH@lb}rKwH@oy@jCt	:UvzvrtzRsntRdmFnFNW9M4r40vZV90s8120G#GG!4690N08642V43R#202041B!8$1!F!V4F0	fhiaB@A^AbILklj{TYht@EUULRNST@@
+!B@[?H_Y_]oe~~W?C]e}vWw]x_|KrW_OC]|Mv~@N]]Oi?poOA]	<tyqtzjsnxchLHvkB_xMLqZ4u4eAVF830nG2F1pGFF0381N0864304FO!820224160104#1!I!F880	fleaA@GHADAdLbbRbTrRbcirtZjjBAhhqBDUD@
+!B?m?Wo^a]PQ}AG?]]zEwhWREo}{sh_O]]}uuA@Ib]p^?woO^]	<tyqtzjsnxchLHvkB_xMLqZ4u4eAVF830nG2F1pGFF0381N0864304FO!820224160104#1!I!F880	fleaA@GHADAdLbbRbTrRbcirtZjjBAhhqBDUD@
+!B_c~Ho]^}b@JH_Wx@b@JH@gx@bKvH@h`B_c~HoXb}bKu~Oxb}b@H	;vzvztzwtntRfnFnGNd9z4r42vZV9@s8C20l022IG20J690N086BHV47R2202F3061B!80V0F1!FV%	fbu``@I@RdsrmlkzJPXmUUTDATHINH@
+!B`U~wOZ`}mpJwoXD@m?rw?HD@msvw?K_|`U~wO[\}msvAW{\}m?p	;vzvztzwtntRfnFnGNd9z4r42vZV9@s8C20l022IG20J690N086BHV47R2202F3061B!80V0F1!FV%	fbu``@I@RdsrmlkzJPXmUUTDATHINH@
+!BRr|fKu~A|r|Ycta}Eut~gsz_|EtWWQ]]|Kq^[q]||EwpWSx@YqvhwEyo	<tyqtzjsnzcxH2nmDhhrLya5u4g0kGc15mlXNWoOkF03N1N0D24206FI1!2220Z1601Z4F0V#621F4c0	ffcQA@DeXBlPDILkZrvkLRdmQkUUUTDCQPRBHaJR@@
+!B]D?YSv@AcD?f}s^}FIwA{|Go}ytXgQb]}{raKqa|}ywwg\D@VNvWwJDo	<tyqtzjsnzcxH2nmDhhrLya5u4g0kGc15mlXNWoOkF03N1N0D24206FI1!2220Z1601Z4F0V#621F4c0	ffcQA@DeXBlPDILkZrvkLRdmQkUUUTDCQPRBHaJR@@
+!B_rY~cqvP[_^X{P^UYIRoeS{wfLKwlicmfNw~ZEm}fLJ~CyamfNuGGYcB	<tyyvzjunzezLmvlBpUMLyZ1uLe9XGF3cnJIJ3xGGG0A81Q2B64F@_F91082H!492!24V0V581I40F080	ff}a`@G@pgIEEDeBdhiUDQe`uUTDCEUQbDPbH@
+!B@LZAc~K`do_g[W`UV~RPE\GwytKpLn]myvtAJBR}ytIAC~^myvtx{^]B	<tyyvzjunzezLmvlBpUMLyZ1uLe9XGF3cnJIJ3xGGG0A81Q2B64F@_F91082H!492!24V0V581I40F080	ff}a`@G@pgIEEDeBdhiUDQe`uUTDCEUQbDPbH@
+!B_c?W_O@}uswWO_B|Oe?W_C\B|CwpO]\}|Kp~W}\B|Mu~@I_]|KsW_M]|ust	<vzyvzjuvzDzLovxBtSrrqpouwsOnGN3VlGVF3lG4N1ABGy@965I@5FO!N3G2041680B4V!501L01!V0	fnsP`@KQ@EJYYU^}e^`mNjvj`hJJZjbqAT`h@
+!B`U~h_O_]jMvhw_^|pQ~h_Bc|}}wwwZc]}{sAGzc|}uvA@Na]}{rh_Ja|jMt	<vzyvzjuvzDzLovxBtSrrqpouwsOnGN3VlGVF3lG4N1ABGy@965I@5FO!N3G2041680B4V!501L01!V0	fnsP`@KQ@EJYYU^}e^`mNjvj`hJJZjbqAT`h@
+<hitlist data>
+<hitlistName="<selection>">
+<hitlistData="@`">
+</hitlist data>
+<datawarrior properties>
+<columnFilter_Table="">
+<columnWidth_Table_Structure="153">
+<currentRecord="10">
+<detailView="height[Data]=0.5;height[Structure]=0.5">
+<headerLines_Table="2">
+<mainSplitting="1">
+<mainView="Table">
+<mainViewCount="2">
+<mainViewDockInfo0="root">
+<mainViewDockInfo1="Table	bottom	0.824">
+<mainViewName0="Table">
+<mainViewName1="Macro Editor">
+<mainViewType0="tableView">
+<mainViewType1="macroEditor">
+<rightSplitting="0.66693">
+<rowHeight_Table="80">
+</datawarrior properties>

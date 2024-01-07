@@ -22,8 +22,6 @@ import com.actelion.research.datawarrior.help.DEAboutDialog;
 import com.apple.eawt.Application;
 
 import javax.swing.*;
-import javax.swing.plaf.MenuBarUI;
-
 import java.io.File;
 
 import static com.actelion.research.datawarrior.DataWarrior.LookAndFeel.*;
@@ -102,21 +100,23 @@ public class DataWarriorOSX extends DataWarrior {
 
 	private void registerAppleEvents() {
 		Application app = Application.getApplication();
-		app.setAboutHandler(e -> new DEAboutDialog(getActiveFrame()) );
-		app.setOpenFileHandler(e -> {
-			for (File f:e.getFiles())
-				readFile(f.getPath());
-			} );
-		app.setOpenURIHandler(e -> {
-			JOptionPane.showMessageDialog(getActiveFrame(), "Open URI:"+e.getURI());
-			} );
-		app.setQuitHandler((e,response) -> {
-			if (closeApplication(true))
-				response.performQuit();
-			else
-				response.cancelQuit();
-			} );
-		app.setPreferencesHandler(null);	// No preferences menu item!
+		if (app != null) {
+			app.setAboutHandler(e -> new DEAboutDialog(getActiveFrame()));
+			app.setOpenFileHandler(e -> {
+				for (File f:e.getFiles())
+					readFile(f.getPath());
+				} );
+			app.setOpenURIHandler(e -> {
+				JOptionPane.showMessageDialog(getActiveFrame(), "Open URI:"+e.getURI());
+				} );
+			app.setQuitHandler((e,response) -> {
+				if (closeApplication(true))
+					response.performQuit();
+				else
+					response.cancelQuit();
+				} );
+			app.setPreferencesHandler(null);	// No preferences menu item!
+			}
 		}
 
 	public static void main(String[] args) {

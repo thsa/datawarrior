@@ -2,8 +2,9 @@ mkdir ./bin
 cp -r ./src/html ./bin/
 cp -r ./src/images ./bin/
 echo "Compiling DataWarrior source code..."
-javac -nowarn -d ./bin -sourcepath ./src:./stubs -classpath "./lib/*" src/com/actelion/research/datawarrior/DataWarriorLinux.java
+javac -nowarn -d ./bin -sourcepath ./src:./stubs -classpath "./lib/*" src/com/actelion/research/datawarrior/DataWarriorLinux.java src/com/actelion/research/datawarrior/DataWarriorOSX.java
 rm -r bin/chemaxon
+rm -r bin/com/apple
 cd bin
 for JAR in ../lib/*.jar ; do (echo "Unpacking $JAR"; jar -xf "$JAR"); done
 rm -f META-INF/*.SF

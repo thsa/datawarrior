@@ -38,18 +38,14 @@ extentions and causes proper file icon display. Installers for Linux, Macintosh,
 which include proper platform integration, can be downloaded from
 https://openmolecules.org/datawarrior/download.html.
 
-This platform integration is not (yet) part of this project. Thus, if you intend to run *DataWarrior*
-from self compiled source code and if you don't do the platform integration yourself, then
-you may still install *DataWarrior* with the official installer and afterwards replace the original
-datawarrior.jar file with the freshly built one.
+This platform integration for Windows is not (yet) part of this project. Explanations and
+scripts of how to build installers for Linux and Macintosh with proper platform integration
+can be found in the *linux* and *macosx* directories.
 
-Unfortunately, this does not work on Windows platforms, because a proper platform integration on
-Windows requires the application to be an .exe file. Therefore, on Windows the datawarrior.jar,
-the application icon and all document icons are embedded in the DataWarrior.exe file as resources.
-
-Note: The datawarrior.jar file of the platform specific installers are shrunk with *Proguard*,
-to reduce the datawarrior.jar file size significantly be the removal of unused classes and methods
-from the byte code.
+If you intend to run *DataWarrior* from self compiled source code and if you cannot or don't
+want to do the platform integration yourself, then you may still install *DataWarrior* with the
+official installer and then replace the original datawarrior_all.jar file with a freshly
+built one.
 
 ### How to contribute
 Contact the author under the e-mail shown on https://openmolecules.org/about.html

@@ -912,4 +912,11 @@ public abstract class DataWarrior implements WindowFocusListener {
 		catch (Exception e) {}
 		return null;
 		}
+
+	public static void main(final String[] args) {
+		if (Platform.isMacintosh())
+			DataWarriorOSX.main(args);
+		else
+			DataWarriorLinux.main(args);
 	}
+}

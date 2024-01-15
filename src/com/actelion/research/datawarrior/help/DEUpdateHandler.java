@@ -40,9 +40,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.prefs.Preferences;
 
 public class DEUpdateHandler extends JDialog implements ActionListener {
@@ -309,6 +307,18 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 						sIsUpdating = false;
 						return;
 						}
+
+					// remove older updates. Just keep the three newest ones
+					try {
+						File[] files = new File(updatePath).listFiles(file -> isDataWarriorUpdateJar(file));
+						if (files != null && files.length > 3) {
+							Arrays.sort(files, Comparator.comparing(File::getName));
+							for (int i=0; i<files.length-3; i++)
+								files[i].delete();
+							}
+						}
+					catch (Exception e) {}
+
 					SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
 							"DataWarrior has successfully updated to version '"+availableVersion+"'.\nNext time you start DataWarrior, this version will be used.",
 							"Updated Successfully", JOptionPane.INFORMATION_MESSAGE));
@@ -374,6 +384,17 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 		}
 		return null;
 	}
+
+	private static boolean isDataWarriorUpdateJar(File file) {
+		// same logic as in DataWarriorLauncher.fileQualifies(File file)
+		if (file.isDirectory())
+			return false;
+
+		String filename = file.getName().toLowerCase();
+		return filename.startsWith("datawarrior_v")
+				&& filename.endsWith(".jar")
+				&& filename.length() == 25;
+		}
 
 	private static String getUpdatePath(final Frame parent) {
 		Preferences prefs = DataWarrior.getPreferences();

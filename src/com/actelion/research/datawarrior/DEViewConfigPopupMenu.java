@@ -123,7 +123,8 @@ public class DEViewConfigPopupMenu extends JPopupMenu implements ActionListener,
 			addMenuItem(TEXT_MARKER_SIZE);
 
 			if (chartType != JVisualization.cChartTypeBars
-			 && chartType != JVisualization.cChartTypePies)
+			 && chartType != JVisualization.cChartTypePies
+			 && chartType != JVisualization.cChartTypeViolins)
 				addMenuItem(TEXT_MARKER_SHAPE);
 
 			addMenuItem(TEXT_MARKER_COLOR);

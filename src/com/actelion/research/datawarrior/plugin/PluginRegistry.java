@@ -135,12 +135,10 @@ public class PluginRegistry implements IPluginStartHelper {
 						BufferedReader br = new BufferedReader(new InputStreamReader(loader.getResourceAsStream("tasknames")));
 						String line = br.readLine();
 						while (line != null) {
-							if (line.length() != 0 && !line.startsWith("#")) {
-								int index = line.indexOf(','); // we may have one or multiple items per line: <className>[,spec1][,spec2]...
+							if (!line.isEmpty() && !line.startsWith("#")) {
+								int index = line.indexOf(','); // we may have one or multiple items per line: <className>[,spec1[;spec2[;spec3]]]
 								String className = (index == -1 ? line : line.substring(0, index)).trim();
 								String menuName = (index == -1) ? "Database" : line.substring(index+1).trim();
-								if (menuName.equals("From Chemical Structure")) // for compatibility with olf format
-									menuName = "Chemistry;From Chemical Structure";
 
 								Class pluginClass = null;
 								try {
@@ -157,6 +155,9 @@ public class PluginRegistry implements IPluginStartHelper {
 									}
 									catch (ClassNotFoundException icnfe) {
 										System.out.println("Class '"+className+"' not found in plugin '"+file.getName()+"'.");
+									}
+									catch (Throwable t) {
+										t.printStackTrace();
 									}
 								}
 								if (pluginClass != null) {

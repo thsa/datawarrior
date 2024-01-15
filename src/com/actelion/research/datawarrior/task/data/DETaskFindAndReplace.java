@@ -121,7 +121,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 
 	@Override
 	public JPanel createDialogContent() {
-		mComboBoxColumn = new JComboBox();
+		mComboBoxColumn = new JComboBox<>();
 		mComboBoxColumn.addItem(OPTION_ANY_COLUMN);
 		mComboBoxColumn.addItem(OPTION_VISIBLE_COLUMN);
 		mComboBoxColumn.addItem(OPTION_SELECTED_COLUMN);
@@ -131,7 +131,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		mComboBoxColumn.setEditable(!isInteractive());
 		mComboBoxColumn.addActionListener(this);
 
-		mComboBoxWhat = new JComboBox(WHAT_NAME);
+		mComboBoxWhat = new JComboBox<>(WHAT_NAME);
 		mComboBoxWhat.addActionListener(this);
 
 		mTextFieldWhat = new JTextField(16);
@@ -176,7 +176,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			}
 		if (isInteractive() && e.getSource() == mComboBoxColumn) {
 			int column = mTableModel.findColumn((String)mComboBoxColumn.getSelectedItem());
-			boolean isStructure = (column < 0) ? false : mTableModel.isColumnTypeStructure(column);
+			boolean isStructure = column>=0 && mTableModel.isColumnTypeStructure(column);
 			updateInputFields(isStructure);
 			}
 		if (e.getSource() == mComboBoxWhat) {
@@ -287,7 +287,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			String what = (mComboBoxWhat.getSelectedIndex() == WHAT_ANY) ? CODE_WHAT_ANY
 						: (mComboBoxWhat.getSelectedIndex() == WHAT_EMPTY) ? CODE_WHAT_EMPTY
 						: (whatMol.getAllAtoms() == 0) ? "" : new Canonizer(whatMol).getIDCode();
-			if (what.length() != 0)
+			if (!what.isEmpty())
 				configuration.setProperty(PROPERTY_WHAT, what);
 
 			StereoMolecule withMol = mStructureFieldWith.getMolecule();
@@ -301,7 +301,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			String what = (mComboBoxWhat.getSelectedIndex() == WHAT_ANY) ? CODE_WHAT_ANY
 					    : (mComboBoxWhat.getSelectedIndex() == WHAT_EMPTY) ? CODE_WHAT_EMPTY
 						: mTextFieldWhat.getText();
-			if (what.length() != 0) {
+			if (!what.isEmpty()) {
 				if (mComboBoxWhat.getSelectedIndex() == WHAT_REGEX)
 					configuration.setProperty(PROPERTY_IS_REGEX, "true");
 				configuration.setProperty(PROPERTY_WHAT, what);
@@ -341,7 +341,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		String with = configuration.getProperty(PROPERTY_WITH, "");
 		if ("true".equals(configuration.getProperty(PROPERTY_IS_STRUCTURE))) {
 			updateInputFields(true);
-			if (what.length() == 0) {
+			if (what.isEmpty()) {
 				mStructureFieldWhat.getMolecule().clear();
 				}
 			else {
@@ -357,7 +357,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 						} catch (Exception e) {}
 					}
 				}
-			if (with.length() == 0) {
+			if (with.isEmpty()) {
 				mStructureFieldWith.getMolecule().clear();
 				}
 			else {
@@ -377,7 +377,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 				mComboBoxWhat.setSelectedIndex(WHAT_EMPTY);
 			else {
 				mComboBoxWhat.setSelectedIndex("true".equals(configuration.getProperty(PROPERTY_IS_REGEX)) ?
-						WHAT_REGEX : WHAT_EMPTY);
+						WHAT_REGEX : WHAT_THIS);
 				mTextFieldWhat.setText(what);
 				}
 			mTextFieldWith.setText(with);
@@ -395,7 +395,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		boolean isStructureMode = "true".equals(configuration.getProperty(PROPERTY_IS_STRUCTURE));
 		String what = configuration.getProperty(PROPERTY_WHAT, "");
-		if (what.length() == 0) {
+		if (what.isEmpty()) {
 			showErrorMessage(isStructureMode ? "No structure defined." : "No search string defined.");
 			return false;
 			}
@@ -407,7 +407,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			String with = configuration.getProperty(PROPERTY_WITH, "");
 
 			StereoMolecule withMol;
-			if (with.length() == 0) {
+			if (with.isEmpty()) {
 				withMol = new StereoMolecule(0,0);
 				}
 			else {
@@ -615,7 +615,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		Link[] link = null;
 		mol = new StereoMolecule();
 		whatMol = new IDCodeParser().getCompactMolecule(what);
-		withMol = (with.length() == 0) ? new StereoMolecule(0,0) : new IDCodeParser().getCompactMolecule(with);
+		withMol = (with.isEmpty()) ? new StereoMolecule(0,0) : new IDCodeParser().getCompactMolecule(with);
 		materializeImplicitHydrogensOnLinkAtoms(withMol);
 		whatMol.ensureHelperArrays(Molecule.cHelperNeighbours);
 		withMol.ensureHelperArrays(Molecule.cHelperParities);
@@ -644,8 +644,8 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 							}
 
 						linkList.add(new Link(atom1, whatMol.getConnAtom(atom1, 0), whatMol.getConnBondOrder(atom1, 0),
-											  atom2, newStereoCenter, newParity,
-											  newStereoCenter == -1 ? false : withMol.isAtomParityPseudo(newStereoCenter)));
+								atom2, newStereoCenter, newParity,
+								newStereoCenter != -1 && withMol.isAtomParityPseudo(newStereoCenter)));
 						break;
 						}
 					}
@@ -655,10 +655,9 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 					whatMol.setAtomQueryFeature(atom1, Molecule.cAtomQFNoMoreNeighbours, true);
 				}
 			}
-		if (linkList.size() != 0) {
+		if (!linkList.isEmpty()) {
 			withMol.ensureHelperArrays(Molecule.cHelperBitNeighbours);
-			for (int i=0; i<linkList.size(); i++) {
-				Link l = linkList.get(i);
+			for (Link l:linkList) {
 				int bond = withMol.getConnBond(l.replaceAtom, 0);
 				withMol.markAtomForDeletion(l.replaceAtom);
 				withMol.markBondForDeletion(bond);
@@ -721,7 +720,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 				boolean[] atomUsed = new boolean[mol.getAllAtoms()];
 				float[] atad = mol.getAverageTopologicalAtomDistance();
 
-				while (matchList.size() != 0) {
+				while (!matchList.isEmpty()) {
 					// Remove those matches that overlapp with already processed matches.
 					// Then find that remaining match whose link atoms are most central in the molecule
 					// (this prefers small substituents to be eliminated)
@@ -828,7 +827,6 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 				mol.deleteMarkedAtomsAndBonds();
 				mol.setParitiesValid(0);
 				new CoordinateInventor().invent(mol);
-//				mol.setStereoBondsFromParity(); not needed anymore
 				Canonizer canonizer = new Canonizer(mol);
 				mTableModel.setTotalValueAt(canonizer.getIDCode(), row, column);
 				mTableModel.removeChildDescriptorsAndCoordinates(row, column);
@@ -914,7 +912,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 
 			String value = mTableModel.getTotalValueAt(row, column);
 			if (what.equals(CODE_WHAT_EMPTY)) {
-				if (value.length() == 0) {
+				if (value.isEmpty()) {
 					mTableModel.setTotalValueAt(with, row, column);
 					replacements++;
 					}
@@ -988,7 +986,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 
 			String value = mTableModel.getTotalValueAt(row, column);
 			if (what.equals(CODE_WHAT_EMPTY)) {
-				if (value.length() == 0) {
+				if (value.isEmpty()) {
 					mTableModel.setTotalValueAt(with, row, column);
 					replacements++;
 					}
@@ -1049,7 +1047,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		return null;
 		}
 
-	private class Link {
+	private static class Link {
 		int searchAtom,searchAtomNeighbour,replaceAtom,oldBondOrder,newBondOrder,newStereoCenter,newParity;
 		boolean bondOrderChanged,newParityIsPseudo;
 

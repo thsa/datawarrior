@@ -190,7 +190,8 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 
 		boolean isBoxPlot = (!hasInteractiveView()
 				|| getInteractiveVisualization().getChartType() == JVisualization.cChartTypeBoxPlot
-				|| getInteractiveVisualization().getChartType() == JVisualization.cChartTypeWhiskerPlot);
+				|| getInteractiveVisualization().getChartType() == JVisualization.cChartTypeWhiskerPlot
+				|| getInteractiveVisualization().getChartType() == JVisualization.cChartTypeViolins);
 		double[][] boxPlotSize = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL},
 								   {gap/2, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED,
 										   gap, TableLayout.PREFERRED, TableLayout.PREFERRED,
@@ -541,7 +542,9 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		mComboBoxSplitCurveColumn.setEnabled(canSplitCurve);
 		mSliderCurveSmoothing.setEnabled(curveMode == JVisualization2D.cCurveModeSmooth);
 
-		boolean isBoxPlot = (!hasInteractiveView() || getInteractiveVisualization().getChartType() == JVisualization.cChartTypeBoxPlot);
+		boolean isBoxPlot = (!hasInteractiveView()
+				|| getInteractiveVisualization().getChartType() == JVisualization.cChartTypeBoxPlot
+				|| getInteractiveVisualization().getChartType() == JVisualization.cChartTypeViolins);
 		if (isBoxPlot) {
 			mCheckBoxShowMeanValues.setEnabled(mComboBoxBoxplotMeanMode.getSelectedIndex() != 0);
 

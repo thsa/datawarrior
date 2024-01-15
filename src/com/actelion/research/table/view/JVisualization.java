@@ -33,8 +33,6 @@ import com.actelion.research.table.view.graph.VisualizationNode;
 import com.actelion.research.util.ByteArrayComparator;
 import com.actelion.research.util.ColorHelper;
 import com.actelion.research.util.DoubleFormat;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.stat.inference.TTestImpl;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -89,11 +87,12 @@ public abstract class JVisualization extends JComponent
 	public static final int cChartTypeScatterPlot = 0;
 	public static final int cChartTypeWhiskerPlot = 1;
 	public static final int cChartTypeBoxPlot = 2;
-	public static final int cChartTypeBars = 3;
-	public static final int cChartTypePies = 4;
+	public static final int cChartTypeViolins = 3;
+	public static final int cChartTypeBars = 4;
+	public static final int cChartTypePies = 5;
 
-	public static final String[] CHART_TYPE_NAME = { "Scatter Plot", "Whisker Plot", "Box Plot", "Bar Chart", "Pie Chart" };
-	public static final String[] CHART_TYPE_CODE = { "scatter", "whiskers", "boxes", "bars", "pies" };
+	public static final String[] CHART_TYPE_NAME = { "Scatter Plot", "Whisker Plot", "Box Plot", "Violin Plot", "Bar Chart", "Pie Chart" };
+	public static final String[] CHART_TYPE_CODE = { "scatter", "whiskers", "boxes", "violins", "bars", "pies" };
 
 	public static final int cChartModeCount = 0;
 	public static final int cChartModePercent = 1;
@@ -139,9 +138,6 @@ public abstract class JVisualization extends JComponent
 
 	public static final int cMaxChartCategoryCount = 10000;			// this is for one axis
 	public static final int cMaxTotalChartCategoryCount = 100000;	// this is the product of all axis
-	public static final float cAnchoredBarSpacing = 0.08f;  // for bars that touch one end of bar area this spacing is added to the other end
-	public static final float cCenteredBarSpacing = 0.05f;  // for centered bars we add this spacing on both ends of bar area
-	private static final float cLogBarMinSizeFactor = 0.10f;    // bars on logarithic data have this as base height
 
 	public static final int cMaxCaseSeparationCategoryCount = 128;	// this is for one axis
 	public static final int cMaxSplitViewCount = 10000;
@@ -156,10 +152,6 @@ public abstract class JVisualization extends JComponent
 	public static final String[] BOXPLOT_MEAN_MODE_TEXT = { "No Indicator", "Median Line", "Mean Line", "Mean & Median Lines", "Mean & Median Triangles" };
 	public static final String[] BOXPLOT_MEAN_MODE_CODE = { "none", "median", "mean", "both", "triangles" };
 	public static final int BOXPLOT_DEFAULT_MEAN_MODE = 3;
-	protected static final int cBoxplotMeanModeMedian = 1;
-	protected static final int cBoxplotMeanModeMean = 2;
-	protected static final int cBoxplotMeanModeLines = 3;
-	protected static final int cBoxplotMeanModeTriangles = 4;
 
 /*	protected static final int AXIS_TYPE_UNASSIGNED = 0;
 	protected static final int AXIS_TYPE_TEXT_CATEGORY = 1;
@@ -192,7 +184,7 @@ public abstract class JVisualization extends JComponent
 	protected float[][]				mAxisSimilarity;
 	protected int[]					mAxisIndex,mLabelColumn,mSplittingColumn;
 	protected boolean[]				mIsCategoryAxis;
-	protected CategoryViewInfo		mChartInfo;
+	protected AbstractCategoryChart mChartInfo;
 	protected VisualizationPoint[]	mPoint;
 	protected VisualizationPoint 	mHighlightedPoint,mActivePoint;
 	protected LabelPosition2D       mHighlightedLabelPosition;
@@ -414,6 +406,10 @@ public abstract class JVisualization extends JComponent
 
 		updateActiveRow();
 		}
+
+	protected VisualizationPoint[] getDataPoints() {
+		return mPoint;
+	}
 
 	protected Point getLabelConnectionPoint(float px, float py, int lx1, int ly1, int lx2, int ly2) {
 		if (px >= lx1 && px <= lx2 && py >= ly1 && py <= ly2)
@@ -946,6 +942,10 @@ public abstract class JVisualization extends JComponent
 		return mCaseSeparationValue;
 		}
 
+	public int getCaseSeparationCategoryCount() {
+		return mCaseSeparationCategoryCount;
+		}
+
 	/**
 	 * Checks, whether a case separation column was defined and the view applies
 	 * a case specific shift to all markers, bars or boxes.
@@ -987,8 +987,9 @@ public abstract class JVisualization extends JComponent
 		int preferredCategoryCount = Integer.MAX_VALUE;
 		for (int axis=0; axis<mDimensions; axis++) {
 			if ((mChartType != cChartTypeBoxPlot
-			  && mChartType != cChartTypeWhiskerPlot)
-			 || ((BoxPlotViewInfo)mChartInfo).barAxis != axis) {
+			  && mChartType != cChartTypeWhiskerPlot
+			  && mChartType != cChartTypeViolins)
+			 || mChartInfo.mDoubleAxis != axis) {
 				int column = mAxisIndex[axis];
 				if (column == cColumnUnassigned) {
 					if (preferredCategoryCount > 1) {
@@ -1870,6 +1871,10 @@ public abstract class JVisualization extends JComponent
 		return mShowEmptyInSplitView;
 		}
 
+	public VisualizationSplitter getSplitter() {
+		return mSplitter;
+		}
+
 	public int[] getSplittingColumns() {
 		return mSplittingColumn;
 		}
@@ -1910,7 +1915,8 @@ public abstract class JVisualization extends JComponent
 			return mChartMode != cChartModePercent
 				&& mChartMode != cChartModeCount;
 		return mChartType == cChartTypeBoxPlot
-			|| mChartType == cChartTypeWhiskerPlot;
+			|| mChartType == cChartTypeWhiskerPlot
+			|| mChartType == cChartTypeViolins;
 		}
 
 	public boolean supportsShowStdDevAndErrorMergin() {
@@ -1919,14 +1925,16 @@ public abstract class JVisualization extends JComponent
 			return mChartMode != cChartModePercent
 				&& mChartMode != cChartModeCount;
 		return mChartType == cChartTypeBoxPlot
-			|| mChartType == cChartTypeWhiskerPlot;
+			|| mChartType == cChartTypeWhiskerPlot
+			|| mChartType == cChartTypeViolins;
 		}
 
 	public boolean supportsShowValueCount() {
 		return mChartType == cChartTypeBars
 			|| mChartType == cChartTypePies
 			|| mChartType == cChartTypeBoxPlot
-			|| mChartType == cChartTypeWhiskerPlot;
+			|| mChartType == cChartTypeWhiskerPlot
+			|| mChartType == cChartTypeViolins;
 		}
 
 	public boolean supportsShowBarOrPieSizeValues() {
@@ -1939,7 +1947,8 @@ public abstract class JVisualization extends JComponent
 		 */
 	public int getBoxplotMeanMode() {
 		return (mChartType == cChartTypeBoxPlot
-			 || mChartType == cChartTypeWhiskerPlot) ? mBoxplotMeanMode : BOXPLOT_DEFAULT_MEAN_MODE;
+			 || mChartType == cChartTypeWhiskerPlot
+			 || mChartType == cChartTypeViolins) ? mBoxplotMeanMode : BOXPLOT_DEFAULT_MEAN_MODE;
 		}
 
 	/**
@@ -2065,7 +2074,8 @@ public abstract class JVisualization extends JComponent
 	 */
 	public boolean isShowPValue() {
 		return (mChartType == cChartTypeBoxPlot
-	   		 || mChartType == cChartTypeWhiskerPlot)
+	   		 || mChartType == cChartTypeWhiskerPlot
+			 || mChartType == cChartTypeViolins)
 	   		&& mBoxplotShowPValue
    			&& isValidPValueColumn(mPValueColumn);
    		}
@@ -2090,7 +2100,8 @@ public abstract class JVisualization extends JComponent
 	 */
 	public boolean isShowFoldChange() {
 		return (mChartType == cChartTypeBoxPlot
-	   		 || mChartType == cChartTypeWhiskerPlot)
+	   		 || mChartType == cChartTypeWhiskerPlot
+			 || mChartType == cChartTypeViolins)
 	   		&& mBoxplotShowFoldChange
    			&& isValidPValueColumn(mPValueColumn);
    		}
@@ -2129,7 +2140,8 @@ public abstract class JVisualization extends JComponent
 			return false;
 
 		if (mChartType == cChartTypeBoxPlot
-		 || mChartType == cChartTypeWhiskerPlot) {
+		 || mChartType == cChartTypeWhiskerPlot
+		 || mChartType == cChartTypeViolins) {
 			if (column == getCaseSeparationColumn())
 				return true;
 
@@ -2141,7 +2153,7 @@ public abstract class JVisualization extends JComponent
 			for (int axis=0; axis<mDimensions; axis++)
 				if (column == mAxisIndex[axis]
 				 && getCategoryVisCount(axis) >= 2
-				 && axis != mChartInfo.barAxis)
+				 && (mChartInfo == null || axis != mChartInfo.mDoubleAxis))
 					return true;
 			}
 
@@ -2163,7 +2175,7 @@ public abstract class JVisualization extends JComponent
 		}
 
 	/**
-	 * In fast rendering mode anti-aliasing is switched off
+	 * In fast rendering mode antialiasing is switched off
 	 * @return whether we are in fast render mode
 	 */
 	public boolean isFastRendering() {
@@ -2171,7 +2183,7 @@ public abstract class JVisualization extends JComponent
 		}
 
 	/**
-	 * In fast rendering mode anti-aliasing is switched off
+	 * In fast rendering mode antialiasing is switched off
 	 * @param v
 	 */
 	public void setFastRendering(boolean v) {
@@ -2207,7 +2219,8 @@ public abstract class JVisualization extends JComponent
 				mIsCategoryAxis[csAxis] = true;
 			}
 		else if (mPreferredChartType == cChartTypeBoxPlot
-			  || mPreferredChartType == cChartTypeWhiskerPlot) {
+			  || mPreferredChartType == cChartTypeWhiskerPlot
+			  || mPreferredChartType == cChartTypeViolins) {
 			int boxPlotDoubleAxis = determineBoxPlotDoubleAxis();
 			if (boxPlotDoubleAxis != -1) {
 				mChartType = mPreferredChartType;
@@ -2272,7 +2285,8 @@ public abstract class JVisualization extends JComponent
 			String preferred = mPreferredChartType == cChartTypeBars ? "bar chart"
 							 : mPreferredChartType == cChartTypePies ? "pie chart"
 							 : mPreferredChartType == cChartTypeBoxPlot ? "box plot"
-							 : mPreferredChartType == cChartTypeWhiskerPlot ? "whisker plot" : "scatter plot";
+							 : mPreferredChartType == cChartTypeWhiskerPlot ? "whisker plot"
+							 : mPreferredChartType == cChartTypeViolins ? "violin plot" : "scatter plot";
 
 			if (mPreferredChartType == cChartTypeBars
 			 || mPreferredChartType == cChartTypePies) {
@@ -2456,11 +2470,12 @@ public abstract class JVisualization extends JComponent
 
 		adr.min = mTableModel.getMinimumValue(column);
 		adr.max = mTableModel.getMaximumValue(column);
-		if (mScatterPlotMargin != 0f
+		float margin = (mChartType == cChartTypeViolins) ? ViolinPlot.DEFAULT_MARGIN : mScatterPlotMargin;
+		if (margin != 0f
 		 && adr.min != adr.max
 		 && mTableModel.getColumnProperty(column, cColumnPropertyCyclicDataMax) == null) {
 			adr.pruning = mPruningBarHigh[axis] - mPruningBarLow[axis];
-			float margin = mScatterPlotMargin * (adr.max - adr.min);
+			margin *= (adr.max - adr.min);
 			if (mTableModel.getColumnProperty(column, cColumnPropertyDataMin) == null)
 				adr.leftMargin = margin;
 			if (mTableModel.getColumnProperty(column, cColumnPropertyDataMax) == null)
@@ -2539,6 +2554,14 @@ public abstract class JVisualization extends JComponent
 
 	/**
 	 * @param axis
+	 * @return percentage of visible data range on that axis between 0.0 and 1.0
+	 */
+	public float getRelativeVisibleRange(int axis) {
+		return mPruningBarHigh[axis] - mPruningBarLow[axis];
+		}
+
+	/**
+	 * @param axis
 	 * @return value at the right/upper end of visible range; logarithmic in case of logarithmic columns
 	 */
 	public float getVisibleMin(int axis) {
@@ -2611,7 +2634,7 @@ public abstract class JVisualization extends JComponent
 		mZoomState = Math.min(100f, 1f / zoomFactor);
 		}
 
-	private void calculateCategoryCounts(int boxPlotDoubleAxis) {
+	protected void calculateCategoryCounts(int boxPlotDoubleAxis) {
 		if (isCaseSeparationDone())
 			mCaseSeparationCategoryCount = mTableModel.getCategoryCount(mCaseSeparationColumn);
 		else
@@ -2645,211 +2668,6 @@ public abstract class JVisualization extends JComponent
 			colorIndex += colorListLength+2;
 
 		return colorIndex;
-		}
-
-	/**
-	 * Based on axis column assignments and on hvIndices of VisualizationPoints
-	 * this method assigns all visible VisualizationPoints to bars/pies and to color categories
-	 * within these bars/pies. It also calculates relative bar/pie sizes.
-	 */
-	protected void calculateBarsOrPies(double widthHeightRatio) {
-		calculateCategoryCounts(-1);
-
-		Color[] colorList = mMarkerColor.getColorList();
-		int focusFlagNo = getFocusFlag();
-		int basicColorCount = colorList.length + 2;
-		int colorCount = basicColorCount * ((focusFlagNo == -1) ? 1 : 2);
-
-		// determine the number of visible bars within the view, or within one view in case we have split views
-		int catCount = mCaseSeparationCategoryCount;
-		for (int i=0; i<mDimensions; i++)
-			catCount *= getCategoryVisCount(i);
-
-		mChartInfo = new CategoryViewInfo(mHVCount, catCount, colorCount, mChartMode, mMarkerSizeColumn != cColumnUnassigned);
-
-		int assignedAxisCount = 0;
-		for (int axis=0; axis<mDimensions; axis++)
-			if (mAxisIndex[axis] != cColumnUnassigned)
-				assignedAxisCount++;
-
-		// determine, which of the axis the bar is parallel to
-		if (assignedAxisCount == 0 || assignedAxisCount == mDimensions) {
-			// we take the axis with the maximum space available
-			double maxSpace = 0;
-			for (int axis=0; axis<mDimensions; axis++) {
-				double relSpace = (axis == 0 ? widthHeightRatio : 1.0) / getCategoryVisCount(axis);
-				if (maxSpace < relSpace) {
-					maxSpace = relSpace;
-					mChartInfo.barAxis = axis;
-					}
-				}
-			}
-		else {
-			mChartInfo.barAxis = 0;
-			for (int axis=1; axis<mDimensions; axis++)
-				if (mAxisIndex[axis] == cColumnUnassigned)
-					mChartInfo.barAxis = axis;
-				else if (mAxisIndex[mChartInfo.barAxis] != cColumnUnassigned
-					  && getCategoryVisCount(axis) <= getCategoryVisCount(mChartInfo.barAxis))
-					mChartInfo.barAxis = axis;
-			}
-
-		for (int i=0; i<colorList.length; i++)
-			mChartInfo.color[i] = colorList[i];
-		mChartInfo.color[colorList.length] = VisualizationColor.cSelectedColor;
-		mChartInfo.color[colorList.length+1] = VisualizationColor.cUseAsFilterColor;
-		if (focusFlagNo != -1) {
-			for (int i=0; i<colorList.length; i++)
-				mChartInfo.color[i+basicColorCount] = VisualizationColor.grayOutColor(colorList[i]);
-			mChartInfo.color[colorList.length+basicColorCount] = VisualizationColor.grayOutColor(VisualizationColor.cSelectedColor);
-			mChartInfo.color[colorList.length+1+basicColorCount] = VisualizationColor.cUseAsFilterColor;
-			}
-
-		for (int i=0; i<mDataPoints; i++) {
-			VisualizationPoint vp = mPoint[i];
-			if (isVisibleInBarsOrPies(vp)) {
-				int cat = getChartCategoryIndex(vp);
-				int colorIndex = getColorIndex(vp, colorList.length, focusFlagNo);
-				float chartValue = (mChartColumn == -1) ? Float.NaN : vp.record.getDouble(mChartColumn);
-				float widthValue = (mMarkerSizeColumn == -1) ? Float.NaN : vp.record.getDouble(mMarkerSizeColumn);
-				mChartInfo.addValue(vp.hvIndex, cat, colorIndex, chartValue, widthValue);
-				}
-			}
-
-		if (mChartInfo.mean != null)
-			for (int i=0; i<mHVCount; i++)
-				for (int j = 0; j < catCount; j++)
-					if (mChartInfo.pointsInCategory[i][j] != 0)
-						mChartInfo.mean[i][j] /= mChartInfo.pointsInCategory[i][j];
-
-		if (mChartInfo.mean != null)
-			// calculate standard deviation and error margin using the values in mChartColumn
-			calculateStdDevAndErrorMargin(catCount, mChartInfo.pointsInCategory, -1, mChartColumn);
-
-		int[][][] count = new int[mHVCount][catCount][colorCount];
-		for (int hv=0; hv<mHVCount; hv++)
-			for (int cat=0; cat<catCount; cat++)
-				for (int color=1; color<colorCount; color++)
-					count[hv][cat][color] = count[hv][cat][color-1]+mChartInfo.pointsInColorCategory[hv][cat][color-1];
-		for (int i=0; i<mDataPoints; i++) {
-			VisualizationPoint vp = mPoint[i];
-			if (isVisibleInBarsOrPies(vp)) {
-				int hv = vp.hvIndex;
-				int cat = getChartCategoryIndex(vp);
-				int colorIndex = getColorIndex(vp, colorList.length, focusFlagNo);
-				vp.chartGroupIndex = count[hv][cat][colorIndex];
-				count[hv][cat][colorIndex]++;
-				}
-			}
-
-		// generate all category bar values
-		float[] dataMinAndMax = calculateBarDimensions(mChartInfo.barValue, mChartInfo.pointsInCategory,  true);
-
-		// For a static scale, we need to calculate the absolute bar minimum and maximum of all bars
-		// assuming all rows to be visible.
-		if (!mIsDynamicScale) {
-			int allCatCount = mCaseSeparationCategoryCount;
-			for (int axis=0; axis<mDimensions; axis++)
-				if (mAxisIndex[axis] != cColumnUnassigned)
-					allCatCount *=  mTableModel.getCategoryCount(mAxisIndex[axis]);
-
-			int[][] pointsInCategory = new int[mHVCount][allCatCount];
-			for (int i=0; i<mDataPoints; i++) {
-				VisualizationPoint vp = mPoint[i];
-				if (!isNaN(vp) && vp.hvIndex != -1) {
-					int cat = getFullCategoryIndex(vp);
-					pointsInCategory[vp.hvIndex][cat]++;
-					}
-				}
-
-			float[] visOnlyMinAndMax = dataMinAndMax;
-
-			dataMinAndMax = calculateBarDimensions(new float[mHVCount][allCatCount], pointsInCategory, false);
-
-			if (dataMinAndMax[0] > visOnlyMinAndMax[0])
-				dataMinAndMax[0] = visOnlyMinAndMax[0];
-			if (dataMinAndMax[1] < visOnlyMinAndMax[1])
-				dataMinAndMax[1] = visOnlyMinAndMax[1];
-			}
-
-		mChartInfo.barOrPieDataAvailable = (dataMinAndMax[0] != Float.POSITIVE_INFINITY);
-
-		if (mChartInfo.barOrPieDataAvailable) {
-			switch (mChartMode) {
-			case cChartModeCount:
-			case cChartModePercent:
-				mChartInfo.axisMin = 0.0f;
-				mChartInfo.axisMax = dataMinAndMax[1] * (1f + cAnchoredBarSpacing);
-				mChartInfo.barBase = 0.0f;
-				break;
-			default:
-				float maxMinusMin = dataMinAndMax[1] - dataMinAndMax[0];
-				if (mTableModel.isLogarithmicViewMode(mChartColumn)) {
-					float spacing = cAnchoredBarSpacing * maxMinusMin;
-					float minSize = cLogBarMinSizeFactor * maxMinusMin;
-					mChartInfo.axisMin = dataMinAndMax[0] - minSize;
-					mChartInfo.axisMax = dataMinAndMax[1] + spacing;
-					mChartInfo.barBase = mChartInfo.axisMin;
-					}
-				else {
-					if (dataMinAndMax[0] >= 0.0) {
-						mChartInfo.axisMin = 0.0f;
-						mChartInfo.axisMax = dataMinAndMax[1] * (1f + cAnchoredBarSpacing);
-						}
-					else if (dataMinAndMax[1] <= 0.0) {
-						mChartInfo.axisMin = dataMinAndMax[0] * (1f + cAnchoredBarSpacing);
-						mChartInfo.axisMax = 0.0f;
-						}
-					else {
-						float spacing = cCenteredBarSpacing * maxMinusMin;
-						mChartInfo.axisMax = dataMinAndMax[1] + spacing;
-						mChartInfo.axisMin = dataMinAndMax[0] - spacing;
-						}
-					mChartInfo.barBase = 0.0f;
-					}
-				break;
-				}
-			}
-		else {
-			mChartInfo.axisMin = 0.0f;
-			mChartInfo.axisMax = 1.0f + cAnchoredBarSpacing;
-			mChartInfo.barBase = 0.0f;
-			}
-//System.out.println("calculateBarsOrPies() dataMin:"+dataMinAndMax[0]+" dataMax:"+dataMinAndMax[1]+" axisMin:"+mChartInfo.axisMin+" axisMax:"+mChartInfo.axisMax+" barBase:"+mChartInfo.barBase);
-		}
-
-	/**
-	 * Calculates depending on the bar chart type (logarithmic, centered, left- or right-anchored)
-	 * the fraction of the default spacing within a graph cell, which multiplied with the cell size
-	 * would give the size of the empty spacing in graph coordinates as long as no labels are shown.
-	 * If labels are shown, they use this area and enlarge it on demand while reducing the
-	 * actual bar area accordingly.
-	 * @return fraction of cell that is used as empty space on that size of the bar, where labels may be shown
-	 */
-	protected float getBarChartEmptyLabelAreaSpacing() {
-		if (isLogarithmicBarOrPieChart())
-			return cAnchoredBarSpacing / (1f + cLogBarMinSizeFactor + cAnchoredBarSpacing);
-		if (isCenteredBarChart())
-			return cCenteredBarSpacing / (1f + 2f * cCenteredBarSpacing);
-		else
-			return cAnchoredBarSpacing / (1f + cAnchoredBarSpacing);
-		}
-
-	/**
-	 * Calculates depending on the bar chart type (logarithmic, centered, left- or right-anchored)
-	 * the fraction of the total spacing within a graph cell. This is the sum of left/top and
-	 * right/bottom spacing fractions of which one of them is 0.0 for anchored bars. In case of
-	 * logarithmic bars the drawn base part of the bar is considered spacing and included in this
-	 * fraction.
-	 * @return fraction of cell that is not occupied by the bar area (or base part of bar in case of logarithmic bars)
-	 */
-	protected float getBarChartTotalSpacing() {
-		if (isLogarithmicBarOrPieChart())
-			return (cAnchoredBarSpacing + cLogBarMinSizeFactor) / (1f + cLogBarMinSizeFactor + cAnchoredBarSpacing);
-		if (isCenteredBarChart())
-			return 2f * cCenteredBarSpacing / (1f + 2f * cCenteredBarSpacing);
-		else
-			return cAnchoredBarSpacing / (1f + cAnchoredBarSpacing);
 		}
 
 	protected boolean isNaNInBarsOrPies(VisualizationPoint vp) {
@@ -2887,113 +2705,6 @@ public abstract class JVisualization extends JComponent
 		}
 
 	/**
-	 * Calculates the barValue of all bars, which is the basis for the complete bar or pie size.
-	 * @param barValue
-	 * @param pointsInCategory
-	 * @param visibleOnly
-	 * @return
-	 */
-	private float[] calculateBarDimensions(float[][] barValue, int[][] pointsInCategory, boolean visibleOnly) {
-		int count = 0;
-		for (int i=0; i<mDataPoints; i++) {
-			VisualizationPoint vp = mPoint[i];
-			if ((visibleOnly && isVisibleInBarsOrPies(vp)) || (!visibleOnly && !isNaNInBarsOrPies(vp) && vp.hvIndex != -1)) {
-				int cat = visibleOnly ? getChartCategoryIndex(vp) : getFullCategoryIndex(vp);
-				count++;
-				switch (mChartMode) {
-					case cChartModeCount:
-					case cChartModePercent:
-						barValue[vp.hvIndex][cat]++;
-						break;
-					case cChartModeMin:
-					case cChartModeMax:
-						float value = vp.record.getDouble(mChartColumn);
-						if (pointsInCategory[vp.hvIndex][cat] == 1)
-							barValue[vp.hvIndex][cat] = value;
-						else if (mChartMode == cChartModeMin)
-							barValue[vp.hvIndex][cat] = Math.min(barValue[vp.hvIndex][cat], value);
-						else
-							barValue[vp.hvIndex][cat] = Math.max(barValue[vp.hvIndex][cat], value);
-						break;
-					case cChartModeMean:
-						barValue[vp.hvIndex][cat] += vp.record.getDouble(mChartColumn);
-						break;
-					case cChartModeSum:
-						if (mTableModel.isLogarithmicViewMode(mChartColumn))
-							barValue[vp.hvIndex][cat] += Math.pow(10, vp.record.getDouble(mChartColumn));
-						else
-							barValue[vp.hvIndex][cat] += vp.record.getDouble(mChartColumn);
-						break;
-					}
-				}
-			}
-
-		if (mChartMode == cChartModePercent)
-			for (int i=0; i<mHVCount; i++)
-				for (int j=0; j<barValue[i].length; j++)
-					barValue[i][j] *= 100f / count;
-		if (mChartMode == cChartModeMean)
-			for (int i=0; i<mHVCount; i++)
-				for (int j=0; j<barValue[i].length; j++)
-					barValue[i][j] /= pointsInCategory[i][j];
-		if (mChartMode == cChartModeSum && mTableModel.isLogarithmicViewMode(mChartColumn))
-			for (int i=0; i<mHVCount; i++)
-				for (int j=0; j<barValue[i].length; j++)
-					barValue[i][j] = (float)Math.log10(barValue[i][j]);
-
-		float[] dataMinAndMax = new float[2];
-		dataMinAndMax[0] = Float.POSITIVE_INFINITY;
-		dataMinAndMax[1] = Float.NEGATIVE_INFINITY;
-		for (int i=0; i<mHVCount; i++) {
-			for (int j=0; j<pointsInCategory[i].length; j++) {
-				if (pointsInCategory[i][j] != 0) {
-					if (dataMinAndMax[0] > barValue[i][j])
-						dataMinAndMax[0] = barValue[i][j];
-					if (dataMinAndMax[1] < barValue[i][j])
-						dataMinAndMax[1] = barValue[i][j];
-					}
-				}
-			}
-
-		return dataMinAndMax;
-		}
-
-	/**
-	 * @return true if bars of a bar chart are based on the left/bottom edge
-	 */
-	protected boolean isLogarithmicBarOrPieChart() {
-		int chartColumn = getChartColumn();
-		return (chartColumn != -1 && mTableModel.isLogarithmicViewMode(chartColumn));
-		}
-
-	/**
-	 * @return true if bars of a bar chart are based on the left/bottom edge
-	 */
-	protected boolean isLeftBarChart() {
-		if (mChartInfo.axisMin == 0)
-			return true;
-		int chartColumn = getChartColumn();
-		return (chartColumn != -1 && mTableModel.isLogarithmicViewMode(chartColumn));
-		}
-
-	/**
-	 * @return true if bars of a bar chart are based on the right/top edge
-	 */
-	protected boolean isRightBarChart() {
-		return mChartInfo.axisMax == 0;
-	}
-
-	/**
-	 * @return true if bars of a bar chart are centered in view
-	 */
-	protected boolean isCenteredBarChart() {
-		if (mChartInfo.axisMin == 0 || mChartInfo.axisMax == 0)
-			return false;
-		int chartColumn = getChartColumn();
-		return (chartColumn != -1 && !mTableModel.isLogarithmicViewMode(chartColumn));
-	}
-
-	/**
 	 * Allocates stdDev and errorMargin of mChartInfo and calculates the values.
 	 * Needs a valid mean array and vCount, which includes all outliers.
 	 * @param catCount
@@ -3002,233 +2713,27 @@ public abstract class JVisualization extends JComponent
 	 * @param column -1 if axis is given
 	 */
 	private void calculateStdDevAndErrorMargin(int catCount, int[][] vCount, int axis, int column) {
-		mChartInfo.stdDev = new float[mHVCount][catCount];
-		mChartInfo.errorMargin = new float[mHVCount][catCount];
+		mChartInfo.mStdDev = new float[mHVCount][catCount];
+		mChartInfo.mErrorMargin = new float[mHVCount][catCount];
 		for (int i=0; i<mDataPoints; i++) {
 			VisualizationPoint vp = mPoint[i];
 			if (((mChartType == cChartTypeBars || mChartType == cChartTypePies) && isVisibleInBarsOrPies(vp))
-			 || ((mChartType == cChartTypeBoxPlot || mChartType == cChartTypeWhiskerPlot) && isVisibleExcludeNaN(vp))) {
+			 || ((mChartType == cChartTypeBoxPlot || mChartType == cChartTypeWhiskerPlot || mChartType == cChartTypeViolins) && isVisibleExcludeNaN(vp))) {
 				int hv = mPoint[i].hvIndex;
 				int cat = getChartCategoryIndex(mPoint[i]);
-				float d = getValue(mPoint[i].record, axis, column) - mChartInfo.mean[hv][cat];
-				mChartInfo.stdDev[hv][cat] += d*d;
+				float d = getValue(mPoint[i].record, axis, column) - mChartInfo.mMean[hv][cat];
+				mChartInfo.mStdDev[hv][cat] += d*d;
 				}
 			}
 		for (int hv=0; hv<mHVCount; hv++) {
 			for (int cat=0; cat<catCount; cat++) {
 				if (vCount[hv][cat] <= 1) {
-					mChartInfo.stdDev[hv][cat] = Float.POSITIVE_INFINITY;
-					mChartInfo.errorMargin[hv][cat] = Float.POSITIVE_INFINITY;
+					mChartInfo.mStdDev[hv][cat] = Float.POSITIVE_INFINITY;
+					mChartInfo.mErrorMargin[hv][cat] = Float.POSITIVE_INFINITY;
 					}
 				else {
-					mChartInfo.stdDev[hv][cat] = (float)Math.sqrt(mChartInfo.stdDev[hv][cat] /= (vCount[hv][cat] - 1));
-					mChartInfo.errorMargin[hv][cat] = 1.96f * mChartInfo.stdDev[hv][cat] / (float)Math.sqrt(vCount[hv][cat]);
-					}
-				}
-			}
-		}
-
-	/**
-	 * Based on axis column assignments and on hvIndices of VisualizationPoints
-	 * this method assigns all visible VisualizationPoints to boxes and to color categories
-	 * within these boxes. It also calculates statistical parameters of all boxes.
-	 */
-	protected void calculateBoxPlot() {
-		int doubleAxis = determineBoxPlotDoubleAxis();
-		calculateCategoryCounts(doubleAxis);
-
-		Color[] colorList = mMarkerColor.getColorList();
-		int focusFlagNo = getFocusFlag();
-		int basicColorCount = colorList.length + 2;
-		int colorCount = basicColorCount * ((focusFlagNo == -1) ? 1 : 2);
-
-		int catCount = mCaseSeparationCategoryCount;
-		for (int axis=0; axis<mDimensions; axis++)
-			if (axis != doubleAxis)
-				catCount *= getCategoryVisCount(axis);
-
-		BoxPlotViewInfo boxPlotInfo = new BoxPlotViewInfo(mHVCount, catCount, colorCount);
-		mChartInfo = boxPlotInfo;
-		boxPlotInfo.barAxis = doubleAxis;
-
-		// create array with all visible values separated by hv and cat
-		int[][] vCount = new int[mHVCount][catCount];
-		for (int i=0; i<mDataPoints; i++) {
-			if (isVisibleExcludeNaN(mPoint[i])) {
-				int cat = getChartCategoryIndex(mPoint[i]);
-				int hv = mPoint[i].hvIndex;
-				vCount[hv][cat]++;
-				}
-			}
-		double[][][] value = new double[mHVCount][catCount][];
-		for (int hv=0; hv<mHVCount; hv++)
-			for (int cat=0; cat<catCount; cat++)
-				if (vCount[hv][cat] != 0)
-					value[hv][cat] = new double[vCount[hv][cat]];
-
-		// fill in values
-		mChartInfo.mean = new float[mHVCount][catCount];
-		vCount = new int[mHVCount][catCount];
-		for (int i=0; i<mDataPoints; i++) {
-			if (isVisibleExcludeNaN(mPoint[i])) {
-				int hv = mPoint[i].hvIndex;
-				int cat = getChartCategoryIndex(mPoint[i]);
-				float d = getAxisValue(mPoint[i].record, boxPlotInfo.barAxis);
-				boxPlotInfo.mean[hv][cat] += d;
-				value[hv][cat][vCount[hv][cat]] = d;
-				vCount[hv][cat]++;
-				}
-			}
-
-		// calculate mean
-		for (int hv=0; hv<mHVCount; hv++) {
-			for (int cat=0; cat<catCount; cat++) {
-				if (vCount[hv][cat] != 0) {
-					boxPlotInfo.mean[hv][cat] /= vCount[hv][cat];
-					}
-				}
-			}
-
-		// calculate standard deviation and error margin using the values applied to barAxis
-		calculateStdDevAndErrorMargin(catCount, vCount, boxPlotInfo.barAxis, -1);
-
-		boxPlotInfo.boxQ1 = new float[mHVCount][catCount];
-		boxPlotInfo.median = new float[mHVCount][catCount];
-		boxPlotInfo.boxQ3 = new float[mHVCount][catCount];
-		boxPlotInfo.boxLAV = new float[mHVCount][catCount];
-		boxPlotInfo.boxUAV = new float[mHVCount][catCount];
-
-		// calculate statistical parameters from sorted values
-		for (int hv=0; hv<mHVCount; hv++) {
-			for (int cat=0; cat<catCount; cat++) {
-				if (vCount[hv][cat] != 0) {
-					Arrays.sort(value[hv][cat]);
-					boxPlotInfo.boxQ1[hv][cat] = (float)getQuartile(value[hv][cat], 1);
-					boxPlotInfo.median[hv][cat] = (float)getQuartile(value[hv][cat], 2);
-					boxPlotInfo.boxQ3[hv][cat] = (float)getQuartile(value[hv][cat], 3);
-	
-					// set lower and upper adjacent values
-					float iqr = boxPlotInfo.boxQ3[hv][cat] - boxPlotInfo.boxQ1[hv][cat];
-					float lowerLimit = boxPlotInfo.boxQ1[hv][cat] - 1.5f * iqr;
-					float upperLimit = boxPlotInfo.boxQ3[hv][cat] + 1.5f * iqr;
-					int i = 0;
-					while (value[hv][cat][i] < lowerLimit)
-						i++;
-					boxPlotInfo.boxLAV[hv][cat] = (float)value[hv][cat][i];
-					i = value[hv][cat].length - 1;
-					while (value[hv][cat][i] > upperLimit)
-						i--;
-					boxPlotInfo.boxUAV[hv][cat] = (float)value[hv][cat][i];
-
-					if (mChartType == cChartTypeWhiskerPlot)
-						boxPlotInfo.pointsInCategory[hv][cat] = vCount[hv][cat];
-					}
-				}
-			}
-
-		int pValueColumn = getPValueColumn();
-		if (pValueColumn != cColumnUnassigned) {
-			int categoryIndex = getCategoryIndex(pValueColumn, mPValueRefCategory);
-			if (categoryIndex != -1) {
-				if (mBoxplotShowFoldChange)
-					boxPlotInfo.foldChange = new float[mHVCount][catCount];
-				if (mBoxplotShowPValue)
-					boxPlotInfo.pValue = new float[mHVCount][catCount];
-				int[] individualIndex = new int[1+mDimensions];
-				for (int hv=0; hv<mHVCount; hv++) {
-					for (int cat=0; cat<catCount; cat++) {
-						if (vCount[hv][cat] != 0) {
-							int refHV = getReferenceHV(hv, pValueColumn, categoryIndex);
-							int refCat = getReferenceCat(cat, pValueColumn, categoryIndex, individualIndex);
-							if ((refHV != hv || refCat != cat) && vCount[refHV][refCat] != 0) {
-								if (mBoxplotShowFoldChange) {
-									if (mTableModel.isLogarithmicViewMode(mAxisIndex[boxPlotInfo.barAxis]))
-										boxPlotInfo.foldChange[hv][cat] = 3.321928094887363f * (boxPlotInfo.mean[hv][cat] - boxPlotInfo.mean[refHV][refCat]);	// this is the log2(fc)
-									else
-										boxPlotInfo.foldChange[hv][cat] = boxPlotInfo.mean[hv][cat] / boxPlotInfo.mean[refHV][refCat];
-									}
-								if (mBoxplotShowPValue) {
-									try {
-										boxPlotInfo.pValue[hv][cat] = (float) new TTestImpl().tTest(value[hv][cat], value[refHV][refCat]);
-										}
-									catch (IllegalArgumentException e) {
-										boxPlotInfo.pValue[hv][cat] = Float.NaN;
-										}
-									catch (MathException e) {
-										boxPlotInfo.pValue[hv][cat] = Float.NaN;
-										}
-									}
-								}
-							else {
-								if (mBoxplotShowFoldChange)
-									boxPlotInfo.foldChange[hv][cat] = Float.NaN;
-								if (mBoxplotShowPValue)
-									boxPlotInfo.pValue[hv][cat] = Float.NaN;
-								}
-							}
-						}
-					}
-				}
-			}
-
-		// For this chart type we need the statistical parameters, but no colored bar.
-		// pointsInCategory[][] is aleady set and we have no outliers.
-		if (mChartType == cChartTypeWhiskerPlot)
-			return;
-
-		// create color list
-		for (int i=0; i<colorList.length; i++)
-			boxPlotInfo.color[i] = colorList[i];
-		boxPlotInfo.color[colorList.length] = VisualizationColor.cSelectedColor;
-		boxPlotInfo.color[colorList.length+1] = VisualizationColor.cUseAsFilterColor;
-		if (focusFlagNo != -1) {
-			for (int i=0; i<colorList.length; i++)
-				boxPlotInfo.color[i+basicColorCount] = VisualizationColor.grayOutColor(colorList[i]);
-			boxPlotInfo.color[colorList.length+basicColorCount] = VisualizationColor.grayOutColor(VisualizationColor.cSelectedColor);
-			boxPlotInfo.color[colorList.length+1+basicColorCount] = VisualizationColor.grayOutColor(VisualizationColor.cUseAsFilterColor);
-			}
-
-		boxPlotInfo.outlierCount = new int[mHVCount][catCount];
-
-		for (int i=0; i<mDataPoints; i++) {
-			VisualizationPoint vp = mPoint[i];
-			if (isVisibleExcludeNaN(vp)) {
-				int cat = getChartCategoryIndex(vp);
-				int hv = vp.hvIndex;
-				if (boxPlotInfo.isOutsideValue(hv, cat, getAxisValue(vp.record, boxPlotInfo.barAxis))) {
-					boxPlotInfo.outlierCount[hv][cat]++;
-					}
-				else {
-					int colorIndex = getColorIndex(vp, colorList.length, focusFlagNo);
-					boxPlotInfo.pointsInCategory[hv][cat]++;
-					boxPlotInfo.pointsInColorCategory[hv][cat][colorIndex]++;
-					}
-				}
-			}
-
-		int[][][] count = new int[mHVCount][catCount][colorCount];
-		for (int hv=0; hv<mHVCount; hv++)
-			for (int cat=0; cat<catCount; cat++)
-				for (int color=1; color<colorCount; color++)
-					count[hv][cat][color] = count[hv][cat][color-1]+boxPlotInfo.pointsInColorCategory[hv][cat][color-1];
-		for (int i=0; i<mDataPoints; i++) {
-			VisualizationPoint vp = mPoint[i];
-			if (isVisible(vp)) {
-				float v = getAxisValue(vp.record, boxPlotInfo.barAxis);
-				if (Float.isNaN(v)) {
-					vp.chartGroupIndex = -1;
-					}
-				else {
-					int hv = vp.hvIndex;
-					int cat = getChartCategoryIndex(vp);
-					if (boxPlotInfo.isOutsideValue(hv, cat, v)) {
-						vp.chartGroupIndex = -1;
-						}
-					else {
-						int colorIndex = getColorIndex(vp, colorList.length, focusFlagNo);
-						vp.chartGroupIndex = count[hv][cat][colorIndex];
-						count[hv][cat][colorIndex]++;
-						}
+					mChartInfo.mStdDev[hv][cat] = (float)Math.sqrt(mChartInfo.mStdDev[hv][cat] /= (vCount[hv][cat] - 1));
+					mChartInfo.mErrorMargin[hv][cat] = 1.96f * mChartInfo.mStdDev[hv][cat] / (float)Math.sqrt(vCount[hv][cat]);
 					}
 				}
 			}
@@ -3295,7 +2800,8 @@ public abstract class JVisualization extends JComponent
 				writer.append(columnTitle+"\t");
 				}
 
-			if (mChartType != cChartTypeBoxPlot)
+			if (mChartType != cChartTypeBoxPlot
+			 && mChartType != cChartTypeViolins)
 				writer.append("Rows in Category");
 
 			if ((mChartType == cChartTypeBars
@@ -3315,9 +2821,11 @@ public abstract class JVisualization extends JComponent
 				}
 
 			if (mChartType == cChartTypeBoxPlot
-			 || mChartType == cChartTypeWhiskerPlot) {
-				boolean isLogarithmic = mTableModel.isLogarithmicViewMode(mAxisIndex[mChartInfo.barAxis]);
-				if (mChartType == cChartTypeBoxPlot) {
+			 || mChartType == cChartTypeWhiskerPlot
+			 || mChartType == cChartTypeViolins) {
+				boolean isLogarithmic = mTableModel.isLogarithmicViewMode(mAxisIndex[mChartInfo.mDoubleAxis]);
+				if (mChartType == cChartTypeBoxPlot
+				 || mChartType == cChartTypeViolins) {
 					writer.append("Total Count");
 					writer.append("\tOutlier Count");
 					}
@@ -3357,7 +2865,7 @@ public abstract class JVisualization extends JComponent
 				if (isCaseSeparationDone())
 					cat += categoryIndex[columnIndex++];
 
-				if (mChartInfo.pointsInCategory[hv][cat] != 0) {
+				if (mChartInfo.mPointsInCategory[hv][cat] != 0) {
 					for (int i=0; i<categoryColumnCount; i++) {
 						writer.append(categoryList[i][categoryIndex[i]]);
 						if ((includeFoldChange || includePValue)
@@ -3367,37 +2875,40 @@ public abstract class JVisualization extends JComponent
 						writer.append("\t");
 						}
 			
-					if (mChartType != cChartTypeBoxPlot)
-						writer.append(""+mChartInfo.pointsInCategory[hv][cat]);
+					if (mChartType != cChartTypeBoxPlot
+					 && mChartType != cChartTypeViolins)
+						writer.append(""+mChartInfo.mPointsInCategory[hv][cat]);
 
 					if ((mChartType == cChartTypeBars
 					  || mChartType == cChartTypePies)
 					 && mChartMode != cChartModeCount) {
-						writer.append("\t" + formatValue(mChartInfo.barValue[hv][cat], mChartColumn));
+						writer.append("\t" + formatValue(mChartInfo.mBarValue[hv][cat], mChartColumn));
 						if (mChartMode != cChartModePercent) {
-							writer.append("\t"+formatValue(mChartInfo.stdDev[hv][cat], mChartColumn));
-							writer.append("\t"+formatValue(mChartInfo.mean[hv][cat]-mChartInfo.errorMargin[hv][cat], mChartColumn)
-										  +"-"+formatValue(mChartInfo.mean[hv][cat]+mChartInfo.errorMargin[hv][cat], mChartColumn));
+							writer.append("\t"+formatValue(mChartInfo.mStdDev[hv][cat], mChartColumn));
+							writer.append("\t"+formatValue(mChartInfo.mMean[hv][cat]-mChartInfo.mErrorMargin[hv][cat], mChartColumn)
+										  +"-"+formatValue(mChartInfo.mMean[hv][cat]+mChartInfo.mErrorMargin[hv][cat], mChartColumn));
 							}
 						}
 
 					if (mChartType == cChartTypeBoxPlot
-					 || mChartType == cChartTypeWhiskerPlot) {
-						BoxPlotViewInfo vi = (BoxPlotViewInfo)mChartInfo;
-						if (mChartType == cChartTypeBoxPlot) {
-							writer.append(""+(mChartInfo.pointsInCategory[hv][cat]+vi.outlierCount[hv][cat]));
-							writer.append("\t"+vi.outlierCount[hv][cat]);
+					 || mChartType == cChartTypeWhiskerPlot
+					 || mChartType == cChartTypeViolins) {
+						AbstractDistributionPlot vi = (AbstractDistributionPlot)mChartInfo;
+						if (mChartType == cChartTypeBoxPlot
+						 || mChartType == cChartTypeViolins) {
+							writer.append(""+(mChartInfo.mPointsInCategory[hv][cat]+vi.mOutlierCount[hv][cat]));
+							writer.append("\t"+vi.mOutlierCount[hv][cat]);
 							}
-						int column = mAxisIndex[((BoxPlotViewInfo)mChartInfo).barAxis];
-						writer.append("\t"+formatValue(vi.mean[hv][cat], column));
-						writer.append("\t"+formatValue(vi.boxQ1[hv][cat], column));
-						writer.append("\t"+formatValue(vi.median[hv][cat], column));
-						writer.append("\t"+formatValue(vi.boxQ3[hv][cat], column));
-						writer.append("\t"+formatValue(vi.boxLAV[hv][cat], column));
-						writer.append("\t"+formatValue(vi.boxUAV[hv][cat], column));
-						writer.append("\t"+formatValue(vi.stdDev[hv][cat], column));
-						writer.append("\t"+formatValue(vi.mean[hv][cat]-vi.errorMargin[hv][cat], column)
-									  +"-"+formatValue(vi.mean[hv][cat]+vi.errorMargin[hv][cat], column));
+						int column = mAxisIndex[((AbstractDistributionPlot)mChartInfo).mDoubleAxis];
+						writer.append("\t"+formatValue(vi.mMean[hv][cat], column));
+						writer.append("\t"+formatValue(vi.mBoxQ1[hv][cat], column));
+						writer.append("\t"+formatValue(vi.mMedian[hv][cat], column));
+						writer.append("\t"+formatValue(vi.mBoxQ3[hv][cat], column));
+						writer.append("\t"+formatValue(vi.mBoxLAV[hv][cat], column));
+						writer.append("\t"+formatValue(vi.mBoxUAV[hv][cat], column));
+						writer.append("\t"+formatValue(vi.mStdDev[hv][cat], column));
+						writer.append("\t"+formatValue(vi.mMean[hv][cat]-vi.mErrorMargin[hv][cat], column)
+									  +"-"+formatValue(vi.mMean[hv][cat]+vi.mErrorMargin[hv][cat], column));
 /*						if (includeFoldChange || includePValue) {		don't use additional column
 							int refHV = getReferenceHV(hv, pValueColumn, referenceCategoryIndex);
 							int refCat = getReferenceCat(cat, pValueColumn, referenceCategoryIndex, new int[1+mDimensions]);
@@ -3405,13 +2916,13 @@ public abstract class JVisualization extends JComponent
 							}	*/
 						if (includeFoldChange) {
 							writer.append("\t");
-							if (!Float.isNaN(vi.foldChange[hv][cat]))
-								writer.append(new DecimalFormat("#.#####").format(vi.foldChange[hv][cat]));
+							if (!Float.isNaN(vi.mFoldChange[hv][cat]))
+								writer.append(new DecimalFormat("#.#####").format(vi.mFoldChange[hv][cat]));
 							}
 						if (includePValue) {
 							writer.append("\t");
-							if (!Float.isNaN(vi.pValue[hv][cat]))
-								writer.append(new DecimalFormat("#.#####").format(vi.pValue[hv][cat]));
+							if (!Float.isNaN(vi.mPValue[hv][cat]))
+								writer.append(new DecimalFormat("#.#####").format(vi.mPValue[hv][cat]));
 							}
 						}
 					writer.newLine();
@@ -3454,7 +2965,7 @@ public abstract class JVisualization extends JComponent
 	 * @param column -1 if axis is given
 	 * @return
 	 */
-	private float getValue(CompoundRecord record, int axis, int column) {
+	protected float getValue(CompoundRecord record, int axis, int column) {
 		return (column != -1) ? record.getDouble(column) : getAxisValue(record, axis);
 		}
 
@@ -3464,8 +2975,9 @@ public abstract class JVisualization extends JComponent
 	 * a descriptor similarity calculation) or a static value from the CompoundRecord.
 	 * With ambiguous column types (category and double) it also considers, whether
 	 * to use the category index or the double value.
+	 * It does not, however, consider case separation on this axis!!!
 	 * @param record
-	 * @param axis
+	 * @param axis existing axis assigned to existing column
 	 * @return
 	 */
 	protected float getAxisValue(CompoundRecord record, int axis) {
@@ -3792,7 +3304,8 @@ public abstract class JVisualization extends JComponent
 	public int getConnectionColumn() {
 		// filter out connection types being incompatible with chart type
 		if (mChartType == cChartTypeBoxPlot
-		 || mChartType == cChartTypeWhiskerPlot) {
+		 || mChartType == cChartTypeWhiskerPlot
+		 || mChartType == cChartTypeViolins) {
 			if (mConnectionColumn == cConnectionColumnConnectCases
 			 || (mCaseSeparationCategoryCount != 1 && mConnectionColumn == mCaseSeparationColumn))
 				return mConnectionColumn;
@@ -3809,7 +3322,8 @@ public abstract class JVisualization extends JComponent
 	public int getConnectionOrderColumn() {
 		return (mConnectionColumn == cColumnUnassigned
 			 || mChartType == cChartTypeBoxPlot
-			 || mChartType == cChartTypeWhiskerPlot) ?
+			 || mChartType == cChartTypeWhiskerPlot
+			 || mChartType == cChartTypeViolins) ?
 					 cColumnUnassigned : mConnectionOrderColumn;
 		}
 
@@ -4163,7 +3677,7 @@ public abstract class JVisualization extends JComponent
 			}
 		}
 
-	private int getReferenceHV(int hv, int categoryColumn, int categoryIndex) {
+	protected int getReferenceHV(int hv, int categoryColumn, int categoryIndex) {
 		if (!isSplitView())
 			return 0;
 
@@ -4181,7 +3695,7 @@ public abstract class JVisualization extends JComponent
 			}
 		}
 
-	private int getReferenceCat(int cat, int categoryColumn, int categoryIndex, int[] individualIndex) {
+	protected int getReferenceCat(int cat, int categoryColumn, int categoryIndex, int[] individualIndex) {
 		for (int i=mDimensions; i>0; i--) {
 			individualIndex[i] = cat / mCombinedCategoryCount[i-1];
 			cat -= individualIndex[i] * mCombinedCategoryCount[i-1];
@@ -4245,7 +3759,7 @@ public abstract class JVisualization extends JComponent
 	 * @param value
 	 * @return category index or -1 if the category is scrolled out of view
 	 */
-	private int getCategoryIndex(int column, String value) {
+	protected int getCategoryIndex(int column, String value) {
 		if (column == mCaseSeparationColumn)
 			return mTableModel.getCategoryIndex(column, value);
 
@@ -4289,8 +3803,9 @@ public abstract class JVisualization extends JComponent
 
 		for (int axis=0; axis<mDimensions; axis++) {
 			if ((mChartType != cChartTypeBoxPlot
-   			  && mChartType != cChartTypeWhiskerPlot)
-		   	 || axis != mChartInfo.barAxis) {
+   			  && mChartType != cChartTypeWhiskerPlot
+			  && mChartType != cChartTypeViolins)
+		   	 || axis != mChartInfo.mDoubleAxis) {
 				int axisIndex = getCategoryIndex(axis, vp);
 				if (axisIndex == -1)
 					return -1;
@@ -4315,8 +3830,9 @@ public abstract class JVisualization extends JComponent
 
 		for (int axis=0; axis<mDimensions; axis++) {
 			if ((mChartType != cChartTypeBoxPlot
-			 && mChartType != cChartTypeWhiskerPlot)
-			  || axis != mChartInfo.barAxis) {
+			 && mChartType != cChartTypeWhiskerPlot
+			 && mChartType != cChartTypeViolins)
+			  || axis != mChartInfo.mDoubleAxis) {
 				int column = mAxisIndex[axis];
 				int axisIndex = (column == cColumnUnassigned) ? 0 : mTableModel.getCategoryIndex(column, vp.record);
 				index += axisIndex * mFullCombinedCategoryCount[axis];
@@ -4324,48 +3840,6 @@ public abstract class JVisualization extends JComponent
 			}
 
 		return index;
-		}
-
-	/**
-	 *
-	 * @param value
-	 * @param no 1(lower), 2(mean), or 3(upper)
-	 * @return
-	 */
-	private double getQuartile(double[] value, int no) {
-		int length = value.length;
-		if (length == 1)
-			return value[0];
-
-		int index;
-		switch (no) {
-		case 1:
-			index = length / 4;
-			if ((length & 1) == 0) {
-				return ((length & 2) == 2) ? value[index] : (value[index-1] + value[index]) / 2;
-				}
-			else if ((length & 3) == 1) {
-				return (value[index-1] + 3*value[index]) / 4;
-				}
-			else {
-				return (3*value[index] + value[index+1]) / 4;
-				}
-		case 2:
-			index = length / 2;
-			return ((length & 1) == 1) ? value[index] : (value[index-1] + value[index]) / 2;
-		case 3:
-			index = length / 2 + length / 4;
-			if ((length & 1) == 0) {
-				return ((length & 2) == 2) ? value[index] : (value[index-1] + value[index]) / 2;
-				}
-			else if ((length & 3) == 1) {
-				return (3*value[index] + value[index+1]) / 4;
-				}
-			else {
-				return (value[index] + 3*value[index+1]) / 4;
-				}
-			}
-		return 0;
 		}
 
 	public void mouseClicked(MouseEvent e) {
@@ -5186,6 +4660,7 @@ public abstract class JVisualization extends JComponent
 				invalidateSplittingIndices();
 
 			invalidateOffImage(mChartType == cChartTypeBoxPlot
+							|| mChartType == cChartTypeViolins
 							|| mChartType == cChartTypeBars
 							|| mChartType == cChartTypePies);
 			}

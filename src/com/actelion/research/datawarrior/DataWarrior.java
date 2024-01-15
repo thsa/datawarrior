@@ -437,7 +437,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 
 	/**
-	 * If the frame contains unsaved content, then the user is asked, whether
+	 * If the frame contains unsaved content, then the user is asked whether
 	 * its data shall be saved. If the user cancels the dialog the frame stays open.
 	 * If the frame is the owner of a running macro, then the frame is not closed
 	 * and an appropriate error message is displayed unless it is the macro itself
@@ -461,7 +461,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 * If the frame contains unsaved content and saveContent==true then
 	 * the frame's content is saved without user interaction.
 	 * If a file is already assigned to the frame then this file is overwritten.
-	 * Otherwise a new file is saved in the home directory.
+	 * Otherwise, a new file is saved in the home directory.
 	 * If a macro is recording, then this call does not record any tasks.
 	 * If a macro is recording and the frame to be closed is the macro owner, then
 	 * the recording is stopped before the frame is saved and closed.
@@ -480,7 +480,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 
 	/**
-	 * If the frame contains unsaved content, then the user is asked, whether
+	 * If the frame contains unsaved content, then the user is asked whether
 	 * its data shall be saved. If the user cancels the dialog the frame stays open.
 	 * If the frame is the owner of a running macro, then the frame is not closed
 	 * and an appropriate error message is displayed unless it is the macro itself
@@ -502,8 +502,8 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 * If the frame contains unsaved content and saveContent==true then
 	 * the frame's content is saved without user interaction.
 	 * If a file is already assigned to the frame then this file is overwritten.
-	 * Otherwise a new file is saved in the home directory.
-	 * The application is exited after closing the last frame.
+	 * Otherwise, a new file is saved in the home directory.
+	 * The application exits after closing the last frame.
 	 * If a macro is recording, then this call does not record any tasks.
 	 */
 	public void closeAllFramesSilentlyAndExit(boolean saveContent) {
@@ -548,7 +548,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 
 	/**
-	 * Sets the look&feel, which is defined in the preferences. If the preferences doesn't contain
+	 * Sets the look&feel, which is defined in the preferences. If the preferences don't contain
 	 * a look&feel name, then the default look&feel for this platform is chosen.
 	 */
 	public void setInitialLookAndFeel() {
@@ -688,39 +688,6 @@ public abstract class DataWarrior implements WindowFocusListener {
 	public abstract boolean isMacintosh();
 	public abstract LookAndFeel getDefaultLAF();
 	public abstract LookAndFeel[] getAvailableLAFs();
-
-	/**
-	 * Opens the file, runs the query, starts the macro depending on the file type.
-	 * @param filename
-	 * @return new frame or null if no frame was opened
-	 *
-	public DEFrame readFile(String filename) {
-		final int filetype = FileHelper.getFileType(filename);
-		switch (filetype) {
-		case FileHelper.cFileTypeDataWarrior:
-		case FileHelper.cFileTypeSD:
-		case FileHelper.cFileTypeTextTabDelimited:
-		case FileHelper.cFileTypeTextCommaSeparated:
-			final DEFrame _emptyFrame = getEmptyFrame(filename);
-			new CompoundTableLoader(_emptyFrame, _emptyFrame.getTableModel()) {
-				public void finalStatus(boolean success) {
-					if (success && filetype == FileHelper.cFileTypeDataWarrior)
-						_emptyFrame.setDirty(false);
-					}
-				}.readFile(new File(filename), new DERuntimeProperties(_emptyFrame.getMainFrame()), filetype);
-
-			return _emptyFrame;
-		case FileHelper.cFileTypeDataWarriorQuery:
-			new DEFileLoader(getActiveFrame(), this).openAndRunQuery(new File(filename));
-			return null;
-		case FileHelper.cFileTypeDataWarriorMacro:
-			new DEFileLoader(getActiveFrame(), this).openAndRunMacro(new File(filename));
-			return null;
-		default:
-			JOptionPane.showMessageDialog(getActiveFrame(), "Unsupported file type.\n"+filename);
-			return null;
-			}
-		}	*/
 
 	/**
 	 * When the program is launched with file names as arguments, and if file names

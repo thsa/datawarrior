@@ -238,7 +238,7 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		mCheckBoxScatterplotMargin.addActionListener(this);
 		renderPanel.add(mCheckBoxScatterplotMargin, "2,2");
 		if (!hasInteractiveView() || getInteractiveVisualization() instanceof JVisualization2D) {
-			mCheckBoxDrawBoxOutline = new JCheckBox("Draw bar/pie/box outlines", false);
+			mCheckBoxDrawBoxOutline = new JCheckBox("Draw bar/pie/box/violine outlines", false);
 			mCheckBoxDrawBoxOutline.addActionListener(this);
 			renderPanel.add(mCheckBoxDrawBoxOutline, "2,3");
 			mCheckBoxDrawMarkerOutline = new JCheckBox("Draw marker outlines", false);

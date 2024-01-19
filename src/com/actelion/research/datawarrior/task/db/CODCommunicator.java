@@ -32,7 +32,7 @@ public class CODCommunicator extends ClientCommunicator implements CODServerCons
 	private static String sSecondaryURL = sURL_2;
 	private static boolean sUseSecondaryServer = false;
 
-	private ProgressController mProgressController;
+	private final ProgressController mProgressController;
 
 	public CODCommunicator(ProgressController task, String applicationName) {
 		super(false, applicationName);
@@ -49,10 +49,13 @@ public class CODCommunicator extends ClientCommunicator implements CODServerCons
 		return sSecondaryURL;
 	}
 
-	public static void setServerURL(String serverURL) {
+	public static void setPrimaryServerURL(String serverURL) {
 		sPrimaryURL = serverURL;
-		sSecondaryURL = sURL_1;
-		}
+	}
+
+	public static void setSecondaryServerURL(String serverURL) {
+		sSecondaryURL = serverURL;
+	}
 
 	@Override
 	public boolean isUseSecondaryServer() {
@@ -74,7 +77,7 @@ public class CODCommunicator extends ClientCommunicator implements CODServerCons
 
 	@Override
 	public void showBusyMessage(String message) {
-		if (message.length() == 0)
+		if (message.isEmpty())
 			System.out.println("Done");
 		else
 			System.out.println("Busy: "+message);

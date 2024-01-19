@@ -16,7 +16,7 @@ public class PatentReactionCommunicator extends ClientCommunicator implements Pa
 	// TODO take these from server MercuryServerConstants:
 	private static final String REQUEST_GET_QUERYABLE_FIELDS = "getFieldNames";
 
-	private ProgressController mProgressController;
+	private final ProgressController mProgressController;
 
 	public PatentReactionCommunicator(ProgressController task, String applicationName) {
 		super(false, applicationName);
@@ -33,6 +33,14 @@ public class PatentReactionCommunicator extends ClientCommunicator implements Pa
 		return sSecondaryURL;
 	}
 
+	public static void setPrimaryServerURL(String serverURL) {
+		sPrimaryURL = serverURL;
+	}
+
+	public static void setSecondaryServerURL(String serverURL) {
+		sSecondaryURL = serverURL;
+	}
+
 	@Override
 	public boolean isUseSecondaryServer() {
 		return sUseSecondaryServer;
@@ -47,18 +55,14 @@ public class PatentReactionCommunicator extends ClientCommunicator implements Pa
 		return (Object[][])getResponse(REQUEST_RUN_QUERY_GET_TABLE, KEY_QUERY, encode(query));
 		}
 
-	public String[] searchIDs(TreeMap<String,Object> query) {
-		return (String[])getResponse(REQUEST_RUN_QUERY, KEY_QUERY, encode(query));
-		}
-
 	public String[] getQueryFields() {
 		String queryFields = (String)getResponse(REQUEST_GET_QUERYABLE_FIELDS);
-		return queryFields == null || queryFields.length() == 0 ? null : queryFields.split(",");
+		return queryFields == null || queryFields.isEmpty() ? null : queryFields.split(",");
 		}
 
 	@Override
 	public void showBusyMessage(String message) {
-		if (message.length() == 0)
+		if (message.isEmpty())
 			System.out.println("Done");
 		else
 			System.out.println("Busy: "+message);

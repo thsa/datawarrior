@@ -32,12 +32,15 @@ public class ChemblCommunicator extends ClientCommunicator implements ChemblServ
 	private static String sSecondaryURL = sURL_2;
 	private static boolean sUseSecondaryServer = false;
 
-	private ProgressController mProgressController;
+	private final ProgressController mProgressController;
 
-	public static void setServerURL(String url) {
-		sPrimaryURL = url;
-		sSecondaryURL = sURL_1;
-		}
+	public static void setPrimaryServerURL(String serverURL) {
+		sPrimaryURL = serverURL;
+	}
+
+	public static void setSecondaryServerURL(String serverURL) {
+		sSecondaryURL = serverURL;
+	}
 
 	@Override
 	public String getPrimaryServerURL() {
@@ -82,25 +85,25 @@ public class ChemblCommunicator extends ClientCommunicator implements ChemblServ
 
 	/**
 	 * This runs a skelSpheres search against many(!) given molecules
-	 * @param idcode
-	 * @return
+	 * @param idcode query molecule(s)
+	 * @return result table
 	 */
 	public byte[][][] findActiveCompoundsSkelSpheres(byte[][] idcode) {
 		return (byte[][][])getResponse(REQUEST_FIND_ACTIVES_SKELSPHERES, KEY_IDCODE_LIST, encode(idcode));
 		}
 
-	/**
-	 * This runs a flexophore and skelSPheres search against one(!) given molecule
-	 * @param idcode
-	 * @return
-	 */
-	public byte[][][] findActiveCompoundsFlexophore(byte[] idcode) {
-		return (byte[][][])getResponse(REQUEST_FIND_ACTIVES_FLEXOPHORE, KEY_IDCODE, encode(idcode));
-		}
+//	/**
+//	 * This runs a flexophore and skelSPheres search against one(!) given molecule
+//	 * @param idcode
+//	 * @return
+//	 */
+//	public byte[][][] findActiveCompoundsFlexophore(byte[] idcode) {
+//		return (byte[][][])getResponse(REQUEST_FIND_ACTIVES_FLEXOPHORE, KEY_IDCODE, encode(idcode));
+//		}
 
 	@Override
 	public void showBusyMessage(String message) {
-		if (message.length() == 0)
+		if (message.isEmpty())
 			System.out.println("Done");
 		else
 			System.out.println("Busy: "+message);

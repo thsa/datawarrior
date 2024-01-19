@@ -35,7 +35,7 @@ public class BBCommunicator extends ClientCommunicator {
 
 	private static String[] sProviderList;
 
-	private ProgressController mProgressController;
+	private final ProgressController mProgressController;
 
 	public BBCommunicator(ProgressController task, String applicationName) {
 		super(false, applicationName);
@@ -60,10 +60,13 @@ public class BBCommunicator extends ClientCommunicator {
 		return sSecondaryURL;
 		}
 
-	public static void setServerURL(String serverURL) {
+	public static void setPrimaryServerURL(String serverURL) {
 		sPrimaryURL = serverURL;
-		sSecondaryURL = sURL_1;
 		}
+
+	public static void setSecondaryServerURL(String serverURL) {
+		sSecondaryURL = serverURL;
+	}
 
 	@Override
 	public boolean isUseSecondaryServer() {
@@ -86,7 +89,7 @@ public class BBCommunicator extends ClientCommunicator {
 
 	@Override
 	public void showBusyMessage(String message) {
-		if (message.length() == 0)
+		if (message.isEmpty())
 			System.out.println("Done");
 		else
 			System.out.println("Busy: "+message);

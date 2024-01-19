@@ -24,8 +24,10 @@ import com.actelion.research.gui.hidpi.HiDPIHelper;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -33,7 +35,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
+public class DEAboutDialog extends JDialog {
 	private static final long serialVersionUID = 20140219L;
 	private int mMillis;
 
@@ -43,7 +45,22 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
 	    setUndecorated(true);
 		getContentPane().add(createImagePanel());
 
-		addMouseListener(this);
+		addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				super.mousePressed(e);
+				dispose();
+			}
+		});
+
+		addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				super.keyPressed(e);
+				if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+					dispose();
+			}
+		});
 
 		pack();
 		setLocationRelativeTo(owner);
@@ -60,7 +77,14 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
 		setLocationRelativeTo(owner);
 
 		mMillis = millis;
-		new Thread(this).start();
+
+		new Thread(() -> {
+			try {
+				Thread.sleep(mMillis);
+			}
+			catch (Exception e) {}
+			dispose();
+		}).start();
 
 		setVisible(true);
 		}
@@ -98,21 +122,5 @@ public class DEAboutDialog extends JDialog implements MouseListener,Runnable {
 			catch (IOException e) {}
 			}
 		return DEUpdateHandler.DATAWARRIOR_VERSION;
-		}
-
-	public void run() {
-		try {
-			Thread.sleep(mMillis);
-			}
-		catch (Exception e) {}
-		dispose();
-		}
-
-	public void mouseEntered(MouseEvent e) {}
-	public void mouseExited(MouseEvent e) {}
-	public void mousePressed(MouseEvent e) {}
-	public void mouseReleased(MouseEvent e) {}
-	public void mouseClicked(MouseEvent e) {
-		dispose();
 		}
 	}

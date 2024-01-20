@@ -247,10 +247,9 @@ public class DETaskAddCalculatedValues extends ConfigurableTask implements Actio
 			}
 		else {
 			mLabelColumnName.setText("New column name:");
-			String item = (String)mComboBoxColumnName.getSelectedItem();
 			mDialogPanel.remove(mComboBoxColumnName);
 			mDialogPanel.add(mTextFieldColumnName, "5,9,7,9");
-			mTextFieldColumnName.setText(item == null ? "" : item);
+			mTextFieldColumnName.setText("Calculated Column");
 			mTextFieldColumnName.repaint();
 			}
 		}
@@ -722,15 +721,13 @@ public class DETaskAddCalculatedValues extends ConfigurableTask implements Actio
 			updateColumnNameComponent(true);
 			}
 		else {
-			boolean isOverwrite = "true".equals(configuration.getProperty(PROPERTY_OVERWRITE_COLUMN));
+			String columnName = configuration.getProperty(PROPERTY_COLUMN_NAME, "");
+			boolean isOverwrite = "true".equals(configuration.getProperty(PROPERTY_OVERWRITE_COLUMN)) && mTableModel.findColumn(columnName) != -1;
 			mTextAreaFormula.setText(configuration.getProperty(PROPERTY_FORMULA, "").replace("<NL>", "\n"));
 			mCheckBoxOverwriteExisting.setSelected(isOverwrite);
-			String columnName = configuration.getProperty(PROPERTY_COLUMN_NAME, "");
 			if (isOverwrite) {
 				int column = mTableModel.findColumn(columnName);
-				if (column != -1)
-					columnName = mTableModel.getColumnTitle(column);
-				mComboBoxColumnName.setSelectedItem(columnName);
+				mComboBoxColumnName.setSelectedItem(mTableModel.getColumnTitle(column));
 				updateColumnNameComponent(true);
 				}
 			else {
@@ -778,6 +775,13 @@ public class DETaskAddCalculatedValues extends ConfigurableTask implements Actio
 					}
 				if (mTableModel.getColumnSpecialType(column) != null) {
 					showErrorMessage("Target column is not alpha-numerical.");
+					return false;
+					}
+				}
+			else {
+				int column = mTableModel.findColumn(columnName);
+				if (column != -1) {
+					showErrorMessage("Target column exists, but you have chosen not to overwrite.");
 					return false;
 					}
 				}

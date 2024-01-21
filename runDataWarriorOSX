@@ -1,1 +1,0 @@
-java --add-exports java.desktop/com.apple.eawt=ALL-UNNAMED -Dapple.laf.useScreenMenuBar=true -jar datawarrior_all.jar

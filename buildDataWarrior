@@ -2,7 +2,7 @@ mkdir ./bin
 cp -r ./src/html ./bin/
 cp -r ./src/images ./bin/
 echo "Compiling DataWarrior source code..."
-javac -nowarn -d ./bin -sourcepath ./src:./stubs -classpath "./lib/*" src/com/actelion/research/datawarrior/DataWarriorLinux.java src/com/actelion/research/datawarrior/DataWarriorOSX.java
+javac --add-exports javafx.web/com.sun.webkit=ALL-UNNAMED --add-exports java.base/jdk.internal.module=ALL-UNNAMED -nowarn -d ./bin -sourcepath ./src:./stubs -classpath "./lib/*" src/com/actelion/research/datawarrior/DataWarriorLinux.java src/com/actelion/research/datawarrior/DataWarriorOSX.java
 rm -r bin/chemaxon
 rm -r bin/com/apple
 cd bin

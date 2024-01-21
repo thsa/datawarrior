@@ -24,6 +24,7 @@ import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.hidpi.HiDPIIconButton;
 import com.actelion.research.gui.hidpi.ScaledEditorKit;
+import com.sun.webkit.WebPage;
 import info.clearthought.layout.TableLayout;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -73,11 +74,11 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
     private static final long SEARCH_DELAY = 100L;
 
 	private static DEHelpFrame sHelpFrame;
-    private DEFrame 	mParent;
-	private JEditorPane mIndexArea;
+	private final JEditorPane mIndexArea;
 	private WebEngine	mEngine;
-	private JTextField  mTextFieldSearch;
-	private JLabel      mLabelMatchCount,mLabelCurrentChapter;
+	private final JTextField  mTextFieldSearch;
+	private final JLabel      mLabelMatchCount;
+	private final JLabel mLabelCurrentChapter;
 	private byte[][]    mSearchCache;
 	private int[]       mPageMatchCount;
 	private int         mTotalMatchCount,mTotalMatch,mChapterMatch,mCurrentChapter;
@@ -100,7 +101,6 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 
 	private DEHelpFrame(DEFrame parent) {
 		super("DataWarrior Help");
-		mParent = parent;
 
 		final int scaled250 = HiDPIHelper.scale(250);
 		final int gap = HiDPIHelper.scale(8);
@@ -150,7 +150,7 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 					app.isIdorsia() ? "/html/help/contentActelion.html" : "/html/help/content.html"));
 			}
 		catch (IOException e) {
-			JOptionPane.showMessageDialog(mParent,e.getMessage());
+			JOptionPane.showMessageDialog(parent,e.getMessage());
 			return;
 			}
 		JScrollPane spIndexArea = new JScrollPane(mIndexArea);
@@ -174,8 +174,8 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 		Rectangle screenBounds = getGraphicsConfiguration().getBounds();
 		setSize(HiDPIHelper.scale(980), Math.min(HiDPIHelper.scale(1024), getGraphicsConfiguration().getBounds().height - HiDPIHelper.scale(64)));
 
-		int prefX = mParent.getLocationOnScreen().x + mParent.getSize().width + HiDPIHelper.scale(16);
-		int prefY = mParent.getLocationOnScreen().y + mParent.getSize().height/2 - this.getSize().height/2;
+		int prefX = parent.getLocationOnScreen().x + parent.getSize().width + HiDPIHelper.scale(16);
+		int prefY = parent.getLocationOnScreen().y + parent.getSize().height/2 - this.getSize().height/2;
 		int x = Math.min(prefX, screenBounds.x + screenBounds.width - this.getSize().width - HiDPIHelper.scale(16));
 		int y = Math.max(screenBounds.y + HiDPIHelper.scale(32), Math.min(prefY, screenBounds.y + screenBounds.height - this.getSize().height) - HiDPIHelper.scale(32));
 		setLocation(new Point(x, y));
@@ -246,7 +246,7 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 		String query = mTextFieldSearch.getText();
 		countPageMatches(query);
 
-		if (mTotalMatchCount == 0 || query.length() == 0) {
+		if (mTotalMatchCount == 0 || query.isEmpty()) {
 			mLabelMatchCount.setText("");
 			}
 		else {
@@ -332,10 +332,8 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 				Field pageField = mEngine.getClass().getDeclaredField("page");
 				pageField.setAccessible(true);
 
-/* TODO find other solution
 				WebPage page = (WebPage)pageField.get(mEngine);
 				page.find(query, forward, true, false);
- */
 				}
 			catch (Exception e) {}
 			});
@@ -345,7 +343,7 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 		mTotalMatchCount = 0;
 		mPageMatchCount = new int[CONTENT_PAGES.length];
 
-		if (query.length() != 0) {
+		if (!query.isEmpty()) {
 			if (mSearchCache == null) {
 				mSearchCache = new byte[CONTENT_PAGES.length][];
 				for (int i=0; i<CONTENT_PAGES.length; i++)

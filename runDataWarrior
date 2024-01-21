@@ -1,2 +1,1 @@
-java -jar datawarrior_all.jar
-
+java --add-exports java.base/jdk.internal.module=ALL-UNNAMED -Dapple.laf.useScreenMenuBar=true -jar datawarrior_all.jar

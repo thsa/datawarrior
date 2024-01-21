@@ -20,6 +20,7 @@ package com.actelion.research.datawarrior;
 
 import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.util.Platform;
 import org.pushingpixels.radiance.common.api.font.FontPolicy;
 import org.pushingpixels.radiance.common.api.font.FontSet;
 import org.pushingpixels.radiance.theming.api.RadianceThemingCortex;
@@ -164,6 +165,15 @@ public class DataWarriorLinux extends DataWarrior {
 		}
 
 	public static void main(final String[] args) {
+		if (Platform.isWindows()) {
+			// Liberica 21 moved libraries from jre\bin\javafx to jre\bin. These dlls are wrongly accessed via the old path.
+			// If not found there, then the jre tries to find them using the java.library.path runtime variable.
+			// For things to work correctly, java.library.path should start with "C:\\Program Files\\DataWarrior\\jre\\bin".
+			// If an older JRE is installed, this variable may contain another path causing to load outdated libraries...
+			final String javaLibraryPath = System.getProperty("java.library.path");
+//			final String libericaLibraryPath = "C:\\Program Files\\DataWarrior\\jre\\bin";
+			System.out.println("java.library.path is "+javaLibraryPath);
+			}
 		SwingUtilities.invokeLater(() -> {
 			try {
 				Thread.setDefaultUncaughtExceptionHandler((final Thread t, final Throwable e) ->

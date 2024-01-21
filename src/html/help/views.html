@@ -362,7 +362,7 @@ For an example see the image below.</p>
 <p align="center"><img src="help/img/views/splitViews.jpeg"></p>
 <br>
 
-<h3><a name="ConnectionLines"></a>Connection Lines</b></h3>
+<h3><a name="ConnectionLines"></a>Connection Lines</h3>
 
 Whenever the change of a numerical parameter over time shall be visualized, or when
 some logical connection between objects needs to be shown, or whenever a tree graph
@@ -435,7 +435,7 @@ This effectively inverts the direction of reference.</p>
 or beneath the root row.</p>
 <br>
 
-<h3><a name="BarsAndPies"></a>Bar Charts And Pie Charts</b></h3>
+<h3><a name="BarsAndPies"></a>Bar Charts And Pie Charts</h3>
 
 <p align="left">If all axis of a graphical view are either unassigned or connected
 to a column with category data, then the view can be configured to show a bar chart
@@ -480,13 +480,13 @@ large pies in order to recognize very small pies as well. Overlapping pies are u
 tolerable and therefore pies can often visualize large size variations better than bars.</p>
 <br>
 
-<h3><a name="BoxesAndWhiskers"></a>Box Plots And Whisker Plots</b></h3>
+<h3><a name="BoxesAndWhiskers"></a>Box Plots, Whisker Plots, and Violin Plots</h3>
 
-<p><span class="keyword">Box Plots</span> and <span class="keyword">Whisker Plots</span> are
-popular, when measured data can be assigned to groups and where the variation of the data
-within the groups between the groups is of concern. Often the median or mean of a group
-is compared to other groups and statistical significance is deduced from p-values as a
-result of a <span class="keyword">t-test</span>.</p> 
+<p><span class="keyword">Box Plots, Whisker Plots, or Violin Plots</span> are a great choice,
+when the distribution of numerical values shall be visualized. This can be done for the entire dataset,
+but more often the intention is to compare the distribution of numerical values in multiple data subsets.
+Often, the median, mean, or quartile values are compared between groups, or statistical significance
+can be deduced from p-values as a result of a <span class="keyword">t-test</span>.</p>
 
 <p align="center"><img src="help/img/views/boxplot.jpeg"></p>
 
@@ -502,8 +502,6 @@ If there are many individual values, then it is often difficult to judge where a
 because they highly overlap. In these cases it often helps to add some transparency with
 <span class="menu">Set Marker Transparency...</span></p>
 
-
-
 <p align="center"><img src="help/img/views/whiskerPlot.jpeg"></p>
 
 <p>In the example above we see a whisker plot with lines connecting the <i>Main Cases</i>,
@@ -513,6 +511,38 @@ Since we separate three cases, we also have three lines instead of one. Each lin
 five size groups of one species. Since every species in shown in a different color and
 since every line connects markers of one species only, the lines automatically are drawn
 in the color associated to the particular species.</p>
+
+<p>Especially, when we have many individual data points, then showing them all in a
+<span class="keyword">Whisker Plot</span> as an overlapping cloud of markers may be difficult to
+interpret, even if horizontal jittering and transparency is used. A <span class="keyword">Box Plot</span>
+on the other hand does not reveal much about the exact distribution of the numerical values.
+This is, where <span class="keyword">Violin Plots</span> come into the place. In the center they contain
+a thin line in bar direction running from the lowest to the highest value in the group not considering outliers.
+A second broader and overlapping line runs from the first to the third quartile. Mean and/or median values
+are indicated by red and gray dots, respectively. With these elements a <span class="keyword">Violin Plot</span>
+shows the same information as a <span class="keyword">Box Plot</span>. Now comes the clue: In addition
+to that a <span class="keyword">Violin Plot</span> consists of two symmetrical density curves. The width
+between these outline curves corresponds to the approximate frequency of data points in each region.
+This is only approximate, because <span class="keyword">DataWarrior</span> applies some smoothing, called
+<span class="keyword">Kernel Density Estimate (KDE)</span>, that uses a Gaussian function, before drawing the outline.
+In <span class="keyword">DataWarrior</span> one can use <span class="menu">Set Marker Color...</span>
+to the visualize the distribution of a second categorical or numerical property within one violin's area
+by painting the area using multiple colors. In this case data row counts corresponding to an individual color
+are smoothed by the same KDE used previously for all violin members. The width of one color zone approximately
+represents the frequency of the respective data subgroup.</p>
+<p>The relative width of all violins can be adjusted with <span class="menu">Set Marker Size...</span></p>
+
+<p align="center"><img src="help/img/views/violinPlot.png" width="600" height="318"></p>
+
+<p align="center"><i>Violin Plot with passenger data of the Titanic tragedy.</i></p>
+
+<p>The dataset used for the <span class="keyword">Violin Plot</span> above contains information about
+891 passengers of the <span class="keyword">RMS Titanic</span> ocean liner when it sank after hitting
+an iceberg in 1912. The plot shows the relation between age, sex, passenger class, and whether they survived.
+For 177 passengers some data is missing. These are represented by the markers in the lower NaN area.
+All others are split by their survival into two separate plots. Within these plots, passengers are separated
+by their booked classes. Finally, the six violins use color to depict the relative counts of male and female
+passengers within every age group.</p>
 <br>
 
 <h3><a name="FormView"></a>The Form View</h3>

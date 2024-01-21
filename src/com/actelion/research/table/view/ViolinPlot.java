@@ -10,6 +10,7 @@ import java.awt.geom.Path2D;
 public class ViolinPlot extends AbstractDistributionPlot {
 	private static final int FRACTIONS = 120;
 	private static final int SCREEN_WIDTH_FRACTIONS = 7;
+	private static final float VIOLIN_WIDTH_FACTOR = 0.95f;  // We devide space such that violins never overlap with the default marker size == 1
 	public static final float DEFAULT_MARGIN = 2.5f * SCREEN_WIDTH_FRACTIONS / FRACTIONS;   // 2.0 is exact fit
 	private float[][][][] mViolinWidth;
 	private int[][][][] mPointsInColorFraction;
@@ -156,7 +157,7 @@ public class ViolinPlot extends AbstractDistributionPlot {
 		Color strongGray = mVisualization.getContrastGrey(JVisualization.SCALE_STRONG);
 		Color mediumGray = mVisualization.getContrastGrey(JVisualization.SCALE_MEDIUM);
 		int fractions = mViolinWidth[0][0][0].length-1;
-		mTranslatedMaxWidth = 0.95f * mBarWidth / mMaxViolinWidth * mVisualization.getMarkerSize();
+		mTranslatedMaxWidth = VIOLIN_WIDTH_FACTOR * mBarWidth / mMaxViolinWidth * mVisualization.getMarkerSize();
 
 		Path2D.Float path = new Path2D.Float(Path2D.WIND_NON_ZERO, 2*mViolinWidth[0][0].length);
 

@@ -885,12 +885,6 @@ public abstract class DataWarrior implements WindowFocusListener {
 			// export and open package for WebEngine/WebPage search, highlighting and navigation at run time:
 			jdk.internal.module.Modules.addExportsToAllUnnamed(ModuleLayer.boot().findModule("javafx.web").orElseThrow(), "com.sun.webkit");
 			jdk.internal.module.Modules.addOpensToAllUnnamed(ModuleLayer.boot().findModule("javafx.web").orElseThrow(), "javafx.scene.web");
-			if (Platform.isMacintosh()) {
-				jdk.internal.module.Modules.addExportsToAllUnnamed(ModuleLayer.boot().findModule("java.desktop").orElseThrow(), "com.apple.eawt");
-				jdk.internal.module.Modules.addOpensToAllUnnamed(ModuleLayer.boot().findModule("java.desktop").orElseThrow(), "com.apple.eawt");
-//				jdk.internal.module.Modules.addOpensToAllUnnamed(ModuleLayer.boot().findModule("java.desktop").orElseThrow(), "com.apple.eawt.event");
-//				jdk.internal.module.Modules.addOpensToAllUnnamed(ModuleLayer.boot().findModule("java.desktop").orElseThrow(), "com.apple.laf");
-			}
 		}
 		catch (Exception|Error e) {
 			System.out.println("Could not export packages. Run with JRE option: '--add-exports java.base/jdk.internal.module=ALL-UNNAMED',");

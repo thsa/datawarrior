@@ -22,6 +22,7 @@ import com.actelion.research.datawarrior.help.DEAboutDialog;
 import com.apple.eawt.Application;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 
 import static com.actelion.research.datawarrior.DataWarrior.LookAndFeel.*;
@@ -64,58 +65,24 @@ public class DataWarriorOSX extends DataWarrior {
 		return false;
 		}
 
-	@Override
-	public StandardMenuBar createMenuBar(DEFrame frame) {
-		return makeOSXMenuBar(super.createMenuBar(frame));
-		}
-
-	public StandardMenuBar makeOSXMenuBar(StandardMenuBar menuBar) {
-		try {
-//			Class c = Class.forName("com.apple.laf.AquaMenuBarUI");
-//			System.out.println(c);
-//			menuBar.setUI((MenuBarUI) Class.forName("com.apple.laf.AquaMenuBarUI").newInstance());
-			}
-		catch (Exception ex) {
-			ex.printStackTrace();
-			}
-		return menuBar;
-		}
-
-	@Override
-	public boolean updateLookAndFeel(LookAndFeel laf) {
-		if (super.updateLookAndFeel(laf)) {
-			for (DEFrame f : getFrameList()) {
-				try {
-					StandardMenuBar menubar = f.getDEMenuBar();
-//					menubar.setUI((MenuBarUI) Class.forName("com.apple.laf.AquaMenuBarUI").newInstance());
-					}
-				catch (Exception ex) {
-					ex.printStackTrace();
-					}
-				}
-			return true;
-			}
-		return false;
-		}
-
 	private void registerAppleEvents() {
-		Application app = Application.getApplication();
-		if (app != null) {
-			app.setAboutHandler(e -> new DEAboutDialog(getActiveFrame()));
-			app.setOpenFileHandler(e -> {
+		Desktop desktop = Desktop.getDesktop();
+		if (desktop != null) {
+			desktop.setAboutHandler(e -> new DEAboutDialog(getActiveFrame()));
+			desktop.setOpenFileHandler(e -> {
 				for (File f:e.getFiles())
 					readFile(f.getPath());
 				} );
-			app.setOpenURIHandler(e -> {
+			desktop.setOpenURIHandler(e -> {
 				JOptionPane.showMessageDialog(getActiveFrame(), "Open URI:"+e.getURI());
 				} );
-			app.setQuitHandler((e,response) -> {
+			desktop.setQuitHandler((e,response) -> {
 				if (closeApplication(true))
 					response.performQuit();
 				else
 					response.cancelQuit();
 				} );
-			app.setPreferencesHandler(null);	// No preferences menu item!
+			desktop.setPreferencesHandler(null);	// No preferences menu item!
 			}
 		}
 

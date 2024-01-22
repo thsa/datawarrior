@@ -165,6 +165,8 @@ public class DataWarriorLinux extends DataWarrior {
 		}
 
 	public static void main(final String[] args) {
+		initModuleAccess();
+
 		if (Platform.isWindows()) {
 			// Liberica 21 moved libraries from jre\bin\javafx to jre\bin. These dlls are wrongly accessed via the old path.
 			// If not found there, then the jre tries to find them using the java.library.path runtime variable.

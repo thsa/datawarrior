@@ -3,5 +3,4 @@ DWJAR="/opt/datawarrior"
 # increase -Xms and -Xmx options, if you have plenty of memory
 # insert "-Ddpifactor=1.5" (without quotes) after -X options to manually define UI element scaling to 150% for HiDPI monitors
 # insert "-Ddatapath=/home/username/data/datawarrior:/home/username/data/mydata" (without quotes) after -X options to define commonly used data directories
-/opt/datawarrior/jre/bin/java -Xms512m -Xmx4096m -splash:/opt/datawarrior/loading.png -Dfile.encoding=UTF-8 -cp $DWJAR/datawarriorlauncher.jar:$DWJAR/capka.jar org.openmolecules.datawarrior.launcher.DataWarriorLauncher $*
-
+/opt/datawarrior/jre/bin/java -Xms512m -Xmx4096m -splash:/opt/datawarrior/loading.png --add-exports java.base/jdk.internal.module=ALL-UNNAMED -Dfile.encoding=UTF-8 -cp $DWJAR/datawarriorlauncher.jar:$DWJAR/capka.jar org.openmolecules.datawarrior.launcher.DataWarriorLauncher $*

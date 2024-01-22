@@ -120,6 +120,8 @@ public class DataWarriorOSX extends DataWarrior {
 		}
 
 	public static void main(String[] args) {
+		initModuleAccess();
+
 		SwingUtilities.invokeLater(() -> {
 			try {
 				System.setProperty("com.apple.macos.use-file-dialog-packages", "true");

@@ -237,7 +237,8 @@ public class DETaskCODQuery extends DETaskStructureQuery implements CODServerCon
    		if (ssSpec != null)
    			query.put(QUERY_STRUCTURE_SEARCH_SPEC, ssSpec);
 
-		query.put(QUERY_ORGANIC_ONLY, new Boolean(!"false".equals(getTaskConfiguration().getProperty(PROPERTY_ORGANIC_ONLY))));
+//		query.put(QUERY_ORGANIC_ONLY, new Boolean(!"false".equals(getTaskConfiguration().getProperty(PROPERTY_ORGANIC_ONLY))));
+		query.put(QUERY_ORGANIC_ONLY, !"false".equals(getTaskConfiguration().getProperty(PROPERTY_ORGANIC_ONLY)));
 
 		String years = configuration.getProperty(PROPERTY_YEARS);
 		if (years != null)

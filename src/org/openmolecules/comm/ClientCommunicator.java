@@ -131,9 +131,6 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 	            }
 
 			mSessionID = null;
-			System.runFinalization();
-					// supposed to call the unreferenced() method on the server object
-
 			showBusyMessage("");
 			}
 		}

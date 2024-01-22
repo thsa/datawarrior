@@ -283,7 +283,7 @@ public class DensityDrawer {
             g.setStroke(mStrokeDensity);
             g.draw(p);
         }
-        g.finalize();
+        g.dispose();
 
         return bim;
     }
@@ -367,7 +367,7 @@ public class DensityDrawer {
                 g.draw(ds);
             }
         }
-        g.finalize();
+        g.dispose();
         return bim;
     }
 

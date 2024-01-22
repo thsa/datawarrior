@@ -19,7 +19,6 @@
 package com.actelion.research.datawarrior;
 
 import com.actelion.research.datawarrior.help.DEAboutDialog;
-import com.apple.eawt.Application;
 
 import javax.swing.*;
 import java.awt.*;

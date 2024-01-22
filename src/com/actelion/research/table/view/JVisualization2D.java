@@ -885,8 +885,8 @@ public class JVisualization2D extends JVisualization {
 				boolean drawLabels = false;
 				if (isVisible(vp)
 				 && (mChartType == cChartTypeScatterPlot
-				  || mTreeNodeList != null)
-				  || mChartInfo.paintMarker(vp)) {
+				  || mTreeNodeList != null
+				  || mChartInfo.paintMarker(vp))) {
 					vp.widthOrAngle1 = vp.heightOrAngle2 = (int)getMarkerSize(vp);
 					boolean inFocus = (focusFlagNo == -1 || vp.record.isFlagSet(focusFlagNo));
 

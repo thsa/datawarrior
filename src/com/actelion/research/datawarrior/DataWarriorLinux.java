@@ -167,15 +167,28 @@ public class DataWarriorLinux extends DataWarrior {
 	public static void main(final String[] args) {
 		initModuleAccess();
 
+		// On Windows Liberica 21 moved libraries from jre\bin\javafx to jre\bin. These dlls are wrongly accessed via the old path.
+		// If not found there, then the jre tries to find them using the java.library.path runtime variable.
+		// For things to work correctly, java.library.path should start with "C:\\Program Files\\DataWarrior\\jre\\bin;".
+		// If DataWarrior on WIndows is started using the putjar/bootstrap mechanism, then java.library.path should starts
+		// with "C:\\Program Files\\DataWarrior;" If an older JRE is installed, this variable contains another path causing
+		// to load outdated libraries...
+		// (On Macintosh and Linux this doesn't seem to be an issue.)
 		if (Platform.isWindows()) {
-			// Liberica 21 moved libraries from jre\bin\javafx to jre\bin. These dlls are wrongly accessed via the old path.
-			// If not found there, then the jre tries to find them using the java.library.path runtime variable.
-			// For things to work correctly, java.library.path should start with "C:\\Program Files\\DataWarrior\\jre\\bin".
-			// If an older JRE is installed, this variable may contain another path causing to load outdated libraries...
-			final String javaLibraryPath = System.getProperty("java.library.path");
-//			final String libericaLibraryPath = "C:\\Program Files\\DataWarrior\\jre\\bin";
-			System.out.println("java.library.path is "+javaLibraryPath);
+			final String jrePath = "C:\\Program Files\\DataWarrior\\jre\\bin;";
+			String currentPath = System.getProperty("java.library.path");
+			if (!currentPath.startsWith(jrePath)) {
+//				System.out.println("Old java.library.path: " + currentPath);
+				int index = currentPath.indexOf(jrePath);
+				if (index != -1)
+					currentPath = currentPath.substring(0, index).concat(currentPath.substring(index + jrePath.length()));
+
+				System.setProperty("java.library.path", jrePath+currentPath);
+				System.out.println("Added missing '"+jrePath+"' to JRE property 'java.library.path'.");
+//				System.out.println("New java.library.path: " + System.getProperty("java.library.path"));
+				}
 			}
+
 		SwingUtilities.invokeLater(() -> {
 			try {
 				Thread.setDefaultUncaughtExceptionHandler((final Thread t, final Throwable e) ->

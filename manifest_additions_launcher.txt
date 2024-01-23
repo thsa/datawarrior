@@ -1,1 +1,2 @@
 Main-Class: org.openmolecules.datawarrior.launcher.DataWarriorLauncher
+Add-exports: java.base/jdk.internal.module

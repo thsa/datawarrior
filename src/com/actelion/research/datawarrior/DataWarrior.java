@@ -244,7 +244,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 
 		initialize();
 
-		DEUpdateHandler.getPostInstallInfoAndHandleUpdates(mFrameOnFocus, isIdorsia());
+		DEUpdateHandler.getPostInstallInfoAndHandleUpdates(mFrameOnFocus);
 
 		mTaskFactory = createTaskFactory();
 		DEMacroRecorder.getInstance().setTaskFactory(mTaskFactory);
@@ -341,10 +341,6 @@ public abstract class DataWarrior implements WindowFocusListener {
 
 	public DatabaseActions createDatabaseActions(DEFrame parent) {
 		return null;
-		}
-
-	public boolean isIdorsia() {
-		return false;
 		}
 
 	public StandardTaskFactory getTaskFactory() {

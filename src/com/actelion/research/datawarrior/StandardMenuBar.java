@@ -515,17 +515,14 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		updateRecentFileMenu();
 		jMenuFileOpenSpecial.add(jMenuFileOpenTemplate);
 		jMenuFileOpenSpecial.add(jMenuFileOpenMacro);
-		addIdorsiaOpenFileMenuOptions(jMenuFileOpenSpecial);
 		jMenuFileOpenSpecial.add(jMenuFileOpenMDLReactions);
 		jMenuFile.add(jMenuFileOpenSpecial);
 		addResourceFileMenus(jMenuFile);
-		if (!mApplication.isIdorsia()) {
-			jMenuHelpMoreData = new JMenuItem();
-			jMenuHelpMoreData.setText("Download More Data...");
-			jMenuHelpMoreData.addActionListener(this);
-			jMenuFile.addSeparator();
-			jMenuFile.add(jMenuHelpMoreData);
-			}
+		jMenuHelpMoreData = new JMenuItem();
+		jMenuHelpMoreData.setText("Download More Data...");
+		jMenuHelpMoreData.addActionListener(this);
+		jMenuFile.addSeparator();
+		jMenuFile.add(jMenuHelpMoreData);
 		jMenuFile.addSeparator();
 		jMenuFile.add(jMenuFileMerge);
 		jMenuFile.add(jMenuFileAppend);
@@ -537,7 +534,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuFile.add(jMenuFileSaveAs);
 		jMenuFileSaveSpecial.add(jMenuFileSaveText);
 		jMenuFileSaveSpecial.add(jMenuFileSaveSDF);
-		addIdorsiaSaveFileMenuOptions(jMenuFileSaveSpecial);
 		jMenuFileSaveSpecial.add(jMenuFileSaveTemplate);
 		jMenuFile.add(jMenuFileSaveSpecial);
  		jMenuFile.addSeparator();
@@ -553,12 +549,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			}
 		return jMenuFile;
 		}
-
-	// override to add Idorsia specific items
-	protected void addIdorsiaOpenFileMenuOptions(JMenu jMenuFileOpenSpecial) {}
-	protected void addIdorsiaSaveFileMenuOptions(JMenu jMenuFileOpenSpecial) {}
-	protected void addIdorsiaResourceFileMenus(JMenu parentMenu) {}
-
 
 		protected JMenu buildEditMenu() {
 		jMenuEditCut = new JMenuItem();
@@ -924,7 +914,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemFromStructure.add(jMenuChemAddCanonicalCode);
 		jMenuChemFromStructure.add(jMenuChemAddSubstructureCount);
 		jMenuChemFromStructure.add(jMenuChemExtractFragment);
-		addIdorsiaChemistryMenuOptions(jMenuChemFromStructure);
 
 		JMenu jMenuChemFromReaction = new JMenu("From Chemical Reaction");
 		jMenuChemFromReaction.add(jMenuChemAddReactionDescriptor);
@@ -970,7 +959,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemMachineLearning.add(jMenuChemPredictMissingValues);
 		jMenuChem.addSeparator();
 		jMenuChem.add(jMenuChemDecomposeRGroups);
-		if (mApplication.isIdorsia() || System.getProperty("development") != null)
+		if (System.getProperty("development") != null)
 			jMenuChem.add(jMenuChemInteractiveSARTable);
 		jMenuChem.add(jMenuChemAnalyzeScaffolds);
 		jMenuChem.addSeparator();
@@ -1016,8 +1005,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		item.addActionListener(this);
 		menu.add(item);
 		}
-
-	protected void addIdorsiaChemistryMenuOptions(JMenu jMenuChem) {}	// override to add Actelion specific items
 
 	protected JMenu buildDatabaseMenu() {
 		JMenu jMenuDB = new JMenu();
@@ -2080,7 +2067,6 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		//   getClass().getProtectionDomain().getCodeSource().getLocation();
 
 		parentMenu.addSeparator();
-		addIdorsiaResourceFileMenus(parentMenu);
 		for (String resDir:DataWarrior.RESOURCE_DIR) {
 			File directory = mApplication.resolveResourcePath(resDir);
 			if (directory != null)

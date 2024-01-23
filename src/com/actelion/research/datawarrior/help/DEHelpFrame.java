@@ -146,8 +146,7 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 		mIndexArea.setContentType("text/html");
 		try {
 			DataWarrior app = parent.getApplication();
-			mIndexArea.setPage(getClass().getResource(
-					app.isIdorsia() ? "/html/help/contentActelion.html" : "/html/help/content.html"));
+			mIndexArea.setPage(getClass().getResource("/html/help/content.html"));
 			}
 		catch (IOException e) {
 			JOptionPane.showMessageDialog(parent,e.getMessage());

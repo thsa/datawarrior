@@ -107,7 +107,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 		return sIsUpdating;
 		}
 
-	public static void getPostInstallInfoAndHandleUpdates(DEFrame parent, boolean skipUpdateHandling) {
+	public static void getPostInstallInfoAndHandleUpdates(DEFrame parent) {
 		new Thread(() -> {
 			Preferences prefs = DataWarrior.getPreferences();
 
@@ -140,15 +140,13 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 					consistentFailure = true;
 				}
 
-			if (!skipUpdateHandling) {
-				String modeString = prefs.get(PREFERENCES_KEY_UPDATE_MODE, PREFERENCES_UPDATE_MODE_CODE[PREFERENCES_UPDATE_MODE_ASK]);
-				int updateMode = AbstractTask.findListIndex(modeString, PREFERENCES_UPDATE_MODE_CODE, PREFERENCES_UPDATE_MODE_ASK);
-				if (updateMode != PREFERENCES_UPDATE_MODE_NEVER) {
-					if (consistentFailure)
-						askForBrowser(URL1 + params, parent, prefs, error);
-					else
-						handleUpdate(parent, prefs, updateMode);
-					}
+			String modeString = prefs.get(PREFERENCES_KEY_UPDATE_MODE, PREFERENCES_UPDATE_MODE_CODE[PREFERENCES_UPDATE_MODE_ASK]);
+			int updateMode = AbstractTask.findListIndex(modeString, PREFERENCES_UPDATE_MODE_CODE, PREFERENCES_UPDATE_MODE_ASK);
+			if (updateMode != PREFERENCES_UPDATE_MODE_NEVER) {
+				if (consistentFailure)
+					askForBrowser(URL1 + params, parent, prefs, error);
+				else
+					handleUpdate(parent, prefs, updateMode);
 				}
 			} ).start();
 		}

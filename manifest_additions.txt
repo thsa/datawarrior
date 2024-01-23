@@ -1,2 +1,3 @@
 Main-Class: com.actelion.research.datawarrior.DataWarrior
 Add-exports: java.base/jdk.internal.module
+

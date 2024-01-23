@@ -102,7 +102,7 @@ public abstract class AbstractDistributionPlot extends AbstractCategoryChart {
 		}
 
 		// calculate standard deviation and error margin using the values applied to barAxis
-		calculateStdDevAndErrorMargin(mVisualization, mCatCount, vCount, mDoubleAxis, -1);
+		calculateStdDevAndErrorMargin(mVisualization, vCount, mDoubleAxis, -1);
 
 		mBoxQ1 = new float[mHVCount][mCatCount];
 		mMedian = new float[mHVCount][mCatCount];

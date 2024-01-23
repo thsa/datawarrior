@@ -86,9 +86,9 @@ public abstract class AbstractCategoryChart {
         return Float.isNaN(sizeValue) ? 0f : 2f * Math.abs(sizeValue) / mMaxWidth;
         }
 
-    protected void calculateStdDevAndErrorMargin(JVisualization visualization, int catCount, int[][] vCount, int axis, int column) {
-        mStdDev = new float[mHVCount][catCount];
-        mErrorMargin = new float[mHVCount][catCount];
+    protected void calculateStdDevAndErrorMargin(JVisualization visualization, int[][] vCount, int axis, int column) {
+        mStdDev = new float[mHVCount][mCatCount];
+        mErrorMargin = new float[mHVCount][mCatCount];
         VisualizationPoint[] point = visualization.getDataPoints();
         int chartType = visualization.getChartType();
         for (VisualizationPoint vp:point) {
@@ -103,7 +103,7 @@ public abstract class AbstractCategoryChart {
             }
         }
         for (int hv = 0; hv<mHVCount; hv++) {
-            for (int cat=0; cat<catCount; cat++) {
+            for (int cat=0; cat<mCatCount; cat++) {
                 if (vCount[hv][cat] <= 1) {
                     mStdDev[hv][cat] = Float.POSITIVE_INFINITY;
                     mErrorMargin[hv][cat] = Float.POSITIVE_INFINITY;

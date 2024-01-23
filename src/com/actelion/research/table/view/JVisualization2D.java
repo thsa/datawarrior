@@ -5151,9 +5151,10 @@ public class JVisualization2D extends JVisualization {
 		d.paint(mG);
 		}
 
-	protected void paintLegend(boolean transparentBG) {
+@Override
+protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 		mG.setStroke(mThinLineStroke);
-		super.paintLegend(mBoundsWithoutLegend, transparentBG);
+		super.paintLegend(bounds, transparentBG);
 		}
 
 	@Override

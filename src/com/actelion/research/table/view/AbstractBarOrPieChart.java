@@ -110,7 +110,7 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 
 		if (mMean != null)
 			// calculate standard deviation and error margin using the values in mChartColumn
-			calculateStdDevAndErrorMargin(mVisualization, mCatCount, mPointsInCategory, -1, chartColumn);
+			calculateStdDevAndErrorMargin(mVisualization, mPointsInCategory, -1, chartColumn);
 
 		int[][][] count = new int[mHVCount][mCatCount][mColor.length];
 		for (int hv = 0; hv<mHVCount; hv++)

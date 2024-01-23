@@ -838,7 +838,8 @@ public abstract class JVisualization extends JComponent
 	protected void addLegends(Rectangle bounds, int fontHeight) {
 		if (mMarkerSizeColumn != cColumnUnassigned
 		 && mChartType != cChartTypeBars
-		 && mChartType != cChartTypePies) {
+		 && mChartType != cChartTypePies
+		 && mChartType != cChartTypeViolins) {
 			VisualizationLegend sizeLegend = new VisualizationLegend(this, mTableModel,
 													mMarkerSizeColumn,
 													null,

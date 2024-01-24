@@ -10,7 +10,7 @@ mkdir dmg/DataWarrior.app/tutorial
 mkdir dmg/DataWarrior.app/plugin
 cp ../loading.png dmg/DataWarrior.app/Contents/Resources/
 cp ../datawarriorlauncher.jar dmg/DataWarrior.app/Contents/Java/
-cp ../datawarrior_osx_all.jar dmg/DataWarrior.app/Contents/Java/update/datawarrior_all.jar
+cp ../datawarrior_all.jar dmg/DataWarrior.app/Contents/Java/update/
 cp ../external_data/example/* dmg/DataWarrior.app/example/
 cp ../external_data/reference/* dmg/DataWarrior.app/reference/
 cp ../external_data/macro/* dmg/DataWarrior.app/macro/

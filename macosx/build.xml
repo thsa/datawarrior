@@ -16,8 +16,8 @@ This file contains the script to bundle the DataWarrior application for OSX.
     <property name="bundle.name" value="DataWarrior"/>
     <property name="bundle.displayname" value="DataWarrior"/>
     <property name="bundle.icon" value="datawarrior.icns"/>
-    <property name="version.public" value="6.0"/>
-    <property name="version.internal" value="6.0.0"/>
+    <property name="version.public" value="6.1"/>
+    <property name="version.internal" value="6.1.0"/>
     <property name="icons.path" value="icons"/>
     <property name="icons.dwam" value="dwam.icns"/>
     <property name="icons.dwaq" value="dwaq.icns"/>
@@ -61,7 +61,7 @@ This file contains the script to bundle the DataWarrior application for OSX.
           version="${version.internal}"
           icon="${icons.path}/${bundle.icon}"
           mainclassname="org.openmolecules.datawarrior.launcher.DataWarriorLauncher"
-          copyright="2023 Openmolecules.org"
+          copyright="2024 Openmolecules.org"
           applicationCategory="public.app-category.productivity">
 
           <!-- Embed complete JRE, for JRE>8 better use jlink syntax with modules -->          
@@ -126,5 +126,4 @@ This file contains the script to bundle the DataWarrior application for OSX.
           <option value="-Dfile.encoding=UTF-8"/>
       </bundleapp>
     </target>
-
 </project>

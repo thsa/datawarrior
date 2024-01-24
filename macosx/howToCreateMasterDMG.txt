@@ -2,7 +2,7 @@ Procedure to create master_dmg:
 
 - make sure no device named 'DataWarrior' is mounted
 - create empty dmg "dw_master.dmg" with 'Disk Utility'
-  ("New Image->Blank Image...", 600MB, name: DataWarrior, no encryption, r/w)
+  ("New Image->Blank Image...", 750MB, name: DataWarrior, APFS, no encryption, r/w)
 - close Disk Utility and mount dw_master.dmg if it is not mounted yet!!!
 - run something like the following in a shell:
   mkdir /Volumes/DataWarrior/.background

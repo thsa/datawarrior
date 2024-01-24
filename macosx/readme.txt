@@ -59,6 +59,8 @@ NOTE: We use the latest theinfinitekind/appbundler (GitHub) to build the DataWar
 
 5. Verify that folder 'external_data' contains all examples, macros, plugins, etc, that shall be included in dmg.
 
-6. Run script to create datawarrior.dmg from dw_master.dmg by adding all needed files
+6. Make sure that ../datawarrior_all.jar and datawarriorlauncher.jar are up-to-date.
+
+7. Run script to create datawarrior.dmg from dw_master.dmg by adding all needed files
    > ./makedmg
 

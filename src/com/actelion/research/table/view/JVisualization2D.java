@@ -329,10 +329,21 @@ public class JVisualization2D extends JVisualization {
 					mG = mOffG;
 					paintContent(bounds, false);
 
-					if (mWarningMessage != null) {
+					if (mWarningMessage != null && width > HiDPIHelper.scale(100)) {
 						setColor(Color.RED);
 						setFontHeight(mFontHeight);
-						drawString(mWarningMessage, width/2 - getStringWidth(mWarningMessage)/2, mFontHeight);
+						String msg = mWarningMessage;
+						int y = mFontHeight;
+						while (!msg.isEmpty()) {
+							int index = msg.length();
+							while (getStringWidth(msg.substring(0, index)) > width) {
+								int lastSpaceIndex = msg.lastIndexOf(' ', index-1);
+								index = (lastSpaceIndex != -1) ? lastSpaceIndex : index-1;
+								}
+							drawString(msg.substring(0, index), 0, y);
+							msg = msg.substring(index < msg.length() && msg.charAt(index) == ' ' ? index + 1 : index);
+							y += mFontHeight;
+							}
 						}
 
 					if (mSkipPaintDetails) {

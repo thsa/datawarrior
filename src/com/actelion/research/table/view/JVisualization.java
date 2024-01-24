@@ -221,7 +221,7 @@ public abstract class JVisualization extends JComponent
 	protected int[][]				mVisibleCategoryFromCategory;
 
 	private Thread					mPopupThread;
-	private CompoundListSelectionModel mSelectionModel;
+	private final CompoundListSelectionModel mSelectionModel;
 	private int						mDragMode,mLocalExclusionFlagNo,mPreviousLocalExclusionFlagNo;
 	private float[]					mSimilarityMarkerSize;
 	private int[]					mCombinedCategoryCount,mFullCombinedCategoryCount;
@@ -425,10 +425,10 @@ public abstract class JVisualization extends JComponent
 		 || mDragMode == DRAG_MODE_LASSO_SELECT) {
 			g.setColor(VisualizationColor.cSelectedColor);
 			if (mDragMode == DRAG_MODE_RECT_SELECT)
-				g.drawRect((mMouseX1<mMouseX2) ? mMouseX1 : mMouseX2,
-						   (mMouseY1<mMouseY2) ? mMouseY1 : mMouseY2,
-						   Math.abs(mMouseX2 - mMouseX1),
-						   Math.abs(mMouseY2 - mMouseY1));
+				g.drawRect( Math.min(mMouseX1, mMouseX2),
+							Math.min(mMouseY1, mMouseY2),
+							Math.abs(mMouseX2 - mMouseX1),
+							Math.abs(mMouseY2 - mMouseY1) );
 			else
 				g.drawPolygon(mLassoRegion);
 			}
@@ -627,7 +627,7 @@ public abstract class JVisualization extends JComponent
 					strengthColumn = -1;
 					}
 				else {
-					min -= 0.2 * (max - min);
+					min -= 0.2f * (max - min);
 					dif = max - min;
 					}
 				}
@@ -767,7 +767,7 @@ public abstract class JVisualization extends JComponent
 							}
 						}
 	
-					if (vpList.size() == 0)
+					if (vpList.isEmpty())
 						break;
 	
 					shellList.add(vpList.toArray(new VisualizationNode[0]));
@@ -913,7 +913,7 @@ public abstract class JVisualization extends JComponent
 		if (mLocalExclusionList != -1)
 			msg = msg.concat("  List '"+mTableModel.getListHandler().getListName(mLocalExclusionList)+"' only!");
 
-		if (msg.length() != 0) {
+		if (!msg.isEmpty()) {
 			int fontSize = HiDPIHelper.scale(10);
 			g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, fontSize));
 			g.setColor(ColorHelper.getContrastColor(Color.red, getViewBackground()));
@@ -1218,7 +1218,7 @@ public abstract class JVisualization extends JComponent
 	 * Make marker size not smaller than 1.5 unless<br>
 	 * - marker sizes are not modulated by a column value<br>
 	 * - and connection lines are shown that are thicker than the marker<br>
-	 * This allows reduce marker size to 0, if connection lines are shown.
+	 * This allows to reduce marker size to 0, if connection lines are shown.
 	 * @param size updated size
 	 * @return
 	 */
@@ -2485,7 +2485,7 @@ public abstract class JVisualization extends JComponent
 		return adr;
 		}
 
-	class AxisDataRange {
+	protected static class AxisDataRange {
 		private float min,max,leftMargin,rightMargin,pruning;
 
 		public float scaledMin() {
@@ -2897,19 +2897,18 @@ public abstract class JVisualization extends JComponent
 						AbstractDistributionPlot vi = (AbstractDistributionPlot)mChartInfo;
 						if (mChartType == cChartTypeBoxPlot
 						 || mChartType == cChartTypeViolins) {
-							writer.append(""+(mChartInfo.mPointsInCategory[hv][cat]+vi.mOutlierCount[hv][cat]));
-							writer.append("\t"+vi.mOutlierCount[hv][cat]);
+							writer.append(Integer.toString(mChartInfo.mPointsInCategory[hv][cat]+vi.mOutlierCount[hv][cat]));
+							writer.append("\t").append(String.valueOf(vi.mOutlierCount[hv][cat]));
 							}
-						int column = mAxisIndex[((AbstractDistributionPlot)mChartInfo).mDoubleAxis];
-						writer.append("\t"+formatValue(vi.mMean[hv][cat], column));
-						writer.append("\t"+formatValue(vi.mBoxQ1[hv][cat], column));
-						writer.append("\t"+formatValue(vi.mMedian[hv][cat], column));
-						writer.append("\t"+formatValue(vi.mBoxQ3[hv][cat], column));
-						writer.append("\t"+formatValue(vi.mBoxLAV[hv][cat], column));
-						writer.append("\t"+formatValue(vi.mBoxUAV[hv][cat], column));
-						writer.append("\t"+formatValue(vi.mStdDev[hv][cat], column));
-						writer.append("\t"+formatValue(vi.mMean[hv][cat]-vi.mErrorMargin[hv][cat], column)
-									  +"-"+formatValue(vi.mMean[hv][cat]+vi.mErrorMargin[hv][cat], column));
+						int column = mAxisIndex[mChartInfo.mDoubleAxis];
+						writer.append("\t").append(formatValue(vi.mMean[hv][cat], column));
+						writer.append("\t").append(formatValue(vi.mBoxQ1[hv][cat], column));
+						writer.append("\t").append(formatValue(vi.mMedian[hv][cat], column));
+						writer.append("\t").append(formatValue(vi.mBoxQ3[hv][cat], column));
+						writer.append("\t").append(formatValue(vi.mBoxLAV[hv][cat], column));
+						writer.append("\t").append(formatValue(vi.mBoxUAV[hv][cat], column));
+						writer.append("\t").append(formatValue(vi.mStdDev[hv][cat], column));
+						writer.append("\t").append(formatValue(vi.mMean[hv][cat] - vi.mErrorMargin[hv][cat], column)).append("-").append(formatValue(vi.mMean[hv][cat] + vi.mErrorMargin[hv][cat], column));
 /*						if (includeFoldChange || includePValue) {		don't use additional column
 							int refHV = getReferenceHV(hv, pValueColumn, referenceCategoryIndex);
 							int refCat = getReferenceCat(cat, pValueColumn, referenceCategoryIndex, new int[1+mDimensions]);
@@ -3015,7 +3014,7 @@ public abstract class JVisualization extends JComponent
 				strengthColumn = -1;
 				}
 			else {
-				min -= 0.2 * (max - min);
+				min -= 0.2f * (max - min);
 				dif = max - min;
 				}
 			}
@@ -3073,7 +3072,7 @@ public abstract class JVisualization extends JComponent
 	}
 
 	public void setUseAsFilter(boolean b) {
-		if (b != (mUseAsFilterFlagNo != -1)) {
+		if (b == (mUseAsFilterFlagNo == -1)) {
 			if (!b) {
 				mTableModel.setRowFlagToDirty(mUseAsFilterFlagNo);
 				mTableModel.freeRowFlag(mUseAsFilterFlagNo);
@@ -3936,7 +3935,7 @@ public abstract class JVisualization extends JComponent
 			else
 				showPopupMenu();
 			}
-		if ((e.getModifiers() & InputEvent.BUTTON3_MASK) == 0) {
+		if ((e.getModifiersEx() & InputEvent.BUTTON3_DOWN_MASK) == 0) {
 			mAddingToSelection = e.isShiftDown();
 			if (e.isControlDown()) {
 				mDragMode = DRAG_MODE_TRANSLATE;
@@ -4192,7 +4191,7 @@ public abstract class JVisualization extends JComponent
 
 		addLabelTooltips(vp, columnSet, sb);
 
-		if (sb.length() == 0)
+		if (sb.isEmpty())
 			return null;
 
 		sb.append("</html>");
@@ -4243,7 +4242,7 @@ public abstract class JVisualization extends JComponent
 			   		}
 		   		}
 			if (value != null) {
-				sb.append((sb.length() == 0) ? "<html>" : "<br>");
+				sb.append((sb.isEmpty()) ? "<html>" : "<br>");
 		   		sb.append(title);
 		   		sb.append(value.length() > MAX_TOOLTIP_LENGTH ? value.substring(0, MAX_TOOLTIP_LENGTH)+"..." : value);
 				}
@@ -4747,9 +4746,8 @@ public abstract class JVisualization extends JComponent
 		if (mLocalExclusionList != CompoundTableListHandler.LISTINDEX_NONE
 				&& !point.record.isFlagSet(mTableModel.getListHandler().getListFlagNo(mLocalExclusionList)))
 			return false;
-		return mIsIgnoreGlobalExclusion ? true
-				: (mUseAsFilterFlagNo == -1) ? mTableModel.isVisible(point.record)
-				: mTableModel.isVisibleNeglecting(point.record, mUseAsFilterFlagNo);
+		return mIsIgnoreGlobalExclusion || ((mUseAsFilterFlagNo == -1) ? mTableModel.isVisible(point.record)
+				: mTableModel.isVisibleNeglecting(point.record, mUseAsFilterFlagNo));
 		}
 
 	/**
@@ -4867,7 +4865,7 @@ public abstract class JVisualization extends JComponent
 			if (isProportional && Float.isNaN(mPoint[i].record.getDouble(mChartColumn)))
 				mPoint[i].exclusionFlags |= nanFlag;
 			else
-				mPoint[i].exclusionFlags &= ~nanFlag;
+				mPoint[i].exclusionFlags &= (byte)~nanFlag;
 		}
 	}
 
@@ -4887,10 +4885,10 @@ public abstract class JVisualization extends JComponent
 				 || theDouble > mAxisVisMax[axis])
 					mPoint[i].exclusionFlags |= zoomFlag;
 				else
-					mPoint[i].exclusionFlags &= ~zoomFlag;
+					mPoint[i].exclusionFlags &= (byte)~zoomFlag;
 				}
 			else {
-				mPoint[i].exclusionFlags &= ~zoomFlag;
+				mPoint[i].exclusionFlags &= (byte)~zoomFlag;
 				}
 			}
 		}
@@ -5104,11 +5102,11 @@ public abstract class JVisualization extends JComponent
 			}
 		}
 
-	public class DoubleDimension {
+	public static class DoubleDimension {
 		double width,height;
 		}
 
-	public class LineConnection {
+	public static class LineConnection {
 		VisualizationPoint target;
 		float strength;
 
@@ -5123,6 +5121,6 @@ class VisualizationPointComparator implements Comparator<VisualizationPoint> {
 	public int compare(VisualizationPoint o1, VisualizationPoint o2) {
 		int id1 = o1.record.getID();
 		int id2 = o2.record.getID();
-		return (id1 < id2) ? -1 : (id1 == id2) ? 0 : 1;
+		return Integer.compare(id1, id2);
 		}
 	}

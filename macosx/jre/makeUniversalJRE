@@ -5,8 +5,8 @@
 #This script creates a universal binary for MacOS from Liberica JREs for ARM (Apple Silicon) and Intel architectures
 #The resulting package is a JRE only
 
-JRE_ARM=bellsoft-jre21.0.1+12-macos-aarch64-full
-JRE_AMD=bellsoft-jre21.0.1+12-macos-amd64-full
+JRE_ARM=bellsoft-jre21.0.2+14-macos-aarch64-full
+JRE_AMD=bellsoft-jre21.0.2+14-macos-amd64-full
 TARGET=universal.jre
 
 UNI_DIR=$TARGET/Contents/Home

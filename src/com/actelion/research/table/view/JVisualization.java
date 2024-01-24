@@ -2418,32 +2418,7 @@ public abstract class JVisualization extends JComponent
 	 * @return
 	 */
 	protected float[] calculatePruningBarLowAndHigh(int axis, float dataLow, float dataHigh) {
-		// NOTE: If you change the margin logic here, then also adapt the margin logic
-		//       in calculateDataMinAndMax() accordingly!!!
-		float[] lowAndHigh = new float[2];
-		lowAndHigh[0] = 0f;
-		lowAndHigh[1] = 1f;
-		JVisualization.AxisDataRange range = calculateDataMinAndMax(axis);
-		if (range.min < range.max) {
-			if (!Float.isNaN(dataLow) && dataLow <= range.min-range.leftMargin)
-				dataLow = Float.NaN;
-			if (!Float.isNaN(dataHigh) && dataHigh >= range.max+range.rightMargin)
-				dataHigh = Float.NaN;
-			boolean maxOutLeft = Float.isNaN(dataLow);
-			boolean maxOutRight = Float.isNaN(dataHigh);
-			if (!maxOutLeft || !maxOutRight) {
-				dataLow = Math.min(range.max+range.rightMargin, maxOutLeft ? range.min-range.leftMargin : dataLow);
-				dataHigh = Math.max(dataLow, maxOutRight ? range.max+range.rightMargin : dataHigh);
-				float barRange = (dataHigh - dataLow) / range.fullRange();
-				float scaledLeftMargin = barRange * range.leftMargin;
-				float scaledRightMargin = barRange * range.rightMargin;
-				if (!maxOutLeft)
-					lowAndHigh[0] = (dataLow - range.min + scaledLeftMargin) / (scaledLeftMargin + scaledRightMargin + range.max - range.min);
-				if (!maxOutRight)
-					lowAndHigh[1] = (dataHigh - range.min + scaledLeftMargin) / (scaledLeftMargin + scaledRightMargin + range.max - range.min);
-				}
-			}
-		return lowAndHigh;
+		return calculateDataMinAndMax(axis).calculatePruningBarLowAndHigh(dataLow, dataHigh);
 		}
 
 	/**
@@ -2458,56 +2433,10 @@ public abstract class JVisualization extends JComponent
 	 * @return min and max values of total data range incl. margin or data range definition
 	 */
 	protected AxisDataRange calculateDataMinAndMax(int axis) {
-		// NOTE: If you change the margin logic here, then also adapt the margin logic
-		//       in calculatePruningBarLowAndHigh() accordingly!!!
-		int column = mAxisIndex[axis];
-		AxisDataRange adr = new AxisDataRange();
-
-		if (mTableModel.isDescriptorColumn(column)) {
-			adr.min = 0f;
-			adr.max = 1f;
-			return adr;
-			}
-
-		adr.min = mTableModel.getMinimumValue(column);
-		adr.max = mTableModel.getMaximumValue(column);
 		float margin = (mChartType == cChartTypeViolins) ? ViolinPlot.DEFAULT_MARGIN : mScatterPlotMargin;
-		if (margin != 0f
-		 && adr.min != adr.max
-		 && mTableModel.getColumnProperty(column, cColumnPropertyCyclicDataMax) == null) {
-			adr.pruning = mPruningBarHigh[axis] - mPruningBarLow[axis];
-			margin *= (adr.max - adr.min);
-			if (mTableModel.getColumnProperty(column, cColumnPropertyDataMin) == null)
-				adr.leftMargin = margin;
-			if (mTableModel.getColumnProperty(column, cColumnPropertyDataMax) == null)
-				adr.rightMargin = margin;
-			}
-		return adr;
+		float range = mPruningBarHigh[axis] - mPruningBarLow[axis];
+		return new AxisDataRange(mTableModel, mAxisIndex[axis], margin, range);
 		}
-
-	protected static class AxisDataRange {
-		private float min,max,leftMargin,rightMargin,pruning;
-
-		public float scaledMin() {
-			return min - pruning * leftMargin;
-		}
-
-		public float scaledMax() {
-			return max + pruning * rightMargin;
-		}
-
-		public float fullMin() {
-			return min - leftMargin;
-		}
-
-		public float fullMax() {
-			return max + rightMargin;
-		}
-
-		public float fullRange() {
-			return max - min + leftMargin + rightMargin;
-		}
-	}
 
 	/**
 	 * Calculates the visible range of the axis based on pruning bar settings
@@ -5117,6 +5046,80 @@ public abstract class JVisualization extends JComponent
 		}
 	}
 
+class AxisDataRange {
+	private float min,max,leftMargin,rightMargin,pruning;
+
+	public float scaledMin() {
+		return min - pruning * leftMargin;
+	}
+
+	public float scaledMax() {
+		return max + pruning * rightMargin;
+	}
+
+	public float fullMin() {
+		return min - leftMargin;
+	}
+
+	public float fullMax() {
+		return max + rightMargin;
+	}
+
+	public float fullRange() {
+		return max - min + leftMargin + rightMargin;
+	}
+
+	public AxisDataRange(CompoundTableModel tableModel, int column, float margin, float pruningRange) {
+		// NOTE: If you change the margin logic here, then also adapt the margin logic
+		//       in calculatePruningBarLowAndHigh() accordingly!!!
+		if (tableModel.isDescriptorColumn(column)) {
+			min = 0f;
+			max = 1f;
+		}
+		else {
+			min = tableModel.getMinimumValue(column);
+			max = tableModel.getMaximumValue(column);
+			if (margin != 0f
+					&& min != max
+					&& tableModel.getColumnProperty(column, cColumnPropertyCyclicDataMax) == null) {
+				pruning = pruningRange;
+				margin *= (max - min);
+				if (tableModel.getColumnProperty(column, cColumnPropertyDataMin) == null)
+					leftMargin = margin;
+				if (tableModel.getColumnProperty(column, cColumnPropertyDataMax) == null)
+					rightMargin = margin;
+			}
+		}
+	}
+
+	public float[] calculatePruningBarLowAndHigh(float dataLow, float dataHigh) {
+		// NOTE: If you change the margin logic here, then also adapt the margin logic
+		//       in AxisDataRange() accordingly!!!
+		float[] lowAndHigh = new float[2];
+		lowAndHigh[0] = 0f;
+		lowAndHigh[1] = 1f;
+		if (min < max) {
+			if (!Float.isNaN(dataLow) && dataLow <= min-leftMargin)
+				dataLow = Float.NaN;
+			if (!Float.isNaN(dataHigh) && dataHigh >= max+rightMargin)
+				dataHigh = Float.NaN;
+			boolean maxOutLeft = Float.isNaN(dataLow);
+			boolean maxOutRight = Float.isNaN(dataHigh);
+			if (!maxOutLeft || !maxOutRight) {
+				dataLow = Math.min(max+rightMargin, maxOutLeft ? min-leftMargin : dataLow);
+				dataHigh = Math.max(dataLow, maxOutRight ? max+rightMargin : dataHigh);
+				float barRange = (dataHigh - dataLow) / fullRange();
+				float scaledLeftMargin = barRange * leftMargin;
+				float scaledRightMargin = barRange * rightMargin;
+				if (!maxOutLeft)
+					lowAndHigh[0] = (dataLow - min + scaledLeftMargin) / (scaledLeftMargin + scaledRightMargin + max - min);
+				if (!maxOutRight)
+					lowAndHigh[1] = (dataHigh - min + scaledLeftMargin) / (scaledLeftMargin + scaledRightMargin + max - min);
+			}
+		}
+		return lowAndHigh;
+	}
+}
 class VisualizationPointComparator implements Comparator<VisualizationPoint> {
 	public int compare(VisualizationPoint o1, VisualizationPoint o2) {
 		int id1 = o1.record.getID();

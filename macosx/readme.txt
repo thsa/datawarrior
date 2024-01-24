@@ -1,7 +1,7 @@
 This describes the complete process to make DataWarrior.dmg with embedded universal JRE21 for OSX.
 
 NOTE: In order to natively support Intel and Apple Silicon based architectures we need to use a recent appbundler.
-      Unfortunately, it seems that binary launchers created by a recent appbundler crash on MacOS Sonoma
+      Unfortunately, it seems that binary launchers created by a recent appbundler crash on MacOS Sonoma 14.1
       when using JVM option "apple.laf.useScreenMenuBar=true", no matter whether the option is defined in
       Info.plist or whether it is defined in the main() method of the launching class
       (tested with liberica 1.8-392 and Zulu 1.8-392):
@@ -29,7 +29,7 @@ NOTE: We use the latest theinfinitekind/appbundler (GitHub) to build the DataWar
 1. Verify and possibly update version numbers in build.xml
 
 2. Create a universal JRE (arm64 and x64) from separate Liberica ARM and Intel versions and add that to the DataWarrior.app
-   - Download pkg full versions of newest JRE for MacOS for both architectures, place them in macos/jre folder
+   - Download pkg full versions of newest JRE for MacOS for both architectures, don't install them, just place them in macos/jre folder
    - update two path settings in jre/makeUniversalJRE script and run it
    > cd jre
    > ./makeUniversalJRE

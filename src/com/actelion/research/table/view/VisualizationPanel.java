@@ -487,7 +487,7 @@ public abstract class VisualizationPanel extends JPanel
 					high[i] = 1f;
 					}
 				else {
-					JVisualization.AxisDataRange adr = mVisualization.calculateDataMinAndMax(i);
+					AxisDataRange adr = mVisualization.calculateDataMinAndMax(i);
 					float dif = 0.5f * adr.fullRange() * zoom[i];
 					float[] lowAndHigh = mVisualization.calculatePruningBarLowAndHigh(i, value-dif, value+dif);
 					low[i] = lowAndHigh[0];

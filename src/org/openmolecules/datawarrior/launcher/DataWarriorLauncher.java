@@ -13,11 +13,13 @@ public class DataWarriorLauncher {
 	// IMPORTANT: This must match DEUpdateHandler.DATAWARRIOR_VERSION within datawarrior_all.jar
 	//            included in the manual(!!!) installer package, which also contains this launcher.
 	//            Automatic updates are considered only, if their version is newer than this one.
-	private static final String BASE_VERSION = "v06.00.00";
+	private static final String BASE_VERSION = "v06.01.00";
 
 	// These settings are copies from the DataWarrior class:
 	private static final String PREFERENCES_ROOT = "org.openmolecules.datawarrior";
 	private static final String PREFERENCES_KEY_UPDATE_PATH = "update_path";
+	private static final String APP_CLASS_NAME = "com.actelion.research.datawarrior.DataWarrior";
+
 	private static Class<?> sDatawarriorClass;
 
 	public static void main(final String[] args) {
@@ -56,7 +58,7 @@ public class DataWarriorLauncher {
 				ClassLoader loader = new URLClassLoader(new URL[]{appJar.toURI().toURL()}, Thread.currentThread().getContextClassLoader());
 				Thread.currentThread().setContextClassLoader(loader);
 
-				sDatawarriorClass = loader.loadClass(getAppClassName());
+				sDatawarriorClass = loader.loadClass(APP_CLASS_NAME);
 
 				try {
 					final Method method = sDatawarriorClass.getMethod("main", String[].class);
@@ -101,10 +103,6 @@ public class DataWarriorLauncher {
 		catch (final Exception e) {
 			e.printStackTrace();
 			}
-		}
-
-	private static String getAppClassName() {
-		return isMacintosh() ? "com.actelion.research.datawarrior.DataWarriorOSX" : "com.actelion.research.datawarrior.DataWarriorLinux";
 		}
 
 	private static boolean isWindows() {

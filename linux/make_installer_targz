@@ -15,7 +15,7 @@ mkdir datawarrior_linux/resources/64x64
 mkdir datawarrior_linux/resources/96x96
 mkdir datawarrior_linux/resources/128x128
 mkdir datawarrior_linux/datawarrior/jre
-cp -r /opt/openjava/jre-21.0.1-full/* datawarrior_linux/datawarrior/jre/
+cp -r /opt/openjava/jre-21.0.2-full/* datawarrior_linux/datawarrior/jre/
 cp ./textfiles/install.sh ./datawarrior_linux/
 cp ./textfiles/uninstall.sh ./datawarrior_linux/
 cp ./textfiles/readme.txt ./datawarrior_linux/

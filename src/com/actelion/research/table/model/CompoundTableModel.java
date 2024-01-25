@@ -1661,7 +1661,6 @@ public class CompoundTableModel extends AbstractTableModel
 	 * @return
 	 */
 	public int addNewColumns(int columnCount) {
-System.out.println("CTM addNewColumns count:"+columnCount+" current:"+mColumnInfo.length);
 		int firstNewColumn = mColumnInfo.length;
 		CompoundTableColumnInfo[] newColumnInfo = new CompoundTableColumnInfo[firstNewColumn+columnCount];
 

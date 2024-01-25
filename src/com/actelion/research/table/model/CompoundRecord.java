@@ -99,7 +99,6 @@ public class CompoundRecord {
 		}
 
 	public Object getData(int column) {
-if (column >= mData.length) System.out.println("CR getData column:"+column+" columns:"+mData.length);
 		return (column == -1) ? null : mData[column];
 		}
 

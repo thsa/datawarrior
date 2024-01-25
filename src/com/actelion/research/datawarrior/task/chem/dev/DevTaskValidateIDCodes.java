@@ -1,9 +1,10 @@
-package com.actelion.research.datawarrior.task.chem;
+package com.actelion.research.datawarrior.task.chem.dev;
 
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.task.chem.DETaskAbstractFromChemistry;
 import com.actelion.research.datawarrior.task.file.JFilePathLabel;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -18,7 +19,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Properties;
 
-public class DETaskValidateIDCodes extends DETaskAbstractFromChemistry {
+public class DevTaskValidateIDCodes extends DETaskAbstractFromChemistry {
 	public static final String TASK_NAME = "Validate ID-Codes";
 
 	private static final String PROPERTY_IDCODE_FILE = "idcodeFile";
@@ -36,7 +37,7 @@ public class DETaskValidateIDCodes extends DETaskAbstractFromChemistry {
 	 * @param parent
 	 * @param chemistryType CompoundTableModel.cColumnTypeIDCode or cColumnTypeRXNCode
 	 */
-	public DETaskValidateIDCodes(DEFrame parent, String chemistryType) {
+	public DevTaskValidateIDCodes(DEFrame parent, String chemistryType) {
 		super(parent, DESCRIPTOR_NONE, false, true);
 		mChemistryType = chemistryType;
 		mCheckOverwrite = true;

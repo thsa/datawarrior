@@ -16,7 +16,7 @@
  * @author Thomas Sander
  */
 
-package com.actelion.research.datawarrior.task.chem;
+package com.actelion.research.datawarrior.task.chem.dev;
 
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
@@ -33,7 +33,7 @@ import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
 
 
-public class DETestExtractPairwiseStuff extends AbstractTaskWithoutConfiguration {
+public class DevTaskExtractPairwiseStuff extends AbstractTaskWithoutConfiguration {
     public static final String TASK_NAME = "Extract Pairwise Compound Similarities";
 
 	private DataWarrior			mApplication;
@@ -42,10 +42,10 @@ public class DETestExtractPairwiseStuff extends AbstractTaskWithoutConfiguration
     private AtomicInteger		mSMPRecordIndex,mSMPPairCount;
     private CountDownLatch		mSMPDoneSignal;
 
-	public DETestExtractPairwiseStuff(DEFrame parent, DataWarrior application) {
+	public DevTaskExtractPairwiseStuff(DEFrame parent) {
 		super(parent, true);
 		mSourceTableModel = parent.getTableModel();
-		mApplication = application;
+		mApplication = parent.getApplication();
 		}
 
 	@Override

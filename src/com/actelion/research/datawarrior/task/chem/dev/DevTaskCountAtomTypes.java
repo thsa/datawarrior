@@ -16,7 +16,7 @@
  * @author Thomas Sander
  */
 
-package com.actelion.research.datawarrior.task.chem;
+package com.actelion.research.datawarrior.task.chem.dev;
 
 import java.util.Properties;
 
@@ -27,14 +27,14 @@ import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
 import com.actelion.research.table.model.CompoundTableModel;
 
 
-public class DETestCountAtomTypes extends AbstractTaskWithoutConfiguration {
+public class DevTaskCountAtomTypes extends AbstractTaskWithoutConfiguration {
     public static final long serialVersionUID = 0x20150812;
 
     public static final String TASK_NAME = "Count Atom Types";
 
 	private CompoundTableModel  mTableModel;
 
-	public DETestCountAtomTypes(DEFrame parent) {
+	public DevTaskCountAtomTypes(DEFrame parent) {
 		super(parent, true);
 		mTableModel = parent.getTableModel();
 		}

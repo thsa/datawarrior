@@ -16,7 +16,7 @@
  * @author Thomas Sander
  */
 
-package com.actelion.research.datawarrior.task.chem;
+package com.actelion.research.datawarrior.task.chem.dev;
 
 import com.actelion.research.calc.Matrix;
 import com.actelion.research.calc.regression.ModelError;
@@ -30,7 +30,7 @@ import com.actelion.research.util.datamodel.ModelXYIndex;
 import java.util.Properties;
 
 
-public class DETestRunSurfacePLS extends AbstractTaskWithoutConfiguration {
+public class DevTaskRunSurfacePLS extends AbstractTaskWithoutConfiguration {
     public static final long serialVersionUID = 0x20150812;
 
     private static final int MODE_POLAR = 0;
@@ -43,7 +43,7 @@ public class DETestRunSurfacePLS extends AbstractTaskWithoutConfiguration {
 
 	private CompoundTableModel  mTableModel;
 
-	public DETestRunSurfacePLS(DEFrame parent) {
+	public DevTaskRunSurfacePLS(DEFrame parent) {
 		super(parent, true);
 		mTableModel = parent.getTableModel();
 		}

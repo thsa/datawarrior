@@ -16,7 +16,7 @@
  * @author Thomas Sander
  */
 
-package com.actelion.research.datawarrior.task.chem.rxn;
+package com.actelion.research.datawarrior.task.chem.dev;
 
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.StereoMolecule;
@@ -34,7 +34,7 @@ import javax.swing.*;
 import java.util.Arrays;
 import java.util.Properties;
 
-public class DETaskCompareReactionMapping extends DETaskAbstractFromReaction {
+public class DevTaskCompareReactionMapping extends DETaskAbstractFromReaction {
 	public static final String TASK_NAME = "Compare Reaction Mapping";
 
 	private static final String PROPERTY_REACTION_COLUMN = "reactionColumn";
@@ -42,7 +42,7 @@ public class DETaskCompareReactionMapping extends DETaskAbstractFromReaction {
 	private JComboBox mComboBoxReactionColumn;
 	private int mReactionColumn1,mReactionColumn2,mMappingColumn1,mMappingColumn2;
 
-	public DETaskCompareReactionMapping(DEFrame parent) {
+	public DevTaskCompareReactionMapping(DEFrame parent) {
 		super(parent, DESCRIPTOR_NONE, false, true);
 	}
 

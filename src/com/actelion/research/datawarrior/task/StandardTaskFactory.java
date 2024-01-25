@@ -27,6 +27,7 @@ import com.actelion.research.datawarrior.help.DETaskSetExplanationHTML;
 import com.actelion.research.datawarrior.plugin.PluginTaskDefinition;
 import com.actelion.research.datawarrior.task.chem.*;
 import com.actelion.research.datawarrior.task.chem.clib.DETaskEnumerateCombinatorialLibrary;
+import com.actelion.research.datawarrior.task.chem.dev.*;
 import com.actelion.research.datawarrior.task.chem.elib.DETaskBuildEvolutionaryLibrary;
 import com.actelion.research.datawarrior.task.chem.ml.DETaskAssessPredictionQuality;
 import com.actelion.research.datawarrior.task.chem.ml.DETaskPredictMissingValues;
@@ -132,7 +133,6 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskClusterCompounds.TASK_NAME) ? new DETaskClusterCompounds(frame)
 			 : codeMatches(taskCode, DETaskCODQuery.TASK_NAME) ? new DETaskCODQuery(frame, application)
 			 : codeMatches(taskCode, DETaskCombineTwoRowLists.TASK_NAME) ? new DETaskCombineTwoRowLists(frame)
-			 : codeMatches(taskCode, DETaskCompareReactionMapping.TASK_NAME) ? new DETaskCompareReactionMapping(frame)
 			 : codeMatches(taskCode, DETaskCopyMacro.TASK_NAME) ? new DETaskCopyMacro(frame, null)
 			 : codeMatches(taskCode, DETaskCopyTableCells.TASK_NAME) ? new DETaskCopyTableCells(frame, mainPane.getTableModel(), mainPane.getTable())
 			 : codeMatches(taskCode, DETaskCopyStatisticalValues.TASK_NAME) ? new DETaskCopyStatisticalValues(frame, mainPane, null)
@@ -282,9 +282,16 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskSuperposeConformers.TASK_NAME) ? new DETaskSuperposeConformers(frame)
 			 : codeMatches(taskCode, DETaskSynchronizeView.TASK_NAME) ? new DETaskSynchronizeView(frame, mainPane, null, null)
 			 : codeMatches(taskCode, DETaskRemoveColumnGroup.TASK_NAME) ? new DETaskRemoveColumnGroup(frame, mainPane.getTableView(), mainPane.getTableModel())
-			 : codeMatches(taskCode, DETaskValidateIDCodes.TASK_NAME) ? new DETaskValidateIDCodes(frame, CompoundTableConstants.cColumnTypeIDCode)
 			 : codeMatches(taskCode, DETaskUseAsFilter.TASK_NAME) ? new DETaskUseAsFilter(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskWait.TASK_NAME) ? new DETaskWait(frame)
+			 : codeMatches(taskCode, DevTaskCompareDescriptorSimilarityDistribution.TASK_NAME) ? new DevTaskCompareDescriptorSimilarityDistribution(frame)
+			 : codeMatches(taskCode, DevTaskCompareReactionMapping.TASK_NAME) ? new DevTaskCompareReactionMapping(frame)
+			 : codeMatches(taskCode, DevTaskCountAtomTypes.TASK_NAME) ? new DevTaskCountAtomTypes(frame)
+			 : codeMatches(taskCode, DevTaskCreateTaggedSmiles.TASK_NAME) ? new DevTaskCreateTaggedSmiles(frame)
+			 : codeMatches(taskCode, DevTaskExtractPairwiseCompoundSimilarities.TASK_NAME) ? new DevTaskExtractPairwiseCompoundSimilarities(frame)
+			 : codeMatches(taskCode, DevTaskExtractPairwiseStuff.TASK_NAME) ? new DevTaskExtractPairwiseStuff(frame)
+			 : codeMatches(taskCode, DevTaskRunSurfacePLS.TASK_NAME) ? new DevTaskRunSurfacePLS(frame)
+			 : codeMatches(taskCode, DevTaskValidateIDCodes.TASK_NAME) ? new DevTaskValidateIDCodes(frame, CompoundTableConstants.cColumnTypeIDCode)
 			 : createPluginTaskFromCode(application, taskCode);
 		}
 
@@ -402,6 +409,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskImportMacro.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_EDIT, DETaskInvertSelection.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TABLE, DETaskJumpToReferenceRow.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskMapReactions.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskMergeColumns.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILE, DETaskMergeFile.TASK_NAME_FILE));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_EDIT, DETaskMergeFile.TASK_NAME_CLIPBOARD));
@@ -517,11 +525,13 @@ public class StandardTaskFactory {
 					}
 				}
 
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETaskValidateIDCodes.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETaskCompareReactionMapping.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETaskMapReactions.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETestCompareDescriptorSimilarityDistribution.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DETestExtractPairwiseCompoundSimilarities.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DevTaskCompareDescriptorSimilarityDistribution.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DevTaskCompareReactionMapping.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DevTaskCountAtomTypes.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DevTaskCreateTaggedSmiles.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DevTaskExtractPairwiseCompoundSimilarities.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DevTaskRunSurfacePLS.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TEST, DevTaskValidateIDCodes.TASK_NAME));
 			}
 
 		return mTaskDictionary;

@@ -30,6 +30,7 @@ import com.actelion.research.datawarrior.help.*;
 import com.actelion.research.datawarrior.task.*;
 import com.actelion.research.datawarrior.task.chem.*;
 import com.actelion.research.datawarrior.task.chem.clib.DETaskEnumerateCombinatorialLibrary;
+import com.actelion.research.datawarrior.task.chem.dev.*;
 import com.actelion.research.datawarrior.task.chem.elib.DETaskBuildEvolutionaryLibrary;
 import com.actelion.research.datawarrior.task.chem.ml.DETaskAssessPredictionQuality;
 import com.actelion.research.datawarrior.task.chem.ml.DETaskPredictMissingValues;
@@ -153,6 +154,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuChemAnalyzeScaffolds,jMenuChemAnalyzeCliffs,jMenuChemMatchFile,jMenuChemSelectDiverse,
 					  jMenuChemCluster,jMenuChemExtract3DFragments,jMenuChemMapReactions,jMenuChemCompareReactionMapping,
 					  jMenuChemCreateGenericTautomers,jMenuChemCompareDescriptorSimilarityDistribution,jMenuChemGenerateRandomMolecules,
+					  jMenuChemCreateTaggedSmiles,
 					  jMenuChemExtractPairwiseCompoundSimilarities,jMenuChemExtractPairwiseStuff,jMenuChemCountAtomTypes,jMenuChemCheckIDCodes,
 					  jMenuChemRunSurfacePLS,jMenuChemClassifyReactions,jMenuDBWikipedia,jMenuDBReadChEMBL,jMenuDBFindChEMBLActives,jMenuDBPatentReactions,
 					  jMenuDBSearchCOD, jMenuDBSearchBuildingBlocks,jMenuDBSearchChemSpace,jMenuDBRetrieveDataFromURL,jMenuDBRetrieveSQLData,jMenuDBGooglePatents,
@@ -802,6 +804,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemCluster = new JMenuItem();
 		jMenuChemCreateGenericTautomers = new JMenuItem();
 		jMenuChemCheckIDCodes = new JMenuItem();
+		jMenuChemCreateTaggedSmiles = new JMenuItem();
 		jMenuChemMapReactions = new JMenuItem();
 		jMenuChemCompareReactionMapping = new JMenuItem();
 		jMenuChemCompareDescriptorSimilarityDistribution = new JMenuItem();
@@ -881,6 +884,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemCreateGenericTautomers.addActionListener(this);
 		jMenuChemCheckIDCodes.setText("Check IDCode Correctness");
 		jMenuChemCheckIDCodes.addActionListener(this);
+		jMenuChemCreateTaggedSmiles.setText("Create Tagged SMILES");
+		jMenuChemCreateTaggedSmiles.addActionListener(this);
 		jMenuChemMapReactions.setText("Map Reaction Atoms");
 		jMenuChemMapReactions.addActionListener(this);
 		jMenuChemCompareReactionMapping.setText("Compare Reaction Mapping");
@@ -973,6 +978,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		if (System.getProperty("development") != null) {
 			jMenuChem.addSeparator();
 			jMenuChem.add(jMenuChemCheckIDCodes);
+			jMenuChem.add(jMenuChemCreateTaggedSmiles);
 			jMenuChem.add(jMenuChemCompareReactionMapping);
 			jMenuChem.add(jMenuChemCompareDescriptorSimilarityDistribution);
 			jMenuChem.add(jMenuChemExtractPairwiseCompoundSimilarities);
@@ -1726,21 +1732,23 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 /*		  else if (source == jMenuChemExtractPKATree)
 				new PKATreeExtractor(mParentFrame, new PKADataWarriorAdapter(mTableModel)).extract();	*/
 			else if (source == jMenuChemCheckIDCodes)
-				new DETaskValidateIDCodes(mParentFrame, CompoundTableConstants.cColumnTypeIDCode).defineAndRun();
+				new DevTaskValidateIDCodes(mParentFrame, CompoundTableConstants.cColumnTypeIDCode).defineAndRun();
+			else if (source == jMenuChemCreateTaggedSmiles)
+				new DevTaskCreateTaggedSmiles(mParentFrame).defineAndRun();
 			else if (source == jMenuChemMapReactions)
 				new DETaskMapReactions(getParentFrame()).defineAndRun();
 			else if (source == jMenuChemCompareReactionMapping)
-				new DETaskCompareReactionMapping(getParentFrame()).defineAndRun();
+				new DevTaskCompareReactionMapping(getParentFrame()).defineAndRun();
 			else if (source == jMenuChemCompareDescriptorSimilarityDistribution)
-				new DETestCompareDescriptorSimilarityDistribution(mParentFrame, mApplication).defineAndRun();
+				new DevTaskCompareDescriptorSimilarityDistribution(mParentFrame).defineAndRun();
 			else if (source == jMenuChemExtractPairwiseCompoundSimilarities)
-				new DETestExtractPairwiseCompoundSimilarities(mParentFrame, mApplication).defineAndRun();
+				new DevTaskExtractPairwiseCompoundSimilarities(mParentFrame).defineAndRun();
 			else if (source == jMenuChemExtractPairwiseStuff)
-				new DETestExtractPairwiseStuff(mParentFrame, mApplication).defineAndRun();
+				new DevTaskExtractPairwiseStuff(mParentFrame).defineAndRun();
 			else if (source == jMenuChemCountAtomTypes)
-				new DETestCountAtomTypes(mParentFrame).defineAndRun();
+				new DevTaskCountAtomTypes(mParentFrame).defineAndRun();
 			else if (source == jMenuChemRunSurfacePLS)
-				new DETestRunSurfacePLS(mParentFrame).defineAndRun();
+				new DevTaskRunSurfacePLS(mParentFrame).defineAndRun();
 			else if (source == jMenuChemClassifyReactions)
 				new DETaskClassifyReactions(mParentFrame).defineAndRun();
 /*			else if (source == jMenuChemPredictPKa) {

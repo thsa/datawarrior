@@ -118,7 +118,7 @@ This file contains the script to bundle the DataWarrior application for OSX.
           <!-- Workaround as com.apple.mrj.application.apple.menu.about.name property may no longer work -->
           <option value="-Xdock:name=${bundle.name}"/>
           <option value="-Xmx4096M" name="Xmx"/>
-          <option value="--add-exports java.base/jdk.internal.module=ALL-UNNAMED"/>
+          <option value="--add-exports=java.base/jdk.internal.module=ALL-UNNAMED"/>
           <option value="-Dapple.laf.useScreenMenuBar=true"/>
           <option value="-Dcom.apple.macos.use-file-dialog-packages=true"/>
           <option value="-Dcom.apple.mrj.application.apple.menu.about.name=${bundle.name}"/>

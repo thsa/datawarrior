@@ -19,6 +19,7 @@
 package com.actelion.research.datawarrior.task;
 
 import com.actelion.research.datawarrior.*;
+import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
@@ -31,8 +32,10 @@ public class DETaskSelectRowsRandomly extends ConfigurableTask {
 	public static final String TASK_NAME = "Select Rows Randomly";
 
 	private static final String PROPERTY_PERCENTAGE = "percent";
+	private static final String PROPERTY_VISIBLE_ONLY = "visibleOnly";
 
 	private JTextField mTextFieldPercentage;
+	private JCheckBox mCheckBoxVisibleRowsOnly;
 	private CompoundTableModel mTableModel;
 
 	public DETaskSelectRowsRandomly(Frame owner, CompoundTableModel tableModel) {
@@ -57,14 +60,17 @@ public class DETaskSelectRowsRandomly extends ConfigurableTask {
 	@Override
 	public JComponent createDialogContent() {
 		double[][] size = { {8, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 8},
-				{8, TableLayout.PREFERRED, 8} };
+				{8, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 8} };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 		content.add(new JLabel("Select"), "1,1");
 		mTextFieldPercentage = new JTextField(3);
 		content.add(mTextFieldPercentage, "3,1");
-		content.add(new JLabel("percent of all rows."), "5,1");
+		content.add(new JLabel("percent of rows."), "5,1");
+
+		mCheckBoxVisibleRowsOnly = new JCheckBox("Visible rows only");
+		content.add(mCheckBoxVisibleRowsOnly, "1,3,5,3");
 
 		return content;
 	}
@@ -73,17 +79,20 @@ public class DETaskSelectRowsRandomly extends ConfigurableTask {
 	public Properties getDialogConfiguration() {
 		Properties configuration = new Properties();
 		configuration.setProperty(PROPERTY_PERCENTAGE, mTextFieldPercentage.getText());
+		configuration.setProperty(PROPERTY_VISIBLE_ONLY, mCheckBoxVisibleRowsOnly.isSelected() ? "true" : "false");
 		return configuration;
 		}
 
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
 		mTextFieldPercentage.setText(configuration.getProperty(PROPERTY_PERCENTAGE, ""));
+		mCheckBoxVisibleRowsOnly.setSelected(!"false".equals(configuration.getProperty(PROPERTY_VISIBLE_ONLY)));
 		}
 
 	@Override
 	public void setDialogConfigurationToDefault() {
 		mTextFieldPercentage.setText("50");
+		mCheckBoxVisibleRowsOnly.setSelected(true);
 		}
 
 	@Override
@@ -91,14 +100,14 @@ public class DETaskSelectRowsRandomly extends ConfigurableTask {
 		String value = configuration.getProperty(PROPERTY_PERCENTAGE);
 		if (value != null) {
 			try {
-				int percent = Integer.parseInt(value);
+				float percent = Float.parseFloat(value);
 				if (percent <= 0 || percent >= 100) {
-					showErrorMessage("Percentage must be between 1 and 99.");
+					showErrorMessage("Percentage value must be in range: 0 < value < 100.");
 					return false;
 					}
 				}
 			catch (NumberFormatException nfe) {
-				showErrorMessage("Percentage is not an integer.");
+				showErrorMessage("Percentage is not numerical.");
 				return false;
 				}
 			}
@@ -108,9 +117,10 @@ public class DETaskSelectRowsRandomly extends ConfigurableTask {
 
 	@Override
 	public void runTask(Properties configuration) {
-		int percent = Integer.parseInt(configuration.getProperty(PROPERTY_PERCENTAGE));
-		int selectionCount = mTableModel.getTotalRowCount() * percent / 100;
-		int totalCount = mTableModel.getTotalRowCount();
+		float percent = Float.parseFloat(configuration.getProperty(PROPERTY_PERCENTAGE));
+		boolean visibleOnly = !"false".equals(configuration.getProperty(PROPERTY_VISIBLE_ONLY));
+		int totalCount = visibleOnly ? mTableModel.getRowCount() : mTableModel.getTotalRowCount();
+		int selectionCount = Math.round(totalCount * percent / 100);
 
 		int[] rowNo = new int[totalCount];
 		for (int i=0; i<rowNo.length; i++)
@@ -124,10 +134,14 @@ public class DETaskSelectRowsRandomly extends ConfigurableTask {
 			rowNo[selected] = temp;
 			}
 
+		for (int row=0; row<mTableModel.getTotalRowCount(); row++)
+			mTableModel.getTotalRecord(row).clearFlags(CompoundRecord.cFlagMaskSelected);
+
 		for (int i=0; i<selectionCount; i++)
-			mTableModel.setSelected(rowNo[i]);
-		for (int i=selectionCount; i<totalCount; i++)
-			mTableModel.clearSelected(rowNo[i]);
+			if (visibleOnly)
+				mTableModel.setSelected(rowNo[i]);
+			else
+				mTableModel.getTotalRecord(rowNo[i]).setFlags(CompoundRecord.cFlagMaskSelected);
 
 		mTableModel.invalidateSelectionModel();
 		}

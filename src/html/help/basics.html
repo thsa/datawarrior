@@ -256,7 +256,12 @@ Thus, the number of <span class="keyword">Visible Rows</span> may change when ma
 <p>All main views except for the <span class="keyword">Form View</span> allow to select
 or deselect rows with the mouse. The row selection is shared among all views. Thus,
 when you change the row selection in one view, the selection in all other views is
-updated simultaniously. The number of (visible) selected rows is always displayed in the status area.</p>
+updated simultaniously. The number of (visible) selected rows, which are a subset of the visible rows,
+is always displayed in the status area. Invisible rows can be selected as well, but these dare not included
+in the number of selected rows shown in the <span class="keyword">Status Area</span>. If selected rows
+get hidden by changed filter criteria or by an axis slider, then they remember their selection status
+until they get visible again.
+</p>
 
 <br>
 <h3><a name="ReferenceRow"></a>Reference Row</h3>

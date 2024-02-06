@@ -30,10 +30,7 @@ import javax.swing.*;
 import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Properties;
+import java.util.*;
 
 public class PluginRegistry implements IPluginStartHelper {
 	private static final String INITIALIZER_CLASS_NAME = "PluginInitializer";
@@ -132,6 +129,7 @@ public class PluginRegistry implements IPluginStartHelper {
 							// no error handling, because it is OK for the class not to be present
 						}
 
+						TreeSet<String> menuSet = new TreeSet<>();
 						BufferedReader br = new BufferedReader(new InputStreamReader(loader.getResourceAsStream("tasknames")));
 						String line = br.readLine();
 						while (line != null) {
@@ -161,7 +159,7 @@ public class PluginRegistry implements IPluginStartHelper {
 									}
 								}
 								if (pluginClass != null) {
-									IPluginTask task = (IPluginTask)pluginClass.newInstance();
+									IPluginTask task = (IPluginTask)pluginClass.getDeclaredConstructor().newInstance();
 									String taskGroupName = menuName;
 
 									// For old handling add separator, if menu exists
@@ -169,11 +167,15 @@ public class PluginRegistry implements IPluginStartHelper {
 									 || menuName.equals("Edit")
 									 || menuName.equals("Data")
 									 || menuName.equals("Chemistry")
+									 || menuName.equals("Database")
 									 || menuName.equals("List")
 									 || menuName.equals("Macro")
 									 || menuName.equals("Help")) {
+										if (!menuSet.contains(menuName)) {
 										// add separator
-										mMenuEntryList.add(new PluginMenuEntry(null, menuName, task.getTaskName()));
+											mMenuEntryList.add(new PluginMenuEntry(null, menuName, task.getTaskName()));
+											menuSet.add(menuName);
+										}
 									}
 									// Translate old menu name to menu path for new handling
 									else if (menuName.equals("From Chemical Structure")) {

@@ -887,6 +887,16 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 	}
 
+	/**
+	 *  This is called from the Windows bootstrap process instead of main(), when
+	 *  the user tries to open a new DataWarrior instance while one is already running.
+	 * @param args
+	 */
+	public static void initSingleApplication(String[] args) {
+		if (Platform.isWindows())
+			DataWarriorLinux.initSingleApplication(args);
+	}
+
 	public static void main(final String[] args) {
 		if (Platform.isMacintosh())
 			DataWarriorOSX.main(args);

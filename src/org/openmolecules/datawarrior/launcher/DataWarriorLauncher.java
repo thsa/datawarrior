@@ -106,11 +106,11 @@ public class DataWarriorLauncher {
 		}
 
 	private static boolean isWindows() {
-		return System.getProperty("os.name").toLowerCase().indexOf("win") >= 0;
+		return System.getProperty("os.name").toLowerCase().contains("win");
 		}
 
 	private static boolean isMacintosh() {
-		return System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
+		return System.getProperty("os.name").toLowerCase().contains("mac");
 		}
 	}
 

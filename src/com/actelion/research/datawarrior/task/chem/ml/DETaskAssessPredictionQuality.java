@@ -8,6 +8,7 @@ import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import com.actelion.research.table.view.chart.ChartType;
 import com.actelion.research.util.ByteArrayComparator;
 import com.actelion.research.util.DoubleFormat;
 import com.actelion.research.util.datamodel.ModelXYIndex;
@@ -357,7 +358,7 @@ public class DETaskAssessPredictionQuality extends DETaskAbstractMachineLearning
 			vpanel.setAxisColumnName(1, predictedValueColumn);
 			visualization.setShowNaNValues(false);
 			visualization.setGridMode(JVisualization.cGridModeHidden);
-			visualization.setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+			visualization.setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 			visualization.setMarkerSize(0.5f, false);
 			int colorListMode = VisualizationColor.cColorListModeCategories;
 			visualization.getMarkerColor().setColor(firstNewColumn, null, colorListMode);

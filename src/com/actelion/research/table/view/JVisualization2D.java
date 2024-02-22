@@ -31,6 +31,9 @@ import com.actelion.research.table.MarkerLabelDisplayer;
 import com.actelion.research.table.category.CategoryList;
 import com.actelion.research.table.category.CategoryMolecule;
 import com.actelion.research.table.model.*;
+import com.actelion.research.table.view.chart.AbstractBarOrPieChart;
+import com.actelion.research.table.view.chart.ChartType;
+import com.actelion.research.table.view.chart.PieChart;
 import com.actelion.research.table.view.graph.RadialGraphOptimizer;
 import com.actelion.research.table.view.graph.TreeGraphOptimizer;
 import com.actelion.research.table.view.graph.VisualizationNode;
@@ -85,7 +88,7 @@ public class JVisualization2D extends JVisualization {
 
 	private static final int cPrintScaling = 16;
 
-	protected static final float MARKER_OUTLINE = 0.7f;
+	public static final float MARKER_OUTLINE = 0.7f;
 	private static final float NAN_WIDTH = 2.0f;
 	private static final float NAN_SPACING = 0.5f;
 	private static final float AXIS_TEXT_PADDING = 0.5f;
@@ -137,7 +140,10 @@ public class JVisualization2D extends JVisualization {
 	public static final float DEFAULT_CURVE_LINE_WIDTH = 1.5f;
 	public static final float DEFAULT_CURVE_SMOOTHING = 0.5f;
 
-	private static final int[] SUPPORTED_CHART_TYPE = { cChartTypeScatterPlot, cChartTypeWhiskerPlot, cChartTypeBoxPlot, cChartTypeViolins, cChartTypeBars, cChartTypePies };
+	private static final int[] SUPPORTED_CHART_TYPE = { ChartType.cTypeScatterPlot,
+			ChartType.cTypeWhiskerPlot, ChartType.cTypeBoxPlot,
+			ChartType.cTypeRidgeLines, ChartType.cTypeViolins,
+			ChartType.cTypeBars, ChartType.cTypePies};
 
 	private static final int cDefaultScaleStyle = cScaleStyleFrame;
 
@@ -170,21 +176,20 @@ public class JVisualization2D extends JVisualization {
 	private long			mPreviousPaintEnd,mPreviousFullDetailPaintMillis,mMostRecentRepaintMillis;
 	private boolean			mBackgroundValid,mIsHighResolution,mScaleTitleCentered,
 							mDrawMarkerOutline,mDrawBarPieBoxOutline;
-	private int[]			mScaleTextMode,mScaleDepictorOffset,mSplittingMolIndex,mMultiValueMarkerColumns;
-	private int[]           mScaleSize; // 0: label area height beneath X-axis; 1: label area width left of y-axis
-	private int[]           mNaNSize;   // 0: NaN area width left of Y-axis; 1: NaN area height beneath X-axis
-	private VisualizationColor	mBackgroundColor;
+	private int[]           mMultiValueMarkerColumns;
+	private final  int[]	mScaleTextMode,mScaleDepictorOffset,mSplittingMolIndex;
+	private final int[]     mScaleSize; // 0: label area height beneath X-axis; 1: label area width left of y-axis
+	private final int[]     mNaNSize;   // 0: NaN area width left of Y-axis; 1: NaN area height beneath X-axis
+	private final VisualizationColor mBackgroundColor;
 	private LabelHelper     mLabelHelper;
 	private Color[]			mMultiValueMarkerColor;
-	private Depictor2D[][]	mScaleDepictor,mSplittingDepictor;
+	private final Depictor2D[][] mScaleDepictor,mSplittingDepictor;
 	private VolatileImage	mOffImage;
 	private BufferedImage   mBackgroundImage;		// primary data
 	private BufferedImage[] mMarkerBackgroundImage;
 	private byte[]			mBackgroundImageData;	// cached if delivered or constructed from mBackgroundImage if needed
-//	private byte[]			mSVGBackgroundData;		// alternative to mBackgroundImage
-	private Graphics2D		mOffG;
-	private ArrayList<ScaleLine>[] mScaleLineList;
-	private ArrayList<GraphPoint> mCrossHairList;
+	private final ArrayList<ScaleLine>[] mScaleLineList;
+	private final ArrayList<GraphPoint> mCrossHairList;
 	private float[][]       mCurveXMin,mCurveXInc,mCurveStdDev;
 	private float[][][]     mCurveY;
 	private String          mCurveExpression;
@@ -214,12 +219,11 @@ public class JVisualization2D extends JVisualization {
 		initialize();
 		}
 
+	@Override
 	protected void initialize() {
 		super.initialize();
 		mBackgroundColorConsidered = BACKGROUND_VISIBLE_RECORDS;
 		mMarkerShapeColumn = cColumnUnassigned;
-		mChartColumn = cColumnUnassigned;
-		mChartMode = cChartModeCount;
 		mCurveSplitCategoryColumn = cColumnUnassigned;
 		mBackgroundColorRadius = 10;
 		mBackgroundColorFading = 10;
@@ -294,9 +298,10 @@ public class JVisualization2D extends JVisualization {
 				if (mOffImage.validate(((Graphics2D)g).getDeviceConfiguration()) == VolatileImage.IMAGE_INCOMPATIBLE)
 					mOffImage = ((Graphics2D) g).getDeviceConfiguration().createCompatibleVolatileImage(Math.round(width * retinaFactor), Math.round(height * retinaFactor), Transparency.OPAQUE);
 
-				mOffG = null;
+				//	private byte[]			mSVGBackgroundData;		// alternative to mBackgroundImage
+				Graphics2D offG = null;
 				try {
-					mOffG = mOffImage.createGraphics();
+					offG = mOffImage.createGraphics();
 
 					final long start = System.currentTimeMillis();
 					if (!mSkipPaintDetails) {	// if we are not already in skip detail mode
@@ -311,14 +316,14 @@ public class JVisualization2D extends JVisualization {
 						}
 
 					if (retinaFactor != 1f)
-						mOffG.scale(retinaFactor, retinaFactor);
+						offG.scale(retinaFactor, retinaFactor);
 					if (!mIsFastRendering && !mSkipPaintDetails) {
-						mOffG.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+						offG.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 //					mOffG.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);	// no sub-pixel accuracy looks cleaner
 					}
 		
-					mOffG.setColor(getViewBackground());
-					mOffG.fillRect(0, 0, width, height);
+					offG.setColor(getViewBackground());
+					offG.fillRect(0, 0, width, height);
 					Insets insets = getInsets();
 					Rectangle bounds = new Rectangle(insets.left, insets.top, width-insets.left-insets.right, height-insets.top-insets.bottom);
 		
@@ -326,7 +331,7 @@ public class JVisualization2D extends JVisualization {
 
 					mFontHeight = calculateFontSize(bounds.width, bounds.height, 1f, retinaFactor, true);
 
-					mG = mOffG;
+					mG = offG;
 					paintContent(bounds, false);
 
 					if (mWarningMessage != null && width > HiDPIHelper.scale(100)) {
@@ -363,8 +368,8 @@ public class JVisualization2D extends JVisualization {
 						mPreviousFullDetailPaintMillis = System.currentTimeMillis() - start;
 					}
 				finally {	// It's always best to dispose of your Graphics objects.
-					if (mOffG != null)
-						mOffG.dispose();
+					if (offG != null)
+						offG.dispose();
 					}
 				} while (mOffImage.contentsLost());
 
@@ -488,28 +493,9 @@ public class JVisualization2D extends JVisualization {
 			mSplitter = new VisualizationSplitter(mBoundsWithoutLegend, count1, count2, scaledFontHeight, largeHeader, mSplittingAspectRatio);
 			}
 
-		switch (mChartType) {
-			case cChartTypeBoxPlot:
-				mChartInfo = new BoxPlot(this, mHVCount, determineBoxPlotDoubleAxis());
-				mChartInfo.calculate();
-				break;
-			case cChartTypeWhiskerPlot:
-				mChartInfo = new WhiskerPlot(this, mHVCount, determineBoxPlotDoubleAxis());
-				mChartInfo.calculate();
-				break;
-			case cChartTypeViolins:
-				mChartInfo = new ViolinPlot(this, mHVCount, determineBoxPlotDoubleAxis());
-				mChartInfo.calculate();
-				break;
-			case cChartTypeBars:
-				mChartInfo = new BarChart(this, mHVCount, mChartMode);
-				mChartInfo.calculate();
-				break;
-			case cChartTypePies:
-				mChartInfo = new PieChart(this, mHVCount, mChartMode);
-				mChartInfo.calculate();
-				break;
-			}
+		mChartInfo = mChartType.createChartInfo(this, mHVCount);
+		if (mChartInfo != null)
+			mChartInfo.calculate();
 
 		// total bounds of first split (or total unsplit) graphical including scales
 		Rectangle baseBounds = isSplitView() ? mSplitter.getSubViewBounds(0) : mBoundsWithoutLegend;
@@ -529,13 +515,11 @@ public class JVisualization2D extends JVisualization {
 
 		// We may need to enlarge the visible scale range to create space for statistics labels
 		if (hasFreshCoords
-		 && (mChartType == cChartTypeBars
-		  || mChartType == cChartTypePies))
+		 && mChartType.isBarOrPieChart())
 			((AbstractBarOrPieChart)mChartInfo).adaptDoubleScalesForStatisticalLabels(baseGraphRect);
 
 		if (mOptimizeLabelPositions
-		 && mChartType != cChartTypeBars
-		 && mChartType != cChartTypePies) {
+		 && !mChartType.isBarOrPieChart()) {
 			mLabelHelper = new LabelHelper(baseBounds, baseGraphRect);
 			mLabelHelper.calculateLabels();
 			mLabelHelper.optimizeLabels();
@@ -661,9 +645,9 @@ public class JVisualization2D extends JVisualization {
 			paintGraph(baseGraphRect, 0);
 			}
 
-		if (mChartType == cChartTypeScatterPlot || mChartInfo.isChartWithMarkers())
+		if (mChartType.displaysMarkers())
 			paintMarkers(baseBounds, baseGraphRect);
-		if (mChartType != cChartTypeScatterPlot)
+		if (mChartInfo != null)
 			mChartInfo.paint(mG, baseBounds, baseGraphRect);
 
 		paintLegend(mBoundsWithoutLegend, transparentBG);
@@ -766,13 +750,13 @@ public class JVisualization2D extends JVisualization {
 			if (mScaleTitleCentered) {
 				if (showScale(0)) {
 					graphBounds.width -= arrowSize;    // arrow triangle on x-axis
-					if (mAxisIndex[0] != cColumnUnassigned || (mChartType == cChartTypeBars && mChartInfo.mDoubleAxis == 0))
-						graphBounds.height -= (AXIS_TEXT_PADDING+1.0) * scaledFontHeight;
+					if (mAxisIndex[0] != cColumnUnassigned || (mChartType.getType() == ChartType.cTypeBars && mChartInfo.getDoubleAxis() == 0))
+						graphBounds.height -= (AXIS_TEXT_PADDING+1.0f) * scaledFontHeight;
 					}
 				if (showScale(1)) {
-					if (mAxisIndex[1] != cColumnUnassigned || (mChartType == cChartTypeBars && mChartInfo.mDoubleAxis == 1)) {
+					if (mAxisIndex[1] != cColumnUnassigned || (mChartType.getType() == ChartType.cTypeBars && mChartInfo.getDoubleAxis() == 1)) {
 						graphBounds.x += (AXIS_TEXT_PADDING+1.0) * scaledFontHeight;
-						graphBounds.width -= (AXIS_TEXT_PADDING+1.0) * scaledFontHeight;
+						graphBounds.width -= (AXIS_TEXT_PADDING+1.0f) * scaledFontHeight;
 						}
 					graphBounds.y += arrowSize;
 					graphBounds.height -= arrowSize;
@@ -828,8 +812,7 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private boolean hasColorBackground() {
-		return mChartType != cChartTypeBars
-	   		&& mChartType != cChartTypeBoxPlot
+		return mChartType.supportsBackgroundColor()
 	   		&& mBackgroundColor.getColorColumn() != cColumnUnassigned;
 		}
 
@@ -847,7 +830,7 @@ public class JVisualization2D extends JVisualization {
 
 		if (mLabelHelper == null && showAnyLabels())
 			mLabelHelper = new LabelHelper(baseBounds, baseGraphRect);
-		boolean drawConnectionLinesInFocus = (mChartType == cChartTypeScatterPlot || mTreeNodeList != null) && drawConnectionLines();
+		boolean drawConnectionLinesInFocus = (mChartType.isScatterPlot() || mTreeNodeList != null) && drawConnectionLines();
 
 		if (mConnectionColumn != cColumnUnassigned
 		 && mRelativeMarkerSize == 0.0
@@ -895,7 +878,7 @@ public class JVisualization2D extends JVisualization {
 
 				boolean drawLabels = false;
 				if (isVisible(vp)
-				 && (mChartType == cChartTypeScatterPlot
+				 && (mChartType.isScatterPlot()
 				  || mTreeNodeList != null
 				  || mChartInfo.paintMarker(vp))) {
 					vp.widthOrAngle1 = vp.heightOrAngle2 = (int)getMarkerSize(vp);
@@ -946,7 +929,7 @@ public class JVisualization2D extends JVisualization {
 		if (original != null)
 			mG.setComposite(original);
 
-		if (mChartType == cChartTypeScatterPlot && mTreeNodeList == null) {
+		if (mChartType.isScatterPlot() && mTreeNodeList == null) {
 			if (mCurveInfo != cCurveModeNone)
 				drawCurves(baseGraphRect);
 
@@ -955,7 +938,7 @@ public class JVisualization2D extends JVisualization {
 			}
 		}
 
-	protected void drawMarkerLabels(MarkerLabelInfo[] labelInfo, Color labelFG, Color labelBG, Color outlineColor, boolean isTreeView, Composite composite) {
+	public void drawMarkerLabels(MarkerLabelInfo[] labelInfo, Color labelFG, Color labelBG, Color outlineColor, boolean isTreeView, Composite composite) {
 		if (mMarkerLabelSize != 1.0)
 			setFontHeightAndScaleToSplitView(mMarkerLabelSize * mFontHeight);
 
@@ -1760,7 +1743,7 @@ public class JVisualization2D extends JVisualization {
 			|| (mCrossHairMode == CROSSHAIR_MODE_AUTOMATIC
 			 && (mScaleLineList[axis].size() == 0
 			  || (mAxisIndex[axis] != -1 && !mIsCategoryAxis[axis])
-			  || (mAxisIndex[axis] == -1 && mChartType == cChartTypeBars && mChartInfo.mDoubleAxis == axis)));
+			  || (mAxisIndex[axis] == -1 && mChartType.getType() == ChartType.cTypeBars && mChartInfo.getDoubleAxis() == axis)));
 		}
 
 	private void drawCurves(Rectangle baseGraphRect) {
@@ -1816,7 +1799,7 @@ public class JVisualization2D extends JVisualization {
 
 			@Override
 	public String getStatisticalValues() {
-		if (mChartType != cChartTypeScatterPlot)
+		if (!mChartType.isScatterPlot())
 			return super.getStatisticalValues();
 
 		StringWriter stringWriter = new StringWriter(1024);
@@ -2771,25 +2754,25 @@ public class JVisualization2D extends JVisualization {
 //			hSizeY = sizeY/2;
 //			g.draw(new Rectangle2D.Float(vp.screenX-hSizeX, vp.screenY-hSizeY, sizeX, sizeY));
 			}
-		else if (mChartType == cChartTypeBars
-			 || (mChartType == cChartTypeBoxPlot && vp.chartGroupIndex != -1)) {
+		else if (mChartType.getType() == ChartType.cTypeBars
+			 || (mChartType.getType() == ChartType.cTypeBoxPlot && vp.chartGroupIndex != -1)) {
 			int hv = vp.hvIndex;
 			int cat = getChartCategoryIndex(vp);
 			if (cat != -1) {
-				if (mChartInfo.mInnerDistance != null || mChartInfo.mAbsValueFactor != null) {
-					float width = mChartInfo.mBarWidth;
+				if (mChartInfo.hasInnerDistance() || mChartInfo.hasAbsValueFactor()) {
+					float width = mChartInfo.getBarWidth();
 					if (mChartInfo.useProportionalWidths())
 						width *= mChartInfo.getBarWidthFactor(vp.record.getDouble(mMarkerSizeColumn));
 
-					if (mChartInfo.mDoubleAxis == 1) {
+					if (mChartInfo.getDoubleAxis() == 1) {
 						sizeX = width + 2f*GAP;
-						sizeY = (mChartInfo.mInnerDistance != null ? mChartInfo.mInnerDistance[hv][cat]
-								: Math.abs(vp.record.getDouble(mChartColumn)) * mChartInfo.mAbsValueFactor[hv][cat])
+						sizeY = (mChartInfo.hasInnerDistance() ? mChartInfo.getInnerDistance(hv, cat)
+								: Math.abs(vp.record.getDouble(mChartType.getColumn())) * mChartInfo.getAbsValueFactor(hv, cat))
 								+ 2f*GAP;
 						}
 					else {
-						sizeX = (mChartInfo.mInnerDistance != null ? mChartInfo.mInnerDistance[hv][cat]
-								: Math.abs(vp.record.getDouble(mChartColumn)) * mChartInfo.mAbsValueFactor[hv][cat])
+						sizeX = (mChartInfo.hasInnerDistance() ? mChartInfo.getInnerDistance(hv, cat)
+								: Math.abs(vp.record.getDouble(mChartType.getColumn())) * mChartInfo.getAbsValueFactor(hv, cat))
 								+ 2f*GAP;
 						sizeY = width + 2f*GAP;
 						}
@@ -2800,29 +2783,31 @@ public class JVisualization2D extends JVisualization {
 					}
 				}
 			}
-		else if (mChartType == cChartTypeViolins && isVisibleExcludeNaN(vp)) {
-			g.draw(new Ellipse2D.Float(vp.screenX-vp.widthOrAngle1/2, vp.screenY-vp.heightOrAngle2/2, vp.widthOrAngle1, vp.heightOrAngle2));
+		else if (mChartType.getType() == ChartType.cTypeViolins
+			  || mChartType.getType() == ChartType.cTypeRidgeLines) {
+				if (isVisibleExcludeNaN(vp))
+					g.draw(new Ellipse2D.Float(vp.screenX-vp.widthOrAngle1/2, vp.screenY-vp.heightOrAngle2/2, vp.widthOrAngle1, vp.heightOrAngle2));
 			}
-		else if (mChartType == cChartTypePies) {
-			if (!mChartInfo.mBarOrPieDataAvailable)
+		else if (mChartType.getType() == ChartType.cTypePies) {
+			if (!((PieChart)mChartInfo).isBarOrPieDataAvailable())
 				return;
 
 			int hv = vp.hvIndex;
 			int cat = getChartCategoryIndex(vp);
 			if (cat != -1) {
-				float x = mChartInfo.mPieX[hv][cat];
-				float y = mChartInfo.mPieY[hv][cat];
-				float r = mChartInfo.mPieSize[hv][cat]/2 + GAP;
+				float x = ((PieChart)mChartInfo).getPieX(hv, cat);
+				float y = ((PieChart)mChartInfo).getPieY(hv, cat);
+				float r = ((PieChart)mChartInfo).getPieSize(hv, cat)/2f + GAP;
 				float dif,angle;
 				if (mChartInfo.useProportionalFractions()) {
 					angle = vp.widthOrAngle1;
 					dif = vp.heightOrAngle2 - vp.widthOrAngle1;
 					}
 				else {
-					dif = 360f / (float)mChartInfo.mPointsInCategory[hv][cat];
+					dif = 360f / (float)mChartInfo.getPointsInCategory(hv, cat);
 					angle = dif * vp.chartGroupIndex;
 					}
-				if (mChartInfo.mPointsInCategory[hv][cat] == 1)
+				if (mChartInfo.getPointsInCategory(hv, cat) == 1)
 					g.draw(new Ellipse2D.Float(x-r, y-r, 2*r, 2*r));
 				else
 					g.draw(new Arc2D.Float(x-r, y-r, 2*r, 2*r, angle, dif, Arc2D.PIE));
@@ -2983,9 +2968,7 @@ public class JVisualization2D extends JVisualization {
 		super.compoundTableChanged(e);
 
 		if (e.getType() == CompoundTableEvent.cChangeExcluded) {
-			if (mChartType == cChartTypeBoxPlot
-			 || mChartType == cChartTypeWhiskerPlot
-			 || mChartType == cChartTypeViolins) {
+			if (mChartType.isDistributionPlot()) {  // TODO: why not pies and bars???
 				invalidateOffImage(true);
 				}
 			if (mBackgroundColorConsidered == BACKGROUND_VISIBLE_RECORDS)
@@ -3032,12 +3015,11 @@ public class JVisualization2D extends JVisualization {
 					}
 				}
 
-			if (mChartMode != cChartModeCount
-			 && mChartMode != cChartModePercent
-			 && mChartColumn != cColumnUnassigned) {
-				mChartColumn = columnMapping[mChartColumn];
-				if (mChartColumn == cColumnUnassigned) {
-					mChartMode = cChartModeCount;
+			if (!mChartType.isSimpleMode()
+			 && mChartType.getColumn() != cColumnUnassigned) {
+				mChartType.setColumn(columnMapping[mChartType.getColumn()]);
+				if (mChartType.getColumn() == cColumnUnassigned) {
+					mChartType.setMode(ChartType.cModeCount);
 					invalidateOffImage(true);
 					}
 				}
@@ -3063,9 +3045,8 @@ public class JVisualization2D extends JVisualization {
 					if (column == mvmColumn)
 						invalidateOffImage(false);
 
-			if (mChartMode != cChartModeCount
-			 && mChartMode != cChartModePercent
-			 && mChartColumn == column) {
+			if (!mChartType.isSimpleMode()
+			 && mChartType.getColumn() == column) {
 				invalidateOffImage(true);
 				}
 
@@ -3220,7 +3201,7 @@ public class JVisualization2D extends JVisualization {
 		return mConnectionLineTransparency;
 		}
 
-	protected Stroke getConnectionStroke() {
+	public Stroke getConnectionStroke() {
 		return mConnectionStroke;
 		}
 
@@ -3318,14 +3299,14 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	public VisualizationPoint findMarker(int x, int y) {
-		if (mChartType == cChartTypePies) {
-			if (mChartInfo != null && mChartInfo.mBarOrPieDataAvailable) {
+		if (mChartType.getType() == ChartType.cTypePies) {
+			if (mChartInfo != null && ((PieChart)mChartInfo).isBarOrPieDataAvailable()) {
 				int catCount = getCategoryVisCount(0)* getCategoryVisCount(1)*mCaseSeparationCategoryCount;
 				for (int hv=mHVCount-1; hv>=0; hv--) {
 					for (int cat=catCount-1; cat>=0; cat--) {
-						float dx = x - mChartInfo.mPieX[hv][cat];
-						float dy = mChartInfo.mPieY[hv][cat] - y;
-						float radius = Math.round(mChartInfo.mPieSize[hv][cat]/2);
+						float dx = x - ((PieChart)mChartInfo).getPieX(hv, cat);
+						float dy = ((PieChart)mChartInfo).getPieY(hv, cat) - y;
+						float radius = Math.round(((PieChart)mChartInfo).getPieSize(hv, cat)/2f);
 						if (Math.sqrt(dx*dx+dy*dy) < radius) {
 							float angle = (dx==0) ? ((dy>0) ? 0.5f*(float)Math.PI : 1.5f*(float)Math.PI)
 										 : (dx<0) ? (float)Math.PI + (float)Math.atan(dy/dx)
@@ -3342,8 +3323,8 @@ public class JVisualization2D extends JVisualization {
 								return null;	// should never reach this
 								}
 							else {
-								int index = (int)(mChartInfo.mPointsInCategory[hv][cat] * angle/(2*Math.PI));
-								if (index>=0 && index<mChartInfo.mPointsInCategory[hv][cat]) {
+								int index = (int)(mChartInfo.getPointsInCategory(hv, cat) * angle/(2*Math.PI));
+								if (index>=0 && index<mChartInfo.getPointsInCategory(hv, cat)) {
 									for (int i=mDataPoints-1; i>=0; i--)
 										if (mPoint[i].hvIndex == hv
 										 && getChartCategoryIndex(mPoint[i]) == cat
@@ -3366,17 +3347,15 @@ public class JVisualization2D extends JVisualization {
 
 	@Override
     public float getDistanceToMarker(VisualizationPoint vp, int x, int y) {
-		if (mMultiValueMarkerMode != cMultiValueMarkerModeNone && mMultiValueMarkerColumns != null
-		 && (mChartType == cChartTypeScatterPlot
-		  || mChartType == cChartTypeWhiskerPlot
-		  || (mChartType == cChartTypeBoxPlot && vp.chartGroupIndex == -1)
-		  || (mChartType == cChartTypeViolins && vp.chartGroupIndex == -1))) {   // TODO calculate violin marker distance
+		if (mMultiValueMarkerMode != cMultiValueMarkerModeNone
+		 && mMultiValueMarkerColumns != null
+		 && mChartType.isShownAsMarker(vp)) {
 			if (mMultiValueMarkerMode == cMultiValueMarkerModePies) {
 				float dx = x - vp.screenX;
 				float dy = y - vp.screenY;
 				float a = (float)(Math.atan2(dy, dx) + Math.PI/2);	// 0 degrees is not in EAST, but in NORTH
 				if (a < 0f)
-					a += 2*Math.PI;
+					a += 2*(float)Math.PI;
 				int i = Math.min((int)(a * mMultiValueMarkerColumns.length / (2*Math.PI)), mMultiValueMarkerColumns.length-1);
 				float distance = (float)Math.sqrt(dx*dx + dy*dy);
 				float size = 0.5f  * vp.widthOrAngle1 * (float)Math.sqrt(Math.sqrt(mMultiValueMarkerColumns.length));
@@ -3385,7 +3364,7 @@ public class JVisualization2D extends JVisualization {
 				}
 			else {
 				float minDistance = Float.MAX_VALUE;
-				float maxdx = (mMultiValueMarkerColumns.length*Math.max(2, Math.round(vp.widthOrAngle1 /(2f*(float)Math.sqrt(mMultiValueMarkerColumns.length))))+8)/2;
+				float maxdx = (mMultiValueMarkerColumns.length*Math.max(2, Math.round(vp.widthOrAngle1 /(2f*(float)Math.sqrt(mMultiValueMarkerColumns.length))))+8)/2f;
 				float maxdy = Math.round(vp.heightOrAngle2 *2f)+4;
 				if (Math.abs(x-vp.screenX) < maxdx && Math.abs(y-vp.screenY) < maxdy) {
 					MultiValueBars mvbi = new MultiValueBars();
@@ -3407,27 +3386,25 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	@Override
-	protected float getMarkerWidth(VisualizationPoint p) {
+	protected float getMarkerWidth(VisualizationPoint vp) {
 		// Pie charts don't use this function because marker location is handled
 		// by overwriting the findMarker() method.
-		if (mChartType == cChartTypeBars
-		 || (mChartType == cChartTypeBoxPlot && p.chartGroupIndex != -1)
-		 || (mChartType == cChartTypeViolins && p.chartGroupIndex != -1))    // TODO getViolinFractionSize()
-			return getBarFractionSize(p, mChartInfo.mDoubleAxis == 0);
-		else
-			return getMarkerSize(p);
+		if (mChartType.isShownAsBarFraction(vp))
+			return getBarFractionSize(vp, mChartInfo.getDoubleAxis() == 0);
+		if (mChartType.isShownAsOvalFraction(vp))
+			return getBarFractionSize(vp, mChartInfo.getDoubleAxis() == 0);   // TODO getViolinFractionSize()
+		return getMarkerSize(vp);
 		}
 
 	@Override
-	protected float getMarkerHeight(VisualizationPoint p) {
+	protected float getMarkerHeight(VisualizationPoint vp) {
 		// Pie charts don't use this function because marker location is handled
 		// by overwriting the findMarker() method.
-		if (mChartType == cChartTypeBars
-		 || (mChartType == cChartTypeBoxPlot && p.chartGroupIndex != -1)
-		 || (mChartType == cChartTypeViolins && p.chartGroupIndex != -1))    // TODO getViolinFractionSize()
-			return getBarFractionSize(p, mChartInfo.mDoubleAxis == 1);
-		else
-			return getMarkerSize(p);
+		if (mChartType.isShownAsBarFraction(vp))
+			return getBarFractionSize(vp, mChartInfo.getDoubleAxis() == 1);
+		if (mChartType.isShownAsOvalFraction(vp))
+			return getBarFractionSize(vp, mChartInfo.getDoubleAxis() == 1);   // TODO getViolinFractionSize()
+		return getMarkerSize(vp);
 		}
 
 	private float getBarFractionSize(VisualizationPoint p, boolean isInBarDirection) {
@@ -3437,11 +3414,11 @@ public class JVisualization2D extends JVisualization {
 		else if (isInBarDirection) {
 			int cat = getChartCategoryIndex(p);
 			return (cat == -1) ? 0 : mChartInfo.useProportionalFractions() ?
-					  Math.abs(p.record.getDouble(mAxisIndex[mChartInfo.mDoubleAxis])) * mChartInfo.mAbsValueFactor[p.hvIndex][cat]
-					: mChartInfo.mInnerDistance[p.hvIndex][cat];
+					  Math.abs(p.record.getDouble(mAxisIndex[mChartInfo.getDoubleAxis()])) * mChartInfo.getAbsValueFactor(p.hvIndex, cat)
+					: mChartInfo.getInnerDistance(p.hvIndex, cat);
 			}
 		else {
-			return mChartInfo.mBarWidth;
+			return mChartInfo.getBarWidth();
 			}
 		}
 
@@ -3537,7 +3514,7 @@ public class JVisualization2D extends JVisualization {
 
 				if (axis == 0) {
 					// assume vertical scale to take 1/6 of total width
-					int firstLabelWidth = (mScaleLineList[0].size() == 0) ? 0 : getStringWidth((String)mScaleLineList[0].get(0).label);
+					int firstLabelWidth = (mScaleLineList[0].isEmpty()) ? 0 : getStringWidth((String)mScaleLineList[0].get(0).label);
 					int gridSize = (width - Math.max(mNaNSize[0] + usedScaleSize[1], firstLabelWidth / 2)) / mScaleLineList[0].size();
 					int maxSizeWithPadding = maxLabelSize + scaledFontSize / 2;
 					if (gridSize < 1.75f * scaledFontSize) {
@@ -3653,7 +3630,7 @@ public class JVisualization2D extends JVisualization {
 	private void compileScaleLabels(int axis, int scaleSize) {
 		mScaleLineList[axis].clear();
 		if (mAxisIndex[axis] == cColumnUnassigned) {
-			if (mChartType == cChartTypeBars && mChartInfo.mDoubleAxis == axis)
+			if (mChartType.getType() == ChartType.cTypeBars && mChartInfo.getDoubleAxis() == axis)
 				compileDoubleScaleLabels(axis);
 			}
 		else {
@@ -3671,17 +3648,16 @@ public class JVisualization2D extends JVisualization {
 
 	private Object calculateDynamicScaleLabel(int axis, float position) {
 		if (mAxisIndex[axis] == -1) {
-			if (mChartType != cChartTypeBars || axis != mChartInfo.mDoubleAxis)
+			if (mChartType.getType() != ChartType.cTypeBars || axis != mChartInfo.getDoubleAxis())
 				return null;
 
-			double v = mChartInfo.mAxisMin + position * (mChartInfo.mAxisMax - mChartInfo.mAxisMin);
+			double v = mChartInfo.getAxisMin() + position * (mChartInfo.getAxisMax() - mChartInfo.getAxisMin());
 
-			if (mChartMode != cChartModeCount
-			 && mChartMode != cChartModePercent
-			 && mTableModel.isLogarithmicViewMode(mChartColumn))
+			if (!mChartType.isSimpleMode()
+			 && mTableModel.isLogarithmicViewMode(mChartType.getColumn()))
 				v = Math.pow(10, v);
-			else if (mChartMode == cChartModeCount
-			 || mTableModel.isColumnTypeInteger(mChartColumn))
+			else if (mChartType.getMode() == ChartType.cModeCount
+			 || mTableModel.isColumnTypeInteger(mChartType.getColumn()))
 				return Long.toString(Math.round(v));
 
 			return DoubleFormat.toString(v, 4, false);
@@ -3741,8 +3717,7 @@ public class JVisualization2D extends JVisualization {
 			updateScaleMolecules(axis, min, max+1, scaleSize);
 
 		for (int i=min; i<=max; i++) {
-			float scalePosition = (mChartType == cChartTypeBars && axis == mChartInfo.mDoubleAxis) ?
-				(mChartInfo.mBarBase - mChartInfo.mAxisMin) / (mChartInfo.mAxisMax - mChartInfo.mAxisMin) - 0.5f + i : i;
+			float scalePosition = mChartType.isScatterPlot() ? i : mChartInfo.getScaleLinePosition(axis) - 0.5f + i;
 			float position = (scalePosition - mAxisVisMin[axis]) / (mAxisVisMax[axis] - mAxisVisMin[axis]);
 			if (mScaleDepictor[axis] == null)
 				mScaleLineList[axis].add(new ScaleLine(position, categoryList[i]));
@@ -3783,15 +3758,14 @@ public class JVisualization2D extends JVisualization {
 		float axisStart,axisLength,totalRange;
 
 		if (mAxisIndex[axis] == -1) {	// bar axis of bar chart
-			if (mChartMode != cChartModeCount
-			 && mChartMode != cChartModePercent
-			 && mTableModel.isLogarithmicViewMode(mChartColumn)) {
+			if (!mChartType.isSimpleMode()
+			 && mTableModel.isLogarithmicViewMode(mChartType.getColumn())) {
 				compileLogarithmicScaleLabels(axis);
 				return;
 				}
 
-			axisStart = mChartInfo.mAxisMin;
-			axisLength = mChartInfo.mAxisMax - mChartInfo.mAxisMin;
+			axisStart = mChartInfo.getAxisMin();
+			axisLength = mChartInfo.getAxisMax() - mChartInfo.getAxisMin();
 			totalRange = axisLength;
 			}
 		else if (mTableModel.isDescriptorColumn(mAxisIndex[axis])) {
@@ -3857,8 +3831,8 @@ public class JVisualization2D extends JVisualization {
 		float axisStart,axisLength,totalRange;
 
 		if (mAxisIndex[axis] == -1) {	// bar axis of bar chart
-			axisStart = mChartInfo.mAxisMin;
-			axisLength = mChartInfo.mAxisMax - mChartInfo.mAxisMin;
+			axisStart = mChartInfo.getAxisMin();
+			axisLength = mChartInfo.getAxisMax() - mChartInfo.getAxisMin();
 			totalRange = axisLength;
 			}
 		else {
@@ -3940,8 +3914,8 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private void addLogarithmicScaleLabel(int axis, float value) {
-		float min = (mAxisIndex[axis] == -1) ? mChartInfo.mAxisMin : mAxisVisMin[axis];
-		float max = (mAxisIndex[axis] == -1) ? mChartInfo.mAxisMax : mAxisVisMax[axis];
+		float min = (mAxisIndex[axis] == -1) ? mChartInfo.getAxisMin() : mAxisVisMin[axis];
+		float max = (mAxisIndex[axis] == -1) ? mChartInfo.getAxisMax() : mAxisVisMax[axis];
 		if (value >= min && value <= max) {
 			float position = (value-min) / (max - min);
 			mScaleLineList[axis].add(new ScaleLine(position, DoubleFormat.toString(Math.pow(10, value), 3, true)));
@@ -3952,20 +3926,20 @@ public class JVisualization2D extends JVisualization {
 	 * Needs to be called before validateLegend(), because the size legend depends on it.
 	 */
 	private void calculateMarkerSize(Rectangle bounds) {
-		if (mChartType != cChartTypeBars && mChartType != cChartTypePies) {
+		if (mChartType.displaysMarkers()) {
 
 			// With smaller views due to splitting we reduce size less than proportionally,
 			// because individual views are much less crowded and relatively larger markers seem more natural.
 			float splittingFactor = (float)Math.pow(Math.max(1, mHVCount), 0.33);
 
-			if (mChartType == cChartTypeBoxPlot || mChartType == cChartTypeWhiskerPlot || mChartType == cChartTypeViolins) {
+			if (mChartType.isScatterPlot()) {
+				mAbsoluteMarkerSize = mRelativeMarkerSize * cMarkerSize * (float)Math.sqrt(bounds.width * bounds.height) / splittingFactor;
+			}
+			else {  // any distribution plot (boxes, whiskers, violins, ridge lines)
 				float cellWidth = (mIsCategoryAxis[0]) ?
 						Math.min((float)bounds.width / (float)getCategoryVisCount(0), (float)bounds.height / 5.0f)
 					  : Math.min((float)bounds.height / (float)getCategoryVisCount(1), (float)bounds.width / 5.0f);
 				mAbsoluteMarkerSize = mRelativeMarkerSize * cellWidth / (4.0f * splittingFactor * (float)Math.sqrt(mCaseSeparationCategoryCount));
-				}
-			else {
-				mAbsoluteMarkerSize = mRelativeMarkerSize * cMarkerSize * (float)Math.sqrt(bounds.width * bounds.height) / splittingFactor;
 				}
 
 			mAbsoluteConnectionLineWidth = mRelativeConnectionLineWidth * cConnectionLineWidth
@@ -3984,10 +3958,7 @@ public class JVisualization2D extends JVisualization {
 		calculateNaNArea(bounds.width, bounds.height);
 		calculateScaleDimensions(g, bounds.width, bounds.height);
 
-		if (mChartType == cChartTypeScatterPlot
-		 || mChartType == cChartTypeBoxPlot
-		 || mChartType == cChartTypeWhiskerPlot
-		 || mChartType == cChartTypeViolins
+		if (mChartType.displaysMarkers()
 		 || mTreeNodeList != null) {
 			Rectangle graphRect = getGraphBounds(bounds);
 
@@ -4025,7 +3996,7 @@ public class JVisualization2D extends JVisualization {
 
 				int xNaN = Math.round(graphRect.x - mNaNSize[0] * (0.5f * NAN_WIDTH + NAN_SPACING) / (NAN_WIDTH + NAN_SPACING));
 				int yNaN = Math.round(graphRect.y + graphRect.height + mNaNSize[1] * (0.5f * NAN_WIDTH + NAN_SPACING) / (NAN_WIDTH + NAN_SPACING));
-				if (mChartType == cChartTypeScatterPlot) {
+				if (mChartType.isScatterPlot()) {
 					for (VisualizationPoint vp:mPoint) {
 						// calculating coordinates for invisible records also allows to skip coordinate recalculation
 						// when the visibility changes (JVisualization3D uses the inverse approach)
@@ -4049,16 +4020,15 @@ public class JVisualization2D extends JVisualization {
 							}
 						}
 					}
-				else {	// mChartType == cChartTypeBoxPlot or cChartTypeWhiskerPlot
-					boolean xIsDoubleCategory = mChartInfo.mDoubleAxis == 1
+				else {  // any distribution plot (boxes, whiskers, violins, ridge lines)
+					boolean xIsDoubleCategory = mChartInfo.getDoubleAxis() == 1
 											 && mAxisIndex[0] != cColumnUnassigned
 											 && mTableModel.isColumnTypeDouble(mAxisIndex[0]);
-					boolean yIsDoubleCategory = mChartInfo.mDoubleAxis == 0
+					boolean yIsDoubleCategory = mChartInfo.getDoubleAxis() == 0
 											 && mAxisIndex[1] != cColumnUnassigned
 											 && mTableModel.isColumnTypeDouble(mAxisIndex[1]);
 					for (VisualizationPoint vp:mPoint) {
-						if (mChartType == cChartTypeWhiskerPlot
-						 || vp.chartGroupIndex == -1) {
+						if (mChartType.isShownAsMarker(vp)) {
 							if (mAxisIndex[0] == cColumnUnassigned)
 								vp.screenX = graphRect.x + graphRect.width * 0.5f;
 							else if (xIsDoubleCategory)
@@ -4080,9 +4050,9 @@ public class JVisualization2D extends JVisualization {
 								}
 
 							if (jitterMaxX != 0)
-								vp.screenX += (mRandom.nextDouble() - 0.5) * jitterMaxX;
+								vp.screenX += (float)(mRandom.nextDouble() - 0.5) * jitterMaxX;
 							if (jitterMaxY != 0)
-								vp.screenY += (mRandom.nextDouble() - 0.5) * jitterMaxY;
+								vp.screenY += (float)(mRandom.nextDouble() - 0.5) * jitterMaxY;
 
 							if (mCaseSeparationAxis != -1) {
 								float csShift = csOffset + csCategoryWidth * mTableModel.getCategoryIndex(mCaseSeparationColumn, vp.record);
@@ -4127,14 +4097,12 @@ public class JVisualization2D extends JVisualization {
 		if (isSplitView()) {
 			int gridWidth = mSplitter.getGridWidth();
 			int gridHeight = mSplitter.getGridHeight();
-			for (int i=0; i<mDataPoints; i++) {
-				if (mChartType == cChartTypeScatterPlot
-				 || mChartType == cChartTypeWhiskerPlot
-				 || mPoint[i].chartGroupIndex == -1) {
-					int hIndex = mSplitter.getHIndex((int)mPoint[i].hvIndex);
-					int vIndex = mSplitter.getVIndex((int)mPoint[i].hvIndex);
-					mPoint[i].screenX += hIndex * gridWidth;
-					mPoint[i].screenY += vIndex * gridHeight;
+			for (VisualizationPoint vp:mPoint) {
+				if (mChartType.isShownAsMarker(vp)) {
+					int hIndex = mSplitter.getHIndex(vp.hvIndex);
+					int vIndex = mSplitter.getVIndex(vp.hvIndex);
+					vp.screenX += hIndex * gridWidth;
+					vp.screenY += vIndex * gridHeight;
 					}
 				}
 			}
@@ -4523,7 +4491,7 @@ public class JVisualization2D extends JVisualization {
 		int[] py = new int[3];
 		if (showScale(0)
 		 && (mAxisIndex[0] != cColumnUnassigned
-		  || (mChartType == cChartTypeBars && mChartInfo.mDoubleAxis == 0))) {
+		  || (mChartType.getType() == ChartType.cTypeBars && mChartInfo.getDoubleAxis() == 0))) {
 			g.drawLine(xmin, ymax, xmax, ymax);
 			if (mScaleStyle == cScaleStyleFrame)
 				g.drawLine(xmin, ymin, xmax, ymin);
@@ -4539,12 +4507,12 @@ public class JVisualization2D extends JVisualization {
 				}
 
 			String label = (mAxisIndex[0] != cColumnUnassigned) ? getAxisTitle(mAxisIndex[0])
-					: mChartMode == cChartModeCount ? "Count"
-					: mChartMode == cChartModePercent ? "Percent"
-					: CHART_MODE_AXIS_TEXT[mChartMode]+"("+mTableModel.getColumnTitle(mChartColumn)+")";
+					: mChartType.getMode() == ChartType.cModeCount ? "Count"
+					: mChartType.getMode() == ChartType.cModePercent ? "Percent"
+					: CHART_MODE_AXIS_TEXT[mChartType.getMode()]+"("+mTableModel.getColumnTitle(mChartType.getColumn())+")";
 			if (mScaleTitleCentered) {
 				g.drawString(label,
-						xmax-(xmax-xmin)/2-g.getFontMetrics().stringWidth(label)/2,
+						xmax-(xmax-xmin)/2f-g.getFontMetrics().stringWidth(label)/2f,
 						ymax+mScaleSize[0]+mNaNSize[1]+AXIS_TEXT_PADDING*scaleIfSplitView(mFontHeight)+g.getFontMetrics().getAscent());
 				}
 			else {
@@ -4556,7 +4524,7 @@ public class JVisualization2D extends JVisualization {
 
 		if (showScale(1)
 		 && (mAxisIndex[1] != cColumnUnassigned
-		  || (mChartType == cChartTypeBars && mChartInfo.mDoubleAxis == 1))) {
+		  || (mChartType.getType() == ChartType.cTypeBars && mChartInfo.getDoubleAxis() == 1))) {
 			g.drawLine(xmin, ymax, xmin, ymin);
 			if (mScaleStyle == cScaleStyleFrame)
 				g.drawLine(xmax, ymax, xmax, ymin);
@@ -4572,12 +4540,12 @@ public class JVisualization2D extends JVisualization {
 				}
 
 			String label = (mAxisIndex[1] != cColumnUnassigned) ? getAxisTitle(mAxisIndex[1])
-					: mChartMode == cChartModeCount ? "Count"
-					: mChartMode == cChartModePercent ? "Percent"
-					: CHART_MODE_AXIS_TEXT[mChartMode]+"("+mTableModel.getColumnTitle(mChartColumn)+")";
+					: mChartType.getMode() == ChartType.cModeCount ? "Count"
+					: mChartType.getMode() == ChartType.cModePercent ? "Percent"
+					: CHART_MODE_AXIS_TEXT[mChartType.getMode()]+"("+mTableModel.getColumnTitle(mChartType.getColumn())+")";
 			if (mScaleTitleCentered) {
 				double labelX = xmin - mScaleSize[1] - mNaNSize[0] - AXIS_TEXT_PADDING * scaleIfSplitView(mFontHeight) - g.getFontMetrics().getDescent();
-				double labelY = ymin + (ymax - ymin) / 2;
+				double labelY = ymin + (ymax - ymin) / 2.0;
 				AffineTransform oldTransform = g.getTransform();
 				g.rotate(-Math.PI / 2, labelX, labelY);
 				g.drawString(label, (int)labelX - g.getFontMetrics().stringWidth(label)/2, (int)labelY);
@@ -4598,7 +4566,7 @@ public class JVisualization2D extends JVisualization {
 				drawScaleLine(g, graphRect, axis, i);
 		}
 
-	protected void transformScaleLinePositions(int axis, float shift, float scale) {
+	public void transformScaleLinePositions(int axis, float shift, float scale) {
 		for (JVisualization2D.ScaleLine sl : mScaleLineList[axis])
 			sl.position = shift + sl.position * scale;
 		}
@@ -5036,7 +5004,7 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private boolean isCurveExpressionValid(String expression) {
-		if (expression != null && expression.length() != 0) {
+		if (expression != null && !expression.isEmpty()) {
 			JEP parser = new JEP();
 			parser.addStandardFunctions();
 			parser.addStandardConstants();
@@ -5095,7 +5063,7 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	@Override
-	protected int getStringWidth(String s) {
+	public int getStringWidth(String s) {
 		return (int)mG.getFontMetrics().getStringBounds(s, mG).getWidth();
 		}
 
@@ -5106,13 +5074,13 @@ public class JVisualization2D extends JVisualization {
 	 * @param factor
 	 * @return used scaled font size
 	 */
-	protected int setRelativeFontHeightAndScaleToSplitView(float factor) {
+	public int setRelativeFontHeightAndScaleToSplitView(float factor) {
 		int fontSize = Math.round(scaleIfSplitView(factor * mFontHeight));
 		setFontHeight(fontSize);
 		return fontSize;
 		}
 
-	protected float getFontHeightScaledToSplitView() {
+	public float getFontHeightScaledToSplitView() {
 		return scaleIfSplitView(mFontHeight);
 	}
 
@@ -5120,7 +5088,7 @@ public class JVisualization2D extends JVisualization {
 		setFontHeight((int)scaleIfSplitView(h));
 		}
 
-	protected void setFontHeight(int h) {
+	public void setFontHeight(int h) {
 		if (mG.getFont().getSize2D() != h)
 			mG.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, h));
 		}
@@ -5175,8 +5143,7 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 		if (!mSuppressLegend
 		 && mMultiValueMarkerMode != cMultiValueMarkerModeNone
 		 && mMultiValueMarkerColumns != null
-		 && mChartType != cChartTypeBars
-		 && mChartType != cChartTypePies) {
+		 && !mChartType.isBarOrPieChart()) {
 			VisualizationLegend multiValueLegend = new VisualizationLegend(this, mTableModel, cColumnUnassigned, null,
 														 VisualizationLegend.cLegendTypeMultiValueMarker);
 			multiValueLegend.calculate(bounds, fontHeight);
@@ -5186,7 +5153,7 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 
 		if (!mSuppressLegend
 		 && mBackgroundColor.getColorColumn() != cColumnUnassigned
-		 && mChartType != cChartTypeBars) {
+		 && mChartType.supportsBackgroundColor()) {
 			VisualizationLegend backgroundLegend = new VisualizationLegend(this, mTableModel,
 													mBackgroundColor.getColorColumn(),
 													mBackgroundColor,
@@ -5213,16 +5180,16 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 			|| (axis == 1 && mScaleMode == cScaleModeHideX);
 		}
 
-	protected LabelHelper createLabelHelper(Rectangle baseBounds, Rectangle baseGraphRect) {
+	public LabelHelper createLabelHelper(Rectangle baseBounds, Rectangle baseGraphRect) {
 		return new LabelHelper(baseBounds, baseGraphRect);
 		}
 
-	protected class LabelHelper {
-		private Rectangle mBaseBounds,mBaseGraphRect;
-		private MarkerLabelInfo[] mLabelInfo;
-		private TreeMap<byte[],VisualizationPoint> mOneLabelPerCategoryMap;
-		private int mLabelFlagNo;
-		private boolean mIsTreeView;
+	public class LabelHelper {
+		private final Rectangle mBaseBounds, mBaseGraphRect;
+		private final MarkerLabelInfo[] mLabelInfo;
+		private final TreeMap<byte[],VisualizationPoint> mOneLabelPerCategoryMap;
+		private final int mLabelFlagNo;
+		private final boolean mIsTreeView;
 		private LabelPosition2D[][] mLabelPosition;
 
 		public LabelHelper(Rectangle baseBounds, Rectangle baseGraphRect) {
@@ -5257,10 +5224,8 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 			}
 
 			for (VisualizationPoint vp:mPoint) {
-				if ((mChartType == cChartTypeScatterPlot && isVisible(vp))
-				 || (mChartType == cChartTypeBars && isVisibleInBarsOrPies(vp))
-				 || (mChartType == cChartTypeWhiskerPlot && isVisible(vp))
-				 || (vp.chartGroupIndex == -1 && isVisible(vp))
+				if ((mChartType.isShownAsMarker(vp) && isVisible(vp))
+				 || (mChartType.isBarOrPieChart() && isVisibleInBarsOrPies(vp))
 				 || (mTreeNodeList != null && isVisible(vp))) {
 					if (hasLabels(vp)) {
 						for (int j = 0; j<mLabelColumn.length; j++) {
@@ -5338,7 +5303,7 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 			}
 		}
 
-	class MarkerLabelInfo {
+	public static class MarkerLabelInfo {
 		int x,x1,x2,y,y1,y2,border;
 		float fontSize;
 		String label;
@@ -5347,7 +5312,7 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 
 	class MultiValueBars {
 		private float top,bottom;	// relative usage of area above and below zero line (0...1); is the same for all markers in a view
-		private float[] relValue;	// relative value of a specific marker compared to max/min (-1...1)
+		private final float[] relValue;	// relative value of a specific marker compared to max/min (-1...1)
 		int barWidth,firstBarX,zeroY;
 		int[] barY,barHeight;
 

@@ -26,6 +26,7 @@ import com.actelion.research.table.view.CompoundTableView;
 import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.VisualizationPanel;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import com.actelion.research.table.view.chart.ChartType;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -111,7 +112,7 @@ public class DETaskSetMarkerSize extends DETaskAbstractSetViewOptions implements
 		mComboBox.addItemListener(this);
 		if (hasInteractiveView()) {
 			JVisualization visualization = ((VisualizationPanel)getInteractiveView()).getVisualization();
-			if (visualization.getChartType() == JVisualization.cChartTypePies)
+			if (visualization.getChartType().getType() == ChartType.cTypePies)
 				mComboBox.setEnabled(false);
 			}
 		cp.add(new JLabel("Size by: "));

@@ -1,4 +1,9 @@
-package com.actelion.research.table.view;
+package com.actelion.research.table.view.chart;
+
+import com.actelion.research.table.view.JVisualization;
+import com.actelion.research.table.view.JVisualization2D;
+import com.actelion.research.table.view.VisualizationColor;
+import com.actelion.research.table.view.VisualizationPoint;
 
 import java.awt.*;
 
@@ -13,7 +18,7 @@ public class WhiskerPlot extends AbstractDistributionPlot {
 
 	@Override
 	public void calculate() {
-		super.calculate(JVisualization.cChartTypeWhiskerPlot);
+		super.calculateStatistics();
 	}
 
 	@Override

@@ -29,10 +29,10 @@ import com.actelion.research.table.MarkerLabelConstants;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.table.view.VisualizationPanel3D;
+import com.actelion.research.table.view.chart.ChartType;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 
@@ -511,7 +511,7 @@ public class DETaskPCA extends ConfigurableTask {
 	                    VisualizationPanel2D vpanel1 = mainPane.add2DView("2D-PCA", null);
 	                    vpanel1.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
 	                    vpanel1.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn+1));
-	                    vpanel1.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+	                    vpanel1.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 	                    int colorListMode = VisualizationColor.cColorListModeHSBLong;
 	                    Color[] colorList = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode, null);
 	                    vpanel1.getVisualization().getMarkerColor().setColor(bestCorrelatingColumn2D, colorList, colorListMode);
@@ -522,7 +522,7 @@ public class DETaskPCA extends ConfigurableTask {
 		                    vpanel2.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
 		                    vpanel2.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn+1));
 		                    vpanel2.setAxisColumnName(2, mTableModel.getColumnTitle(firstNewColumn+2));
-		                    vpanel2.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+		                    vpanel2.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 		                    vpanel2.getVisualization().getMarkerColor().setColor(bestCorrelatingColumn3D, colorList, colorListMode);
 	                    	}
 						}
@@ -564,7 +564,7 @@ public class DETaskPCA extends ConfigurableTask {
 							VisualizationPanel2D vpanel1 = mainPane.add2DView("Eigenvalues 2D", "Table\tbottom");
 							vpanel1.setAxisColumnName(0, targetTableModel.getColumnTitle(1));
 							vpanel1.setAxisColumnName(1, targetTableModel.getColumnTitle(2));
-							vpanel1.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+							vpanel1.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 							vpanel1.getVisualization().addMarkerLabel(MarkerLabelConstants.cTopRight, 0);
 							vpanel1.getVisualization().setMarkerLabelSize(2f, false);
 							vpanel1.getVisualization().getMarkerColor().setDefaultDataColor(Color.BLUE);
@@ -575,7 +575,7 @@ public class DETaskPCA extends ConfigurableTask {
 								vpanel2.setAxisColumnName(0, targetTableModel.getColumnTitle(1));
 								vpanel2.setAxisColumnName(1, targetTableModel.getColumnTitle(2));
 								vpanel2.setAxisColumnName(2, targetTableModel.getColumnTitle(3));
-								vpanel2.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+								vpanel2.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 								vpanel1.getVisualization().addMarkerLabel(MarkerLabelConstants.cTopRight, 0);
 								vpanel2.getVisualization().setMarkerLabelSize(2f, false);
 								vpanel2.getVisualization().getMarkerColor().setDefaultDataColor(Color.BLUE);

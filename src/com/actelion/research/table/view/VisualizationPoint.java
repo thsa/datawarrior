@@ -27,10 +27,10 @@ public class VisualizationPoint {
 	public static final int COLOR_TYPE_LABEL_BG = 2;
 
 	public float screenX,screenY,widthOrAngle1,heightOrAngle2;
-	protected int chartGroupIndex,hvIndex;
+	public int chartGroupIndex,hvIndex;
 	protected short markerColorIndex,labelBackgroundColorIndex;
 	protected byte shape,exclusionFlags;
-	protected CompoundRecord record;
+	public CompoundRecord record;
 	protected LabelPosition2D labelPosition;
 
 	protected VisualizationPoint(CompoundRecord r) {

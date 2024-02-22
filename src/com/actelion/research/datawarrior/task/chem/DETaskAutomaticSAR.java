@@ -25,6 +25,7 @@ import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import com.actelion.research.table.view.chart.ChartType;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -254,7 +255,7 @@ public class DETaskAutomaticSAR extends DETaskAbstractFromStructure {
 
 				JVisualization2D visualization = (JVisualization2D)vpanel.getVisualization();
 				visualization.setMarkerSize(0.6f, false);
-				visualization.setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+				visualization.setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 				if (coreCount != 1 && firstAxisColumn != firstNewColumn)
 					visualization.setSplittingColumns(firstNewColumn, JVisualization.cColumnUnassigned, 1.0f, false);
 				}

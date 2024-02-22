@@ -22,11 +22,10 @@ import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.table.model.CompoundRecord;
-import com.actelion.research.table.model.CompoundTableDetailHandler;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import com.actelion.research.table.view.chart.ChartType;
 import info.clearthought.layout.TableLayout;
 
 import javax.imageio.ImageIO;
@@ -305,7 +304,7 @@ public class DETaskNewFileFromReversePivoting extends ConfigurableTask {
 		targetTableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, getProgressController());
 
         VisualizationPanel2D view = mTargetFrame.getMainFrame().getMainPane().add2DView("2D View", null);
-        view.getVisualization().setPreferredChartType(JVisualization.cChartTypeBoxPlot, -1, -1);
+        view.getVisualization().setPreferredChartType(ChartType.cTypeBoxPlot, -1, -1);
         view.setAxisColumnName(0, targetTableModel.getColumnTitle(newColumnCount-2));
         view.setAxisColumnName(1, targetTableModel.getColumnTitle(newColumnCount-1));
 		}

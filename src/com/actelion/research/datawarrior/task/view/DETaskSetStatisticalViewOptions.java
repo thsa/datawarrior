@@ -188,10 +188,7 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 
 		tabbedPane.add(scatterPlotPanel, "Scatter Plot");
 
-		boolean isBoxPlot = (!hasInteractiveView()
-				|| getInteractiveVisualization().getChartType() == JVisualization.cChartTypeBoxPlot
-				|| getInteractiveVisualization().getChartType() == JVisualization.cChartTypeWhiskerPlot
-				|| getInteractiveVisualization().getChartType() == JVisualization.cChartTypeViolins);
+		boolean isDistributionPlot = (!hasInteractiveView() || getInteractiveVisualization().getChartType().isDistributionPlot());
 		double[][] boxPlotSize = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL},
 								   {gap/2, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED,
 										   gap, TableLayout.PREFERRED, TableLayout.PREFERRED,
@@ -204,7 +201,7 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 
 		mCheckBoxShowBarOrPieSizeValue = new JCheckBox("Show bar/pie size value");
 		mCheckBoxShowBarOrPieSizeValue.addActionListener(this);
-		mCheckBoxShowBarOrPieSizeValue.setEnabled(!isBoxPlot);
+		mCheckBoxShowBarOrPieSizeValue.setEnabled(!isDistributionPlot);
 		boxPlotPanel.add(mCheckBoxShowBarOrPieSizeValue, "1,1,3,1");
 
 		mCheckBoxShowStdDev2 = new JCheckBox("Show standard deviation");
@@ -221,12 +218,12 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 
 		mCheckBoxShowPValues = new JCheckBox("Show p-values");
 		mCheckBoxShowPValues.addActionListener(this);
-		mCheckBoxShowPValues.setEnabled(isBoxPlot);
+		mCheckBoxShowPValues.setEnabled(isDistributionPlot);
 		boxPlotPanel.add(mCheckBoxShowPValues, "1,6,3,6");
 
 		mCheckBoxShowFoldChange = new JCheckBox("Show fold-change");
 		mCheckBoxShowFoldChange.addActionListener(this);
-		mCheckBoxShowFoldChange.setEnabled(isBoxPlot);
+		mCheckBoxShowFoldChange.setEnabled(isDistributionPlot);
 		boxPlotPanel.add(mCheckBoxShowFoldChange, "1,7,3,7");
 
 		boxPlotPanel.add(new JLabel("Compare values on:"), "1,9");
@@ -269,17 +266,17 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 
 		boxPlotPanel.add(new JLabel("Mean/median mode:"), "1,13");
 		mComboBoxBoxplotMeanMode = new JComboBox(JVisualization2D.BOXPLOT_MEAN_MODE_TEXT);
-		mComboBoxBoxplotMeanMode.setEnabled(isBoxPlot);
+		mComboBoxBoxplotMeanMode.setEnabled(isDistributionPlot);
 		mComboBoxBoxplotMeanMode.addActionListener(this);
 		boxPlotPanel.add(mComboBoxBoxplotMeanMode, "3,13");
 
-		mCheckBoxShowMeanValues = new JCheckBox(isBoxPlot ? "Show mean/median values" : "Show mean values");
+		mCheckBoxShowMeanValues = new JCheckBox(isDistributionPlot ? "Show mean/median values" : "Show mean values");
 		mCheckBoxShowMeanValues.addActionListener(this);
 		boxPlotPanel.add(mCheckBoxShowMeanValues, "1,15,3,15");
 
-		tabbedPane.add(boxPlotPanel, "Box Plot / Bar Chart");
+		tabbedPane.add(boxPlotPanel, "Other Plots");
 
-		if (hasInteractiveView() && getInteractiveVisualization().getChartType() != JVisualization.cChartTypeScatterPlot)
+		if (hasInteractiveView() && !getInteractiveVisualization().getChartType().isScatterPlot())
 			tabbedPane.setSelectedComponent(boxPlotPanel);
 
 		return tabbedPane;
@@ -542,10 +539,8 @@ public class DETaskSetStatisticalViewOptions extends DETaskAbstractSetViewOption
 		mComboBoxSplitCurveColumn.setEnabled(canSplitCurve);
 		mSliderCurveSmoothing.setEnabled(curveMode == JVisualization2D.cCurveModeSmooth);
 
-		boolean isBoxPlot = (!hasInteractiveView()
-				|| getInteractiveVisualization().getChartType() == JVisualization.cChartTypeBoxPlot
-				|| getInteractiveVisualization().getChartType() == JVisualization.cChartTypeViolins);
-		if (isBoxPlot) {
+		boolean supportsPValues = !hasInteractiveView()	|| getInteractiveVisualization().getChartType().supportsPValues();
+		if (supportsPValues) {
 			mCheckBoxShowMeanValues.setEnabled(mComboBoxBoxplotMeanMode.getSelectedIndex() != 0);
 
 			boolean needsBoxPlotCategories = mCheckBoxShowPValues.isSelected() || mCheckBoxShowFoldChange.isSelected();

@@ -1,11 +1,14 @@
-package com.actelion.research.table.view;
+package com.actelion.research.table.view.chart;
 
+import com.actelion.research.table.view.JVisualization;
+import com.actelion.research.table.view.JVisualization2D;
+import com.actelion.research.table.view.VisualizationPoint;
+import com.actelion.research.table.view.VisualizationSplitter;
 import com.actelion.research.util.DoubleFormat;
 
 import java.awt.*;
 
-public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
-	private static final float cMaxBarReduction = 0.66f;
+public abstract class AbstractBarOrPieChart extends AbstractChart {
 	protected static final float STATISTIC_LABEL_FONT_FACTOR = 0.8f;
 
 	public static final float cAnchoredBarSpacing = 0.08f;  // for bars that touch one end of bar area this spacing is added to the other end
@@ -13,22 +16,24 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 	protected static final float cLogBarMinSizeFactor = 0.10f;    // bars on logarithic data have this as base height
 
 	private int mChartMode;
+	private boolean mBarOrPieDataAvailable;
+
 
 	public AbstractBarOrPieChart(JVisualization visualization, int hvCount, int mode) {
 		super(visualization, hvCount, -1);
 		mChartMode = mode;
 	}
 
-	@Override
-	public boolean isChartWithMarkers() {
-		// neither NaN markers nor outliers
-		return false;
+	public boolean isBarOrPieDataAvailable() {
+		return mBarOrPieDataAvailable;
 	}
 
 	@Override
 	public boolean paintMarker(VisualizationPoint vp) {
 		return false;
 	}
+
+	public abstract void adaptDoubleScalesForStatisticalLabels(final Rectangle baseRect);
 
 	/**
 	 * Based on axis column assignments and on hvIndices of VisualizationPoints
@@ -40,8 +45,8 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 		mPointsInCategory = new int[mHVCount][mCatCount];
 		mPointsInColorCategory = new int[mHVCount][mCatCount][mColor.length];
 		mBarValue = new float[mHVCount][mCatCount];
-		if (mChartMode != JVisualization.cChartModeCount
-		 && mChartMode != JVisualization.cChartModePercent) {
+		if (mChartMode != ChartType.cModeCount
+		 && mChartMode != ChartType.cModePercent) {
 			mMean = new float[mHVCount][mCatCount];
 			mAbsValueSum = new float[mHVCount][mCatCount];
 			mAbsColorValueSum = new float[mHVCount][mCatCount][mColor.length];
@@ -89,7 +94,7 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 		}
 
 		VisualizationPoint[] point = mVisualization.getDataPoints();
-		int chartColumn = mVisualization.getChartColumn();
+		int chartColumn = mVisualization.getChartType().getColumn();
 		int markerSizeColumn = mVisualization.getMarkerSizeColumn();
 
 		for (VisualizationPoint vp:point) {
@@ -140,7 +145,7 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 
 			int[][] localPointsInCategory = new int[mHVCount][allCatCount];
 			for (VisualizationPoint vp:point) {
-				if (!mVisualization.isNaN(vp) && vp.hvIndex != -1) {
+				if (!mVisualization.isNaNOnAxis(vp) && vp.hvIndex != -1) {
 					int cat = mVisualization.getFullCategoryIndex(vp);
 					localPointsInCategory[vp.hvIndex][cat]++;
 				}
@@ -160,8 +165,8 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 
 		if (mBarOrPieDataAvailable) {
 			switch (mChartMode) {
-				case JVisualization.cChartModeCount:
-				case JVisualization.cChartModePercent:
+				case ChartType.cModeCount:
+				case ChartType.cModePercent:
 					mAxisMin = 0.0f;
 					mAxisMax = dataMinAndMax[1] * (1f + cAnchoredBarSpacing);
 					mBarBase = 0.0f;
@@ -236,7 +241,7 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 	 */
 	private float[] calculateBarDimensions(float[][] barValue, int[][] pointsInCategory, boolean visibleOnly) {
 		VisualizationPoint[] point = mVisualization.getDataPoints();
-		int chartColumn = mVisualization.getChartColumn();
+		int chartColumn = mVisualization.getChartType().getColumn();
 
 		int count = 0;
 		for (VisualizationPoint vp:point) {
@@ -244,24 +249,24 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 				int cat = visibleOnly ? mVisualization.getChartCategoryIndex(vp) : mVisualization.getFullCategoryIndex(vp);
 				count++;
 				switch (mChartMode) {
-					case JVisualization.cChartModeCount:
-					case JVisualization.cChartModePercent:
+					case ChartType.cModeCount:
+					case ChartType.cModePercent:
 						barValue[vp.hvIndex][cat]++;
 						break;
-					case JVisualization.cChartModeMin:
-					case JVisualization.cChartModeMax:
+					case ChartType.cModeMin:
+					case ChartType.cModeMax:
 						float value = vp.record.getDouble(chartColumn);
 						if (pointsInCategory[vp.hvIndex][cat] == 1)
 							barValue[vp.hvIndex][cat] = value;
-						else if (mChartMode == JVisualization.cChartModeMin)
+						else if (mChartMode == ChartType.cModeMin)
 							barValue[vp.hvIndex][cat] = Math.min(barValue[vp.hvIndex][cat], value);
 						else
 							barValue[vp.hvIndex][cat] = Math.max(barValue[vp.hvIndex][cat], value);
 						break;
-					case JVisualization.cChartModeMean:
+					case ChartType.cModeMean:
 						barValue[vp.hvIndex][cat] += vp.record.getDouble(chartColumn);
 						break;
-					case JVisualization.cChartModeSum:
+					case ChartType.cModeSum:
 						if (mVisualization.getTableModel().isLogarithmicViewMode(chartColumn))
 							barValue[vp.hvIndex][cat] += Math.pow(10, vp.record.getDouble(chartColumn));
 						else
@@ -271,15 +276,15 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 			}
 		}
 
-		if (mChartMode == JVisualization.cChartModePercent)
+		if (mChartMode == ChartType.cModePercent)
 			for (int i = 0; i<mHVCount; i++)
 				for (int j=0; j<barValue[i].length; j++)
 					barValue[i][j] *= 100f / count;
-		if (mChartMode == JVisualization.cChartModeMean)
+		if (mChartMode == ChartType.cModeMean)
 			for (int i = 0; i<mHVCount; i++)
 				for (int j=0; j<barValue[i].length; j++)
 					barValue[i][j] /= pointsInCategory[i][j];
-		if (mChartMode == JVisualization.cChartModeSum && mVisualization.getTableModel().isLogarithmicViewMode(chartColumn))
+		if (mChartMode == ChartType.cModeSum && mVisualization.getTableModel().isLogarithmicViewMode(chartColumn))
 			for (int i = 0; i<mHVCount; i++)
 				for (int j=0; j<barValue[i].length; j++)
 					barValue[i][j] = (float)Math.log10(barValue[i][j]);
@@ -303,12 +308,12 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 
 
 	private int getBarOrPieSizeValueDigits() {
-		if (mChartMode == JVisualization.cChartModeCount)
+		if (mChartMode == ChartType.cModeCount)
 			return 1 + (int)Math.log10(mVisualization.getTableModel().getTotalRowCount());
-		if (mChartMode == JVisualization.cChartModePercent)
+		if (mChartMode == ChartType.cModePercent)
 			return FLOAT_DIGITS;
 
-		int chartColumn = mVisualization.getChartColumn();
+		int chartColumn = mVisualization.getChartType().getColumn();
 		if (mVisualization.getTableModel().isColumnTypeInteger(chartColumn) && !mVisualization.getTableModel().isLogarithmicViewMode(chartColumn))
 			return INT_DIGITS;
 
@@ -316,14 +321,14 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 	}
 
 	protected int compileStatisticsLines(int hv, int cat, String[] lineText) {
-		boolean usesCounts = (mChartMode == JVisualization.cChartModeCount || mChartMode == JVisualization.cChartModePercent);
-		boolean isLogarithmic = usesCounts ? false : mVisualization.getTableModel().isLogarithmicViewMode(mVisualization.getChartColumn());
+		boolean usesCounts = (mChartMode == ChartType.cModeCount || mChartMode == ChartType.cModePercent);
+		boolean isLogarithmic = usesCounts ? false : mVisualization.getTableModel().isLogarithmicViewMode(mVisualization.getChartType().getColumn());
 
 		int lineCount = 0;
 		if (mVisualization.isShowBarOrPieSizeValue()) {
-			double value = mChartMode == JVisualization.cChartModeCount
-					|| mChartMode == JVisualization.cChartModePercent
-					|| !mVisualization.getTableModel().isLogarithmicViewMode(mVisualization.getChartColumn()) ?
+			double value = mChartMode == ChartType.cModeCount
+					|| mChartMode == ChartType.cModePercent
+					|| !mVisualization.getTableModel().isLogarithmicViewMode(mVisualization.getChartType().getColumn()) ?
 					mBarValue[hv][cat] : Math.pow(10.0, mBarValue[hv][cat]);
 			lineText[lineCount++] = DoubleFormat.toString(value, getBarOrPieSizeValueDigits());
 		}
@@ -358,56 +363,6 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 			lineText[lineCount++] = "N=" + mPointsInCategory[hv][cat];
 		}
 		return lineCount;
-	}
-
-	/**
-	 * If we need space for statistics labels, then reduce the area that we have for the bar.
-	 * If we show a scale reflecting the bar values, then we need to transform scale labels
-	 * accordingly.
-	 * @param baseRect
-	 */
-	protected void adaptDoubleScalesForStatisticalLabels(final Rectangle baseRect) {
-		if (mVisualization.getChartType() == JVisualization.cChartTypeBars) {
-			for (int axis=0; axis<2; axis++) {
-				if (axis == mDoubleAxis) {
-					float cellSize = (axis == 0 ? baseRect.width : baseRect.height) / (float)mVisualization.getCategoryVisCount(axis);
-					float spacing = cellSize * getBarChartEmptyLabelAreaSpacing();
-					float labelSize = calculateStatisticsLabelSize(axis == 0, spacing);
-					if (labelSize != 0f) {
-						float reduction = Math.min(cMaxBarReduction * cellSize, labelSize - spacing);
-						float appliedHeight = (cellSize - reduction);
-
-						// if the axis is not assigned to a category column, then we have a double value scale
-						if (mVisualization.getColumnIndex(axis) == JVisualization.cColumnUnassigned) {
-							float shift = isRightBarChart() ? reduction / cellSize : 0f;
-							((JVisualization2D)mVisualization).transformScaleLinePositions(axis, shift, appliedHeight / cellSize);
-						}
-						// if the bar axis shows category values, then we correct centered bars only: label must be at bar base
-						else if (isCenteredBarChart()) {
-							float lowFraction = mAxisMin / (mAxisMin - mAxisMax);
-							float shift = (lowFraction * appliedHeight / cellSize - lowFraction) / (float)mVisualization.getCategoryVisCount(axis);
-							((JVisualization2D)mVisualization).transformScaleLinePositions(axis, shift, 1f);
-						}
-
-						float originalRange = mAxisMax - mAxisMin;
-						if (!isRightBarChart())
-							mAxisMax = mAxisMin + originalRange * cellSize / appliedHeight;
-						else
-							mAxisMin = mAxisMax - originalRange * cellSize / appliedHeight;
-					}
-				}
-			}
-		}
-		else if (mVisualization.getChartType() == JVisualization.cChartTypePies) {
-			if (mVisualization.getColumnIndex(1) != JVisualization.cColumnUnassigned) {
-				float cellHeight = baseRect.height / (float)mVisualization.getCategoryVisCount(1);
-				float labelSize = Math.min(cellHeight / 2f, calculateStatisticsLabelSize(false, 0f));
-				if (labelSize != 0f) {
-					float shift = labelSize / (2f * baseRect.height);
-					((JVisualization2D)mVisualization).transformScaleLinePositions(1, shift, 1f);
-				}
-			}
-		}
 	}
 
 	/**
@@ -475,7 +430,7 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 	protected boolean isCenteredBarChart() {
 		if (mAxisMin == 0 || mAxisMax == 0)
 			return false;
-		int chartColumn = mVisualization.getChartColumn();
+		int chartColumn = mVisualization.getChartType().getColumn();
 		return (chartColumn != -1 && !mVisualization.getTableModel().isLogarithmicViewMode(chartColumn));
 	}
 
@@ -483,7 +438,7 @@ public abstract class AbstractBarOrPieChart extends AbstractCategoryChart {
 	 * @return true if bars of a bar chart are based on the left/bottom edge
 	 */
 	protected boolean isLogarithmicBarOrPieChart() {
-		int chartColumn = mVisualization.getChartColumn();
+		int chartColumn = mVisualization.getChartType().getColumn();
 		return (chartColumn != -1 && mVisualization.getTableModel().isLogarithmicViewMode(chartColumn));
 	}
 

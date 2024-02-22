@@ -108,15 +108,11 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		mComboBox1 = new JComboBox();
 		mComboBox1.addItem(ITEM_CONNECTION_NONE);
 		if (getInteractiveVisualization() == null
-		 || getInteractiveVisualization().getChartType() == JVisualization.cChartTypeBoxPlot
-		 || getInteractiveVisualization().getChartType() == JVisualization.cChartTypeWhiskerPlot
-		 || getInteractiveVisualization().getChartType() == JVisualization.cChartTypeViolins) {
+		 || getInteractiveVisualization().getChartType().isDistributionPlot()) {
 			mComboBox1.addItem(ITEM_CONNECTION_CASES);
 			}
 		if (getInteractiveVisualization() == null
-		 || (getInteractiveVisualization().getChartType() != JVisualization.cChartTypeBoxPlot
-		  && getInteractiveVisualization().getChartType() != JVisualization.cChartTypeWhiskerPlot
-		  && getInteractiveVisualization().getChartType() != JVisualization.cChartTypeViolins)) {
+		 || (getInteractiveVisualization().getChartType().isDistributionPlot())) {
 			mComboBox1.addItem(ITEM_CONNECTION_ALL);
 			}
 		for (int i=0; i<getTableModel().getTotalColumnCount(); i++)

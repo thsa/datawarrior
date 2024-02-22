@@ -35,9 +35,9 @@ import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import com.actelion.research.table.view.chart.ChartType;
 import com.actelion.research.util.DoubleFormat;
 import com.actelion.research.util.concurrent.AtomicFloat;
 import info.clearthought.layout.TableLayout;
@@ -857,7 +857,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 
 			JVisualization2D visualization = (JVisualization2D)vpanel1.getVisualization();
 			visualization.setMarkerSize(0.6f, false);
-			visualization.setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+			visualization.setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 			visualization.setConnectionColumns(mTargetFrame.getTableModel().findColumn("Parent ID"), -1);
 			visualization.getMarkerColor().setColor(CompoundTableListHandler.getColumnFromList(hitlist));
 			visualization.setFocusList(hitlist);

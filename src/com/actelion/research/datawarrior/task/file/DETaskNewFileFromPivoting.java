@@ -25,8 +25,8 @@ import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import com.actelion.research.table.view.chart.ChartType;
 import com.actelion.research.util.ByteArrayArrayComparator;
 import info.clearthought.layout.TableLayout;
 
@@ -499,7 +499,7 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
         		firstDataColumn++;
 
         VisualizationPanel2D view = mTargetFrame.getMainFrame().getMainPane().add2DView("2D View", "Table\tbottom");
-        view.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+        view.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
         view.setAxisColumnName(0, targetTableModel.getColumnTitle(firstDataColumn));
         view.setAxisColumnName(1, targetTableModel.getColumnTitle(firstDataColumn+1));
 

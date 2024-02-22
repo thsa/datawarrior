@@ -24,6 +24,7 @@ import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.view.CompoundTableView;
 import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.VisualizationPanel;
+import com.actelion.research.table.view.chart.ChartType;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -72,16 +73,16 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 		mComboBoxType = new JComboBox();
 		if (hasInteractiveView())
 			for (int type: getInteractiveVisualization().getSupportedChartTypes())
-				mComboBoxType.addItem(JVisualization.CHART_TYPE_NAME[type]);
+				mComboBoxType.addItem(ChartType.TYPE_NAME[type]);
 		else
-			for (String name:JVisualization.CHART_TYPE_NAME)
+			for (String name:ChartType.TYPE_NAME)
 				mComboBoxType.addItem(name);
 		mComboBoxType.addItemListener(this);
 		p1.add(mComboBoxType, "3,1");
 
 		mLabelSizeBy = new JLabel("Bar/Pie size by:");
 		p1.add(mLabelSizeBy, "1,3");
-		mComboBoxMode = new JComboBox(JVisualization.CHART_MODE_NAME);
+		mComboBoxMode = new JComboBox(ChartType.MODE_NAME);
 		mComboBoxMode.addItemListener(this);
 		p1.add(mComboBoxMode, "3,3");
 
@@ -114,13 +115,13 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 
 	@Override
 	public void setDialogToConfiguration(Properties configuration) {
-		int type = findListIndex(configuration.getProperty(PROPERTY_TYPE), JVisualization.CHART_TYPE_CODE, JVisualization.cChartTypeScatterPlot);
-		mComboBoxType.setSelectedItem(JVisualization.CHART_TYPE_NAME[type]);
+		int type = findListIndex(configuration.getProperty(PROPERTY_TYPE), ChartType.TYPE_CODE, ChartType.cTypeScatterPlot);
+		mComboBoxType.setSelectedItem(ChartType.TYPE_NAME[type]);
 
-		int mode = findListIndex(configuration.getProperty(PROPERTY_MODE), JVisualization.CHART_MODE_CODE, JVisualization.cChartModeCount);
-		mComboBoxMode.setSelectedItem(JVisualization.CHART_MODE_NAME[mode]);
+		int mode = findListIndex(configuration.getProperty(PROPERTY_MODE), ChartType.MODE_CODE, ChartType.cModeCount);
+		mComboBoxMode.setSelectedItem(ChartType.MODE_NAME[mode]);
 
-		if (mode != JVisualization.cChartModeCount && mode != JVisualization.cChartModePercent) {
+		if (mode != ChartType.cModeCount && mode != ChartType.cModePercent) {
 			String columnName = configuration.getProperty(PROPERTY_COLUMN, "<column name>");
 			int column = getTableModel().findColumn(columnName);
 			mComboBoxColumn.setSelectedItem(!hasInteractiveView() && column == -1 ? columnName : getTableModel().getColumnTitleExtended(column));
@@ -129,12 +130,12 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 
 	@Override
 	public void addDialogConfiguration(Properties configuration) {
-		int type = findListIndex((String)mComboBoxType.getSelectedItem(), JVisualization.CHART_TYPE_NAME, JVisualization.cChartTypeScatterPlot);
-		configuration.setProperty(PROPERTY_TYPE, JVisualization.CHART_TYPE_CODE[type]);
-		if (type == JVisualization.cChartTypeBars || type == JVisualization.cChartTypePies) {
+		int type = findListIndex((String)mComboBoxType.getSelectedItem(), ChartType.TYPE_NAME, ChartType.cTypeScatterPlot);
+		configuration.setProperty(PROPERTY_TYPE, ChartType.TYPE_CODE[type]);
+		if (type == ChartType.cTypeBars || type == ChartType.cTypePies) {
 			int mode = mComboBoxMode.getSelectedIndex();
-			configuration.setProperty(PROPERTY_MODE, JVisualization.CHART_MODE_CODE[mode]);
-			if (mode != JVisualization.cChartModeCount && mode != JVisualization.cChartModePercent && mComboBoxColumn.getItemCount() != 0)
+			configuration.setProperty(PROPERTY_MODE, ChartType.MODE_CODE[mode]);
+			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mComboBoxColumn.getItemCount() != 0)
 				configuration.setProperty(PROPERTY_COLUMN, ""+getTableModel().getColumnTitleNoAlias((String)mComboBoxColumn.getSelectedItem()));
 			}
 		}
@@ -143,21 +144,21 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 	public void addViewConfiguration(CompoundTableView view, Properties configuration) {
 		JVisualization visualization = ((VisualizationPanel)view).getVisualization();
 		int type = visualization.getPreferredChartType();
-		configuration.setProperty(PROPERTY_TYPE, JVisualization.CHART_TYPE_CODE[type]);
-		if (type == JVisualization.cChartTypeBars || type == JVisualization.cChartTypePies) {
+		configuration.setProperty(PROPERTY_TYPE, ChartType.TYPE_CODE[type]);
+		if (type == ChartType.cTypeBars || type == ChartType.cTypePies) {
 			int mode = visualization.getPreferredChartMode();
-			configuration.setProperty(PROPERTY_MODE, JVisualization.CHART_MODE_CODE[mode]);
-			if (mode != JVisualization.cChartModeCount && mode != JVisualization.cChartModePercent)
+			configuration.setProperty(PROPERTY_MODE, ChartType.MODE_CODE[mode]);
+			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent)
 				configuration.setProperty(PROPERTY_COLUMN, ""+getTableModel().getColumnTitleNoAlias(visualization.getPreferredChartColumn()));
 			}
 		}
 
 	@Override
 	public boolean isViewConfigurationValid(CompoundTableView view, Properties configuration) {
-		int type = findListIndex(configuration.getProperty(PROPERTY_TYPE), JVisualization.CHART_TYPE_CODE, JVisualization.cChartTypeScatterPlot);
-		if (type == JVisualization.cChartTypeBars || type == JVisualization.cChartTypePies) {
-			int mode = findListIndex(configuration.getProperty(PROPERTY_MODE), JVisualization.CHART_MODE_CODE, JVisualization.cChartModeCount);
-			if (mode != JVisualization.cChartModeCount && mode != JVisualization.cChartModePercent) {
+		int type = findListIndex(configuration.getProperty(PROPERTY_TYPE), ChartType.TYPE_CODE, ChartType.cTypeScatterPlot);
+		if (type == ChartType.cTypeBars || type == ChartType.cTypePies) {
+			int mode = findListIndex(configuration.getProperty(PROPERTY_MODE), ChartType.MODE_CODE, ChartType.cModeCount);
+			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent) {
 				String columnName = configuration.getProperty(PROPERTY_COLUMN);
 				if (columnName == null) {
 					showErrorMessage("No numerical column available or defined.");
@@ -182,9 +183,9 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 
 	@Override
 	public void enableItems() {
-		int type = ConfigurableTask.findListIndex((String)mComboBoxType.getSelectedItem(), JVisualization.CHART_TYPE_NAME, -1);
-		boolean isBarsOrPies = type == JVisualization.cChartTypeBars || type == JVisualization.cChartTypePies;
-		boolean columnEnabled = isBarsOrPies && mComboBoxMode.getSelectedIndex() != JVisualization.cChartModeCount && mComboBoxMode.getSelectedIndex() != JVisualization.cChartModePercent;
+		int type = ConfigurableTask.findListIndex((String)mComboBoxType.getSelectedItem(), ChartType.TYPE_NAME, -1);
+		boolean isBarsOrPies = type == ChartType.cTypeBars || type == ChartType.cTypePies;
+		boolean columnEnabled = isBarsOrPies && mComboBoxMode.getSelectedIndex() != ChartType.cModeCount && mComboBoxMode.getSelectedIndex() != ChartType.cModePercent;
 		mLabelSizeBy.setEnabled(isBarsOrPies);
 		mComboBoxMode.setEnabled(isBarsOrPies);
 		mLabelColumn.setEnabled(columnEnabled);
@@ -195,12 +196,12 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 	public void applyConfiguration(CompoundTableView view, Properties configuration, boolean isAdjusting) {
 		if (view instanceof VisualizationPanel) {
 			JVisualization visualization = ((VisualizationPanel)view).getVisualization();
-			int type = findListIndex(configuration.getProperty(PROPERTY_TYPE), JVisualization.CHART_TYPE_CODE, JVisualization.cChartTypeScatterPlot);
-			int mode = JVisualization.cChartModeCount;
+			int type = findListIndex(configuration.getProperty(PROPERTY_TYPE), ChartType.TYPE_CODE, ChartType.cTypeScatterPlot);
+			int mode = ChartType.cModeCount;
 			int column = -1;
-			if (type == JVisualization.cChartTypeBars || type == JVisualization.cChartTypePies) {
-				mode = findListIndex(configuration.getProperty(PROPERTY_MODE), JVisualization.CHART_MODE_CODE, JVisualization.cChartModeCount);
-				if (mode != JVisualization.cChartModeCount && mode != JVisualization.cChartModePercent)
+			if (type == ChartType.cTypeBars || type == ChartType.cTypePies) {
+				mode = findListIndex(configuration.getProperty(PROPERTY_MODE), ChartType.MODE_CODE, ChartType.cModeCount);
+				if (mode != ChartType.cModeCount && mode != ChartType.cModePercent)
 					column = getTableModel().findColumn(configuration.getProperty(PROPERTY_COLUMN));
 				}
 			visualization.setPreferredChartType(type, mode, column);

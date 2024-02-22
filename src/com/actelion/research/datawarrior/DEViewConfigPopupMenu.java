@@ -29,6 +29,7 @@ import com.actelion.research.gui.dock.Dockable;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.*;
 import com.actelion.research.table.view.card.CardElement;
+import com.actelion.research.table.view.chart.ChartType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -109,55 +110,51 @@ public class DEViewConfigPopupMenu extends JPopupMenu implements ActionListener,
 		mSource = source;
 
 		if (source instanceof VisualizationPanel) {
-			int chartType = ((VisualizationPanel)source).getVisualization().getChartType();
+			ChartType chartType = ((VisualizationPanel)source).getVisualization().getChartType();
 
 			addMenuItem(TEXT_CHART_TYPE);
 			addSeparator();
 
 			addMenuItem(TEXT_GENERAL_OPTIONS);
-			if (source instanceof VisualizationPanel2D)
+			if (chartType.supportsStatistics())
 				addMenuItem(TEXT_STATISTICAL_OPTIONS);
 
 			addSeparator();
 
 			addMenuItem(TEXT_MARKER_SIZE);
 
-			if (chartType != JVisualization.cChartTypeBars
-			 && chartType != JVisualization.cChartTypePies
-			 && chartType != JVisualization.cChartTypeViolins)
+			if (chartType.displaysMarkers())
 				addMenuItem(TEXT_MARKER_SHAPE);
 
 			addMenuItem(TEXT_MARKER_COLOR);
 
-			if (source instanceof VisualizationPanel2D
-			 && chartType != JVisualization.cChartTypeBars)
+			if (chartType.supportsBackgroundColor())
 				addMenuItem(TEXT_MARKER_BG_COLOR);
 
 			addSeparator();
 
-			if (source instanceof VisualizationPanel2D
-			 || chartType == JVisualization.cChartTypeScatterPlot)
-			addMenuItem(TEXT_MARKER_LABELS);
+			if (chartType.supportsLabels()) {
+				addMenuItem(TEXT_MARKER_LABELS);
+				addMenuItem(TEXT_LABEL_BACKGROUND_COLOR);
+			}
 
-			addMenuItem(TEXT_LABEL_BACKGROUND_COLOR);
-
-			if (chartType != JVisualization.cChartTypeBars
-			 && chartType != JVisualization.cChartTypePies) {
+			if (chartType.supportsConnectionLines())
 				addMenuItem(TEXT_MARKER_CONNECTION);
-				addMenuItem(TEXT_MARKER_JITTERING);
-				}
 
-			if (source instanceof VisualizationPanel2D) {
+			if (chartType.displaysMarkers())
+				addMenuItem(TEXT_MARKER_JITTERING);
+
+			if (chartType.supportsTransparency()) {
 				addMenuItem(TEXT_MARKER_TRANSPARENCY);
 				}
 
 			addSeparator();
 			addMenuItem(TEXT_SEPARATE_CASES);
+
 			if (source instanceof VisualizationPanel2D) {
 				addMenuItem(TEXT_SPLIT_VIEW);
 
-				if (chartType != JVisualization.cChartTypeBars
-				 && chartType != JVisualization.cChartTypePies)
+				if (chartType.displaysMarkers())
 					addMenuItem(TEXT_MULTI_VALUE_MARKER);
 
 				addSeparator();

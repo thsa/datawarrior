@@ -29,6 +29,7 @@ import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.*;
+import com.actelion.research.table.view.chart.ChartType;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 
@@ -821,7 +822,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 						vpanel1.getVisualization().setMarkerSize(12f/(float)Math.sqrt(rowCount), false);
 						vpanel1.getVisualization().setScaleMode(JVisualization.cScaleModeHidden);
 						vpanel1.getVisualization().setGridMode(JVisualization.cGridModeHidden);
-						vpanel1.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+						vpanel1.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 
 						int colorColumn,colorListMode;
 						Color[] colorList = null;
@@ -875,7 +876,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 							if (referencingColumn != -1) {
 								// create a tree view panel
 								VisualizationPanel2D vpanel2 = mainPane.add2DView("Neighbor Tree", title+"\tleft\t0.25");
-								vpanel2.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+								vpanel2.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 
 								vpanel2.getVisualization().getMarkerColor().setColor(colorColumn, colorList, colorListMode);
 								if (activityColumn == -1)

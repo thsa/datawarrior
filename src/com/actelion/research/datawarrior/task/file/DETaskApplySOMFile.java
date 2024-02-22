@@ -11,6 +11,7 @@ import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import com.actelion.research.table.view.chart.ChartType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -53,27 +54,25 @@ e.printStackTrace();
 		final BufferedImage background = som.createSimilarityMapImage(Math.max(som.getWidth()*4, 768), Math.max(som.getHeight()*4, 768));
 
 		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-				public void run() {
-	                int somFitColumn = mParentFrame.getTableModel().getTotalColumnCount()-1;
-	                String xColumn = mParentFrame.getTableModel().getColumnTitle(somFitColumn-2);
-	                String yColumn = mParentFrame.getTableModel().getColumnTitle(somFitColumn-1);
-	                if (xColumn.startsWith("SOM_X") && yColumn.startsWith("SOM_Y")) {
-	                    VisualizationPanel2D vpanel1 = mParentFrame.getMainFrame().getMainPane().add2DView("SOM", null);
-	                    vpanel1.setAxisColumnName(0, xColumn);
-	                    vpanel1.setAxisColumnName(1, yColumn);
-	                    ((JVisualization2D)vpanel1.getVisualization()).setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
-	                    int colorListMode = VisualizationColor.cColorListModeHSBLong;
-	                    Color[] colorList = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode, null);
-	                    vpanel1.getVisualization().getMarkerColor().setColor(somFitColumn, colorList, colorListMode);
-	                    if (background != null) {
-	                        ((JVisualization2D)vpanel1.getVisualization()).setBackgroundImage(background);
-	                        vpanel1.getVisualization().setScaleMode(JVisualization.cScaleModeHidden);
-	                        vpanel1.getVisualization().setGridMode(JVisualization.cGridModeHidden);
-	                    	}
+			SwingUtilities.invokeAndWait(() -> {
+                int somFitColumn = mParentFrame.getTableModel().getTotalColumnCount()-1;
+                String xColumn = mParentFrame.getTableModel().getColumnTitle(somFitColumn-2);
+                String yColumn = mParentFrame.getTableModel().getColumnTitle(somFitColumn-1);
+                if (xColumn.startsWith("SOM_X") && yColumn.startsWith("SOM_Y")) {
+                    VisualizationPanel2D vpanel1 = mParentFrame.getMainFrame().getMainPane().add2DView("SOM", null);
+                    vpanel1.setAxisColumnName(0, xColumn);
+                    vpanel1.setAxisColumnName(1, yColumn);
+                    vpanel1.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
+                    int colorListMode = VisualizationColor.cColorListModeHSBLong;
+                    Color[] colorList = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode, null);
+                    vpanel1.getVisualization().getMarkerColor().setColor(somFitColumn, colorList, colorListMode);
+                    if (background != null) {
+                        ((JVisualization2D)vpanel1.getVisualization()).setBackgroundImage(background);
+                        vpanel1.getVisualization().setScaleMode(JVisualization.cScaleModeHidden);
+                        vpanel1.getVisualization().setGridMode(JVisualization.cGridModeHidden);
 	                    }
-	                }
-				} );
+                    }
+                });
 			}
 		catch (Exception ie) {}
 

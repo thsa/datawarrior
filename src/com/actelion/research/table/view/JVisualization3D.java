@@ -31,6 +31,7 @@ import com.actelion.research.table.model.CompoundListSelectionModel;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.table.view.chart.*;
 import com.actelion.research.util.ColorHelper;
 import com.actelion.research.util.DoubleFormat;
 import org.jmol.g3d.Graphics3D;
@@ -61,7 +62,7 @@ import static com.actelion.research.table.view.VisualizationColor.cUseAsFilterCo
 public class JVisualization3D extends JVisualization implements ComponentListener,RotationListener {
 	private static final long serialVersionUID = 0x20061002;
 
-	private static final int[] SUPPORTED_CHART_TYPE = { cChartTypeScatterPlot, /*cChartTypeWhiskerPlot, cChartTypeBoxPlot,*/ cChartTypeBars };
+	private static final int[] SUPPORTED_CHART_TYPE = { ChartType.cTypeScatterPlot, /*cChartTypeWhiskerPlot, cChartTypeBoxPlot,*/ ChartType.cTypeBars};
 
 	public static final int DEFAULT_GRAPH_FACE_COLOR = 0xFFECECFA;
 
@@ -399,7 +400,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			}
 		else {
 				// mEyeOffset > 0 ==>> left eye
-			mEyeOffset = mContentScaling*cStereoEyeDistance/2;
+			mEyeOffset = mContentScaling*cStereoEyeDistance/2f;
 
 				// 0.5 would be directly in the plane; we place it slightly behind
 				// that axis labels behind the display edges look naturally clipped.
@@ -410,8 +411,8 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			size = new Dimension(mNonHighlightedImage.getWidth(null),
 								 mNonHighlightedImage.getHeight(null));
 
-			if (mChartType == cChartTypeBars
-			 || (mChartType == cChartTypeBoxPlot && mHighlightedPoint.chartGroupIndex != -1)) {
+			if (mChartType.getType() == ChartType.cTypeBars
+			 || (mChartType.getType() == ChartType.cTypeBoxPlot && mHighlightedPoint.chartGroupIndex != -1)) {
 				BarFraction fraction = getBarFraction((VisualizationPoint3D)mHighlightedPoint);
 				if (fraction != null) { // should not happen
 					fraction.calculateBounds((VisualizationPoint3D)mHighlightedPoint, false);
@@ -652,25 +653,25 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		mHVCount = 1;	// we don't use view splitting in 3D-views
 
 		if (mChartInfo == null) {
-			if (mChartType == cChartTypeBoxPlot) {
+			if (mChartType.getType() == ChartType.cTypeBoxPlot) {
 				int doubleAxis = determineBoxPlotDoubleAxis();
 				mChartInfo = new BoxPlot(this, mHVCount, doubleAxis);
 				mChartInfo.calculate();
 				}
-			else if (mChartType == cChartTypeWhiskerPlot) {
+			else if (mChartType.getType() == ChartType.cTypeWhiskerPlot) {
 				int doubleAxis = determineBoxPlotDoubleAxis();
 				mChartInfo = new WhiskerPlot(this, mHVCount, doubleAxis);
 				mChartInfo.calculate();
 			}
-			else if (mChartType == cChartTypeBars) {
-				mChartInfo = new BarChart(this, mHVCount, mChartMode);
+			else if (mChartType.getType() == ChartType.cTypeBars) {
+				mChartInfo = new BarChart(this, mHVCount, mChartType.getMode());
 				mChartInfo.calculate();
 
 				for (int axis=0; axis<3; axis++) {
-					if (mChartInfo.mDoubleAxis != axis) {
+					if (mChartInfo.getDoubleAxis() != axis) {
 						float cellSize = 2.0f / (float)getCategoryVisCount(axis);
-						if (mChartInfo.mBarWidth == 0 || mChartInfo.mBarWidth> 0.5 * cellSize)
-							mChartInfo.mBarWidth = 0.5f * cellSize;
+						if (mChartInfo.getBarWidth() == 0 || mChartInfo.getBarWidth() > 0.5 * cellSize)
+							mChartInfo.setBarWidth(0.5f * cellSize);
 					}
 				}
 			}
@@ -701,12 +702,12 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			drawAxes();
 			}
 
-		if (mChartType == cChartTypeBars) {
+		if (mChartType.getType() == ChartType.cTypeBars) {
 			drawBars(clipRect);
 			}
 		else {
-			if (mChartType == cChartTypeBoxPlot
-			 || mChartType == cChartTypeWhiskerPlot)
+			if (mChartType.getType() == ChartType.cTypeBoxPlot
+			 || mChartType.getType() == ChartType.cTypeWhiskerPlot)
 				drawBoxesOrWhiskers(clipRect);
 
 			drawConnectionLines(clipRect);
@@ -722,7 +723,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		return (BufferedImage)mG3D.getScreenImage();
 		}
 
-	protected int getStringWidth(String s) {
+	public int getStringWidth(String s) {
 		return mG3D.getFont3DCurrent().fontMetrics.stringWidth(s)/mAAFactor;
 		}
 
@@ -731,7 +732,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 	 * The parameter h must not include mAAFactor.
 	 * @param h
 	 */
-	protected void setFontHeight(int h) {
+	public void setFontHeight(int h) {
 		// fontsize in Graphics3D is limited to 63. We need to limit to 50% of that
 		// in order to assure that the mAAFactor always has enough room...
 		if (h > MAX_FONT_HEIGHT)
@@ -1217,7 +1218,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 	 * @param axis use -1 for all axis
 	 */
 	private void invalidateMetaCoordinates(int axis) {
-		if (axis == -1 || mChartType == cChartTypeBars) {
+		if (axis == -1 || mChartType.getType() == ChartType.cTypeBars) {
 			mChartInfo = null;
 			for (int i=0; i<3; i++)
 				mMetaCoordsValid[i] = false;
@@ -1228,7 +1229,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		}
 
 	private void calculateMetaCoordinates(int axis) {
-		if (mChartType == cChartTypeBars) {
+		if (mChartType.getType() == ChartType.cTypeBars) {
 			calculateMetaBarCoordinates(axis);
 			}
 		else {
@@ -1345,24 +1346,24 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		}
 
 	private void calculateMetaBarCoordinates(int axis) {
-		if (!mChartInfo.mBarOrPieDataAvailable)
+		if (!((AbstractBarOrPieChart)mChartInfo).isBarOrPieDataAvailable())
 			return;
 
-		float axisSize = mChartInfo.mAxisMax - mChartInfo.mAxisMin;
+		float axisSize = mChartInfo.getAxisMax() - mChartInfo.getAxisMin();
 		float cellSize = 2.0f / (float)getCategoryVisCount(axis);
 		int catCount = getCategoryVisCount(0)* getCategoryVisCount(1)* getCategoryVisCount(2);
 
-		if (mChartInfo.mDoubleAxis == axis) {
+		if (mChartInfo.getDoubleAxis() == axis) {
 			int focusFlagNo = getFocusFlag();
 			int basicColorCount = mMarkerColor.getColorList().length + 1;
 			int colorCount = basicColorCount * ((focusFlagNo == -1) ? 1 : 2);
 	
-			float barBaseOffset = (mChartInfo.mBarBase - mChartInfo.mAxisMin) * cellSize / axisSize;
+			float barBaseOffset = (mChartInfo.getBarBase() - mChartInfo.getAxisMin()) * cellSize / axisSize;
 	
 			if (mChartInfo.useProportionalFractions())
-				mChartInfo.mAbsValueFactor = new float[1][catCount];
+				mChartInfo.initializeAbsValueFactor(1, catCount);
 			else
-				mChartInfo.mInnerDistance = new float[1][catCount];
+				mChartInfo.initializeInnerDistance(1, catCount);
 
 			mMetaBarColorEdge = new float[catCount][colorCount+1];
 			mMetaBarPosition[axis] = null;
@@ -1371,25 +1372,25 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 				for (int j = 0; j<getCategoryVisCount(1); j++) {
 					for (int k = 0; k<getCategoryVisCount(2); k++) {
 						int cat = i+j* getCategoryVisCount(0)+k* getCategoryVisCount(0)* getCategoryVisCount(1);
-						float barHeight = cellSize * Math.abs(mChartInfo.mBarValue[0][cat] - mChartInfo.mBarBase) / axisSize;
+						float barHeight = cellSize * Math.abs(mChartInfo.getBarValue(0, cat) - mChartInfo.getBarBase()) / axisSize;
 						if (mChartInfo.useProportionalFractions())
-							mChartInfo.mAbsValueFactor[0][cat] = barHeight / mChartInfo.mAbsValueSum[0][cat];
+							mChartInfo.setAbsValueFactor(0, cat, barHeight / mChartInfo.getAbsValueSum(0, cat));
 						else
-							mChartInfo.mInnerDistance[0][cat] = barHeight / (float)mChartInfo.mPointsInCategory[0][cat];
+							mChartInfo.setInnerDistance(0, cat, barHeight / (float)mChartInfo.getPointsInCategory(0, cat));
 
-						float barOffset = (mChartInfo.mBarValue[0][cat] >= 0.0f) ? 0.0f
-								: cellSize * (mChartInfo.mBarValue[0][cat] - mChartInfo.mBarBase) / axisSize;
+						float barOffset = (mChartInfo.getBarValue(0, cat) >= 0.0f) ? 0.0f
+								: cellSize * (mChartInfo.getBarValue(0, cat) - mChartInfo.getBarBase()) / axisSize;
 						int ii = (axis==0) ? i : (axis==1) ? j : k;
 						mMetaBarColorEdge[cat][0] = -1.0f + barBaseOffset + barOffset + ii * cellSize;
 						if (mChartInfo.useProportionalFractions()) {
 							for (int l=0; l<colorCount; l++)
 								mMetaBarColorEdge[cat][l+1] = mMetaBarColorEdge[cat][l]
-										+ mChartInfo.mAbsColorValueSum[0][cat][l] * mChartInfo.mAbsValueFactor[0][cat];
+										+ mChartInfo.getAbsColorValueSum(0, cat, l) * mChartInfo.getAbsValueFactor(0, cat);
 							}
 						else {
 							for (int l=0; l<colorCount; l++)
 								mMetaBarColorEdge[cat][l+1] = mMetaBarColorEdge[cat][l]
-										+ mChartInfo.mInnerDistance[0][cat] * (float)mChartInfo.mPointsInColorCategory[0][cat][l];
+										+ mChartInfo.getInnerDistance(0, cat) * (float)mChartInfo.getPointsInColorCategory(0, cat, l);
 							}
 						}
 					}
@@ -1397,7 +1398,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 
 			// calculate meta coords of individual records as basis for screen position
 			float[][] barColorEdge = null;
-			if (mChartInfo.mAbsColorValueSum != null) {
+			if (mChartInfo.hasAbsColorValueSum()) {
 				barColorEdge = new float[catCount][colorCount];
 				for (int i=0; i<catCount; i++)
 					for (int j=0; j<colorCount; j++)
@@ -1412,13 +1413,13 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 					int cat = getChartCategoryIndex(mPoint[i]);
 					if (mChartInfo.useProportionalFractions()) {
 						int colorIndex = getColorIndex(vp, colorListLength, focusFlagNo);
-						float fractionHeight = Math.abs(vp.record.getDouble(mChartColumn)) * mChartInfo.mAbsValueFactor[0][cat];
+						float fractionHeight = Math.abs(vp.record.getDouble(mChartType.getColumn())) * mChartInfo.getAbsValueFactor(0, cat);
 						((VisualizationPoint3D)vp).coord[axis] = barColorEdge[cat][colorIndex] + 0.5f * fractionHeight;
 						barColorEdge[cat][colorIndex] += fractionHeight;
 						}
 					else {
 						((VisualizationPoint3D)vp).coord[axis] = mMetaBarColorEdge[cat][0]
-											 + mChartInfo.mInnerDistance[0][cat]*(0.5f+vp.chartGroupIndex);
+											 + mChartInfo.getInnerDistance(0, cat)*(0.5f+vp.chartGroupIndex);
 						}
 					}
 				}
@@ -1721,10 +1722,10 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 				String label = null;
 				if (mAxisIndex[i] != -1)
 					label = getAxisTitle(mAxisIndex[i]);
-				else if (mChartType == cChartTypeBars && mChartInfo.mDoubleAxis == i)
-					label = (mChartMode == cChartModeCount ? "Count"
-							: mChartMode == cChartModePercent ? "Percent"
-							: CHART_MODE_AXIS_TEXT[mChartMode]+"("+mTableModel.getColumnTitle(mChartColumn)+")");
+				else if (mChartType.getType() == ChartType.cTypeBars && mChartInfo.getDoubleAxis() == i)
+					label = (mChartType.getMode() == ChartType.cModeCount ? "Count"
+							: mChartType.getMode() == ChartType.cModePercent ? "Percent"
+							: CHART_MODE_AXIS_TEXT[mChartType.getMode()]+"("+mTableModel.getColumnTitle(mChartType.getColumn())+")");
 	
 				Point3i base = new Point3i(x2+surplusX, y2+surplusY, z2+surplusZ);
 				Point3i tip = new Point3i(x2+2*surplusX, y2+2*surplusY, z2+2*surplusZ);
@@ -1782,7 +1783,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			int axis = cEdgeOfFace[face][edge];
 
 			if (mAxisIndex[axis] == cColumnUnassigned) {
-				if (mChartType == cChartTypeBars && mChartInfo.mDoubleAxis == axis)
+				if (mChartType.getType() == ChartType.cTypeBars && mChartInfo.getDoubleAxis() == axis)
 					drawDoubleScale(face, edge, axis);
 				}
 			else {
@@ -1819,8 +1820,8 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			}
 		else {
 			for (int i=min; i<=max; i++) {
-				float scalePosition = (mChartType == cChartTypeBars && axis == mChartInfo.mDoubleAxis && mChartInfo.mAxisMax != mChartInfo.mAxisMin) ?
-						(mChartInfo.mBarBase - mChartInfo.mAxisMin) / (mChartInfo.mAxisMax - mChartInfo.mAxisMin) - 0.5f + i : i;
+				float scalePosition = (mChartType.getType() == ChartType.cTypeBars && axis == mChartInfo.getDoubleAxis() && mChartInfo.getAxisMax() != mChartInfo.getAxisMin()) ?
+						(mChartInfo.getBarBase() - mChartInfo.getAxisMin()) / (mChartInfo.getAxisMax() - mChartInfo.getAxisMin()) - 0.5f + i : i;
 				float edgePosition = (scalePosition - mAxisVisMin[axis])
 						/ (mAxisVisMax[axis] - mAxisVisMin[axis]) * 2.0f - 1.0f;
 				String label = (mScaleMolecule[axis] == null) ? categoryList[i] : null;
@@ -1833,15 +1834,14 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		float axisStart,axisLength,totalRange;
 
 		if (mAxisIndex[axis] == -1) {	// bar axis of bar chart
-			if (mChartMode != cChartModeCount
-			 && mChartMode != cChartModePercent
-			 && mTableModel.isLogarithmicViewMode(mChartColumn)) {
+			if (!mChartType.isSimpleMode()
+			 && mTableModel.isLogarithmicViewMode(mChartType.getColumn())) {
 				drawLogarithmicScale(face, edge, axis);
 				return;
 				}
 
-			axisStart = mChartInfo.mAxisMin;
-			axisLength = mChartInfo.mAxisMax - mChartInfo.mAxisMin;
+			axisStart = mChartInfo.getAxisMin();
+			axisLength = mChartInfo.getAxisMax() - mChartInfo.getAxisMin();
 			totalRange = axisLength;
 			}
 		else if (mTableModel.isDescriptorColumn(mAxisIndex[axis])) {
@@ -1907,8 +1907,8 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		float axisStart,axisLength,totalRange;
 
 		if (mAxisIndex[axis] == -1) {	// bar axis of bar chart
-			axisStart = mChartInfo.mAxisMin;
-			axisLength = mChartInfo.mAxisMax - mChartInfo.mAxisMin;
+			axisStart = mChartInfo.getAxisMin();
+			axisLength = mChartInfo.getAxisMax() - mChartInfo.getAxisMin();
 			totalRange = axisLength;
 			}
 		else {
@@ -1990,8 +1990,8 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		}
 
 	private void drawLogarithmicScaleLine(int face, int edge, int axis, float value) {
-		float min = (mAxisIndex[axis] == -1) ? mChartInfo.mAxisMin : mAxisVisMin[axis];
-		float max = (mAxisIndex[axis] == -1) ? mChartInfo.mAxisMax : mAxisVisMax[axis];
+		float min = (mAxisIndex[axis] == -1) ? mChartInfo.getAxisMin() : mAxisVisMin[axis];
+		float max = (mAxisIndex[axis] == -1) ? mChartInfo.getAxisMax() : mAxisVisMax[axis];
 		if (value >= min && value <= max) {
 			float edgePosition = (value-min) / (max - min) * 2.0f - 1.0f;
 			drawScaleLine(face, edge, axis, -1, edgePosition, DoubleFormat.toString(Math.pow(10, value), 3, true));
@@ -2181,7 +2181,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 					if (vp == mHighlightedPoint && (clipRect != null || mIsAdjusting))
 						color = color.darker().darker();
 
-					if (outOfFocus || isNaN(mPoint[i]))
+					if (outOfFocus || isNaNOnAxis(mPoint[i]))
 						color = VisualizationColor.grayOutColor(color);
 
 					short colix = Graphics3D.getColix(color.getRGB());
@@ -2436,7 +2436,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		}
 
 	private void drawBars(Rectangle clipRect) {
-		if (!mChartInfo.mBarOrPieDataAvailable)
+		if (!((AbstractBarOrPieChart)mChartInfo).isBarOrPieDataAvailable())
 			return;
 
 		int catCount = getCategoryVisCount(0)* getCategoryVisCount(1)* getCategoryVisCount(2);
@@ -2445,7 +2445,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		int colorCount = basicColorCount * ((focusFlagNo == -1) ? 1 : 2);
 
 		if (mHighlightedPoint != null && (clipRect != null || mIsAdjusting)) {
-			short colix = Graphics3D.getColix(mChartInfo.mColor[mHighlightedPoint.markerColorIndex].darker().darker().getRGB());
+			short colix = Graphics3D.getColix(mChartInfo.getColor(mHighlightedPoint.markerColorIndex).darker().darker().getRGB());
 			getBarFraction((VisualizationPoint3D)mHighlightedPoint).draw(colix);
 			}
 
@@ -2454,18 +2454,18 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			getBarFraction((VisualizationPoint3D)mActivePoint).draw(colix);
 			}
 
-		BarFraction barFragment = new BarFraction(mChartInfo.mDoubleAxis, mChartInfo.mBarWidth, false);
+		BarFraction barFragment = new BarFraction(mChartInfo.getDoubleAxis(), mChartInfo.getBarWidth(), false);
 
 		for (int cat=0; cat<catCount; cat++) {
 			for (int k=0; k<colorCount; k++) {
-				if (mChartInfo.mPointsInColorCategory[0][cat][k] > 0) {
-					float xoffset = (mChartInfo.mDoubleAxis == 0) ? mMetaBarColorEdge[cat][k] : mMetaBarPosition[0][cat];
-					float yoffset = (mChartInfo.mDoubleAxis == 1) ? mMetaBarColorEdge[cat][k] : mMetaBarPosition[1][cat];
-					float zoffset = (mChartInfo.mDoubleAxis == 2) ? mMetaBarColorEdge[cat][k] : mMetaBarPosition[2][cat];
+				if (mChartInfo.getPointsInColorCategory(0, cat, k) > 0) {
+					float xoffset = (mChartInfo.getDoubleAxis() == 0) ? mMetaBarColorEdge[cat][k] : mMetaBarPosition[0][cat];
+					float yoffset = (mChartInfo.getDoubleAxis() == 1) ? mMetaBarColorEdge[cat][k] : mMetaBarPosition[1][cat];
+					float zoffset = (mChartInfo.getDoubleAxis() == 2) ? mMetaBarColorEdge[cat][k] : mMetaBarPosition[2][cat];
 					float height = mMetaBarColorEdge[cat][k+1] - mMetaBarColorEdge[cat][k];
 					barFragment.calculate(height, xoffset, yoffset, zoffset);
 					if (clipRect == null || barFragment.calculateBounds(null, false).intersects(clipRect)) {
-						short colix = Graphics3D.getColix(mChartInfo.mColor[k].getRGB());
+						short colix = Graphics3D.getColix(mChartInfo.getColor(k).getRGB());
 						barFragment.draw(colix);
 						}
 					}
@@ -2478,16 +2478,16 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		if (cat == -1)
 			return null;
 
-		if (mChartInfo.mInnerDistance == null && mChartInfo.mAbsValueFactor == null)
+		if (!mChartInfo.hasInnerDistance() && !mChartInfo.hasAbsValueFactor())
 			return null;
 
-		BarFraction fraction = new BarFraction(mChartInfo.mDoubleAxis, mChartInfo.mBarWidth, true);
+		BarFraction fraction = new BarFraction(mChartInfo.getDoubleAxis(), mChartInfo.getBarWidth(), true);
 		if (mChartInfo.useProportionalFractions()) {
-			float height = Math.abs(vp.record.getDouble(mChartColumn)) * mChartInfo.mAbsValueFactor[0][cat];
+			float height = Math.abs(vp.record.getDouble(mChartType.getColumn())) * mChartInfo.getAbsValueFactor(0, cat);
 			fraction.calculate(height, vp.coord[0], vp.coord[1], vp.coord[2]);
 			}
 		else {
-			fraction.calculate(mChartInfo.mInnerDistance[0][cat], vp.coord[0], vp.coord[1], vp.coord[2]);
+			fraction.calculate(mChartInfo.getInnerDistance(0, cat), vp.coord[0], vp.coord[1], vp.coord[2]);
 			}
 		return fraction;
 		}

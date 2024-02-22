@@ -1,4 +1,8 @@
-package com.actelion.research.table.view;
+package com.actelion.research.table.view.chart;
+
+import com.actelion.research.table.view.JVisualization;
+import com.actelion.research.table.view.JVisualization2D;
+import com.actelion.research.table.view.VisualizationPoint;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
@@ -15,7 +19,7 @@ public class BoxPlot extends AbstractDistributionPlot {
 
 	@Override
 	public void calculate() {
-		super.calculate(JVisualization.cChartTypeBoxPlot);
+		super.calculateStatistics();
 
 		VisualizationPoint[] point = mVisualization.getDataPoints();
 

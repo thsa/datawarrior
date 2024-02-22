@@ -16,11 +16,15 @@
  * @author Thomas Sander
  */
 
-package com.actelion.research.table.view;
+package com.actelion.research.table.view.chart;
+
+import com.actelion.research.table.view.JVisualization;
+import com.actelion.research.table.view.VisualizationColor;
+import com.actelion.research.table.view.VisualizationPoint;
 
 import java.awt.*;
 
-public abstract class AbstractCategoryChart {
+public abstract class AbstractChart {
     protected static final int FLOAT_DIGITS = 4;  // significant digits for in-view floating point values
     protected static final int INT_DIGITS = 8;    // significant digits for in-view integer values
 
@@ -37,15 +41,11 @@ public abstract class AbstractCategoryChart {
     float[][] mStdDev;	// standard deviation (sigma-1)
     float[][] mErrorMargin;// (95 % confidence)
     float[][] mInnerDistance;   // distance of two adjacent sub-bar areas in bar
-    float[][] mPieX;
-    float[][] mPieY;
-    float[][] mPieSize;         // pie size in pixel
-    float mAxisMin,mAxisMax, mBarBase;
+    float mAxisMin,mAxisMax,mBarBase;
     float mBarWidth, mMaxWidth;
     int mDoubleAxis,mHVCount,mCatCount,mFocusFlagNo,mBaseColorCount;
-    boolean mBarOrPieDataAvailable;
 
-    public AbstractCategoryChart(JVisualization visualization, int hvCount, int doubleAxis) {
+    public AbstractChart(JVisualization visualization, int hvCount, int doubleAxis) {
         mVisualization = visualization;
         mHVCount = hvCount;
         mDoubleAxis = doubleAxis;
@@ -60,6 +60,109 @@ public abstract class AbstractCategoryChart {
                 mCatCount *= mVisualization.getCategoryVisCount(i);
 
         calculateColors();
+    }
+
+    /**
+     * @return relative position of scale line 0.0 - 1.0
+     */
+    public float getScaleLinePosition(int axis) {
+        return 0.5f;
+    }
+
+    public float getBarWidth() {
+        return mBarWidth;
+    }
+
+    public float getBarBase() {
+        return mBarBase;
+    }
+
+    public float getAxisMin() {
+        return mAxisMin;
+    }
+
+    public float getAxisMax() {
+        return mAxisMax;
+    }
+
+    public Color getColor(int i) {
+        return mColor[i];
+    }
+
+    public void initializeAbsValueFactor(int hvCount, int catCount) {
+        mAbsValueFactor = new float[hvCount][catCount];
+    }
+
+    public boolean hasAbsValueFactor() {
+        return mAbsValueFactor != null;
+    }
+
+    public float getAbsValueFactor(int hv, int cat) {
+        return mAbsValueFactor[hv][cat];
+    }
+
+    public void setAbsValueFactor(int hv, int cat, float f) {
+        mAbsValueFactor[hv][cat] = f;
+    }
+
+    public void initializeInnerDistance(int hvCount, int catCount) {
+        mInnerDistance = new float[hvCount][catCount];
+    }
+
+    public boolean hasInnerDistance() {
+        return mInnerDistance != null;
+    }
+
+    public float getInnerDistance(int hv, int cat) {
+        return mInnerDistance[hv][cat];
+    }
+
+    public void setInnerDistance(int hv, int cat, float d) {
+        mInnerDistance[hv][cat] = d;
+    }
+
+    public boolean hasAbsColorValueSum() {
+        return mAbsColorValueSum != null;
+    }
+
+    public float getAbsValueSum(int hv, int cat) {
+        return mAbsValueSum[hv][cat];
+    }
+
+    public float getAbsColorValueSum(int hv, int cat, int i) {
+        return mAbsColorValueSum[hv][cat][i];
+    }
+
+    public void setBarWidth(float w) {
+        mBarWidth = w;
+    }
+
+    public int getPointsInCategory(int hv, int cat) {
+        return mPointsInCategory[hv][cat];
+    }
+
+    public int getPointsInColorCategory(int hv, int cat, int i) {
+        return mPointsInColorCategory[hv][cat][i];
+    }
+
+    public int getDoubleAxis() {
+        return mDoubleAxis;
+    }
+
+    public float getBarValue(int hv, int cat) {
+        return mBarValue[hv][cat];
+    }
+
+    public float getMean(int hv, int cat) {
+        return mMean[hv][cat];
+    }
+
+    public float getStdDev(int hv, int cat) {
+        return mStdDev[hv][cat];
+    }
+
+    public float getErrorMargin(int hv, int cat) {
+        return mErrorMargin[hv][cat];
     }
 
     private void calculateColors() {
@@ -90,12 +193,10 @@ public abstract class AbstractCategoryChart {
         mStdDev = new float[mHVCount][mCatCount];
         mErrorMargin = new float[mHVCount][mCatCount];
         VisualizationPoint[] point = visualization.getDataPoints();
-        int chartType = visualization.getChartType();
+        int chartType = visualization.getChartType().getType();
         for (VisualizationPoint vp:point) {
-            if (((chartType == JVisualization.cChartTypeBars || chartType == JVisualization.cChartTypePies)
-                    && visualization.isVisibleInBarsOrPies(vp))
-             || ((chartType == JVisualization.cChartTypeBoxPlot || chartType == JVisualization.cChartTypeWhiskerPlot || chartType == JVisualization.cChartTypeViolins)
-                    && visualization.isVisibleExcludeNaN(vp))) {
+            if ((ChartType.isBarOrPieChart(chartType) && visualization.isVisibleInBarsOrPies(vp))
+             || (ChartType.isDistributionPlot(chartType) && visualization.isVisibleExcludeNaN(vp))) {
                 int hv = vp.hvIndex;
                 int cat = visualization.getChartCategoryIndex(vp);
                 float d = visualization.getValue(vp.record, axis, column) - mMean[hv][cat];
@@ -123,7 +224,6 @@ public abstract class AbstractCategoryChart {
         return mAbsColorWidthSum != null;
     }
 
-    public abstract boolean isChartWithMarkers();
     public abstract boolean paintMarker(VisualizationPoint vp);
     public abstract void calculate();
 

@@ -28,6 +28,7 @@ import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import com.actelion.research.table.view.chart.ChartType;
 import com.actelion.research.util.SortedList;
 import info.clearthought.layout.TableLayout;
 
@@ -496,45 +497,43 @@ public class DETaskArrangeGraphNodes extends ConfigurableTask implements ActionL
 			mY = null;
 
 			try {
-				SwingUtilities.invokeAndWait(new Runnable() {
-					public void run() {
-						String title = "Graph View";
-						DEMainPane mainPane = mParentFrame.getMainFrame().getMainPane();
-						VisualizationPanel2D vpanel1 = mainPane.add2DView(title, null);
-						vpanel1.setAxisColumnName(0, mSourceTableModel.getColumnTitle(xColumn));
-						vpanel1.setAxisColumnName(1, mSourceTableModel.getColumnTitle(yColumn));
-						vpanel1.getVisualization().setMarkerSize(12f/(float)Math.sqrt(rowCount), false);
-						vpanel1.getVisualization().setScaleMode(JVisualization.cScaleModeHidden);
-						vpanel1.getVisualization().setGridMode(JVisualization.cGridModeHidden);
-						((JVisualization2D)vpanel1.getVisualization()).setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+				SwingUtilities.invokeAndWait(() -> {
+					String title = "Graph View";
+					DEMainPane mainPane = mParentFrame.getMainFrame().getMainPane();
+					VisualizationPanel2D vpanel1 = mainPane.add2DView(title, null);
+					vpanel1.setAxisColumnName(0, mSourceTableModel.getColumnTitle(xColumn));
+					vpanel1.setAxisColumnName(1, mSourceTableModel.getColumnTitle(yColumn));
+					vpanel1.getVisualization().setMarkerSize(12f/(float)Math.sqrt(rowCount), false);
+					vpanel1.getVisualization().setScaleMode(JVisualization.cScaleModeHidden);
+					vpanel1.getVisualization().setGridMode(JVisualization.cGridModeHidden);
+					((JVisualization2D)vpanel1.getVisualization()).setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 
-						int colorColumn = (strengthColumn != -1) ? strengthColumn : neighborCountColumn;
-						int colorListMode = VisualizationColor.cColorListModeHSBLong;
-						Color[] colorList = VisualizationColor.createColorWedge(Color.green, Color.blue, colorListMode, null);
-						vpanel1.getVisualization().getMarkerColor().setColor(colorColumn, colorList, colorListMode);
+					int colorColumn = (strengthColumn != -1) ? strengthColumn : neighborCountColumn;
+					int colorListMode = VisualizationColor.cColorListModeHSBLong;
+					Color[] colorList = VisualizationColor.createColorWedge(Color.green, Color.blue, colorListMode, null);
+					vpanel1.getVisualization().getMarkerColor().setColor(colorColumn, colorList, colorListMode);
 
-						if (rowCount > 10000)
-							vpanel1.getVisualization().setFastRendering(true);
-		
-						if (referencingColumn != -1) {
-							vpanel1.getVisualization().setConnectionColumns(referencingColumn, -1);
-							vpanel1.getVisualization().setConnectionLineWidth(Math.max(0.5f, 10f/(float)Math.sqrt(rowCount)), false);
-							}
+					if (rowCount > 10000)
+						vpanel1.getVisualization().setFastRendering(true);
 
-						// create a tree view panel
-						VisualizationPanel2D vpanel2 = mainPane.add2DView("Neighbor Tree", title+"\tright\t0.75");
-						((JVisualization2D)vpanel2.getVisualization()).setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
-
-						vpanel2.getVisualization().getMarkerColor().setColor(colorColumn, colorList, colorListMode);
-						if (strengthColumn != -1)
-							vpanel2.getVisualization().getMarkerColor().setColorRange(0.5f, 1f);
-						vpanel2.getVisualization().setAffectGlobalExclusion(false);
-						vpanel2.getVisualization().setFontSize(2.5f, JVisualization.cFontSizeModeRelative, false);
-						vpanel2.getVisualization().setConnectionColumns(referencingColumn, -1);
-						vpanel2.getVisualization().setConnectionLineWidth(2f, false);
-						vpanel2.getVisualization().setTreeViewMode(JVisualization.cTreeViewModeLeftRoot, 5, false, false, false);
+					if (referencingColumn != -1) {
+						vpanel1.getVisualization().setConnectionColumns(referencingColumn, -1);
+						vpanel1.getVisualization().setConnectionLineWidth(Math.max(0.5f, 10f/(float)Math.sqrt(rowCount)), false);
 						}
-					} );
+
+					// create a tree view panel
+					VisualizationPanel2D vpanel2 = mainPane.add2DView("Neighbor Tree", title+"\tright\t0.75");
+					((JVisualization2D)vpanel2.getVisualization()).setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
+
+					vpanel2.getVisualization().getMarkerColor().setColor(colorColumn, colorList, colorListMode);
+					if (strengthColumn != -1)
+						vpanel2.getVisualization().getMarkerColor().setColorRange(0.5f, 1f);
+					vpanel2.getVisualization().setAffectGlobalExclusion(false);
+					vpanel2.getVisualization().setFontSize(2.5f, JVisualization.cFontSizeModeRelative, false);
+					vpanel2.getVisualization().setConnectionColumns(referencingColumn, -1);
+					vpanel2.getVisualization().setConnectionLineWidth(2f, false);
+					vpanel2.getVisualization().setTreeViewMode(JVisualization.cTreeViewModeLeftRoot, 5, false, false, false);
+					});
 				}
 			catch (Exception e) {}
 			}

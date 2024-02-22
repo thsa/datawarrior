@@ -31,6 +31,7 @@ import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import com.actelion.research.table.view.chart.ChartType;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -471,7 +472,7 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
                     VisualizationPanel2D vpanel1 = mParentFrame.getMainFrame().getMainPane().add2DView("SOM", null);
                     vpanel1.setAxisColumnName(0, xColumn);
                     vpanel1.setAxisColumnName(1, yColumn);
-                    ((JVisualization2D)vpanel1.getVisualization()).setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+                    ((JVisualization2D)vpanel1.getVisualization()).setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
                     int colorListMode = VisualizationColor.cColorListModeHSBLong;
                     Color[] colorList = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode, null);
                     vpanel1.getVisualization().getMarkerColor().setColor(somFitColumn, colorList, colorListMode);

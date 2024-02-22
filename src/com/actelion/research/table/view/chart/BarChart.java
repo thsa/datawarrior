@@ -1,18 +1,29 @@
-package com.actelion.research.table.view;
+package com.actelion.research.table.view.chart;
 
+import com.actelion.research.table.view.JVisualization;
+import com.actelion.research.table.view.JVisualization2D;
+import com.actelion.research.table.view.VisualizationPoint;
+import com.actelion.research.table.view.VisualizationSplitter;
 import com.actelion.research.util.ColorHelper;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 
 public class BarChart extends AbstractBarOrPieChart {
+	private static final float cMaxBarReduction = 0.66f;
+
 	public BarChart(JVisualization visualization, int hvCount, int mode) {
 		super(visualization, hvCount, mode);
 	}
 
 	@Override
+	public float getScaleLinePosition(int axis) {
+		return axis == mDoubleAxis ? (mBarBase - mAxisMin) / (mAxisMax - mAxisMin) : super.getScaleLinePosition(axis);
+	}
+
+	@Override
 	public void paint(Graphics2D g, Rectangle baseBounds, Rectangle baseGraphRect) {
-		if (!mBarOrPieDataAvailable)
+		if (!isBarOrPieDataAvailable())
 			return;
 
 		float axisRange = mAxisMax - mAxisMin;
@@ -193,7 +204,7 @@ public class BarChart extends AbstractBarOrPieChart {
 		}
 
 		VisualizationPoint[] point = mVisualization.getDataPoints();
-		int chartColumn = mVisualization.getChartColumn();
+		int chartColumn = mVisualization.getChartType().getColumn();
 		int sizeColumn = mVisualization.getMarkerSizeColumn();
 
 		for (VisualizationPoint vp:point) {
@@ -287,6 +298,45 @@ public class BarChart extends AbstractBarOrPieChart {
 
 			if (labelComposite != null)
 				g.setComposite(original);
+		}
+	}
+
+	/**
+	 * If we need space for statistics labels, then reduce the area that we have for the bar.
+	 * If we show a scale reflecting the bar values, then we need to transform scale labels
+	 * accordingly.
+	 * @param baseRect
+	 */
+	@Override
+	public void adaptDoubleScalesForStatisticalLabels(final Rectangle baseRect) {
+		for (int axis=0; axis<2; axis++) {
+			if (axis == mDoubleAxis) {
+				float cellSize = (axis == 0 ? baseRect.width : baseRect.height) / (float)mVisualization.getCategoryVisCount(axis);
+				float spacing = cellSize * getBarChartEmptyLabelAreaSpacing();
+				float labelSize = calculateStatisticsLabelSize(axis == 0, spacing);
+				if (labelSize != 0f) {
+					float reduction = Math.min(cMaxBarReduction * cellSize, labelSize - spacing);
+					float appliedHeight = (cellSize - reduction);
+
+					// if the axis is not assigned to a category column, then we have a double value scale
+					if (mVisualization.getColumnIndex(axis) == JVisualization.cColumnUnassigned) {
+						float shift = isRightBarChart() ? reduction / cellSize : 0f;
+						((JVisualization2D)mVisualization).transformScaleLinePositions(axis, shift, appliedHeight / cellSize);
+					}
+					// if the bar axis shows category values, then we correct centered bars only: label must be at bar base
+					else if (isCenteredBarChart()) {
+						float lowFraction = mAxisMin / (mAxisMin - mAxisMax);
+						float shift = (lowFraction * appliedHeight / cellSize - lowFraction) / (float)mVisualization.getCategoryVisCount(axis);
+						((JVisualization2D)mVisualization).transformScaleLinePositions(axis, shift, 1f);
+					}
+
+					float originalRange = mAxisMax - mAxisMin;
+					if (!isRightBarChart())
+						mAxisMax = mAxisMin + originalRange * cellSize / appliedHeight;
+					else
+						mAxisMin = mAxisMax - originalRange * cellSize / appliedHeight;
+				}
+			}
 		}
 	}
 }

@@ -27,12 +27,12 @@ import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.table.view.VisualizationPanel3D;
-import info.clearthought.layout.TableLayout;
+import com.actelion.research.table.view.chart.ChartType;
 import com.tagbio.umap.Umap;
+import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -571,7 +571,7 @@ public class DETaskCreateUMAPVisualization extends ConfigurableTask {
 						VisualizationPanel2D vpanel1 = mainPane.add2DView("UMAP 2D", null);
 						vpanel1.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
 						vpanel1.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn + 1));
-						vpanel1.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+						vpanel1.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 	                    if (_colorColumn != -1)
 							vpanel1.getVisualization().getMarkerColor().setColor(_colorColumn, colorList, colorListMode);
 						}
@@ -580,7 +580,7 @@ public class DETaskCreateUMAPVisualization extends ConfigurableTask {
 	                    vpanel2.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
 	                    vpanel2.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn+1));
 	                    vpanel2.setAxisColumnName(2, mTableModel.getColumnTitle(firstNewColumn+2));
-	                    vpanel2.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+	                    vpanel2.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 						if (_colorColumn != -1)
 		                    vpanel2.getVisualization().getMarkerColor().setColor(_colorColumn, colorList, colorListMode);
 	                    }

@@ -4,10 +4,10 @@ import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.table.CompoundTableSOM;
-import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import com.actelion.research.table.view.chart.ChartType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -46,7 +46,7 @@ public class DETaskAnalyseSOMFile extends DETaskAbstractOpenFile {
                     VisualizationPanel2D vpanel1 = newFrame.getMainFrame().getMainPane().add2DView("SOM", null);
                     vpanel1.setAxisColumnName(0, CompoundTableSOM.SOM_ANALYSIS_COLUMN_NAME[0]);
                     vpanel1.setAxisColumnName(1, CompoundTableSOM.SOM_ANALYSIS_COLUMN_NAME[1]);
-                    ((JVisualization2D)vpanel1.getVisualization()).setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+                    ((JVisualization2D)vpanel1.getVisualization()).setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
                     int colorListMode = VisualizationColor.cColorListModeHSBLong;
                     Color[] colorList = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode, null);
                     vpanel1.getVisualization().getMarkerColor().setColor(2, colorList, colorListMode);

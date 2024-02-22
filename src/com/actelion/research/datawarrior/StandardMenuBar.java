@@ -127,7 +127,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	private TreeMap<Integer,int[]> mMacroItemCountMap;
 	private TreeMap<String,DENews> mNewsMap;
 
-	private JMenu jMenuFileNewFrom,jMenuFileOpenSpecial,jMenuFileOpenRecent,jMenuFileSaveSpecial,jMenuEditPasteSpecial,jMenuDataRemoveRows,
+	protected JMenu jMenuFileNewFrom,jMenuFileOpenSpecial,jMenuFileOpenRecent,jMenuFileSaveSpecial,jMenuEditPasteSpecial,jMenuDataRemoveRows,
 				  jMenuDataSelfOrganizingMap,jMenuDataSetRange,jMenuDataViewLogarithmic,jMenuChemAddMoleculeDescriptor,
 				  jMenuChemAddReactionDescriptor,jMenuListCreate,jMenuMacroExport,jMenuMacroCopy,jMenuMacroRun,jMenuHelpNews,jMenuHelpLaF,
 				  jMenuHelpDPIScaling,jMenuHelpUpdate,jMenuChemMachineLearning;

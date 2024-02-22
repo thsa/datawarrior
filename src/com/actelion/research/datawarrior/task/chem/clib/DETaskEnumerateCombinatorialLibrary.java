@@ -36,6 +36,7 @@ import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.VisualizationPanel;
+import com.actelion.research.table.view.chart.ChartType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -279,7 +280,7 @@ public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements
 					if (LookAndFeelHelper.isDarkLookAndFeel())
 						visualization.setViewBackground(new Color(32,0,64));
 					visualization.setMarkerSize(0.6f, false);
-					visualization.setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+					visualization.setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 					visualization.getMarkerColor().setColor(mTargetFrame.getTableModel().getChildColumn(0, DescriptorConstants.DESCRIPTOR_FFP512.shortName));
 				}
 			}

@@ -29,9 +29,9 @@ import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableListHandler;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.model.NumericalCompoundTableColumn;
-import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
+import com.actelion.research.table.view.chart.ChartType;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 
@@ -200,7 +200,7 @@ public class DETaskNewFileFromCorrelationCoefficients extends ConfigurableTask {
 		targetTableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, getProgressController());
 
 		VisualizationPanel2D view = mTargetFrame.getMainFrame().getMainPane().add2DView("Correlation View", "Table\tbottom");
-		view.getVisualization().setPreferredChartType(JVisualization.cChartTypeScatterPlot, -1, -1);
+		view.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
 		view.setAxisColumnName(0, targetTableModel.getColumnTitle(0));
 		view.setAxisColumnName(1, targetTableModel.getColumnTitle(1));
 		view.getVisualization().setMarkerSizeColumn(2, Float.NaN, Float.NaN);

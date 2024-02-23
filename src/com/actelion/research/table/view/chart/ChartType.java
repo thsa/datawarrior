@@ -95,7 +95,9 @@ public class ChartType {
 	 * @return plot specific margin or -1f to use the view's mScatterPlotMargin
 	 */
 	public float getMargin() {
-		return mType == cTypeViolins ? ViolinPlot.DEFAULT_MARGIN : -1f;
+		return mType == cTypeViolins
+			|| mType == cTypeRidgeLines ?
+				AbstractSmoothDistributionPlot.DEFAULT_MARGIN : -1f;
 	}
 
 	public AbstractChart createChartInfo(JVisualization visualization, int hvCount) {
@@ -124,9 +126,7 @@ public class ChartType {
 	}
 
 	public boolean supportsBackgroundColor() {
-		return mDimensions == 2
-			&& mType != cTypeBars
-			&& mType != cTypeBoxPlot;
+		return mDimensions == 2;
 	}
 
 	public boolean supportsTransparency() {

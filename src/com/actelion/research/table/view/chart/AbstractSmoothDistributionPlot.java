@@ -3,13 +3,12 @@ package com.actelion.research.table.view.chart;
 import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationPoint;
-import com.actelion.research.table.view.VisualizationSplitter;
 import com.actelion.research.util.ColorHelper;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
 
-public abstract class AbstractOutlineDistributionPlot extends AbstractDistributionPlot {
+public abstract class AbstractSmoothDistributionPlot extends AbstractDistributionPlot {
 	protected static final int FRACTIONS = 120;
 	protected static final int SCREEN_WIDTH_FRACTIONS = 7;
 	protected static final float VIOLIN_WIDTH_FACTOR = 0.95f;  // We devide space such that violins never overlap with the default marker size == 1
@@ -18,9 +17,7 @@ public abstract class AbstractOutlineDistributionPlot extends AbstractDistributi
 	protected int[][][][] mPointsInColorFraction;
 	protected float mMaxViolinWidth,mTranslatedMaxWidth;
 
-	protected int[] mSplittingOffset;
-
-	public AbstractOutlineDistributionPlot(JVisualization visualization, int hvCount, int doubleAxis) {
+	public AbstractSmoothDistributionPlot(JVisualization visualization, int hvCount, int doubleAxis) {
 		super(visualization, hvCount, doubleAxis);
 	}
 
@@ -127,19 +124,28 @@ public abstract class AbstractOutlineDistributionPlot extends AbstractDistributi
 	}
 
 	@Override
-	public void paint(Graphics2D g, Rectangle baseBounds, Rectangle baseGraphRect) {
+	public void calculateCoordinates(Rectangle baseGraphRect) {
 		if (mViolinWidth == null || mViolinWidth.length == 0 || mViolinWidth[0].length == 0)
 			return;
 
-		float[][] position = new float[mHVCount][mCatCount];
-		float[][] mean = new float[mHVCount][mCatCount];
-		float[][] median = new float[mHVCount][mCatCount];
-		float[][] lav = new float[mHVCount][mCatCount];
-		float[][] uav = new float[mHVCount][mCatCount];
-		float[][] q1 = new float[mHVCount][mCatCount];
-		float[][] q3 = new float[mHVCount][mCatCount];
+		// initialize arrays to be filled
+		mSCenter = new float[mHVCount][mCatCount];
+		mSMean = new float[mHVCount][mCatCount];
+		mSMedian = new float[mHVCount][mCatCount];
+		mSLAV = new float[mHVCount][mCatCount];
+		mSUAV = new float[mHVCount][mCatCount];
+		mSQ1 = new float[mHVCount][mCatCount];
+		mSQ3 = new float[mHVCount][mCatCount];
+		calculateScreenCoordinates(baseGraphRect);
 
-		calculateCoordinates(baseGraphRect, position, mean, median, lav, uav, q1, q3, null);
+		mTranslatedMaxWidth = VIOLIN_WIDTH_FACTOR * mBarWidth / mMaxViolinWidth * mVisualization.getMarkerSize();
+		calculatePseudoMarkerPositions(baseGraphRect);
+	}
+
+	@Override
+	public void paint(Graphics2D g, Rectangle baseBounds, Rectangle baseGraphRect) {
+		if (mViolinWidth == null || mViolinWidth.length == 0 || mViolinWidth[0].length == 0)
+			return;
 
 		Composite original = null;
 		float markerTransparency = ((JVisualization2D)mVisualization).getMarkerTransparency();
@@ -149,7 +155,7 @@ public abstract class AbstractOutlineDistributionPlot extends AbstractDistributi
 			g.setComposite(composite);
 		}
 
-		drawConnectionLines(g, position, mean, median);
+		drawConnectionLines(g);
 
 		float lineWidth = Math.min(((JVisualization2D)mVisualization).getFontHeightScaledToSplitView()/6f, mBarWidth/8f);
 		Stroke outlineStroke = new BasicStroke(0.5f*lineWidth, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
@@ -157,7 +163,6 @@ public abstract class AbstractOutlineDistributionPlot extends AbstractDistributi
 		Color strongGray = mVisualization.getContrastGrey(JVisualization.SCALE_STRONG);
 		Color mediumGray = mVisualization.getContrastGrey(JVisualization.SCALE_MEDIUM);
 		int fractions = mViolinWidth[0][0][0].length-1;
-		mTranslatedMaxWidth = VIOLIN_WIDTH_FACTOR * mBarWidth / mMaxViolinWidth * mVisualization.getMarkerSize();
 
 		Path2D.Float path = new Path2D.Float(Path2D.WIND_NON_ZERO, 2*mViolinWidth[0][0].length);
 
@@ -169,24 +174,12 @@ public abstract class AbstractOutlineDistributionPlot extends AbstractDistributi
 			for (int f=0; f<=fractions; f++)
 				fc[f] = baseGraphRect.x + f * (float)baseGraphRect.width / fractions;
 
-		// Calculate splitting offset in double axis direction (the other splitting axis offset is already in position[])
-		mSplittingOffset = new int[mHVCount];
-		for (int hv = 0; hv<mHVCount; hv++) {
-			if (mVisualization.isSplitView()) {
-				VisualizationSplitter splitter = mVisualization.getSplitter();
-				if (mDoubleAxis == 0)
-					mSplittingOffset[hv] = splitter.getHIndex(hv) * splitter.getGridWidth();
-				else
-					mSplittingOffset[hv] = splitter.getVIndex(hv) * splitter.getGridHeight();
-			}
-		}
-
 		for (int hv = 0; hv<mHVCount; hv++) {
 			for (int cat=mCatCount-1; cat>=0; cat--) {
 				for (int colorIndex = 0; colorIndex<mColor.length; colorIndex++) {
 					int startFraction = 0;
 					while (startFraction >= 0 && startFraction < fractions) {
-						startFraction = buildViolinPath(position, startFraction, hv, cat, colorIndex-1, colorIndex, fc, path);
+						startFraction = buildViolinPath(startFraction, hv, cat, colorIndex-1, colorIndex, fc, path);
 						if (startFraction != -1) {
 							g.setColor(mColor[colorIndex]);
 							g.fill(path);
@@ -197,7 +190,7 @@ public abstract class AbstractOutlineDistributionPlot extends AbstractDistributi
 				if (((JVisualization2D)mVisualization).isDrawBarPieBoxOutline()) {
 					int startFraction = 0;
 					while (startFraction >= 0 && startFraction < fractions) {
-						startFraction = buildViolinPath(position, startFraction, hv, cat, -1, mColor.length-1, fc, path);
+						startFraction = buildViolinPath(startFraction, hv, cat, -1, mColor.length-1, fc, path);
 
 						if (startFraction != -1) {
 							g.setColor(strongGray);
@@ -208,55 +201,19 @@ public abstract class AbstractOutlineDistributionPlot extends AbstractDistributi
 				}
 
 				if (mVisualization.getBoxplotMeanMode() != cBoxplotMeanModeNoIndicator) {
-					drawAVIndicators(g, lav[hv][cat], uav[hv][cat], position[hv][cat], lineWidth, mediumGray);
-					drawQIndicators(g, q1[hv][cat], q3[hv][cat], position[hv][cat], lineWidth, mediumGray);
+					drawAVIndicators(g, mSLAV[hv][cat], mSUAV[hv][cat], mSCenter[hv][cat], lineWidth, mediumGray);
+					drawQIndicators(g, mSQ1[hv][cat], mSQ3[hv][cat], mSCenter[hv][cat], lineWidth, mediumGray);
 				}
 
-				drawMeanIndicators(g, median[hv][cat], mean[hv][cat], position[hv][cat], lineWidth);
+				drawMeanIndicators(g, mSMedian[hv][cat], mSMean[hv][cat], mSCenter[hv][cat], lineWidth);
 
 				float offset = 1.5f * (mDoubleAxis == 1 ? baseGraphRect.height : baseGraphRect.width) * SCREEN_WIDTH_FRACTIONS / (float)fractions;
-				paintStatisticsInfo(g, baseGraphRect, position, lav, uav, offset);
+				paintStatisticsInfo(g, baseGraphRect, offset);
 			}
 		}
 
 		if (original != null)
 			g.setComposite(original);
-
-		// Assign screen positions, width, and height to individual violin contributing visualization points
-		float axisVisMin = mVisualization.getVisibleMin(mDoubleAxis);
-		float axisVisMax = mVisualization.getVisibleMax(mDoubleAxis);
-		float axisRange = axisVisMax - axisVisMin;
-		int[][][][] count = new int[mHVCount][mCatCount][mColor.length][fractions+1];
-		for (VisualizationPoint vp:mVisualization.getDataPoints()) {
-			if (vp.chartGroupIndex == 1) {  // visible and not NaN
-				float v = mVisualization.getAxisValue(vp.record, mDoubleAxis);
-				if (!Float.isNaN(v)) {
-					int hv = vp.hvIndex;
-					int cat = mVisualization.getChartCategoryIndex(vp);
-					int colorIndex = mVisualization.getColorIndex(vp, mBaseColorCount, mFocusFlagNo);
-					int fraction = Math.min(fractions-1, (int)(fractions * (v-axisVisMin) / (axisVisMax-axisVisMin)));
-					float dist = (mViolinWidth[hv][cat][colorIndex][fraction] - (colorIndex == 0 ? 0f : mViolinWidth[hv][cat][colorIndex-1][fraction]))
-							/ Math.max(1, mPointsInColorFraction[hv][cat][colorIndex][fraction]);   // should never be 0, though!
-					float markerSize = 2f * mTranslatedMaxWidth * dist;
-					float screenPos = translate(hv, cat, colorIndex-1, fraction, position)
-							+ addDirection((0.5f + count[hv][cat][colorIndex][fraction]) * markerSize);
-
-					if (mDoubleAxis == 1) {
-						vp.screenX = screenPos;
-						vp.widthOrAngle1 = markerSize;
-						vp.screenY = mSplittingOffset[hv] + baseGraphRect.y + baseGraphRect.height + (axisVisMin-v)*baseGraphRect.height / axisRange;
-						vp.heightOrAngle2 = SCREEN_WIDTH_FRACTIONS * baseGraphRect.height / (float)fractions;
-					}
-					else {
-						vp.screenX = mSplittingOffset[hv] + baseGraphRect.x + (v-axisVisMin)*baseGraphRect.width / axisRange;
-						vp.widthOrAngle1 = SCREEN_WIDTH_FRACTIONS * baseGraphRect.width / (float)fractions;
-						vp.screenY = screenPos;
-						vp.heightOrAngle2 = markerSize;
-					}
-					count[hv][cat][colorIndex][fraction]++;
-				}
-			}
-		}
 
 		if (mVisualization.showAnyLabels()) {
 			JVisualization2D.LabelHelper labelHelper = ((JVisualization2D)mVisualization).createLabelHelper(baseBounds, baseGraphRect);
@@ -293,12 +250,50 @@ public abstract class AbstractOutlineDistributionPlot extends AbstractDistributi
 		}
 	}
 
+	private void calculatePseudoMarkerPositions(Rectangle baseGraphRect) {
+		// Assign screen positions, width, and height to individual violin contributing visualization points
+		int fractions = mViolinWidth[0][0][0].length-1;
+		float axisVisMin = mVisualization.getVisibleMin(mDoubleAxis);
+		float axisVisMax = mVisualization.getVisibleMax(mDoubleAxis);
+		float axisRange = axisVisMax - axisVisMin;
+		int[][][][] count = new int[mHVCount][mCatCount][mColor.length][fractions+1];
+		for (VisualizationPoint vp:mVisualization.getDataPoints()) {
+			if (vp.chartGroupIndex == 1) {  // visible and not NaN
+				float v = mVisualization.getAxisValue(vp.record, mDoubleAxis);
+				if (!Float.isNaN(v)) {
+					int hv = vp.hvIndex;
+					int cat = mVisualization.getChartCategoryIndex(vp);
+					int colorIndex = mVisualization.getColorIndex(vp, mBaseColorCount, mFocusFlagNo);
+					int fraction = Math.min(fractions-1, (int)(fractions * (v-axisVisMin) / (axisVisMax-axisVisMin)));
+					float dist = (mViolinWidth[hv][cat][colorIndex][fraction] - (colorIndex == 0 ? 0f : mViolinWidth[hv][cat][colorIndex-1][fraction]))
+							/ Math.max(1, mPointsInColorFraction[hv][cat][colorIndex][fraction]);   // should never be 0, though!
+					float markerSize = 2f * mTranslatedMaxWidth * dist;
+					float screenPos = translate(hv, cat, colorIndex-1, fraction)
+							+ addDirection((0.5f + count[hv][cat][colorIndex][fraction]) * markerSize);
+
+					if (mDoubleAxis == 1) {
+						vp.screenX = screenPos;
+						vp.widthOrAngle1 = markerSize;
+						vp.screenY = mHVOffset[1][hv] + baseGraphRect.y + baseGraphRect.height + (axisVisMin-v)*baseGraphRect.height / axisRange;
+						vp.heightOrAngle2 = SCREEN_WIDTH_FRACTIONS * baseGraphRect.height / (float)fractions;
+					}
+					else {
+						vp.screenX = mHVOffset[0][hv] + baseGraphRect.x + (v-axisVisMin)*baseGraphRect.width / axisRange;
+						vp.widthOrAngle1 = SCREEN_WIDTH_FRACTIONS * baseGraphRect.width / (float)fractions;
+						vp.screenY = screenPos;
+						vp.heightOrAngle2 = markerSize;
+					}
+					count[hv][cat][colorIndex][fraction]++;
+				}
+			}
+		}
+	}
+
 	/**
 	 * Starting from fraction f1, build a path of the next violin fragment between the given color indexes.
 	 * If at the given fraction the violin width is 0.0, then increase f1 until populated width is found.
 	 * Increases fractions and adds them to the violin path until either width gets 0.0 again or f1 reaches
 	 * fc.length.
-	 * @param position
 	 * @param f1
 	 * @param hv
 	 * @param cat
@@ -308,7 +303,7 @@ public abstract class AbstractOutlineDistributionPlot extends AbstractDistributi
 	 * @param path
 	 * @return -1 if no path was built
 	 */
-	private int buildViolinPath(float[][] position, int f1, int hv, int cat, int colorIndex1, int colorIndex2, float[] fc, Path2D.Float path) {
+	private int buildViolinPath(int f1, int hv, int cat, int colorIndex1, int colorIndex2, float[] fc, Path2D.Float path) {
 		int fractions = fc.length-1;
 		path.reset();
 
@@ -322,24 +317,24 @@ public abstract class AbstractOutlineDistributionPlot extends AbstractDistributi
 		// Lowest point of violin. May require a second symmetrical point
 		// if f1==0 and mViolinWidth[hv][cat][f1] != 0.
 		if (mDoubleAxis == 1)
-			path.moveTo(translate(hv, cat, colorIndex1, f1, position), mSplittingOffset[hv] + fc[f1]);
+			path.moveTo(translate(hv, cat, colorIndex1, f1), mHVOffset[mDoubleAxis][hv] + fc[f1]);
 		else
-			path.moveTo(mSplittingOffset[hv] + fc[f1], translate(hv, cat, colorIndex1, f1, position));
+			path.moveTo(mHVOffset[mDoubleAxis][hv] + fc[f1], translate(hv, cat, colorIndex1, f1));
 
 		int f2 = f1+1;
 		while (f2 < fractions && !violinBetweenColorsIsEmpty(hv, cat, colorIndex1, colorIndex2, f2)) {
-			addToViolinPath(mSplittingOffset[hv] + fc[f2], translate(hv, cat, colorIndex1, f2, position), path);
+			addToViolinPath(mHVOffset[mDoubleAxis][hv] + fc[f2], translate(hv, cat, colorIndex1, f2), path);
 			f2++;
 		}
-		addToViolinPath(mSplittingOffset[hv] + fc[f2], translate(hv, cat, colorIndex1, f2, position), path);
+		addToViolinPath(mHVOffset[mDoubleAxis][hv] + fc[f2], translate(hv, cat, colorIndex1, f2), path);
 		if (!violinBetweenColorsIsEmpty(hv, cat, colorIndex1, colorIndex2, f2))
-			addToViolinPath(mSplittingOffset[hv] + fc[f2], translate(hv, cat, colorIndex2, f2, position), path);
+			addToViolinPath(mHVOffset[mDoubleAxis][hv] + fc[f2], translate(hv, cat, colorIndex2, f2), path);
 
 		for (int f=f2-1; f>f1; f--)
-			addToViolinPath(mSplittingOffset[hv] + fc[f], translate(hv, cat, colorIndex2, f, position), path);
+			addToViolinPath(mHVOffset[mDoubleAxis][hv] + fc[f], translate(hv, cat, colorIndex2, f), path);
 
 		if (!violinBetweenColorsIsEmpty(hv, cat, colorIndex1, colorIndex2, f1))
-			addToViolinPath(mSplittingOffset[hv] + fc[f1], translate(hv, cat, colorIndex2, f1, position), path);
+			addToViolinPath(mHVOffset[mDoubleAxis][hv] + fc[f1], translate(hv, cat, colorIndex2, f1), path);
 
 		path.closePath();
 
@@ -357,7 +352,7 @@ public abstract class AbstractOutlineDistributionPlot extends AbstractDistributi
 		return screenDelta;
 	}
 
-	protected abstract float translate(int hv, int cat, int colorIndex, int fraction, float[][] position);
+	protected abstract float translate(int hv, int cat, int colorIndex, int fraction);
 
 	protected abstract void drawQIndicators(Graphics2D g, float q1, float q3, float bar, float lineWidth, Color color);
 	protected abstract void drawAVIndicators(Graphics2D g, float lav, float uav, float bar, float lineWidth, Color color);

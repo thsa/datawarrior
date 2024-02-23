@@ -6,7 +6,7 @@ import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 
-public class ViolinPlot extends AbstractOutlineDistributionPlot {
+public class ViolinPlot extends AbstractSmoothDistributionPlot {
 	private BasicStroke mFatStroke,mLineStroke,mThinLineStroke;
 
 	public ViolinPlot(JVisualization visualization, int hvCount, int doubleAxis) {
@@ -14,8 +14,8 @@ public class ViolinPlot extends AbstractOutlineDistributionPlot {
 	}
 
 	@Override
-	protected float translate(int hv, int cat, int colorIndex, int fraction, float[][] position) {
-		float leftEdge = position[hv][cat] - mTranslatedMaxWidth * mViolinWidth[hv][cat][mColor.length-1][fraction];
+	protected float translate(int hv, int cat, int colorIndex, int fraction) {
+		float leftEdge = mSCenter[hv][cat] - mTranslatedMaxWidth * mViolinWidth[hv][cat][mColor.length-1][fraction];
 		return colorIndex == -1 ? leftEdge : leftEdge + 2f * mTranslatedMaxWidth * mViolinWidth[hv][cat][colorIndex][fraction];
 	}
 

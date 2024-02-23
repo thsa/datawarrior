@@ -225,7 +225,23 @@ public abstract class AbstractChart {
     }
 
     public abstract boolean paintMarker(VisualizationPoint vp);
+
+    /**
+     * Based on axis column assignments and on hvIndices of VisualizationPoints
+     * this method assigns all visible VisualizationPoints to bars/pies/boxes/violins/ridgelines/etc.
+     * and to color categories within these objects. It also calculates relative object sizes, positioning
+     * statistics and whatever is needed to later scale and paint the objects once grapg bounds are given.
+     */
     public abstract void calculate();
+
+    /**
+     * Based on the information created with calculate() this method calculates all screen coordinates
+     * for all bars/boxes/violins/etc. and also for all individual rows, which contributed to those objects.
+     * Individual rows should be assigned to reasonable locations on top of those objects, which are used for
+     * interactive row highlighting and also for calculating color backgrounds, if shown.
+     * @param baseGraphRect
+     */
+    public abstract void calculateCoordinates(Rectangle baseGraphRect);
 
     public abstract void paint(Graphics2D g, Rectangle baseBounds, Rectangle baseGraphRect);
 

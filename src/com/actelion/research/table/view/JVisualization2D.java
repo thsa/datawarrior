@@ -518,6 +518,9 @@ public class JVisualization2D extends JVisualization {
 		 && mChartType.isBarOrPieChart())
 			((AbstractBarOrPieChart)mChartInfo).adaptDoubleScalesForStatisticalLabels(baseGraphRect);
 
+		if (mChartInfo != null)
+			mChartInfo.calculateCoordinates(baseGraphRect);
+
 		if (mOptimizeLabelPositions
 		 && !mChartType.isBarOrPieChart()) {
 			mLabelHelper = new LabelHelper(baseBounds, baseGraphRect);
@@ -4213,9 +4216,9 @@ public class JVisualization2D extends JVisualization {
 			if (considerAllRecords
 			 || (considerVisibleRecords && isVisibleExcludeNaN(vp))
 			 || (!considerVisibleRecords && vp.record.isFlagSet(listFlagNo)))	{
-				float valueX;
-				float valueY;
-				if (mTreeNodeList != null) {
+				float valueX = vp.screenX;
+				float valueY = vp.screenY;
+/*				if (mTreeNodeList != null) {
 					valueX = vp.screenX;
 					valueY = vp.screenY;
 					}
@@ -4223,11 +4226,18 @@ public class JVisualization2D extends JVisualization {
 					valueX = (mAxisIndex[0] == cColumnUnassigned) ? (dataLowX + dataHighX) / 2 : getAxisValue(vp.record, 0);
 					valueY = (mAxisIndex[1] == cColumnUnassigned) ? (dataLowY + dataHighY) / 2 : getAxisValue(vp.record, 1);
 					}
-
+*/
 				if (Float.isNaN(valueX) || Float.isNaN(valueY))
 					continue;
 
-				// 0-based coordinates of VP in graphRect (in case of zoomed-in state these may be outside graphRect)
+				if (mSplitter != null) {
+					valueX -= mSplitter.getHIndex(vp.hvIndex) * mSplitter.getGridWidth();
+					valueY -= mSplitter.getVIndex(vp.hvIndex) * mSplitter.getGridHeight();
+					}
+				int grx = Math.round(valueX - graphBounds.x);
+				int gry = Math.round(graphBounds.y + graphBounds.height - valueY);
+
+/*				// 0-based coordinates of VP in graphRect (in case of zoomed-in state these may be outside graphRect)
 				int grx = Math.round(graphBounds.width * (valueX - dataLowX) / visDataRangeX);
 				int gry = Math.round(graphBounds.height * (valueY - dataLowY) / visDataRangeY);
 
@@ -4237,7 +4247,7 @@ public class JVisualization2D extends JVisualization {
 						grx += csShift;
 					else
 						gry -= csShift;
-				}
+				}   */
 
 				// 0-based coordinates of closest top-left background grid point of VP.
 				// If bgx (and bgy) are in the range between 0->bgWidth, then the VP has influence on the
@@ -5153,6 +5163,7 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 
 		if (!mSuppressLegend
 		 && mBackgroundColor.getColorColumn() != cColumnUnassigned
+		 && mBackgroundColor.getColorColumn() != mMarkerColor.getColorColumn()
 		 && mChartType.supportsBackgroundColor()) {
 			VisualizationLegend backgroundLegend = new VisualizationLegend(this, mTableModel,
 													mBackgroundColor.getColorColumn(),

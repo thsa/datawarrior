@@ -18,21 +18,25 @@ public class WhiskerPlot extends AbstractDistributionPlot {
 
 	@Override
 	public void calculate() {
-		super.calculateStatistics();
+		calculateStatistics();
+	}
+
+	@Override
+	public void calculateCoordinates(Rectangle baseGraphRect) {
+		// initialize arrays to be filled
+		mSCenter = new float[mHVCount][mCatCount];
+		mSMean = new float[mHVCount][mCatCount];
+		mSMedian = new float[mHVCount][mCatCount];
+		mSLAV = new float[mHVCount][mCatCount];
+		mSUAV = new float[mHVCount][mCatCount];
+		mSQ1 = new float[mHVCount][mCatCount];
+		mSQ3 = new float[mHVCount][mCatCount];
+		calculateScreenCoordinates(baseGraphRect);
 	}
 
 	@Override
 	public void paint(Graphics2D g, Rectangle baseBounds, Rectangle baseGraphRect) {
-		float[][] position = new float[mHVCount][mCatCount];
-		float[][] mean = new float[mHVCount][mCatCount];
-		float[][] median = new float[mHVCount][mCatCount];
-		float[][] lav = new float[mHVCount][mCatCount];
-		float[][] uav = new float[mHVCount][mCatCount];
-		float[][] q1 = new float[mHVCount][mCatCount];
-		float[][] q3 = new float[mHVCount][mCatCount];
-
-		calculateCoordinates(baseGraphRect, position, mean, median, lav, uav, q1, q3, null);
-		drawConnectionLines(g, position, mean, median);
+		drawConnectionLines(g);
 
 		float lineLengthAV = mBarWidth / 3;
 		float lineWidth = Math.min(((JVisualization2D)mVisualization).getFontHeightScaledToSplitView()/8f, mBarWidth /8f);
@@ -67,47 +71,47 @@ public class WhiskerPlot extends AbstractDistributionPlot {
 
 					if (mDoubleAxis == 1) {
 						g.setStroke(lineStroke);
-						if (lav[hv][cat] > q1[hv][cat])
-							g.drawLine(Math.round(position[hv][cat]-lineLengthAV),
-									Math.round(lav[hv][cat]),
-									Math.round(position[hv][cat]+lineLengthAV),
-									Math.round(lav[hv][cat]));
-						if (uav[hv][cat] < q3[hv][cat])
-							g.drawLine(Math.round(position[hv][cat]-lineLengthAV),
-									Math.round(uav[hv][cat]),
-									Math.round(position[hv][cat]+lineLengthAV),
-									Math.round(uav[hv][cat]));
+						if (mSLAV[hv][cat] > mSQ1[hv][cat])
+							g.drawLine(Math.round(mSCenter[hv][cat]-lineLengthAV),
+									Math.round(mSLAV[hv][cat]),
+									Math.round(mSCenter[hv][cat]+lineLengthAV),
+									Math.round(mSLAV[hv][cat]));
+						if (mSUAV[hv][cat] < mSQ3[hv][cat])
+							g.drawLine(Math.round(mSCenter[hv][cat]-lineLengthAV),
+									Math.round(mSUAV[hv][cat]),
+									Math.round(mSCenter[hv][cat]+lineLengthAV),
+									Math.round(mSUAV[hv][cat]));
 
 						g.setStroke(dashedStroke);
-						g.drawLine(Math.round(position[hv][cat]),
-								Math.round(uav[hv][cat]),
-								Math.round(position[hv][cat]),
-								Math.round(lav[hv][cat]));
+						g.drawLine(Math.round(mSCenter[hv][cat]),
+								Math.round(mSUAV[hv][cat]),
+								Math.round(mSCenter[hv][cat]),
+								Math.round(mSLAV[hv][cat]));
 					}
 					else {
 						g.setStroke(lineStroke);
-						g.drawLine(Math.round(lav[hv][cat]),
-								Math.round(position[hv][cat]-lineLengthAV),
-								Math.round(lav[hv][cat]),
-								Math.round(position[hv][cat]+lineLengthAV));
-						g.drawLine(Math.round(uav[hv][cat]),
-								Math.round(position[hv][cat]-lineLengthAV),
-								Math.round(uav[hv][cat]),
-								Math.round(position[hv][cat]+lineLengthAV));
+						g.drawLine(Math.round(mSLAV[hv][cat]),
+								Math.round(mSCenter[hv][cat]-lineLengthAV),
+								Math.round(mSLAV[hv][cat]),
+								Math.round(mSCenter[hv][cat]+lineLengthAV));
+						g.drawLine(Math.round(mSUAV[hv][cat]),
+								Math.round(mSCenter[hv][cat]-lineLengthAV),
+								Math.round(mSUAV[hv][cat]),
+								Math.round(mSCenter[hv][cat]+lineLengthAV));
 
 						g.setStroke(dashedStroke);
-						g.drawLine(Math.round(lav[hv][cat]),
-								Math.round(position[hv][cat]),
-								Math.round(uav[hv][cat]),
-								Math.round(position[hv][cat]));
+						g.drawLine(Math.round(mSLAV[hv][cat]),
+								Math.round(mSCenter[hv][cat]),
+								Math.round(mSUAV[hv][cat]),
+								Math.round(mSCenter[hv][cat]));
 					}
 
 					g.setStroke(lineStroke);
-					drawMeanIndicators(g, median[hv][cat], mean[hv][cat], position[hv][cat], 2*lineWidth);
+					drawMeanIndicators(g, mSMedian[hv][cat], mSMean[hv][cat], mSCenter[hv][cat], 2*lineWidth);
 				}
 			}
 		}
 
-		paintStatisticsInfo(g, baseGraphRect, position, lav, uav, 0f);
+		paintStatisticsInfo(g, baseGraphRect, 0f);
 	}
 }

@@ -6,7 +6,7 @@ import java.awt.*;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 
-public class RidgeLinePlot extends AbstractOutlineDistributionPlot {
+public class RidgeLinePlot extends AbstractSmoothDistributionPlot {
 	private static final float cBasePosition = 0.1f;
 
 	private BasicStroke mFatStroke,mDoubleStroke,mNormalStroke;
@@ -26,8 +26,8 @@ public class RidgeLinePlot extends AbstractOutlineDistributionPlot {
 	}
 
 	@Override
-	protected float translate(int hv, int cat, int colorIndex, int fraction, float[][] position) {
-		float base = position[hv][cat] + baseLineShift();
+	protected float translate(int hv, int cat, int colorIndex, int fraction) {
+		float base = mSCenter[hv][cat] + baseLineShift();
 		if (mDoubleAxis == 0)
 			return colorIndex == -1 ? base : base - 2f * mTranslatedMaxWidth * mViolinWidth[hv][cat][colorIndex][fraction];
 		else
@@ -145,22 +145,22 @@ public class RidgeLinePlot extends AbstractOutlineDistributionPlot {
 	}
 
 	@Override
-	protected int statisticsX(float position, float lav, float uav, int textLineWidth, float textWidth, float gap, float graphX1, float graphX2, float offset) {
+	protected int statisticsX(int hv, int cat, int textLineWidth, float textWidth, float gap, float graphX1, float graphX2, float offset) {
 		if (mDoubleAxis == 1) {
-			return Math.round(position+baseLineShift());
+			return Math.round(mSCenter[hv][cat] + baseLineShift());
 		}
 		else {
-			return super.statisticsX(position, lav, uav, textLineWidth, textWidth, gap, graphX1, graphX2, offset);
+			return super.statisticsX(hv, cat, textLineWidth, textWidth, gap, graphX1, graphX2, offset);
 		}
 	}
 
 	@Override
-	protected int statisticsY(float position, float lav, float uav, int line, int lineCount, int scaledFontHeight, float textHeight, float gap, float graphY1, float graphY2, float offset) {
+	protected int statisticsY(int hv, int cat, int line, int lineCount, int scaledFontHeight, float textHeight, float gap, float graphY1, float graphY2, float offset) {
 		if (mDoubleAxis == 1) {
-			return super.statisticsY(position, lav, uav, line, lineCount, scaledFontHeight, textHeight, gap, graphY1, graphY2, offset);
+			return super.statisticsY(hv, cat, line, lineCount, scaledFontHeight, textHeight, gap, graphY1, graphY2, offset);
 		}
 		else {
-			return Math.round(position+baseLineShift()+(0.9f-lineCount)*scaledFontHeight+line*scaledFontHeight);
+			return Math.round(mSCenter[hv][cat] + baseLineShift()+(0.9f-lineCount)*scaledFontHeight+line*scaledFontHeight);
 		}
 	}
 }

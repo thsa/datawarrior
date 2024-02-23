@@ -18,8 +18,20 @@ public class BoxPlot extends AbstractDistributionPlot {
 		}
 
 	@Override
+	public void calculateCoordinates(Rectangle baseGraphRect) {
+		// initialize arrays to be filled
+		mSCenter = new float[mHVCount][mCatCount];
+		mSMean = new float[mHVCount][mCatCount];
+		mSMedian = new float[mHVCount][mCatCount];
+		mSLAV = new float[mHVCount][mCatCount];
+		mSUAV = new float[mHVCount][mCatCount];
+		mSBarColorEdge = new float[mHVCount][mCatCount][mColor.length+1];
+		calculateScreenCoordinates(baseGraphRect);
+	}
+
+	@Override
 	public void calculate() {
-		super.calculateStatistics();
+		calculateStatistics();
 
 		VisualizationPoint[] point = mVisualization.getDataPoints();
 
@@ -74,15 +86,7 @@ public class BoxPlot extends AbstractDistributionPlot {
 
 	@Override
 	public void paint(Graphics2D g, Rectangle baseBounds, Rectangle baseGraphRect) {
-		float[][] position = new float[mHVCount][mCatCount];
-		float[][] mean = new float[mHVCount][mCatCount];
-		float[][] median = new float[mHVCount][mCatCount];
-		float[][] lav = new float[mHVCount][mCatCount];
-		float[][] uav = new float[mHVCount][mCatCount];
-		float[][][] barColorEdge = new float[mHVCount][mCatCount][mColor.length+1];
-
-		calculateCoordinates(baseGraphRect, position, mean, median, lav, uav, null, null, barColorEdge);
-		drawConnectionLines(g, position, mean, median);
+		drawConnectionLines(g);
 
 		Composite original = null;
 		Composite composite = null;
@@ -112,14 +116,14 @@ public class BoxPlot extends AbstractDistributionPlot {
 						if (mPointsInColorCategory[hv][cat][k] > 0) {
 							g.setColor(mColor[k]);
 							if (mDoubleAxis == 1)
-								g.fillRect(Math.round(position[hv][cat]- mBarWidth /2),
-										Math.round(barColorEdge[hv][cat][k+1]),
+								g.fillRect(Math.round(mSCenter[hv][cat]- mBarWidth /2),
+										Math.round(mSBarColorEdge[hv][cat][k+1]),
 										Math.round(mBarWidth),
-										Math.round(barColorEdge[hv][cat][k])-Math.round(barColorEdge[hv][cat][k+1]));
+										Math.round(mSBarColorEdge[hv][cat][k])-Math.round(mSBarColorEdge[hv][cat][k+1]));
 							else
-								g.fillRect(Math.round(barColorEdge[hv][cat][k]),
-										Math.round(position[hv][cat]- mBarWidth /2),
-										Math.round(barColorEdge[hv][cat][k+1]-Math.round(barColorEdge[hv][cat][k])),
+								g.fillRect(Math.round(mSBarColorEdge[hv][cat][k]),
+										Math.round(mSCenter[hv][cat]- mBarWidth /2),
+										Math.round(mSBarColorEdge[hv][cat][k+1]-Math.round(mSBarColorEdge[hv][cat][k])),
 										Math.round(mBarWidth));
 						}
 					}
@@ -131,47 +135,47 @@ public class BoxPlot extends AbstractDistributionPlot {
 
 					if (((JVisualization2D)mVisualization).isDrawBarPieBoxOutline()) {
 						if (mDoubleAxis == 1)
-							g.drawRect(Math.round(position[hv][cat]- mBarWidth /2),
-									Math.round(barColorEdge[hv][cat][mColor.length]),
+							g.drawRect(Math.round(mSCenter[hv][cat]- mBarWidth /2),
+									Math.round(mSBarColorEdge[hv][cat][mColor.length]),
 									Math.round(mBarWidth),
-									Math.round(barColorEdge[hv][cat][0])-Math.round(barColorEdge[hv][cat][mColor.length]));
+									Math.round(mSBarColorEdge[hv][cat][0])-Math.round(mSBarColorEdge[hv][cat][mColor.length]));
 						else
-							g.drawRect(Math.round(barColorEdge[hv][cat][0]),
-									Math.round(position[hv][cat]- mBarWidth /2),
-									Math.round(barColorEdge[hv][cat][mColor.length])-Math.round(barColorEdge[hv][cat][0]),
+							g.drawRect(Math.round(mSBarColorEdge[hv][cat][0]),
+									Math.round(mSCenter[hv][cat]- mBarWidth /2),
+									Math.round(mSBarColorEdge[hv][cat][mColor.length])-Math.round(mSBarColorEdge[hv][cat][0]),
 									Math.round(mBarWidth));
 					}
 
-					if (lav[hv][cat] < barColorEdge[hv][cat][0] ^ mDoubleAxis == 1)
-						drawLine(g, Math.round(position[hv][cat]-lineLengthAV),
-								Math.round(lav[hv][cat]),
-								Math.round(position[hv][cat]+lineLengthAV),
-								Math.round(lav[hv][cat]));
-					if (uav[hv][cat] > barColorEdge[hv][cat][mColor.length] ^ mDoubleAxis == 1)
-						drawLine(g, Math.round(position[hv][cat]-lineLengthAV),
-								Math.round(uav[hv][cat]),
-								Math.round(position[hv][cat]+lineLengthAV),
-								Math.round(uav[hv][cat]));
+					if (mSLAV[hv][cat] < mSBarColorEdge[hv][cat][0] ^ mDoubleAxis == 1)
+						drawLine(g, Math.round(mSCenter[hv][cat]-lineLengthAV),
+								Math.round(mSLAV[hv][cat]),
+								Math.round(mSCenter[hv][cat]+lineLengthAV),
+								Math.round(mSLAV[hv][cat]));
+					if (mSUAV[hv][cat] > mSBarColorEdge[hv][cat][mColor.length] ^ mDoubleAxis == 1)
+						drawLine(g, Math.round(mSCenter[hv][cat]-lineLengthAV),
+								Math.round(mSUAV[hv][cat]),
+								Math.round(mSCenter[hv][cat]+lineLengthAV),
+								Math.round(mSUAV[hv][cat]));
 
 					g.setStroke(dashedStroke);
-					if (lav[hv][cat] < barColorEdge[hv][cat][0] ^ mDoubleAxis == 1)
-						drawLine(g, Math.round(position[hv][cat]),
-								Math.round(lav[hv][cat]),
-								Math.round(position[hv][cat]),
-								Math.round(barColorEdge[hv][cat][0]));
-					if (uav[hv][cat] > barColorEdge[hv][cat][mColor.length] ^ mDoubleAxis == 1)
-						drawLine(g, Math.round(position[hv][cat]),
-								Math.round(uav[hv][cat]),
-								Math.round(position[hv][cat]),
-								Math.round(barColorEdge[hv][cat][mColor.length]));
+					if (mSLAV[hv][cat] < mSBarColorEdge[hv][cat][0] ^ mDoubleAxis == 1)
+						drawLine(g, Math.round(mSCenter[hv][cat]),
+								Math.round(mSLAV[hv][cat]),
+								Math.round(mSCenter[hv][cat]),
+								Math.round(mSBarColorEdge[hv][cat][0]));
+					if (mSUAV[hv][cat] > mSBarColorEdge[hv][cat][mColor.length] ^ mDoubleAxis == 1)
+						drawLine(g, Math.round(mSCenter[hv][cat]),
+								Math.round(mSUAV[hv][cat]),
+								Math.round(mSCenter[hv][cat]),
+								Math.round(mSBarColorEdge[hv][cat][mColor.length]));
 
 					g.setStroke(lineStroke);
-					drawMeanIndicators(g, median[hv][cat], mean[hv][cat], position[hv][cat], 2*lineWidth);
+					drawMeanIndicators(g, mSMedian[hv][cat], mSMean[hv][cat], mSCenter[hv][cat], 2*lineWidth);
 				}
 			}
 		}
 
-		paintStatisticsInfo(g, baseGraphRect, position, lav, uav, 0f);
+		paintStatisticsInfo(g, baseGraphRect, 0f);
 
 		// in case of box-plot calculate screen positions of all non-outliers
 		for (VisualizationPoint vp:mVisualization.getDataPoints()) {
@@ -180,16 +184,16 @@ public class BoxPlot extends AbstractDistributionPlot {
 					int hv = vp.hvIndex;
 					int cat = mVisualization.getChartCategoryIndex(vp);
 					if (mDoubleAxis == 1) {
-						vp.screenX = position[hv][cat];
-						vp.screenY = barColorEdge[hv][cat][0]- mInnerDistance[hv][cat]*(1+vp.chartGroupIndex)
+						vp.screenX = mSCenter[hv][cat];
+						vp.screenY = mSBarColorEdge[hv][cat][0]- mInnerDistance[hv][cat]*(1+vp.chartGroupIndex)
 								+ mInnerDistance[hv][cat]/2;
 						vp.widthOrAngle1 = mBarWidth;
 						vp.heightOrAngle2 = mInnerDistance[hv][cat];
 					}
 					else {
-						vp.screenX = barColorEdge[hv][cat][0]+ mInnerDistance[hv][cat]*vp.chartGroupIndex
+						vp.screenX = mSBarColorEdge[hv][cat][0]+ mInnerDistance[hv][cat]*vp.chartGroupIndex
 								+ mInnerDistance[hv][cat]/2;
-						vp.screenY = position[hv][cat]- mBarWidth /2+ mBarWidth /2;
+						vp.screenY = mSCenter[hv][cat]- mBarWidth /2+ mBarWidth /2;
 						vp.widthOrAngle1 = mInnerDistance[hv][cat];
 						vp.heightOrAngle2 = mBarWidth;
 					}

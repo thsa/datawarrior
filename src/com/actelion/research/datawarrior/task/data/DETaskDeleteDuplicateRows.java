@@ -301,8 +301,11 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 					}
 				row++;
 				}
-			if (mMode == MODE_MERGE_EQUIVALENT && firstRow < row - 1) {
-				mergeRowContent(record, firstRow, row - 1, columnMask, columnError);
+			if (mMode == MODE_MERGE_EQUIVALENT) {
+				if (firstRow < row - 1)
+					mergeRowContent(record, firstRow, row - 1, columnMask, columnError);
+				if (countColumn != -1)
+					record[firstRow].setData(Integer.toString(row-firstRow).getBytes(), countColumn);
 				}
 			}
 

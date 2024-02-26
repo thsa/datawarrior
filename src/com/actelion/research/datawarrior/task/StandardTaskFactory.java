@@ -91,6 +91,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskAddStandardInchi.TASK_NAME) ? new DETaskAddStandardInchi(frame)
 			 : codeMatches(taskCode, DETaskExtractFragment.TASK_NAME) ? new DETaskExtractFragment(frame)
 			 : codeMatches(taskCode, DETaskAddNewFilter.TASK_NAME) ? new DETaskAddNewFilter(frame, pruningPanel)
+			 : codeMatches(taskCode, DETaskAddReactionSmiles.TASK_NAME) ? new DETaskAddReactionSmiles(frame)
 			 : codeMatches(taskCode, DETaskAddRowNumbers.TASK_NAME) ? new DETaskAddRowNumbers(frame)
 			 : codeMatches(taskCode, DETaskAddSelectionToList.TASK_NAME) ? new DETaskAddSelectionToList(frame, -1)
 			 : codeMatches(taskCode, DETaskAddSmiles.TASK_NAME) ? new DETaskAddSmiles(frame)
@@ -322,6 +323,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskCalculateFuzzyScore.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskExtractFragment.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskAddNewFilter.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAddReactionSmiles.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskAddRowNumbers.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskAddSelectionToList.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAddSmiles.TASK_NAME));

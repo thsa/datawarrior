@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -20,43 +20,44 @@ package com.actelion.research.datawarrior.task.chem;
 
 import com.actelion.research.chem.IsomericSmilesCreator;
 import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.datawarrior.DEFrame;
 
 
-public class DETaskAddSmiles extends DETaskAbstractFromStructure {
-	public static final String TASK_NAME = "Add Smiles Codes";
+public class DETaskAddReactionSmiles extends DETaskAbstractFromReaction {
+    public static final String TASK_NAME = "Add Reaction Smiles";
 
-	public DETaskAddSmiles(DEFrame parent) {
-		super(parent, DESCRIPTOR_NONE, true, true);
-		}
+    public DETaskAddReactionSmiles(DEFrame parent) {
+        super(parent, DESCRIPTOR_NONE, true, true);
+    }
 
-	@Override
-	public String getTaskName() {
-		return TASK_NAME;
-		}
+    @Override
+    public String getTaskName() {
+        return TASK_NAME;
+    }
 
-	@Override
-	public String getHelpURL() {
-		return "/html/help/chemistry.html#AddSmiles";
-		}
+    @Override
+    public String getHelpURL() {
+        return "/html/help/chemistry.html#AddSmiles";
+    }
 
-	@Override
+    @Override
     protected int getNewColumnCount() {
-		return 1;
-		}
+        return 1;
+    }
 
-	@Override
+    @Override
     protected String getNewColumnName(int column) {
-		return "Smiles";
-		}
+        return "Reaction Smiles";
+    }
 
-	@Override
-	public boolean hasExtendedDialogContent() {
-		return false;
-	}
+    @Override
+    public boolean hasExtendedDialogContent() {
+        return false;
+    }
 
-	@Override
-	protected String getNewColumnValue(StereoMolecule mol, Object descriptor, int column) {
-    	return IsomericSmilesCreator.createSmiles(mol);
-		}
-	}
+    @Override
+    protected String getNewColumnValue(Reaction rxn, Object descriptor, int column) {
+        return IsomericSmilesCreator.createReactionSmiles(rxn);
+    }
+}

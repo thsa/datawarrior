@@ -152,7 +152,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuChemSuperpose,jMenuChemDock, jMenuChemExtractFragment,
 					  jMenuChemAddSubstructureCount,jMenuChemAddStructureFromName, jMenuChemDecomposeRGroups,jMenuChemInteractiveSARTable,
 					  jMenuChemAnalyzeScaffolds,jMenuChemAnalyzeCliffs,jMenuChemMatchFile,jMenuChemSelectDiverse,
-					  jMenuChemCluster,jMenuChemExtract3DFragments,jMenuChemMapReactions,jMenuChemCompareReactionMapping,
+					  jMenuChemCluster,jMenuChemExtract3DFragments,jMenuChemMapReactions,jMenuChemCompareReactionMapping,jMenuChemAddReactionSmiles,
 					  jMenuChemCreateGenericTautomers,jMenuChemCompareDescriptorSimilarityDistribution,jMenuChemGenerateRandomMolecules,
 					  jMenuChemCreateTaggedSmiles,
 					  jMenuChemExtractPairwiseCompoundSimilarities,jMenuChemExtractPairwiseStuff,jMenuChemCountAtomTypes,jMenuChemCheckIDCodes,
@@ -779,6 +779,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemExtractProducts = new JMenuItem();
 		jMenuChemExtractTransformation = new JMenuItem();
 		jMenuChemClassifyReactions = new JMenuItem();
+		jMenuChemAddReactionSmiles = new JMenuItem();
 		jMenuChemAddFormula = new JMenuItem();
 		jMenuChemAddSmiles = new JMenuItem();
 		jMenuChemAddInchi = new JMenuItem();
@@ -835,6 +836,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemExtractTransformation.addActionListener(this);
 		jMenuChemClassifyReactions.setText("Classify Reactions");
 		jMenuChemClassifyReactions.addActionListener(this);
+		jMenuChemAddReactionSmiles.setText("Add Reaction SMILES...");
+		jMenuChemAddReactionSmiles.addActionListener(this);
 		jMenuChemAddFormula.setText("Add Molecular Formula...");
 		jMenuChemAddFormula.addActionListener(this);
 		jMenuChemAddSmiles.setText("Add SMILES Code...");
@@ -937,6 +940,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemFromReaction.add(jMenuChemExtractTransformation);
 		jMenuChemFromReaction.add(jMenuChemMapReactions);
 		jMenuChemFromReaction.add(jMenuChemClassifyReactions);
+		jMenuChemFromReaction.add(jMenuChemAddReactionSmiles);
 
 		jMenuChem.add(jMenuChemFromStructure);
 		jMenuChem.add(jMenuChemFromReaction);
@@ -1751,6 +1755,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DevTaskRunSurfacePLS(mParentFrame).defineAndRun();
 			else if (source == jMenuChemClassifyReactions)
 				new DETaskClassifyReactions(mParentFrame).defineAndRun();
+			else if (source == jMenuChemAddReactionSmiles)
+				new DETaskAddReactionSmiles(mParentFrame).defineAndRun();
 /*			else if (source == jMenuChemPredictPKa) {
 				int idcodeColumn = getStructureColumn(true);
 				if (idcodeColumn != -1)

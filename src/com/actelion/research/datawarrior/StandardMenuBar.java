@@ -382,9 +382,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		add(buildDatabaseMenu());
 		add(buildListMenu());
 		add(buildMacroMenu());
-		add(buildHelpMenu());
-
 		mApplication.getPluginRegistry().addPluginMenuItems(this);
+		add(buildHelpMenu());
 
 		double[][] size = {{TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL},{HiDPIHelper.scale(2), TableLayout.PREFERRED}};
 		JPanel msgPanel = new JPanel();

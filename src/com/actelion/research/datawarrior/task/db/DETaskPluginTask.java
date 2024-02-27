@@ -98,7 +98,7 @@ public class DETaskPluginTask extends ConfigurableTask {
 
 	@Override
 	public void setDialogConfigurationToDefault() {
-		// IPluginTask has no method for this. Instead createDialogContent() should already fill with default values.
+		// IPluginTask has no method for this. Instead, createDialogContent() should already fill with default values.
 		}
 
 	@Override

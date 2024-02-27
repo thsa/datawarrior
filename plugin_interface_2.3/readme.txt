@@ -1,5 +1,5 @@
-DataWarrior Plugin-SDK 2.2 (requires DataWarrior v6.6.0 or dev build 12-June-2023 or newer)
-===========================================================================================
+DataWarrior Plugin-SDK 2.3 (requires DataWarrior v6.1.2 or dev build 26-Feb-2024 or newer)
+==========================================================================================
 
 This file describes the concept and all steps needed to create a DataWarrior plugin.
 A plugin, if put in the plugin directory of a DataWarrior installation, adds one or more new
@@ -27,20 +27,26 @@ Content
 -------
 
 readme.txt                              : this file
-com/mycompany/ExamplePluginTask1.java   : simple plugin task example source code; used by 'buildAll'
-com/mycompany/ExamplePluginTask2.java   : plugin task example using structure editor; used by 'buildAll'
-com/mycompany/ExamplePluginTask1.java   : plugin task example adding columns to DataWarrior table; used by 'buildAll'
-org/openmolecules/datawarrior/plugin/I* : plugin related Java interfaces needed to build the plugin
+com/mycompany/ExamplePluginTask1.java   : simple plugin task example source file; used by 'buildAll'
+com/mycompany/ExamplePluginTask2.java   : task example using structure editor; used by 'buildAll'
+com/mycompany/ExamplePluginTask3.java   : task example adding columns to existing DataWarrior table; used by 'buildAll'
+com/mycompany/ExamplePluginTask4.java   : task example adding structure columns to DataWarrior table; used by 'buildAll'
+com/mycompany/ExamplePluginTask5.java   : task example with 3D-query structure in dialog; used by 'buildAll'
 org/openmolecules/datawarrior/plugin/PluginStarter.java : Root class that instantiates example tasks and assigns menu items
 org/openmolecules/datawarrior/plugin/PluginInfo.java : Class to display message if plugin jar file is double-clicked
+interface_src                           : Java interfaces for DataWarrior-plugin interaction; needed to build the plugin
 buildAll                                : short Linux/Mac script to build examplePlugin.jar from the source
 examplePlugin.jar                       : built example plugin file that can be placed into the DataWarrior 'plugin' folder
 
 
-Note
-----
-This documentation refers to Plugin-SDK 2.2, which requires DataWarrior v6.0.0 or newer. If you need
-compatibility to older DataWarrior version, use Plugin-SDK 1.0, which is supported from DataWarrior v4.5.3.
+Compatibility Note
+------------------
+This documentation refers to Plugin-SDK 2.3, which requires DataWarrior v6.1.2 or newer. If you need
+compatibility to older DataWarrior version, use Plugin-SDK 1.0, which is supported since DataWarrior v4.5.3.
+
+DataWarrior v6.x.x installations come with an embedded JRE 21. Thus, plugins targeted for DataWarrior v6
+may contain bytecode versions compatiple with JRE21 or earlier. If you want your plugins to run on earlier
+DataWarrior versions, then you should build them with JRE8 or use the '-target 8' option for 'javac'.
 
 
 Concept
@@ -115,6 +121,28 @@ Finally, DataWarrior analyses all new columns and creates new default filters fo
 The menu item that triggers the plugin is in the 'Chemistry->From Chemical Structure' sub-menu.
 
 
+Example 4
+---------
+
+ExamplePluginTask4.java is similar to example 3, since it also adds columns to an open DataWarrior window.
+However, there are two major differences:
+- The new column(s) contain chemical structures and, thus, is/are associated with a second invisible column
+  that contains atom coordinates for the visible structure column(s).
+- The plugin uses functionality of the cheminformatics framework 'openchemlib'. Therefore, openchemlib.jar
+  must be in the classpath, when building the plugin. It must not, however, be included in final plugin jar,
+  because openchemlib is part of DataWarrior itself and can be accessed by the plugin when it runs in the
+  DataWarrior context.
+In terms of functionality, this example extracts a scaffold from an exosting structure column and puts it
+into a new column. The user may choose from two different scaffold types, Murcko or most central ring system.
+He/she may also select both. Then the plugin generates the respective number of new columns and defines their
+type(s) to be COLUMN_TYPE_STRUCTURE_FROM_IDCODE.
+Then, in a loop over all rows, the plugin gets the source structures from the currently open DataWarrior
+table, detects and extracts the scaffold(s) and writes them into (a) new column(s).
+Under the hood, DataWarrior generates (an) invisible column(s) to store scaffold atom coordinates.
+Finally, the plugin calls finalizeNewColumns(), which causes DataWarrior to analyse the columns and to
+create new default filters for them.
+
+
 PluginStarter
 -------------
 
@@ -154,11 +182,12 @@ Debugging
 ---------
 
 If your created plugins gain in complexity, you may want to more efficiently debug them than just
-adding System.out.println() statements into the source code. You may use the debuger of your development
+adding System.out.println() statements into the source code. You may use the debugger of your development
 environment, e.g. IntelliJ or Eclipse, to set break points, single step through the code, watch variables, etc.
 For that to work, however, you need to do some extra work:
+
 - Download the DataWarrior source code from github.com and create a runnable project within your IDE.
-- Add your plugin's source code directory to the DataWarrior's project source code. Exclude the
-  org/openmolecules/datawarrior/plugin directory, because the DataWarrior source code contains these interfaces.
-- When DataWarrior is now launched by the IDE, it will find, load and instantiate the PluginStarter class
-  from the source code rather than from a plugin jar file making your source code availabe for full debugging.
+- Add your plugin's 'src' directory to the DataWarrior's project source code.
+
+When DataWarrior is now launched by the IDE, it will find, load and instantiate the PluginStarter class
+from the source code rather than from a plugin jar file making your source code availabe for full debugging.

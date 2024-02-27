@@ -4,8 +4,8 @@ import org.openmolecules.datawarrior.plugin.IPluginHelper;
 import org.openmolecules.datawarrior.plugin.IPluginTask;
 import org.openmolecules.datawarrior.plugin.IUserInterfaceHelper;
 
-import java.util.Properties;
 import javax.swing.*;
+import java.util.Properties;
 
 /**
  * PluginTask creating a simple table, one with structures from SMILES
@@ -86,7 +86,7 @@ public class ExamplePluginTask1 implements IPluginTask {
 	}
 
 	/**
-	 * This method performes the database query. Typically it reads the query configuration from
+	 * This method performes the task's action. It reads the task's configuration from
 	 * the given Properties object, sends it to a database server, retrieves a result and populates
 	 * a new window's table with the retrieved data. The passed IPluginHelper object provides
 	 * all needed methods to create a new DataWarrior window, to allocate result columns,

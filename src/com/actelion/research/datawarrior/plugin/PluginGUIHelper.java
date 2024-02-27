@@ -6,6 +6,7 @@ import com.actelion.research.datawarrior.task.db.DETaskPluginTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableModel;
 import org.openmolecules.datawarrior.plugin.IChemistryPanel;
+import org.openmolecules.datawarrior.plugin.IConformerPanel;
 import org.openmolecules.datawarrior.plugin.IPluginHelper;
 import org.openmolecules.datawarrior.plugin.IUserInterfaceHelper;
 
@@ -66,6 +67,11 @@ public class PluginGUIHelper implements IUserInterfaceHelper {
 	public IChemistryPanel getChemicalEditor() {
 		return new PluginChemistryPanel();
 		}
+
+	@Override
+	public IConformerPanel getConformerEditor(int mode) {
+		return new PluginConformerPanel(mApplication.getActiveFrame(), mode);
+	}
 
 	@Override
 	public JComboBox<String> getComboBoxForColumnSelection(int columnType) {

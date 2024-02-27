@@ -35,9 +35,9 @@ public class ExamplePluginTask3 implements IPluginTask {
 	}
 
 	/**
-	 * This method expects a JPanel with all UI-elements for defining a database query.
-	 * These may include elements to define a structure search and/or alphanumerical
-	 * search criteria. 'Cancel' and 'OK' buttons are provided outside of this panel.
+	 * This method expects a JPanel with all UI-elements for defining task options.
+	 * For instance, these may include criteria to define a structure and/or alphanumerical
+	 * search database. 'Cancel' and 'OK' buttons are provided outside of this panel.
 	 * @param dialogHelper is not used in this example
 	 * @return
 	 */
@@ -66,16 +66,17 @@ public class ExamplePluginTask3 implements IPluginTask {
 	 * This method is called after the users presses the dialog's 'OK' button.
 	 * At this time the dialog is still shown. This method expects a Properties
 	 * object containing all UI-elements' states converted into key-value pairs
-	 * describing the user defined database query. This query configuration is
+	 * fully describing the user defined task. This task configuration is
 	 * used later for two purposes:<br>
-	 * - to run the query independent from the actual dialog<br>
+	 * - to run the task independent of the actual dialog<br>
 	 * - to populate a dialog with a query that has been performed earlier<br>
 	 * @return query configuration
 	 */
 	@Override public Properties getDialogConfiguration() {
 		StringBuilder sb = new StringBuilder();
 		Properties configuration = new Properties();
-		configuration.setProperty(CONFIGURATION_STRUCTURE_COLUMN, (String)mComboBox.getSelectedItem());
+		if (mComboBox.getItemCount() != 0)
+			configuration.setProperty(CONFIGURATION_STRUCTURE_COLUMN, (String)mComboBox.getSelectedItem());
 
 		for (int i=0; i<PROPERTY_CODE.length; i++) {
 			if (mCheckBox[i].isSelected()) {
@@ -110,12 +111,16 @@ public class ExamplePluginTask3 implements IPluginTask {
 
 	/**
 	 * Checks, whether the given dialog configuration is a valid one.
-	 * If not, the this method should return a short and clear error message
+	 * If not, then this method should return a short and clear error message
 	 * intended for the user in order to correct the dialog setting.
 	 * @param configuration
 	 * @return user-interpretable error message or null, if query configuration is valid
 	 */
 	@Override public String checkConfiguration(Properties configuration) {
+		String structureColumn = configuration.getProperty(CONFIGURATION_STRUCTURE_COLUMN, "");
+		if (structureColumn.isEmpty())
+			return "No chemical structures found.";
+
 		String properties = configuration.getProperty(CONFIGURATION_PROPERTY_LIST, "");
 		if (properties.length() == 0)
 			return "You need to select at least one of the properies.";

@@ -31,6 +31,8 @@ public interface IPluginHelper {
 	int COLUMN_TYPE_STRUCTURE_FROM_SMILES = 1;
 	int COLUMN_TYPE_STRUCTURE_FROM_MOLFILE = 2;
 	int COLUMN_TYPE_STRUCTURE_FROM_IDCODE = 3;
+	int COLUMN_TYPE_3D_STRUCTURE_FROM_MOLFILE = 4;
+	int COLUMN_TYPE_3D_STRUCTURE_FROM_IDCODE = 5;
 
 	String TEMPLATE_DEFAULT_FILTERS = "Filters";
 	String TEMPLATE_DEFAULT_FILTERS_AND_VIEWS = "FiltersAndViews";
@@ -77,6 +79,18 @@ public interface IPluginHelper {
 	HashMap<String, String> getColumnProperties(int column);
 
 	/**
+	 * If column is a new column added by this plugin and if setColumnType(..., COLUMN_TYPE_STRUCTURE_xxx)
+	 * was called earlier for that column, then this method returns the associated invisible coordinate column
+	 * that DataWarrior created for the structure column.
+	 * If column existed before this task was launched, if column contains chemical structures, and if an
+	 * associated atom coordinate column exists matching the is3D parameter, then its column index is returned.
+	 * @param column structure column
+	 * @param is3D whether to return a 2D or 3D coordinates column
+	 * @return associated atom coordinates column or -1 it doesn't exist
+	 */
+	int getCoordinateColumn(int column, boolean is3D);
+
+	/**
 	 * @return total column count of DataWarrior's current front window
 	 */
 	int getTotalColumnCount();
@@ -119,6 +133,9 @@ public interface IPluginHelper {
 	/**
 	 * Assuming that the given column contains chemical structures, the cell's structure
 	 * is converted into molfile version 2, which is then returned.
+	 * If a 2D-coordinate column is associated with the structure column,
+	 * then atom coordinates are taken from that.
+	 * If column is a 3D-coordinate column, then the returned molfile contains these.
 	 * @param row
 	 * @param column
 	 * @return valid molfile V2 or null, if the cell is empty
@@ -128,6 +145,9 @@ public interface IPluginHelper {
 	/**
 	 * Assuming that the given column contains chemical structures, the cell's structure
 	 * is converted into molfile version 3, which is then returned.
+	 * If a 2D-coordinate column is associated with the structure column,
+	 * then atom coordinates are taken from that.
+	 * If column is a 3D-coordinate column, then the returned molfile contains these.
 	 * @param row
 	 * @param column
 	 * @return valid molfile V3 or null, if the cell is empty
@@ -142,6 +162,29 @@ public interface IPluginHelper {
 	 * @return valid SMILES or null, if the cell is empty
 	 */
 	String getCellDataAsSmiles(int row, int column);
+
+	/**
+	 * Assuming that the given column contains chemical structures, the cell's structure
+	 * is returned as IDCode. If a 2D-coordinate column is associated to the structure column,
+	 * then the returned string contains an IDCode with id-coords delimited by a SPACE character.
+	 * If column is a 3D-coordinate column, then idcode and 3D-idcoords delimited by a SPACE character
+	 * are returned.
+	 * @param row
+	 * @param column
+	 * @return idcode (potentially with appended SPACE and id-coordinates) or null, if the cell is empty
+	 */
+	String getCellDataAsIDCode(int row, int column);
+
+	/**
+	 * This returns a reference to the native in-memory format of the cell content.
+	 * Typically, this is a UTF-8 encoded byte[] of the cell's text.
+	 * Structure, or structure coordinate columns return IDCodes or id-coords as byte[].
+	 * Most descriptors are returned as long[].
+	 * @param row
+	 * @param column
+	 * @return native DataWarrior cell content
+	 */
+	Object getCellDataNative(int row, int column);
 
 	/**
 	 * Call this if you need to append one or more new columns to DataWarrior's active window.

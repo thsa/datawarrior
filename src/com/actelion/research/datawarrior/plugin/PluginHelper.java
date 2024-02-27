@@ -39,15 +39,18 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 public class PluginHelper implements IPluginHelper {
-	private DataWarrior mApplication;
-	private DETaskPluginTask mPluginTask;
+	private final DataWarrior mApplication;
+	private final DETaskPluginTask mPluginTask;
 	private DEFrame mNewFrame;
-	private CompoundTableModel  mSourceTableModel,mTargetTableModel;
-	private ProgressController  mProgressController;
-	private int[]               mColumnType,mCoordinateColumn;
-	private StereoMolecule      mMol;
+	private final CompoundTableModel mSourceTableModel;
+	private CompoundTableModel mTargetTableModel;
+	private final ProgressController mProgressController;
+	private int[] mColumnType;
+	private StereoMolecule mMol;
+	private TreeMap<Integer,Integer> mCoordinateColumnMap;
 
 	public PluginHelper(DataWarrior application, DETaskPluginTask task, ProgressController pl) {
 		mApplication = application;
@@ -60,6 +63,15 @@ public class PluginHelper implements IPluginHelper {
 	@Override
 	public int findColumn(String columnTitle) {
 		return mSourceTableModel.findColumn(columnTitle);
+	}
+
+	@Override
+	public int getCoordinateColumn(int column, boolean is3D) {
+		if (mCoordinateColumnMap.containsKey(column))
+			return mCoordinateColumnMap.get(column);
+
+		return mSourceTableModel.getChildColumn(column, is3D ?
+				CompoundTableConstants.cColumnType3DCoordinates : CompoundTableConstants.cColumnType2DCoordinates);
 	}
 
 	@Override
@@ -187,6 +199,33 @@ public class PluginHelper implements IPluginHelper {
 	}
 
 	@Override
+	public String getCellDataAsIDCode(int row, int column) {
+		int coordsColumn = -1;
+		boolean is3D = CompoundTableConstants.cColumnType3DCoordinates.equals(mSourceTableModel.getColumnSpecialType(column));
+		if (is3D) {
+			coordsColumn = column;
+			column = mSourceTableModel.getParentColumn(column);
+			}
+		else if (!mSourceTableModel.isColumnTypeStructure(column))
+			return null;
+
+		byte[] idcode = (byte[])mSourceTableModel.getTotalRecord(row).getData(column);
+		if (idcode == null)
+			return null;
+
+		if (!is3D)
+			coordsColumn = mSourceTableModel.getChildColumn(column, CompoundTableConstants.cColumnType2DCoordinates);
+
+		byte[] coords = (coordsColumn == -1) ? null : (byte[])mSourceTableModel.getTotalRecord(row).getData(coordsColumn);
+		return (coords == null) ? new String(idcode) : new String(idcode).concat(" ").concat(new String(coords));
+	}
+
+	@Override
+	public Object getCellDataNative(int row, int column) {
+		return mSourceTableModel.getTotalRecord(row).getData(column);
+	}
+
+	@Override
 	public String getVariable(String name) {
 		if (!(mProgressController instanceof DEMacroRecorder))
 			return null;
@@ -208,6 +247,7 @@ public class PluginHelper implements IPluginHelper {
 			return -1;
 
 		mColumnType = new int[mSourceTableModel.getTotalColumnCount()+columnTitle.length];
+		mCoordinateColumnMap = new TreeMap<>();
 		int firstColumn = mSourceTableModel.addNewColumns(columnTitle);
 		mProgressController.startProgress("Populating table...", 0, 0);
 		return firstColumn;
@@ -222,7 +262,7 @@ public class PluginHelper implements IPluginHelper {
 		mTargetTableModel = mNewFrame.getTableModel();
 		mTargetTableModel.initializeTable(rowCount, columnCount);
 		mColumnType = new int[columnCount];
-		mCoordinateColumn = new int[columnCount];
+		mCoordinateColumnMap = new TreeMap<>();
 		mProgressController.startProgress("Populating table...", 0, rowCount);
 	}
 
@@ -242,14 +282,21 @@ public class PluginHelper implements IPluginHelper {
 		mColumnType[column] = type;
 		if (type == COLUMN_TYPE_STRUCTURE_FROM_SMILES
 		 || type == COLUMN_TYPE_STRUCTURE_FROM_MOLFILE
-		 || type == COLUMN_TYPE_STRUCTURE_FROM_IDCODE) {
+		 || type == COLUMN_TYPE_STRUCTURE_FROM_IDCODE
+		 || type == COLUMN_TYPE_3D_STRUCTURE_FROM_MOLFILE
+		 || type == COLUMN_TYPE_3D_STRUCTURE_FROM_IDCODE) {
 			if (mMol == null)
 				mMol = new StereoMolecule();
-			mCoordinateColumn[column] = mTargetTableModel.addNewColumns(1);
+			boolean is3D = type == COLUMN_TYPE_3D_STRUCTURE_FROM_MOLFILE || type == COLUMN_TYPE_3D_STRUCTURE_FROM_IDCODE;
+			int coordsColumn = mTargetTableModel.addNewColumns(1);
+			mCoordinateColumnMap.put(column, coordsColumn);
+			mTargetTableModel.setColumnName(is3D ? "Conformer" : "atomCoordinates2D", coordsColumn);
 			mTargetTableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertySpecialType,
 					CompoundTableConstants.cColumnTypeIDCode);
-			mTargetTableModel.setColumnProperty(mCoordinateColumn[column], CompoundTableConstants.cColumnPropertySpecialType,
-					CompoundTableConstants.cColumnType2DCoordinates);
+			mTargetTableModel.setColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertySpecialType,
+					is3D ? CompoundTableConstants.cColumnType3DCoordinates : CompoundTableConstants.cColumnType2DCoordinates);
+			mTargetTableModel.setColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertyParentColumn,
+					mTargetTableModel.getColumnTitleNoAlias(column));
 		}
 	}
 
@@ -287,7 +334,8 @@ public class PluginHelper implements IPluginHelper {
 				value = null;
 			}
 		}
-		else if (mColumnType[column] == COLUMN_TYPE_STRUCTURE_FROM_MOLFILE) {
+		else if (mColumnType[column] == COLUMN_TYPE_STRUCTURE_FROM_MOLFILE
+			  || mColumnType[column] == COLUMN_TYPE_3D_STRUCTURE_FROM_MOLFILE) {
 			try {
 				new MolfileParser().parse(mMol, value);
 				Canonizer canonizer = new Canonizer(mMol);
@@ -297,7 +345,8 @@ public class PluginHelper implements IPluginHelper {
 				value = null;
 			}
 		}
-		else if (mColumnType[column] == COLUMN_TYPE_STRUCTURE_FROM_IDCODE) {
+		else if (mColumnType[column] == COLUMN_TYPE_STRUCTURE_FROM_IDCODE
+			  || mColumnType[column] == COLUMN_TYPE_3D_STRUCTURE_FROM_IDCODE) {
 			int index = value.indexOf(' ');
 			if (index != -1) {
 				coordinates = value.substring(index+1);
@@ -306,8 +355,8 @@ public class PluginHelper implements IPluginHelper {
 		}
 
 		mTargetTableModel.setTotalValueAt(value, row, column);
-		if (coordinates != null && coordinates.length() != 0)
-			mTargetTableModel.setTotalValueAt(coordinates, row, mCoordinateColumn[column]);
+		if (coordinates != null && !coordinates.isEmpty())
+			mTargetTableModel.setTotalValueAt(coordinates, row, mCoordinateColumnMap.get(column));
 	}
 
 	@Override
@@ -321,11 +370,11 @@ public class PluginHelper implements IPluginHelper {
 			return;
 
 		// we need to do this, when all column titles are reliably set
-		for (int column=0; column<mCoordinateColumn.length; column++)
-			if (mCoordinateColumn[column] != 0)
-				mTargetTableModel.setColumnProperty(mCoordinateColumn[column],
+		for (int structureColumn:mCoordinateColumnMap.keySet())
+			if (mCoordinateColumnMap.get(structureColumn) != null)
+				mTargetTableModel.setColumnProperty(mCoordinateColumnMap.get(structureColumn),
 						CompoundTableConstants.cColumnPropertyParentColumn,
-						mTargetTableModel.getColumnTitleNoAlias(column));
+						mTargetTableModel.getColumnTitleNoAlias(structureColumn));
 
 		if (template == null || template.equals(TEMPLATE_DEFAULT_FILTERS_AND_VIEWS)) {
 			mTargetTableModel.finalizeTable(CompoundTableEvent.cSpecifierDefaultFiltersAndViews, mProgressController);

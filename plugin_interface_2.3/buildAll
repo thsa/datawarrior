@@ -1,7 +1,7 @@
 mkdir bin
 
 # Compile PluginInfo,PluginStarter and all referenced plugin task classes and interfaces
-javac -sourcepath ./src -d ./bin -Xlint:unchecked src/org/openmolecules/datawarrior/plugin/*.java
+javac -sourcepath ./src:./interface_src -cp lib/openchemlib.jar -d ./bin -Xlint:unchecked src/org/openmolecules/datawarrior/plugin/*.java
 
 # If your plugin uses classes that are part of DataWarrior itself or OpenChemLib (which is part of DataWarrior),
 # then you should not include these classes into your final plugin.jar, because

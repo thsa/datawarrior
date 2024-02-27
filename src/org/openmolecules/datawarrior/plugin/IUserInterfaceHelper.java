@@ -56,12 +56,21 @@ public interface IUserInterfaceHelper {
 	float getRetinaScaleFactor();
 
 	/**
-	 * Creates and returns a chemical structure editor that supports editing molecules
-	 * of substructures, depending on the editor mode. In substructure mode the editor
+	 * Creates and returns a JComponent that represents and shows a chemical 2D-structure.
+	 * A popup menu or double click opens a chemical editor that allows editing the shown
+	 * molecule or substructures, depending on the editor mode. In substructure mode the editor
 	 * allows to edit atom and bond specific query features.
 	 * @return
 	 */
 	IChemistryPanel getChemicalEditor();
+
+	/**
+	 * Creates and returns a JComponent that represents and shows a chemical 3D-structure.
+	 * A popup menu allows to load a 3D-structure from various sources and file formats.
+	 * @param mode IConformerPanel.MODE_CONFORMER or IConformerPanel.MODE_PROTEIN
+	 * @return
+	 */
+	public IConformerPanel getConformerEditor(int mode);
 
 	/**
 	 * Creates and return a JComboBox prefilled with all columns of the current fron window

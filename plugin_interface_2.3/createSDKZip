@@ -1,0 +1,12 @@
+rm -rf interface_src
+rm -rf lib
+mkdir interface_src
+mkdir interface_src/org
+mkdir interface_src/org/openmolecules
+mkdir interface_src/org/openmolecules/datawarrior
+mkdir lib
+cp -r ../../datawarrior/src/org/openmolecules/datawarrior/plugin interface_src/org/openmolecules/datawarrior/
+cp ../lib/openchemlib.jar ./lib/openchemlib.jar
+rm interface_src/org/openmolecules/datawarrior/plugin/IPluginInitializer.java
+./buildAll
+jar -cvfM datawarriorPluginSDK_2.3.zip src interface_src lib buildAll readme.txt manifest_additions.txt examplePlugin.jar

@@ -5,12 +5,12 @@ import org.openmolecules.datawarrior.plugin.IPluginHelper;
 import org.openmolecules.datawarrior.plugin.IPluginTask;
 import org.openmolecules.datawarrior.plugin.IUserInterfaceHelper;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Hashtable;
 import java.util.Properties;
-import javax.swing.*;
 
 /**
  * PluginTask with a dialog that embeds a structure editor.
@@ -146,7 +146,7 @@ public class ExamplePluginTask2 implements ActionListener,IPluginTask {
 
 	/**
 	 * Checks, whether the given database query configuration is a valid one.
-	 * If not, the this method should return a short and clear error message
+	 * If not, then this method should return a short and clear error message
 	 * intended for the user in order to correct the dialog setting.
 	 * @param configuration
 	 * @return user-interpretable error message or null, if query configuration is valid
@@ -161,7 +161,7 @@ public class ExamplePluginTask2 implements ActionListener,IPluginTask {
 	}
 
 	/**
-	 * This method performes the database query. Typically it reads the query configuration from
+	 * This method performes the database query. Typically, it reads the query configuration from
 	 * the given Properties object, sends it to a database server, retrieves a result and populates
 	 * a new window's table with the retrieved data. The passed IPluginHelper object provides
 	 * all needed methods to create a new DataWarrior window, to allocate result columns,

@@ -102,6 +102,16 @@ public class PieChart extends AbstractBarOrPieChart {
 		VisualizationPoint[] point = mVisualization.getDataPoints();
 		int chartColumn = mVisualization.getChartType().getColumn();
 
+		float[][][] colorFractionEdge = null;
+		if (useProportionalFractions()) {
+			colorFractionEdge = new float[mPieColorEdge.length][][];
+			for (int i=0; i<mPieColorEdge.length; i++) {
+				colorFractionEdge[i] = new float[mPieColorEdge[i].length][];
+				for (int j=0; j<mPieColorEdge[i].length; j++)
+					colorFractionEdge[i][j] = mPieColorEdge[i][j].clone();
+			}
+		}
+
 		// calculate coordinates for selection
 		for (VisualizationPoint vp:point) {
 			if (mVisualization.isVisibleInBarsOrPies(vp)) {
@@ -112,10 +122,10 @@ public class PieChart extends AbstractBarOrPieChart {
 					int colorIndex = mVisualization.getColorIndex(vp, mBaseColorCount, mFocusFlagNo);
 					float fractionAngle = 360f * Math.abs(vp.record.getDouble(chartColumn))
 							/ mAbsValueSum[hv][cat];
-					vp.widthOrAngle1 = mPieColorEdge[hv][cat][colorIndex];
-					angle = (mPieColorEdge[hv][cat][colorIndex] + 0.5f * fractionAngle) * (float)Math.PI / 180f;
-					mPieColorEdge[hv][cat][colorIndex] += fractionAngle;
-					vp.heightOrAngle2 = mPieColorEdge[hv][cat][colorIndex];
+					vp.widthOrAngle1 = colorFractionEdge[hv][cat][colorIndex];
+					angle = (colorFractionEdge[hv][cat][colorIndex] + 0.5f * fractionAngle) * (float)Math.PI / 180f;
+					colorFractionEdge[hv][cat][colorIndex] += fractionAngle;
+					vp.heightOrAngle2 = colorFractionEdge[hv][cat][colorIndex];
 				}
 				else {
 					angle = (0.5f + vp.chartGroupIndex) * 2.0f * (float)Math.PI / mPointsInCategory[hv][cat];

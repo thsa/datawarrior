@@ -126,6 +126,16 @@ public class BarChart extends AbstractBarOrPieChart {
 		int chartColumn = mVisualization.getChartType().getColumn();
 		int sizeColumn = mVisualization.getMarkerSizeColumn();
 
+		float[][][] colorFractionEdge = null;
+		if (useProportionalFractions()) {
+			colorFractionEdge = new float[mBarColorEdge.length][][];
+			for (int i=0; i<mBarColorEdge.length; i++) {
+				colorFractionEdge[i] = new float[mBarColorEdge[i].length][];
+				for (int j=0; j<mBarColorEdge[i].length; j++)
+					colorFractionEdge[i][j] = mBarColorEdge[i][j].clone();
+			}
+		}
+
 		for (VisualizationPoint vp:point) {
 			if (mVisualization.isVisibleInBarsOrPies(vp)) {
 				int hv = vp.hvIndex;
@@ -142,15 +152,15 @@ public class BarChart extends AbstractBarOrPieChart {
 						vp.widthOrAngle1 = width;
 						float fractionHeight = Math.abs(vp.record.getDouble(chartColumn))
 								* mAbsValueFactor[hv][cat];
-						vp.screenY = mBarColorEdge[hv][cat][colorIndex] - 0.5f * fractionHeight;
-						mBarColorEdge[hv][cat][colorIndex] -= fractionHeight;
+						vp.screenY = colorFractionEdge[hv][cat][colorIndex] - 0.5f * fractionHeight;
+						colorFractionEdge[hv][cat][colorIndex] -= fractionHeight;
 						vp.heightOrAngle2 = fractionHeight;
 					}
 					else {
 						float fractionHeight = Math.abs(vp.record.getDouble(chartColumn))
 								* mAbsValueFactor[hv][cat];
-						vp.screenX = mBarColorEdge[hv][cat][colorIndex] + 0.5f * fractionHeight;
-						mBarColorEdge[hv][cat][colorIndex] += fractionHeight;
+						vp.screenX = colorFractionEdge[hv][cat][colorIndex] + 0.5f * fractionHeight;
+						colorFractionEdge[hv][cat][colorIndex] += fractionHeight;
 						vp.widthOrAngle1 = fractionHeight;
 						vp.screenY = mBarPosition[hv][cat];
 						vp.heightOrAngle2 = width;

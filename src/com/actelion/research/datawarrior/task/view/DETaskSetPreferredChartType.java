@@ -23,8 +23,10 @@ import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.view.CompoundTableView;
 import com.actelion.research.table.view.JVisualization;
+import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationPanel;
 import com.actelion.research.table.view.chart.ChartType;
+import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -38,9 +40,12 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 	private static final String PROPERTY_TYPE = "type";
 	private static final String PROPERTY_MODE = "mode";
 	private static final String PROPERTY_COLUMN = "column";
-	
+	private static final String PROPERTY_EDGE_SMOOTHING = "smoothing";
+
+
 	private JComboBox	mComboBoxType,mComboBoxColumn,mComboBoxMode;
 	private JLabel		mLabelSizeBy,mLabelColumn;
+	private JSlider     mSliderEdgeSmoothing;
 	
 	public DETaskSetPreferredChartType(Frame owner, DEMainPane mainPane, VisualizationPanel view) {
 		super(owner, mainPane, view);
@@ -66,7 +71,7 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 		JPanel p1 = new JPanel();
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
-							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		p1.setLayout(new TableLayout(size));
 
 		p1.add(new JLabel("Preferred Chart Type:"), "1,1");
@@ -96,6 +101,12 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 		mComboBoxColumn.addItemListener(this);
 		p1.add(mComboBoxColumn, "7,3");
 
+		mSliderEdgeSmoothing = new JSlider(JSlider.HORIZONTAL, 0, 100, 50);
+//		mSliderEdgeSmoothing.setPreferredSize(new Dimension(HiDPIHelper.scale(150), mSliderEdgeSmoothing.getPreferredSize().height));
+		mSliderEdgeSmoothing.addChangeListener(this);
+		p1.add(new JLabel("Edge Smoothing:"), "1,5");
+		p1.add(mSliderEdgeSmoothing, "3,5");
+
 		mComboBoxMode.setEnabled(!hasInteractiveView() || mComboBoxColumn.getItemCount() != 0);
 
 		return p1;
@@ -111,6 +122,7 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
         mComboBoxMode.setSelectedIndex(0);
         if (mComboBoxColumn.getItemCount() != 0)
         	mComboBoxColumn.setSelectedIndex(0);
+		mSliderEdgeSmoothing.setValue(50);
 		}
 
 	@Override
@@ -126,17 +138,25 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 			int column = getTableModel().findColumn(columnName);
 			mComboBoxColumn.setSelectedItem(!hasInteractiveView() && column == -1 ? columnName : getTableModel().getColumnTitleExtended(column));
 			}
+
+		String value = configuration.getProperty(PROPERTY_EDGE_SMOOTHING);
+		float smoothing = (value == null) ? JVisualization2D.DEFAULT_EDGE_SMOOTHING : Float.parseFloat(value);
+		mSliderEdgeSmoothing.setValue(Math.round(100*smoothing));
 		}
 
 	@Override
 	public void addDialogConfiguration(Properties configuration) {
 		int type = findListIndex((String)mComboBoxType.getSelectedItem(), ChartType.TYPE_NAME, ChartType.cTypeScatterPlot);
 		configuration.setProperty(PROPERTY_TYPE, ChartType.TYPE_CODE[type]);
-		if (type == ChartType.cTypeBars || type == ChartType.cTypePies) {
+		if (ChartType.supportsProportionalFractions(type)) {
 			int mode = mComboBoxMode.getSelectedIndex();
 			configuration.setProperty(PROPERTY_MODE, ChartType.MODE_CODE[mode]);
 			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mComboBoxColumn.getItemCount() != 0)
 				configuration.setProperty(PROPERTY_COLUMN, ""+getTableModel().getColumnTitleNoAlias((String)mComboBoxColumn.getSelectedItem()));
+			}
+		if (ChartType.supportsEdgeSmoothing(type)) {
+			float smoothing = (float)mSliderEdgeSmoothing.getValue()/100f;
+			configuration.setProperty(PROPERTY_EDGE_SMOOTHING, ""+smoothing);
 			}
 		}
 
@@ -145,18 +165,20 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 		JVisualization visualization = ((VisualizationPanel)view).getVisualization();
 		int type = visualization.getPreferredChartType();
 		configuration.setProperty(PROPERTY_TYPE, ChartType.TYPE_CODE[type]);
-		if (type == ChartType.cTypeBars || type == ChartType.cTypePies) {
+		if (ChartType.supportsProportionalFractions(type)) {
 			int mode = visualization.getPreferredChartMode();
 			configuration.setProperty(PROPERTY_MODE, ChartType.MODE_CODE[mode]);
 			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent)
 				configuration.setProperty(PROPERTY_COLUMN, ""+getTableModel().getColumnTitleNoAlias(visualization.getPreferredChartColumn()));
 			}
+		if (ChartType.supportsEdgeSmoothing(type))
+			configuration.setProperty(PROPERTY_EDGE_SMOOTHING, DoubleFormat.toString(((JVisualization2D)visualization).getEdgeSmoothing()));
 		}
 
 	@Override
 	public boolean isViewConfigurationValid(CompoundTableView view, Properties configuration) {
 		int type = findListIndex(configuration.getProperty(PROPERTY_TYPE), ChartType.TYPE_CODE, ChartType.cTypeScatterPlot);
-		if (type == ChartType.cTypeBars || type == ChartType.cTypePies) {
+		if (ChartType.supportsProportionalFractions(type)) {
 			int mode = findListIndex(configuration.getProperty(PROPERTY_MODE), ChartType.MODE_CODE, ChartType.cModeCount);
 			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent) {
 				String columnName = configuration.getProperty(PROPERTY_COLUMN);
@@ -184,12 +206,13 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 	@Override
 	public void enableItems() {
 		int type = ConfigurableTask.findListIndex((String)mComboBoxType.getSelectedItem(), ChartType.TYPE_NAME, -1);
-		boolean isBarsOrPies = type == ChartType.cTypeBars || type == ChartType.cTypePies;
-		boolean columnEnabled = isBarsOrPies && mComboBoxMode.getSelectedIndex() != ChartType.cModeCount && mComboBoxMode.getSelectedIndex() != ChartType.cModePercent;
-		mLabelSizeBy.setEnabled(isBarsOrPies);
-		mComboBoxMode.setEnabled(isBarsOrPies);
+		boolean supportsSizeBy = ChartType.supportsProportionalFractions(type);
+		boolean columnEnabled = supportsSizeBy && mComboBoxMode.getSelectedIndex() != ChartType.cModeCount && mComboBoxMode.getSelectedIndex() != ChartType.cModePercent;
+		mLabelSizeBy.setEnabled(supportsSizeBy);
+		mComboBoxMode.setEnabled(supportsSizeBy);
 		mLabelColumn.setEnabled(columnEnabled);
 		mComboBoxColumn.setEnabled(columnEnabled);
+		mSliderEdgeSmoothing.setEnabled(ChartType.supportsEdgeSmoothing(type));
 		}
 
 	@Override
@@ -199,12 +222,14 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 			int type = findListIndex(configuration.getProperty(PROPERTY_TYPE), ChartType.TYPE_CODE, ChartType.cTypeScatterPlot);
 			int mode = ChartType.cModeCount;
 			int column = -1;
-			if (type == ChartType.cTypeBars || type == ChartType.cTypePies) {
+			if (ChartType.supportsProportionalFractions(type)) {
 				mode = findListIndex(configuration.getProperty(PROPERTY_MODE), ChartType.MODE_CODE, ChartType.cModeCount);
 				if (mode != ChartType.cModeCount && mode != ChartType.cModePercent)
 					column = getTableModel().findColumn(configuration.getProperty(PROPERTY_COLUMN));
 				}
 			visualization.setPreferredChartType(type, mode, column);
+			String smoothing = configuration.getProperty(PROPERTY_EDGE_SMOOTHING);
+			((JVisualization2D)visualization).setEdgeSmoothing(smoothing != null ? Float.parseFloat(smoothing) : JVisualization2D.DEFAULT_EDGE_SMOOTHING);
 			}
 		}
 	}

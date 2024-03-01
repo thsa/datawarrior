@@ -178,6 +178,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cSplitViewShowEmpty = "splitViewShowEmpty";
 	private static final String cCaseSeparationColumn = "caseSeparationColumn";
 	private static final String cCaseSeparationValue = "caseSeparationValue";
+	private static final String cEdgeSmoothing = "edgeSmoothing";
 	private static final String cChartType = "chartType";
 	private static final String cChartMode = "chartMode";
 	private static final String cChartColumn = "chartColumn";
@@ -1062,6 +1063,10 @@ public class DERuntimeProperties extends RuntimeProperties {
 				int type = decodeProperty(cCorrelationCoefficient+viewName, CorrelationCalculator.TYPE_NAME);
 				if (type != -1)
 					((JVisualization2D)visualization).setShownCorrelationType(type);
+
+				value = getProperty(cEdgeSmoothing+viewName);
+				if (value != null)
+					((JVisualization2D)visualization).setEdgeSmoothing(Float.parseFloat(value));
 				}
 
 			if (view instanceof VisualizationPanel3D) {
@@ -1577,7 +1582,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 
 					ChartType type = visualization.getChartType();
 					setProperty(cChartType+viewName, ChartType.TYPE_CODE[type.getType()]);
-					if (type.isBarOrPieChart()) {
+					if (ChartType.supportsProportionalFractions(type.getType())) {
 						int mode = visualization.getPreferredChartMode();
 						setProperty(cChartMode+viewName, ChartType.MODE_CODE[mode]);
 						if (mode != ChartType.cModeCount && mode != ChartType.cModePercent) {
@@ -1816,6 +1821,12 @@ public class DERuntimeProperties extends RuntimeProperties {
 						int correlationType = ((JVisualization2D)visualization).getShownCorrelationType();
 						if (correlationType != CorrelationCalculator.TYPE_NONE) {
 							setProperty(cCorrelationCoefficient+viewName, CorrelationCalculator.TYPE_NAME[correlationType]);
+							}
+
+						if (ChartType.supportsEdgeSmoothing(type.getType())) {
+							float smoothing = ((JVisualization2D)visualization).getEdgeSmoothing();
+							if (smoothing != JVisualization2D.DEFAULT_EDGE_SMOOTHING)
+								setProperty(cEdgeSmoothing+viewName, ""+smoothing);
 							}
 						}
 					}

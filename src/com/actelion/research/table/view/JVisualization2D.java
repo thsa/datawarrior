@@ -139,6 +139,7 @@ public class JVisualization2D extends JVisualization {
 
 	public static final float DEFAULT_CURVE_LINE_WIDTH = 1.5f;
 	public static final float DEFAULT_CURVE_SMOOTHING = 0.5f;
+	public static final float DEFAULT_EDGE_SMOOTHING = 0.5f;
 
 	private static final int[] SUPPORTED_CHART_TYPE = { ChartType.cTypeScatterPlot,
 			ChartType.cTypeWhiskerPlot, ChartType.cTypeBoxPlot,
@@ -169,7 +170,7 @@ public class JVisualization2D extends JVisualization {
 	private Stroke          mThinLineStroke,mNormalLineStroke,mFatLineStroke,mVeryFatLineStroke,mConnectionStroke;
 	private float[]			mCorrelationCoefficient;
 	private float			mBackgroundColorRadius,mBackgroundColorFading,mFontScaling,mMarkerTransparency,
-							mMarkerLabelTransparency,mConnectionLineTransparency,mCurveLineWidth,mCurveSmoothing;
+							mMarkerLabelTransparency,mConnectionLineTransparency,mCurveLineWidth,mCurveSmoothing,mEdgeSmoothing;
 	private int				mBorder,mCurveInfo,mBackgroundHCount,mBackgroundVCount,mCrossHairMode,
 							mBackgroundColorConsidered,mCurveSplitCategoryColumn,mCurveRowList,mCaseSeparationAxis,
 							mConnectionFromIndex1,mConnectionFromIndex2,mShownCorrelationType,mMultiValueMarkerMode;
@@ -238,6 +239,7 @@ public class JVisualization2D extends JVisualization {
 		mCurveRowList = cCurveRowListVisible;
 		mCurveLineWidth = DEFAULT_CURVE_LINE_WIDTH;
 		mCurveSmoothing = DEFAULT_CURVE_SMOOTHING;
+		mEdgeSmoothing = DEFAULT_EDGE_SMOOTHING;
 		mCrossHairMode = CROSSHAIR_MODE_AUTOMATIC;
 		}
 
@@ -504,7 +506,7 @@ public class JVisualization2D extends JVisualization {
 
 		boolean hasFreshCoords = false;
 		if (!mCoordinatesValid) {
-			calculateCoordinates(mG, baseBounds);
+			calculateMarkerCoordinates(mG, baseBounds);
 			hasFreshCoords = true;
 			}
 
@@ -3952,7 +3954,7 @@ public class JVisualization2D extends JVisualization {
 			}
 		}
 
-	private void calculateCoordinates(Graphics2D g, Rectangle bounds) {
+	private void calculateMarkerCoordinates(Graphics2D g, Rectangle bounds) {
 		mBorder = (mScaleMode == cScaleModeHidden) ? 0 : Math.min(bounds.width, bounds.height)/40;
 
 		// to ensure proper string width
@@ -4824,6 +4826,18 @@ public class JVisualization2D extends JVisualization {
 				invalidateOffImage(false);
 			}
 		}
+
+	public float getEdgeSmoothing() {
+		return mEdgeSmoothing;
+	}
+
+	public void setEdgeSmoothing(float smoothing) {
+		if (ChartType.supportsEdgeSmoothing(mChartType.getType())
+		 && mEdgeSmoothing != smoothing) {
+			mEdgeSmoothing = smoothing;
+			invalidateOffImage(false);
+		}
+	}
 
 	public boolean isCurveAreaTruncated() {
 		return (mCurveInfo & cCurveTruncateArea) != 0;

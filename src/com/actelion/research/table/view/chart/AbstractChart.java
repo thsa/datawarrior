@@ -43,7 +43,7 @@ public abstract class AbstractChart {
     float[][] mInnerDistance;   // distance of two adjacent sub-bar areas in bar
     float mAxisMin,mAxisMax,mBarBase;
     float mBarWidth, mMaxWidth;
-    int mDoubleAxis,mHVCount,mCatCount,mFocusFlagNo,mBaseColorCount;
+    int mDoubleAxis,mHVCount,mCatCount,mFocusFlagNo,mBaseColorCount,mChartMode;
 
     public AbstractChart(JVisualization visualization, int hvCount, int doubleAxis) {
         mVisualization = visualization;

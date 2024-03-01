@@ -9,7 +9,9 @@ import java.awt.*;
 import java.awt.geom.Path2D;
 
 public abstract class AbstractSmoothDistributionPlot extends AbstractDistributionPlot {
-	protected static final int FRACTIONS = 120;
+	protected static final int FRACTIONS = 120; // number of fractions for full data range and default smoothing=0.5
+	protected static final int SMOOTHING_FRACTIONS = 12; // absolute number of fractions used for smoothing for one side of Gaussian curve
+	private static final float SMOOTHING_FACTOR = 2; // min and max total range fractions is FRACTIONS '/' and '*' exp(SMOOTHING_FACTOR), respectively
 	protected static final int SCREEN_WIDTH_FRACTIONS = 7;
 	protected static final float VIOLIN_WIDTH_FACTOR = 0.95f;  // We devide space such that violins never overlap with the default marker size == 1
 	public static final float DEFAULT_MARGIN = 2.5f * SCREEN_WIDTH_FRACTIONS / FRACTIONS;   // 2.0 is exact fit
@@ -30,7 +32,8 @@ public abstract class AbstractSmoothDistributionPlot extends AbstractDistributio
 	public void calculate() {
 		super.calculateStatistics();
 
-		int fractions = Math.round(FRACTIONS * mVisualization.getRelativeVisibleRange(mDoubleAxis));
+		int fullRangeFractions = (int)Math.round(FRACTIONS * Math.exp(0.5*SMOOTHING_FACTOR * (((JVisualization2D)mVisualization).getEdgeSmoothing() - 0.5)));
+		int fractions = Math.round(fullRangeFractions * mVisualization.getRelativeVisibleRange(mDoubleAxis));
 		if (fractions == 0)
 			return;
 
@@ -83,7 +86,7 @@ public abstract class AbstractSmoothDistributionPlot extends AbstractDistributio
 		}
 
 		// Calculate neighbour incluence factors using a Gaussean function
-		int influences = FRACTIONS / 10;
+		int influences = SMOOTHING_FRACTIONS;
 		float[] influence = new float[influences];
 		float factor = 4f/((influences-1)*(influences-1));  // lowest used influence factor is e^-4 (0.0183)
 		for (int i=0; i<influences; i++)

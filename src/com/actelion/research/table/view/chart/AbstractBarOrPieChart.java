@@ -15,7 +15,6 @@ public abstract class AbstractBarOrPieChart extends AbstractChart {
 	public static final float cCenteredBarSpacing = 0.05f;  // for centered bars we add this spacing on both ends of bar area
 	protected static final float cLogBarMinSizeFactor = 0.10f;    // bars on logarithic data have this as base height
 
-	private int mChartMode;
 	private boolean mBarOrPieDataAvailable;
 
 

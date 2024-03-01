@@ -174,6 +174,21 @@ public class ChartType {
 		return isDistributionPlot(mType);
 	}
 
+	public static boolean supportsProportionalFractions(int chartType) {
+		return chartType == cTypeBars
+			|| chartType == cTypePies;
+
+		// since we don't have categories, but floating point values on x-axis, we can hardly calculate means, sums, etc.
+		// Due to Gaussean adding to neighbor bins, individual curve position on y-axis could not exactly reflect input values.
+		// Thus, ridgleline views may not give expected results, when using values rather than counts.
+		// Maybe, one should use a scatter plot with curves for this.
+//			|| chartType == cTypeRidgeLines;
+	}
+
+	public static boolean supportsEdgeSmoothing(int chartType) {
+		return chartType == cTypeViolins
+			|| chartType == cTypeRidgeLines;
+	}
 	public boolean isBarOrPieChart() {
 		return isBarOrPieChart(mType);
 	}

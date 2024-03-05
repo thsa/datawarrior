@@ -180,15 +180,15 @@ public class PluginRegistry implements IPluginStartHelper {
 									// Translate old menu name to menu path for new handling
 									else if (menuName.equals("From Chemical Structure")) {
 										// add separator
-										mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
 										menuName = "Chemistry" + MENU_PATH_SEPARATOR + "From Chemical Structure";
 										taskGroupName = "Chemistry";
+										mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
 										}
 									else if (menuName.equals("From Chemical Reaction")) {
 										// add separator
-										mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
 										menuName = "Chemistry" + MENU_PATH_SEPARATOR + "From Chemical Reaction";
 										taskGroupName = "Chemistry";
+										mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
 										}
 
 									mTaskDefinitionList.add(new PluginTaskDefinition(task, taskGroupName));

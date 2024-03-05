@@ -17,7 +17,6 @@
  */
 package com.actelion.research.datawarrior.task.db;
 
-import com.actelion.research.calc.ProgressController;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.plugin.PluginGUIHelper;
@@ -32,10 +31,10 @@ import java.util.Properties;
  * This is a facade for any plugin task
  */
 public class DETaskPluginTask extends ConfigurableTask {
-	private IPluginTask mDelegate;
+	private final IPluginTask mDelegate;
 	private PluginHelper mPluginHelper;
 	private PluginGUIHelper mGUIHelper;
-	private DataWarrior mApplication;
+	private final DataWarrior mApplication;
 
 	public DETaskPluginTask(DataWarrior application, IPluginTask delegate) {
 		super(application.getActiveFrame(), true);
@@ -69,9 +68,7 @@ public class DETaskPluginTask extends ConfigurableTask {
 
 	@Override
 	public void runTask(Properties configuration) {
-		ProgressController pc = getProgressController();
-		mPluginHelper = new PluginHelper(mApplication, this, pc);
-		pc.startProgress("Retrieving data from plugin...", 0, 0);
+		mPluginHelper = new PluginHelper(mApplication, this, getProgressController());
 		mDelegate.run(configuration, mPluginHelper);
 		}
 

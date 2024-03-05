@@ -431,6 +431,18 @@ public class PluginHelper implements IPluginHelper {
 		}
 
 	@Override
+	public void startProgress(String message, int steps) {
+		if (mPluginTask.getProgressController() != null)
+			mPluginTask.getProgressController().startProgress(message, 0, steps);
+	}
+
+	@Override
+	public void updateProgress(int step) {
+		if (mPluginTask.getProgressController() != null)
+			mPluginTask.getProgressController().updateProgress(step);
+	}
+
+	@Override
 	public boolean isCancelled() {
 		return mProgressController.threadMustDie();
 	}

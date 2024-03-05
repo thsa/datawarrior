@@ -313,6 +313,23 @@ public interface IPluginHelper {
 	void showWarningMessage(String message);
 
 	/**
+	 * Lengthy tasks should report a task progress. You may use this method to initialize
+	 * progress reporting with a message like 'Retrieving results...'.
+	 * If your task consists of a number of steps that take a similar amount of time,
+	 * you may call updateProgress(), which will ultimately show a progress bar to the user.
+	 * @param message
+	 * @param steps value >0 if you call updateProgress() later, otherwise 0
+	 */
+	void startProgress(String message, int steps);
+
+	/**
+	 * Lengthy tasks should report a task progress. You may use this method report the current
+	 * progress.
+	 * @param step 0 <= step < steps
+	 */
+	void updateProgress(int step);
+
+	/**
 	 * During task execution DataWarrior shows a progress dialog with a cancel button.
 	 * For lengthy tasks you should frequently call this method and stop the task
 	 * execution if this method returns true.

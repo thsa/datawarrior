@@ -41,6 +41,7 @@ import com.actelion.research.datawarrior.task.list.*;
 import com.actelion.research.datawarrior.task.macro.*;
 import com.actelion.research.datawarrior.task.table.*;
 import com.actelion.research.datawarrior.task.view.*;
+import org.openmolecules.datawarrior.plugin.IPluginTask;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
@@ -297,12 +298,14 @@ public class StandardTaskFactory {
 		}
 
 	private DETaskPluginTask createPluginTaskFromCode(DataWarrior application, String taskCode) {
-		ArrayList<PluginTaskDefinition> pluginTaskList = application.getPluginRegistry().getPluginTasks();
-		for (PluginTaskDefinition def:pluginTaskList)
-			if (taskCode.equals(def.getTaskCode()))
-				return new DETaskPluginTask(application, def.getTask());
-
-		return null;
+		IPluginTask task = application.getPluginRegistry().getPluginTask(taskCode);
+		return (task == null) ? null : new DETaskPluginTask(application, task);
+//		ArrayList<PluginTaskDefinition> pluginTaskList = application.getPluginRegistry().getPluginTasks();
+//		for (PluginTaskDefinition def:pluginTaskList)
+//			if (taskCode.equals(def.getTaskCode()))
+//				return new DETaskPluginTask(application, def.getTask());
+//
+//		return null;
 		}
 
 	public TreeSet<TaskSpecification> getTaskDictionary(DEFrame frame) {

@@ -111,8 +111,8 @@ public class PluginRegistry implements IPluginStartHelper {
 
 					// Since Dec2022 plugins may contain an PluginStarter class. We try to load and run it...
 					try {
-						Class starterClass = loader.loadClass(STARTER_CLASS_NAME);
-						IPluginStarter starter = (IPluginStarter)starterClass.newInstance();
+						Class<?> starterClass = loader.loadClass(STARTER_CLASS_NAME);
+						IPluginStarter starter = (IPluginStarter)starterClass.getDeclaredConstructor().newInstance();
 						starter.initialize(this, directory, config);
 					}
 					catch (Exception e) {
@@ -121,8 +121,8 @@ public class PluginRegistry implements IPluginStartHelper {
 
 						try {
 							// Since Sep2021 plugins may contain an Initializer class, which is already deprecated. We try to load and run it...
-							Class initializerClass = loader.loadClass(INITIALIZER_CLASS_NAME);
-							IPluginInitializer initializer = (IPluginInitializer)initializerClass.newInstance();
+							Class<?> initializerClass = loader.loadClass(INITIALIZER_CLASS_NAME);
+							IPluginInitializer initializer = (IPluginInitializer)initializerClass.getDeclaredConstructor().newInstance();
 							initializer.initialize(directory, config);
 						}
 						catch (Exception ee) {
@@ -138,7 +138,7 @@ public class PluginRegistry implements IPluginStartHelper {
 								String className = (index == -1 ? line : line.substring(0, index)).trim();
 								String menuName = (index == -1) ? "Database" : line.substring(index+1).trim();
 
-								Class pluginClass = null;
+								Class<?> pluginClass = null;
 								try {
 									// If the class is part of the DataWarrior source code (usually it is not),
 									// then we instantiate it with the standard class loader to make it available for debugging.
@@ -173,20 +173,20 @@ public class PluginRegistry implements IPluginStartHelper {
 									 || menuName.equals("Help")) {
 										if (!menuSet.contains(menuName)) {
 										// add separator
-											mMenuEntryList.add(new PluginMenuEntry(null, menuName, task.getTaskName()));
+											mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
 											menuSet.add(menuName);
 										}
 									}
 									// Translate old menu name to menu path for new handling
 									else if (menuName.equals("From Chemical Structure")) {
 										// add separator
-										mMenuEntryList.add(new PluginMenuEntry(null, menuName, task.getTaskName()));
+										mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
 										menuName = "Chemistry" + MENU_PATH_SEPARATOR + "From Chemical Structure";
 										taskGroupName = "Chemistry";
 										}
 									else if (menuName.equals("From Chemical Reaction")) {
 										// add separator
-										mMenuEntryList.add(new PluginMenuEntry(null, menuName, task.getTaskName()));
+										mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
 										menuName = "Chemistry" + MENU_PATH_SEPARATOR + "From Chemical Reaction";
 										taskGroupName = "Chemistry";
 										}

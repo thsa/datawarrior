@@ -5114,7 +5114,7 @@ public class JVisualization2D extends JVisualization {
 
 	public void setFontHeight(int h) {
 		if (mG.getFont().getSize2D() != h)
-			mG.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, h));
+			mG.setFont(mG.getFont().deriveFont(Font.PLAIN, h));
 		}
 
 	/**

@@ -20,9 +20,10 @@ import java.net.*;
 
 public abstract class ClientCommunicator extends CommunicationHelper {
 	private static final int CONNECT_TIME_OUT = 5000;
-	private static final int READ_TIME_OUT = 300000; // 0 -> no timeout
+	private static final int READ_TIME_OUT = 600000;
 
     private boolean	mWithSessions;
+	private int mConnectTimeOut,mReadTimeOut;
 	private String	mSessionID,mSessionServerURL,mAppicationName;
 
 	public abstract String getPrimaryServerURL();
@@ -51,7 +52,17 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 	public ClientCommunicator(boolean withSessions, String applicationName) {
 		mWithSessions = withSessions;
 		mAppicationName = (applicationName == null) ? "unknown" : applicationName;
+		mConnectTimeOut = CONNECT_TIME_OUT;
+		mReadTimeOut = READ_TIME_OUT;
 		}
+
+	public void setConnectTimeOut(int timeOut) {
+		mConnectTimeOut = timeOut;
+	}
+
+	public void setReadTimeOut(int timeOut) {
+		mReadTimeOut = timeOut;
+	}
 
 	private URLConnection getConnection(String serverURL) throws IOException {
         URL urlServlet = new URL(serverURL);
@@ -61,8 +72,8 @@ public abstract class ClientCommunicator extends CommunicationHelper {
         con.setDoInput(true);
         con.setDoOutput(true);
         con.setUseCaches(false);
-		con.setConnectTimeout(CONNECT_TIME_OUT);
-		con.setReadTimeout(READ_TIME_OUT);
+		con.setConnectTimeout(mConnectTimeOut);
+		con.setReadTimeout(mReadTimeOut);
         con.setRequestProperty("User-Agent", "Mozilla/5.0");
         con.setRequestProperty("Content-Type", "application/x-java-serialized-object");
 
@@ -131,6 +142,7 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 	            }
 
 			mSessionID = null;
+
 			showBusyMessage("");
 			}
 		}
@@ -168,10 +180,12 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 					return response;
 				}
 			catch (ServerErrorException see) {  // server reached, but could not satisfy request
+				reportException(see);
 				showErrorMessage(see.getMessage());
 				return null;
 				}
 			catch (ConnectException ce) {  // connection refused
+				reportException(ce);
 				if (!mayUseSecondaryServer) {
 					showErrorMessage(ce.toString());
 					return null;
@@ -179,6 +193,7 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 				showBusyMessage("Connection refused. Trying alternative server...");
 				}
 			catch (SocketTimeoutException ste) {  // timed out
+				reportException(ste);
 				if (!mayUseSecondaryServer) {
 					showErrorMessage(ste.toString());
 					return null;
@@ -186,6 +201,7 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 				showBusyMessage("Connection timed out. Trying alternative server...");
 				}
 			catch (IOException ioe) {
+				reportException(ioe);
 				showErrorMessage(ioe.toString());
 				return null;
 				}
@@ -210,6 +226,11 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 		showErrorMessage("No response from server.");
 		return null;
 		}
+
+	/**
+	 * Override this, if you need information about exceptions happening in the getResponse() method
+	 */
+	public void reportException(Exception e) {}
 
 	public Object getResponseWithURL(String serverURL, String request, String... keyValuePair) throws IOException {
 		if (mWithSessions && mSessionID == null) {

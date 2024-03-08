@@ -93,7 +93,7 @@ public interface IUserInterfaceHelper {
 	JDialog getParentDialog();
 
 	/**
-	 * @return the parent dialog, if it is visible; otherwise the DataWarrior's front most window
+	 * @return the parent dialog, if it is visible; otherwise the DataWarrior's front most window (Dialog or Frame)
 	 */
 	Component getParentComponent();
 

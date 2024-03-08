@@ -16,6 +16,7 @@ package org.openmolecules.comm;
 
 public interface CommunicationConstants {
     String ERROR_INVALID_SESSION = "Invalid session";
+    String ERROR_INVALID_TOKEN = "Invalid token";
 
     String BODY_MESSAGE = "Message";
     String BODY_OBJECT = "Object";

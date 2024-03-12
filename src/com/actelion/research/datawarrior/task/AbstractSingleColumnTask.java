@@ -35,9 +35,9 @@ public abstract class AbstractSingleColumnTask extends ConfigurableTask implemen
 	private static final String CODE_NO_COLUMN = "_none_";
 	public static final int NO_COLUMN = -2;
 
-	private CompoundTableModel	mTableModel;
-	private JComboBox           mComboBoxColumn;
-	private int				    mColumn;
+	private final CompoundTableModel	mTableModel;
+	private JComboBox<String>           mComboBoxColumn;
+	private final int				    mColumn;
 
 	public AbstractSingleColumnTask(Frame owner, CompoundTableModel tableModel, boolean useOwnThread) {
 		super(owner, useOwnThread);
@@ -88,13 +88,13 @@ public abstract class AbstractSingleColumnTask extends ConfigurableTask implemen
 	@Override
 	public JPanel createDialogContent() {
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL, gap},
+		double[][] size = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL, gap},
 				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
 		content.add(new JLabel(getColumnLabelText()), "1,1");
-		mComboBoxColumn = new JComboBox();
+		mComboBoxColumn = new JComboBox<>();
 		mComboBoxColumn.addItemListener(this);
 		if (allowColumnNoneItem())
 			mComboBoxColumn.addItem(TEXT_NO_COLUMN);
@@ -171,7 +171,7 @@ public abstract class AbstractSingleColumnTask extends ConfigurableTask implemen
 		Properties configuration = new Properties();
 
 		String item = (String)mComboBoxColumn.getSelectedItem();
-		if (item == null || item.length() == 0)
+		if (item == null || item.isEmpty())
 			item = TEXT_NO_COLUMN;
 
 		if (TEXT_NO_COLUMN.equals(item))
@@ -201,7 +201,7 @@ public abstract class AbstractSingleColumnTask extends ConfigurableTask implemen
 	 * If there is no preselected column then this function is called and selects the first compatible column.
 	 * Override this for different handling.
 	 */
-	public void selectDefaultColumn(JComboBox comboBox) {
+	public void selectDefaultColumn(JComboBox<String> comboBox) {
 		if (allowColumnNoneItem()) {
 			comboBox.setSelectedItem(TEXT_NO_COLUMN);
 			}

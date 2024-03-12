@@ -65,7 +65,7 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 	public JPanel createInnerDialogContent() {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {TableLayout.PREFERRED},
-							{gap/2, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+							{gap>>1, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
@@ -87,7 +87,7 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 		}
 
 	@Override
-	public void selectDefaultColumn(JComboBox comboBox) {
+	public void selectDefaultColumn(JComboBox<String> comboBox) {
 		for (String name:cSourceColumnName) {
 			for (int i=0; i<comboBox.getItemCount(); i++) {
 				if (name.equals(((String)comboBox.getItemAt(i)).toLowerCase())) {
@@ -133,9 +133,8 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 	public void runTask(Properties configuration) {
 		int sourceColumn = getColumn(configuration);
 
-        int firstNewColumn = getTableModel().addNewColumns(3);
-        int idcodeColumn = firstNewColumn;
-        int coordsColumn = firstNewColumn+1;
+        int idcodeColumn = getTableModel().addNewColumns(3);
+        int coordsColumn = idcodeColumn+1;
 		getTableModel().prepareStructureColumns(idcodeColumn, "Structure", true, true);
 
 		NameToStructure opsinN2S = NameToStructure.getInstance();
@@ -150,18 +149,26 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 			updateProgress(row);
 
 			String name = getTableModel().getTotalValueAt(row, sourceColumn).trim();
-			if (name.length() != 0) {
-				String smiles = opsinN2S.parseToSmiles(name);
-				if (smiles == null)
-					smiles = name;
-
+			if (!name.isEmpty()) {
 				try {
 					boolean isSmarts = "true".equals(configuration.getProperty(PROPERTY_IS_SMARTS, "false"));
 					int smilesMode = isSmarts ? SmilesParser.SMARTS_MODE_IS_SMARTS : SmilesParser.SMARTS_MODE_GUESS;
-					new SmilesParser(smilesMode, false).parse(mol, smiles);
+					new SmilesParser(smilesMode, false).parse(mol, name);
 					}
 				catch (Exception e) {
 					mol.clear();
+					}
+
+				if (mol.getAllAtoms() == 0) {
+					String smiles = opsinN2S.parseToSmiles(name);
+					if (smiles != null) {
+						try {
+							new SmilesParser(SmilesParser.SMARTS_MODE_IS_SMILES, false).parse(mol, smiles);
+							}
+						catch (Exception e) {
+							mol.clear();
+							}
+						}
 					}
 
 				if (mol.getAllAtoms() != 0) {
@@ -188,9 +195,9 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 			String[] idcodes = StructureNameResolver.getInstance().resolveRemote(unresolvedList.toArray());
 			for (int row=0; row<getTableModel().getTotalRowCount() && !threadMustDie(); row++) {
 				String name = getTableModel().getTotalValueAt(row, sourceColumn).trim();
-				if (name.length() != 0 && getTableModel().getTotalRecord(row).getData(idcodeColumn) == null) {
+				if (!name.isEmpty() && getTableModel().getTotalRecord(row).getData(idcodeColumn) == null) {
 					String idcode = idcodes[unresolvedList.getListIndex(name)];
-					if (idcode != null && idcode.length() != 0) {
+					if (idcode != null && !idcode.isEmpty()) {
 						int index = idcode.indexOf(' ');
 						if (index == -1) {
 							getTableModel().setTotalValueAt(idcode, row, idcodeColumn);
@@ -204,11 +211,6 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 				}
 			}
 
-		getTableModel().finalizeNewColumns(firstNewColumn, this);
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
+		getTableModel().finalizeNewColumns(idcodeColumn, this);
 		}
 	}

@@ -45,6 +45,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -133,15 +134,14 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		public void setIdentifierAliases(CompoundTableModel tableModel) {}
 	};
 
-	private volatile CompoundTableModel mTableModel;
-	private Frame				mParentFrame;
+	private final CompoundTableModel mTableModel;
+	private final Frame			mParentFrame;
 	private volatile ProgressController	mProgressController;
 	private volatile File		mFile;
 	private volatile Reader		mDataReader;
 	private volatile int		mDataType,mAction;
 	private volatile TreeMap<String,DataDependentPropertyReader> mDataDependentPropertyReaderMap;
-	private int					mOldVersionIDCodeColumn,mOldVersionCoordinateColumn,mOldVersionCoordinate3DColumn,
-								mAddDefaultFilters,mAddDefaultViews;
+	private int					mOldVersionIDCodeColumn,mOldVersionCoordinateColumn,mAddDefaultFilters,mAddDefaultViews;
 	private boolean				mWithHeaderLine,mAppendRest,mCoordsMayBe3D,mIsGooglePatentsFile,mIsFiltersOnly,
 								mMolnameFound,mMolnameIsDifferentFromFirstField,mAssumeChiralFlag,mAddAtomMapping;
 	private volatile boolean	mOwnsProgressController;
@@ -257,7 +257,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				is = new GZIPInputStream(is);
 				dataType = CompoundFileHelper.cFileTypeSD;
 				}
-			BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 			BOMSkipper.skip(reader);
 			readStream(reader, properties, dataType, action, mFile.getName());
 			}
@@ -354,11 +354,11 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	 */
 	private byte[] constructMergeKey(Object[] rowData, int[] keyColumn, boolean[] isIgnoreCase) {
 		int count = keyColumn.length - 1;	// TABs needed
-		for (int i=0; i<keyColumn.length; i++) {
-			byte[] data = (byte[])rowData[keyColumn[i]];
+		for (int j : keyColumn) {
+			byte[] data = (byte[])rowData[j];
 			if (data != null)
 				count += data.length;
-			}
+		}
 		if (count == keyColumn.length - 1)
 			return null;
 
@@ -483,7 +483,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					fromIndex = toIndex+1;
 					}
 
-				if (!isNotNumerical[sourceColumn] && value.length() != 0) {
+				if (!isNotNumerical[sourceColumn] && !value.isEmpty()) {
 					try {
 						Double.parseDouble(value);
 						}
@@ -560,7 +560,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				if (isFirstLine && theLine.equals(cNativeFileHeaderStart)) {
 					rowCount = readFileHeader(theReader);
 					if (rowCount > PROGRESS_LIMIT)
-						mProgressController.startProgress("Reading Data...", 0, (rowCount > PROGRESS_LIMIT) ? rowCount : 0);
+						mProgressController.startProgress("Reading Data...", 0, rowCount);
 					continue;
 					}
 
@@ -630,6 +630,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 						do {
 							theLine = theReader.readLine();
 							} while (theLine != null && !theLine.equals(cDataDependentPropertiesEnd));
+						if (theLine == null)
+							break;
 						}
 					}
 
@@ -644,7 +646,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					break;
 					}
 
-				if (theLine.length() == 0 && (mDataType != FileHelper.cFileTypeDataWarrior || header != null))
+				if (theLine.isEmpty() && (mDataType != FileHelper.cFileTypeDataWarrior || header != null))
 					continue;
 
 				if (mDataType != FileHelper.cFileTypeDataWarriorTemplate) {
@@ -653,7 +655,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 						header = convertCSVLine(theLine, lineBuilder, theReader);
 						}
 					else {
-						if (!mWithHeaderLine && lineList.size() == 0)
+						if (!mWithHeaderLine && lineList.isEmpty())
 							evaluateSeparatorSymbol(theLine);
 						lineList.add(convertCSVLine(theLine, lineBuilder, theReader).getBytes());
 						if (rowCount > PROGRESS_LIMIT && lineList.size()%PROGRESS_STEP == 0)
@@ -728,12 +730,12 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			}
 		// if we have no link column, we create one from the 'id' column
 		if (!linkFound) {
-			for (int column=0; column<mFieldNames.length; column++) {
-				if (mFieldNames[column].equals("id")) {
-					addColumnProperty(mFieldNames[column], cColumnPropertyLookupCount, "1");
-					addColumnProperty(mFieldNames[column], cColumnPropertyLookupURL+"0", "https://patents.google.com/patent/%s");
-					addColumnProperty(mFieldNames[column], cColumnPropertyLookupName+"0", "original patent");
-					addColumnProperty(mFieldNames[column], cColumnPropertyLookupFilter+"0", cColumnPropertyLookupFilterRemoveMinus);
+			for (String mFieldName : mFieldNames) {
+				if (mFieldName.equals("id")) {
+					addColumnProperty(mFieldName, cColumnPropertyLookupCount, "1");
+					addColumnProperty(mFieldName, cColumnPropertyLookupURL + "0", "https://patents.google.com/patent/%s");
+					addColumnProperty(mFieldName, cColumnPropertyLookupName + "0", "original patent");
+					addColumnProperty(mFieldName, cColumnPropertyLookupFilter + "0", cColumnPropertyLookupFilterRemoveMinus);
 					}
 				}
 			}
@@ -831,13 +833,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				char theChar = line.charAt(i);
 
 				if (isFirstColumnChar) {
-					if (theChar == '\t') {
-						if (isQuotedSection)
-							lineBuilder.append("<TAB>");
-						continue;
-						}
-
-					if (theChar == ' ' && !isQuotedSection)
+					if (theChar == '\t'
+					 || theChar == ' ')
 						continue;
 
 					if (theChar != DELIMITER_SYMBOL[mDelimiter])
@@ -932,7 +929,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		if (mVersion == null)
 			createColumnPropertiesForFilesPriorVersion270(columnNameList);
 
-		if (!mWithHeaderLine && lineList.size() > 0) {
+		if (!mWithHeaderLine && !lineList.isEmpty()) {
 			byte[] lineBytes = lineList.get(0);
 			columnNameList.add("Column 1");
 			int no = 2;
@@ -1209,7 +1206,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		while (true) {
 			boolean found = false;
 			for (String n:names) {
-				if (n != null && name.equalsIgnoreCase(n)) {
+				if (name.equalsIgnoreCase(n)) {
 					found = true;
 					break;
 					}
@@ -1219,7 +1216,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 
 			int index = name.lastIndexOf(' ');
 			if (index == -1) {
-				name = name + " 2";
+				name = name.concat(" 2");
 				}
 			else {
 				try {
@@ -1227,7 +1224,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					name = name.substring(0, index + 1) + (suffix + 1);
 					}
 				catch (NumberFormatException nfe) {
-					name = name + " 2";
+					name = name.concat(" 2");
 					}
 				}
 			}
@@ -1300,11 +1297,11 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			String[] rxnData = ReactionEncoder.encode(rxn, false);
 			if (rxnData != null && rxnData[0] != null) {
 				mFieldData[row][reactionColumn] = rxnData[0].getBytes();
-				if (rxnData[1] != null && rxnData[1].length() != 0)
+				if (rxnData[1] != null && !rxnData[1].isEmpty())
 					mFieldData[row][reactionColumn+1] = rxnData[1].getBytes();
-				if (rxnData[2] != null && rxnData[2].length() != 0)
+				if (rxnData[2] != null && !rxnData[2].isEmpty())
 					mFieldData[row][reactionColumn+2] = rxnData[2].getBytes();
-				if (rxnData[4] != null && rxnData[4].length() != 0)
+				if (rxnData[4] != null && !rxnData[4].isEmpty())
 					mFieldData[row][reactionColumn+6] = rxnData[4].getBytes();
 				}
 			}
@@ -1456,8 +1453,8 @@ try {
 
 	private void addDefaultLookupColumnProperties() {
 		if (sIdentifierHandler != null)
-			for (int column=0; column<mFieldNames.length; column++)
-				mColumnProperties = sIdentifierHandler.addDefaultColumnProperties(mFieldNames[column], mColumnProperties);
+			for (String mFieldName : mFieldNames)
+				mColumnProperties = sIdentifierHandler.addDefaultColumnProperties(mFieldName, mColumnProperties);
 		}
 
 	private void createColumnPropertiesForFilesPriorVersion270(ArrayList<String> columnNameList) {
@@ -1587,10 +1584,10 @@ try {
 		}
 
 	private void readHitlistData(BufferedReader theReader) {
-		mHitlists = new ArrayList<String>();
+		mHitlists = new ArrayList<>();
 		try {
 			String hitlistName = null;
-			StringBuffer hitlistData = null;
+			StringBuilder hitlistData = null;
 			while (true) {
 				String theLine = theReader.readLine();
 				if (theLine == null
@@ -1604,11 +1601,11 @@ try {
 						mHitlists.add(hitlistName + "\t" + hitlistData);
 
 					hitlistName = extractValue(theLine);
-					hitlistData = new StringBuffer();
+					hitlistData = new StringBuilder();
 					continue;
 					}
 
-				if (theLine.startsWith("<"+cHitlistData)) {
+				if (hitlistData != null && theLine.startsWith("<"+cHitlistData)) {
 					hitlistData.append(extractValue(theLine));
 					continue;
 					}
@@ -1620,7 +1617,7 @@ try {
 		}
 
 	private void readDetailData(BufferedReader theReader) {
-		mDetails = new HashMap<String,byte[]>();
+		mDetails = new HashMap<>();
 		try {
 			while (true) {
 				String theLine = theReader.readLine();
@@ -1644,7 +1641,7 @@ try {
 						StringBuilder sb = new StringBuilder();
 						theLine = theReader.readLine();
 						while (theLine != null && !theLine.startsWith("</"+cDetailID)) {
-							if (sb.length() != 0)
+							if (!sb.isEmpty())
 								sb.append("\n");
 							sb.append(theLine);
 							theLine = theReader.readLine();
@@ -1701,7 +1698,7 @@ try {
 		}
 
 	private byte[] getBytes(String s) {
-		return (s == null || s.length() == 0) ? null : s.getBytes();
+		return (s == null || s.isEmpty()) ? null : s.getBytes();
 		}
 
 	private boolean initializeReaderFromFile() {
@@ -1713,7 +1710,7 @@ try {
 			if (isGZipped)
 				is = new GZIPInputStream(is);
 
-			mDataReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+			mDataReader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 			BOMSkipper.skip(mDataReader);
 			return true;
 			}
@@ -1802,7 +1799,7 @@ try {
 			}
 
 		if (mErrorCount > 0) {
-			final String message = ""+mErrorCount+" compound structures could not be generated because of molfile parsing errors.";
+			final String message = mErrorCount + " compound structures could not be generated because of molfile parsing errors.";
 			showMessageOnEDT(message, "Import Errors", JOptionPane.WARNING_MESSAGE);
 			}
 
@@ -1848,7 +1845,7 @@ try {
 
 			Object[] fieldData = new Object[mFieldNames.length];
 
-			String molname = null;
+			String molname = "";
 			try {
 				String molfile = sdParser.getNextMolFile();
 
@@ -1886,7 +1883,7 @@ try {
 				mErrorCount++;
 				}
 
-			if (molname.length() != 0) {
+			if (!molname.isEmpty()) {
 				mMolnameFound = true;
 				fieldData[2] = getBytes(molname);
 				if (structureIDColumn != -1 && !molname.equals(removeTabs(sdParser.getFieldData(structureIDColumn - 3))))
@@ -1991,7 +1988,7 @@ try {
 				errors++;
 				}
 
-			if (name != null && name.length() != 0) {
+			if (name != null && !name.isEmpty()) {
 				nameFound = true;
 				fieldData[0] = getBytes(name);
 				}
@@ -2033,7 +2030,7 @@ try {
 			}
 
 		if (errors > 0) {
-			final String message = ""+errors+" compound structures could not be generated because of molfile parsing errors.";
+			final String message = errors+" compound structures could not be generated because of molfile parsing errors.";
 			showMessageOnEDT(message, "Import Errors", JOptionPane.WARNING_MESSAGE);
 			}
 
@@ -2116,7 +2113,7 @@ try {
 	 * If we have 3D only, we need to change column properties accordingly.
 	 */
 	private void handlePotentially3DCoordinates() {
-		mOldVersionCoordinate3DColumn = -1;
+		int mOldVersionCoordinate3DColumn = -1;
 
 		if (!mCoordsMayBe3D)
 			return;
@@ -2156,7 +2153,7 @@ try {
 			}
 
 		mOldVersionCoordinate3DColumn = mFieldNames.length;
-		mFieldNames = Arrays.copyOf(mFieldNames, mOldVersionCoordinate3DColumn+1);
+		mFieldNames = Arrays.copyOf(mFieldNames, mOldVersionCoordinate3DColumn +1);
 		mFieldNames[mOldVersionCoordinate3DColumn] = cColumnType3DCoordinates;
 
 		mProgressController.startProgress("Separating 2D- from 3D-coordinates...", 0, (mFieldData.length > PROGRESS_LIMIT) ? mFieldData.length : 0);
@@ -2165,7 +2162,7 @@ try {
 			if (mFieldData.length > PROGRESS_LIMIT && row%PROGRESS_STEP == 0)
 				mProgressController.updateProgress(row);
 
-			mFieldData[row] = Arrays.copyOf(mFieldData[row], mOldVersionCoordinate3DColumn+1);
+			mFieldData[row] = Arrays.copyOf(mFieldData[row], mOldVersionCoordinate3DColumn +1);
 			byte[] idcode = (byte[])mFieldData[row][mOldVersionIDCodeColumn];
 			byte[] coords = (byte[])mFieldData[row][mOldVersionCoordinateColumn];
 			if (idcode != null && coords != null) {
@@ -2247,8 +2244,7 @@ try {
 			return cellBytes;
 
 		byte[] newBytes = new byte[index];
-		for (int i=0; i<index; i++)
-			newBytes[i] = cellBytes[i];
+		System.arraycopy(cellBytes, 0, newBytes, 0, index);
 
 		return newBytes;
 		}
@@ -2334,7 +2330,7 @@ try {
 					mParentFrame.setTitle(mNewWindowTitle);
 
 				int specifier = CompoundTableEvent.cSpecifierNoRuntimeProperties;   // if we have read them from the file
-				if (mRuntimeProperties == null || mRuntimeProperties.size() == 0) {
+				if (mRuntimeProperties == null || mRuntimeProperties.isEmpty()) {
 					boolean addDefaultFilters = (mAddDefaultFilters != 0);
 					boolean addDefaultViews = (mAddDefaultViews == 1) ? true
 							: (mAddDefaultViews == 0) ? false
@@ -2362,8 +2358,8 @@ try {
 		mFirstNewColumn = mTableModel.getTotalColumnCount();
 		int newDatasetNameColumns = (mAppendDatasetColumn == NEW_COLUMN) ? 1 : 0;
 		int newColumns = newDatasetNameColumns;
-		for (int i=0; i<mAppendDestColumn.length; i++)
-			if (mAppendDestColumn[i] == NEW_COLUMN)
+		for (int j : mAppendDestColumn)
+			if (j == NEW_COLUMN)
 				newColumns++;
 
 		if (newColumns != 0) {
@@ -2444,15 +2440,15 @@ try {
 		// construct key column array from mMergeMode
 		int keyColumns = 0;
 		int wordSearchIndex = -1;
-		for (int sourceColumn=0; sourceColumn<mMergeMode.length; sourceColumn++) {
-			if (mMergeMode[sourceColumn] == MERGE_MODE_IS_KEY
-			 || mMergeMode[sourceColumn] == MERGE_MODE_IS_KEY_NO_CASE
-			 || mMergeMode[sourceColumn] == MERGE_MODE_IS_KEY_WORD_SEARCH) {
-				if (mMergeMode[sourceColumn] == MERGE_MODE_IS_KEY_WORD_SEARCH)
+		for (int j : mMergeMode) {
+			if (j == MERGE_MODE_IS_KEY
+			 || j == MERGE_MODE_IS_KEY_NO_CASE
+			 || j == MERGE_MODE_IS_KEY_WORD_SEARCH) {
+				if (j == MERGE_MODE_IS_KEY_WORD_SEARCH)
 					wordSearchIndex = keyColumns;
 				keyColumns++;
-				}
 			}
+		}
 
 		int[] keyColumn = null;
 		boolean[] isIgnoreCase = null;
@@ -2698,7 +2694,7 @@ try {
 		int maxCount = 0;
 		for (byte[][] key:keySet) {
 			String s = new String(key[0]);
-			int count = (s.length() == 0) ? 0 : 1;
+			int count = (s.isEmpty()) ? 0 : 1;
 			for (int i=0; i<s.length(); i++)
 				if (s.charAt(i) == ' ')
 					count++;
@@ -2818,8 +2814,7 @@ try {
 							}
 						}
 					if (found) {
-						for (int j=0; j<newRefBytes.length; j++)
-							bytes[i+j] = newRefBytes[j];
+						System.arraycopy(newRefBytes, 0, bytes, i, newRefBytes.length);
 						i += oldRefBytes.length -1;
 						}
 					}
@@ -2892,12 +2887,11 @@ try {
 			// use either offset or destRowMap to indicate mapping of original hitlists to current rows
 		if (mHitlists != null) {
 			CompoundTableListHandler hitlistHandler = mTableModel.getListHandler();
-			for (int list=0; list<mHitlists.size(); list++) {
-				String listString = mHitlists.get(list);
+			for (String listString : mHitlists) {
 				int index = listString.indexOf('\t');
 				String name = listString.substring(0, index);
-				byte[] data = new byte[listString.length()-index-1];
-				for (int i=0; i<data.length; i++)
+				byte[] data = new byte[listString.length() - index - 1];
+				for (int i = 0; i<data.length; i++)
 					data[i] = (byte)(listString.charAt(++index) - 64);
 
 				boolean isSelection = CompoundTableListHandler.LIST_CODE_SELECTION.equals(name);

@@ -55,6 +55,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 	private static final String URL1 = "https://dwversion.openmolecules.org";
 	private static final String URL2 = "http://datawarrior.org:8084";
 	private static final String DEFAULT_UPDATE_URL = "https://openmolecules.org/datawarrior/update";
+	private static final String DEFAULT_PLUGIN_URL = "https://openmolecules.org/datawarrior/plugin";
 
 	// IMPORTANT: When creating a new manual(!!!) installer (not an update for automatic deployment),
 	// then DataWarriorLauncher.BASE_VERSION must also be changed to match this DATAWARRIOR_VERSION!
@@ -94,6 +95,13 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 	private static final String PROPERTY_NEWS_IMAGE = "news_image_";
 	private static final String PROPERTY_NEWS_URL = "news_url_";
 	private static final String PROPERTY_NEWS_TYPE = "news_type_";
+
+	private static final String PROPERTY_PLUGIN_SOURCE_URL = "plugin_source_url_";
+	private static final String PROPERTY_PLUGIN_NAME = "plugin_name_";
+	private static final String PROPERTY_PLUGIN_VERSION = "plugin_version_";
+	private static final String PROPERTY_PLUGIN_MD5SUM = "plugin_md5sum_";
+	private static final String PROPERTY_PLUGIN_INFO_URL = "plugin_info_url_";
+	private static final String PROPERTY_PLUGIN_COMMENT = "plugin_comment_";
 
 	private static final char[] DIGITS = { '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 
@@ -146,9 +154,12 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 				if (consistentFailure)
 					askForBrowser(URL1 + params, parent, prefs, error);
 				else
-					handleUpdate(parent, prefs, updateMode);
+					handleUpdate(parent, updateMode);
 				}
-			} ).start();
+
+			if (System.getProperty("development") != null)
+				handleTrustesPlugins(parent, prefs);
+		} ).start();
 		}
 
 	private static void updateServerURLs(Preferences prefs) {
@@ -225,7 +236,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 		prefs.put(PREFERENCES_KEY_HANDLED_NEWS_IDS, newHandledNewsIDs.toString());
 		}
 
-	private static void handleUpdate(DEFrame parent, Preferences prefs, int updateMode) {
+	private static void handleUpdate(DEFrame parent, int updateMode) {
 		String availableInstaller = sPostInstallInfo.getProperty(PROPERTY_MANUAL_UPDATE_VERSION);
 		if (availableInstaller != null
 				&& availableInstaller.matches("v\\d\\d\\.\\d\\d\\.\\d\\d")
@@ -269,107 +280,14 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 				return;
 		}
 
-		String updatePath = getUpdatePath(parent, prefs);
-		if (updatePath != null) {
+		String targetDir = getUpdatePath(parent);
+		if (targetDir != null) {
 			String md5sum = sPostInstallInfo.getProperty(PROPERTY_AUTO_UPDATE_MD5SUM);
-			final String updateName = "datawarrior_"+availableVersion;
-			final String tempFilePath = updatePath.concat(File.separator).concat(updateName).concat(".temp");
-			final String finalFilePath = updatePath.concat(File.separator).concat(updateName).concat(".jar");
-
-			// Don't download, if we have that file already
-			File finalFile = new File(finalFilePath);
-			if (finalFile.exists()) {
-				if (md5sum == null || md5sum.equalsIgnoreCase(md5sum(finalFilePath)))
-					return;
-
-				// If we have an older file with unexpected md5sum, then delete that.
-				boolean success = false;
-				String msg = null;
-				try {
-					success = finalFile.delete();
-				}
-				catch (SecurityException e) {
-					msg = e.getMessage();
-				}
-				if (!success) {
-					final String msgLine = (msg == null) ? "" : "\nMessage: "+msg;
-					SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-							"DataWarrior could not delete broken file '"+finalFilePath+"'.\nTry deleting it manually!"+msgLine,
-							"Deletion Failed", JOptionPane.ERROR_MESSAGE));
-					return;
-				}
-			}
-
-			File tempFile = new File(tempFilePath);
-			if (tempFile.exists()) {
-				if (md5sum == null || md5sum.equalsIgnoreCase(md5sum(tempFilePath))) {
-					boolean success = false;
-					String msg = null;
-					try {
-						success = tempFile.renameTo(finalFile);
-					}
-					catch (SecurityException e) {
-						msg = e.getMessage();
-					}
-					if (!success) {
-						final String msgLine = (msg == null) ? "" : "\nMessage: "+msg;
-						SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-								"DataWarrior could not rename successfully downloaded '" + tempFilePath + "'."+msgLine,
-								"File Rename Failed", JOptionPane.ERROR_MESSAGE));
-					}
-					return;
-				}
-
-				// If we have an older file with unexpected md5sum, then delete that.
-				boolean success = false;
-				String msg = null;
-				try {
-					success = tempFile.delete();
-				}
-				catch (SecurityException e) {
-					msg = e.getMessage();
-				}
-				if (!success) {
-					final String msgLine = (msg == null) ? "" : "\nMessage: "+msg;
-					SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-							"DataWarrior could not delete broken file '"+tempFilePath+"'.\nTry deleting it manually!"+msgLine,
-							"Deletion Failed", JOptionPane.ERROR_MESSAGE));
-					return;
-				}
-			}
-
-			try {
-				sIsUpdating = true;
-				URL url = new URL(updateURL+"/"+updateName+".jar");
-				ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-				FileOutputStream fileOutputStream = new FileOutputStream(tempFilePath);
-				FileChannel fileChannel = fileOutputStream.getChannel();
-				fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-				if (md5sum != null) {
-					String checksum = md5sum(tempFilePath);
-					if (!md5sum.equalsIgnoreCase(checksum)) {
-						SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-								"DataWarrior could download and write file '"+tempFilePath
-										+ "', but its md5sum\n"+checksum+" does not match the expected one "+md5sum,
-								"MD5 Mismatch", JOptionPane.ERROR_MESSAGE));
-						sIsUpdating = false;
-						return;
-					}
-				}
-				try {
-					tempFile.renameTo(finalFile);
-				}
-				catch (SecurityException e) {
-					SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-							"DataWarrior could not rename successfully downloaded '"+tempFilePath+"'.\nMessage: "+e.getMessage(),
-							"File Rename Failed", JOptionPane.ERROR_MESSAGE));
-					sIsUpdating = false;
-					return;
-				}
-
+			final String fileNameNoExtention = "datawarrior_"+availableVersion;
+			if (downloadJarFile(parent, updateURL, targetDir, fileNameNoExtention, md5sum)) {
 				// remove older updates. Just keep the three newest ones
 				try {
-					File[] files = new File(updatePath).listFiles(file -> isDataWarriorUpdateJar(file));
+					File[] files = new File(targetDir).listFiles(file -> isDataWarriorUpdateJar(file));
 					if (files != null && files.length > 3) {
 						Arrays.sort(files, Comparator.comparing(File::getName));
 						for (int i=0; i<files.length-3; i++)
@@ -377,23 +295,163 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 					}
 				}
 				catch (Exception e) {}
-
-				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-						"DataWarrior has successfully updated to version '"+availableVersion+"'.\nNext time you start DataWarrior, this version will be used.",
-						"Updated Successfully", JOptionPane.INFORMATION_MESSAGE));
 			}
-			catch (IOException ioe) {
-				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-						"DataWarrior could not download or write file '"+tempFilePath+"'.\nMessage: "+ioe.getMessage(),
-						"Download Failed", JOptionPane.ERROR_MESSAGE));
-			}
-			catch (Throwable t) {
-				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
-						"Unexpected failure in DataWarrior update procedure\nMessage: "+t.getMessage(),
-						"DataWarrior Update Failed", JOptionPane.ERROR_MESSAGE));
-			}
-			sIsUpdating = false;
 		}
+	}
+
+	public static boolean downloadJarFile(Frame parent, String sourceURL, String targetDir, String fileNameNoExtention, String md5sum) {
+		final String tempFilePath = targetDir.concat(File.separator).concat(fileNameNoExtention).concat(".temp");
+		final String finalFilePath = targetDir.concat(File.separator).concat(fileNameNoExtention).concat(".jar");
+
+		// Don't download, if we have that file already
+		File finalFile = new File(finalFilePath);
+		if (finalFile.exists()) {
+			if (md5sum == null || md5sum.equalsIgnoreCase(md5sum(finalFilePath)))
+				return true;
+
+			// If we have an older file with unexpected md5sum, then delete that.
+			boolean success = false;
+			String msg = null;
+			try {
+				success = finalFile.delete();
+			}
+			catch (SecurityException e) {
+				msg = e.getMessage();
+			}
+			if (!success) {
+				final String msgLine = (msg == null) ? "" : "\nMessage: "+msg;
+				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+						"DataWarrior could not delete broken file '"+finalFilePath+"'.\nTry deleting it manually!"+msgLine,
+						"Deletion Failed", JOptionPane.ERROR_MESSAGE));
+				return false;
+			}
+		}
+
+		File tempFile = new File(tempFilePath);
+		if (tempFile.exists()) {
+			if (md5sum == null || md5sum.equalsIgnoreCase(md5sum(tempFilePath))) {
+				boolean success = false;
+				String msg = null;
+				try {
+					success = tempFile.renameTo(finalFile);
+				}
+				catch (SecurityException e) {
+					msg = e.getMessage();
+				}
+				if (!success) {
+					final String msgLine = (msg == null) ? "" : "\nMessage: "+msg;
+					SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+							"DataWarrior could not rename successfully downloaded '" + tempFilePath + "'."+msgLine,
+							"File Rename Failed", JOptionPane.ERROR_MESSAGE));
+				}
+				return success;
+			}
+
+			// If we have an older file with unexpected md5sum, then delete that.
+			boolean success = false;
+			String msg = null;
+			try {
+				success = tempFile.delete();
+			}
+			catch (SecurityException e) {
+				msg = e.getMessage();
+			}
+			if (!success) {
+				final String msgLine = (msg == null) ? "" : "\nMessage: "+msg;
+				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+						"DataWarrior could not delete broken file '"+tempFilePath+"'.\nTry deleting it manually!"+msgLine,
+						"Deletion Failed", JOptionPane.ERROR_MESSAGE));
+				return false;
+			}
+		}
+
+		try {
+			sIsUpdating = true;
+			URL url = new URL(sourceURL+"/"+fileNameNoExtention+".jar");
+			ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
+			FileOutputStream fileOutputStream = new FileOutputStream(tempFilePath);
+			FileChannel fileChannel = fileOutputStream.getChannel();
+			fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+			if (md5sum != null) {
+				String checksum = md5sum(tempFilePath);
+				if (!md5sum.equalsIgnoreCase(checksum)) {
+					SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+							"DataWarrior could download and write file '"+tempFilePath
+									+ "', but its md5sum\n"+checksum+" does not match the expected one "+md5sum,
+							"MD5 Mismatch", JOptionPane.ERROR_MESSAGE));
+					sIsUpdating = false;
+					return false;
+				}
+			}
+			try {
+				sIsUpdating = false;
+				return tempFile.renameTo(finalFile);
+			}
+			catch (SecurityException e) {
+				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+						"DataWarrior could not rename successfully downloaded '"+tempFilePath+"'.\nMessage: "+e.getMessage(),
+						"File Rename Failed", JOptionPane.ERROR_MESSAGE));
+				sIsUpdating = false;
+				return false;
+			}
+		}
+		catch (IOException ioe) {
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+					"DataWarrior could not download or write file '"+tempFilePath+"'.\nMessage: "+ioe.getMessage(),
+					"Download Failed", JOptionPane.ERROR_MESSAGE));
+		}
+		catch (Throwable t) {
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+					"Unexpected failure in DataWarrior update procedure\nMessage: "+t.getMessage(),
+					"DataWarrior Update Failed", JOptionPane.ERROR_MESSAGE));
+		}
+		sIsUpdating = false;
+		return false;
+	}
+
+	private static void handleTrustesPlugins(DEFrame parent, Preferences prefs) {
+		Set<String> propertyNames = sPostInstallInfo.stringPropertyNames();
+		TreeMap<String, DETrustedPlugin> pluginMap = new TreeMap<>();
+		for (String propertyName : propertyNames) {
+			if (propertyName.startsWith(PROPERTY_PLUGIN_NAME)) {
+				String pluginID = propertyName.substring(PROPERTY_PLUGIN_NAME.length());
+				String name = sPostInstallInfo.getProperty(propertyName);
+				String version = sPostInstallInfo.getProperty(PROPERTY_PLUGIN_VERSION.concat(pluginID));
+				String md5sum = sPostInstallInfo.getProperty(PROPERTY_PLUGIN_MD5SUM.concat(pluginID));
+				String infoURL = sPostInstallInfo.getProperty(PROPERTY_PLUGIN_INFO_URL.concat(pluginID));
+				String sourceURL = sPostInstallInfo.getProperty(PROPERTY_PLUGIN_SOURCE_URL.concat(pluginID), DEFAULT_PLUGIN_URL);
+				String comment = sPostInstallInfo.getProperty(PROPERTY_PLUGIN_COMMENT.concat(pluginID));
+				DETrustedPlugin plugin = new DETrustedPlugin(pluginID, version, name, sourceURL, md5sum, infoURL, comment);
+				plugin.checkInstallation(prefs);
+				if (!plugin.isDevelopment() || System.getProperty("development") != null)
+					pluginMap.put(pluginID, plugin);
+			}
+		}
+
+		// Remove outdated plugins and update those that have an updated version available.
+		try {
+			String targetDir = prefs.get(PREFERENCES_KEY_UPDATE_PATH, null);
+			if (targetDir != null) {
+				File[] files = new File(targetDir).listFiles(file -> !file.isDirectory() && DETrustedPlugin.isValidFileName(file.getName()));
+				if (files != null) {
+					for (File f:files) {
+						DETrustedPlugin plugin = new DETrustedPlugin(f.getName());
+						DETrustedPlugin newPlugin = pluginMap.get(plugin.getID());
+						boolean needsUpdate = newPlugin != null && !plugin.getVersion().equals(newPlugin.getVersion());
+						boolean deleteOutdated = newPlugin == null || needsUpdate;
+
+						if (needsUpdate && downloadJarFile(parent, newPlugin.getSourceURL(), targetDir, newPlugin.getFilename(false), newPlugin.getMD5Sum()))
+							JOptionPane.showMessageDialog(parent, "The trusted plugin '"+newPlugin.getName()+"' was successfully updated.");
+
+						if (deleteOutdated && !f.delete())
+							JOptionPane.showMessageDialog(parent, "Could not delete outdated trusted plugin file '"+f.getName()+"' from directory '"+targetDir+"'.");
+					}
+				}
+			}
+		}
+		catch (Exception e) {}
+
+		SwingUtilities.invokeLater(() -> parent.getDEMenuBar().updateTrustedPluginMenu(pluginMap) );
 	}
 
 	private static String md5sum(String path) {
@@ -454,7 +512,8 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 				&& filename.length() == 25;
 		}
 
-	private static String getUpdatePath(final Frame parent, Preferences prefs) {
+	public static String getUpdatePath(final Frame parent) {
+		Preferences prefs = DataWarrior.getPreferences();
 		String baseDir = prefs.get(PREFERENCES_KEY_UPDATE_PATH, null);
 		if (baseDir != null)
 			baseDir = getWritableDir(baseDir, null);
@@ -509,24 +568,24 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 
 	private static String getWritableDir(String baseDirName, String dirName) {
 		File baseDir = new File(baseDirName);
-		if (baseDir.exists()) {
-			String writabelDirName = baseDirName;
-			try {
-				if (dirName != null) {
-					writabelDirName = baseDirName.concat(File.separator).concat(dirName);
-					File file = new File(writabelDirName);
-					if (!file.exists() && !file.mkdir())
-						return null;
-					}
+		if (!baseDir.exists())
+			return null;
 
-				File testFile = new File(writabelDirName.concat(File.separator).concat("emptyABCXYZ.txt"));
-				testFile.createNewFile();
-				testFile.delete();
-				return writabelDirName;
+		String writabelDirName = baseDirName;
+		try {
+			if (dirName != null) {
+				writabelDirName = baseDirName.concat(File.separator).concat(dirName);
+				File file = new File(writabelDirName);
+				if (!file.exists() && !file.mkdir())
+					return null;
 				}
-			catch (IOException e) {}
+
+			File testFile = new File(writabelDirName.concat(File.separator).concat("emptyABCXYZ.txt"));
+			return (testFile.createNewFile() && testFile.delete()) ? writabelDirName : null;
 			}
-		return null;
+		catch (IOException e) {
+			return null;
+			}
 		}
 
 	private static void askForBrowser(final String url, final Frame parent, final Preferences prefs, final String error) {

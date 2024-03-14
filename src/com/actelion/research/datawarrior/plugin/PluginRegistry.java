@@ -19,6 +19,7 @@
 package com.actelion.research.datawarrior.plugin;
 
 import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.datawarrior.help.DETrustedPlugin;
 import com.actelion.research.datawarrior.task.ITableRowTask;
 import com.actelion.research.datawarrior.task.db.DETaskPluginTask;
 import org.openmolecules.datawarrior.plugin.IPluginInitializer;
@@ -32,13 +33,15 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 
+import static com.actelion.research.datawarrior.help.DEUpdateHandler.PREFERENCES_KEY_UPDATE_PATH;
+
 public class PluginRegistry implements IPluginStartHelper {
 	private static final String INITIALIZER_CLASS_NAME = "PluginInitializer";
 	private static final String STARTER_CLASS_NAME = "org.openmolecules.datawarrior.plugin.PluginStarter";
 	private static final String CONFIG_FILE_NAME = "config.txt";
 	private static final String KEY_CUSTOM_PLUGIN_DIRS = "custom_plugin_dirs";
 
-	private DataWarrior mApplication;
+	private final DataWarrior mApplication;
 	private ArrayList<PluginMenuEntry> mMenuEntryList;
 	private ArrayList<PluginTaskDefinition> mTaskDefinitionList;
 
@@ -86,6 +89,13 @@ public class PluginRegistry implements IPluginStartHelper {
 					loadPlugins(customPluginDir, config, parent);
 			}
 		}
+
+		String trustedPluginDir = DataWarrior.getPreferences().get(PREFERENCES_KEY_UPDATE_PATH, null);
+		if (trustedPluginDir != null) {
+			File dir = new File(trustedPluginDir);
+			if (dir.exists() && dir.isDirectory())
+				loadPlugins(dir, config, parent);
+		}
 	}
 
 	private void loadPlugins(File directory, Properties config, ClassLoader parent) {
@@ -93,117 +103,123 @@ public class PluginRegistry implements IPluginStartHelper {
 			// First we try instantiating the starter class using the standard class loader, which should only succeed,
 			// if it was added to the DataWarrior source code for the purpose of plugin development & debugging.
 			// If the starter class is found, then it is allowed to initialize and loading of real plugins is skipped.
-			Class starterClass = getClass().getClassLoader().loadClass(STARTER_CLASS_NAME);
-			IPluginStarter starter = (IPluginStarter)starterClass.newInstance();
+			Class<?> starterClass = getClass().getClassLoader().loadClass(STARTER_CLASS_NAME);
+			IPluginStarter starter = (IPluginStarter)starterClass.getDeclaredConstructor().newInstance();
 			starter.initialize(this, directory, config);
 			return;
 		}
 		catch (Exception e) {}
 
 		// Now we try loading all real plugins...
-		File[] files = directory.listFiles(file -> !file.isDirectory() && file.getName().toLowerCase().endsWith(".jar"));
+		File[] files = directory.listFiles(file -> !file.isDirectory() && DETrustedPlugin.isValidFileName(file.getName()));
 		if (files != null && files.length != 0) {
 			Arrays.sort(files, Comparator.comparing(File::getName));
-			for (File file : files) {
-				try {
+			for (File file : files)
+				loadPlugin(file, directory, config, parent);
+		}
+	}
+
+	private void loadPlugin(File file, File directory, Properties config, ClassLoader parent) {
+		try {
 //					ClassLoader loader = URLClassLoader.newInstance(new URL[] { file.toURI().toURL() }, getClass().getClassLoader());
-					ClassLoader loader = new URLClassLoader(new URL[] { file.toURI().toURL() }, parent);
+			ClassLoader loader = new URLClassLoader(new URL[] { file.toURI().toURL() }, parent);
 
-					// Since Dec2022 plugins may contain an PluginStarter class. We try to load and run it...
-					try {
-						Class<?> starterClass = loader.loadClass(STARTER_CLASS_NAME);
-						IPluginStarter starter = (IPluginStarter)starterClass.getDeclaredConstructor().newInstance();
-						starter.initialize(this, directory, config);
-					}
-					catch (Exception e) {
-						// If we don't find the PluginStarter class, we look for the older PluginInitializer
-						// and then load and use plugin task names from the 'tasknames' file.
+			// Since Dec2022 plugins may contain an PluginStarter class. We try to load and run it...
+			try {
+				Class<?> starterClass = loader.loadClass(STARTER_CLASS_NAME);
+				IPluginStarter starter = (IPluginStarter)starterClass.getDeclaredConstructor().newInstance();
+				starter.initialize(this, directory, config);
+			}
+			catch (Exception e) {
+				// If we don't find the PluginStarter class, we look for the older PluginInitializer
+				// and then load and use plugin task names from the 'tasknames' file.
 
-						try {
-							// Since Sep2021 plugins may contain an Initializer class, which is already deprecated. We try to load and run it...
-							Class<?> initializerClass = loader.loadClass(INITIALIZER_CLASS_NAME);
-							IPluginInitializer initializer = (IPluginInitializer)initializerClass.getDeclaredConstructor().newInstance();
-							initializer.initialize(directory, config);
-						}
-						catch (Exception ee) {
-							// no error handling, because it is OK for the class not to be present
-						}
+				try {
+					// Since Sep2021 plugins may contain an Initializer class, which is already deprecated. We try to load and run it...
+					Class<?> initializerClass = loader.loadClass(INITIALIZER_CLASS_NAME);
+					IPluginInitializer initializer = (IPluginInitializer)initializerClass.getDeclaredConstructor().newInstance();
+					initializer.initialize(directory, config);
+				}
+				catch (Exception ee) {
+					// no error handling, because it is OK for the class not to be present
+				}
 
-						TreeSet<String> menuSet = new TreeSet<>();
-						BufferedReader br = new BufferedReader(new InputStreamReader(loader.getResourceAsStream("tasknames")));
-						String line = br.readLine();
-						while (line != null) {
-							if (!line.isEmpty() && !line.startsWith("#")) {
-								int index = line.indexOf(','); // we may have one or multiple items per line: <className>[,spec1[;spec2[;spec3]]]
-								String className = (index == -1 ? line : line.substring(0, index)).trim();
-								String menuName = (index == -1) ? "Database" : line.substring(index+1).trim();
+				TreeSet<String> menuSet = new TreeSet<>();
+				InputStream is = loader.getResourceAsStream("tasknames");
+				if (is != null) {
+					BufferedReader br = new BufferedReader(new InputStreamReader(loader.getResourceAsStream("tasknames")));
+					String line = br.readLine();
+					while (line != null) {
+						if (!line.isEmpty() && !line.startsWith("#")) {
+							int index = line.indexOf(','); // we may have one or multiple items per line: <className>[,spec1[;spec2[;spec3]]]
+							String className = (index == -1 ? line : line.substring(0, index)).trim();
+							String menuName = (index == -1) ? "Database" : line.substring(index+1).trim();
 
-								Class<?> pluginClass = null;
+							Class<?> pluginClass = null;
+							try {
+								// If the class is part of the DataWarrior source code (usually it is not),
+								// then we instantiate it with the standard class loader to make it available for debugging.
+								// For debugging the jar file defining plugin task names must still be in the plugin folder.
+								pluginClass = Class.forName(className);
+							}
+							catch (ClassNotFoundException cnfe) {
+								// However, typically the class is part of an external jar file and is instantiated
+								// with an extra class loader directly from the plugin jar file.
 								try {
-									// If the class is part of the DataWarrior source code (usually it is not),
-									// then we instantiate it with the standard class loader to make it available for debugging.
-									// For debugging the jar file defining plugin task names must still be in the plugin folder.
-									pluginClass = Class.forName(className);
+									pluginClass = loader.loadClass(className);
 								}
-								catch (ClassNotFoundException cnfe) {
-									// However, typically the class is part of an external jar file and is instantiated
-									// with an extra class loader directly from the plugin jar file.
-									try {
-										pluginClass = loader.loadClass(className);
-									}
-									catch (ClassNotFoundException icnfe) {
-										System.out.println("Class '"+className+"' not found in plugin '"+file.getName()+"'.");
-									}
-									catch (Throwable t) {
-										t.printStackTrace();
-									}
+								catch (ClassNotFoundException icnfe) {
+									System.out.println("Class '"+className+"' not found in plugin '"+file.getName()+"'.");
 								}
-								if (pluginClass != null) {
-									IPluginTask task = (IPluginTask)pluginClass.getDeclaredConstructor().newInstance();
-									String taskGroupName = menuName;
-
-									// For old handling add separator, if menu exists
-									if (menuName.equals("File")
-									 || menuName.equals("Edit")
-									 || menuName.equals("Data")
-									 || menuName.equals("Chemistry")
-									 || menuName.equals("Database")
-									 || menuName.equals("List")
-									 || menuName.equals("Macro")
-									 || menuName.equals("Help")) {
-										if (!menuSet.contains(menuName)) {
-										// add separator
-											mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
-											menuSet.add(menuName);
-										}
-									}
-									// Translate old menu name to menu path for new handling
-									else if (menuName.equals("From Chemical Structure")) {
-										// add separator
-										menuName = "Chemistry" + MENU_PATH_SEPARATOR + "From Chemical Structure";
-										taskGroupName = "Chemistry";
-										mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
-										}
-									else if (menuName.equals("From Chemical Reaction")) {
-										// add separator
-										menuName = "Chemistry" + MENU_PATH_SEPARATOR + "From Chemical Reaction";
-										taskGroupName = "Chemistry";
-										mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
-										}
-
-									mTaskDefinitionList.add(new PluginTaskDefinition(task, taskGroupName));
-									mMenuEntryList.add(new PluginMenuEntry(task, menuName, task.getTaskName()));
+								catch (Throwable t) {
+									t.printStackTrace();
 								}
 							}
-							line = br.readLine();
+							if (pluginClass != null) {
+								IPluginTask task = (IPluginTask)pluginClass.getDeclaredConstructor().newInstance();
+								String taskGroupName = menuName;
+
+								// For old handling add separator, if menu exists
+								if (menuName.equals("File")
+										|| menuName.equals("Edit")
+										|| menuName.equals("Data")
+										|| menuName.equals("Chemistry")
+										|| menuName.equals("Database")
+										|| menuName.equals("List")
+										|| menuName.equals("Macro")
+										|| menuName.equals("Help")) {
+									if (!menuSet.contains(menuName)) {
+										// add separator
+										mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
+										menuSet.add(menuName);
+									}
+								}
+								// Translate old menu name to menu path for new handling
+								else if (menuName.equals("From Chemical Structure")) {
+									// add separator
+									menuName = "Chemistry" + MENU_PATH_SEPARATOR + "From Chemical Structure";
+									taskGroupName = "Chemistry";
+									mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
+								}
+								else if (menuName.equals("From Chemical Reaction")) {
+									// add separator
+									menuName = "Chemistry" + MENU_PATH_SEPARATOR + "From Chemical Reaction";
+									taskGroupName = "Chemistry";
+									mMenuEntryList.add(new PluginMenuEntry(null, menuName, null));
+								}
+
+								mTaskDefinitionList.add(new PluginTaskDefinition(task, taskGroupName));
+								mMenuEntryList.add(new PluginMenuEntry(task, menuName, task.getTaskName()));
+							}
 						}
-						br.close();
+						line = br.readLine();
 					}
-				}
-				catch (Exception e) {
-					e.printStackTrace();
+					br.close();
 				}
 			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 

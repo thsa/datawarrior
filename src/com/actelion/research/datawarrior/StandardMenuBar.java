@@ -129,8 +129,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 	protected JMenu jMenuFileNewFrom,jMenuFileOpenSpecial,jMenuFileOpenRecent,jMenuFileSaveSpecial,jMenuEditPasteSpecial,jMenuDataRemoveRows,
 				  jMenuDataSelfOrganizingMap,jMenuDataSetRange,jMenuDataViewLogarithmic,jMenuChemAddMoleculeDescriptor,
-				  jMenuChemAddReactionDescriptor,jMenuListCreate,jMenuMacroExport,jMenuMacroCopy,jMenuMacroRun,jMenuHelpNews,jMenuHelpLaF,
-				  jMenuHelpDPIScaling,jMenuHelpUpdate,jMenuChemMachineLearning;
+				  jMenuChemAddReactionDescriptor,jMenuListCreate,jMenuMacroExport,jMenuMacroCopy,jMenuMacroRun,jMenuHelp,jMenuHelpNews,jMenuHelpLaF,
+				  jMenuHelpDPIScaling,jMenuHelpUpdate,jMenuHelpTrustedPlugins,jMenuChemMachineLearning;
 
 	private JMenuItem jMenuFileNew,jMenuFileNewFromVisible,jMenuFileNewFromSelection,jMenuFileNewFromPivoting,jMenuFileNewFromReversePivoting,jMenuFileNewFromTransposition,
 					  jMenuFileOpen,jMenuFileOpenMacro,jMenuFileOpenTemplate,jMenuFileOpenMDLReactions,jMenuFileMerge,
@@ -198,6 +198,73 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			e.printStackTrace();
 			}
 		}
+
+	public void updateTrustedPluginMenu(TreeMap<String,DETrustedPlugin> pluginMap) {
+		if (jMenuHelpTrustedPlugins != null)
+			jMenuHelpTrustedPlugins.removeAll();
+		try {
+			for (String pluginID : pluginMap.keySet()) {
+				DETrustedPlugin plugin = pluginMap.get(pluginID);
+				JMenu pluginMenu = createTrustedPluginMenu(plugin);
+
+				if (jMenuHelpTrustedPlugins == null) {
+					jMenuHelpTrustedPlugins = new JMenu("Trusted Plugins");
+					jMenuHelp.addSeparator();
+					jMenuHelp.add(jMenuHelpTrustedPlugins);
+				}
+				jMenuHelpTrustedPlugins.add(pluginMenu);
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static JMenu createTrustedPluginMenu(DETrustedPlugin plugin) {
+		JMenu pluginMenu = new JMenu(plugin.getName());
+		if (plugin.getComment() != null)
+			pluginMenu.setToolTipText(format(plugin.getComment(), 60));
+		JMenuItem item1 = new JMenuItem(plugin.isInstalled() ? "Uninstall This Plugin" : "Install This Plugin");
+		item1.addActionListener(e -> { if (plugin.isInstalled()) plugin.uninstall(); else plugin.install(); } );
+		pluginMenu.add(item1);
+		if (plugin.getInfoURL() != null) {
+			JMenuItem item2 = new JMenuItem("More In Web-Browser...");
+			item2.addActionListener(e -> BrowserControl.displayURL(plugin.getInfoURL()) );
+			pluginMenu.add(item2);
+		}
+		return pluginMenu;
+	}
+
+	private static String format(String input, int width) {
+		int maxChars = Math.min(20, width/2);
+		StringBuilder sb = new StringBuilder("<html>");
+
+		int start = 0;
+		while (true) {
+			if (input.length() - start <= width) {
+				sb.append(input.substring(start));
+				break;
+			}
+
+			int end = start + width;
+			int index = end;
+
+			while (input.charAt(index) != ' ' && index > end-maxChars)
+				index--;
+
+			if (input.charAt(index) == ' ') {
+				sb.append(input, start, index).append("<br>");
+				start = index+1;
+			}
+			else {
+				sb.append(input, start, end).append("<br>");
+				start = end;
+			}
+		}
+
+		sb.append("</html>");
+		return sb.toString();
+	}
 
 	private void addOtherActionKeys() {
 		final String expandMain = "ExpandMain";
@@ -1258,7 +1325,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuHelpShortcuts.setText("Shortcuts...");
 		jMenuHelpShortcuts.addActionListener(this);
 
-		JMenu jMenuHelp = new JMenu();
+		jMenuHelp = new JMenu();
 		if (!mApplication.isMacintosh()) {
 			jMenuHelp.add(jMenuHelpAbout);
 			jMenuHelp.addSeparator();

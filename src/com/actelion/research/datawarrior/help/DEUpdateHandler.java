@@ -441,10 +441,10 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 						boolean deleteOutdated = newPlugin == null || needsUpdate;
 
 						if (needsUpdate && downloadJarFile(parent, newPlugin.getSourceURL(), targetDir, newPlugin.getFilename(false), newPlugin.getMD5Sum()))
-							JOptionPane.showMessageDialog(parent, "The trusted plugin '"+newPlugin.getName()+"' was successfully updated.");
+							SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent, "The trusted plugin '"+newPlugin.getName()+"' was successfully updated."));
 
 						if (deleteOutdated && !f.delete())
-							JOptionPane.showMessageDialog(parent, "Could not delete outdated trusted plugin file '"+f.getName()+"' from directory '"+targetDir+"'.");
+							SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent, "Could not delete outdated trusted plugin file '"+f.getName()+"' from directory '"+targetDir+"'."));
 					}
 				}
 			}

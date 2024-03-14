@@ -143,7 +143,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private volatile TreeMap<String,DataDependentPropertyReader> mDataDependentPropertyReaderMap;
 	private int					mOldVersionIDCodeColumn,mOldVersionCoordinateColumn,mAddDefaultFilters,mAddDefaultViews;
 	private boolean				mWithHeaderLine,mAppendRest,mCoordsMayBe3D,mIsGooglePatentsFile,mIsFiltersOnly,
-								mMolnameFound,mMolnameIsDifferentFromFirstField,mAssumeChiralFlag,mAddAtomMapping;
+								mMolnameFound,mMolnameIsDifferentFromFirstField,mAssumeChiralFlag,mAddAtomMapping,
+								mMakeUnknownSingleStereoCentersRacemic;
 	private volatile boolean	mOwnsProgressController;
 	private volatile int		mDelimiter;
 	private String				mNewWindowTitle,mVersion;
@@ -1753,18 +1754,38 @@ try {
 				}
 			}
 
+		SDFileContentAnalysis analysis = processSDFile(fieldNames, structureIDColumn, fieldDataList);
+		boolean processAgain = false;
+
+		// In a first run we check for all compounds with exactly one stereo center, whether some of them are defined to be racemic.
+		// If some of these compounds have no stere information, but no racemic compounds were found, we offer to consider unspecified
+		// compounds to be racemic.
+		if (!mMakeUnknownSingleStereoCentersRacemic && analysis.v2000Found && !analysis.singleRacemicStereoCenterFound && analysis.singleUnspecifiedStereoCenterFound
+				&& askOnEDT("When writing an SD-file, many programs export racemic compounds without any stereo\n"
+						+ "information for compounds that contain just one stereo center.\n"
+						+ "All molecules of this SD-file, which contain just one stereo center, miss stereo information.\n"
+						+ "Do you want DataWarrior to interpret those molecules to be racemic?", "Warning",
+				JOptionPane.WARNING_MESSAGE)) {
+			mMakeUnknownSingleStereoCentersRacemic = true;
+			processAgain = true;
+			}
+
 		// In a first run we check, whether all molfiles are V2000 without chiral flag == 0 despite some
 		// molfiles having defined stereo centers. If found then we may process the file a second time
 		// assuming that molecules with defined stereo centers are meant to be enantiomerically pure.
-		if (processSDFile(fieldNames, structureIDColumn, fieldDataList, mAssumeChiralFlag)
+		if (!mAssumeChiralFlag && analysis.v2000Found && !analysis.chiralFlagFound && analysis.definedStereoCentersFound
 		 && askOnEDT("Erroneously, some programs store pure enantiomers as racemates when exporting to an SD-file.\n"
 						+ "All molecules in this SD-file are marked as racemate and some molecules contain stereo centers.\n"
 						+ "Do you want DataWarrior to interpret those stereo centers as absolute? If you answer YES, then\n"
 						+ "molecules with defined stereo conters will be assumed to be pure enantiomers rather then racemates.", "Warning",
 				JOptionPane.WARNING_MESSAGE)) {
 			mAssumeChiralFlag = true;
+			processAgain = true;
+			}
+
+		if (processAgain) {
 			fieldDataList.clear();
-			processSDFile(fieldNames, structureIDColumn, fieldDataList, true);
+			processSDFile(fieldNames, structureIDColumn, fieldDataList);
 			}
 
 		addColumnProperty("Structure", cColumnPropertySpecialType, cColumnTypeIDCode);
@@ -1814,14 +1835,13 @@ try {
 	 * @param fieldNames
 	 * @param structureIDColumn
 	 * @param fieldDataList
-	 * @param assumeChiralTrue
 	 * @return true if no V3000 molfiles found, not set chiral flag found, but molecules with explicit stereo centers found
 	 */
-	private boolean processSDFile(String[] fieldNames, int structureIDColumn, ArrayList<Object[]> fieldDataList, boolean assumeChiralTrue) {
+	private SDFileContentAnalysis processSDFile(String[] fieldNames, int structureIDColumn, ArrayList<Object[]> fieldDataList) {
 		initializeReaderFromFile();
 		SDFileParser sdParser = new SDFileParser(mDataReader, fieldNames);
 		MolfileParser mfParser = new MolfileParser();
-		mfParser.setAssumeChiralTrue(assumeChiralTrue);
+		mfParser.setAssumeChiralTrue(mAssumeChiralFlag);
 		StereoMolecule mol = new StereoMolecule();
 		int recordNo = 0;
 		mErrorCount = 0;
@@ -1829,11 +1849,17 @@ try {
 		mMolnameIsDifferentFromFirstField = false;
 		int recordCount = sdParser.getRowCount();
 
+		// DataWarrior used to assume for molecules with exactly one stereo center to be racemic,
+		// if the stereo center was not specified. Such molecules were automatically 'corrected'.
+		// Now 14Mar2024 we change the logic:
+		// - If the file contains molecules with exactly one stereo center, which are defined racemic
+		//   - then no 'correction' is done on other molecules
+		//   - else the user is asked whether to correct
+		//
 		// If we find V2000 molfiles only of which none have a set chiral flag and if some molecules
 		// have stereo centers, then the creating software may have errorneously not set the chiral flag.
 		// We need to ask the user for an optional correction.
-		boolean chiralFlagOrV3000Found = false;
-		boolean stereoCentersFound = false;
+		SDFileContentAnalysis analysis = new SDFileContentAnalysis();
 
 		mProgressController.startProgress("Processing Records...", 0, (recordCount != -1) ? recordCount : 0);
 
@@ -1866,17 +1892,24 @@ try {
 				if (mol.getAllAtoms() != 0) {
 					mol.normalizeAmbiguousBonds();
 					mol.canonizeCharge(true);
+
 					Canonizer canonizer = new Canonizer(mol);
-					canonizer.setSingleUnknownAsRacemicParity();
+
+					analyseStereoCenters(mol, canonizer, analysis);
+					if (mfParser.isChiralFlagSet())
+						analysis.chiralFlagFound = true;
+					if (mfParser.isV3000())
+						analysis.v3000Found = true;
+					else
+						analysis.v2000Found = true;
+
+					if (mMakeUnknownSingleStereoCentersRacemic)
+						canonizer.setSingleUnknownAsRacemicParity();
+
 					byte[] idcode = getBytes(canonizer.getIDCode());
 					byte[] coords = getBytes(canonizer.getEncodedCoordinates());
 					fieldData[0] = idcode;
 					fieldData[1] = coords;
-
-					if (mfParser.isChiralFlagSet() || mfParser.isV3000())
-						chiralFlagOrV3000Found = true;
-					if (!chiralFlagOrV3000Found && mol.getStereoCenterCount() != 0)
-						stereoCentersFound = true;
 					}
 				}
 			catch (Exception e) {
@@ -1897,7 +1930,52 @@ try {
 			recordNo++;
 			}
 
-		return !assumeChiralTrue && !chiralFlagOrV3000Found && stereoCentersFound;
+		return analysis;
+		}
+
+	private int analyseStereoCenters(StereoMolecule mol, Canonizer canonizer, SDFileContentAnalysis analysis) {
+		int parityCount = 0;
+		boolean unknownParityFound = false;
+		boolean racemicParityFound = false;
+		boolean definedParityFound = false;
+
+		for (int atom=0; atom<mol.getAtoms(); atom++) {
+			if (canonizer.getTHParity(atom) != Molecule.cAtomParityNone
+			 && !canonizer.isPseudoTHParity(atom)) {
+				parityCount++;
+				if (canonizer.getTHParity(atom) == Molecule.cAtomParityUnknown)
+					unknownParityFound = true;
+				else {
+					definedParityFound = true;
+					if (canonizer.getTHESRType(atom) == Molecule.cESRTypeAnd)
+						racemicParityFound = true;
+					}
+				}
+			}
+
+		for (int bond=0; bond<mol.getBonds(); bond++) {
+			if (mol.getBondType(bond) == Molecule.cBondTypeSingle
+			 && canonizer.getEZParity(bond) != Molecule.cAtomParityNone
+			 && !canonizer.isPseudoEZParity(bond)) {
+				parityCount++;
+				if (canonizer.getEZParity(bond) == Molecule.cAtomParityUnknown)
+					unknownParityFound = true;
+				else {
+					definedParityFound = true;
+					if (canonizer.getEZESRType(bond) == Molecule.cESRTypeAnd)
+						racemicParityFound = true;
+					}
+				}
+			}
+
+		if (parityCount == 1 && unknownParityFound)
+			analysis.singleUnspecifiedStereoCenterFound = true;
+		if (parityCount == 1 && racemicParityFound)
+			analysis.singleRacemicStereoCenterFound = true;
+		if (definedParityFound)
+			analysis.definedStereoCentersFound = true;
+
+		return parityCount;
 		}
 
 	private boolean readRDFile() {
@@ -2927,6 +3005,14 @@ try {
 		mAssumeChiralFlag = b;
 		}
 
+	public boolean isMakeUnknownSingleStereoCentersRacemic() {
+		return mMakeUnknownSingleStereoCentersRacemic;
+	}
+
+	public void setMakeUnknownSingleStereoCentersRacemic(boolean b) {
+		mMakeUnknownSingleStereoCentersRacemic = b;
+	}
+
 	public boolean isAddAtomMapping() {
 		return mAddAtomMapping;
 		}
@@ -3003,3 +3089,7 @@ try {
 	 */
 	public void finalStatus(boolean success) {}
 	}
+
+class SDFileContentAnalysis {
+	boolean chiralFlagFound,v2000Found,v3000Found,definedStereoCentersFound,singleRacemicStereoCenterFound,singleUnspecifiedStereoCenterFound;
+}

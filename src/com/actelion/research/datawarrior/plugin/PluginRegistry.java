@@ -76,6 +76,17 @@ public class PluginRegistry implements IPluginStartHelper {
 			} catch (IOException ioe) {}
 		}
 
+		try {
+			// First we try instantiating the starter class using the standard class loader, which should only succeed,
+			// if it was added to the DataWarrior source code for the purpose of plugin development & debugging.
+			// If the starter class is found, then it is allowed to initialize and loading of real plugins is skipped.
+			Class<?> starterClass = getClass().getClassLoader().loadClass(STARTER_CLASS_NAME);
+			IPluginStarter starter = (IPluginStarter)starterClass.getDeclaredConstructor().newInstance();
+			starter.initialize(this, rootPluginDir, config);
+			return;
+		}
+		catch (Exception e) {}
+
 		// Load plugins from standard plugin directory
 		if (rootPluginDir != null && rootPluginDir.isDirectory())
 			loadPlugins(rootPluginDir, config, parent);
@@ -99,18 +110,7 @@ public class PluginRegistry implements IPluginStartHelper {
 	}
 
 	private void loadPlugins(File directory, Properties config, ClassLoader parent) {
-		try {
-			// First we try instantiating the starter class using the standard class loader, which should only succeed,
-			// if it was added to the DataWarrior source code for the purpose of plugin development & debugging.
-			// If the starter class is found, then it is allowed to initialize and loading of real plugins is skipped.
-			Class<?> starterClass = getClass().getClassLoader().loadClass(STARTER_CLASS_NAME);
-			IPluginStarter starter = (IPluginStarter)starterClass.getDeclaredConstructor().newInstance();
-			starter.initialize(this, directory, config);
-			return;
-		}
-		catch (Exception e) {}
-
-		// Now we try loading all real plugins...
+		// Try loading all real plugins in the given directory...
 		File[] files = directory.listFiles(file -> !file.isDirectory() && DETrustedPlugin.isValidFileName(file.getName()));
 		if (files != null && files.length != 0) {
 			Arrays.sort(files, Comparator.comparing(File::getName));

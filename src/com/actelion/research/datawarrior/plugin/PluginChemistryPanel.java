@@ -55,22 +55,28 @@ public class PluginChemistryPanel extends JEditableStructureView implements IChe
 		}
 
 	@Override public void setMoleculeFromIDCode(String idcode) {
-		int index = idcode.indexOf(" ");
-		if (index == -1)
-			setIDCode(idcode);
-		else
-			setIDCode(idcode.substring(0, index), idcode.substring(index+1));
+		if (idcode != null && !idcode.isEmpty()) {
+			int index = idcode.indexOf(" ");
+			if (index == -1)
+				setIDCode(idcode);
+			else
+				setIDCode(idcode.substring(0, index), idcode.substring(index+1));
+		}
 	}
 
 	@Override public void setMoleculeFromMolfile(String molfile) {
-		new MolfileParser().parse(getMolecule(), molfile);
-		structureChanged();
+		if (molfile != null && !molfile.isEmpty()) {
+			new MolfileParser().parse(getMolecule(), molfile);
+			structureChanged();
+		}
 	}
 
 	@Override public void setMoleculeFromSmiles(String smiles) {
-		try {
-			new SmilesParser().parse(getMolecule(), smiles);
-			structureChanged();
-		} catch (Exception e) {}
+		if (smiles != null && !smiles.isEmpty()) {
+			try {
+				new SmilesParser().parse(getMolecule(), smiles);
+				structureChanged();
+			} catch (Exception e) {}
+		}
 	}
 }

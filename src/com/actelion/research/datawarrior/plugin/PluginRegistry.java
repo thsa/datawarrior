@@ -88,30 +88,35 @@ public class PluginRegistry implements IPluginStartHelper {
 		catch (Exception e) {}
 
 		// Load plugins from standard plugin directory
-		if (rootPluginDir != null && rootPluginDir.isDirectory())
-			loadPlugins(rootPluginDir, config, parent);
+		if (rootPluginDir != null && rootPluginDir.isDirectory()) {
+			File[] files = rootPluginDir.listFiles(file -> !file.isDirectory() && file.getName().toLowerCase().endsWith(".jar"));
+			loadPlugins(files, rootPluginDir, config, parent);
+		}
 
 		// Load plugins from defined custom plugin directories
 		String customPaths = config.getProperty(KEY_CUSTOM_PLUGIN_DIRS);
 		if (customPaths != null) {
 			for (String customPath:customPaths.split(",")) {
 				File customPluginDir = new File(mApplication.resolvePathVariables(customPath.trim()));
-				if (customPluginDir.exists() && customPluginDir.isDirectory())
-					loadPlugins(customPluginDir, config, parent);
+				if (customPluginDir.exists() && customPluginDir.isDirectory()) {
+					File[] files = customPluginDir.listFiles(file -> !file.isDirectory() && file.getName().toLowerCase().endsWith(".jar"));
+					loadPlugins(files, customPluginDir, config, parent);
+					}
 			}
 		}
 
 		String trustedPluginDir = DataWarrior.getPreferences().get(PREFERENCES_KEY_UPDATE_PATH, null);
 		if (trustedPluginDir != null) {
 			File dir = new File(trustedPluginDir);
-			if (dir.exists() && dir.isDirectory())
-				loadPlugins(dir, config, parent);
+			if (dir.exists() && dir.isDirectory()) {
+				File[] files = dir.listFiles(file -> !file.isDirectory() && DETrustedPlugin.isValidFileName(file.getName()));
+				loadPlugins(files, dir, config, parent);
+			}
 		}
 	}
 
-	private void loadPlugins(File directory, Properties config, ClassLoader parent) {
+	private void loadPlugins(File[] files, File directory, Properties config, ClassLoader parent) {
 		// Try loading all real plugins in the given directory...
-		File[] files = directory.listFiles(file -> !file.isDirectory() && DETrustedPlugin.isValidFileName(file.getName()));
 		if (files != null && files.length != 0) {
 			Arrays.sort(files, Comparator.comparing(File::getName));
 			for (File file : files)

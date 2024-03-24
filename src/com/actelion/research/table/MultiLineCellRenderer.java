@@ -31,18 +31,25 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.text.*;
 import java.awt.*;
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
 import static com.actelion.research.chem.io.CompoundTableConstants.*;
 
 public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRenderer,TableCellRenderer {
-    static final long serialVersionUID = 0x20070312;
+    @Serial
+    private static final long serialVersionUID = 0x20070312;
 
-    private boolean mAlternateBackground,mIsURL;
+    private boolean mAlternateBackground;
+	private LookupURLBuilder mLookupURLBuilder;
     private VisualizationColor mForegroundColor,mBackgroundColor;
     private int mMouseX,mMouseY,mMouseRow;
-    private TreeMap<Integer,String> mClickableEntryMap;
+    private final TreeMap<Integer,String> mClickableEntryMap;
+
+	public int URL_NO = 0;
+	public int URL_MAYBE = 1;
+	public int URL_YES = 2;
 
     public MultiLineCellRenderer() {
 		setLineWrap(true);
@@ -72,8 +79,8 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
     	return mClickableEntryMap.get(row);
 		}
 
-	public void setIsURL(boolean isURL) {
-    	mIsURL = isURL;
+	public void setLookupURLBuilder(LookupURLBuilder retriever) {
+		mLookupURLBuilder = retriever;
 		}
 
 	public void setMouseLocation(int x, int y, int row) {
@@ -151,11 +158,11 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 			setText("Unicode Error!!!");
 			}    // some unicode chars create exceptions with setText() and then with paintComponent()
 
-	    if (mIsURL) {
+	    if (mLookupURLBuilder != null && mLookupURLBuilder.hasURL(row, 0)) {
 	    	Color color = LookAndFeelHelper.isDarkLookAndFeel() ? Color.CYAN : Color.BLUE;
 		    setForeground(color);
 		    try {
-			    getHighlighter().addHighlight(0, ((String)value).length(), new UnderlinePainter(row, color));
+			    getHighlighter().addHighlight(0, value == null ? 0 : ((String)value).length(), new UnderlinePainter(row, color));
 			    }
 		    catch (Exception e) {}
 	        }
@@ -168,7 +175,8 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 	 */
 	class UnderlinePainter extends DefaultHighlighter.DefaultHighlightPainter {
 		private ArrayList<int[]> mEntryIndexList;
-		private int mEntryUnderMouse,mRow;
+		private int mEntryUnderMouse;
+		private final int mRow;
 
 		public UnderlinePainter(int row, Color color) {
 			super(color);
@@ -189,7 +197,7 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 		 * @return region drawing occured in
 		 */
 		public Shape paintLayer(Graphics g, int offs0, int offs1, Shape bounds, JTextComponent c, View view) {
-			// The cell may contains multiple entries. Find start- and end-indexes of every entry
+			// The cell may contain multiple entries. Find start- and end-indexes of every entry
 			// and locate that entry that is under the mouse pointer
 			if (mEntryIndexList == null) {
 				mClickableEntryMap.put(mRow, null);

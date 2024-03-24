@@ -28,6 +28,7 @@ import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.util.ByteArrayComparator;
 import info.clearthought.layout.TableLayout;
 import org.openmolecules.bb.BBServerConstants;
 
@@ -59,6 +60,7 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 	private JTextField  mTextFieldMaxPrice,mTextFieldMinPackageSize,mTextFieldMolweight,mTextFieldMaxRows;
 	private JLabel mLabelCustomProviders;
 	private String[] mColumnTitle,mProviderList;
+	private String mColumnProperties;
 
 	public DETaskBuildingBlockQuery(DEFrame owner, DataWarrior application) {
 		super(owner, application);
@@ -359,7 +361,7 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 	}
 
 	@Override
-	protected void retrieveRecords() throws Exception {
+	protected void retrieveRecords() {
 		TreeMap<String,Object> query = new TreeMap<String,Object>();
 
 		Properties configuration = getTaskConfiguration();
@@ -391,13 +393,31 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 		if (pruningMode != null)
 			query.put(QUERY_PRUNING_MODE, pruningMode);
 
+		query.put(QUERY_INCLUDE_LINKS, "true"); // causes to return a provider specific lookup URL list to be returned as additional first line
+
 		mResultList = new ArrayList<>();
 		byte[][][] resultTable = new BBCommunicator(this, "datawarrior").search(query);
 		if (resultTable != null) {
-			mColumnTitle = new String[resultTable[0].length-RESULT_STRUCTURE_COLUMNS];	// title without structure related columns
-			for (int col=RESULT_STRUCTURE_COLUMNS; col<resultTable[0].length; col++)
-				mColumnTitle[col-RESULT_STRUCTURE_COLUMNS] = new String(resultTable[0][col]);
-			for (int r=1; r<resultTable.length; r++) {
+			int rowIndex = 0;
+
+			// We check, whether the server supports and has returned lookup URL definitions...
+			if (new ByteArrayComparator().compare(RESULT_COLUMN_PROPERTIES.getBytes(), resultTable[rowIndex][0]) == 0) {
+				mColumnProperties = new String(resultTable[rowIndex][1]);
+				rowIndex++;
+			}
+
+			if (new ByteArrayComparator().compare(RESULT_TEMPLATE.getBytes(), resultTable[rowIndex][0]) == 0) {
+				String template = new String(resultTable[rowIndex][1]);
+				rowIndex++;
+			}
+
+			// Next row is the title row
+			mColumnTitle = new String[resultTable[rowIndex].length-RESULT_STRUCTURE_COLUMNS];	// title without structure related columns
+			for (int col=RESULT_STRUCTURE_COLUMNS; col<resultTable[rowIndex].length; col++)
+				mColumnTitle[col-RESULT_STRUCTURE_COLUMNS] = new String(resultTable[rowIndex][col]);
+			rowIndex++;
+
+			for (int r=rowIndex; r<resultTable.length; r++) {
 				byte[][] resultLine = resultTable[r];
 				Object[] row = new Object[resultLine.length];
 				for (int i=0; i<resultLine.length; i++)
@@ -418,6 +438,22 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 	@Override
 	protected int getFragFpColumn() {
 		return RESULT_COLUMN_FFP512;
+	}
+
+	@Override
+	protected void setColumnProperties(CompoundTableModel tableModel) {
+		super.setColumnProperties(tableModel);
+		if (mColumnProperties != null) {
+			String[] propertyLine = mColumnProperties.split("\\n");
+			for (String property:propertyLine) {
+				String[] entry = property.split("\\t");
+				if (entry.length == 3) {
+					int column = tableModel.findColumn(entry[0]);
+					if (column != -1)
+						tableModel.getColumnProperties(column).put(entry[1], entry[2]);
+				}
+			}
+		}
 	}
 
 	@Override

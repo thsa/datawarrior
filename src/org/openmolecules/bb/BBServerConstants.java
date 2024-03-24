@@ -46,6 +46,9 @@ public interface BBServerConstants {
 	String QUERY_RESULT_FORMAT_VALUE_SHORT = "short";
 	String QUERY_PRUNING_MODE = "mode";
 	String QUERY_SINGLE_MATCH_ONLY = "singlematch";
+	String QUERY_INCLUDE_LINKS = "withlinks";
+	String RESULT_COLUMN_PROPERTIES = "dwarColProps";
+	String RESULT_TEMPLATE = "dwarTemplate";
 
 	int PRUNING_MODE_RANDOM = 0;
 	int PRUNING_MODE_CHEAPEST = 1;

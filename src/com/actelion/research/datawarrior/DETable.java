@@ -31,6 +31,7 @@ import com.actelion.research.gui.swing.SwingCursorHelper;
 import com.actelion.research.gui.table.JTableWithRowNumbers;
 import com.actelion.research.table.CompoundTableChemistryCellRenderer;
 import com.actelion.research.table.MultiLineCellRenderer;
+import com.actelion.research.table.LookupURLBuilder;
 import com.actelion.research.table.model.*;
 import com.actelion.research.table.view.CellDecorationPainter;
 import com.actelion.research.table.view.VisualizationColor;
@@ -46,14 +47,13 @@ import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.io.Serial;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.regex.PatternSyntaxException;
 
 public class DETable extends JTableWithRowNumbers implements ActionListener,ComponentListener,CompoundTableListener {
+	@Serial
 	private static final long serialVersionUID = 0x20060904;
 
 	public static final int DEFAULT_FONT_SIZE = 12;
@@ -61,19 +61,19 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 	private static final Color EMBEDDED_DETAIL_COLOR = new Color(108, 156, 99);
 	private static final Color REFERENCED_DETAIL_COLOR = new Color(156, 99, 99);
 
-	private Frame mParentFrame;
-	private DEMainPane mMainPane;
+	private final Frame mParentFrame;
+	private final DEMainPane mMainPane;
 	private JScrollPane mScrollPane;
 	private CompoundRecord mCurrentRecord;
 	private TreeMap<String,Integer> mNonExpandedColumnSizes/*,mHiddenColumnSizes*/;
-	private TreeMap<String,DEHiddenColumn> mHiddenColumnMap;
+	private final TreeMap<String,DEHiddenColumn> mHiddenColumnMap;
 	private TreeMap<String,Color> mColumnGroupToColorMap;
 	private JButton mJumpButton, mExpandButton, mSearchButton;
 	private Object mDraggedObject;
-	private JTextField mTextFieldSearch;
-	private JWindow mSearchControls;
+	private final JTextField mTextFieldSearch;
+	private final JWindow mSearchControls;
 	private Point mSearchPopupLocation;
-	private DEColumnOrder mIntendedColumnOrder;
+	private final DEColumnOrder mIntendedColumnOrder;
 	private int mPreviousClickableCellCol,mPreviousClickableCellRow;
 
 	public DETable(Frame parentFrame, DEMainPane mainPane, ListSelectionModel sm) {
@@ -175,18 +175,9 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 					String entry = getClickableCellEntry(p);
 					if (entry != null) {
 						CompoundTableModel tableModel = (CompoundTableModel)getModel();
-						String url = tableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyLookupURL+"0");
-						if (CompoundTableConstants.cColumnPropertyLookupFilterRemoveMinus.equals(
-								tableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyLookupFilter+"0")))
-							entry = entry.replace("-", "");
-						try {
-							if (!"false".equals(CompoundTableConstants.cColumnPropertyLookupEncode+"0"))
-								entry = URLEncoder.encode(entry, "UTF-8").replace("+", "%20");
-							BrowserControl.displayURL(url.replace("%s", entry));
-							}
-						catch (UnsupportedEncodingException uee) {
-							JOptionPane.showMessageDialog(mParentFrame, uee.getMessage());
-							}
+						String url = new LookupURLBuilder(tableModel, column).getURL(rowAtPoint(p), 0, entry);
+						if (url != null)
+							BrowserControl.displayURL(url);
 						}
 					}
 				else if (isSelectedFilledCell(e.getPoint())) {
@@ -240,7 +231,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 						&& !tableModel.getNativeCategoryList(valueColumn).containsString(newValue)) {
 					JOptionPane.showMessageDialog(mParentFrame, "For columns that contain range categories, you need to type an existing range.");
 				} else {
-					record.setData(newValue.length() == 0 ? null : newValue.getBytes(), valueColumn, true);
+					record.setData(newValue.isEmpty() ? null : newValue.getBytes(), valueColumn, true);
 					tableModel.finalizeChangeCell(record, valueColumn);
 				}
 			}
@@ -351,8 +342,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 	private boolean isClickableCell(int row, int col) {
 		CompoundTableModel tableModel = (CompoundTableModel)getModel();
 		int column = convertTotalColumnIndexFromView(col);
-		return tableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyLookupCount) != null
-			&& tableModel.getRecord(row).getData(column) != null;
+		return tableModel.getRecord(row).getData(column) != null && new LookupURLBuilder(tableModel, column).hasURL(row, 0);
 		}
 
 	private String getClickableCellEntry(Point p) {
@@ -459,7 +449,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 		}
 
 	/**
-	 * Shows or hides a popup at the top left corner containing
+	 * Shows or hides a popup in the top left corner containing
 	 * comboboxes for column selection and pruning bars.
 	 */
 	public void showSearchControls() {
@@ -544,7 +534,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 					int column = convertTotalColumnIndexFromView(viewColumn);
 					String key = tableModel.getColumnTitleNoAlias(column);
 					int oldWidth = getColumnModel().getColumn(viewColumn).getPreferredWidth();
-					mNonExpandedColumnSizes.put(key, Integer.valueOf(oldWidth));
+					mNonExpandedColumnSizes.put(key, oldWidth);
 					String name = tableModel.getColumnTitle(column);
 					int width = getFont().getSize() + SwingUtilities.computeStringWidth(getFontMetrics(getFont()), name);
 					getColumnModel().getColumn(viewColumn).setPreferredWidth(Math.max(oldWidth, width));
@@ -610,14 +600,13 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			return 80;
 			}
 
-		boolean isURL = ((CompoundTableModel)getModel()).getColumnProperty(column,
-				CompoundTableConstants.cColumnPropertyLookupCount) != null;
+		CompoundTableModel tableModel = (CompoundTableModel)getModel();
 
 		if (((CompoundTableModel)getModel()).isMultiLineColumn(column)) {
 			if (!(tc.getCellRenderer() instanceof MultiLineCellRenderer)) {
 				MultiLineCellRenderer renderer = new MultiLineCellRenderer();
 				renderer.setAlternateRowBackground(true);
-				renderer.setIsURL(isURL);
+				renderer.setLookupURLBuilder(new LookupURLBuilder(tableModel, column));
 				tc.setCellRenderer(renderer);
 				}
 
@@ -631,7 +620,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			MultiLineCellRenderer renderer = new MultiLineCellRenderer();
 			renderer.setLineWrap(false);
 			renderer.setAlternateRowBackground(true);
-			renderer.setIsURL(isURL);
+			renderer.setLookupURLBuilder(new LookupURLBuilder(tableModel, column));
 			tc.setCellRenderer(renderer);
 			}
 
@@ -704,7 +693,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 				int lookupCount = tableModel.getColumnLookupCount(modelColumn);
 				if (detailCount != 0 || lookupCount != 0) {
 					int fontSize = HiDPIHelper.scale(7);
-					g.setFont(g.getFont().deriveFont(0, fontSize));
+					g.setFont(g.getFont().deriveFont(Font.PLAIN, fontSize));
 					for (int row=firstRow; row<=lastRow; row++) {
 						Color color = LOOKUP_COLOR;	// lowest priority
 						int count = 0;
@@ -784,6 +773,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 	@Override
 	protected JTableHeader createDefaultTableHeader() {
 		return new JTableHeader(this.getColumnModel()) {
+			@Serial
 			private static final long serialVersionUID = 0x20110105;
 
 			@Override
@@ -831,18 +821,18 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 					StringBuilder html = new StringBuilder("<html><b>"+model.getColumnTitleNoAlias(column)+"</b>");
 					String alias = model.getColumnAlias(column);
 					if (alias != null)
-						html.append("<br><i>alias:</i> "+alias);
+						html.append("<br><i>alias:</i> ").append(alias);
 					String group = model.getColumnProperty(column, CompoundTableConstants.cColumnPropertyDisplayGroup);
 					if (group != null) {
 						String pluralS = group.indexOf(';') == -1 ? "" : "s";
-						html.append("<br><i>column group"+pluralS+":</i> " + group);
+						html.append("<br><i>column group").append(pluralS).append(":</i> ").append(group);
 						}
 					String description = model.getColumnDescription(column);
 					if (description != null)
-						html.append("<br><i>description:</i> "+description);
+						html.append("<br><i>description:</i> ").append(description);
 					String formula = model.getColumnProperty(column, CompoundTableConstants.cColumnPropertyFormula);
 					if (formula != null)
-						html.append("<br><i>Formula used:</i> "+formula);
+						html.append("<br><i>Formula used:</i> ").append(formula);
 					html.append("<br><i>perceived data type:</i> ");
 					if (model.isColumnTypeStructure(column))
 						html.append("chemical structure");
@@ -853,7 +843,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 					else if (model.isColumnTypeString(column))
 						html.append("text");
 					if (model.isColumnTypeCategory(column)) {
-						html.append(" categories:"+model.getCategoryCount(column));
+						html.append(" categories:").append(model.getCategoryCount(column));
 						if (model.isColumnTypeRangeCategory(column))
 							html.append(" (ranges)");
 						}
@@ -876,7 +866,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 					if (model.isMultiLineColumn(column))
 						html.append("<br>Some cells contain multiple lines.");
 					if (model.getColumnDetailCount(column) != 0)
-						html.append("<br>Column has "+model.getColumnDetailCount(column)+" associated details.");
+						html.append("<br>Column has ").append(model.getColumnDetailCount(column)).append(" associated details.");
 					if (model.getColumnSummaryMode(column) != CompoundTableModel.cSummaryModeNormal) {
 						html.append("<br>Of multiple numerical values only the <b>");
 						html.append(model.getColumnSummaryMode(column) == CompoundTableModel.cSummaryModeMean ? " mean"
@@ -887,26 +877,26 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 						html.append("</b> value is shown.");
 						}
 					if (model.getColumnSignificantDigits(column) != 0)
-						html.append("<br>Numerical values are rounded to "+model.getColumnSignificantDigits(column)+" significant digits.");
+						html.append("<br>Numerical values are rounded to ").append(model.getColumnSignificantDigits(column)).append(" significant digits.");
 					String refColumn = model.getColumnProperty(column, CompoundTableConstants.cColumnPropertyReferencedColumn);
 					if (refColumn != null) {
 						String refColumnTitle = model.getColumnTitle(model.findColumn(refColumn));
 						String monoOrBi = CompoundTableConstants.cColumnPropertyReferenceTypeRedundant.equals(
 								model.getColumnProperty(column, CompoundTableConstants.cColumnPropertyReferenceType)) ? "Bi" : "Mono";
-						html.append("<br>"+monoOrBi+"-directionally references '" + refColumnTitle + "'.");
+						html.append("<br>").append(monoOrBi).append("-directionally references '").append(refColumnTitle).append("'.");
 						}
 
 					if (model.isColumnTypeStructure(column)) {
 						StringBuilder sb = new StringBuilder();
 						for (int i=0; i<model.getTotalColumnCount(); i++) {
 							if (model.isDescriptorColumn(i) && model.getParentColumn(i) == column) {
-								if (sb.length() != 0)
+								if (!sb.isEmpty())
 									sb.append(", ");
 								sb.append(model.getColumnSpecialType(i));
 								}
 							}
-						if (sb.length() != 0)
-							html.append("<br>Attached descriptor columns: "+sb);
+						if (!sb.isEmpty())
+							html.append("<br>Attached descriptor columns: ").append(sb);
 						int coordsColumn = model.getChildColumn(column, CompoundTableConstants.cColumnType2DCoordinates);
 						if (coordsColumn != -1)
 							html.append("<br>Column has an attached 2D-atom-coordinate column.");
@@ -916,7 +906,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 							if (CompoundTableConstants.cColumnType3DCoordinates.equals(model.getColumnSpecialType(i)) && model.getParentColumn(i) == column)
 								count++;
 						if (count != 0)
-							html.append("<br>Column has "+count+" attached 3D-atom-coordinate columns.");
+							html.append("<br>Column has ").append(count).append(" attached 3D-atom-coordinate columns.");
 
 						if ("true".equals(model.getColumnProperty(column, CompoundTableConstants.cColumnPropertyIsFragment)))
 							html.append("<br>Column contains substructure fragments.");
@@ -958,10 +948,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			}
 		else if (e.getType() == CompoundTableEvent.cRemoveColumns) {
 			// remove from mHiddenColumnMap all columns that cannot be found anymore
-			Iterator<String> iterator = mHiddenColumnMap.keySet().iterator();
-			while (iterator.hasNext())
-				if (((CompoundTableModel)getModel()).findColumn(iterator.next()) == -1)
-					iterator.remove();
+			mHiddenColumnMap.keySet().removeIf(s -> ((CompoundTableModel)getModel()).findColumn(s) == -1);
 
 			// also remove all visible columns from columnModel, which are not in the tableModel anymore
 			for (int i=getColumnModel().getColumnCount()-1; i>=0; i--) {
@@ -1004,7 +991,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 		if (mHiddenColumnMap != null
 		 && e.getFirstRow() == TableModelEvent.HEADER_ROW && e.getColumn() != TableModelEvent.ALL_COLUMNS)
 			for (int column = 0; column < ((CompoundTableModel) getModel()).getTotalColumnCount(); column++)
-				if (mHiddenColumnMap.keySet().contains(((CompoundTableModel) getModel()).getColumnTitleNoAlias(column)))
+				if (mHiddenColumnMap.containsKey(((CompoundTableModel) getModel()).getColumnTitleNoAlias(column)))
 					setColumnVisibility(column, false);
 
 		if (e.getFirstRow() == TableModelEvent.HEADER_ROW)
@@ -1053,7 +1040,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 				renderer = hiddenColumnSpec.cellRenderer;
 			}
 
-		return (renderer != null && renderer instanceof MultiLineCellRenderer) ? ((MultiLineCellRenderer)renderer).getLineWrap() : false;
+		return renderer instanceof MultiLineCellRenderer && ((MultiLineCellRenderer)renderer).getLineWrap();
 		}
 
 	/**
@@ -1069,7 +1056,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 		int viewColumn = convertColumnIndexToView(displayableColumn);
 
 		if (viewColumn != -1) {	// is visible
-			if (mTextFieldSearch.getText().length() != 0
+			if (!mTextFieldSearch.getText().isEmpty()
 			 && !((CompoundTableModel)getModel()).getColumnTitle(column).contains(mTextFieldSearch.getText())) {
 				return "true";
 				}
@@ -1149,7 +1136,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			int displayableColumn = ((CompoundTableModel)getModel()).convertToDisplayableColumnIndex(column);
 			if (displayableColumn != -1) {
 				boolean isVisible = true;
-				if (s != null && s.length() != 0) {
+				if (s != null && !s.isEmpty()) {
 					String title = ((CompoundTableModel)getModel()).getColumnTitle(column);
 					if (s.startsWith("regex:"))
 						try { isVisible = title.matches(s.substring(6)); } catch (PatternSyntaxException pse) {}
@@ -1222,9 +1209,9 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			return null;
 
 		CompoundTableModel tableModel = (CompoundTableModel)getModel();
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		for (int column: mIntendedColumnOrder) {
-			if (buf.length() != 0)
+			if (!buf.isEmpty())
 				buf.append('\t');
 			buf.append(tableModel.getColumnTitleNoAlias(column));
 			}
@@ -1278,7 +1265,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			if (column != -1) {
 				int displayableColumn = tableModel.convertToDisplayableColumnIndex(column);
 				if (displayableColumn != -1) {
-					Integer object = Integer.valueOf(column);
+					Integer object = column;
 					mIntendedColumnOrder.remove(object);
 					mIntendedColumnOrder.add(dispIndex++, object);
 
@@ -1449,7 +1436,7 @@ class DEHiddenColumn {
 	}
 
 class DEColumnProperty {
-	private String columnName;
+	private final String columnName;
 	TableCellRenderer cellRenderer;
 	int width;
 	boolean isSelected;

@@ -158,12 +158,11 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 	private static final String TEXT_CARD_FROM_SELECTION_ARRANGE                 = "Card-From-Selection-Arrange";
 
 
-	private DEMainPane			mMainPane;
-	private CompoundTableModel	mTableModel;
-	private CompoundRecord		mRecord;
-	private DEPruningPanel		mPruningPanel;
-	private CompoundTableView	mSource;
-	private DatabaseActions		mDatabaseActions;
+	private final DEMainPane			mMainPane;
+	private final CompoundTableModel	mTableModel;
+	private final CompoundRecord		mRecord;
+	private final DEPruningPanel		mPruningPanel;
+	private final CompoundTableView	mSource;
 
 	/**
 	 * Creates a context dependent popup menu presenting options for one record.
@@ -183,7 +182,6 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 		mRecord = record;
 		mPruningPanel = pruningPanel;
 		mSource = source;
-		mDatabaseActions = databaseActions;
 
 		if (record == null) {
 			if (mSource instanceof VisualizationPanel2D && ((VisualizationPanel)mSource).getVisualization().showCrossHair()) {
@@ -387,7 +385,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 					add(hitlistRemoveMenu);
 				}
 
-			if (rxncodeColumnList.size() != 0) {
+			if (!rxncodeColumnList.isEmpty()) {
 				addSeparator();
 				JMenu filterMenu = new JMenu("New Reaction Filter from");
 				for (String columnName:rxncodeColumnList) {
@@ -398,7 +396,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 				add(filterMenu);
 				}
 
-			if (idcodeColumnList.size() != 0) {
+			if (!idcodeColumnList.isEmpty()) {
 				addSeparator();
 				JMenu filterMenu = new JMenu("New Structure Filter from");
 				for (String columnName:idcodeColumnList) {
@@ -413,9 +411,9 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 					}
 				}
 
-			if (idcodeColumnList.size() != 0 || rxncodeColumnList.size() != 0) {
+			if (!idcodeColumnList.isEmpty() || !rxncodeColumnList.isEmpty()) {
 				addSeparator();
-				if (idcodeColumnList.size() == 1 && rxncodeColumnList.size() == 0) {
+				if (idcodeColumnList.size() == 1 && rxncodeColumnList.isEmpty()) {
 					String columnName = idcodeColumnList.get(0);
 					addMenuItem("Search "+columnName+" in Google Scholar", SCHOLAR_SEARCH+columnName);
 					addMenuItem("Search "+columnName+" in Google Patents", PATENT_SEARCH+columnName);
@@ -572,11 +570,11 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 				}
 			catch (NumberFormatException e) {}
 
-			if (idcodeColumnList.size() != 0 && mDatabaseActions != null) {
+			if (idcodeColumnList.size() != 0 && databaseActions != null) {
 				if (getComponentCount() > 0)
 					addSeparator();
 
-				mDatabaseActions.addActionItems(this, mRecord, idcodeColumnList);
+				databaseActions.addActionItems(this, mRecord, idcodeColumnList);
 				}
 			}
 

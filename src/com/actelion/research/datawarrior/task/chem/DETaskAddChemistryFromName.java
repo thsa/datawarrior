@@ -32,7 +32,9 @@ import uk.ac.cam.ch.wwmm.opsin.NameToStructure;
 import javax.swing.*;
 import java.util.Properties;
 
-public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
+public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
+	// TODO also allow reactions...
+
 	public static final String TASK_NAME = "Add Structures From Name";
 
 //  Cactus is not used anymore.
@@ -43,11 +45,11 @@ public class DETaskAddStructureFromName extends AbstractSingleColumnTask {
 	private static final String PROPERTY_USE_SERVER = "useServer";
 	private static final String PROPERTY_IS_SMARTS = "isSmarts";
 
-	private static final String[] cSourceColumnName = { "substance name", "compound name", "iupac name" };
+	private static final String[] cSourceColumnName = { "substance name", "compound name", "iupac name", "smiles", "smarts", "smirks" };
 
 	private JCheckBox mCheckBoxIsSmarts,mCheckBoxUseServer;
 
-	public DETaskAddStructureFromName(DEFrame parentFrame) {
+	public DETaskAddChemistryFromName(DEFrame parentFrame) {
     	super(parentFrame, parentFrame.getTableModel(), true);
     	}
 

@@ -1763,7 +1763,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuChemExtractFragment)
 				new DETaskExtractFragment(mParentFrame).defineAndRun();
 			else if (source == jMenuChemAddStructureFromName)
-				new DETaskAddStructureFromName(mParentFrame).defineAndRun();
+				new DETaskAddChemistryFromName(mParentFrame).defineAndRun();
 			else if (source == jMenuChemExtractReactants)
 				new DETaskExtractReactants(mParentFrame).defineAndRun();
 			else if (source == jMenuChemExtractCatalysts)

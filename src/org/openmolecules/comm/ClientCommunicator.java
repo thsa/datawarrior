@@ -263,7 +263,7 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 		if (response == null)
         	return null;
 		else if (response.startsWith(BODY_MESSAGE))
-			return response.substring(BODY_MESSAGE.length() + 1).trim();
+			return response.substring(BODY_MESSAGE.length() + 1);
         else if (response.startsWith(BODY_OBJECT))
 	        return decode(response.substring(BODY_OBJECT.length() + 1));
 		else if (response.startsWith(BODY_ERROR))

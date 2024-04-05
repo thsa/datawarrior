@@ -459,6 +459,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			if (sIdentifierHandler.isIdentifierName(columnName)
 			 || columnName.equalsIgnoreCase("Substance Name")
 			 || columnName.equalsIgnoreCase("smiles")
+			 || columnName.equalsIgnoreCase("smirks")
 			 || columnName.equalsIgnoreCase("idcode")
 			 || columnName.endsWith("[idcode]")
 			 || columnName.endsWith("[rxncode]")
@@ -1288,7 +1289,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 
 	private void insertIDCodeFromSmiles(StereoMolecule mol, int structureColumn, int smilesColumn, int row) {
 		byte[] smiles = (byte[])mFieldData[row][smilesColumn];
-		if (smiles != null && isValidSmiles(mol, smiles))
+		if (getMoleculeFromSmiles(mol, smiles) != null)
 			mFieldData[row][structureColumn] = getIDCodeFromMolecule(mol);
 		}
 
@@ -1323,8 +1324,8 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 			byte[] data = (byte[])mFieldData[row][column];
 			if (data != null && data.length > 3) {
 				checked++;
-				if ((!isReaction && !isValidSmiles(mol, data))
-				 || (isReaction && getReactionFromSmiles(data) == null)) {
+				if ((!isReaction && (SmilesParser.isReactionSmiles(data) || getMoleculeFromSmiles(mol, data) == null))
+				 || (isReaction && (!SmilesParser.isReactionSmiles(data) || getReactionFromSmiles(data) == null))) {
 					if (++failures >= maxFailures)
 						return false;
 					}
@@ -1336,21 +1337,21 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		return (checked != 0 && (float)failures/(float)checked <= MAX_TOLERATED_SMILES_FAILURE_RATE);
 		}
 
-	private boolean isValidSmiles(StereoMolecule mol, byte[] smiles) {
+	private StereoMolecule getMoleculeFromSmiles(StereoMolecule mol, byte[] smiles) {
 		if (smiles != null && smiles.length != 0) {
 			try {
 				new SmilesParser(SmilesParser.SMARTS_MODE_GUESS, false).parse(mol, smiles);
-				return mol.getAllAtoms() != 0;
+				return mol.getAllAtoms() != 0 ? mol : null;
 				}
 			catch (Exception e) {}
 			}
-		return false;
+		return null;
 		}
 
 	private Reaction getReactionFromSmiles(byte[] smiles) {
 		if (smiles != null && smiles.length != 0) {
 			try {
-				return new SmilesParser(SmilesParser.SMARTS_MODE_IS_SMILES, false).parseReaction(smiles);
+				return new SmilesParser(SmilesParser.SMARTS_MODE_GUESS, false).parseReaction(smiles);
 				}
 			catch (Exception e) {}
 			}

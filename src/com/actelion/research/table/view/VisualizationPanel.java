@@ -481,17 +481,29 @@ public abstract class VisualizationPanel extends JPanel
 				}
 
 			for (int i=0; i<mDimensions; i++) {
-				float value = mVisualization.getAxisValue(ref, i);
-				if (Float.isNaN(value)) {
+				int column = mVisualization.getColumnIndex(i);
+				if (column == -1) {
 					low[i] = 0f;
 					high[i] = 1f;
 					}
 				else {
-					AxisDataRange adr = mVisualization.calculateDataMinAndMax(i);
-					float dif = 0.5f * adr.fullRange() * zoom[i];
-					float[] lowAndHigh = mVisualization.calculatePruningBarLowAndHigh(i, value-dif, value+dif);
-					low[i] = lowAndHigh[0];
-					high[i] = lowAndHigh[1];
+					float value = mVisualization.getAxisValue(ref, i);
+					if (Float.isNaN(value)) {
+						low[i] = 0f;
+						high[i] = 1f;
+						}
+					else if (mVisualization.isCategoryAxis(i)) {
+						float dif = 0.5f + (int)(0.5f * zoom[i] * mTableModel.getCategoryCount(column));
+						low[i] = Math.max(0, (0.5f + value - dif) / mTableModel.getCategoryCount(column));
+						high[i] = Math.min(1, (0.5f + value + dif) / mTableModel.getCategoryCount(column));
+						}
+					else {
+						AxisDataRange adr = mVisualization.calculateDataMinAndMax(i);
+						float dif = 0.5f * adr.fullRange() * zoom[i];
+						float[] lowAndHigh = mVisualization.calculatePruningBarLowAndHigh(i, value-dif, value+dif);
+						low[i] = lowAndHigh[0];
+						high[i] = lowAndHigh[1];
+						}
 					}
 				}
 			}

@@ -9,20 +9,18 @@ import java.nio.charset.StandardCharsets;
 
 public class LookupURLBuilder {
 	private final CompoundTableModel mTableModel;
-	private final int mColumn;
 
-	public LookupURLBuilder(CompoundTableModel tableModel, int column) {
+	public LookupURLBuilder(CompoundTableModel tableModel) {
 		mTableModel = tableModel;
-		mColumn = column;
 	}
 
-	public boolean hasURL(int row, int index) {
+	public boolean hasURL(int row, int column, int index) {
 		// If we have (a) standard lookup URL(s) defined, they take precedence:
-		String countString = mTableModel.getColumnProperty(mColumn, CompoundTableConstants.cColumnPropertyLookupCount);
+		String countString = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyLookupCount);
 		if (countString != null)
 			return Integer.parseInt(countString) > index;
 
-		String catSpecificLookupString = mTableModel.getColumnProperty(mColumn, CompoundTableConstants.cColumnPropertyCategorySpecificLookup);
+		String catSpecificLookupString = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyCategorySpecificLookup);
 		if (catSpecificLookupString == null)
 			return false;
 
@@ -41,24 +39,24 @@ public class LookupURLBuilder {
 		return false;
 	}
 
-	public String getURL(int row, int index, String entry) {
+	public String getURL(int row, int column, int index, String entry) {
 		// If we have (a) standard lookup URL(s) defined, they take precedence:
-		String countString = mTableModel.getColumnProperty(mColumn, CompoundTableConstants.cColumnPropertyLookupCount);
+		String countString = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyLookupCount);
 		if (countString != null) {
-			String url = mTableModel.getColumnProperty(mColumn, CompoundTableConstants.cColumnPropertyLookupURL + index);
+			String url = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyLookupURL + index);
 			if (url == null)
 				return null;
 
 			if (CompoundTableConstants.cColumnPropertyLookupFilterRemoveMinus.equals(
-					mTableModel.getColumnProperty(mColumn, CompoundTableConstants.cColumnPropertyLookupFilter + index)))
+					mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyLookupFilter + index)))
 				entry = entry.replace("-", "");
-			if (!"false".equals(mTableModel.getColumnProperty(mColumn, CompoundTableConstants.cColumnPropertyLookupEncode + "0")))
+			if (!"false".equals(mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyLookupEncode + "0")))
 				entry = URLEncoder.encode(entry, StandardCharsets.UTF_8).replace("+", "%20");
 
 			return url.replace("%s", entry);
 		}
 
-		String catSpecificLookupString = mTableModel.getColumnProperty(mColumn, CompoundTableConstants.cColumnPropertyCategorySpecificLookup);
+		String catSpecificLookupString = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyCategorySpecificLookup);
 		if (catSpecificLookupString == null)
 			return null;
 

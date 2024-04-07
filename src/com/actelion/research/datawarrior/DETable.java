@@ -175,7 +175,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 					String entry = getClickableCellEntry(p);
 					if (entry != null) {
 						CompoundTableModel tableModel = (CompoundTableModel)getModel();
-						String url = new LookupURLBuilder(tableModel, column).getURL(rowAtPoint(p), 0, entry);
+						String url = new LookupURLBuilder(tableModel).getURL(rowAtPoint(p), column, 0, entry);
 						if (url != null)
 							BrowserControl.displayURL(url);
 						}
@@ -342,7 +342,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 	private boolean isClickableCell(int row, int col) {
 		CompoundTableModel tableModel = (CompoundTableModel)getModel();
 		int column = convertTotalColumnIndexFromView(col);
-		return tableModel.getRecord(row).getData(column) != null && new LookupURLBuilder(tableModel, column).hasURL(row, 0);
+		return tableModel.getRecord(row).getData(column) != null && new LookupURLBuilder(tableModel).hasURL(row, column, 0);
 		}
 
 	private String getClickableCellEntry(Point p) {
@@ -606,7 +606,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			if (!(tc.getCellRenderer() instanceof MultiLineCellRenderer)) {
 				MultiLineCellRenderer renderer = new MultiLineCellRenderer();
 				renderer.setAlternateRowBackground(true);
-				renderer.setLookupURLBuilder(new LookupURLBuilder(tableModel, column));
+				renderer.setLookupURLBuilder(new LookupURLBuilder(tableModel));
 				tc.setCellRenderer(renderer);
 				}
 
@@ -620,7 +620,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			MultiLineCellRenderer renderer = new MultiLineCellRenderer();
 			renderer.setLineWrap(false);
 			renderer.setAlternateRowBackground(true);
-			renderer.setLookupURLBuilder(new LookupURLBuilder(tableModel, column));
+			renderer.setLookupURLBuilder(new LookupURLBuilder(tableModel));
 			tc.setCellRenderer(renderer);
 			}
 

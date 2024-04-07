@@ -158,7 +158,7 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 			setText("Unicode Error!!!");
 			}    // some unicode chars create exceptions with setText() and then with paintComponent()
 
-	    if (mLookupURLBuilder != null && mLookupURLBuilder.hasURL(row, 0)) {
+	    if (mLookupURLBuilder != null && mLookupURLBuilder.hasURL(row, column, 0)) {
 	    	Color color = LookAndFeelHelper.isDarkLookAndFeel() ? Color.CYAN : Color.BLUE;
 		    setForeground(color);
 		    try {

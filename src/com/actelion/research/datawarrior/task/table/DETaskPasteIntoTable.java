@@ -31,9 +31,9 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 	private static final String FIRST_ROW_AT_END_CODE = "append";
 	public static final int ROW_APPEND = -2;
 
-	private int mVisibleRow;
+	private final int mVisibleRow;
 	private JTextField mTextFieldFirstRow;
-	private DETable mTable;
+	private final DETable mTable;
 	private String[][] mClipboardContent;
 
 	/**
@@ -262,7 +262,7 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 		int firstVisColumn = (firstColumn == NO_COLUMN) ? 0 : mTable.convertTotalColumnIndexToView(firstColumn);
 
 		String firstVisRowText = configuration.getProperty(PROPERTY_FIRST_ROW, "1");
-		int firstVisRow = (firstVisRowText == FIRST_ROW_AT_END_CODE) ? tableRowCount : Integer.parseInt(firstVisRowText) - 1;
+		int firstVisRow = (firstVisRowText.equals(FIRST_ROW_AT_END_CODE)) ? tableRowCount : Integer.parseInt(firstVisRowText) - 1;
 
 		int newColumnCount = Math.max(0, clipColumnCount - tableColumnCount + firstVisColumn);
 		int newRowCount = Math.max(0, clipRowCount - tableRowCount + firstVisRow);
@@ -345,10 +345,10 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 		SortedStringList unresolvedNameList = null;
 		for (int clipRow=0; clipRow<clipRowCount; clipRow++) {
 			String value = mClipboardContent[clipRow][clipColumn].trim();
-			if (value.length() != 0) {
+			if (!value.isEmpty()) {
 				StereoMolecule mol = new StereoMolecule();
 				try {
-					new SmilesParser(smartsMode, false).parse(mol, value);
+					new SmilesParser(smartsMode).parse(mol, value);
 					}
 				catch (Exception e) {
 					mol = null;
@@ -372,12 +372,14 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 
 		if (unresolvedNameList != null && unresolvedNameList.getSize() != 0) {
 			String[] idcodes = StructureNameResolver.resolveRemote(unresolvedNameList.toArray());
-			for (int clipRow=0; clipRow<clipRowCount; clipRow++) {
-				if (needsRemoteResolution[clipRow]) {
-					String value = mClipboardContent[clipRow][clipColumn].trim();
-					String idcode = idcodes[unresolvedNameList.getListIndex(value)];
-					if (idcode != null && idcode.length() != 0)
-						mClipboardContent[clipRow][clipColumn] = idcode;
+			if (idcodes != null) {
+				for (int clipRow=0; clipRow<clipRowCount; clipRow++) {
+					if (needsRemoteResolution[clipRow]) {
+						String value = mClipboardContent[clipRow][clipColumn].trim();
+						String idcode = idcodes[unresolvedNameList.getListIndex(value)];
+						if (idcode != null && !idcode.isEmpty())
+							mClipboardContent[clipRow][clipColumn] = idcode;
+						}
 					}
 				}
 			}
@@ -387,7 +389,7 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 		byte[] coords2D = null;
 		byte[] coords3D = null;
 		byte[] mapping = null;
-		if (value != null && value.length() != 0) {
+		if (value != null && !value.isEmpty()) {
 			if (isStructure) {
 				if (isValidIDCode(value)) {
 					int index = value.indexOf(' ');

@@ -1340,7 +1340,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private StereoMolecule getMoleculeFromSmiles(StereoMolecule mol, byte[] smiles) {
 		if (smiles != null && smiles.length != 0) {
 			try {
-				new SmilesParser(SmilesParser.SMARTS_MODE_GUESS, false).parse(mol, smiles);
+				new SmilesParser(SmilesParser.SMARTS_MODE_GUESS).parse(mol, smiles);
 				return mol.getAllAtoms() != 0 ? mol : null;
 				}
 			catch (Exception e) {}
@@ -1351,7 +1351,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	private Reaction getReactionFromSmiles(byte[] smiles) {
 		if (smiles != null && smiles.length != 0) {
 			try {
-				return new SmilesParser(SmilesParser.SMARTS_MODE_GUESS, false).parseReaction(smiles);
+				return new SmilesParser(SmilesParser.SMARTS_MODE_GUESS).parseReaction(smiles);
 				}
 			catch (Exception e) {}
 			}

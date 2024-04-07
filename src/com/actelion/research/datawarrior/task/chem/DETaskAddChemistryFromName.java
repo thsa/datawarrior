@@ -23,9 +23,12 @@ import com.actelion.research.chem.SmilesParser;
 import com.actelion.research.chem.SortedStringList;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.name.StructureNameResolver;
+import com.actelion.research.chem.reaction.Reaction;
+import com.actelion.research.chem.reaction.ReactionEncoder;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractSingleColumnTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 import uk.ac.cam.ch.wwmm.opsin.NameToStructure;
 
@@ -33,8 +36,6 @@ import javax.swing.*;
 import java.util.Properties;
 
 public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
-	// TODO also allow reactions...
-
 	public static final String TASK_NAME = "Add Structures From Name";
 
 //  Cactus is not used anymore.
@@ -44,10 +45,14 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 
 	private static final String PROPERTY_USE_SERVER = "useServer";
 	private static final String PROPERTY_IS_SMARTS = "isSmarts";
+	private static final String PROPERTY_USE_DOUBLE_DOT = "useDoubleDot";
+
+	private static final int MAX_REACTION_SMILES_CHECKS = 10;
+	private static final int MAX_REACTION_SMILES_ERRORS = 5;
 
 	private static final String[] cSourceColumnName = { "substance name", "compound name", "iupac name", "smiles", "smarts", "smirks" };
 
-	private JCheckBox mCheckBoxIsSmarts,mCheckBoxUseServer;
+	private JCheckBox mCheckBoxIsSmarts,mCheckBoxUseServer,mCheckBoxUseDoubleDot;
 
 	public DETaskAddChemistryFromName(DEFrame parentFrame) {
     	super(parentFrame, parentFrame.getTableModel(), true);
@@ -67,20 +72,30 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 	public JPanel createInnerDialogContent() {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {TableLayout.PREFERRED},
-							{gap>>1, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+							{gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
-		mCheckBoxIsSmarts = new JCheckBox("Interpret SMILES as SMARTS");
+		mCheckBoxIsSmarts = new JCheckBox("Interpret SMILES as SMARTS and reaction SMILES as SMIRKS");
 		content.add(mCheckBoxIsSmarts, "0,1");
 
-		content.add(new JLabel("If DataWarrior cannot interpret a name as IUPAC-name nor as SMILES,"), "0,3");
-		content.add(new JLabel("then DataWarrior may connect to openmolecules.org to resolve names."), "0,5");
+		mCheckBoxUseDoubleDot = new JCheckBox("Consider '..' (not '.') as molecule separator (reaction SMILES / SMIRKS)");
+		content.add(mCheckBoxUseDoubleDot, "0,3");
+
+		content.add(new JLabel("If DataWarrior cannot interpret a name as IUPAC-name nor as SMILES,"), "0,5");
+		content.add(new JLabel("then DataWarrior may connect to openmolecules.org to resolve names."), "0,7");
 
 		mCheckBoxUseServer = new JCheckBox("Allow openmolecules.org name-to-structure service");
-		content.add(mCheckBoxUseServer, "0,7");
+		content.add(mCheckBoxUseServer, "0,9");
 
 		return content;
+		}
+
+	@Override
+	public void columnChanged(int column) {
+		super.columnChanged(column);
+		if (mCheckBoxUseDoubleDot != null && isInteractive())
+			mCheckBoxUseDoubleDot.setEnabled(isReactionSmilesOrSmirks(column, mCheckBoxIsSmarts.isSelected(), new boolean[1]));
 		}
 
 	@Override
@@ -92,7 +107,7 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 	public void selectDefaultColumn(JComboBox<String> comboBox) {
 		for (String name:cSourceColumnName) {
 			for (int i=0; i<comboBox.getItemCount(); i++) {
-				if (name.equals(((String)comboBox.getItemAt(i)).toLowerCase())) {
+				if (name.equals((comboBox.getItemAt(i)).toLowerCase())) {
 					comboBox.setSelectedIndex(i);
 					return;
 					}
@@ -108,6 +123,8 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 		Properties configuration = super.getDialogConfiguration();
 		String isSmarts = (mCheckBoxIsSmarts == null) ? "false" : mCheckBoxIsSmarts.isSelected()? "true" : "false";
 		configuration.setProperty(PROPERTY_IS_SMARTS, isSmarts);
+		String useDoubleDot = (mCheckBoxUseDoubleDot == null) ? "true" : mCheckBoxUseDoubleDot.isSelected()? "true" : "false";
+		configuration.setProperty(PROPERTY_USE_DOUBLE_DOT, useDoubleDot);
 		String useServer = (mCheckBoxUseServer == null) ? "true" : mCheckBoxUseServer.isSelected()? "true" : "false";
 		configuration.setProperty(PROPERTY_USE_SERVER, useServer);
 		return configuration;
@@ -118,6 +135,8 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 		super.setDialogConfiguration(configuration);
 		if (mCheckBoxIsSmarts != null)
 			mCheckBoxIsSmarts.setSelected("true".equals(configuration.getProperty(PROPERTY_IS_SMARTS, "false")));
+		if (mCheckBoxUseDoubleDot != null)
+			mCheckBoxUseDoubleDot.setSelected("true".equals(configuration.getProperty(PROPERTY_USE_DOUBLE_DOT, "true")));
 		if (mCheckBoxUseServer != null)
 			mCheckBoxUseServer.setSelected("true".equals(configuration.getProperty(PROPERTY_USE_SERVER, "true")));
 		}
@@ -127,6 +146,8 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 		super.setDialogConfigurationToDefault();
 		if (mCheckBoxIsSmarts != null)
 			mCheckBoxIsSmarts.setSelected(false);
+		if (mCheckBoxUseDoubleDot != null)
+			mCheckBoxUseDoubleDot.setSelected(true);
 		if (mCheckBoxUseServer != null)
 			mCheckBoxUseServer.setSelected(true);
 		}
@@ -134,13 +155,23 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 	@Override
 	public void runTask(Properties configuration) {
 		int sourceColumn = getColumn(configuration);
+		boolean[] catalystsFound = new boolean[1];
+		boolean isSmarts = "true".equals(configuration.getProperty(PROPERTY_IS_SMARTS, "false"));
+		boolean isReactionSmiles = isReactionSmilesOrSmirks(sourceColumn, isSmarts, catalystsFound);
+		int smilesMode = isSmarts ? SmilesParser.SMARTS_MODE_IS_SMARTS : SmilesParser.SMARTS_MODE_GUESS;
+		if ("false".equals(configuration.getProperty(PROPERTY_USE_DOUBLE_DOT, "true")))
+			smilesMode += SmilesParser.MODE_SINGLE_DOT_SEPARATOR;
 
-        int idcodeColumn = getTableModel().addNewColumns(3);
-        int coordsColumn = idcodeColumn+1;
-		getTableModel().prepareStructureColumns(idcodeColumn, "Structure", true, true);
+		int idcodeColumn = getTableModel().addNewColumns(!isReactionSmiles ? 3 : catalystsFound[0] ? 8 : 6);
+        int coordsColumn = idcodeColumn + (isReactionSmiles ? 2 : 1);
+		if (isReactionSmiles)
+			getTableModel().prepareReactionColumns(idcodeColumn, "Reaction", isSmarts, true, true, catalystsFound[0], true, true, true, catalystsFound[0]);
+		else
+			getTableModel().prepareStructureColumns(idcodeColumn, "Structure", true, true);
 
 		NameToStructure opsinN2S = NameToStructure.getInstance();
 		StereoMolecule mol = new StereoMolecule();
+		Reaction rxn = null;
 
 		boolean useServer = "true".equals(configuration.getProperty(PROPERTY_USE_SERVER, "true"))
 							&& StructureNameResolver.getInstance() != null;
@@ -153,41 +184,59 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 			String name = getTableModel().getTotalValueAt(row, sourceColumn).trim();
 			if (!name.isEmpty()) {
 				try {
-					boolean isSmarts = "true".equals(configuration.getProperty(PROPERTY_IS_SMARTS, "false"));
-					int smilesMode = isSmarts ? SmilesParser.SMARTS_MODE_IS_SMARTS : SmilesParser.SMARTS_MODE_GUESS;
-					new SmilesParser(smilesMode, false).parse(mol, name);
+					if (isReactionSmiles)
+						rxn = new SmilesParser(smilesMode).parseReaction(name);
+					else
+						new SmilesParser(smilesMode).parse(mol, name);
 					}
 				catch (Exception e) {
 					mol.clear();
+					rxn = null;
 					}
 
-				if (mol.getAllAtoms() == 0) {
-					String smiles = opsinN2S.parseToSmiles(name);
-					if (smiles != null) {
+				if (isReactionSmiles) {
+					if (rxn != null) {
+						String[] rxnData = ReactionEncoder.encode(rxn, false, false);
+						if (rxnData != null && rxnData[0] != null) {
+							getTableModel().setTotalValueAt(rxnData[0], row, idcodeColumn);
+							if (rxnData[1] != null && !rxnData[1].isEmpty())
+								getTableModel().setTotalValueAt(rxnData[1], row, idcodeColumn+1);
+							if (rxnData[2] != null && !rxnData[2].isEmpty())
+								getTableModel().setTotalValueAt(rxnData[2], row, idcodeColumn+2);
+							if (rxnData[4] != null && !rxnData[4].isEmpty() && catalystsFound[0])
+								getTableModel().setTotalValueAt(rxnData[4], row, idcodeColumn+3);
+							}
+						}
+					}
+				else {
+					if (mol.getAllAtoms() == 0) {
+						String smiles = opsinN2S.parseToSmiles(name);
+						if (smiles != null) {
+							try {
+								new SmilesParser(SmilesParser.SMARTS_MODE_IS_SMILES).parse(mol, smiles);
+								}
+							catch (Exception e) {
+								mol.clear();
+								}
+							}
+						}
+
+					if (mol.getAllAtoms() != 0) {
 						try {
-							new SmilesParser(SmilesParser.SMARTS_MODE_IS_SMILES, false).parse(mol, smiles);
+							mol.normalizeAmbiguousBonds();
+							mol.canonizeCharge(true);
+							Canonizer canonizer = new Canonizer(mol);
+							canonizer.setSingleUnknownAsRacemicParity();
+							getTableModel().setTotalValueAt(canonizer.getIDCode(), row, idcodeColumn);
+							getTableModel().setTotalValueAt(canonizer.getEncodedCoordinates(), row, coordsColumn);
 							}
 						catch (Exception e) {
-							mol.clear();
+							e.printStackTrace();
 							}
 						}
-					}
-
-				if (mol.getAllAtoms() != 0) {
-					try {
-						mol.normalizeAmbiguousBonds();
-						mol.canonizeCharge(true);
-						Canonizer canonizer = new Canonizer(mol);
-						canonizer.setSingleUnknownAsRacemicParity();
-						getTableModel().setTotalValueAt(canonizer.getIDCode(), row, idcodeColumn);
-						getTableModel().setTotalValueAt(canonizer.getEncodedCoordinates(), row, coordsColumn);
+					else if (useServer) {
+						unresolvedList.addString(name);
 						}
-					catch (Exception e) {
-						e.printStackTrace();
-						}
-					}
-				else if (useServer) {
-					unresolvedList.addString(name);
 					}
 				}
 			}
@@ -214,5 +263,33 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 			}
 
 		getTableModel().finalizeNewColumns(idcodeColumn, this);
+		}
+
+	private boolean isReactionSmilesOrSmirks(int column, boolean isSmarts, boolean[] catalystsFound) {
+		CompoundTableModel tableModel = getTableModel();
+		int smilesMode = isSmarts ? SmilesParser.SMARTS_MODE_IS_SMARTS : SmilesParser.SMARTS_MODE_GUESS;
+		int count = 0;
+		int errorCount = 0;
+		int[] catalystCountHolder = new int[1];
+		for (int row=0; row<getTableModel().getTotalRowCount(); row++) {
+			byte[] value = (byte[])tableModel.getTotalRecord(row).getData(column);
+			if (value != null) {
+				if (!SmilesParser.isReactionSmiles(value, catalystCountHolder))
+					return false;
+				try {
+					new SmilesParser(smilesMode).parseReaction(value);
+					if (catalystCountHolder[0] != 0)
+						catalystsFound[0] = true;
+					}
+				catch (Exception e) {
+					if (++errorCount == MAX_REACTION_SMILES_ERRORS)
+						return false;
+					}
+				if (++count == MAX_REACTION_SMILES_CHECKS)
+					return true;
+				}
+			}
+
+		return count != 0;
 		}
 	}

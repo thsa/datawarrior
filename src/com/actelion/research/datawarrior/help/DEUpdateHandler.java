@@ -59,7 +59,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 
 	// IMPORTANT: When creating a new manual(!!!) installer (not an update for automatic deployment),
 	// then DataWarriorLauncher.BASE_VERSION must also be changed to match this DATAWARRIOR_VERSION!
-	public static final String DATAWARRIOR_VERSION = "v06.01.02";	// format must be v00.00.00
+	public static final String DATAWARRIOR_VERSION = "v06.01.03";	// format must be v00.00.00
 
 	private static final String PREFERENCES_2ND_POST_INSTALL_INFO_SERVER = "2nd_post_install_info_server";
 	public static final String PREFERENCES_POST_INSTALL_INFO_FAILURE_MILLIS = "post_install_info_failure_time";
@@ -95,6 +95,9 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 	private static final String PROPERTY_NEWS_IMAGE = "news_image_";
 	private static final String PROPERTY_NEWS_URL = "news_url_";
 	private static final String PROPERTY_NEWS_TYPE = "news_type_";
+	private static final String PROPERTY_NEWS_OS = "news_os_";
+	private static final String PROPERTY_NEWS_MIN_VERSION = "news_minversion_";
+	private static final String PROPERTY_NEWS_MAX_VERSION = "news_maxversion_";
 
 	private static final String PROPERTY_PLUGIN_SOURCE_URL = "plugin_source_url_";
 	private static final String PROPERTY_PLUGIN_NAME = "plugin_name_";
@@ -208,6 +211,22 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 		for (String propertyName : propertyNames) {
 			if (propertyName.startsWith(PROPERTY_NEWS_TITLE)) {
 				String newsID = propertyName.substring(PROPERTY_NEWS_TITLE.length());
+
+				String os = sPostInstallInfo.getProperty(PROPERTY_NEWS_OS.concat(newsID));
+				if (os != null
+				 && ((os.equals("windows") && !Platform.isWindows())
+				  || (os.equals("macintosh") && !Platform.isMacintosh())
+				  || (os.equals("linux") && !Platform.isLinux())))
+					continue;
+
+				String minVersion = sPostInstallInfo.getProperty(PROPERTY_NEWS_MIN_VERSION.concat(newsID));
+				if (minVersion != null && minVersion.compareTo(DATAWARRIOR_VERSION) > 0)
+					continue;
+
+				String maxVersion = sPostInstallInfo.getProperty(PROPERTY_NEWS_MAX_VERSION.concat(newsID));
+				if (maxVersion != null && maxVersion.compareTo(DATAWARRIOR_VERSION) < 0)
+					continue;
+
 				String title = sPostInstallInfo.getProperty(propertyName);
 				String text = sPostInstallInfo.getProperty(PROPERTY_NEWS_TEXT.concat(newsID));
 				String image = sPostInstallInfo.getProperty(PROPERTY_NEWS_IMAGE.concat(newsID));

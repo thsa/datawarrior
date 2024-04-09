@@ -27,6 +27,7 @@ import com.actelion.research.datawarrior.plugin.PluginRegistry;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.datawarrior.task.DETaskSelectWindow;
 import com.actelion.research.datawarrior.task.StandardTaskFactory;
+import com.actelion.research.datawarrior.task.db.DETaskRetrieveDataFromURL;
 import com.actelion.research.datawarrior.task.file.DETaskOpenFile;
 import com.actelion.research.datawarrior.task.file.DETaskRunMacroFromFile;
 import com.actelion.research.gui.FileHelper;
@@ -48,6 +49,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
@@ -736,15 +739,51 @@ public abstract class DataWarrior implements WindowFocusListener {
 			return;
 		default:
 			JOptionPane.showMessageDialog(getActiveFrame(), "Unsupported file type.\n"+filename);
-			return;
 			}
 		}
 
+	public void handleCustomURI(URI uri) {
+		if (!uri.toString().startsWith("datawarrior://")) {
+			JOptionPane.showMessageDialog(getActiveFrame(), "Unsupported scheme for custom URI: "+uri);
+			return;
+			}
+
+		if (uri.getHost() == null || uri.getPath() == null) {
+			JOptionPane.showMessageDialog(getActiveFrame(), "Missing host or path in custom URI: "+uri);
+			return;
+			}
+
+		String url = "https://".concat(uri.toString().substring(14));
+
+		String path = uri.getPath();
+		int frmt = (path.endsWith(".txt")) ? DETaskRetrieveDataFromURL.FORMAT_TAB_DELIMITED
+				: (path.endsWith(".csv")) ? DETaskRetrieveDataFromURL.FORMAT_COMMA_SEPARATED
+				: (path.endsWith(".dwar")) ? DETaskRetrieveDataFromURL.FORMAT_DWAR
+				: (path.endsWith(".dwam")) ? DETaskRetrieveDataFromURL.FORMAT_DWAM
+				: (path.endsWith(".sdf")) ? DETaskRetrieveDataFromURL.FORMAT_SDF
+				: (path.endsWith(".sdf.gz")) ? DETaskRetrieveDataFromURL.FORMAT_SDF_GZ : -1;
+		if (frmt == -1) {
+			JOptionPane.showMessageDialog(getActiveFrame(), "Extention within custom URI not found or recognized.");
+			return;
+			}
+		String format = DETaskRetrieveDataFromURL.FORMAT_CODE[frmt];
+
+		int index1 = path.lastIndexOf('/');
+		int index2 = path.lastIndexOf('.');
+		String windowName = path.substring(index1+1, index2);
+
+		new DETaskRetrieveDataFromURL(getActiveFrame(), this, url, format, null, windowName).defineAndRun();
+		}
+
 	public void handleCustomURI(String[] args) {
-		// For testing purposes we just display the URI data...
-		System.out.println("Custom URI:");
-		for (String arg:args)
-			System.out.println(arg);
+		for (String arg:args) {
+			try {
+				handleCustomURI(new URI(arg));
+				}
+			catch (URISyntaxException use) {
+				JOptionPane.showMessageDialog(getActiveFrame(), "URISyntaxException:"+arg);
+				}
+			}
 		}
 
 	public void updateRecentFiles(File file) {

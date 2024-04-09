@@ -73,7 +73,7 @@ public class DataWarriorOSX extends DataWarrior {
 					readFile(f.getPath());
 				} );
 			desktop.setOpenURIHandler(e -> {
-				JOptionPane.showMessageDialog(getActiveFrame(), "Open URI:"+e.getURI());
+				handleCustomURI(e.getURI());
 				} );
 			desktop.setQuitHandler((e,response) -> {
 				if (closeApplication(true))

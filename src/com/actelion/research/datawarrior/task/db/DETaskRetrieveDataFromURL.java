@@ -45,18 +45,46 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 	private static final String PROPERTY_TEMPLATE = "template";
 	private static final String PROPERTY_WINDOW_NAME = "windowName";
 
-	private static final String[] FORMAT_TEXT = { "TAB delimited", "comma separated", "semicolon separated", "vertical line separated" };
-	private static final String[] FORMAT_CODE = { "td", "cs", "ss", "vls" };
-	private static final int[] FORMAT = { FileHelper.cFileTypeTextTabDelimited, FileHelper.cFileTypeTextCommaSeparated, FileHelper.cFileTypeTextSemicolonSeparated, FileHelper.cFileTypeTextVLineSeparated };
+	private static final String[] FORMAT_TEXT = { "TAB delimited", "comma separated", "semicolon separated", "vertical line separated",
+												  "DataWarrior native", "DataWarrior Macro", "SD-File", "SD-File (gzipped)" };
 
-	private DataWarrior mApplication;
-	private DEFrame     mTargetFrame;
-	private JTextArea   mTextAreaURL;
-	private JComboBox   mComboBoxFormat;
+	public static final int FORMAT_TAB_DELIMITED = 0;
+	public static final int FORMAT_COMMA_SEPARATED = 1;
+	public static final int FORMAT_SEMICOLON_SEPARATED = 2;
+	public static final int FORMAT_VLINE_SEPARATED = 3;
+	public static final int FORMAT_DWAR = 4;
+	public static final int FORMAT_DWAM = 5;
+	public static final int FORMAT_SDF = 6;
+	public static final int FORMAT_SDF_GZ = 7;
+
+	public static final String[] FORMAT_CODE = { "td", "cs", "ss", "vls", "dwar", "dwam", "sdf", "sdgz" };
+	private static final int[] FORMAT = { FileHelper.cFileTypeTextTabDelimited,
+										  FileHelper.cFileTypeTextCommaSeparated,
+										  FileHelper.cFileTypeTextSemicolonSeparated,
+										  FileHelper.cFileTypeTextVLineSeparated,
+										  FileHelper.cFileTypeDataWarrior,
+										  FileHelper.cFileTypeDataWarriorMacro,
+										  FileHelper.cFileTypeSD,
+										  FileHelper.cFileTypeSDGZ };
+
+	private final DataWarrior mApplication;
+	private DEFrame mTargetFrame;
+	private JTextArea mTextAreaURL;
+	private JComboBox<String> mComboBoxFormat;
+	private String mURL,mFormat,mTemplate,mWindowName;
 
 	public DETaskRetrieveDataFromURL(Frame parent, DataWarrior application) {
 		super(parent, true);
 		mApplication = application;
+	}
+
+	public DETaskRetrieveDataFromURL(Frame parent, DataWarrior application, String url, String format, String template, String windowName) {
+		super(parent, true);
+		mApplication = application;
+		mURL = url;
+		mFormat = format;
+		mTemplate = template;
+		mWindowName = windowName;
 	}
 
 	@Override
@@ -74,6 +102,23 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 		return "/html/help/databases.html#CustomURL";
 		}
 
+		@Override
+	public Properties getPredefinedConfiguration() {
+		if (mURL == null)
+			return null;
+
+		Properties configuration = new Properties();
+		configuration.put(PROPERTY_URL, mURL);
+		if (mFormat != null)
+			configuration.put(PROPERTY_FORMAT, mFormat);
+		if (mTemplate != null)
+			configuration.put(PROPERTY_TEMPLATE, mTemplate);
+		if (mWindowName != null)
+			configuration.put(PROPERTY_WINDOW_NAME, mWindowName);
+
+		return configuration;
+	}
+
 	@Override
 	public JComponent createDialogContent() {
 		int gap = HiDPIHelper.scale(8);
@@ -89,7 +134,7 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 		mTextAreaURL.setLineWrap(true);
 		content.add(mTextAreaURL, "1,3,5,3");
 
-		mComboBoxFormat = new JComboBox(FORMAT_TEXT);
+		mComboBoxFormat = new JComboBox<>(FORMAT_TEXT);
 		content.add(new JLabel("Data Format:"), "2,5");
 		content.add(mComboBoxFormat, "4,5");
 
@@ -126,7 +171,7 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String url = configuration.getProperty(PROPERTY_URL, "");
-		if (url.length() == 0) {
+		if (url.isEmpty()) {
 			showErrorMessage("Missing URL for data retrieval.");
 			return false;
 		}
@@ -164,6 +209,7 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 		}
 		catch (Exception e) {
 			if (isInteractive()) {
+SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(getParentFrame(), "Error URL: "+configuration.getProperty(PROPERTY_URL)));
 				SwingUtilities.invokeLater(() ->
 				JOptionPane.showMessageDialog(getParentFrame(), "Communication error:"+e.getMessage()
 						+"\nA firewall or local security software or settings may prevent contacting the server."));

@@ -17,7 +17,7 @@ import java.net.URL;
 public class DENews {
 	private final static String TYPE_PERMANENT = "permanent";
 
-	private String mTitle, mText, mImageURL, mMoreURL, mType;
+	private final String mTitle, mText, mImageURL, mMoreURL, mType;
 	private BufferedImage mImage;
 	private boolean mImageFailed;
 

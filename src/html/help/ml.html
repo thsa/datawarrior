@@ -202,7 +202,7 @@ In input vector is selected randomly. That reference vector is located, which
 is most similar to the input vector. This reference vector and the reference vectors in
 its circular neighborhood are modified to make them a little more similar to
 the selected input vector. The amount of the modification decreases with increasing
-distance from the central reference vector and it decreases with the number of
+distance from the central reference vector, and it decreases with the number of
 modification rounds already done. This way a coarse grid structure is formed quickly,
 while the more local manifestation of fine-granular details takes the majority of the
 optimization cycles.</p>
@@ -277,7 +277,7 @@ that they contain the properties or descriptor used to train the SOM.
 One might, for instance, train a large SOM from many diverse compounds
 containing both, mutagenic and non-mutagenic structures. If one would use
 the SOM file to later map a commercial screening library, one could merge
-both files and show toxic and non toxic areas by coloring the background
+both files and show toxic and non-toxic areas by coloring the background
 of a 2D-view accordingly. The foreground might show the compounds of the
 screening library distributed in toxic and non-toxic regions.</p>
 <br>
@@ -296,7 +296,7 @@ relationships.</p>
 
 <p>Common to these methods is that they all build a model from given numerical X- and Y-values.
 Later this model can be used to predict Y-values from new X-values. X-values in this regard
-are multiple alpha-numerical or purely numerical values that describe the object
+are multiple alphanumerical or purely numerical values that describe the object
 and the Y-value (also called label) is an object property that is either used for model learning
 or is predicted by the final model for objects that where not used during training.
 In the case of drug discovery the object might be a molecule,
@@ -373,9 +373,9 @@ The <span class="keyword">PLS</span> (partial least squares) method is basically
 regression, which expects a linear dependency of the predicted variable and normality of the data.
 The <span class="keyword">Power-PLS</span> method is a PLS with a preceeding
 <span class="keyword">Box Cox</span> transformation, which opens the PLS for nolinear
-relationsships and non normal distributed data.
+relationsships and non-normal distributed data.
 The <span class="keyword">SVM</span> (support vector machine) is a robust mathematical approach
-for non linear data that was believed for a long time to outperform any multi-layered neural networks.
+for non-linear data that was believed for a long time to outperform any multi-layered neural networks.
 More detailled descriptions of the methods are beyond the scope of this manual,
 but can be easily found on the internet.</p>
 
@@ -403,7 +403,7 @@ to predict hERG activity for a given dataset of structurally related compounds d
 the time axis.</i></center></p>
 
 <p>Looking at these plots it is up to the scientist to decide, whether the achieved correlation is sufficiently
-high to serve a a useful guidence in a drug discovery project.</p>
+high to serve as a useful guidence in a drug discovery project.</p>
 <br>
 
 <h3><a name="MissingValues"></a>Predicting Missing Values</h3>

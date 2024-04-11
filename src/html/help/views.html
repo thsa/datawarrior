@@ -226,7 +226,7 @@ then all synchronized views behave immedately the same. This way you may use som
 whose markers encode different properties, but show the same objects and rotate and zoom synchronously.
 A view can be synchronized to another view by selecting <span class="menu">Synchronize View To</span>
 from the popup menu in the view's header area. The controlling view, which propagates its settings
-to one or more linked views, mare have more but not less dimensions than any client view.
+to one or more linked views, may have more but not fewer dimensions than any client view.
 This means, a 2D-view may be attached to and controlled by a 3D-view, but not the other way round.</p>
 
 <p align="center"><img src="help/img/views/synchronizedViews.jpeg"></p>
@@ -238,7 +238,7 @@ For instance, markers that are zoomed out of the view, are not visible anymore.
 Rows are also hidden, if a column with incomplete data is assigned to an axis and if the view is configured
 to not show empty values.
 In such a case these rows are usually hidden in other views as well. If the ristricting
-view itself gets invisible, e.g. because is is send to the background and because another view
+view itself gets invisible, e.g. because it is sent to the background and because another view
 is displayed on top of it, then the formerly hidden rows reappear again in all remaining visible views.
 There are situations, however, where zooming into the data should not affect the row visibility
 of other views. Therefore, graphical views can be configured to not
@@ -286,7 +286,7 @@ column values. In this case every marker emits a corona of color that fades
 with increasing distance. All overlapping colors mix in hue and saturation to create 
 a smooth colorful property landscape, where areas with similar colors visualize areas 
 of similar properties. Consequently, background coloring is particularly useful 
-if the property associated to it correlates to some extend with the column values that
+if the property associated to it correlates to some extent with the column values that
 are assigned to the x- and y-axis. In other words background colors are used best,
 if close markers have similar properties, e.g. in a chemical space visualization.
 The background color dialog is accessible from the <span class="menu">Set Marker

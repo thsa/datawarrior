@@ -114,7 +114,7 @@ public class DETaskExitProgram extends ConfigurableTask {
 	public void runTask(Properties configuration) {
 		int saveChanges = findListIndex(configuration.getProperty(PROPERTY_SAVE_CHANGES), MODE_CODE, SAVE_CHANGES_YES);
 
-		if (saveChanges != SAVE_CHANGES_ASK) {	// is running a macro
+		if (saveChanges != SAVE_CHANGES_ASK) {	// if running a macro
 			mApplication.closeAllFramesSilentlyAndExit(saveChanges == SAVE_CHANGES_YES);
 			return;
 		}

@@ -1951,6 +1951,11 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				FXHelpFrame.updateLookAndFeel();
 				}
 			else if (actionCommand.startsWith(SCALE_DPI)) {
+				for (int i=0; i<jMenuHelpDPIScaling.getItemCount(); i++) {
+					JCheckBoxMenuItem item = (JCheckBoxMenuItem)jMenuHelpDPIScaling.getItem(i);
+					if (item != source)
+						item.setSelected(false);
+					}
 				String dpiFactor = actionCommand.substring(SCALE_DPI.length());
 				Preferences prefs = DataWarrior.getPreferences();
 				if (dpiFactor.equals(DPI_OPTIONS[0]))

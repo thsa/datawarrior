@@ -14,7 +14,7 @@
 <p>Molecule and reaction similarities play an important role in <span class="keyword">DataWarrior</span>.
 They are calculated, when using a filter to focus on a similar molecule subset and they are used to customize views,
 e.g. to color, size or position markers based on compound similarities.
-Some data analysis algorithms, which typically use alpha-numerical input information, may also consider compound
+Some data analysis algorithms, which typically use alphanumerical input information, may also consider compound
 similarities, e.g. self organizing maps.
 In addition many dedicated cheminformatics analysis methods need a similarity criterion to wor with,
 e.g. an activity cliff analysis, or compound clustering. <span class="keyword">DataWarrior</span>
@@ -22,7 +22,7 @@ supports various kinds of molecule similarities. These range from a simple chemi
 substructure fragments up to a binding behaviour similarity that considers 3D-geometry of conformers and the
 interaction potential to proteins.</p>
 <p>When <span class="keyword">DataWarrior</span> calculates a similarity value between two molecules,
-then the calculation is not performed on the molecular graphs directly. It rather involves a two step process:
+then the calculation is not performed on the molecular graphs directly. It rather involves a two-step process:
 <li>The molecular graphs of all molecules in a dataset are processed to extract certain molecule features.
 These are compiled into an abstract molecule description, called <span class="keyword">descriptor</span>.
 In the simplest case the descriptor consists of a binary array of which every bit indicates, whether a certain
@@ -52,7 +52,7 @@ or to achieve best results from clustering or any kind of similarity analysis, t
 in vast virtual compound space, then the <span class="keyword">SkelSpheres descriptor</span> outperformes
 the binary fingerprints in quality, because it considers multiple fragment occurence and makes hash collisions unlikely.</p>
 <p>When chemical functionality from a synthetic chemist's point of view is more important than the carbon skeleton
-that carries this functionality, the you should try the <span class="keyword">OrgFunctions descriptor</span>.
+that carries this functionality, then you should try the <span class="keyword">OrgFunctions descriptor</span>.
 Examples are searching a chemicals database for an alternative reactant to a reaction or arranging a building
 blocks collection in space based synthetically accessible functionality.</p>
 <p>If the similarity of biological binding behaviour is important rather than merely the similarity of the chemical graph,

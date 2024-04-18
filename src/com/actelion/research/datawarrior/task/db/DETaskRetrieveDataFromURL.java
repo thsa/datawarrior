@@ -30,9 +30,12 @@ import info.clearthought.layout.TableLayout;
 import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.util.Properties;
 
@@ -190,7 +193,7 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 		try {
 			startProgress("Retrieving Data From URL...", 0, 0);
 
-			URLConnection con = new URL(configuration.getProperty(PROPERTY_URL)).openConnection();
+			URLConnection con = new URI(configuration.getProperty(PROPERTY_URL)).toURL().openConnection();
 			con.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)");
 			con.setRequestProperty("Content-Type", "text/plain");
 
@@ -207,9 +210,14 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 				loader.readStream(new BufferedReader(new InputStreamReader(is)), rtp, format, action, title);
 			}
 		}
-		catch (Exception e) {
+		catch (MalformedURLException | URISyntaxException use) {
 			if (isInteractive()) {
-SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(getParentFrame(), "Error URL: "+configuration.getProperty(PROPERTY_URL)));
+				SwingUtilities.invokeLater(() ->
+						JOptionPane.showMessageDialog(getParentFrame(), "URL Syntax Error:"+use.getMessage()));
+			}
+		}
+		catch (IOException e) {
+			if (isInteractive()) {
 				SwingUtilities.invokeLater(() ->
 				JOptionPane.showMessageDialog(getParentFrame(), "Communication error:"+e.getMessage()
 						+"\nA firewall or local security software or settings may prevent contacting the server."));

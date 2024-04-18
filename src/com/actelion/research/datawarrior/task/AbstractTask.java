@@ -271,6 +271,7 @@ public abstract class AbstractTask implements ProgressController {
 			return configuration;
 			}
 
+// TODO Consider to move dialog creation before createDialogContent() to allow the content to use getDialog() and to make PluginGUIHelper.getDialog() not return null
 		mDialog = new JDialog(mParentFrame, getDialogTitle(), true);
 		mDialog.setModalityType(Dialog.ModalityType.DOCUMENT_MODAL);
 		mDialog.getContentPane().setLayout(new BorderLayout());

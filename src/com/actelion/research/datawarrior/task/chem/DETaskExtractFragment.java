@@ -36,13 +36,16 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 	private static final String PROPERTY_NEUTRALIZE = "neutralize";
 	private static final String PROPERTY_AS_SUBSTRUCTURE = "asSubstructure";
 	private static final String PROPERTY_SUBSTRUCTURE = "substructure";
+	private static final String PROPERTY_MODE = "mode";
 
-	private static final String[] OPTIONS = {"Size (largest)", "Substructure"};
-	private static final int OPTION_SIZE = 0;
-	private static final int OPTION_SUBSTRUCTURE = 1;
+	private static final String[] MODE_TEXT = {"Size (largest)", "Substructure"};
+	private static final String[] MODE_CODE = {"size", "sss"};
+
+	private static final int MODE_SIZE = 0;
+	private static final int MODE_SUBSTRUCTURE = 1;
 
 	private JCheckBox mCheckBoxNeutralize,mCheckBoxAsSubstructure;
-	private JComboBox mComboBoxExtractFragment;
+	private JComboBox mComboBoxMode;
 	private JEditableStructureView mSubstructureView;
 	private boolean mNeutralizeFragment,mAsSubstructure;
 	private SSSearcher[] mSearcher;
@@ -76,21 +79,21 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 	@Override
 	public JPanel getExtendedDialogContent() {
     	int gap = HiDPIHelper.scale(8);
-		double[][] size = { {TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL},
-							{TableLayout.PREFERRED, gap/2, HiDPIHelper.scale(80), gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED} };
+		double[][] size = { {TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL},
+							{TableLayout.PREFERRED, gap>>1, HiDPIHelper.scale(80), gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED} };
 
-		mComboBoxExtractFragment = new JComboBox(OPTIONS);
+		mComboBoxMode = new JComboBox<String>(MODE_TEXT);
 		mCheckBoxNeutralize = new JCheckBox("Neutralize charges");
 		mCheckBoxAsSubstructure = new JCheckBox("Convert to sub-structure");
 		mSubstructureView = new JEditableStructureView();
 		mSubstructureView.getMolecule().setFragment(true);
 
-		mComboBoxExtractFragment.addActionListener(e -> mSubstructureView.setEnabled(mComboBoxExtractFragment.getSelectedIndex() == OPTION_SUBSTRUCTURE));
+		mComboBoxMode.addActionListener(e -> mSubstructureView.setEnabled(mComboBoxMode.getSelectedIndex() == MODE_SUBSTRUCTURE));
 
 		JPanel ep = new JPanel();
 		ep.setLayout(new TableLayout(size));
 		ep.add(new JLabel("Extract fragment by:"), "0,0");
-		ep.add(mComboBoxExtractFragment, "2,0");
+		ep.add(mComboBoxMode, "2,0");
 		ep.add(mSubstructureView, "2,2,3,2");
 		ep.add(mCheckBoxNeutralize, "0,4,3,4");
 		ep.add(mCheckBoxAsSubstructure, "0,6,3,6");
@@ -109,8 +112,8 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
-		if (mComboBoxExtractFragment.getSelectedIndex() == OPTION_SUBSTRUCTURE
-		 && mSubstructureView.getMolecule().getAllAtoms() == 0) {
+		int mode = findListIndex(configuration.getProperty(PROPERTY_MODE), MODE_CODE, MODE_SIZE);
+		if (mode == MODE_SUBSTRUCTURE && configuration.getProperty(PROPERTY_SUBSTRUCTURE) == null) {
 			showErrorMessage("No substructure defined.");
 			return false;
 			}
@@ -121,7 +124,8 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 	@Override
 	public Properties getDialogConfiguration() {
 		Properties configuration = super.getDialogConfiguration();
-		if (mComboBoxExtractFragment.getSelectedIndex() == OPTION_SUBSTRUCTURE) {
+		configuration.setProperty(PROPERTY_SUBSTRUCTURE, MODE_CODE[mComboBoxMode.getSelectedIndex()]);
+		if (mComboBoxMode.getSelectedIndex() == MODE_SUBSTRUCTURE) {
 			StereoMolecule mol = mSubstructureView.getMolecule();
 			if (mol.getAllAtoms() != 0) {
 				Canonizer canonizer = new Canonizer(mol);
@@ -137,7 +141,7 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
 		String idcode = configuration.getProperty(PROPERTY_SUBSTRUCTURE);
-		mComboBoxExtractFragment.setSelectedIndex(idcode == null ? OPTION_SIZE : OPTION_SUBSTRUCTURE);
+		mComboBoxMode.setSelectedIndex(idcode == null ? MODE_SIZE : MODE_SUBSTRUCTURE);
 		if (idcode != null)
 			mSubstructureView.setIDCode(idcode);
 		mCheckBoxNeutralize.setSelected("true".equals(configuration.getProperty(PROPERTY_NEUTRALIZE)));
@@ -147,7 +151,7 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 	@Override
 	public void setDialogConfigurationToDefault() {
 		super.setDialogConfigurationToDefault();
-		mComboBoxExtractFragment.setSelectedIndex(OPTION_SIZE);
+		mComboBoxMode.setSelectedIndex(MODE_SIZE);
 		mCheckBoxNeutralize.setSelected(true);
 		mCheckBoxAsSubstructure.setSelected(false);
 		}
@@ -156,7 +160,7 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 	protected void setNewColumnProperties(int firstNewColumn) {
 		String sourceColumnName = getTableModel().getColumnTitle(getChemistryColumn());
 
-		getTableModel().setColumnName((mExtractOption == OPTION_SIZE ? "Largest Fragment of " : "Fragment of ")
+		getTableModel().setColumnName((mExtractOption == MODE_SIZE ? "Largest Fragment of " : "Fragment of ")
 				+ sourceColumnName, firstNewColumn);
 		getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertySpecialType,
 				CompoundTableConstants.cColumnTypeIDCode);
@@ -187,7 +191,7 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 		mAsSubstructure = "true".equals(configuration.getProperty(PROPERTY_AS_SUBSTRUCTURE));
 		mFFPColumn = getTableModel().getChildColumn(getChemistryColumn(configuration), DescriptorConstants.DESCRIPTOR_FFP512.shortName);
 		String idcode = configuration.getProperty(PROPERTY_SUBSTRUCTURE);
-		mExtractOption = (idcode == null) ? OPTION_SIZE : OPTION_SUBSTRUCTURE;
+		mExtractOption = (idcode == null) ? MODE_SIZE : MODE_SUBSTRUCTURE;
 		if (idcode != null) {
 			StereoMolecule substructure = new IDCodeParser().getCompactMolecule(idcode);
 			if (substructure.getAllAtoms() != 0) {
@@ -242,7 +246,7 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 		}
 
 	private void handleMolecule(StereoMolecule mol, int row, int threadIndex) {
-		if (mExtractOption == OPTION_SUBSTRUCTURE) {
+		if (mExtractOption == MODE_SUBSTRUCTURE) {
 			int[] matchList = null;
 			if (mSearcherWithIndex != null) {
 				mSearcherWithIndex[threadIndex].setMolecule(mol, (long[])getTableModel().getTotalRecord(row).getData(mFFPColumn));

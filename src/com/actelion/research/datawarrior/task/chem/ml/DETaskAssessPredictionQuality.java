@@ -339,7 +339,7 @@ public class DETaskAssessPredictionQuality extends DETaskAbstractMachineLearning
 	protected void postprocess(int firstNewColumn) {
 		stopProgress();
 
-		getTableModel().finalizeNewColumns(firstNewColumn, this);
+	//	getTableModel().finalizeNewColumns(firstNewColumn, this);   is already done in DETaskAbstractFromChemistry.finishTaskMultiCore() TLS 23Apr2024
 		if (isValueLogarithmic())
 			getTableModel().setLogarithmicViewMode(firstNewColumn+1, true);
 

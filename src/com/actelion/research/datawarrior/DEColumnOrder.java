@@ -36,8 +36,8 @@ import java.util.ArrayList;
  */
 public class DEColumnOrder extends ArrayList<Integer> implements TableColumnModelListener,CompoundTableListener {
 	// maintains the list of all displayable CompoundTableModel column indexes in display order
-	private CompoundTableModel mTableModel;
-	private TableColumnModel mColumnModel;
+	private final CompoundTableModel mTableModel;
+	private final TableColumnModel mColumnModel;
 	private boolean mNeglectMoveColumnEvents;
 
 	public DEColumnOrder(CompoundTableModel tableModel, TableColumnModel columnModel) {
@@ -49,6 +49,11 @@ public class DEColumnOrder extends ArrayList<Integer> implements TableColumnMode
 
 		// Start with the native oreder of displayable columns.
 		initialize();
+		}
+
+	public void cleanup() {
+		mTableModel.removeCompoundTableListener(this);
+		mColumnModel.removeColumnModelListener(this);
 		}
 
 	public void setNeglectMoveColumnEvents(boolean b) {

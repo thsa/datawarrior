@@ -39,6 +39,18 @@ public class DataWarriorLauncher {
 					}
 
 				if (appJar == null) {
+					try {
+						String launcherPath = DataWarriorLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+						if (new File(launcherPath).exists())
+							System.out.println("JarDir: " + new File(launcherPath).getParent());
+						else
+							System.out.println("launcherPath: " + launcherPath);
+						}
+					catch (Exception e) {
+						System.out.println("Exception getting launcherPath: " + e.getMessage());
+						}
+					// TODO check on all platforms and use launcherPath, if possible!!!
+
 					String path = isWindows() ? "C:\\Program Files\\DataWarrior\\datawarrior_all.jar"
 								: isMacintosh() ? "/Applications/DataWarrior.app/Contents/Java/update/datawarrior_all.jar"
 								: "/opt/datawarrior/datawarrior_all.jar";

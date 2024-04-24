@@ -632,6 +632,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 
 	public void cleanup() {
 		mHiddenColumnMap.clear();
+		mIntendedColumnOrder.cleanup();
 		getModel().removeTableModelListener(this);
 		((CompoundTableModel)getModel()).removeCompoundTableListener(this);
 		}
@@ -1261,6 +1262,9 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 		int dispIndex = 0;
 		int visIndex = 0;
 		for (String title:columnTitle) {
+			if (dispIndex >= mIntendedColumnOrder.size())   // just in case a column is multiple times in the list (happened already)
+				break;
+
 			int column = tableModel.findColumn(title);
 			if (column != -1) {
 				int displayableColumn = tableModel.convertToDisplayableColumnIndex(column);

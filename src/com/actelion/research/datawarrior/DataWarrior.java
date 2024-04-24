@@ -27,6 +27,7 @@ import com.actelion.research.datawarrior.plugin.PluginRegistry;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.datawarrior.task.DETaskSelectWindow;
 import com.actelion.research.datawarrior.task.StandardTaskFactory;
+import com.actelion.research.datawarrior.task.db.DETaskRetrieveDataFromURL;
 import com.actelion.research.datawarrior.task.file.DETaskOpenFile;
 import com.actelion.research.datawarrior.task.file.DETaskRunMacroFromFile;
 import com.actelion.research.gui.FileHelper;
@@ -48,6 +49,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
@@ -85,9 +88,9 @@ public abstract class DataWarrior implements WindowFocusListener {
 		AQUA("Aqua", "com.apple.laf.AquaLookAndFeel", false, 0xAEDBFF, 0x0060FF, 0x006aff);
 
 		private final String displayName;
-		private String className;
-		private boolean isDark;
-		private int rgb1,rgb2,rgb3;
+		private final String className;
+		private final boolean isDark;
+		private final int rgb1,rgb2,rgb3;
 
 		/**
 		 *
@@ -122,12 +125,12 @@ public abstract class DataWarrior implements WindowFocusListener {
 			}
 		}
 
-	private static DataWarrior	sApplication;
+	private static DataWarrior sApplication;
 
-	private ArrayList<DEFrame>	mFrameList;
-	private DEFrame				mFrameOnFocus;
-	private StandardTaskFactory	mTaskFactory;
-	private PluginRegistry mPluginRegistry;
+	private final ArrayList<DEFrame> mFrameList;
+	private DEFrame mFrameOnFocus;
+	private final StandardTaskFactory mTaskFactory;
+	private final PluginRegistry mPluginRegistry;
 
 	public static DataWarrior getApplication() {
 		return sApplication;
@@ -313,7 +316,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 					}
 				}
 				reader.close();
-				if (list.size() != 0)
+				if (!list.isEmpty())
 					GenericEditorArea.setReactionQueryTemplates(list.toArray(new String[0][]));
 			}
 			catch (IOException ioe) {}
@@ -415,7 +418,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 * @return true, if all windows could be closed
 	 */
 	public boolean closeApplication(boolean isInteractive) {
-		while (mFrameList.size() != 0) {
+		while (!mFrameList.isEmpty()) {
 			DEFrame frame = getActiveFrame();
 			if (disposeFrameSafely(frame, isInteractive) == 0)
 				return false;
@@ -424,12 +427,15 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 
 	private void exit() {
+		waitIfUdating();
+		System.exit(0);
+		}
+
+	private void waitIfUdating() {
 		if (DEUpdateHandler.isUpdating())
 			JOptionPane.showMessageDialog(getActiveFrame(), "Cannot exit, while update is downloading....");
 		while (DEUpdateHandler.isUpdating())
 			try { Thread.sleep(100); } catch (InterruptedException ie) {}
-
-		System.exit(0);
 		}
 
 	/**
@@ -447,7 +453,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 	public int closeFrameSafely(DEFrame frame, boolean isInteractive) {
 		int result = disposeFrameSafely(frame, isInteractive);
 
-		if (!isMacintosh() && mFrameList.size() == 0)
+		if (!isMacintosh() && mFrameList.isEmpty())
 			exit();
 
 		return result;
@@ -486,7 +492,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 * @param isInteractive
 	 */
 	public void closeAllFramesSafely(boolean isInteractive) {
-		while (mFrameList.size() != 0)
+		while (!mFrameList.isEmpty())
 			if (disposeFrameSafely(getActiveFrame(), isInteractive) == 0)
 				return;
 
@@ -503,7 +509,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 * If a macro is recording, then this call does not record any tasks.
 	 */
 	public void closeAllFramesSilentlyAndExit(boolean saveContent) {
-		while (mFrameList.size() != 0)
+		while (!mFrameList.isEmpty())
 			closeFrameSilently(getActiveFrame(), saveContent);
 
 		exit();
@@ -536,6 +542,8 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 */
 	private void disposeFrame(DEFrame frame) {
 		mFrameList.remove(frame);
+		if (mFrameList.isEmpty())
+			waitIfUdating();
 		frame.getTableModel().initializeTable(0, 0);
 		frame.setVisible(false);
 		frame.dispose();
@@ -736,15 +744,51 @@ public abstract class DataWarrior implements WindowFocusListener {
 			return;
 		default:
 			JOptionPane.showMessageDialog(getActiveFrame(), "Unsupported file type.\n"+filename);
-			return;
 			}
 		}
 
+	public void handleCustomURI(URI uri) {
+		if (!uri.toString().startsWith("datawarrior://")) {
+			JOptionPane.showMessageDialog(getActiveFrame(), "Unsupported scheme for custom URI: "+uri);
+			return;
+			}
+
+		if (uri.getHost() == null || uri.getPath() == null) {
+			JOptionPane.showMessageDialog(getActiveFrame(), "Missing host or path in custom URI: "+uri);
+			return;
+			}
+
+		String url = "https://".concat(uri.toString().substring(14));
+
+		String path = uri.getPath();
+		int frmt = (path.endsWith(".txt")) ? DETaskRetrieveDataFromURL.FORMAT_TAB_DELIMITED
+				: (path.endsWith(".csv")) ? DETaskRetrieveDataFromURL.FORMAT_COMMA_SEPARATED
+				: (path.endsWith(".dwar")) ? DETaskRetrieveDataFromURL.FORMAT_DWAR
+				: (path.endsWith(".dwam")) ? DETaskRetrieveDataFromURL.FORMAT_DWAM
+				: (path.endsWith(".sdf")) ? DETaskRetrieveDataFromURL.FORMAT_SDF
+				: (path.endsWith(".sdf.gz")) ? DETaskRetrieveDataFromURL.FORMAT_SDF_GZ : -1;
+		if (frmt == -1) {
+			JOptionPane.showMessageDialog(getActiveFrame(), "Extention within custom URI not found or recognized.");
+			return;
+			}
+		String format = DETaskRetrieveDataFromURL.FORMAT_CODE[frmt];
+
+		int index1 = path.lastIndexOf('/');
+		int index2 = path.lastIndexOf('.');
+		String windowName = path.substring(index1+1, index2);
+
+		new DETaskRetrieveDataFromURL(getActiveFrame(), this, url, format, null, windowName).defineAndRun();
+		}
+
 	public void handleCustomURI(String[] args) {
-		// For testing purposes we just display the URI data...
-		System.out.println("Custom URI:");
-		for (String arg:args)
-			System.out.println(arg);
+		for (String arg:args) {
+			try {
+				handleCustomURI(new URI(arg));
+				}
+			catch (URISyntaxException use) {
+				JOptionPane.showMessageDialog(getActiveFrame(), "URISyntaxException:"+arg);
+				}
+			}
 		}
 
 	public void updateRecentFiles(File file) {
@@ -773,7 +817,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 					}
 				}
 
-			for (int i=0; i<MAX_RECENT_FILE_COUNT && recentFileName[i].length() != 0; i++)
+			for (int i = 0; i<MAX_RECENT_FILE_COUNT && !recentFileName[i].isEmpty(); i++)
 				prefs.put(PREFERENCES_KEY_RECENT_FILE+(i+1), recentFileName[i]);
 
 			for (DEFrame frame:getFrameList())
@@ -787,7 +831,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 
 	public DEFrame getActiveFrame() {
-		if (mFrameList == null || mFrameList.size() == 0)
+		if (mFrameList == null || mFrameList.isEmpty())
 			return null;
 
 		for (DEFrame f:mFrameList)
@@ -805,7 +849,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 * @return active frame or null
 	 */
 	public DEFrame getNewFrontFrameAfterClosing() {
-		if (mFrameList.size() == 0)
+		if (mFrameList.isEmpty())
 			return null;
 
 		if (!SwingUtilities.isEventDispatchThread()) {

@@ -1358,7 +1358,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 		Preferences prefs = DataWarrior.getPreferences();
 		String modeString = prefs.get(DEUpdateHandler.PREFERENCES_KEY_UPDATE_MODE, "");
-		if (modeString.length() == 0) // happens once after update, because mode is now stored in new setting
+		if (modeString.isEmpty()) // happens once after update, because mode is now stored in new setting
 			prefs.put(DEUpdateHandler.PREFERENCES_KEY_UPDATE_MODE, DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE[DEUpdateHandler.PREFERENCES_UPDATE_MODE_ASK]);
 		int mode = AbstractTask.findListIndex(modeString, DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE, DEUpdateHandler.PREFERENCES_UPDATE_MODE_ASK);
 
@@ -1498,7 +1498,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				jMenuMacroRun.removeAll();
 				@SuppressWarnings("unchecked")
 				ArrayList<DEMacro> macroList = (ArrayList<DEMacro>)mTableModel.getExtensionData(CompoundTableConstants.cExtensionNameMacroList);
-				if (macroList == null || macroList.size() == 0) {
+				if (macroList == null || macroList.isEmpty()) {
 					addMenuItem(jMenuMacroExport, "<no macros defined>", null);
 					addMenuItem(jMenuMacroCopy, "<no macros defined>", null);
 					}
@@ -1951,6 +1951,11 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				FXHelpFrame.updateLookAndFeel();
 				}
 			else if (actionCommand.startsWith(SCALE_DPI)) {
+				for (int i=0; i<jMenuHelpDPIScaling.getItemCount(); i++) {
+					JCheckBoxMenuItem item = (JCheckBoxMenuItem)jMenuHelpDPIScaling.getItem(i);
+					if (item != source)
+						item.setSelected(false);
+					}
 				String dpiFactor = actionCommand.substring(SCALE_DPI.length());
 				Preferences prefs = DataWarrior.getPreferences();
 				if (dpiFactor.equals(DPI_OPTIONS[0]))

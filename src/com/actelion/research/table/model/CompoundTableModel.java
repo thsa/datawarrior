@@ -2182,7 +2182,7 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	/**
-	 * Needs to be called after changing individual values of one alpha-numerical column.
+	 * Needs to be called after changing individual values of one alphanumerical column.
 	 * It re-analyzes the data type and completeness. For displayable columns that have
 	 * descriptor child columns, e.g. structure columns, use finalizeChangeSpecialColumn(...).
 	 * @param column
@@ -3038,7 +3038,7 @@ public class CompoundTableModel extends AbstractTableModel
 			if (entry.length == 1) {
 				mustBeSet = (inverse == selection[categoryList.getIndexOfString(entry[0])]);
 				}
-			else {	  // record may belong to more than one categories
+			else {	  // record may belong to more than one category
 				boolean visible = false;
 				for (int i=0; i<entry.length; i++) {
 					if (selection[categoryList.getIndexOfString(entry[i])]) {

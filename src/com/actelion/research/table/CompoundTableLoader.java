@@ -2716,6 +2716,15 @@ try {
 
 		setColumnProperties(mMergeDestColumn);
 
+		for (int destColumn : mMergeDestColumn) {
+			if (destColumn != NO_COLUMN && destColumn<mFirstNewColumn) {
+				if (mTableModel.isColumnTypeStructure(destColumn))
+					mTableModel.finalizeChangeChemistryColumn(destColumn, 0, mFieldData.length, true);
+				else
+					mTableModel.finalizeChangeAlphaNumericalColumn(destColumn, 0, mFieldData.length);
+			}
+		}
+
 		if (newColumns != 0)
 			mTableModel.finalizeNewColumns(mFirstNewColumn, mProgressController);
 

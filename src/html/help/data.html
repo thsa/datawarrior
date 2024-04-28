@@ -598,7 +598,7 @@ The expression syntax, all operators and available functions are explained below
     <td><font face="sans-serif"><small>valueCount(column-var)</small></font></td>
   </tr>
   <tr bgcolor="#ffffff">
-    <td><font face="sans-serif"><small>Number of non empty cell values</small></font></td>
+    <td><font face="sans-serif"><small>Number of non-empty cell values</small></font></td>
     <td><font face="sans-serif"><small>nonEmptyValueCount(column-var)</small></font></td>
   </tr>
   <tr bgcolor="#ffffff">
@@ -612,6 +612,10 @@ The expression syntax, all operators and available functions are explained below
   <tr bgcolor="#ffffff">
     <td><font face="sans-serif"><small>Frequency of same value in same category</small></font></td>
     <td><font face="sans-serif"><small>frequencyInCategory(category-column, value-column)</small></font></td>
+  </tr>
+  <tr bgcolor="#ffffff">
+    <td><font face="sans-serif"><small>Previous non-empty value in column</small></font></td>
+    <td><font face="sans-serif"><small>previousNonEmpty(column-name)</small></font></td>
   </tr>
   <tr bgcolor="#ffffff">
     <td><font face="sans-serif"><small>Previous value in category</small></font></td>
@@ -712,6 +716,10 @@ The expression syntax, all operators and available functions are explained below
   it considers the row's category membership. It counts, how many table rows contain the given value in the
   value-column and belong at the same time to the specified category, i.e. have the given category value in
   the category-column.</p>
+<p>The <b>previousNonEmpty()</b> function returns a value from the specified column. If the cell of the
+  currently processed row is not empty, then its value is returned. Otherwise, the last non-empty value
+  abobe the current row is returned. If all rows above the current one are empty then an empty string is
+  returned.</p>
 <p>The <b>previousInCategory()</b> function locates the n-th row above the currently processed row, while only
   considering rows that belong to the same category. Then it returns the specified column's value of that row.
   The function returns NaN, if less than n rows exist above the currently processed row.</p>

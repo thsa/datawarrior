@@ -64,7 +64,8 @@ public class ConformerFitnessPanel extends FitnessPanel {
 		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
 		settings.add(V3DScene.ViewerSettings.EDITING);
 		mConformerPanel = new JFXConformerPanel(false, settings);
-		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
+		mConformerPanel.adaptToLookAndFeelChanges();
+//		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(160), HiDPIHelper.scale(120)));
 		mConformerPanel.setPopupMenuController(new ConformerViewController(owner, mConformerPanel));
 

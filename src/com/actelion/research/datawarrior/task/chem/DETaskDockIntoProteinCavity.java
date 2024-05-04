@@ -88,7 +88,8 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 		settings.add(V3DScene.ViewerSettings.EDITING);
 		mConformerPanel = new JFXConformerPanel(false, settings);
 		mConformerPanel.setPopupMenuController(new DockingPanelController(mConformerPanel));
-		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
+		mConformerPanel.adaptToLookAndFeelChanges();
+//		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(320), HiDPIHelper.scale(240)));
 
 		JPanel ep = new JPanel();

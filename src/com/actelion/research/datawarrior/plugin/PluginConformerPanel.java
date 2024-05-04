@@ -34,7 +34,8 @@ import java.util.List;
 public class PluginConformerPanel extends JFXConformerPanel implements IConformerPanel {
 	public PluginConformerPanel(Frame owner, int mode) {
 		super(false, buildSettings());
-		setBackground(new java.awt.Color(24, 24, 96));
+		adaptToLookAndFeelChanges();
+//		setBackground(new java.awt.Color(24, 24, 96));
 		if (mode == MODE_LIGAND_AND_PROTEIN) {
 			setPreferredSize(new Dimension(HiDPIHelper.scale(320), HiDPIHelper.scale(240)));
 			setPopupMenuController(new DockingPanelController(this));

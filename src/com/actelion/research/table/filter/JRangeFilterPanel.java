@@ -154,8 +154,8 @@ public class JRangeFilterPanel extends JFilterPanel
 
 			if (mPruningBar.getMinimumValue() != mTableModel.getMinimumValue(mColumnIndex)
 			 || mPruningBar.getMaximumValue() != mTableModel.getMaximumValue(mColumnIndex)) {
-				float low = mPruningBar.getLowValue();
-				float high = mPruningBar.getHighValue();
+				double low = mPruningBar.getLowValue();
+				double high = mPruningBar.getHighValue();
 				boolean lowIsMin = (low == mPruningBar.getMinimumValue());
 				boolean highIsMax = (high == mPruningBar.getMaximumValue());
 
@@ -237,18 +237,18 @@ public class JRangeFilterPanel extends JFilterPanel
 		return value.trim().replace(' ', '-');
 		}
 
-	private float parse(String value) {
-		float f = Float.NaN;
-		if (value != null && value.length() != 0) {
-			float min = Float.NaN;
-			float max = Float.NaN;
+	private double parse(String value) {
+		double f = Double.NaN;
+		if (value != null && !value.isEmpty()) {
+			double min = Double.NaN;
+			double max = Double.NaN;
 			if (isActive()) {
 				min = mPruningBar.getMinimumValue();
 				max = mPruningBar.getMaximumValue();
 				}
 			else {
-				try { min = Float.parseFloat(mLabelLow.getText()); } catch (NumberFormatException nfe) {}
-				try { max = Float.parseFloat(mLabelHigh.getText()); } catch (NumberFormatException nfe) {}
+				try { min = Double.parseDouble(mLabelLow.getText()); } catch (NumberFormatException nfe) {}
+				try { max = Double.parseDouble(mLabelHigh.getText()); } catch (NumberFormatException nfe) {}
 				}
 			if (value.equals("min"))
 				return min;
@@ -352,27 +352,27 @@ public class JRangeFilterPanel extends JFilterPanel
 
 	@Override
 	public void setAnimationFrame(int frame) {
-		float min = mPruningBar.getMinimumValue();
-		float max = mPruningBar.getMaximumValue();
+		double min = mPruningBar.getMinimumValue();
+		double max = mPruningBar.getMaximumValue();
 		if (max > min) {
 			int frameCount = mAnimationMillis / getFrameMillis();
 			float progress = ((float)frame % frameCount + 1) / frameCount;
 			if (mAnimateBackAndForth && (frame % (2 * frameCount)) >= frameCount)
 				progress = 1.0f - progress;
-			float low1 = parse(mLowStart);
-			if (Float.isNaN(low1))
+			double low1 = parse(mLowStart);
+			if (Double.isNaN(low1))
 				low1 = min;
-			float low2 = parse(mLowEnd);
-			if (Float.isNaN(low2))
+			double low2 = parse(mLowEnd);
+			if (Double.isNaN(low2))
 				low2 = min;
-			float high1 = parse(mHighStart);
-			if (Float.isNaN(high1))
+			double high1 = parse(mHighStart);
+			if (Double.isNaN(high1))
 				high1 = max;
-			float high2 = parse(mHighEnd);
-			if (Float.isNaN(high2))
+			double high2 = parse(mHighEnd);
+			if (Double.isNaN(high2))
 				high2 = max;
-			float low = Math.min(max, Math.max(min, low1+progress*(low2-low1)));
-			float high = Math.min(max, Math.max(min, high1+progress*(high2-high1)));
+			double low = Math.min(max, Math.max(min, low1+progress*(low2-low1)));
+			double high = Math.min(max, Math.max(min, high1+progress*(high2-high1)));
 			mPruningBar.setLowAndHigh(low, high, false);
 			}
 		}
@@ -415,7 +415,7 @@ public class JRangeFilterPanel extends JFilterPanel
 		try {
 			String valueString = source.getText();
 
-			float value = 0;
+			double value = 0;
 			if (valueString.equalsIgnoreCase("mean")) {
 				for (int row=0; row<mTableModel.getTotalRowCount(); row++)
 					value += mTableModel.getTotalDoubleAt(row, mColumnIndex);
@@ -437,7 +437,7 @@ public class JRangeFilterPanel extends JFilterPanel
 				if (mTableModel.isLogarithmicViewMode(mColumnIndex))
 					value = (float) Math.log10(value);
 
-				float endValue = (source == mLabelLow) ? mPruningBar.getMinimumValue() : mPruningBar.getMaximumValue();
+				double endValue = (source == mLabelLow) ? mPruningBar.getMinimumValue() : mPruningBar.getMaximumValue();
 				String endValueString = DoubleFormat.toString(mTableModel.isLogarithmicViewMode(mColumnIndex) ? Math.pow(10.0, endValue) : endValue);
 
 				// to avoid strange edge effects through rounding
@@ -533,8 +533,8 @@ public class JRangeFilterPanel extends JFilterPanel
 	private void updateExclusion(boolean isAdjusting, boolean isUserChange) {
 		if (isEnabled()) {
 			setLabelTextFromPruningBars();
-			float low  = mPruningBar.getLowValue();
-			float high = mPruningBar.getHighValue();
+			float low  = (float)mPruningBar.getLowValue();
+			float high = (float)mPruningBar.getHighValue();
 	
 			boolean oldUserChange = mIsUserChange;
 			// setDoubleExclusion causes CompoundTableEvents that interfere with the userChange flag
@@ -561,23 +561,23 @@ public class JRangeFilterPanel extends JFilterPanel
 		if (isActive()) {
 			if (mPruningBar.getLowValue() > mPruningBar.getMinimumValue()
 			 || mPruningBar.getHighValue() < mPruningBar.getMaximumValue()) {
-				float low = mPruningBar.getLowValue();
-				float high = mPruningBar.getHighValue();
+				double low = mPruningBar.getLowValue();
+				double high = mPruningBar.getHighValue();
 				if (mTableModel.isLogarithmicViewMode(getColumnIndex())) {
 					low = (float)Math.pow(10, low);
 					high = (float)Math.pow(10, high);
 					}
-				return Float.toString(low)+'\t'+Float.toString(high);
+				return Double.toString(low)+'\t'+Double.toString(high);
 				}
 			}
 		else {
 			String low = mLabelLow.getText();
 			String high = mLabelHigh.getText();
-			if (low.length() != 0)
+			if (!low.isEmpty())
 				try { Float.parseFloat(low); } catch (NumberFormatException nfe) { low = ""; }
-			if (high.length() != 0)
+			if (!high.isEmpty())
 				try { Float.parseFloat(high); } catch (NumberFormatException nfe) { high = ""; }
-			if (low.length() != 0 || high.length() != 0)
+			if (!low.isEmpty() || !high.isEmpty())
 				return low+'\t'+high;
 			}
 

@@ -263,8 +263,8 @@ public abstract class AbstractDistributionPlot extends AbstractChart {
 
 	protected void calculateScreenCoordinates(Rectangle baseGraphRect) {
 		int dimensions = mVisualization.getDimensionCount();
-		float[] axisVisMin = new float[dimensions];
-		float[] axisVisMax = new float[dimensions];
+		double[] axisVisMin = new double[dimensions];
+		double[] axisVisMax = new double[dimensions];
 		for (int i=0; i<dimensions; i++) {
 			axisVisMin[i] = mVisualization.getVisibleMin(i);
 			axisVisMax[i] = mVisualization.getVisibleMax(i);
@@ -276,7 +276,7 @@ public abstract class AbstractDistributionPlot extends AbstractChart {
 		mCellHeight = (mDoubleAxis == 1) ?
 				(float)baseGraphRect.height
 				: (float)baseGraphRect.width;
-		float valueRange = (mDoubleAxis == 1) ?
+		double valueRange = (mDoubleAxis == 1) ?
 				axisVisMax[1]-axisVisMin[1]
 				: axisVisMax[0]-axisVisMin[0];
 
@@ -306,7 +306,7 @@ public abstract class AbstractDistributionPlot extends AbstractChart {
 					int cat = i*mCaseCount + j;
 					if (mPointsInCategory[hv][cat] != 0) {
 						mInnerDistance[hv][cat] = (mBoxQ3[hv][cat] - mBoxQ1[hv][cat])
-								* mCellHeight / valueRange / (float)mPointsInCategory[hv][cat];
+								* mCellHeight / ((float)valueRange * mPointsInCategory[hv][cat]);
 
 						int offset = 0;
 						float visMin = 0;
@@ -316,16 +316,16 @@ public abstract class AbstractDistributionPlot extends AbstractChart {
 							mSCenter[hv][cat] = baseGraphRect.x + mHVOffset[0][hv] + i*mCellWidth + mCellWidth/2;
 
 							offset = baseGraphRect.y + mHVOffset[1][hv] + baseGraphRect.height;
-							visMin = axisVisMin[1];
-							factor =  - (float)baseGraphRect.height / valueRange;
+							visMin = (float)axisVisMin[1];
+							factor =  - baseGraphRect.height / (float)valueRange;
 							distance = -distance;
 						}
 						else {
 							mSCenter[hv][cat] = baseGraphRect.y + mHVOffset[1][hv] + baseGraphRect.height - i*mCellWidth - mCellWidth/2;
 
 							offset = baseGraphRect.x + mHVOffset[0][hv];
-							visMin = axisVisMin[0];
-							factor =  (float)baseGraphRect.width / valueRange;
+							visMin = (float)axisVisMin[0];
+							factor =  baseGraphRect.width / (float)valueRange;
 						}
 
 						if (mCaseCount != 1)

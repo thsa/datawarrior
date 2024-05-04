@@ -64,7 +64,8 @@ public class DockingFitnessPanel extends FitnessPanel {
 		settings.add(V3DScene.ViewerSettings.EDITING);
 		mConformerPanel = new JFXConformerPanel(false, settings);
 		mConformerPanel.setPopupMenuController(new DockingPanelController(mConformerPanel));
-		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
+		mConformerPanel.adaptToLookAndFeelChanges();
+//		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(240), HiDPIHelper.scale(180)));
 		mCheckBoxProtonateLigand = new JCheckBox("Use likely ligand protonation states", true);
 

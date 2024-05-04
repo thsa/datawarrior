@@ -163,7 +163,7 @@ public abstract class JVisualization extends JComponent
 	private static final int MAX_TOOLTIP_LENGTH = 24;
 
 	protected CompoundTableModel	mTableModel;
-	protected float[]				mAxisVisMin,mAxisVisMax,mPruningBarLow,mPruningBarHigh;
+	protected double[]				mAxisVisMin,mAxisVisMax,mPruningBarLow,mPruningBarHigh;
 	protected float[][]				mAxisSimilarity;
 	protected int[]					mAxisIndex,mLabelColumn,mSplittingColumn;
 	protected boolean[]				mIsCategoryAxis;
@@ -236,11 +236,11 @@ public abstract class JVisualization extends JComponent
 		tableModel.addHighlightListener(this);
 		selectionModel.addListSelectionListener(this);
 
-		mPruningBarLow = new float[mDimensions];
-		mPruningBarHigh = new float[mDimensions];
+		mPruningBarLow = new double[mDimensions];
+		mPruningBarHigh = new double[mDimensions];
 
-		mAxisVisMin = new float[mDimensions];
-		mAxisVisMax = new float[mDimensions];
+		mAxisVisMin = new double[mDimensions];
+		mAxisVisMax = new double[mDimensions];
 		mAxisVisRangeIsLogarithmic = new boolean[mDimensions];
 		mAxisIndex = new int[mDimensions];
 		mIsCategoryAxis = new boolean[mDimensions];
@@ -2346,7 +2346,7 @@ public abstract class JVisualization extends JComponent
 	 * @param dataHigh
 	 * @return
 	 */
-	protected float[] calculatePruningBarLowAndHigh(int axis, float dataLow, float dataHigh) {
+	protected double[] calculatePruningBarLowAndHigh(int axis, double dataLow, double dataHigh) {
 		return calculateDataMinAndMax(axis).calculatePruningBarLowAndHigh(dataLow, dataHigh);
 		}
 
@@ -2362,9 +2362,8 @@ public abstract class JVisualization extends JComponent
 	 * @return min and max values of total data range incl. margin or data range definition
 	 */
 	protected AxisDataRange calculateDataMinAndMax(int axis) {
-		float margin = (mChartType.getMargin() == -1f) ? mScatterPlotMargin : mChartType.getMargin();
-		float range = mPruningBarHigh[axis] - mPruningBarLow[axis];
-		return new AxisDataRange(mTableModel, mAxisIndex[axis], margin, range);
+		double margin = (mChartType.getMargin() == -1f) ? mScatterPlotMargin : mChartType.getMargin();
+		return new AxisDataRange(mTableModel, mAxisIndex[axis], margin);
 		}
 
 	/**
@@ -2375,8 +2374,8 @@ public abstract class JVisualization extends JComponent
 	 * @return whether the visible range has been changed
 	 */
 	private boolean calculateVisibleDataRange(int axis) {
-		float visMin = -0.5f;
-		float visMax =  0.5f;
+		double visMin = -0.5;
+		double visMax =  0.5;
 		boolean visRangeIsLog = false;
 		int column = mAxisIndex[axis];
 		if (column != cColumnUnassigned) {
@@ -2391,9 +2390,10 @@ public abstract class JVisualization extends JComponent
 				}
 			else {
 				AxisDataRange adr = calculateDataMinAndMax(axis);
-				float dataMin = adr.scaledMin();
-				float dataMax = adr.scaledMax();
-				float dataRange = dataMax - dataMin;
+				double[] dataMinAndMax = adr.calculateScaledMinAndMax(mPruningBarLow[axis], mPruningBarHigh[axis]);
+				double dataMin = dataMinAndMax[0];
+				double dataMax = dataMinAndMax[1];
+				double dataRange = dataMax - dataMin;
 				visMin = (mPruningBarLow[axis] == 0.0f) ? dataMin : dataMin + mPruningBarLow[axis] * dataRange;
 				visMax = (mPruningBarHigh[axis] == 1.0f) ? dataMax : dataMin + mPruningBarHigh[axis] * dataRange;
 				visRangeIsLog = mTableModel.isLogarithmicViewMode(column);
@@ -2415,15 +2415,15 @@ public abstract class JVisualization extends JComponent
 	 * @param axis
 	 * @return percentage of visible data range on that axis between 0.0 and 1.0
 	 */
-	public float getRelativeVisibleRange(int axis) {
+	public double getRelativeVisibleRange(int axis) {
 		return mPruningBarHigh[axis] - mPruningBarLow[axis];
 		}
 
 	/**
 	 * @param axis
-	 * @return value at the right/upper end of visible range; logarithmic in case of logarithmic columns
+	 * @return value at the left/bottom end of visible range; logarithmic in case of logarithmic columns
 	 */
-	public float getVisibleMin(int axis) {
+	public double getVisibleMin(int axis) {
 		return mAxisVisMin[axis];
 		}
 
@@ -2431,7 +2431,7 @@ public abstract class JVisualization extends JComponent
 	 * @param axis
 	 * @return value at the right/upper end of visible range; logarithmic in case of logarithmic columns
 	 */
-	public float getVisibleMax(int axis) {
+	public double getVisibleMax(int axis) {
 		return mAxisVisMax[axis];
 		}
 
@@ -2448,49 +2448,49 @@ public abstract class JVisualization extends JComponent
 	 * @param record
 	 * @return pruning bar value in range 0.0 to 1.0 reflecting the record's data
 	 */
-	public float calcPruningBarMappedValue(CompoundRecord record, int axis) {
+	public double calcPruningBarMappedValue(CompoundRecord record, int axis) {
 		int column = mAxisIndex[axis];
 		if (column == cColumnUnassigned)
-			return 0.5f;
+			return 0.5;
 
-		float value = getAxisValue(record, axis);
-		if (Float.isNaN(value))
-			return Float.NaN;
+		double value = getAxisValue(record, axis);
+		if (Double.isNaN(value))
+			return Double.NaN;
 
 		if (mTableModel.isDescriptorColumn(column))
 			return value;
 		if (mIsCategoryAxis[axis])
-			return (float)Math.round(value + 0.5f) / (float)mTableModel.getCategoryCount(column);
-
-		AxisDataRange adr = calculateDataMinAndMax(axis);
+			return Math.round(value + 0.5) / (double)mTableModel.getCategoryCount(column);
 
 		if (mTableModel.isLogarithmicViewMode(column) != mAxisVisRangeIsLogarithmic[axis]) {
 			if (mAxisVisRangeIsLogarithmic[axis])
-				value = (float)Math.pow(10, value);
+				value = Math.pow(10, value);
 			else
-				value = (float)Math.log10(value);
+				value = Math.log10(value);
 			}
 
-		return Math.min(1f, Math.max(0f, (value - adr.scaledMin()) / (adr.scaledMax() - adr.scaledMin())));
+		AxisDataRange adr = calculateDataMinAndMax(axis);
+		double[] scaledMaxAndMin = adr.calculateScaledMinAndMax(mPruningBarLow[axis], mPruningBarHigh[axis]);
+		return Math.min(1f, Math.max(0.0, (value - scaledMaxAndMin[0]) / (scaledMaxAndMin[1] - scaledMaxAndMin[0])));
 		}
 
 	private void updateZoomState() {
-		float zoomFactor = 1.0f;
+		double zoomFactor = 1.0f;
 		int axisCount = 0;
 		for (int axis=0; axis<mDimensions; axis++) {
 			if (mAxisIndex[axis] != cColumnUnassigned) {
 				if (mIsCategoryAxis[axis]) {
-					zoomFactor *= (Math.max(1f, mAxisVisMax[axis] - mAxisVisMin[axis]) / mTableModel.getCategoryCount(mAxisIndex[axis]));
+					zoomFactor *= (Math.max(1.0, mAxisVisMax[axis] - mAxisVisMin[axis]) / mTableModel.getCategoryCount(mAxisIndex[axis]));
 					axisCount++;
 					}
 				else {
-					zoomFactor *= Math.max(0.001f, mPruningBarHigh[axis] - mPruningBarLow[axis]);
+					zoomFactor *= Math.max(0.001, mPruningBarHigh[axis] - mPruningBarLow[axis]);
 					axisCount++;
 					}
 				}
 			}
-		zoomFactor = (float)Math.pow(zoomFactor, 1f / (float)axisCount);
-		mZoomState = Math.min(100f, 1f / zoomFactor);
+		zoomFactor = Math.pow(zoomFactor, 1.0 / (float)axisCount);
+		mZoomState = Math.min(100f, 1f / (float)zoomFactor);
 		}
 
 	public void calculateCategoryCounts(int boxPlotDoubleAxis) {
@@ -2983,8 +2983,8 @@ public abstract class JVisualization extends JComponent
 		//     return buildMagicOnePerCategoryMap();
 
 		TreeMap<byte[],VisualizationPoint> oneLabelPerCategoryMap = new TreeMap<>(new ByteArrayComparator());
-		float min = mTableModel.getMinimumValue(mOnePerCategoryLabelValueColumn);
-		float max = mTableModel.getMaximumValue(mOnePerCategoryLabelValueColumn);
+		double min = mTableModel.getMinimumValue(mOnePerCategoryLabelValueColumn);
+		double max = mTableModel.getMaximumValue(mOnePerCategoryLabelValueColumn);
 		for (int i=0; i<mDimensions; i++) {
 			if (mOnePerCategoryLabelValueColumn == mAxisIndex[i]) {
 				min = mAxisVisMin[i];
@@ -2995,23 +2995,23 @@ public abstract class JVisualization extends JComponent
 
 		// magicValue contains for every category a different value mapping
 		// the categories in natural order onto the visible value span
-		float[] magicValue = null;
+		double[] magicValue = null;
 		if (mOnePerCategoryLabelMode == cOPCModeMagic) {
 			int visCatCount = calculateVisibleCategoryCount(mOnePerCategoryLabelCategoryColumn);
 			if (visCatCount == 0)
 				return null;
-			magicValue = new float[visCatCount];
+			magicValue = new double[visCatCount];
 			for (int cat=0; cat<mTableModel.getCategoryCount(mOnePerCategoryLabelCategoryColumn); cat++) {
 				int visCat = mVisibleCategoryFromCategory[mOnePerCategoryLabelCategoryColumn][cat];
 				if (visCat != -1) {
-					float catSpan = (max - min) / visCatCount;
-					magicValue[visCat] = min + (0.5f + visCat) * catSpan;
+					double catSpan = (max - min) / visCatCount;
+					magicValue[visCat] = min + (0.5 + visCat) * catSpan;
 					}
 				}
 			}
 
-		float targetValue = (mOnePerCategoryLabelMode == cOPCModeHighest) ? max
-						  : (mOnePerCategoryLabelMode == cOPCModeAverage) ? (max + min) / 2f : min;
+		double targetValue = (mOnePerCategoryLabelMode == cOPCModeHighest) ? max
+						   : (mOnePerCategoryLabelMode == cOPCModeAverage) ? (max + min) / 2.0 : min;
 		for (VisualizationPoint vp:mPoint) {
 			if (isVisible(vp)) {
 				// don't consider VPs that have no reasonable label
@@ -3514,15 +3514,15 @@ public abstract class JVisualization extends JComponent
 		}
 
 	private int getCategoryVisMin(int axis) {
-		return Math.round(mAxisVisMin[axis] + 0.5f);
+		return (int)Math.round(mAxisVisMin[axis] + 0.5f);
 		}
 
 	private int getCategoryVisMax(int axis) {
-		return Math.round(mAxisVisMax[axis] - 0.5f);
+		return (int)Math.round(mAxisVisMax[axis] - 0.5f);
 		}
 
 	public int getCategoryVisCount(int axis) {
-		return Math.round(mAxisVisMax[axis] - mAxisVisMin[axis]);
+		return (int)Math.round(mAxisVisMax[axis] - mAxisVisMin[axis]);
 		}
 
 	/**
@@ -4467,7 +4467,7 @@ public abstract class JVisualization extends JComponent
 			}
 		}
 
-	public void updateVisibleRange(int axis, float low, float high, boolean isAdjusting) {
+	public void updateVisibleRange(int axis, double low, double high, boolean isAdjusting) {
 		if (axis < mDimensions && mAxisIndex[axis] != cColumnUnassigned) {
 			mPruningBarLow[axis] = low;
 			mPruningBarHigh[axis] = high;
@@ -4903,74 +4903,107 @@ public abstract class JVisualization extends JComponent
 	}
 
 class AxisDataRange {
-	private float min,max,leftMargin,rightMargin,pruning;
+	private final double min,max,relMargin;
+	private double leftFullMargin,rightFullMargin;
 
-	public float scaledMin() {
-		return min - pruning * leftMargin;
+//	public double scaledMin() {
+//		return min - leftScaledMargin;
+//	}
+//
+//	public double scaledMax() {
+//		return max + rightScaledMargin;
+//	}
+
+	public double fullMin() {
+		return min - leftFullMargin;
 	}
 
-	public float scaledMax() {
-		return max + pruning * rightMargin;
+	public double fullMax() {
+		return max + rightFullMargin;
 	}
 
-	public float fullMin() {
-		return min - leftMargin;
+	public double fullRange() {
+		return max - min + leftFullMargin + rightFullMargin;
 	}
 
-	public float fullMax() {
-		return max + rightMargin;
-	}
-
-	public float fullRange() {
-		return max - min + leftMargin + rightMargin;
-	}
-
-	public AxisDataRange(CompoundTableModel tableModel, int column, float margin, float pruningRange) {
+	public AxisDataRange(CompoundTableModel tableModel, int column, double margin) {
 		// NOTE: If you change the margin logic here, then also adapt the margin logic
 		//       in calculatePruningBarLowAndHigh() accordingly!!!
+		relMargin = margin;
 		if (tableModel.isDescriptorColumn(column)) {
-			min = 0f;
-			max = 1f;
+			min = 0.0;
+			max = 1.0;
 		}
 		else {
 			min = tableModel.getMinimumValue(column);
 			max = tableModel.getMaximumValue(column);
-			if (margin != 0f
-					&& min != max
-					&& tableModel.getColumnProperty(column, cColumnPropertyCyclicDataMax) == null) {
-				pruning = pruningRange;
-				margin *= (max - min);
+			if (margin != 0.0
+			 && min != max
+			 && tableModel.getColumnProperty(column, cColumnPropertyCyclicDataMax) == null) {
 				if (tableModel.getColumnProperty(column, cColumnPropertyDataMin) == null)
-					leftMargin = margin;
+					leftFullMargin = margin * (max - min);
 				if (tableModel.getColumnProperty(column, cColumnPropertyDataMax) == null)
-					rightMargin = margin;
+					rightFullMargin = margin * (max - min);
 			}
 		}
 	}
 
-	public float[] calculatePruningBarLowAndHigh(float dataLow, float dataHigh) {
+	public double[] calculateScaledMinAndMax(double pruningBarLow, double pruningBarHigh) {
+		// NOTE: If you change the margin logic here, then also adapt the margin logic
+		//       in AxisDataRange() and calculatePruningBarLowAndHigh() accordingly!!!
+		double[] minAndMax = new double[2];
+		minAndMax[0] = min;
+		minAndMax[1] = max;
+		if (leftFullMargin != 0.0 || rightFullMargin != 0.0) {
+			double relWithMargin0 = (leftFullMargin == 0.0) ? 0.0 : 0.0 - relMargin * (pruningBarHigh - pruningBarLow);
+			double relWithMargin1 = (rightFullMargin == 0.0) ? 1.0 : 1.0 + relMargin * (pruningBarHigh - pruningBarLow);
+			double pos0 = relWithMargin0 + pruningBarLow * (relWithMargin1 - relWithMargin0);
+			double pos1 = relWithMargin0 + pruningBarHigh * (relWithMargin1 - relWithMargin0);
+			double visDataFraction = Math.min(1.0, pos1) - Math.max(0.0, pos0);
+			minAndMax[0] = min - leftFullMargin * visDataFraction;
+			minAndMax[1] = max + rightFullMargin * visDataFraction;
+		}
+		return minAndMax;
+	}
+
+	/**
+	 * Calculates the relative end point positions of the pruning bar as 0.0 to 1.0
+	 * from the input range defined in data space. Data range is defined by low and
+	 * high data value, which should be between min-leftMargin and max+rightMargin.
+	 * @param dataLow NaN or low data value mapped to left pruning bar position
+	 * @param dataHigh NaN or high data value mapped to right pruning bar position
+	 * @return array of left and right pruning bar positions (0.0 to 1.0 each)
+	 */
+	public double[] calculatePruningBarLowAndHigh(double dataLow, double dataHigh) {
 		// NOTE: If you change the margin logic here, then also adapt the margin logic
 		//       in AxisDataRange() accordingly!!!
-		float[] lowAndHigh = new float[2];
+		double[] lowAndHigh = new double[2];
 		lowAndHigh[0] = 0f;
 		lowAndHigh[1] = 1f;
 		if (min < max) {
-			if (!Float.isNaN(dataLow) && dataLow <= min-leftMargin)
-				dataLow = Float.NaN;
-			if (!Float.isNaN(dataHigh) && dataHigh >= max+rightMargin)
-				dataHigh = Float.NaN;
-			boolean maxOutLeft = Float.isNaN(dataLow);
-			boolean maxOutRight = Float.isNaN(dataHigh);
+			if (!Double.isNaN(dataLow) && dataLow <= fullMin())
+				dataLow = Double.NaN;
+			if (!Double.isNaN(dataHigh) && dataHigh >= fullMax())
+				dataHigh = Double.NaN;
+			boolean maxOutLeft = Double.isNaN(dataLow);
+			boolean maxOutRight = Double.isNaN(dataHigh);
 			if (!maxOutLeft || !maxOutRight) {
-				dataLow = Math.min(max+rightMargin, maxOutLeft ? min-leftMargin : dataLow);
-				dataHigh = Math.max(dataLow, maxOutRight ? max+rightMargin : dataHigh);
-				float barRange = (dataHigh - dataLow) / fullRange();
-				float scaledLeftMargin = barRange * leftMargin;
-				float scaledRightMargin = barRange * rightMargin;
-				if (!maxOutLeft)
-					lowAndHigh[0] = (dataLow - min + scaledLeftMargin) / (scaledLeftMargin + scaledRightMargin + max - min);
-				if (!maxOutRight)
-					lowAndHigh[1] = (dataHigh - min + scaledLeftMargin) / (scaledLeftMargin + scaledRightMargin + max - min);
+				double data0 = maxOutLeft ? min : Math.min(max, Math.max(min, dataLow));
+				double data1 = maxOutRight ? max : Math.max(min, Math.min(max, dataHigh));
+				double relRange = (data1 - data0) / (max - min);
+
+				double margin0 = leftFullMargin * relRange;
+				double margin1 = rightFullMargin * relRange;
+				if (!maxOutLeft) {
+					if (dataLow < min)  // if in margin area we have to apapt for smaller margin
+						dataLow = min - margin0 * (min - dataLow) / leftFullMargin;
+					lowAndHigh[0] = (dataLow - min + margin0) / (margin0 + margin1 + max - min);
+					}
+				if (!maxOutRight) {
+					if (dataHigh > max)  // if in margin area we have to apapt for smaller margin
+						dataHigh = max + margin1 * (dataHigh - max) / rightFullMargin;
+					lowAndHigh[1] = (dataHigh - min + margin0) / (margin0 + margin1 + max - min);
+				}
 			}
 		}
 		return lowAndHigh;

@@ -45,10 +45,10 @@ public class VisualizationPanel2D extends VisualizationPanel {
 				mGraphBounds = null;
 				if (e.isControlDown()) {
 					setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
-					mX1 = getActingPruningBar(0).getLowValue();
-					mX2 = getActingPruningBar(0).getHighValue();
-					mY1 = getActingPruningBar(1).getLowValue();
-					mY2 = getActingPruningBar(1).getHighValue();
+					mX1 = (float)getActingPruningBar(0).getLowValue();
+					mX2 = (float)getActingPruningBar(0).getHighValue();
+					mY1 = (float)getActingPruningBar(1).getLowValue();
+					mY2 = (float)getActingPruningBar(1).getHighValue();
 					mDX = 0;
 					mDY = 0;
 					mMouseX = e.getX();
@@ -88,8 +88,8 @@ public class VisualizationPanel2D extends VisualizationPanel {
 					if (mDX != dx || mDY != dy) {
 						mDX = dx;
 						mDY = dy;
-						float[] low = new float[2];
-						float[] high = new float[2];
+						double[] low = new double[2];
+						double[] high = new double[2];
 						low[0] = mX1 + dx;
 						low[1] = mY1 + dy;
 						high[0] = mX2 + dx;
@@ -105,17 +105,17 @@ public class VisualizationPanel2D extends VisualizationPanel {
 
 	@Override
     public void zoom(int sx, int sy, int steps) {
-    	final float MIN_ZOOM = 0.0001f;
+    	final double MIN_ZOOM = 0.0001f;
     	Rectangle bounds = ((JVisualization2D)mVisualization).getGraphBounds(sx, sy, false);
     	if (bounds != null && bounds.contains(sx, sy)) {
     		boolean zoom = false;
-    		float[] low = new float[2];
-    		float[] high = new float[2];
+		    double[] low = new double[2];
+		    double[] high = new double[2];
     		low[0] = (float)getActingPruningBar(0).getLowValue();
     		high[0] = (float)getActingPruningBar(0).getHighValue();
-    		float f = (float)Math.exp(steps / 20.0);
+		    double f = (float)Math.exp(steps / 20.0);
     		if ((steps < 0 && high[0]-low[0] > MIN_ZOOM) || (steps > 0 && high[0]-low[0] < 1.0)) {
-	    		float x = low[0] + (float)(sx - bounds.x) * (high[0] - low[0]) / bounds.width;
+			    double x = low[0] + (sx - bounds.x) * (high[0] - low[0]) / bounds.width;
 	    		low[0] = Math.max(0, x-f*(x-low[0]));
 	    		high[0] = Math.min(1.0f, x+f*(high[0]-x));
 	    		zoom = true;
@@ -123,7 +123,7 @@ public class VisualizationPanel2D extends VisualizationPanel {
     		low[1] = (float)getActingPruningBar(1).getLowValue();
     		high[1] = (float)getActingPruningBar(1).getHighValue();
     		if ((steps < 0 && high[1]-low[1] > MIN_ZOOM) || (steps > 0 && high[1]-low[1] < 1.0)) {
-	    		float y = low[1] + (float)(bounds.y + bounds.height - sy) * (high[1] - low[1]) / bounds.height;
+			    double y = low[1] + (bounds.y + bounds.height - sy) * (high[1] - low[1]) / bounds.height;
 	    		low[1] = Math.max(0, y-f*(y-low[1]));
 	    		high[1] = Math.min(1.0f, y+f*(high[1]-y));
 	    		zoom = true;

@@ -182,8 +182,8 @@ public class DETaskAssignOrZoomAxes extends DETaskAbstractSetViewOptions {
 				vp.setAxisColumnName(i, columnName);
 			}
 
-		final float[] l2 = new float[dimensions];
-		final float[] h2 = new float[dimensions];
+		final double[] l2 = new double[dimensions];
+		final double[] h2 = new double[dimensions];
 		for (int i=0; i<dimensions; i++) {
 			l2[i] = Float.parseFloat(configuration.getProperty(PROPERTY_LOW+i, "0.0"));
 			h2[i] = Float.parseFloat(configuration.getProperty(PROPERTY_HIGH+i, "1.0"));
@@ -192,8 +192,8 @@ public class DETaskAssignOrZoomAxes extends DETaskAbstractSetViewOptions {
 		final long totalMillis = Long.parseLong(configuration.getProperty(PROPERTY_MILLIS, "1000"));
 		if (totalMillis >= 100) {
 			// we need to animate and also need to know the start values
-			float[] l1 = new float[dimensions];
-			float[] h1 = new float[dimensions];
+			double[] l1 = new double[dimensions];
+			double[] h1 = new double[dimensions];
 			for (int i=0; i<dimensions; i++) {
 				l1[i] = vp.getPruningBar(i).getLowValue();
 				h1[i] = vp.getPruningBar(i).getHighValue();
@@ -202,8 +202,8 @@ public class DETaskAssignOrZoomAxes extends DETaskAbstractSetViewOptions {
 			long millis = System.currentTimeMillis();
 			long startMillis = millis - 20;	// assume 20 millis for the calculation of first frame
 			long endMillis = startMillis + totalMillis;
-			final float[] low = new float[dimensions];
-			final float[] high = new float[dimensions];
+			final double[] low = new double[dimensions];
+			final double[] high = new double[dimensions];
 			while (millis < endMillis) {
 				float progress = (1.0f - (float)Math.cos(Math.PI * (millis - startMillis) / totalMillis)) / 2.0f;
 				for (int i=0; i<dimensions; i++) {

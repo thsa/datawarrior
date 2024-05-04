@@ -214,7 +214,8 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			}
 			if (CompoundTableModel.cColumnType3DCoordinates.equals(specialType)) {
 				final JFXConformerPanel view = new JFXConformerPanel(false, V3DScene.CONFORMER_VIEW_MODE);
-				view.setBackground(new java.awt.Color(24, 24, 96));
+				view.adaptToLookAndFeelChanges();
+//				view.setBackground(new java.awt.Color(24, 24, 96));
 				String overlay = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);
 				StereoMolecule overlayMol = (overlay == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(overlay);
 				if (overlayMol != null)

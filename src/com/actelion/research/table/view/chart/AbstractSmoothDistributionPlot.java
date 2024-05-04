@@ -33,12 +33,12 @@ public abstract class AbstractSmoothDistributionPlot extends AbstractDistributio
 		super.calculateStatistics();
 
 		int fullRangeFractions = (int)Math.round(FRACTIONS * Math.exp(0.5*SMOOTHING_FACTOR * (((JVisualization2D)mVisualization).getEdgeSmoothing() - 0.5)));
-		int fractions = Math.round(fullRangeFractions * mVisualization.getRelativeVisibleRange(mDoubleAxis));
+		int fractions = Math.round(fullRangeFractions * (float)mVisualization.getRelativeVisibleRange(mDoubleAxis));
 		if (fractions == 0)
 			return;
 
-		float axisVisMin = mVisualization.getVisibleMin(mDoubleAxis);
-		float axisVisMax = mVisualization.getVisibleMax(mDoubleAxis);
+		double axisVisMin = mVisualization.getVisibleMin(mDoubleAxis);
+		double axisVisMax = mVisualization.getVisibleMax(mDoubleAxis);
 
 		// Assign visualization point contributions to violin segments(i.e. fractions).
 		// Depending on exact position split VP's contribution (1.0) and assign to two adjacent fractions.
@@ -53,7 +53,7 @@ public abstract class AbstractSmoothDistributionPlot extends AbstractDistributio
 					vp.chartGroupIndex = 1;     // visible and not NaN
 					float v = mVisualization.getAxisValue(vp.record, mDoubleAxis);
 					if (!Float.isNaN(v)) {
-						v = (v-axisVisMin) / (axisVisMax-axisVisMin);
+						v = (float)((v-axisVisMin) / (axisVisMax-axisVisMin));
 						int hv = vp.hvIndex;
 						int cat = mVisualization.getChartCategoryIndex(vp);
 						int colorIndex = mVisualization.getColorIndex(vp, mBaseColorCount, mFocusFlagNo);
@@ -256,9 +256,9 @@ public abstract class AbstractSmoothDistributionPlot extends AbstractDistributio
 	private void calculatePseudoMarkerPositions(Rectangle baseGraphRect) {
 		// Assign screen positions, width, and height to individual violin contributing visualization points
 		int fractions = mViolinWidth[0][0][0].length-1;
-		float axisVisMin = mVisualization.getVisibleMin(mDoubleAxis);
-		float axisVisMax = mVisualization.getVisibleMax(mDoubleAxis);
-		float axisRange = axisVisMax - axisVisMin;
+		double axisVisMin = mVisualization.getVisibleMin(mDoubleAxis);
+		double axisVisMax = mVisualization.getVisibleMax(mDoubleAxis);
+		double axisRange = axisVisMax - axisVisMin;
 		int[][][][] count = new int[mHVCount][mCatCount][mColor.length][fractions+1];
 		for (VisualizationPoint vp:mVisualization.getDataPoints()) {
 			if (vp.chartGroupIndex == 1) {  // visible and not NaN
@@ -277,11 +277,11 @@ public abstract class AbstractSmoothDistributionPlot extends AbstractDistributio
 					if (mDoubleAxis == 1) {
 						vp.screenX = screenPos;
 						vp.widthOrAngle1 = markerSize;
-						vp.screenY = mHVOffset[1][hv] + baseGraphRect.y + baseGraphRect.height + (axisVisMin-v)*baseGraphRect.height / axisRange;
+						vp.screenY = mHVOffset[1][hv] + baseGraphRect.y + baseGraphRect.height + (float)((axisVisMin-v)*baseGraphRect.height / axisRange);
 						vp.heightOrAngle2 = SCREEN_WIDTH_FRACTIONS * baseGraphRect.height / (float)fractions;
 					}
 					else {
-						vp.screenX = mHVOffset[0][hv] + baseGraphRect.x + (v-axisVisMin)*baseGraphRect.width / axisRange;
+						vp.screenX = mHVOffset[0][hv] + baseGraphRect.x + (float)((v-axisVisMin)*baseGraphRect.width / axisRange);
 						vp.widthOrAngle1 = SCREEN_WIDTH_FRACTIONS * baseGraphRect.width / (float)fractions;
 						vp.screenY = screenPos;
 						vp.heightOrAngle2 = markerSize;

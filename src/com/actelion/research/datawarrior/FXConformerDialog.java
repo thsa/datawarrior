@@ -34,7 +34,6 @@ import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 import javafx.geometry.Point3D;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.paint.Color;
 import org.openmolecules.chem.conf.gen.ConformerDiagnostics;
 import org.openmolecules.chem.conf.gen.ConformerGenerator;
@@ -106,6 +105,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
 		settings.add(V3DScene.ViewerSettings.INDIVIDUAL_ROTATION);
 		mConformationPanel = new JFXConformerPanel(true, V3DScene.CONFORMER_VIEW_MODE);
+		mConformationPanel.adaptToLookAndFeelChanges();
 		mConformationPanel.setPopupMenuController(new V3DPopupMenuController() {
 			@Override
 			public void addExternalMenuItems(ContextMenu contextMenu, int type) {

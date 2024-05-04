@@ -1435,14 +1435,14 @@ public class DERuntimeProperties extends RuntimeProperties {
 							JPruningBar pbar = vpanel.getPruningBar(j);
 							if (pbar.getLowValue() != pbar.getMinimumValue()) {
 								key = cAxisMin + viewName + "_" + j;
-								float value = visualization.getVisibleMin(j);
+								double value = visualization.getVisibleMin(j);
 								if (visualization.isLogarithmicAxis(j))
 									value = (float)Math.pow(10, value);
 								setProperty(key, ""+value);
 								}
 							if (pbar.getHighValue() != pbar.getMaximumValue()) {
 								key = cAxisMax + viewName + "_" + j;
-								float value = visualization.getVisibleMax(j);
+								double value = visualization.getVisibleMax(j);
 								if (visualization.isLogarithmicAxis(j))
 									value = (float)Math.pow(10, value);
 								setProperty(key, ""+value);

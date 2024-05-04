@@ -42,6 +42,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
 	public JStructure3DFormObject(String key, String type) {
 		super(key, type);
 		mComponent = new JFXConformerPanel(false, V3DScene.CONFORMER_VIEW_MODE);
+		((JFXConformerPanel)mComponent).adaptToLookAndFeelChanges();
 		}
 
 	public void setReferenceMolecule(StereoMolecule refMol) {

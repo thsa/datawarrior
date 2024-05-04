@@ -57,19 +57,19 @@ public class VisualizationPanel3D extends VisualizationPanel implements Rotation
 
 	@Override
     public void zoom(int sx, int sy, int steps) {
-		final float MIN_ZOOM = 0.0001f;
+		final double MIN_ZOOM = 0.0001;
 		float[] c = ((JVisualization3D)mVisualization).getMetaFromScreenCoordinates(sx, sy, 0);
-		float f = (float)Math.exp(steps / 20.0);
-		float[] low = new float[3];
-		float[] high = new float[3];
+		double f = Math.exp(steps / 20.0);
+		double[] low = new double[3];
+		double[] high = new double[3];
 		boolean zoom = false;
 		for (int i=0; i<3; i++) {
 			low[i] = getActingPruningBar(i).getLowValue();
 			high[i] = getActingPruningBar(i).getHighValue();
 			if ((steps < 0 && high[i]-low[i] > MIN_ZOOM) || (steps > 0 && high[i]-low[i] < 1.0)) {
-	    		float p = low[i] + (1f+c[i]) * (high[i]-low[i]) / 2f;
+	    		double p = low[i] + (1.0+c[i]) * (high[i]-low[i]) / 2.0;
 	    		low[i] = Math.max(0, p-f*(p-low[i]));
-	    		high[i] = Math.min(1.0f, p+f*(high[i]-p));
+	    		high[i] = Math.min(1.0, p+f*(high[i]-p));
 	    		zoom = true;
 				}
 			}

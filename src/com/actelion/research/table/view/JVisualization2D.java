@@ -1105,8 +1105,8 @@ public class JVisualization2D extends JVisualization {
 		if (labelPosition.isCustom()) {
 			float dataX = labelPosition.getX();
 			float dataY = labelPosition.getY();
-			float relX = (mAxisVisMax[0] == mAxisVisMin[0]) ? 0.5f : (dataX - mAxisVisMin[0]) / (mAxisVisMax[0] - mAxisVisMin[0]);
-			float relY = (mAxisVisMax[1] == mAxisVisMin[1]) ? 0.5f : (dataY - mAxisVisMin[1]) / (mAxisVisMax[1] - mAxisVisMin[1]);
+			float relX = (mAxisVisMax[0] == mAxisVisMin[0]) ? 0.5f : (dataX - (float)mAxisVisMin[0]) / (float)(mAxisVisMax[0] - mAxisVisMin[0]);
+			float relY = (mAxisVisMax[1] == mAxisVisMin[1]) ? 0.5f : (dataY - (float)mAxisVisMin[1]) / (float)(mAxisVisMax[1] - mAxisVisMin[1]);
 			x = baseGraphRect.x + Math.round(relX * baseGraphRect.width);
 			y = baseGraphRect.y + baseGraphRect.height - Math.round(relY * baseGraphRect.height);
 
@@ -1698,9 +1698,9 @@ public class JVisualization2D extends JVisualization {
 			int sy1 = bounds.y;
 			int sy2 = bounds.y + bounds.height;
 			float rx = (float) (mHighlightedLabelPosition.getLabelCenterOnScreenX() - sx1) / (float) (sx2 - sx1);
-			float x = mAxisVisMin[0] + rx * (mAxisVisMax[0] - mAxisVisMin[0]);
+			float x = (float)(mAxisVisMin[0] + rx * (mAxisVisMax[0] - mAxisVisMin[0]));
 			float ry = (float) (mHighlightedLabelPosition.getLabelCenterOnScreenY() - sy1) / (float) (sy2 - sy1);
-			float y = mAxisVisMin[1] + (1f - ry) * (mAxisVisMax[1] - mAxisVisMin[1]);
+			float y = (float)(mAxisVisMin[1] + (1f - ry) * (mAxisVisMax[1] - mAxisVisMin[1]));
 			mHighlightedLabelPosition.setCustom(true);
 			mHighlightedLabelPosition.setXY(x, y);
 			}
@@ -2227,7 +2227,7 @@ public class JVisualization2D extends JVisualization {
 			return;
 
 		for (int i=0; i<=EXPRESSION_CURVE_STEPS; i++) {
-			float x = mAxisVisMin[0] + i * (mAxisVisMax[0] - mAxisVisMin[0]) / EXPRESSION_CURVE_STEPS;
+			float x = (float)mAxisVisMin[0] + i * (float)(mAxisVisMax[0] - mAxisVisMin[0]) / EXPRESSION_CURVE_STEPS;
 			if (mTableModel.isLogarithmicViewMode(mAxisIndex[0]))
 				x = (float)Math.pow(10.0, x);
 			parser.addVariable("x", x);
@@ -2236,7 +2236,7 @@ public class JVisualization2D extends JVisualization {
 			if (mTableModel.isLogarithmicViewMode(mAxisIndex[1]))
 				y = (float)Math.log10(y);
 			mCurveY[0][0][i] = Float.isNaN(y) ? Float.NaN
-					: baseGraphRect.y + baseGraphRect.height * (1 - (y - mAxisVisMin[1]) / (mAxisVisMax[1] - mAxisVisMin[1]));
+					: baseGraphRect.y + baseGraphRect.height * (1 - (y - (float)mAxisVisMin[1]) / (float)(mAxisVisMax[1] - mAxisVisMin[1]));
 			}
 
 		long mask = mTableModel.getListHandler().getListMask(mCurveRowList);
@@ -3716,14 +3716,14 @@ public class JVisualization2D extends JVisualization {
 			return;
 			}
 
-		int min = Math.round(mAxisVisMin[axis] + 0.5001f);
-		int max = Math.round(mAxisVisMax[axis] - 0.5001f);
+		int min = Math.round((float)mAxisVisMin[axis] + 0.5001f);
+		int max = Math.round((float)mAxisVisMax[axis] - 0.5001f);
 		if (mTableModel.isColumnTypeStructure(mAxisIndex[axis]))
 			updateScaleMolecules(axis, min, max+1, scaleSize);
 
 		for (int i=min; i<=max; i++) {
 			float scalePosition = mChartType.isScatterPlot() ? i : mChartInfo.getScaleLinePosition(axis) - 0.5f + i;
-			float position = (scalePosition - mAxisVisMin[axis]) / (mAxisVisMax[axis] - mAxisVisMin[axis]);
+			float position = (scalePosition - (float)mAxisVisMin[axis]) / (float)(mAxisVisMax[axis] - mAxisVisMin[axis]);
 			if (mScaleDepictor[axis] == null)
 				mScaleLineList[axis].add(new ScaleLine(position, categoryList[i]));
 			else
@@ -3734,19 +3734,19 @@ public class JVisualization2D extends JVisualization {
 	private void compileRangeCategoryScaleLabels(int axis) {
 		String[] categoryList = mTableModel.getCategoryList(mAxisIndex[axis]);
 
-		int min = Math.round(mAxisVisMin[axis] + 0.5001f);
-		int max = Math.round(mAxisVisMax[axis] - 0.5001f);
+		int min = Math.round((float)mAxisVisMin[axis] + 0.5001f);
+		int max = Math.round((float)mAxisVisMax[axis] - 0.5001f);
 
 		if (max >= min) {
 			for (int i=min; i<=max+1; i++) {
 				String category = categoryList[Math.min(i, max)];
-				float position = ((float)i - 0.5f - mAxisVisMin[axis]) / (mAxisVisMax[axis] - mAxisVisMin[axis]);
+				float position = ((float)i - 0.5f - (float)mAxisVisMin[axis]) / (float)(mAxisVisMax[axis] - mAxisVisMin[axis]);
 				String label = "???";	// should not happen
 				if (category.equals(CompoundTableConstants.cRangeNotAvailable)) {
 					if (i == max+1)
 						continue;
 					label = "none";
-					position = ((float)i - mAxisVisMin[axis]) / (mAxisVisMax[axis] - mAxisVisMin[axis]);
+					position = ((float)i - (float)mAxisVisMin[axis]) / (float)(mAxisVisMax[axis] - mAxisVisMin[axis]);
 					}
 				else {
 					int index = category.indexOf(CompoundTableConstants.cRangeSeparation);
@@ -3760,7 +3760,7 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private void compileDoubleScaleLabels(int axis) {
-		float axisStart,axisLength,totalRange;
+		double axisStart,axisLength,totalRange;
 
 		if (mAxisIndex[axis] == -1) {	// bar axis of bar chart
 			if (!mChartType.isSimpleMode()
@@ -3818,7 +3818,7 @@ public class JVisualization2D extends JVisualization {
 			  (int)(axisStart - 0.0000001 - (axisStart % gridSpacing))
 			: (int)(axisStart + 0.0000001 + gridSpacing - (axisStart % gridSpacing));
 		while ((float)theMarker < (axisStart + axisLength)) {
-			float position = (theMarker-axisStart) / axisLength;
+			float position = (float)((theMarker-axisStart) / axisLength);
 
 			if (mAxisIndex[axis] != -1 && mTableModel.isColumnTypeDate(mAxisIndex[axis])) {
 				String label = createDateLabel(theMarker, exponent);
@@ -3833,7 +3833,7 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private void compileLogarithmicScaleLabels(int axis) {
-		float axisStart,axisLength,totalRange;
+		double axisStart,axisLength,totalRange;
 
 		if (mAxisIndex[axis] == -1) {	// bar axis of bar chart
 			axisStart = mChartInfo.getAxisMin();
@@ -3911,7 +3911,7 @@ public class JVisualization2D extends JVisualization {
 				: (int)(start + 0.0000001 + gridSpacing - (start % gridSpacing));
 			while ((float)theMarker < (start + length)) {
 				float log = (float)Math.log10(theMarker) + exponent;
-				float position = (log-axisStart) / axisLength;
+				float position = (float)((log-axisStart) / axisLength);
 				mScaleLineList[axis].add(new ScaleLine(position, DoubleFormat.toShortString(theMarker, exponent)));
 				theMarker += gridSpacing;
 				}
@@ -3919,8 +3919,8 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	private void addLogarithmicScaleLabel(int axis, float value) {
-		float min = (mAxisIndex[axis] == -1) ? mChartInfo.getAxisMin() : mAxisVisMin[axis];
-		float max = (mAxisIndex[axis] == -1) ? mChartInfo.getAxisMax() : mAxisVisMax[axis];
+		float min = (mAxisIndex[axis] == -1) ? mChartInfo.getAxisMin() : (float)mAxisVisMin[axis];
+		float max = (mAxisIndex[axis] == -1) ? mChartInfo.getAxisMax() : (float)mAxisVisMax[axis];
 		if (value >= min && value <= max) {
 			float position = (value-min) / (max - min);
 			mScaleLineList[axis].add(new ScaleLine(position, DoubleFormat.toString(Math.pow(10, value), 3, true)));
@@ -3970,9 +3970,9 @@ public class JVisualization2D extends JVisualization {
 			float jitterMaxX = 0;
 			float jitterMaxY = 0;
 			if ((mMarkerJitteringAxes & 1) != 0)
-				jitterMaxX = mMarkerJittering * graphRect.width / (mIsCategoryAxis[0] ? mAxisVisMax[0] - mAxisVisMin[0] : 5);
+				jitterMaxX = mMarkerJittering * graphRect.width / (mIsCategoryAxis[0] ? (float)(mAxisVisMax[0] - mAxisVisMin[0]) : 5);
 			if ((mMarkerJitteringAxes & 2) != 0)
-				jitterMaxY = mMarkerJittering * graphRect.height / (mIsCategoryAxis[1] ? mAxisVisMax[1] - mAxisVisMin[1] : 5);
+				jitterMaxY = mMarkerJittering * graphRect.height / (mIsCategoryAxis[1] ? (float)(mAxisVisMax[1] - mAxisVisMin[1]) : 5);
 
 			if (mTreeNodeList != null) {
 				if (mTreeNodeList.length != 0)
@@ -3992,7 +3992,7 @@ public class JVisualization2D extends JVisualization {
 				if (mCaseSeparationAxis != -1) {
 					float width = mCaseSeparationAxis == 0 ? graphRect.width : graphRect.height;
 					float categoryWidth = (mAxisIndex[mCaseSeparationAxis] == cColumnUnassigned) ? width
-										 : width / (mAxisVisMax[mCaseSeparationAxis]-mAxisVisMin[mCaseSeparationAxis]);	// mCategoryCount[csAxis]; 	mCategoryCount is undefined for scatter plots
+										 : width / (float)(mAxisVisMax[mCaseSeparationAxis]-mAxisVisMin[mCaseSeparationAxis]);	// mCategoryCount[csAxis]; 	mCategoryCount is undefined for scatter plots
 					categoryWidth *= mCaseSeparationValue;
 					float csCategoryCount = mTableModel.getCategoryCount(mCaseSeparationColumn);
 					csCategoryWidth = categoryWidth / csCategoryCount;
@@ -4008,13 +4008,13 @@ public class JVisualization2D extends JVisualization {
 						float doubleX = (mAxisIndex[0] == cColumnUnassigned) ? 0.0f : getAxisValue(vp.record, 0);
 						float doubleY = (mAxisIndex[1] == cColumnUnassigned) ? 0.0f : getAxisValue(vp.record, 1);
 						vp.screenX = Float.isNaN(doubleX) ? xNaN : graphRect.x
-										  + (doubleX-mAxisVisMin[0])*graphRect.width / (mAxisVisMax[0]-mAxisVisMin[0]);
+										  + (doubleX-(float)mAxisVisMin[0])*graphRect.width / (float)(mAxisVisMax[0]-mAxisVisMin[0]);
 						vp.screenY = Float.isNaN(doubleY) ? yNaN : graphRect.y + graphRect.height
-										  + (mAxisVisMin[1]-doubleY)*graphRect.height / (mAxisVisMax[1]-mAxisVisMin[1]);
+										  + ((float)mAxisVisMin[1]-doubleY)*graphRect.height / (float)(mAxisVisMax[1]-mAxisVisMin[1]);
 						if (jitterMaxX != 0)
-							vp.screenX += (mRandom.nextDouble() - 0.5) * jitterMaxX;
+							vp.screenX += (mRandom.nextFloat() - 0.5f) * jitterMaxX;
 						if (jitterMaxY != 0)
-							vp.screenY += (mRandom.nextDouble() - 0.5) * jitterMaxY;
+							vp.screenY += (mRandom.nextFloat() - 0.5f) * jitterMaxY;
 
 						if (mCaseSeparationAxis != -1) {
 							float csShift = csOffset + csCategoryWidth * mTableModel.getCategoryIndex(mCaseSeparationColumn, vp.record);
@@ -4042,7 +4042,7 @@ public class JVisualization2D extends JVisualization {
 							else {
 								float doubleX = getAxisValue(vp.record, 0);
 								vp.screenX = Float.isNaN(doubleX) ? xNaN : graphRect.x
-										  + (doubleX-mAxisVisMin[0])*graphRect.width / (mAxisVisMax[0]-mAxisVisMin[0]);							}
+										  + (doubleX-(float)mAxisVisMin[0])*graphRect.width / (float)(mAxisVisMax[0]-mAxisVisMin[0]);							}
 							if (mAxisIndex[1] == cColumnUnassigned)
 								vp.screenY = graphRect.y + graphRect.height * 0.5f;
 							else if (yIsDoubleCategory)
@@ -4051,7 +4051,7 @@ public class JVisualization2D extends JVisualization {
 							else {
 								float doubleY = getAxisValue(vp.record, 1);
 								vp.screenY = Float.isNaN(doubleY) ? yNaN : graphRect.y + graphRect.height
-										  + (mAxisVisMin[1]-doubleY)*graphRect.height / (mAxisVisMax[1]-mAxisVisMin[1]);
+										  + ((float)mAxisVisMin[1]-doubleY)*graphRect.height / (float)(mAxisVisMax[1]-mAxisVisMin[1]);
 								}
 
 							if (jitterMaxX != 0)
@@ -4118,8 +4118,8 @@ public class JVisualization2D extends JVisualization {
 	 * @param graphBounds
 	 */
 	private void calculateBackground(Rectangle graphBounds) {
-		float visFactorX = mPruningBarHigh[0] - mPruningBarLow[0];
-		float visFactorY = mPruningBarHigh[1] - mPruningBarLow[1];
+		float visFactorX = (float)(mPruningBarHigh[0] - mPruningBarLow[0]);
+		float visFactorY = (float)(mPruningBarHigh[1] - mPruningBarLow[1]);
 
 		if (visFactorX == 0 || visFactorY == 0) {
 			mBackgroundValid = true;
@@ -4147,10 +4147,10 @@ public class JVisualization2D extends JVisualization {
 		boolean considerAllRecords = (mBackgroundColorConsidered == BACKGROUND_ALL_RECORDS && !considerVisibleRecords);
 
 		// In case of zoomed-in state, these are the invisible (bacause zoomed-out) margins in background grid space
-		int bgZoomX0 = mPruningBarLow[0] == 0 ? 0 : Math.round(mPruningBarLow[0] * graphBounds.width / (visFactorX * pixelPerColor));
-		int bgZoomX1 = mPruningBarHigh[0] == 1 ? 0 : Math.round((1f-mPruningBarHigh[0]) * graphBounds.width / (visFactorX * pixelPerColor));
-		int bgZoomY0 = mPruningBarLow[1] == 0 ? 0 : Math.round(mPruningBarLow[1] * graphBounds.height / (visFactorY * pixelPerColor));
-		int bgZoomY1 = mPruningBarHigh[1] == 1 ? 0 : Math.round((1f-mPruningBarHigh[1]) * graphBounds.height / (visFactorY * pixelPerColor));
+		int bgZoomX0 = mPruningBarLow[0] == 0 ? 0 : Math.round((float)mPruningBarLow[0] * graphBounds.width / (visFactorX * pixelPerColor));
+		int bgZoomX1 = mPruningBarHigh[0] == 1 ? 0 : Math.round((1f-(float)mPruningBarHigh[0]) * graphBounds.width / (visFactorX * pixelPerColor));
+		int bgZoomY0 = mPruningBarLow[1] == 0 ? 0 : Math.round((float)mPruningBarLow[1] * graphBounds.height / (visFactorY * pixelPerColor));
+		int bgZoomY1 = mPruningBarHigh[1] == 1 ? 0 : Math.round((1f-(float)mPruningBarHigh[1]) * graphBounds.height / (visFactorY * pixelPerColor));
 
 		// If we zoomed-out width is larger than the influence radius, then the effectively needed margin
 		// to be calculated and then propargated to the visible background is only as large as the radius.
@@ -4181,7 +4181,7 @@ public class JVisualization2D extends JVisualization {
 		float[][][] backgroundB = new float[mHVCount][bgWidth][bgHeight];
 		float[][][] backgroundC = new float[mHVCount][bgWidth][bgHeight];
 
-		float dataLowX,dataHighX,dataLowY,dataHighY;    // data limits of visible area
+		double dataLowX,dataHighX,dataLowY,dataHighY;    // data limits of visible area
 		if (mTreeNodeList != null) {
 			dataLowX = graphBounds.x;
 			dataLowY = graphBounds.y + graphBounds.height;
@@ -4197,8 +4197,8 @@ public class JVisualization2D extends JVisualization {
 
 		float pixelFactor = 1f / pixelPerColor;
 		float pixelOffset = pixelFactor / 2f;
-		float visDataRangeX = dataHighX - dataLowX;
-		float visDataRangeY = dataHighY - dataLowY;
+		double visDataRangeX = dataHighX - dataLowX;
+		double visDataRangeY = dataHighY - dataLowY;
 		int listFlagNo = (considerVisibleRecords || considerAllRecords) ? -1
 				: mTableModel.getListHandler().getListFlagNo(mBackgroundColorConsidered);
 
@@ -4207,7 +4207,7 @@ public class JVisualization2D extends JVisualization {
 		if (mCaseSeparationAxis != -1) {
 			float width = mCaseSeparationAxis == 0 ? graphBounds.width : graphBounds.height;
 			float categoryWidth = (mAxisIndex[mCaseSeparationAxis] == cColumnUnassigned) ? width
-					: width / (mAxisVisMax[mCaseSeparationAxis]-mAxisVisMin[mCaseSeparationAxis]);	// mCategoryCount[csAxis]; 	mCategoryCount is undefined for scatter plots
+					: width / (float)(mAxisVisMax[mCaseSeparationAxis]-mAxisVisMin[mCaseSeparationAxis]);	// mCategoryCount[csAxis]; 	mCategoryCount is undefined for scatter plots
 			categoryWidth *= mCaseSeparationValue;
 			float csCategoryCount = mTableModel.getCategoryCount(mCaseSeparationColumn);
 			csCategoryWidth = categoryWidth / csCategoryCount;
@@ -4458,10 +4458,10 @@ public class JVisualization2D extends JVisualization {
 		ViewPort port = new ViewPort();
 
 		if (mBackgroundImage != null) {
-			int sx1 = Math.round((float)mBackgroundImage.getWidth()*(port.visMin[0]-port.min[0])/port.getRange(0));
-			int sx2 = Math.round((float)mBackgroundImage.getWidth()*(port.visMax[0]-port.min[0])/port.getRange(0));
-			int sy1 = Math.round((float)mBackgroundImage.getHeight()*(port.max[1]-port.visMax[1])/port.getRange(1));
-			int sy2 = Math.round((float)mBackgroundImage.getHeight()*(port.max[1]-port.visMin[1])/port.getRange(1));
+			int sx1 = (int)Math.round(mBackgroundImage.getWidth()*(port.visMin[0]-port.min[0])/port.getRange(0));
+			int sx2 = (int)Math.round(mBackgroundImage.getWidth()*(port.visMax[0]-port.min[0])/port.getRange(0));
+			int sy1 = (int)Math.round(mBackgroundImage.getHeight()*(port.max[1]-port.visMax[1])/port.getRange(1));
+			int sy2 = (int)Math.round(mBackgroundImage.getHeight()*(port.max[1]-port.visMin[1])/port.getRange(1));
 			if (sx1 < sx2 && sy1 < sy2)
 				g.drawImage(mBackgroundImage, graphRect.x, graphRect.y,
 						graphRect.x+graphRect.width, graphRect.y+graphRect.height,
@@ -5419,35 +5419,35 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 		}
 
 	class GraphPoint {
-		private float valueX,valueY;
+		private double valueX,valueY;
 
 		public GraphPoint(String coords) {
-			valueX = Float.NaN;
-			valueY = Float.NaN;
+			valueX = Double.NaN;
+			valueY = Double.NaN;
 			String[] coord = coords.split(",");
 			if (coord.length == 2) {
-				try { valueX = Float.parseFloat(coord[0]); } catch (NumberFormatException nfe) {}
-				try { valueY = Float.parseFloat(coord[1]); } catch (NumberFormatException nfe) {}
+				try { valueX = Double.parseDouble(coord[0]); } catch (NumberFormatException nfe) {}
+				try { valueY = Double.parseDouble(coord[1]); } catch (NumberFormatException nfe) {}
 				}
 			}
 
 		public GraphPoint(int x, int y, Rectangle bounds) {
 			// relative position in zoomed graph
-			float positionX = (x-bounds.x)/(float)bounds.width;
-			float positionY = (bounds.y+bounds.height-y)/(float)bounds.height;
+			double positionX = (x-bounds.x)/(double)bounds.width;
+			double positionY = (bounds.y+bounds.height-y)/(double)bounds.height;
 
 			// data values at axis positions
 			valueX = mAxisVisMin[0] + positionX * (mAxisVisMax[0] - mAxisVisMin[0]);
 			valueY = mAxisVisMin[1] + positionY * (mAxisVisMax[1] - mAxisVisMin[1]);
 
 			if (mAxisVisRangeIsLogarithmic[0])
-				valueX = (float)Math.pow(10, valueX);
+				valueX = Math.pow(10, valueX);
 			if (mAxisVisRangeIsLogarithmic[1])
-				valueY = (float)Math.pow(10, valueY);
+				valueY = Math.pow(10, valueY);
 			}
 
 		public boolean isValid() {
-			return !Float.isNaN(valueX) && !Float.isNaN(valueX);
+			return !Double.isNaN(valueX) && !Double.isNaN(valueY);
 			}
 
 		/**
@@ -5455,7 +5455,7 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 		 */
 		public double getRelativeX() {
 			if (mPruningBarLow[0] == mPruningBarHigh[0])
-				return 0.5f;
+				return 0.5;
 
 			return ((mAxisVisRangeIsLogarithmic[0] ? Math.log10(valueX) : valueX) - mAxisVisMin[0]) / (mAxisVisMax[0] - mAxisVisMin[0]);
 			}
@@ -5476,13 +5476,13 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 		}
 
 	class ViewPort {
-		float[] min,max,visMin,visMax;
+		double[] min,max,visMin,visMax;
 
 		ViewPort() {
-			min = new float[2];
-			max = new float[2];
-			visMin = new float[2];
-			visMax = new float[2];
+			min = new double[2];
+			max = new double[2];
+			visMin = new double[2];
+			visMax = new double[2];
 			for (int i=0; i<2; i++) {
 				int column = mAxisIndex[i];
 				if (column == cColumnUnassigned || mTreeNodeList != null) {
@@ -5490,20 +5490,21 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 					max[i] = mAxisVisMax[i];
 					}
 				else if (mIsCategoryAxis[i]) {
-					min[i] = -0.5f;
-					max[i] = -0.5f + mTableModel.getCategoryCount(column);
+					min[i] = -0.5;
+					max[i] = -0.5 + mTableModel.getCategoryCount(column);
 					}
 				else {
-					AxisDataRange range = calculateDataMinAndMax(i);
-					min[i] = range.scaledMin();
-					max[i] = range.scaledMax();
+					AxisDataRange adr = calculateDataMinAndMax(i);
+					double[] scaledMinAndMax = adr.calculateScaledMinAndMax(mPruningBarLow[i], mPruningBarHigh[i]);
+					min[i] = scaledMinAndMax[0];
+					max[i] = scaledMinAndMax[1];
 					}
 				visMin[i] = mAxisVisMin[i];
 				visMax[i] = mAxisVisMax[i];
 				}
 			}
 
-		float getRange(int dimension) {
+		double getRange(int dimension) {
 			return max[dimension] - min[dimension];
 			}
 		}

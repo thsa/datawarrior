@@ -3,7 +3,6 @@ package com.actelion.research.gui.form;
 import com.actelion.research.chem.Coordinates;
 import com.actelion.research.chem.Molecule;
 import com.actelion.research.chem.StereoMolecule;
-import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.hidpi.HiDPIIcon;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -48,7 +47,7 @@ public class JFXConformerPanel extends JFXPanel {
 	private volatile int mCurrentUpdateID;
 	private boolean mAdaptToLookAndFeelChanges;
 	private java.awt.Color mSceneBackground, mLookAndFeelSpotColor,
-			mMenuItemBackground,mMenuItemForeground,mMenuItemSelectionBackground,mMenuItemSelectionForeground;
+			mMenuItemBackground,mMenuItemForeground,/*mMenuItemSelectionBackground,*/mMenuItemSelectionForeground;
 
 	public JFXConformerPanel(boolean withSidePanel) {
 		this(withSidePanel, 512, 384, V3DScene.CONFORMER_VIEW_MODE);
@@ -160,7 +159,7 @@ public class JFXConformerPanel extends JFXPanel {
 		mLookAndFeelSpotColor = new java.awt.Color(HiDPIIcon.getThemeSpotRGBs()[0]);
 		mMenuItemBackground = UIManager.getColor("MenuItem.background");
 		mMenuItemForeground = UIManager.getColor("MenuItem.foreground");
-		mMenuItemSelectionBackground = UIManager.getColor("MenuItem.selectionBackground");
+//		mMenuItemSelectionBackground = UIManager.getColor("MenuItem.selectionBackground");
 		mMenuItemSelectionForeground = UIManager.getColor("MenuItem.selectionForeground");
 	}
 
@@ -174,7 +173,7 @@ public class JFXConformerPanel extends JFXPanel {
 	}
 
 	private String generateStyleSheet() {
-		String textSize = HiDPIHelper.scale(8)+" pt;";
+		String textSize = "12 pt;";
 		String lafSpot = toStyleText(mLookAndFeelSpotColor == null ? java.awt.Color.CYAN : mLookAndFeelSpotColor);
 		String menuBG = toStyleText(mMenuItemBackground == null ? java.awt.Color.LIGHT_GRAY : mMenuItemBackground);
 		String menuFG = toStyleText(mMenuItemForeground == null ? java.awt.Color.DARK_GRAY : mMenuItemForeground);

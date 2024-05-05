@@ -86,21 +86,7 @@ public class JFXConformerPanel extends JFXPanel {
 			mScene.setPopupMenuController(mController);
 		}, null);
 		Platform.runLater(mConstructionTask);
-
-//		listUIDefsults();
 	}
-
-/*	private void listUIDefsults() {
-		try {
-			for (Object key : UIManager.getLookAndFeelDefaults().keySet()) {
-				Object val = UIManager.getLookAndFeelDefaults().get(key);
-				if (val instanceof java.awt.Color)
-					System.out.println(key.toString() + ":" + val);
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-	}*/
 
 	/**
 	 * This waits for the constructor's with runLater() deferred initialization to complete
@@ -185,18 +171,6 @@ public class JFXConformerPanel extends JFXPanel {
 
 	private void setLookAndFeelMenuBackground() {
 		StringURLConnection.updateCSS(this, generateStyleSheet() );
-//					".menu {" +
-//							" -fx-background-color: "+toStyleText(java.awt.Color.YELLOW)+"\n" +
-//							" -fx-focus-color: "+toStyleText(java.awt.Color.RED)+"\n" +
-//							" -fx-border-color: "+toStyleText(java.awt.Color.GRAY)+"\n" +
-//							" -fx-effect: null;"+"\n" +
-//							"}\n" +
-//							".menu-item {\n" +
-//							" -fx-background-color: "+toStyleText(bg)+"\n" +
-//							" -fx-focus-color: "+toStyleText(java.awt.Color.RED)+"\n" +
-//							" -fx-border-color: "+toStyleText(java.awt.Color.GRAY)+"\n" +
-//							" -fx-effect: null;\n" +
-//							"}\n");
 	}
 
 	private String generateStyleSheet() {
@@ -204,11 +178,10 @@ public class JFXConformerPanel extends JFXPanel {
 		String lafSpot = toStyleText(mLookAndFeelSpotColor == null ? java.awt.Color.CYAN : mLookAndFeelSpotColor);
 		String menuBG = toStyleText(mMenuItemBackground == null ? java.awt.Color.LIGHT_GRAY : mMenuItemBackground);
 		String menuFG = toStyleText(mMenuItemForeground == null ? java.awt.Color.DARK_GRAY : mMenuItemForeground);
-		String menuSBG = toStyleText(mMenuItemSelectionBackground == null ? java.awt.Color.WHITE : mMenuItemSelectionBackground);
+//		String menuSBG = toStyleText(mMenuItemSelectionBackground == null ? java.awt.Color.WHITE : mMenuItemSelectionBackground);
 		String menuSFG = toStyleText(mMenuItemSelectionForeground == null ? java.awt.Color.BLACK : mMenuItemSelectionForeground);
 
-		String original =
-			".root {\n" +
+		return ".root {\n" +
 				" -fx-text-fill: "+menuFG+"\n" +
 				" -fx-base: rgba(0, 0, 0, 1.0);\n" +
 				" -fx-background-color: rgba(0, 0, 128, 1.0);\n" +
@@ -237,8 +210,6 @@ public class JFXConformerPanel extends JFXPanel {
 				" -fx-background-color: "+lafSpot+"\n" +
 				" -fx-text-fill: "+menuSFG+"\n" +
 				"}\n";
-
-		return original;
 	}
 
 	private String toStyleText(java.awt.Color c) {
@@ -559,7 +530,6 @@ public class JFXConformerPanel extends JFXPanel {
 
 		@Override
 		public InputStream getInputStream() throws IOException {
-System.out.println(sCSS);
 			return new StringBufferInputStream(sCSS);
 		}
 	}

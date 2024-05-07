@@ -313,6 +313,10 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 					}
 				}
 				catch (Exception e) {}
+
+				SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent,
+						"DataWarrior successfully updated to version "+availableVersion+".\nIt will be used, when you open DataWarrior next time.",
+						"Successfully Updated", JOptionPane.INFORMATION_MESSAGE));
 			}
 		}
 	}

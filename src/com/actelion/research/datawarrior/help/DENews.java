@@ -93,12 +93,22 @@ public class DENews {
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new TableLayout(size));
 
+		KeyAdapter keyAdapter = new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				super.keyPressed(e);
+				if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
+					newsDialog.dispose();
+			}
+		};
+
 		if (mMoreURL != null) {
 			JButton moreButton = new JButton("More...");
 			moreButton.addActionListener(e -> {
 				BrowserControl.displayURL(mMoreURL);
 				newsDialog.dispose();
 			});
+			moreButton.addKeyListener(keyAdapter);
 			buttonPanel.add(moreButton, "1,1");
 		}
 
@@ -106,16 +116,8 @@ public class DENews {
 
 		JButton closeButton = new JButton("Close");
 		closeButton.addActionListener(e -> newsDialog.dispose());
+		closeButton.addKeyListener(keyAdapter);
 		buttonPanel.add(closeButton, "5,1");
-
-		closeButton.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				super.keyPressed(e);
-				if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
-					newsDialog.dispose();
-			}
-		});
 
 		newsDialog.setModalityType(JDialog.DEFAULT_MODALITY_TYPE);
 		newsDialog.setUndecorated(true);

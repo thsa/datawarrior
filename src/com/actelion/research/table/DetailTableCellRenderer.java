@@ -29,11 +29,13 @@ import com.actelion.research.table.view.VisualizationColor;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.io.Serial;
 
 public class DetailTableCellRenderer extends DefaultTableCellRenderer {
-    private static final long serialVersionUID = 0x20061009;
+    @Serial
+	private static final long serialVersionUID = 0x20061009;
 
-    private DetailTableModel mTableModel;
+    private final DetailTableModel mTableModel;
     private ChemistryCellRenderer       mChemistryRenderer;
 	private MultiLineCellRenderer       mMultiLineRenderer;
 	private CompoundTableColorHandler	mColorHandler;
@@ -51,7 +53,7 @@ public class DetailTableCellRenderer extends DefaultTableCellRenderer {
         if (mTableModel.getColumnCount() == 0)
             return null;
 
-        int column = mTableModel.getParentModel().convertFromDisplayableColumnIndex(row);
+		int column = mTableModel.getParentColumn(row);
         if (col == 1 && (value instanceof StereoMolecule || value instanceof Reaction)) {
             if (mChemistryRenderer == null) {
                 mChemistryRenderer = new ChemistryCellRenderer();

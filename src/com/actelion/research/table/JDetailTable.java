@@ -75,7 +75,7 @@ public class JDetailTable extends JTable implements TableModelListener {
                 int column = mDetailModel.getParentColumn(row);
 				Integer value = mRowHeightMap.get(tableModel.getColumnTitleNoAlias(column));
 				if (value != null) {
-					setRowHeight(row, value.intValue());
+					setRowHeight(row, value);
 					}
 				else {
 					String specialType = tableModel.getColumnSpecialType(column);

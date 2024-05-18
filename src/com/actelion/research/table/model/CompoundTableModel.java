@@ -5126,7 +5126,7 @@ public class CompoundTableModel extends AbstractTableModel
 		for (int row=mRecord.length-1; row>=0; row--) {
 			String[] entry = separateEntries(encodeData(mRecord[row], column));
 			for (int i=0; i<entry.length; i++)
-				if (entry[i].length() > 0)
+				if (!entry[i].isEmpty())
 					if (!dateAnalysis.analyse(entry[i]) && !enforceDate)
 						return false;
 			}
@@ -5136,31 +5136,31 @@ public class CompoundTableModel extends AbstractTableModel
 
 		boolean found = false;
 		for (int row=mRecord.length-1; row>=firstRow || (!found && row>=0); row--) {
-			String[] entry = separateEntries(encodeData(mRecord[row], column));
+			String[] entries = separateEntries(encodeData(mRecord[row], column));
 
-			long[] medianMillis = (mColumnInfo[column].summaryMode == cSummaryModeMedian) ? new long[entry.length] : null;
+			long[] medianMillis = (mColumnInfo[column].summaryMode == cSummaryModeMedian) ? new long[entries.length] : null;
 
 			long date = 0;
 			int count = 0;
-			for (int i=0; i<entry.length; i++) {
-				if (entry[i].length() > 0) {
-					long millis = dateAnalysis.getDateMillis(entry[i]);
+			for (String entry : entries) {
+				if (!entry.isEmpty()) {
+					long millis = dateAnalysis.getDateMillis(entry);
 					if (millis != -1) {
 						switch (mColumnInfo[column].summaryMode) {
-						case cSummaryModeMinimum:
-							if (count == 0 || date > millis)
-								date = millis;
-							break;
-						case cSummaryModeMaximum:
-							if (count == 0 || date < millis)
-								date = millis;
-							break;
-						case cSummaryModeMedian:
-							medianMillis[count] = millis;
-							break;
-						default:    // sum or mean or normal
-							date += millis;
-							break;
+							case cSummaryModeMinimum:
+								if (count == 0 || date>millis)
+									date = millis;
+								break;
+							case cSummaryModeMaximum:
+								if (count == 0 || date<millis)
+									date = millis;
+								break;
+							case cSummaryModeMedian:
+								medianMillis[count] = millis;
+								break;
+							default:    // sum or mean or normal
+								date += millis;
+								break;
 							}
 						count++;
 						}

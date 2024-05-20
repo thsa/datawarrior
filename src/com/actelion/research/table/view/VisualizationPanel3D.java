@@ -18,17 +18,16 @@
 
 package com.actelion.research.table.view;
 
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.table.model.CompoundListSelectionModel;
 import com.actelion.research.table.model.CompoundTableModel;
-
-import java.awt.*;
 
 public class VisualizationPanel3D extends VisualizationPanel implements RotationListener {
     private static final long serialVersionUID = 0x20060904;
 
-    public VisualizationPanel3D(Frame owner,
+    public VisualizationPanel3D(DEFrame owner,
                                 CompoundTableModel tableModel,
-								CompoundListSelectionModel selectionModel) {
+                                CompoundListSelectionModel selectionModel) {
 		super(owner, tableModel);
 		mVisualization = new JVisualization3D(owner, tableModel, selectionModel);
 		((JVisualization3D)mVisualization).addRotationListener(this);

@@ -327,6 +327,11 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		}
 
 	@Override
+	public void pixelScalingChanged(float pixelScaling) {
+
+	}
+
+	@Override
 	public void setViewSelectionHelper(ViewSelectionHelper l) {
 		mViewSelectionHelper = l;
 		}

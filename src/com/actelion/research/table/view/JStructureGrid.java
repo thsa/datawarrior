@@ -18,8 +18,12 @@
 
 package com.actelion.research.table.view;
 
-import com.actelion.research.chem.*;
+import com.actelion.research.chem.AbstractDepictor;
+import com.actelion.research.chem.Depictor2D;
+import com.actelion.research.chem.IDCodeParser;
+import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.gui.LookAndFeelHelper;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.dnd.MoleculeDragAdapter;
@@ -49,19 +53,20 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class JStructureGrid extends JScrollPane
 		implements CompoundTableColorHandler.ColorListener,CompoundTableView,FocusableView,HighlightListener,
 					ListSelectionListener,MarkerLabelDisplayer,MouseListener,MouseMotionListener,Printable {
 	private static final long serialVersionUID = 0x20060904;
 
-	private Frame						mParentFrame;
-	private CompoundTableModel			mTableModel;
-	private CompoundTableColorHandler	mColorHandler;
-	private CompoundListSelectionModel	mSelectionModel;
+	private final DEFrame				mParentFrame;
+	private final CompoundTableModel	mTableModel;
+	private final CompoundTableColorHandler	mColorHandler;
+	private final CompoundListSelectionModel mSelectionModel;
 	private CompoundRecord				mActiveRow,mHighlightedRow;
 	private ViewSelectionHelper			mViewSelectionHelper;
-	private JStructureGridContentPanel	mContentPanel;
+	private final JStructureGridContentPanel mContentPanel;
 	private GridCellSize				mCellSize;
 	private float						mMarkerLabelSize;
 	private int							mNoOfColumns,mDefinedNoOfColumns,mTableRowCount,
@@ -69,12 +74,12 @@ public class JStructureGrid extends JScrollPane
 										mTableRowCountOnLastValidation,mFocusList,mFocusCount,
 										mStructureColumn,mStructureDrawMode;
 	private int[]						mLabelColumn,mFocusRow;
-	private ArrayList<GridImage> 		mImageList;
+	private final ArrayList<GridImage> 	mImageList;
 	private boolean						mFocusValid,mSelectionChanged,mRepaintRequested,mShowAnyLabels,
 										mIsMarkerLabelsBlackAndWhite,mIsShowColumnNameInTable;
 	private DetailPopupProvider			mDetailPopupProvider;
 
-	public JStructureGrid(Frame parent, CompoundTableModel tableModel,
+	public JStructureGrid(DEFrame parent, CompoundTableModel tableModel,
 						  CompoundTableColorHandler colorHandler, CompoundListSelectionModel selectionModel,
 						  int structureColumn, int noOfColumns) {
 		mParentFrame = parent;
@@ -90,8 +95,7 @@ public class JStructureGrid extends JScrollPane
 		mNoOfColumns = noOfColumns;
 		mDefinedNoOfColumns = noOfColumns;
 		mLabelColumn = new int[cPositionCode.length];
-		for (int i=0; i<mLabelColumn.length; i++)
-			mLabelColumn[i] = -1;
+		Arrays.fill(mLabelColumn, -1);
 		mMarkerLabelSize = 1.0f;
 		mActiveRow = mTableModel.getActiveRow();
 		mHighlightedRow = mTableModel.getHighlightedRow();
@@ -139,6 +143,12 @@ public class JStructureGrid extends JScrollPane
 		return mTableModel;
 		}
 
+	@Override
+	public void pixelScalingChanged(float pixelScaling) {
+		mCellSize = null;
+		repaint();
+		}
+
 	public void cleanup() {
 		mTableModel.removeHighlightListener(this);
 		mSelectionModel.removeListSelectionListener(this);
@@ -150,12 +160,12 @@ public class JStructureGrid extends JScrollPane
 			invalidateView();
 			return;
 			}
-		for (int i=0; i<mLabelColumn.length; i++) {
-			if (mLabelColumn[i] == column) {
+		for (int j : mLabelColumn) {
+			if (j == column) {
 				invalidateView();
 				return;
-				}
 			}
+		}
 		}
 
 	public int getTotalHeight(int totalWidth) {
@@ -915,6 +925,7 @@ public class JStructureGrid extends JScrollPane
 		return index;
 		}
 
+
 	private void validateSize(boolean labelChanged) {
 		Rectangle r = getViewportBorderBounds();
 		if (mCellSize == null || mCellSize.totalWidth != r.width/mNoOfColumns
@@ -924,7 +935,7 @@ public class JStructureGrid extends JScrollPane
 			mRecordCountOnLastValidation = mTableModel.getRowCount();
 			mTableRowCountOnLastValidation = mTableRowCount;
 
-			mCellSize = new GridCellSize(r.width, 1, HiDPIHelper.getRetinaScaleFactor(), 1.0f, 7);
+			mCellSize = new GridCellSize(r.width, 1, mParentFrame.getPixelFactor(), 1.0f, 7);
 			mImageList.clear();
 			mContentPanel.setPreferredSize(
 				new Dimension(mCellSize.totalWidth*mNoOfColumns,

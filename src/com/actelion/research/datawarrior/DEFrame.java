@@ -22,6 +22,7 @@ import com.actelion.research.chem.io.CompoundFileHelper;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.datawarrior.task.file.*;
 import com.actelion.research.gui.FileHelper;
+import com.actelion.research.gui.dock.Dockable;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.CompoundTableSaver;
 import com.actelion.research.table.DataDependentPropertyWriter;
@@ -29,27 +30,35 @@ import com.actelion.research.table.RuntimePropertyEvent;
 import com.actelion.research.table.RuntimePropertyListener;
 import com.actelion.research.table.model.*;
 import com.actelion.research.table.view.CompoundTableView;
+import com.actelion.research.util.Platform;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.util.Properties;
+import java.io.Serial;
+import java.util.Arrays;
+import java.util.Comparator;
 
 public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTableListener,CompoundTableListListener,RuntimePropertyListener {
+	@Serial
 	private static final long serialVersionUID = 0x20070227;
 	private static final String DEFAULT_TITLE = "DataWarrior";
 
 	private StandardMenuBar	mMenuBar;
 	private DEParentPane	mParentPane;
-	private DataWarrior		mDataExplorer;
-	private String			mOsirisQuery;
-	private Properties		mOsirisBioQuery;
+	private final DataWarrior mDataExplorer;
 	private boolean			mIsDirty;
+	private GraphicsDevice  mGraphicsDevice;
+	private float           mUIScaling;
 
   /**Construct the frame*/
-	public DEFrame(DataWarrior datawarrior, String title, boolean lockForImmediateUsage) {
+	public DEFrame(DataWarrior datawarrior, String title, boolean lockForImmediateUsage, GraphicsDevice gd) {
 		mDataExplorer = datawarrior;
+		mGraphicsDevice = gd;
+		mUIScaling = calculatePixelScaling();
 		enableEvents(AWTEvent.WINDOW_EVENT_MASK);
 		try {
 			setIconImage(Toolkit.getDefaultToolkit().createImage(getClass().getResource("/images/datawarrior.png")));
@@ -61,8 +70,8 @@ public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTa
 			tableModel.setDetailHandler(datawarrior.createDetailHandler(this, tableModel));
 
 			mParentPane = new DEParentPane(this, tableModel,
-										   datawarrior.createDetailPane(this, tableModel),
-										   datawarrior.createDatabaseActions(this));
+					datawarrior.createDetailPane(this, tableModel),
+					datawarrior.createDatabaseActions(this));
 			mParentPane.addRuntimePropertyListener(this);
 			mParentPane.getMainPane().setApplicationViewFactory(this);
 			if (lockForImmediateUsage)
@@ -77,11 +86,56 @@ public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTa
 			mMenuBar = datawarrior.createMenuBar(this);
 			setJMenuBar(mMenuBar);
 
-			mIsDirty = false;	// an empty document is not dirty
-			}
-		catch(Exception e) {
+			mIsDirty = false;    // an empty document is not dirty
+		} catch (Exception e) {
 			e.printStackTrace();
+		}
+
+		if (Platform.isWindows() || Platform.isMacintosh()) {
+			addComponentListener(new ComponentAdapter() {
+				@Override
+				public void componentMoved(ComponentEvent e) {
+					Rectangle bounds = getBounds();
+					GraphicsDevice gd = Arrays.stream(GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices())
+							// pick devices where window located
+							.filter(d -> d.getDefaultConfiguration().getBounds().intersects(bounds))
+
+							// sort by biggest intersection square
+							.sorted(Comparator.comparingLong(f -> square(f.getDefaultConfiguration().getBounds().intersection(bounds))))
+
+							// use one with the biggest part of the window
+							.reduce((f, s) -> s) //
+
+							// fallback to default device
+							.orElse(getGraphicsConfiguration().getDevice());
+
+					if (mGraphicsDevice != gd) {
+						mGraphicsDevice = gd;
+						mUIScaling = calculatePixelScaling();
+						for (Dockable d : mParentPane.getMainPane().getDockables())
+							((CompoundTableView)d.getContent()).pixelScalingChanged(mUIScaling);
+						}
+
+					super.componentMoved(e);
+					}
+				});
 			}
+		}
+
+	private float calculatePixelScaling() {
+		return Platform.isMacintosh() ?
+				(float)mGraphicsDevice.getDefaultConfiguration().getDefaultTransform().getScaleX()
+			 : Platform.isWindows() ?
+				(float)mGraphicsDevice.getDisplayMode().getWidth() / mGraphicsDevice.getDefaultConfiguration().getBounds().width
+			 : 1.0f;
+		}
+
+	public float getPixelFactor() {
+		return mUIScaling;
+		}
+
+	private long square(Rectangle rec) {
+		return Math.abs(rec.width * rec.height);
 		}
 
 	/**
@@ -116,24 +170,6 @@ public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTa
 		return mParentPane;
 		}
 
-	@Deprecated
-	public String getOsirisQuery() {
-		return mOsirisQuery;
-		}
-
-	@Deprecated
-	public void setOsirisQuery(String osirisQuery) {
-		mOsirisQuery = osirisQuery;
-		}
-
-	public Properties getOsirisBioQuery() {
-		return mOsirisBioQuery;
-		}
-
-	public void setOsirisBioQuery(Properties osirisBioQuery) {
-		mOsirisBioQuery = osirisBioQuery;
-		}
-
 	public void compoundTableChanged(CompoundTableEvent e) {
 		if (e.getType() != CompoundTableEvent.cChangeExcluded
 		 && e.getType() != CompoundTableEvent.cChangeSelection)
@@ -163,13 +199,13 @@ public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTa
 	 * Creates a suggested file name without extension to be used in a file-save-dialog
 	 * to save derived files. If the table model has a file, then the file's name without extension
 	 * is returned. Otherwise, if the frame has a title, the title (without known extensions) is returned.
-	 * Otherwise "Untitled" is returned.
+	 * Otherwise, "Untitled" is returned.
 	 * @return suggested file name without extension
 	 */
 	public String getSuggestedFileName() {
 		File file = mParentPane.getTableModel().getFile();
 		String fileName = CompoundFileHelper.removePathAndExtension((file != null) ? file.getName() : getTitle());
-		return (fileName.length() == 0) ? "Untitled" : CompoundFileHelper.removePathAndExtension(fileName);
+		return (fileName.isEmpty()) ? "Untitled" : CompoundFileHelper.removePathAndExtension(fileName);
 		}
 
 	/**
@@ -178,7 +214,7 @@ public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTa
 	 * @return
 	 */
 	private File suggestUniqueFile() {
-		String fileName = CompoundFileHelper.removePathAndExtension((getTitle().length() == 0) ? getTitle() : "Untitled");
+		String fileName = CompoundFileHelper.removePathAndExtension((getTitle().isEmpty()) ? getTitle() : "Untitled");
 		String filePath = System.getProperty("user.home").concat(File.pathSeparator).concat(fileName);
 		String extension = FileHelper.getExtension(FileHelper.cFileTypeDataWarrior);
 		File file = new File(filePath.concat(extension));

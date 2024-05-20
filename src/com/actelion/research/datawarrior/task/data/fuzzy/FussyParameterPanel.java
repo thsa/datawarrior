@@ -174,7 +174,7 @@ public class FussyParameterPanel extends JPanel implements ActionListener,Change
 	}
 
 	private JPanel createCloseButton() {
-		JButton b = new HiDPIIconButton("closeButton.png", null, "close", 0, "square");
+		JButton b = new HiDPIIconButton("closeButton.png", null, "close", 0);
 		b.addActionListener(this);
 		JPanel p = new JPanel();
 		p.setLayout(new BorderLayout());

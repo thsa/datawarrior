@@ -67,8 +67,8 @@ public class FXHelpFrame extends JFrame {
 				SwingUtilities.invokeLater(() -> search());
 				}
 			} );
-		HiDPIIconButton b1 = new HiDPIIconButton("toNext.png", null, "<", 180, "bevel");
-		HiDPIIconButton b2 = new HiDPIIconButton("toNext.png", null, ">", 0, "bevel");
+		HiDPIIconButton b1 = new HiDPIIconButton("toNext.png", null, "<", 180);
+		HiDPIIconButton b2 = new HiDPIIconButton("toNext.png", null, ">", 0);
 		b1.addActionListener(e -> previous());
 		b2.addActionListener(e -> next());
 		mLabelMatchCount = new JLabel("", JLabel.RIGHT);

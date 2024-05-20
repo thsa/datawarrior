@@ -46,13 +46,13 @@ public class DETableView extends JScrollPane
 
 	private static final int DEFAULT_HEADER_LINES = 2;
 
-	private DEFrame				    mParentFrame;
-	private DEParentPane		    mParentPane;
-	private DETable				    mTable;
-	private DECompoundTableModel	mTableModel;
+	private final DEFrame			mParentFrame;
+	private final DEParentPane		mParentPane;
+	private final DETable			mTable;
+	private final DECompoundTableModel mTableModel;
 	private DetailPopupProvider	    mDetailPopupProvider;
 	private int					    mMouseX,mHeaderLineCount;
-	private CompoundTableColorHandler	mColorHandler;
+	private final CompoundTableColorHandler	mColorHandler;
 	private ViewSelectionHelper 	mViewSelectionHelper;
 
 	public DETableView(DEFrame parentFrame, DEParentPane parentPane, DECompoundTableModel tableModel,
@@ -119,7 +119,7 @@ public class DETableView extends JScrollPane
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				int index = mTableModel.getActiveRowIndex();
-				if (index != -1 && index > 0) {
+				if (index>0) {
 					mTableModel.setActiveRow(index-1);
 					mTable.scrollToRow(index-1);
 					}
@@ -161,6 +161,12 @@ public class DETableView extends JScrollPane
 		mTable.getTableHeader().resizeAndRepaint();
 		}
 
+	@Override
+	public void pixelScalingChanged(float pixelScaling) {
+
+	}
+
+	@Override
 	public void cleanup() {
 		mTable.cleanup();
 		mColorHandler.removeColorListener(this);
@@ -428,8 +434,8 @@ public class DETableView extends JScrollPane
 	}
 
 class WrappingHeaderCellRenderer implements TableCellRenderer {
-	private DETableView mTableView;
-	private TableCellRenderer mOriginalCellRenderer;
+	private final DETableView mTableView;
+	private final TableCellRenderer mOriginalCellRenderer;
 
 	public WrappingHeaderCellRenderer(DETableView tableView, TableCellRenderer cellRenderer) {
 		super();

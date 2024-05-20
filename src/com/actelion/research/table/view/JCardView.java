@@ -595,6 +595,11 @@ public class JCardView extends JPanel implements CompoundTableView, HighlightLis
     }
 
 	@Override
+	public void pixelScalingChanged(float pixelScaling) {
+
+	}
+
+	@Override
 	public void cleanup() {
 	    // @TODO: reset hidden rows (i.e. return flag), clean up all objects
         this.getCardPane().getCardPaneModel().cleanup();

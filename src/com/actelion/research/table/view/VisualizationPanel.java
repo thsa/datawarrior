@@ -98,6 +98,11 @@ public abstract class VisualizationPanel extends JPanel
 		mVisualization.cleanup();
 		}
 
+	@Override
+	public void pixelScalingChanged(float pixelScaling) {
+		mVisualization.pixelScalingUpdated(pixelScaling);
+	}
+
 	public void addVisualizationListener(VisualizationListener l) {
 		mListenerList.add(l);
 		}

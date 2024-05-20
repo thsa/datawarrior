@@ -351,6 +351,9 @@ public abstract class JVisualization extends JComponent
 		mLocalExclusionFlagNo = -1;
 		}
 
+	public void pixelScalingUpdated(float pixelScaling) {
+	}
+
 	public int getDimensionCount() {
 		return mDimensions;
 		}
@@ -1788,9 +1791,9 @@ public abstract class JVisualization extends JComponent
 					/ (dpiFactor * (isScreen ? HiDPIHelper.scale(cFontRefenceViewSize) : cFontRefenceViewSize));
 
 			if (mFontSizeMode == cFontSizeModeRelative)
-				fontSize *= dpiFactor * relativeViewSize;
+				fontSize *= retinaFactor * dpiFactor * relativeViewSize;
 			else    // adaptive
-				fontSize *= dpiFactor * (float)Math.sqrt(relativeViewSize);
+				fontSize *= retinaFactor * dpiFactor * (float)Math.sqrt(relativeViewSize);
 			}
 
 		return isScreen ? HiDPIHelper.scale(fontSize) : Math.round(fontSize);

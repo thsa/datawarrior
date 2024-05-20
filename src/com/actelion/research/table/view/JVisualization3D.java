@@ -20,9 +20,9 @@ package com.actelion.research.table.view;
 
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.generic.GenericRectangle;
-import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.swing.SwingCursorHelper;
 import com.actelion.research.table.MarkerLabelDisplayer;
 import com.actelion.research.table.category.CategoryList;
@@ -157,30 +157,31 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 
 	private static final int cPrintScaling = 2;
 
-	private Frame				mParentFrame;
-	private float[][]			mMatrix,mRotation;
-	private Point3i[]			mScreenCorner;
-	private int[]				mMoleculeAxisIndex,mMoleculeAxisSize;
-	private boolean[]			mFaceHidden,mEdgeHidden,mMetaCoordsValid;
+	private final DEFrame		mParentFrame;
+	private final float[][]		mMatrix,mRotation;
+	private final Point3i[]		mScreenCorner;
+	private  final int[]		mMoleculeAxisIndex,mMoleculeAxisSize;
+	private final boolean[]		mFaceHidden,mEdgeHidden,mMetaCoordsValid;
 	private int					mScreenCenterX,mScreenCenterY,mScreenCenterOffset,
 								mCurrentFontSize3D,mStereoMode,mContentScaling,mAAFactor,
 								mThreadCount,mGraphFaceColor,mDragMode;
 	private float				mScreenZoom,mEyeOffset;
 	private boolean				mIsStereo,mDepthOrderValid,mIsAdjusting,mPopupVisible,mIsHighResolution;
-	private StereoMolecule[][]	mScaleMolecule;
-	private float[][]			mMoleculeOffsetX,mMoleculeOffsetY,mMetaBarPosition,mMetaBarColorEdge;
+	private final StereoMolecule[][]	mScaleMolecule;
+	private final float[][]		mMoleculeOffsetX,mMoleculeOffsetY,mMetaBarPosition;
+	private float[][]		    mMetaBarColorEdge;
 	private Graphics3D			mG3D,m2ndG3D;
-	private ComposedObject[]	mComposedMarker;
+	private final ComposedObject[]	mComposedMarker;
 	private Image				mNonHighlightedImage;
 	private BufferedImage		mStereoImage;
-	private Matrix3f			mNullRotationMatrix;
+	private final Matrix3f		mNullRotationMatrix;
 	private ExecutorService		mExecutor;
 	private V3DWorker[]			mV3DWorker;
-	private ArrayList<RotationListener> mRotationListenerList;
+	private final ArrayList<RotationListener> mRotationListenerList;
 
-	public JVisualization3D(Frame owner,
-							CompoundTableModel tableModel,
-							CompoundListSelectionModel selectionModel) {
+	public JVisualization3D(DEFrame owner,
+	                        CompoundTableModel tableModel,
+	                        CompoundListSelectionModel selectionModel) {
 		super(tableModel, selectionModel, 3);
 
 		mParentFrame = owner;
@@ -254,6 +255,11 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			m2ndG3D.destroy();
 		}
 
+	public void pixelScalingUpdated(float pixelScaling) {
+
+		repaint();
+	}
+
 	public void componentResized(ComponentEvent e) {}
 	public void componentShown(ComponentEvent e) {}
 	public void componentHidden(ComponentEvent e) {}
@@ -272,12 +278,12 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		mIsHighResolution = false;
 		boolean antialiasing = !mIsAdjusting;
 		mAAFactor = antialiasing ? 2 : 1;
-		float retinaFactor = HiDPIHelper.getRetinaScaleFactor();
-		mContentScaling = (int)(retinaFactor * mAAFactor);
+		float pixelFactor = mParentFrame.getPixelFactor();
+		mContentScaling = (int)(pixelFactor * mAAFactor);
 
 		Dimension panelSize = getSize();
-		Dimension renderSize = (retinaFactor == 1f) ? panelSize
-				: new Dimension((int)(panelSize.width*retinaFactor), (int)(panelSize.height*retinaFactor));
+		Dimension renderSize = (pixelFactor == 1f) ? panelSize
+				: new Dimension((int)(panelSize.width*pixelFactor), (int)(panelSize.height*pixelFactor));
 		if (mG3D == null
 		 || mG3D.getRenderWidth() != panelSize.width*mContentScaling
 		 || mG3D.getRenderHeight() != panelSize.height*mContentScaling) {
@@ -288,7 +294,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			mOffImageValid = false;
 
 		if (!mOffImageValid) {
-			mFontHeight = calculateFontSize(panelSize.width, panelSize.height, 1f, retinaFactor, false);
+			mFontHeight = calculateFontSize(panelSize.width, panelSize.height, 1f, pixelFactor, false);
 
 			Image image = paintAllOnImage(g, renderSize, antialiasing, null);
 			g.drawImage(image, 0, 0, panelSize.width, panelSize.height, this);
@@ -791,7 +797,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 		int y1 = clipRect.y;
 		int x2 = x1 + clipRect.width - 1;
 		int y2 = y1 + clipRect.height - 1;
-		float f = HiDPIHelper.getRetinaScaleFactor();
+		float f = mParentFrame.getPixelFactor();
 		g.drawImage(image, (int)(x1/f), (int)(y1/f), (int)(x2/f), (int)(y2/f), x1, y1, x2, y2, null);
 		}
 
@@ -857,17 +863,17 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 
 	@Override
 	protected float getMarkerWidth(VisualizationPoint p) {
-		return getMarkerSize((VisualizationPoint3D)p);
+		return getMarkerSize(p);
 		}
 
 	@Override
 	protected float getMarkerHeight(VisualizationPoint p) {
-		return getMarkerSize((VisualizationPoint3D)p);
+		return getMarkerSize(p);
 		}
 
 	@Override
 	protected float getMarkerSize(VisualizationPoint vp) {
-		return super.getMarkerSize(vp) * ((VisualizationPoint3D)vp).zoom / HiDPIHelper.getRetinaScaleFactor();
+		return super.getMarkerSize(vp) * ((VisualizationPoint3D)vp).zoom / mParentFrame.getPixelFactor();
 		}
 
 	@Override
@@ -2068,7 +2074,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			}
 
 		if (mScaleMode != cScaleModeHidden) {
-			if (label != null && label.length() != 0) {
+			if (label != null && !label.isEmpty()) {
 				applyZoomToFontSize(mScreenZoom * cLocation / s2.z);
 				FontMetrics metrics = mG3D.getFont3DCurrent().fontMetrics;
 				float lx = 0.5f * (float)metrics.stringWidth(label);

@@ -663,13 +663,13 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		if (LookAndFeelHelper.isSubstance())
 			toolbar.addSeparator();
 
-		JButton plusButton = new HiDPIIconButton("plusButton.png", "New/copy/rename view", null, 0, null);
+		JButton plusButton = new HiDPIIconButton("plusButton.png", "New/copy/rename view", null, 0);
 		plusButton.addActionListener(e -> showNewViewPopupMenu(view, plusButton));
 		toolbar.add(plusButton);
 		if (LookAndFeelHelper.isSubstance())
 			toolbar.addSeparator();
 
-		JButton configButton = new HiDPIIconButton("configButton.png", "Configure View", null, 0, null);
+		JButton configButton = new HiDPIIconButton("configButton.png", "Configure View", null, 0);
 		configButton.addActionListener(e -> showViewConfigPopupMenu(view, configButton));
 		toolbar.add(configButton);
 		if (LookAndFeelHelper.isSubstance())
@@ -677,21 +677,21 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 
 		if (view instanceof VisualizationPanel) {
 			String buttonName = view instanceof VisualizationPanel3D ? "xyzButton.png" : "xyButton.png";
-			JButton axisButton = new HiDPIIconButton(buttonName, "Assign columns to axes", null, 0, null);
+			JButton axisButton = new HiDPIIconButton(buttonName, "Assign columns to axes", null, 0);
 			axisButton.addActionListener(e -> ((VisualizationPanel)view).showControls());
 			toolbar.add(axisButton);
 			if (LookAndFeelHelper.isSubstance())
 				toolbar.addSeparator();
 			}
 
-		JButton maxButton = new HiDPIIconButton("maxButton.png", "Maximize view", null, 0, null);
+		JButton maxButton = new HiDPIIconButton("maxButton.png", "Maximize view", null, 0);
 		maxButton.addActionListener(e -> maximize(view, null));
 		toolbar.add(maxButton);
 		if (LookAndFeelHelper.isSubstance())
 			toolbar.addSeparator();
 
 		if (!(view instanceof DETableView)) {
-			JButton closeButton = new HiDPIIconButton("closeButton.png", "Close View", null, 0, null);
+			JButton closeButton = new HiDPIIconButton("closeButton.png", "Close View", null, 0);
 			closeButton.addActionListener(e -> new DETaskCloseView(mParentFrame, this, view).defineAndRun());
 			toolbar.add(closeButton);
 			if (LookAndFeelHelper.isSubstance())
@@ -1078,6 +1078,10 @@ class ErrorView extends JPanel implements CompoundTableView {
 	@Override
 	public void cleanup() {
 		}
+
+	@Override
+	public void pixelScalingChanged(float f) {
+	}
 
 	@Override
 	public void setViewSelectionHelper(ViewSelectionHelper l) {

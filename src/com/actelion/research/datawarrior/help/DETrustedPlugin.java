@@ -7,9 +7,10 @@ import java.awt.*;
 import java.io.File;
 import java.util.prefs.Preferences;
 
+import static com.actelion.research.datawarrior.help.DEUpdateHandler.PREFERENCES_KEY_TRUSTED_PLUGINS_FOR_REMOVAL;
 import static com.actelion.research.datawarrior.help.DEUpdateHandler.PREFERENCES_KEY_UPDATE_PATH;
 
-public class DETrustedPlugin {
+public class DETrustedPlugin implements Comparable<DETrustedPlugin> {
 	private String mID,mVersion,mName,mSourceURL,mMD5Sum,mInfoURL,mComment;
 	private boolean mIsInstalled;
 
@@ -55,8 +56,16 @@ public class DETrustedPlugin {
 		return mID;
 	}
 
+	public int getNumID() {
+		return Integer.parseInt(mID);
+	}
+
 	public String getVersion() {
 		return mVersion;
+	}
+
+	public int getNumVersion() {
+		return Integer.parseInt(mVersion.endsWith("dev") ? mVersion.substring(0, mVersion.length()-3) : mVersion);
 	}
 
 	public String getName() {
@@ -87,6 +96,12 @@ public class DETrustedPlugin {
 		return mVersion != null && mVersion.endsWith("dev");
 	}
 
+	@Override
+	public int compareTo(DETrustedPlugin tp) {
+		return !mID.equals(tp.mID) ? Integer.compare(getNumID(), tp.getNumID())
+				: Integer.compare(getNumVersion(), tp.getNumVersion());
+	}
+
 	public boolean install() {
 		String targetDir = DEUpdateHandler.getUpdatePath(DataWarrior.getApplication().getActiveFrame());
 		if (targetDir == null) {
@@ -96,6 +111,7 @@ public class DETrustedPlugin {
 
 		File pluginFile = new File(targetDir.concat(File.separator.concat(getName())));
 		if (pluginFile.exists()) {
+			unscheduleForRemoval(); // in case it was just scheduled for removal
 			mIsInstalled = true;
 			return true;
 		}
@@ -118,15 +134,54 @@ public class DETrustedPlugin {
 			return true;
 		}
 
-		File pluginFile = new File(targetDir.concat(File.separator.concat(getFilename(true))));
-		if (!pluginFile.exists() || pluginFile.delete()) {
-			Frame parent = DataWarrior.getApplication().getActiveFrame();
-			JOptionPane.showMessageDialog(parent, "The plugin was removed from your harddisk successfully.");
-			mIsInstalled = false;
-			return true;
+		File pluginFile = new File(targetDir.concat(File.separator).concat(getFilename(true)));
+		if (pluginFile.exists())
+			scheduleForRemoval();
+
+		Frame parent = DataWarrior.getApplication().getActiveFrame();
+		JOptionPane.showMessageDialog(parent, "The plugin was scheduled to be removed from your harddisk.");
+		mIsInstalled = false;
+		return true;
+	}
+
+	private void scheduleForRemoval() {
+		Preferences prefs = DataWarrior.getPreferences();
+		String pluginsForRemoval = prefs.get(PREFERENCES_KEY_TRUSTED_PLUGINS_FOR_REMOVAL, null);
+
+		String filename = getFilename(true);
+
+		if (pluginsForRemoval == null) {
+			prefs.put(PREFERENCES_KEY_TRUSTED_PLUGINS_FOR_REMOVAL, filename);
+			return;
 		}
 
-		mIsInstalled = true;
-		return false;
+		for (String fn : pluginsForRemoval.split(","))
+			if (fn.equals(filename))
+				return;
+
+		prefs.put(PREFERENCES_KEY_TRUSTED_PLUGINS_FOR_REMOVAL, pluginsForRemoval+","+filename);
+	}
+
+	private void unscheduleForRemoval() {
+		Preferences prefs = DataWarrior.getPreferences();
+		String pluginsForRemoval = prefs.get(PREFERENCES_KEY_TRUSTED_PLUGINS_FOR_REMOVAL, null);
+
+		if (pluginsForRemoval == null)
+			return;
+
+		String filename = getFilename(true);
+
+		if (pluginsForRemoval.equals(filename)) {
+			prefs.remove(PREFERENCES_KEY_TRUSTED_PLUGINS_FOR_REMOVAL);
+			return;
+		}
+
+		int index = pluginsForRemoval.indexOf(filename);
+		if (index == -1)
+			return;
+
+		prefs.put(PREFERENCES_KEY_TRUSTED_PLUGINS_FOR_REMOVAL, pluginsForRemoval.endsWith(filename) ?
+			  pluginsForRemoval.substring(0, index-1)
+			: pluginsForRemoval.substring(0, index).concat(pluginsForRemoval.substring(index+filename.length()+1)));
 	}
 }

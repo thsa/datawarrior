@@ -874,9 +874,9 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 
 	private void createNewFrame(String title, boolean lockForImmediateUsage) {
-		GraphicsConfiguration gc = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
+		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 
-		DEFrame f = new DEFrame(this, title, lockForImmediateUsage);
+		DEFrame f = new DEFrame(this, title, lockForImmediateUsage, gd);
 		f.validate();
 
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -894,6 +894,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 		mFrameList.add(f);
 		mFrameOnFocus = f;
 
+		GraphicsConfiguration gc = gd.getDefaultConfiguration();
 		f.setLocation(borderX + gc.getBounds().x + offset * index + blockShift * block,
 					  borderY + gc.getBounds().y + offset * index);
 		f.setVisible(true);

@@ -152,7 +152,7 @@ public class JCategoryBrowser extends JFilterPanel
 		}
 
 	private JButton createButton(int rotation) {
-		JButton b = new HiDPIIconButton("toNext.png", null, null, rotation, "bevel") {
+		JButton b = new HiDPIIconButton("toNext.png", null, null, rotation) {
 			public void processMouseEvent(MouseEvent e) {
 				super.processMouseEvent(e);
 				processButtonMouseEvent(e);

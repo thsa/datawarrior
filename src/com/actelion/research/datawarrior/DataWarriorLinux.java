@@ -93,6 +93,22 @@ public class DataWarriorLinux extends DataWarrior {
 	 * @param args
 	 */
 	public static void initSingleApplication(String[] args) {
+/*
+System.out.println("DataWarriorLinux.initSingleApplication()");
+for (String arg:args) {
+for (int i=0; i<arg.length(); i++) {
+char c = arg.charAt(i);
+System.out.print(c + ":" + (int)c + " ");
+}
+System.out.println();
+byte[] bytes = arg.getBytes(StandardCharsets.UTF_8);
+for (int i=0; i<arg.length(); i++) {
+System.out.print(bytes[i]+" ");
+}
+System.out.println();
+}
+*/
+
 		if (args != null && args.length != 0) {
 			if (args[0].toLowerCase().startsWith("datawarrior:")) {
 				try {
@@ -166,6 +182,21 @@ public class DataWarriorLinux extends DataWarrior {
 
 	public static void main(final String[] args) {
 		initModuleAccess();
+/*
+System.out.println("DataWarriorLinux.main()");
+for (String arg:args) {
+ for (int i=0; i<arg.length(); i++) {
+  char c = arg.charAt(i);
+  System.out.print(c + ":" + (int)c + " ");
+ }
+ System.out.println();
+ byte[] bytes = arg.getBytes(StandardCharsets.UTF_8);
+ for (int i=0; i<arg.length(); i++) {
+  System.out.print(bytes[i]+" ");
+ }
+ System.out.println();
+}
+*/
 
 		// On Windows Liberica 21 moved libraries from jre\bin\javafx to jre\bin. These dlls are wrongly accessed via the old path.
 		// If not found there, then the jre tries to find them using the java.library.path runtime variable.

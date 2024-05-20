@@ -227,6 +227,11 @@ public class DEFormView extends JComponent implements ActionListener,CompoundTab
 		mCompoundTableForm.cleanup();
 		}
 
+	@Override
+	public void pixelScalingChanged(float pixelScaling) {
+
+	}
+
 	public void actionPerformed(ActionEvent e) {
 		if (mIsEditMode)
 			saveFieldInFocus();

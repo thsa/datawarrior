@@ -27,5 +27,6 @@ public interface CompoundTableView extends CompoundTableListener {
 	public void listChanged(CompoundTableListEvent e);
 	public void cleanup();
 	public boolean copyViewContent();
+	public void pixelScalingChanged(float pixelScaling);
 	public CompoundTableModel getTableModel();
 	}

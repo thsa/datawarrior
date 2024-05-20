@@ -113,14 +113,14 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 	private static final String MORE_DATA_URL = "http://www.openmolecules.org/datawarrior/datafiles.html";
 	private static final String FORUM_URL = "http://www.openmolecules.org/forum/index.php";
-	private static final String[] DPI_OPTIONS = { "Default", "1.0", "1.25", "1.5", "1.75", "2.0" };
+	private static final String[] DPI_OPTIONS = { "Default", "1.0", "1.25", "1.5", "1.75", "2.0", "2.5", "3.0" };
 	final static int MENU_MASK = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
 
-	private DataWarrior			mApplication;
-	private DEFrame				mParentFrame;
-	private DEParentPane		mParentPane;
-	private DEMainPane			mMainPane;
-	private CompoundTableModel  mTableModel;
+	private final DataWarrior	mApplication;
+	private final DEFrame		mParentFrame;
+	private final DEParentPane	mParentPane;
+	private final DEMainPane	mMainPane;
+	private final CompoundTableModel mTableModel;
 	private PageFormat          mPageFormat;
 	private double              mMainSplitting,mRightSplitting;
 	private Thread              mMessageThread;
@@ -225,7 +225,16 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		if (plugin.getComment() != null)
 			pluginMenu.setToolTipText(format(plugin.getComment(), 60));
 		JMenuItem item1 = new JMenuItem(plugin.isInstalled() ? "Uninstall This Plugin" : "Install This Plugin");
-		item1.addActionListener(e -> { if (plugin.isInstalled()) plugin.uninstall(); else plugin.install(); } );
+		item1.addActionListener(e -> {
+			if (plugin.isInstalled()) {
+				if (plugin.uninstall())
+					item1.setText("Re-Install This Plugin");
+			}
+			else {
+				if (plugin.install())
+					item1.setText("Uninstall This Plugin");
+			}
+		} );
 		pluginMenu.add(item1);
 		if (plugin.getInfoURL() != null) {
 			JMenuItem item2 = new JMenuItem("More In Web-Browser...");
@@ -1296,7 +1305,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			jMenuHelpLaF.add(item);
 			}
 
-		if (!Platform.isMacintosh()) {
+		if (Platform.isLinux()) {
 			Preferences prefs = DataWarrior.getPreferences();
 			String dpiScaling = prefs.get(DataWarrior.PREFERENCES_KEY_DPI_SCALING, DPI_OPTIONS[0]);
 

@@ -141,6 +141,11 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 	}
 
 	@Override
+	public void pixelScalingChanged(float pixelScaling) {
+
+	}
+
+	@Override
 	public CompoundTableModel getTableModel() {
 		return mTableModel;
 	}

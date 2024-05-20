@@ -135,7 +135,7 @@ public abstract class JFilterPanel extends JPanel
 		if (isActive()) {
 			JPanel rbp = new JPanel();
 			rbp.setLayout(new FlowLayout(FlowLayout.RIGHT, 0, 5));  // 5 is the default vgap matching that of lbp
-			JButton cb = new HiDPIIconButton("closeButton.png", null, "close", 0, "square");
+			JButton cb = new HiDPIIconButton("closeButton.png", null, "close", 0);
 			cb.addActionListener(this);
 			rbp.add(cb);
 			mTitlePanel.add(rbp, "6,0");

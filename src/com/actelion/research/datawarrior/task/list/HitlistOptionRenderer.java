@@ -68,7 +68,7 @@ public class HitlistOptionRenderer extends JPanel implements /*ImageObserver,*/L
 			g.drawString((String)mParameterValue, cImageWidth+2*gap, cItemHeight-HiDPIHelper.scale(1)-verticalBorder-g.getFontMetrics().getDescent());
 
 			g.setClip(gap, verticalBorder, cImageWidth, cImageHeight);
-			if (HiDPIHelper.getRetinaScaleFactor() == 2)
+			if (HiDPIHelper.getPixelPerComponentSizeFactor() != 1.0f)
 				g.drawImage(sImage, gap - mParameterIndex * cImageWidth, verticalBorder, cImageWidth, cImageHeight, null);
 			else
 				g.drawImage(sImage, gap - mParameterIndex * cImageWidth, verticalBorder, null);

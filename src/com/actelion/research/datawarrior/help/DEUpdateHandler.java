@@ -462,15 +462,21 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 			if (targetDir != null) {
 				File[] files = new File(targetDir).listFiles(file -> !file.isDirectory() && DETrustedPlugin.isValidFileName(file.getName()));
 				if (files != null) {
+					TreeSet<String> updatedPlugins = new TreeSet<>();
 					String filesForDeletion = null;
 					for (File f:files) {
 						DETrustedPlugin plugin = new DETrustedPlugin(f.getName());
 						DETrustedPlugin newPlugin = pluginMap.get(plugin.getID());
-						boolean needsUpdate = newPlugin != null && !plugin.getVersion().equals(newPlugin.getVersion());
+						boolean needsUpdate = newPlugin != null
+							 && !plugin.getVersion().equals(newPlugin.getVersion());
 						boolean deleteOutdated = newPlugin == null || needsUpdate;
 
-						if (needsUpdate && downloadJarFile(parent, newPlugin.getSourceURL(), targetDir, newPlugin.getFilename(false), newPlugin.getMD5Sum()))
-							SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent, "The trusted plugin '"+newPlugin.getName()+"' was successfully updated\nand will be used when you launch DataWarrior next time."));
+						if (needsUpdate
+						 && downloadJarFile(parent, newPlugin.getSourceURL(), targetDir, newPlugin.getFilename(false), newPlugin.getMD5Sum())
+						 && !updatedPlugins.contains(plugin.getID())) {
+							updatedPlugins.add(plugin.getID());
+							SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(parent, "The trusted plugin '" + newPlugin.getName() + "' was successfully updated\nand will be used when you launch DataWarrior next time."));
+							}
 
 						if (deleteOutdated)
 							filesForDeletion = (filesForDeletion == null) ? f.getName() : filesForDeletion+","+f.getName();

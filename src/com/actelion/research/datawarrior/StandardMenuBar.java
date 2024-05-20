@@ -203,8 +203,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		if (jMenuHelpTrustedPlugins != null)
 			jMenuHelpTrustedPlugins.removeAll();
 		try {
-			for (String pluginID : pluginMap.keySet()) {
-				DETrustedPlugin plugin = pluginMap.get(pluginID);
+			for (DETrustedPlugin plugin : pluginMap.values()) {
 				JMenu pluginMenu = createTrustedPluginMenu(plugin);
 
 				if (jMenuHelpTrustedPlugins == null) {

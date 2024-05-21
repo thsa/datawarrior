@@ -164,7 +164,6 @@ public class PluginRegistry implements IPluginStartHelper {
 
 	private void loadPlugin(File file, File directory, Properties config, ClassLoader parent) {
 		try {
-//					ClassLoader loader = URLClassLoader.newInstance(new URL[] { file.toURI().toURL() }, getClass().getClassLoader());
 			ClassLoader loader = new URLClassLoader(new URL[] { file.toURI().toURL() }, parent);
 
 			// Since Dec2022 plugins may contain an PluginStarter class. We try to load and run it...

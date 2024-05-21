@@ -58,12 +58,11 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 	private static final String TYPE_IMAGE = "Image";
 	protected static final String TYPE_DETAIL = "Detail";
 
-	private DEFrame mFrame;
-	private CompoundTableModel mTableModel;
+	private final DEFrame mFrame;
+	private final CompoundTableModel mTableModel;
 	private CompoundRecord mCurrentRecord;
-	private DetailTableModel mDetailModel;
-	private JDetailTable mDetailTable;
-	private ArrayList<DetailViewInfo> mDetailViewList;
+	private final JDetailTable mDetailTable;
+	private final ArrayList<DetailViewInfo> mDetailViewList;
 
 	public DEDetailPane(DEFrame frame, CompoundTableModel tableModel) {
 		super();
@@ -75,8 +74,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		setMinimumSize(new Dimension(100, 100));
 		setPreferredSize(new Dimension(100, 100));
 
-		mDetailModel = new DetailTableModel(mTableModel);
-		mDetailTable = new JDetailTable(mDetailModel);
+		mDetailTable = new JDetailTable(new DetailTableModel(mTableModel));
 		Font tableFont = UIManager.getFont("Table.font");
 		mDetailTable.setFont(tableFont.deriveFont(Font.PLAIN, tableFont.getSize() * 11 / 12));
 		mDetailTable.putClientProperty("Quaqua.Table.style", "striped");
@@ -89,7 +87,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		scrollPane.setBorder(BorderFactory.createEmptyBorder());
 		add(scrollPane, TYPE_ROW_DATA);
 
-		mDetailViewList = new ArrayList<DetailViewInfo>();
+		mDetailViewList = new ArrayList<>();
 	}
 
 	public void setColorHandler(CompoundTableColorHandler colorHandler) {
@@ -153,17 +151,20 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			}
 		} else if (e.getType() == CompoundTableEvent.cAddColumnDetails) {
 			int column = e.getColumn();
-			for (int detail = 0; detail < mTableModel.getColumnDetailCount(column); detail++) {
-				boolean found = false;
-				for (int i = 0; i < mDetailViewList.size(); i++) {
-					DetailViewInfo viewInfo = mDetailViewList.get(i);
-					if (viewInfo.type.equals(TYPE_DETAIL) && e.getColumn() == viewInfo.column && viewInfo.detail == detail) {
-						found = true;
-						break;
+			// If column >=mTableModel.getTotalColumnCount(), then we are adding new columns with details.
+			// In this case we get an addColumns event later and add the detail views then.
+			if (column < mTableModel.getTotalColumnCount()) {
+				for (int detail = 0; detail < mTableModel.getColumnDetailCount(column); detail++) {
+					boolean found = false;
+					for (DetailViewInfo viewInfo : mDetailViewList) {
+						if (viewInfo.type.equals(TYPE_DETAIL) && e.getColumn() == viewInfo.column && viewInfo.detail == detail) {
+							found = true;
+							break;
+						}
 					}
+					if (!found)
+						addResultDetailView(column, detail);
 				}
-				if (!found)
-					addResultDetailView(column, detail);
 			}
 		} else if (e.getType() == CompoundTableEvent.cRemoveColumnDetails) {
 			for (int i = mDetailViewList.size() - 1; i >= 0; i--) {
@@ -332,26 +333,29 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 
 			((JStructureView) viewInfo.view).structureChanged(mol, displayMol);
 		}
-		if (viewInfo.type.equals(TYPE_REACTION)) {
-			Reaction rxn = null;
-			if (mCurrentRecord != null)
-				rxn = mTableModel.getChemicalReaction(mCurrentRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_ALL);
-			((JChemistryView) viewInfo.view).setContent(rxn);
-		} else if (viewInfo.type.equals(TYPE_STRUCTURE_3D)) {
-			boolean isSuperpose = CompoundTableConstants.cSuperposeValueReferenceRow.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperpose));
-			boolean isAlign = CompoundTableConstants.cSuperposeAlignValueShape.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperposeAlign));
-			update3DView(viewInfo, isSuperpose, isAlign);
-		} else if (viewInfo.type.equals(TYPE_IMAGE)) {
-			((JImagePanel) viewInfo.view).setFileName((mCurrentRecord == null) ? null
+		switch (viewInfo.type) {
+			case TYPE_REACTION -> {
+				Reaction rxn = null;
+				if (mCurrentRecord != null)
+					rxn = mTableModel.getChemicalReaction(mCurrentRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_ALL);
+				((JChemistryView)viewInfo.view).setContent(rxn);
+			}
+			case TYPE_STRUCTURE_3D -> {
+				boolean isSuperpose = CompoundTableConstants.cSuperposeValueReferenceRow.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperpose));
+				boolean isAlign = CompoundTableConstants.cSuperposeAlignValueShape.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperposeAlign));
+				update3DView(viewInfo, isSuperpose, isAlign);
+			}
+			case TYPE_IMAGE -> ((JImagePanel)viewInfo.view).setFileName((mCurrentRecord == null) ? null
 					: mTableModel.encodeData(mCurrentRecord, viewInfo.column));
-		} else if (viewInfo.type.equals(TYPE_DETAIL)) {
-			if (mCurrentRecord == null) {
-				((JResultDetailView) viewInfo.view).setReferences(null);
-			} else {
-				String[][] reference = mCurrentRecord.getDetailReferences(viewInfo.column);
-				((JResultDetailView) viewInfo.view).setReferences(reference == null
-						|| reference.length <= viewInfo.detail ?
-						null : reference[viewInfo.detail]);
+			case TYPE_DETAIL -> {
+				if (mCurrentRecord == null) {
+					((JResultDetailView)viewInfo.view).setReferences(null);
+				} else {
+					String[][] reference = mCurrentRecord.getDetailReferences(viewInfo.column);
+					((JResultDetailView)viewInfo.view).setReferences(reference == null
+							|| reference.length<=viewInfo.detail ?
+							null : reference[viewInfo.detail]);
+				}
 			}
 		}
 	}
@@ -385,13 +389,13 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				StereoMolecule best = null;
 				if (isAlign && refMol != null) {
 					double maxFit = 0;
-					for (int i=0; i<rowMol.length; i++) {
-						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol[0], rowMol[i]);
-						if (fit > maxFit) {
+					for (StereoMolecule stereoMolecule : rowMol) {
+						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol[0], stereoMolecule);
+						if (fit>maxFit) {
 							maxFit = fit;
-							best = rowMol[i];
-							}
+							best = stereoMolecule;
 						}
+					}
 
 					rowMol = new StereoMolecule[1];
 					rowMol[0] = best;
@@ -489,16 +493,16 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 					// don't allow shape alignment if we show a protein cavity
 					javafx.scene.control.CheckMenuItem itemAlignShape = new CheckMenuItem("Align Shown Structures");
 					itemAlignShape.setSelected(isShapeAlign);
-					itemAlignShape.setDisable(!isSuperpose);
+					itemAlignShape.setDisable(false);
 					itemAlignShape.setOnAction(e -> setSuperposeMode(viewInfo, isSuperpose, !isShapeAlign, isShowLigand));
 					popup.getItems().add(itemAlignShape);
 				}
 
 				if (hasCavity) {
-					boolean isShowInteractions = (hasCavity && hasLigand && ((JFXConformerPanel)viewInfo.view).getV3DScene().isShowInteractions());
+					boolean isShowInteractions = (hasLigand && ((JFXConformerPanel)viewInfo.view).getV3DScene().isShowInteractions());
 					javafx.scene.control.CheckMenuItem itemShowInteractions = new CheckMenuItem("Show Interactions");
 					itemShowInteractions.setSelected(isShowInteractions);
-					itemShowInteractions.setDisable(!hasCavity || !hasLigand);
+					itemShowInteractions.setDisable(!hasLigand);
 					itemShowInteractions.setOnAction(e -> setShowInteractions(viewInfo, !isShowInteractions));
 					popup.getItems().add(itemShowInteractions);
 				}

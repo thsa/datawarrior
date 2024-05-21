@@ -62,12 +62,12 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 
 	public static final String TASK_NAME = "Merge Columns";
 
-	private CompoundTableModel	mTableModel;
-	private JList<String>		mListColumns;
-	private JComboBox			mComboBoxTargetColumn;
+	private final CompoundTableModel mTableModel;
+	private JList<String>	    mListColumns;
+	private JComboBox<String>	mComboBoxTargetColumn;
 	private JTextArea			mTextArea;
 	private JCheckBox			mCheckBoxRemove,mCheckBoxKeepCoords,mCheckBoxUseTransformation;
-	private DETable				mTable;
+	private final DETable		mTable;
 	private JEditableChemistryView mTransformationView;
 	private int                 mWarnings;
 
@@ -89,7 +89,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		content.setLayout(new TableLayout(size));
 
 		content.add(new JLabel("Name of target column (new or existing):"), "1,1");
-		mComboBoxTargetColumn = new JComboBox();
+		mComboBoxTargetColumn = new JComboBox<>();
 		mComboBoxTargetColumn.setEditable(true);
 		for (int i=0; i<mTableModel.getTotalColumnCount(); i++)
 			if (mTableModel.getColumnSpecialType(i) == null
@@ -183,7 +183,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		String columnNames = isInteractive() ?
 				  getSelectedColumnsFromList(mListColumns, mTableModel)
 				: mTextArea.getText().replace('\n', '\t');
-		if (columnNames != null && columnNames.length() != 0)
+		if (columnNames != null && !columnNames.isEmpty())
 			p.setProperty(PROPERTY_COLUMN_LIST, columnNames);
 
 		p.setProperty(PROPERTY_REMOVE_SOURCE_COLUMNS, mCheckBoxRemove.isSelected() ? "true" : "false");
@@ -227,7 +227,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String targetColumn = configuration.getProperty(PROPERTY_TARGET_COLUMN);
 		// targetColumn may be null for compatibility reasons: null means that first source column is target column
-		if (targetColumn != null && targetColumn.length() == 0) {
+		if (targetColumn != null && targetColumn.isEmpty()) {
 			showErrorMessage("No target column defined.");
 			return false;
 			}
@@ -266,7 +266,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 				}
 			if (idcodeFound) {
 				String transformation = configuration.getProperty(PROPERTY_TRANSFORMATION, "");
-				if (transformation.length() != 0) {
+				if (!transformation.isEmpty()) {
 					Reaction rxn = ReactionEncoder.decode(transformation, false);
 					if (rxn.isEmpty()) {
 						showErrorMessage("No tranformation reaction defined.");
@@ -298,7 +298,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 			if (!isExecuting()) {
 				StringBuilder conflictingProperties = new StringBuilder();
 				mergeColumnProperties(column, conflictingProperties);
-				if (conflictingProperties.length() != 0 && JOptionPane.showConfirmDialog(getParentFrame(),
+				if (!conflictingProperties.isEmpty() && JOptionPane.showConfirmDialog(getParentFrame(),
 							"Some column properties cannot be merged, because their values don't match:\n"
 									+conflictingProperties.toString()+"Do you want to merge anyway?",
 							"Warning", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) == JOptionPane.CANCEL_OPTION)
@@ -396,7 +396,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 
 		if (isStructureMerge) {
 			String transformation = configuration.getProperty(PROPERTY_TRANSFORMATION, "");
-			Reaction rxn = (transformation.length() == 0) ? null : ReactionEncoder.decode(transformation, true);
+			Reaction rxn = (transformation.isEmpty()) ? null : ReactionEncoder.decode(transformation, true);
 
 			startProgress("Merging structures...", 0, mTableModel.getTotalRowCount());
 			for (int row = 0; row<mTableModel.getTotalRowCount(); row++) {
@@ -482,8 +482,8 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		mCheckBoxKeepCoords.setSelected("true".equals(configuration.getProperty(PROPERTY_KEEP_COORDS, "true")));
 
 		String transformation = configuration.getProperty(PROPERTY_TRANSFORMATION, "");
-		mCheckBoxUseTransformation.setSelected(transformation.length() != 0);
-		if (transformation.length() != 0)
+		mCheckBoxUseTransformation.setSelected(!transformation.isEmpty());
+		if (!transformation.isEmpty())
 			mTransformationView.setContent(ReactionEncoder.decode(transformation, true));
 
 		enableItems();
@@ -519,14 +519,14 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 		}
 
 	private void mergeTextCells(CompoundRecord record, int[] column, Object[] result) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		String separator = mTableModel.isMultiLineColumn(column[0]) ?
 				CompoundTableModel.cLineSeparator : CompoundTableModel.cEntrySeparator;
 
 		for (int i=0; i<column.length; i++) {
 			String value = mTableModel.encodeData(record, column[i]);
-			if (value.length() != 0) {
-				if (buf.length() != 0)
+			if (!value.isEmpty()) {
+				if (!buf.isEmpty())
 					buf.append(separator);
 				buf.append(value);
 				}
@@ -561,7 +561,7 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 				}
 			}
 
-		result[0] = (buf.length() == 0) ? null : buf.toString().getBytes();
+		result[0] = (buf.isEmpty()) ? null : buf.toString().getBytes();
 		result[1] = detail;
 		}
 
@@ -745,7 +745,6 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 														}
 													mol.markAtomForDeletion(atom2);
 													mol.markAtomForDeletion(atom3);
-													needsDeletion = true;
 													if (rGroupIndex[rGroupNo3] != -1)
 														wasAdded[rGroupIndex[rGroupNo3]] = true;
 													rGroupIndexesResolved |= (1 << rGroupIndex[rGroupNo3]);

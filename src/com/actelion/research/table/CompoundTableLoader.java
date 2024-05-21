@@ -2589,8 +2589,8 @@ try {
 			else {  // one of the key columns requires a sub-word search
 				byte[] targetCellText = key[wordSearchIndex];
 				int spaceCount = 0;
-				for (int i=0; i<targetCellText.length; i++)
-					if (targetCellText[i] == 32)
+				for (byte b : targetCellText)
+					if (b == 32)
 						spaceCount++;
 				int[] wordIndex = new int[spaceCount+2];
 				spaceCount = 0;

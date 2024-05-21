@@ -38,10 +38,10 @@ public class DETaskMergeFile extends AbstractTask implements TaskConstantsMergeF
 	private static final int IS_NOT_DISPLAYABLE = -1;
 	private static final int IS_NORMAL_DISPLAYABLE = 0;
 
-	private CompoundTableModel	mTableModel;
+	private final CompoundTableModel mTableModel;
 	private UIDelegateMergeFile	mUIDelegate;
 	private CompoundTableLoader	mLoader;
-	private boolean             mIsClipboard;
+	private final boolean mIsClipboard;
 
 	public DETaskMergeFile(DEFrame parent, boolean isClipboard) {
 		super(parent, true);
@@ -100,13 +100,13 @@ public class DETaskMergeFile extends AbstractTask implements TaskConstantsMergeF
 		SortedStringList usedColumnList = new SortedStringList();
 		for (int i=0; i<columnCount; i++) {
 			String sourceColumn = configuration.getProperty(PROPERTY_SOURCE_COLUMN+i, "");
-			if (sourceColumn.length() == 0) {
+			if (sourceColumn.isEmpty()) {
 				showErrorMessage("Source column not defined.");
 				return false;
 				}
 
 			String destColumn = configuration.getProperty(PROPERTY_DEST_COLUMN+i, "");
-			if (destColumn.length() == 0) {
+			if (destColumn.isEmpty()) {
 				showErrorMessage("Destination column not defined.");
 				return false;
 				}
@@ -219,11 +219,11 @@ public class DETaskMergeFile extends AbstractTask implements TaskConstantsMergeF
 	private String[] getVisibleFieldNames() {
 		String[] totalFieldName = mLoader.getFieldNames();
 		ArrayList<String> visibleFieldList = new ArrayList<String>();
-		for (int i=0; i<totalFieldName.length; i++) {
-			int displayableType = getDisplayableType(mLoader.getColumnSpecialType(totalFieldName[i]));
+		for (String tfn : totalFieldName) {
+			int displayableType = getDisplayableType(mLoader.getColumnSpecialType(tfn));
 			if (displayableType != IS_NOT_DISPLAYABLE)
-				visibleFieldList.add(totalFieldName[i]);
-			}
+				visibleFieldList.add(tfn);
+		}
 		return visibleFieldList.toArray(new String[0]);
 		}
 

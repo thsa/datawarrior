@@ -85,23 +85,24 @@ public class PluginRegistry implements IPluginStartHelper {
 			Class<?> starterClass = getClass().getClassLoader().loadClass(STARTER_CLASS_NAME);
 			IPluginStarter starter = (IPluginStarter)starterClass.getDeclaredConstructor().newInstance();
 			starter.initialize(this, rootPluginDir, config);
+			return;
 		}
-		catch (Exception e) {
-			// Load plugins from standard plugin directory
-			if (rootPluginDir != null && rootPluginDir.isDirectory()) {
-				File[] files = rootPluginDir.listFiles(file -> !file.isDirectory() && file.getName().toLowerCase().endsWith(".jar"));
-				loadPlugins(files, rootPluginDir, config, parent);
-			}
+		catch (Exception e) {}
 
-			// Load plugins from defined custom plugin directories
-			String customPaths = config.getProperty(KEY_CUSTOM_PLUGIN_DIRS);
-			if (customPaths != null) {
-				for (String customPath:customPaths.split(",")) {
-					File customPluginDir = new File(mApplication.resolvePathVariables(customPath.trim()));
-					if (customPluginDir.exists() && customPluginDir.isDirectory()) {
-						File[] files = customPluginDir.listFiles(file -> !file.isDirectory() && file.getName().toLowerCase().endsWith(".jar"));
-						loadPlugins(files, customPluginDir, config, parent);
-					}
+		// Load plugins from standard plugin directory
+		if (rootPluginDir != null && rootPluginDir.isDirectory()) {
+			File[] files = rootPluginDir.listFiles(file -> !file.isDirectory() && file.getName().toLowerCase().endsWith(".jar"));
+			loadPlugins(files, rootPluginDir, config, parent);
+		}
+
+		// Load plugins from defined custom plugin directories
+		String customPaths = config.getProperty(KEY_CUSTOM_PLUGIN_DIRS);
+		if (customPaths != null) {
+			for (String customPath:customPaths.split(",")) {
+				File customPluginDir = new File(mApplication.resolvePathVariables(customPath.trim()));
+				if (customPluginDir.exists() && customPluginDir.isDirectory()) {
+					File[] files = customPluginDir.listFiles(file -> !file.isDirectory() && file.getName().toLowerCase().endsWith(".jar"));
+					loadPlugins(files, customPluginDir, config, parent);
 				}
 			}
 		}
@@ -135,10 +136,11 @@ public class PluginRegistry implements IPluginStartHelper {
 
 						ArrayList<File> fileList = new ArrayList<>();
 						for (int i=0; i<plugins.length; i++) {
+							String filename = trustedPluginDir+File.separator+plugins[i].getFilename(true);
 							if (i == plugins.length-1 || !plugins[i].getID().equals(plugins[i+1].getID()))
-								fileList.add(new File(plugins[i].getFilename(true)));
+								fileList.add(new File(filename));
 							else
-								new File(plugins[i].getFilename(true)).delete();
+								new File(filename).delete();
 						}
 
 						loadPlugins(fileList.toArray(new File[0]), dir, config, parent);

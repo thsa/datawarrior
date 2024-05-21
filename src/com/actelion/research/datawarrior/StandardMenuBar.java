@@ -1304,7 +1304,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			jMenuHelpLaF.add(item);
 			}
 
-		if (Platform.isLinux()) {
+		if (!Platform.isMacintosh()) {  // TODO remove for Windows also ???
 			Preferences prefs = DataWarrior.getPreferences();
 			String dpiScaling = prefs.get(DataWarrior.PREFERENCES_KEY_DPI_SCALING, DPI_OPTIONS[0]);
 
@@ -1353,7 +1353,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 		jMenuHelp.addSeparator();
 		jMenuHelp.add(jMenuHelpLaF);
-		if (!Platform.isMacintosh())
+		if (jMenuHelpDPIScaling != null)
 			jMenuHelp.add(jMenuHelpDPIScaling);
 
 		addUpdateMenu(jMenuHelp);

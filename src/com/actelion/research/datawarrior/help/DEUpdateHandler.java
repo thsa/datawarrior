@@ -395,6 +395,8 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 			FileOutputStream fileOutputStream = new FileOutputStream(tempFilePath);
 			FileChannel fileChannel = fileOutputStream.getChannel();
 			fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+			fileChannel.close();
+			fileOutputStream.close();
 			if (md5sum != null) {
 				String checksum = md5sum(tempFilePath);
 				if (!md5sum.equalsIgnoreCase(checksum)) {

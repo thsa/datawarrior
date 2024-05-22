@@ -294,7 +294,8 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 			mOffImageValid = false;
 
 		if (!mOffImageValid) {
-			mFontHeight = calculateFontSize(panelSize.width, panelSize.height, 1f, pixelFactor, false);
+			mFontHeight = calculateFontSize((int)(panelSize.width*pixelFactor),
+											(int)(panelSize.height*pixelFactor), 1f, pixelFactor, false);
 
 			Image image = paintAllOnImage(g, renderSize, antialiasing, null);
 			g.drawImage(image, 0, 0, panelSize.width, panelSize.height, this);

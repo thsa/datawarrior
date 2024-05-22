@@ -1787,13 +1787,14 @@ public abstract class JVisualization extends JComponent
 			fontSize *= dpiFactor * retinaFactor;
 			}
 		else {
+			// retinaFactor is already in width and height!
 			float relativeViewSize = (float)Math.sqrt(width * height)
 					/ (dpiFactor * (isScreen ? HiDPIHelper.scale(cFontRefenceViewSize) : cFontRefenceViewSize));
 
 			if (mFontSizeMode == cFontSizeModeRelative)
-				fontSize *= retinaFactor * dpiFactor * relativeViewSize;
+				fontSize *= dpiFactor * relativeViewSize;
 			else    // adaptive
-				fontSize *= retinaFactor * dpiFactor * (float)Math.sqrt(relativeViewSize);
+				fontSize *= dpiFactor * (float)Math.sqrt(relativeViewSize);
 			}
 
 		return isScreen ? HiDPIHelper.scale(fontSize) : Math.round(fontSize);

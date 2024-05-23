@@ -139,7 +139,7 @@ public class DETaskSplitRows extends AbstractSingleColumnTask {
 
 		int[] groupColumn = null;
 		if (!isStructure) {
-			String columnGroupName = getTableModel().getColumnProperty(column, CompoundTableConstants.cColumnPropertyGroupName);
+			String columnGroupName = getTableModel().getColumnProperty(column, CompoundTableConstants.cColumnPropertyDisplayGroup);
 			if (columnGroupName == null) {
 				groupColumn = new int[1];
 				groupColumn[0] = column;
@@ -147,13 +147,13 @@ public class DETaskSplitRows extends AbstractSingleColumnTask {
 			else {
 				int count = 0;
 				for (int c=0; c<getTableModel().getTotalColumnCount(); c++)
-					if (columnGroupName.equals(getTableModel().getColumnProperty(c, CompoundTableConstants.cColumnPropertyGroupName)))
+					if (columnGroupName.equals(getTableModel().getColumnProperty(c, CompoundTableConstants.cColumnPropertyDisplayGroup)))
 						count++;
 				if (count != 0) {
 					groupColumn = new int[count];
 					count = 0;
 					for (int c=0; c<getTableModel().getTotalColumnCount(); c++)
-						if (columnGroupName.equals(getTableModel().getColumnProperty(c, CompoundTableConstants.cColumnPropertyGroupName)))
+						if (columnGroupName.equals(getTableModel().getColumnProperty(c, CompoundTableConstants.cColumnPropertyDisplayGroup)))
 							groupColumn[count++] = c;
 					}
 				}

@@ -18,6 +18,7 @@
 
 package com.actelion.research.datawarrior.task.data;
 
+import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETable;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
@@ -45,15 +46,22 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 	private static final String PROPERTY_COLUMN_LIST = "columnList";
 	private static final String PROPERTY_CASE_SENSITIVE = "caseSensitive";
 	private static final String PROPERTY_ADD_COUNT = "addCount";
+	private static final String PROPERTY_MERGE_CELL_MODE = "mergeCellMode";
 	private static final String CODE_ALL_COLUMNS = "<all>";
 	private static final String COLUMN_NAME_EQUIVALENT_COUNT = "Equivalent Row Count";
+	private static final String[] MERGE_CELL_OPTIONS = {"Remove duplicates", "Keep duplicates", "Depend on column group"};
+	private static final String[] MERGE_CELL_CODE = {"once", "repeat", "cgroup"};
+	private static final int MERGE_CELL_MODE_ONCE = 0;
+	private static final int MERGE_CELL_MODE_REPEAT = 1;
+	private static final int MERGE_CELL_MODE_GROUP = 2;
 
-	private DETable				mTable;
-	private CompoundTableModel	mTableModel;
-	private JList				mListColumns;
-	private JTextArea			mTextArea;
-	private int					mMode;
-	private JCheckBox			mCheckBoxMergeAll,mCheckBoxCaseSensitive,mCheckBoxAddCount;
+	private final DETable mTable;
+	private final CompoundTableModel mTableModel;
+	private JList<String> mListColumns;
+	private JTextArea mTextArea;
+	private final int mMode;
+	private JCheckBox mCheckBoxMergeAll,mCheckBoxCaseSensitive,mCheckBoxAddCount;
+	private JComboBox<String> mComboBoxMergeMode;
 
 	public DETaskDeleteDuplicateRows(DEFrame owner, int mode) {
 		super(owner, true);
@@ -65,26 +73,27 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 	@Override
 	public JPanel createDialogContent() {
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {gap, TableLayout.PREFERRED, gap},
-							{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
-							 gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
+		double[][] size = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap},
+							{gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
+							 gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED,
+							 gap>>1, TableLayout.PREFERRED, gap} };
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
-		content.add(new JLabel("Select column(s) to consider for equivalence check!", SwingConstants.CENTER), "1,1");
-		content.add(new JLabel("(use <CTRL> for multiple selections)", SwingConstants.CENTER), "1,3");
+		content.add(new JLabel("Select column(s) to consider for equivalence check!", SwingConstants.CENTER), "1,1,3,1");
+		content.add(new JLabel("(use <CTRL> for multiple selections)", SwingConstants.CENTER), "1,3,3,3");
 
-		ArrayList<String> columnNameList = new ArrayList<String>();
+		ArrayList<String> columnNameList = new ArrayList<>();
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 			String specialType = mTableModel.getColumnSpecialType(column);
 			if (specialType == null
 			 || specialType.equals(CompoundTableModel.cColumnTypeIDCode)
 			 || specialType.equals(CompoundTableModel.cColumnTypeRXNCode))
-			columnNameList.add(mTableModel.getColumnTitle(column));
+				columnNameList.add(mTableModel.getColumnTitle(column));
 			}
 		JScrollPane scrollPane = null;
 		if (isInteractive()) {
-			mListColumns = new JList(columnNameList.toArray());
+			mListColumns = new JList<>(columnNameList.toArray(new String[0]));
 			scrollPane = new JScrollPane(mListColumns);
 			}
 		else {
@@ -92,21 +101,26 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 			scrollPane = new JScrollPane(mTextArea);
 			}
 		scrollPane.setPreferredSize(new Dimension(HiDPIHelper.scale(240), HiDPIHelper.scale(160)));
-		content.add(scrollPane, "1,5");
+		content.add(scrollPane, "1,5,3,5");
 
 		mCheckBoxCaseSensitive = new JCheckBox("Case sensitive");
-		content.add(mCheckBoxCaseSensitive, "1,7");
+		content.add(mCheckBoxCaseSensitive, "1,7,3,7");
 
 		if (mMode == MODE_MERGE_EQUIVALENT || mMode == MODE_REMOVE_DUPLICATE) {
 			mCheckBoxAddCount = new JCheckBox("Add new column \""+COLUMN_NAME_EQUIVALENT_COUNT+"\".");
 			mCheckBoxAddCount.addActionListener(this);
-			content.add(mCheckBoxAddCount, "1,9");
+			content.add(mCheckBoxAddCount, "1,9,3,9");
 			}
 
 		if (mMode == MODE_MERGE_EQUIVALENT) {
 			mCheckBoxMergeAll = new JCheckBox("Merge all rows");
 			mCheckBoxMergeAll.addActionListener(this);
-			content.add(mCheckBoxMergeAll, "1,11");
+			content.add(mCheckBoxMergeAll, "1,11,3,11");
+
+			mComboBoxMergeMode = new JComboBox<>(MERGE_CELL_OPTIONS);
+			mComboBoxMergeMode.setSelectedIndex(0);
+			content.add(new JLabel("Equal cell merge mode:"), "1,13");
+			content.add(mComboBoxMergeMode, "3,13");
 			}
 
 		return content;
@@ -153,11 +167,13 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 		String columnNames = (mCheckBoxMergeAll != null && mCheckBoxMergeAll.isSelected()) ? CODE_ALL_COLUMNS
 				: isInteractive() ? getSelectedColumnsFromList(mListColumns, mTableModel)
 				: mTextArea.getText().replace('\n', '\t');
-		if (columnNames != null && columnNames.length() != 0)
+		if (columnNames != null && !columnNames.isEmpty())
 			p.setProperty(PROPERTY_COLUMN_LIST, columnNames);
 		p.setProperty(PROPERTY_CASE_SENSITIVE, mCheckBoxCaseSensitive.isSelected() ? "true" : "false");
 		if (mCheckBoxAddCount != null)
 			p.setProperty(PROPERTY_ADD_COUNT, mCheckBoxAddCount.isSelected() ? "true" : "false");
+		if (mComboBoxMergeMode != null)
+			p.setProperty(PROPERTY_MERGE_CELL_MODE, MERGE_CELL_CODE[mComboBoxMergeMode.getSelectedIndex()]);
 		return p;
 		}
 
@@ -174,6 +190,8 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 		mCheckBoxCaseSensitive.setSelected(!"false".equals(configuration.getProperty(PROPERTY_CASE_SENSITIVE)));
 		if (mCheckBoxAddCount != null)
 			mCheckBoxAddCount.setSelected("true".equals(configuration.getProperty(PROPERTY_ADD_COUNT)));
+		if (mComboBoxMergeMode != null)
+			mComboBoxMergeMode.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_MERGE_CELL_MODE), MERGE_CELL_CODE, 0));
 
 		enableItems();
 		}
@@ -188,6 +206,8 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 		mCheckBoxCaseSensitive.setSelected(true);
 		if (mCheckBoxAddCount != null)
 			mCheckBoxAddCount.setSelected(false);
+		if (mComboBoxMergeMode != null)
+			mComboBoxMergeMode.setSelectedIndex(0);
 		}
 
 	@Override
@@ -265,6 +285,9 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 			record[row] = mTableModel.getTotalRecord(row);
 
 		boolean caseSensitive = !"false".equals(configuration.getProperty(PROPERTY_CASE_SENSITIVE));
+		int mergeCellMode = findListIndex(configuration.getProperty(PROPERTY_MERGE_CELL_MODE), MERGE_CELL_CODE, 0);
+
+		ArrayList<ArrayList<Integer>> columnGroups = determineColumnGroups();
 
 		RedundancyComparator comparator = new RedundancyComparator(mTableModel, columnList, caseSensitive);
 
@@ -292,7 +315,7 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 					record[row].markForDeletion();
 				else if (mMode == MODE_MERGE_EQUIVALENT) {
 					if (firstRow < row - 1)
-						mergeRowContent(record, firstRow, row - 1, columnMask, columnError);
+						mergeRowContent(record, firstRow, row - 1, columnGroups, columnMask, mergeCellMode, columnError);
 
 					if (countColumn != -1)
 						record[firstRow].setData(Integer.toString(row-firstRow).getBytes(), countColumn);
@@ -303,7 +326,8 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 				}
 			if (mMode == MODE_MERGE_EQUIVALENT) {
 				if (firstRow < row - 1)
-					mergeRowContent(record, firstRow, row - 1, columnMask, columnError);
+					mergeRowContent(record, firstRow, row - 1, columnGroups, columnMask, mergeCellMode, columnError);
+
 				if (countColumn != -1)
 					record[firstRow].setData(Integer.toString(row-firstRow).getBytes(), countColumn);
 				}
@@ -333,7 +357,7 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 													   +"Instead the first cell's value was used. Affected columns are\n");
 				for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 					if (columnError[column]) {
-						message.append(mTableModel.getColumnTitle(column)+", ");
+						message.append(mTableModel.getColumnTitle(column)).append(", ");
 						}
 					}
 				message.setLength(message.length()-2);
@@ -346,29 +370,66 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 			}
 		}
 
-	private void mergeRowContent(CompoundRecord[] record, int firstRow, int lastRow, boolean[] skipColumn, boolean[] columnError) {
+	private ArrayList<ArrayList<Integer>> determineColumnGroups() {
+		boolean[] columnAssigned = new boolean[mTableModel.getTotalColumnCount()];
+		ArrayList<ArrayList<Integer>> columnGroupList = new ArrayList<>();
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
-			if (mTableModel.getColumnSpecialType(column) == null) {
-				for (int row=firstRow+1; row<=lastRow; row++) {
-					if (!cellContentMatches(record[firstRow], record[row], column)) {
-						mergeCellContent(record, firstRow, lastRow, column);
-						break;
+			if (!columnAssigned[column]) {
+				ArrayList<Integer> columnGroup = new ArrayList<>();
+				columnGroup.add(column);
+				String groupName = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyDisplayGroup);
+				if (groupName != null) {
+					for (int c=column+1; c<mTableModel.getTotalColumnCount(); c++) {
+						if (groupName.equals(mTableModel.getColumnProperty(c, CompoundTableConstants.cColumnPropertyDisplayGroup))) {
+							columnAssigned[c] = true;
+							columnGroup.add(c);
+							}
 						}
 					}
+				columnGroupList.add(columnGroup);
 				}
-			// don't merge content of special types, but raise warning when content differs
-			else if (!columnError[column]) {
-				String firstRowData = mTableModel.encodeData(record[firstRow], column);
-				for (int row=firstRow+1; row<=lastRow; row++) {
-					String rowData = mTableModel.encodeData(record[row], column);
-					if (firstRowData.length() == 0 && rowData.length() != 0) {
-						record[firstRow].setData(record[row].getData(column), column);
-						break;
+			}
+		return columnGroupList;
+		}
+
+	private void mergeRowContent(CompoundRecord[] record, int firstRow, int lastRow, ArrayList<ArrayList<Integer>> columnGroups,
+	                             boolean[] skipColumn, int mergeCellMode, boolean[] columnError) {
+		for (ArrayList<Integer> columnGroup : columnGroups) {
+			boolean isColumnGroupMatch = cellContentMatches(record, firstRow, lastRow, columnGroup);
+			for (int column : columnGroup) {
+				if (!skipColumn[column]) {
+					if (mTableModel.getColumnSpecialType(column) == null) {
+						switch (mergeCellMode) {
+							case MERGE_CELL_MODE_REPEAT:
+								mergeCellContent(record, firstRow, lastRow, column);
+								break;
+							case MERGE_CELL_MODE_GROUP:
+								if (!isColumnGroupMatch)
+									mergeCellContent(record, firstRow, lastRow, column);
+								break;
+							default:    // MERGE_CELL_MODE_ONCE
+								ArrayList<Integer> singleColumn = new ArrayList<>();
+								singleColumn.add(column);
+								if (!cellContentMatches(record, firstRow, lastRow, singleColumn))
+									mergeCellContent(record, firstRow, lastRow, column);
+								break;
+							}
 						}
-					if (!firstRowData.equals(rowData)) {
-//System.out.println("idcode:"+mTableModel.encodeData(record[firstRow], 3)+" coords1:>"+firstRowData+"< coords2:>"+rowData+"<");
-						columnError[column] = true;
-						break;
+					// don't merge content of special types, but raise warning when content differs
+					else if (!columnError[column]) {
+						String firstRowData = mTableModel.encodeData(record[firstRow], column);
+						for (int row=firstRow+1; row<=lastRow; row++) {
+							String rowData = mTableModel.encodeData(record[row], column);
+							if (firstRowData.isEmpty() && !rowData.isEmpty()) {
+								record[firstRow].setData(record[row].getData(column), column);
+								break;
+								}
+							if (!firstRowData.equals(rowData)) {
+		//System.out.println("idcode:"+mTableModel.encodeData(record[firstRow], 3)+" coords1:>"+firstRowData+"< coords2:>"+rowData+"<");
+								columnError[column] = true;
+								break;
+								}
+							}
 						}
 					}
 				}
@@ -376,7 +437,7 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 		}
 
 	private void mergeCellContent(CompoundRecord[] record, int firstRow, int lastRow, int column) {
-		StringBuffer buf = new StringBuffer(mTableModel.encodeData(record[firstRow], column));
+		StringBuilder buf = new StringBuilder(mTableModel.encodeData(record[firstRow], column));
 		String separator = CompoundTableModel.cLineSeparator;
 //		String separator = mTableModel.isMultiLineColumn(column) ?
 //				CompoundTableModel.cLineSeparator : CompoundTableModel.cEntrySeparator;
@@ -394,8 +455,7 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 				else if (detailCount.length < d.length) {
 					int[] oldDetailCount = detailCount;
 					detailCount = new int[d.length];
-					for (int i=0; i<oldDetailCount.length; i++)
-						detailCount[i] = oldDetailCount[i];
+					System.arraycopy(oldDetailCount, 0, detailCount, 0, oldDetailCount.length);
 					}
 				for (int i=0; i<d.length; i++)
 					if (d[i] != null)
@@ -425,6 +485,15 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 			record[firstRow].setDetailReferences(column, detail);
 		}
 
+	private boolean cellContentMatches(CompoundRecord[] record, int firstRow, int lastRow, ArrayList<Integer> columnGroup) {
+		CompoundRecord ref = record[firstRow];
+		for (int row=firstRow+1; row<=lastRow; row++)
+			for (int column : columnGroup)
+				if (!cellContentMatches(ref, record[row], column))
+					return false;
+		return true;
+		}
+
 	private boolean cellContentMatches(CompoundRecord r1, CompoundRecord r2, int column) {
 		if (!mTableModel.encodeData(r1, column).equals(mTableModel.encodeData(r2, column)))
 			return false;
@@ -452,9 +521,9 @@ public class DETaskDeleteDuplicateRows extends ConfigurableTask implements Actio
 	}
 
 class RedundancyComparator implements Comparator<CompoundRecord> {
-	private CompoundTableModel mTableModel;
-	private int[] mColumnList;
-	private boolean[] mIsCaseSensitive;
+	private final CompoundTableModel mTableModel;
+	private final int[] mColumnList;
+	private final boolean[] mIsCaseSensitive;
 
 	public RedundancyComparator(CompoundTableModel tableModel, int[] columnList, boolean caseSensitive) {
 		mTableModel = tableModel;

@@ -51,7 +51,7 @@ public class DEViewConfigPopupMenu extends JPopupMenu implements ActionListener,
 	private static final String TEXT_SHOW_GROUP_ONLY = "Show Column Group Only";
 	private static final String TEXT_GROUP_SELECTED = "Group Selected Columns...";
 	private static final String TEXT_ADD_TO_GROUP = "Add Selected Columns To";
-	private static final String TEXT_REMOVE_GROUP = "Remove Column Group";
+	private static final String TEXT_REMOVE_GROUP = "Ungroup Columns";
 
 	private static final String TEXT_EDIT_WYSIWYG = "Edit WYSIWYG...";
 	private static final String TEXT_EDIT_HTML = "Edit HTML...";

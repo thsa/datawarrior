@@ -340,6 +340,8 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 		}
 
 	private boolean isClickableCell(int row, int col) {
+		if (row == -1)
+			return false;
 		CompoundTableModel tableModel = (CompoundTableModel)getModel();
 		int column = convertTotalColumnIndexFromView(col);
 		return tableModel.getRecord(row).getData(column) != null && new LookupURLBuilder(tableModel).hasURL(row, column, 0);

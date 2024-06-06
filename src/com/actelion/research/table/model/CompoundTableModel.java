@@ -847,7 +847,7 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	/**
-	 * Updates an rxncode, 2D-coordinates, mapping, and catalysts (if existing) from a StereoMolecule.
+	 * Updates a rxncode, 2D-coordinates, mapping, and catalysts (if existing) from a Reaction object.
 	 * All other child columns of the rxn column are cleared.
 	 * Call either finalizeChangeCell() after setting one chemistry object or call
 	 * finalizeChangeColumn() for the rxncode column after setting multiple ones.
@@ -860,7 +860,7 @@ public class CompoundTableModel extends AbstractTableModel
 		if (rxn == null || rxn.getMolecules() == 0)
 			record.setData(null, column);
 		else {
-			String[] encoded = ReactionEncoder.encode(rxn, true);
+			String[] encoded = ReactionEncoder.encode(rxn, true, false);
 			record.setData(encoded[0].getBytes(), column);
 
 			if (encoded[1] != null) {

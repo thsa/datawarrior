@@ -46,6 +46,7 @@ import java.awt.dnd.DnDConstants;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 
 public class DEDetailPane extends JMultiPanelView implements HighlightListener,CompoundTableListener,CompoundTableColorHandler.ColorListener {
@@ -214,7 +215,8 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				continue;
 			}
 			if (CompoundTableModel.cColumnType3DCoordinates.equals(specialType)) {
-				final JFXConformerPanel view = new JFXConformerPanel(false, V3DScene.CONFORMER_VIEW_MODE);
+				EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
+				final JFXConformerPanel view = new JFXConformerPanel(false, settings);
 				view.adaptToLookAndFeelChanges();
 //				view.setBackground(new java.awt.Color(24, 24, 96));
 				String overlay = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);

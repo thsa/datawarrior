@@ -16,6 +16,7 @@ import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
+import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
@@ -31,7 +32,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 	private static final String PROPERTY_FLEXIBLE = "flexible";
 	private static final int COLUMNS_PER_CONFORMER = 3;
 
-	private DETable mTable;
+	private final DETable mTable;
 	protected JFXConformerPanel mConformerPanel;
 	private JCheckBox mCheckBoxFlexible;
 	private String[] mConformerIDCode;
@@ -39,7 +40,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 	private boolean mIsFlexible;
 
 	public DETaskSuperposeConformers(DEFrame parent) {
-		super(parent, DESCRIPTOR_3D_COORDINATES, false, true);
+		super(parent, DESCRIPTOR_NONE, false, true);
 		mTable = parent.getMainFrame().getMainPane().getTable();
 	}
 
@@ -91,7 +92,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 		for (StereoMolecule mol:moleculeList) {
 			mol.center();
 			Canonizer canonizer = new Canonizer(mol);
-			if (sb.length() != 0)
+			if (!sb.isEmpty())
 				sb.append('\t');
 			sb.append(canonizer.getIDCode());
 			sb.append(' ');
@@ -144,7 +145,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 	protected void setNewColumnProperties(int firstNewColumn) {
 		int conformerColumn = firstNewColumn;
 		for (int i = 0; i<mConformer.length; i++) {
-			String columnNameEnd = (mConformer[i].getName() != null && mConformer[i].getName().length() != 0) ?
+			String columnNameEnd = (mConformer[i].getName() != null && !mConformer[i].getName().isEmpty()) ?
 					" "+ mConformer[i].getName() : (mConformer.length == 1) ? "" : " "+(i+1);
 			getTableModel().setColumnName("Best Match" + columnNameEnd, conformerColumn);
 			getTableModel().setColumnProperty(conformerColumn, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnTypeIDCode);
@@ -165,10 +166,20 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String conformers = configuration.getProperty(PROPERTY_CONFORMERS, "");
-		if (conformers.length() == 0) {
+		if (conformers.isEmpty()) {
 			showErrorMessage("No query conformers defined.");
 			return false;
 			}
+
+		if (isLive) {
+			if (!"true".equals(configuration.getProperty(PROPERTY_FLEXIBLE))
+			 && getTableModel().getChildColumn(getChemistryColumn(), CompoundTableConstants.cColumnType3DCoordinates) == -1) {
+				showErrorMessage("The selected structure column does not contain 3D-coordinates.\n"
+							   + "To align these structures you either need to generate conformers\n"
+							   + "before aligning them, or you need to select 'flexible' alignment.");
+				return false;
+			}
+		}
 
 		return super.isConfigurationValid(configuration, isLive);
 		}
@@ -197,42 +208,49 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 		byte[] idcode = (byte[])record.getData(getChemistryColumn());
 		if (idcode != null) {
 			byte[] coords = (byte[])record.getData(getCoordinates3DColumn());
-			if (coords != null) {
+			if (mIsFlexible || coords != null) {
 				int targetColumn = firstNewColumn;
-				for (int refIndex=0; refIndex<mConformer.length; refIndex++) {
+				for (StereoMolecule conformer : mConformer) {
 					Conformer bestConformer = null;
 					double bestFit = 0.0f;
 
 					int coordinateIndex = 0;
-					while (coordinateIndex < coords.length) {
+					while (mIsFlexible || (coords != null && coordinateIndex<coords.length)) {
 						new IDCodeParser(false).parse(containerMol, idcode, coords, 0, coordinateIndex);
-						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(mConformer[refIndex], containerMol, 0.5);
+						if (coords == null
+						 && new ConformerGenerator().getOneConformerAsMolecule(containerMol) == null)
+							break;
+
+						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(conformer, containerMol, 0.5);
 						if (mIsFlexible) {
-							FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(mConformer[refIndex], containerMol);
+							FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(conformer, containerMol);
 							fit = fsa.align()[0];
-							}
-						if (bestFit < fit) {
+						}
+						if (bestFit<fit) {
 							bestFit = fit;
 							bestConformer = new Conformer(containerMol);
-							}
+						}
 
 						if (bestConformer != null) {
 							bestConformer.toMolecule(containerMol);
 							Canonizer canonizer = new Canonizer(containerMol);
 							getTableModel().setTotalValueAt(canonizer.getIDCode(), row, targetColumn);
-							getTableModel().setTotalValueAt(canonizer.getEncodedCoordinates(true), row, targetColumn+1);
-							getTableModel().setTotalValueAt(DoubleFormat.toString(bestFit), row, targetColumn+2);
-							}
-
-						while (coordinateIndex < coords.length) {
-							coordinateIndex++;
-							if (coords[coordinateIndex-1] == ' ')
-								break;
-							}
+							getTableModel().setTotalValueAt(canonizer.getEncodedCoordinates(true), row, targetColumn + 1);
+							getTableModel().setTotalValueAt(DoubleFormat.toString(bestFit), row, targetColumn + 2);
 						}
 
-					targetColumn += COLUMNS_PER_CONFORMER;
+						if (mIsFlexible)
+							break;
+
+						while (coordinateIndex<coords.length) {
+							coordinateIndex++;
+							if (coords[coordinateIndex - 1] == ' ')
+								break;
+						}
 					}
+
+					targetColumn += COLUMNS_PER_CONFORMER;
+				}
 				}
 			}
 		}

@@ -74,7 +74,7 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 	private final JWindow mSearchControls;
 	private Point mSearchPopupLocation;
 	private final DEColumnOrder mIntendedColumnOrder;
-	private int mPreviousClickableCellCol,mPreviousClickableCellRow;
+	private int mPreviousClickableCellColumn, mPreviousClickableCellVisRow;
 
 	public DETable(Frame parentFrame, DEMainPane mainPane, ListSelectionModel sm) {
 		super(mainPane.getTableModel(), null, sm);
@@ -83,8 +83,8 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 		mMainPane = mainPane;
 		mainPane.getTableModel().addCompoundTableListener(this);
 
-		mPreviousClickableCellRow = -1;
-		mPreviousClickableCellCol = -1;
+		mPreviousClickableCellVisRow = -1;
+		mPreviousClickableCellColumn = -1;
 
 		// to eliminate the disabled default action of the JTable when typing menu-V
 		getInputMap(JTable.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_V, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "none");
@@ -314,36 +314,37 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 	private boolean isClickableCell(Point p) {
 		int row = rowAtPoint(p);
 		int col = columnAtPoint(p);
-		return isClickableCell(row, col);
+		return isClickableCell(row, convertTotalColumnIndexFromView(col));
 		}
 
 	private void updateClickableCellsAfterMouseMotion(Point p) {
 		int row = rowAtPoint(p);
 		int col = columnAtPoint(p);
-		boolean isClickableCell = isClickableCell(row, col);
+		int column = convertTotalColumnIndexFromView(col);
+		boolean isClickableCell = isClickableCell(row, column);
 
-		if (mPreviousClickableCellRow != -1
-		 && (mPreviousClickableCellRow != row || mPreviousClickableCellCol != col)) {
-			((MultiLineCellRenderer)getColumnModel().getColumn(mPreviousClickableCellCol).getCellRenderer()).setMouseLocation(10000, 10000, mPreviousClickableCellRow);
-			repaint(getCellRect(mPreviousClickableCellRow, mPreviousClickableCellCol, false));
-			mPreviousClickableCellRow = -1;
-			mPreviousClickableCellCol = -1;
+		if (mPreviousClickableCellVisRow != -1
+		 && (mPreviousClickableCellVisRow != row || mPreviousClickableCellColumn != column)) {
+			int previousCol = convertTotalColumnIndexToView(mPreviousClickableCellColumn);
+			((MultiLineCellRenderer)getColumnModel().getColumn(previousCol).getCellRenderer()).setMouseLocation(10000, 10000, mPreviousClickableCellVisRow);
+			repaint(getCellRect(mPreviousClickableCellVisRow, previousCol, false));
+			mPreviousClickableCellVisRow = -1;
+			mPreviousClickableCellColumn = -1;
 			}
 
 		if (isClickableCell) {
 			Rectangle cellRect = getCellRect(row, col, false);
 			((MultiLineCellRenderer)getColumnModel().getColumn(col).getCellRenderer()).setMouseLocation(p.x - cellRect.x, p.y - cellRect.y, row);
 			repaint(cellRect);
-			mPreviousClickableCellRow = row;
-			mPreviousClickableCellCol = col;
+			mPreviousClickableCellVisRow = row;
+			mPreviousClickableCellColumn = column;
 			}
 		}
 
-	private boolean isClickableCell(int row, int col) {
+	private boolean isClickableCell(int row, int column) {
 		if (row == -1)
 			return false;
 		CompoundTableModel tableModel = (CompoundTableModel)getModel();
-		int column = convertTotalColumnIndexFromView(col);
 		return tableModel.getRecord(row).getData(column) != null && new LookupURLBuilder(tableModel).hasURL(row, column, 0);
 		}
 
@@ -960,11 +961,10 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 					getColumnModel().removeColumn(column);
 					}
 				}
-
-			if (mPreviousClickableCellCol != -1) {
-				mPreviousClickableCellCol = e.getMapping()[mPreviousClickableCellCol];
-				if (mPreviousClickableCellCol == -1)
-					mPreviousClickableCellRow = -1;
+			if (mPreviousClickableCellColumn != -1) {
+				mPreviousClickableCellColumn = e.getMapping()[mPreviousClickableCellColumn];
+				if (mPreviousClickableCellColumn == -1)
+					mPreviousClickableCellVisRow = -1;
 				}
 			}
 		else if (e.getType() == CompoundTableEvent.cChangeActiveRow) {

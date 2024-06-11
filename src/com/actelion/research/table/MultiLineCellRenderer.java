@@ -105,7 +105,7 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 		}
 
     public Component getTableCellRendererComponent(JTable table, Object value,
-							boolean isSelected, boolean hasFocus, int row, int column) {
+							boolean isSelected, boolean hasFocus, int row, int col) {
 	    if (LookAndFeelHelper.isAqua()
 			    // Quaqua does not use the defined background color if CellRenderer is translucent
 	     || (LookAndFeelHelper.isQuaQua()
@@ -142,7 +142,7 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 	    setFont(new Font(Font.SANS_SERIF, Font.PLAIN, table.getFont().getSize()));
 		if (hasFocus) {
 			setBorder( UIManager.getBorder("Table.focusCellHighlightBorder") );
-			if (table.isCellEditable(row, column)) {
+			if (table.isCellEditable(row, col)) {
 				setForeground( UIManager.getColor("Table.focusCellForeground") );
 				setBackground( UIManager.getColor("Table.focusCellBackground") );
 				}
@@ -158,13 +158,16 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 			setText("Unicode Error!!!");
 			}    // some unicode chars create exceptions with setText() and then with paintComponent()
 
-	    if (mLookupURLBuilder != null && mLookupURLBuilder.hasURL(row, column, 0)) {
-	    	Color color = LookAndFeelHelper.isDarkLookAndFeel() ? Color.CYAN : Color.BLUE;
-		    setForeground(color);
-		    try {
-			    getHighlighter().addHighlight(0, value == null ? 0 : ((String)value).length(), new UnderlinePainter(row, color));
-			    }
-		    catch (Exception e) {}
+	    if (mLookupURLBuilder != null) {
+			int column = ((CompoundTableModel)table.getModel()).convertFromDisplayableColumnIndex(table.convertColumnIndexToModel(col));
+			if (mLookupURLBuilder.hasURL(row, column, 0)) {
+		        Color color = LookAndFeelHelper.isDarkLookAndFeel() ? Color.CYAN : Color.BLUE;
+			    setForeground(color);
+			    try {
+				    getHighlighter().addHighlight(0, value == null ? 0 : ((String)value).length(), new UnderlinePainter(row, color));
+				    }
+			    catch (Exception e) {}
+				}
 	        }
 
 		return this;

@@ -1,5 +1,6 @@
 package com.actelion.research.datawarrior.task.chem.elib;
 
+import com.actelion.research.chem.MolecularFormula;
 import com.actelion.research.chem.Molecule3D;
 import com.actelion.research.chem.MolfileParser;
 import com.actelion.research.chem.StereoMolecule;
@@ -15,13 +16,13 @@ import org.openmolecules.fx.viewer3d.V3DMolecule;
 import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
 import org.openmolecules.fx.viewer3d.V3DScene;
 import org.openmolecules.fx.viewer3d.io.V3DMoleculeParser;
-import org.openmolecules.pdb.MMTFParser;
 import org.openmolecules.render.MoleculeArchitect;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 public class ConformerViewController implements V3DPopupMenuController {
 	private Frame mParentFrame;
@@ -42,7 +43,7 @@ public class ConformerViewController implements V3DPopupMenuController {
 			javafx.scene.control.MenuItem itemLoadMolecules = new javafx.scene.control.MenuItem("Load Conformer(s) from DataWarrior-/SD-File...");
 			itemLoadMolecules.setOnAction(e -> loadMolecules());
 
-			javafx.scene.control.MenuItem itemLoadPDBFile = new javafx.scene.control.MenuItem("Load Ligand from PDB or MMTF File...");
+			javafx.scene.control.MenuItem itemLoadPDBFile = new javafx.scene.control.MenuItem("Load Ligand from PDB File...");
 			itemLoadPDBFile.setOnAction(e -> loadPDBFile());
 
 			javafx.scene.control.MenuItem itemLoadPDBDBLigand = new javafx.scene.control.MenuItem("Load Ligand From PDB Database...");
@@ -106,36 +107,28 @@ public class ConformerViewController implements V3DPopupMenuController {
 
 	private void loadPDBFile() {
 		SwingUtilities.invokeLater(() -> {
-			File selectedFile = FileHelper.getFile(mConformerPanel, "Choose PDB-File", FileHelper.cFileTypePDB | FileHelper.cFileTypeMMTF);
+			File selectedFile = FileHelper.getFile(mConformerPanel, "Choose PDB-File", FileHelper.cFileTypePDB);
 			if (selectedFile != null) {
 				Platform.runLater(() -> {
-					if (FileHelper.getFileType(selectedFile.getName()) == FileHelper.cFileTypeMMTF) {
-						String name = selectedFile.getName().substring(0, selectedFile.getName().length()-5);
-						Molecule3D[] mols = MMTFParser.getStructureFromFile(selectedFile.getPath(), name, MMTFParser.MODE_SPLIT_CHAINS);
-						showMessageInEDT("No ligands found in file.");
-
-						}
-					else {
-						PDBFileParser parser = new PDBFileParser();
-						V3DScene scene = mConformerPanel.getV3DScene();
-						try {
-							List<Molecule3D> ligands = parser.parse(selectedFile).extractMols().get(StructureAssembler.LIGAND_GROUP);
-							if (ligands == null || ligands.isEmpty()) {
-								showMessageInEDT("No ligands found in file.");
-								}
-							else if (ligands.size() == 1) {
-								Molecule3D mol = ligands.get(0);
-								mol.center();
-								scene.addMolecule(new V3DMolecule(mol));
-								}
-							else {
-								for (Molecule3D mol : ligands)
-									scene.addMolecule(new V3DMolecule(mol));
-								}
-						} catch (Exception e) {
-							showMessageInEDT(e.getMessage());
-							e.printStackTrace();
+					PDBFileParser parser = new PDBFileParser();
+					V3DScene scene = mConformerPanel.getV3DScene();
+					try {
+						List<Molecule3D> ligands = parser.parse(selectedFile).extractMols().get(StructureAssembler.LIGAND_GROUP);
+						if (ligands == null || ligands.isEmpty()) {
+							showMessageInEDT("No ligands found in file.");
 							}
+						else if (ligands.size() == 1) {
+							Molecule3D mol = ligands.get(0);
+							mol.center();
+							scene.addMolecule(new V3DMolecule(mol));
+							}
+						else {
+							for (Molecule3D mol : ligands)
+								scene.addMolecule(new V3DMolecule(mol));
+							}
+					} catch (Exception e) {
+						showMessageInEDT(e.getMessage());
+						e.printStackTrace();
 						}
 					} );
 				}
@@ -143,6 +136,60 @@ public class ConformerViewController implements V3DPopupMenuController {
 		}
 
 	private void loadPDBLigand() {
+		mPDBCode = null;
+		try {
+			SwingUtilities.invokeLater(() -> {
+				mPDBCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
+				if (mPDBCode == null || mPDBCode.isEmpty())
+					return;
+
+				PDBFileParser parser = new PDBFileParser();
+				try {
+					Map<String, List<Molecule3D>> map = parser.getFromPDB(mPDBCode).extractMols();
+					List<Molecule3D> ligands = map.get(StructureAssembler.LIGAND_GROUP);
+
+					if (ligands == null || ligands.isEmpty()) {
+						showMessageInEDT("No ligand structure found in PDB entry '"+mPDBCode+"'.");
+					}
+					else {
+						int index = -1;
+						if (ligands.size() == 1) {
+							index = 0;
+						}
+						else {
+							String[] ligandName = new String[ligands.size()];
+							for (int i=0; i<ligands.size(); i++) {
+								String formula = new MolecularFormula(ligands.get(i)).getFormula();
+								ligandName[i] = (i + 1) + ": " + formula + "; " + (ligands.get(i).getName() == null ? "Unnamed" : ligands.get(i).getName());
+							}
+							String name = (String)JOptionPane.showInputDialog(mConformerPanel, "Select one of multiple ligands:", "Select Ligand", JOptionPane.QUESTION_MESSAGE, null, ligandName, ligandName[0]);
+							if (name != null)
+								index = Integer.parseInt(name.substring(0, name.indexOf(':')))-1;
+						}
+
+						if (index != -1 && ligands.get(index).getAllAtoms() != 0) {
+							final Molecule3D ligand = ligands.get(index);
+							Platform.runLater(() -> {
+								V3DScene scene = mConformerPanel.getV3DScene();
+
+								ligand.center();
+								scene.addMolecule(new V3DMolecule(ligand, MoleculeArchitect.ConstructionMode.BALL_AND_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true));
+
+								scene.optimizeView();
+							});
+						}
+					}
+				}
+				catch (Exception e) {
+					showMessageInEDT(e.getMessage());
+					e.printStackTrace();
+					}
+				} );
+			}
+		catch (Exception ie) {}
+		}
+
+/*	private void loadPDBLigand() {      MMTF is not supported anymore from July 2nd, 2024
 		mPDBCode = null;
 		try {
 			SwingUtilities.invokeLater(() -> {
@@ -179,5 +226,5 @@ public class ConformerViewController implements V3DPopupMenuController {
 				});
 			}
 		catch (Exception ie) {}
-		}
+		} */
 	}

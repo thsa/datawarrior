@@ -3,6 +3,7 @@ package com.actelion.research.datawarrior.task.chem.elib;
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.conf.AtomAssembler;
 import com.actelion.research.chem.io.Mol2FileParser;
+import com.actelion.research.chem.io.pdb.parser.PDBCoordEntryFile;
 import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
 import com.actelion.research.chem.io.pdb.parser.StructureAssembler;
 import com.actelion.research.gui.FileHelper;
@@ -81,12 +82,8 @@ public class DockingPanelController implements V3DPopupMenuController {
 		SwingUtilities.invokeLater(() -> {
 			File selectedFile = FileHelper.getFile(mConformerPanel, "Choose PDB-File", FileHelper.cFileTypePDB);
 			if (selectedFile != null) {
-				PDBFileParser parser = new PDBFileParser();
 				try {
-					Map<String, List<Molecule3D>> map = parser.parse(selectedFile).extractMols();
-					List<Molecule3D> proteins = map.get(StructureAssembler.PROTEIN_GROUP);
-					List<Molecule3D> ligands = map.get(StructureAssembler.LIGAND_GROUP);
-					addProteinAndLigand(proteins, ligands);
+					addProteinAndLigand(new PDBFileParser().parse(selectedFile));
 				}
 				catch (Exception e) {
 					showMessageInEDT(e.getMessage());
@@ -100,19 +97,14 @@ public class DockingPanelController implements V3DPopupMenuController {
 		try {
 			SwingUtilities.invokeLater(() -> {
 				String pdbCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
-				if (pdbCode == null || pdbCode.isEmpty())
-					return;
-
-				PDBFileParser parser = new PDBFileParser();
-				try {
-					Map<String, List<Molecule3D>> map = parser.getFromPDB(pdbCode).extractMols();
-					List<Molecule3D> proteins = map.get(StructureAssembler.PROTEIN_GROUP);
-					List<Molecule3D> ligands = map.get(StructureAssembler.LIGAND_GROUP);
-					addProteinAndLigand(proteins, ligands);
-				}
-				catch (Exception e) {
-					showMessageInEDT(e.getMessage());
-					e.printStackTrace();
+				if (pdbCode != null && !pdbCode.isEmpty()) {
+					try {
+						addProteinAndLigand(new PDBFileParser().getFromPDB(pdbCode));
+					}
+					catch (Exception e) {
+						showMessageInEDT(e.getMessage());
+						e.printStackTrace();
+					}
 				}
 
 /*  MMTF is not supported anymore from July 2nd, 2024
@@ -136,7 +128,18 @@ public class DockingPanelController implements V3DPopupMenuController {
 		catch (Exception ie) {}
 	}
 
-	private void addProteinAndLigand(List<Molecule3D> proteins, List<Molecule3D> ligands) {
+	private void addProteinAndLigand(PDBCoordEntryFile entryFile) {
+		Map<String, List<Molecule3D>> map = entryFile.extractMols(false);
+		List<Molecule3D> ligands = map.get(StructureAssembler.LIGAND_GROUP);
+		if (ligands == null || ligands.isEmpty()) {
+			map = entryFile.extractMols(true);
+			ligands = map.get(StructureAssembler.LIGAND_GROUP);
+			if (ligands != null && !ligands.isEmpty())
+				JOptionPane.showMessageDialog(mConformerPanel, "Only covalent ligand(s) were found and disconnected from the protein structure.");
+		}
+
+		List<Molecule3D> proteins = map.get(StructureAssembler.PROTEIN_GROUP);
+
 		if (proteins == null || proteins.isEmpty()) {
 			JOptionPane.showMessageDialog(mConformerPanel, "No proteins found in file.");
 		}

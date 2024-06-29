@@ -5,6 +5,7 @@ import com.actelion.research.chem.Molecule3D;
 import com.actelion.research.chem.MolfileParser;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.Mol2FileParser;
+import com.actelion.research.chem.io.pdb.parser.PDBCoordEntryFile;
 import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
 import com.actelion.research.chem.io.pdb.parser.StructureAssembler;
 import com.actelion.research.gui.FileHelper;
@@ -22,7 +23,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 public class ConformerViewController implements V3DPopupMenuController {
 	private Frame mParentFrame;
@@ -44,10 +44,10 @@ public class ConformerViewController implements V3DPopupMenuController {
 			itemLoadMolecules.setOnAction(e -> loadMolecules());
 
 			javafx.scene.control.MenuItem itemLoadPDBFile = new javafx.scene.control.MenuItem("Load Ligand from PDB File...");
-			itemLoadPDBFile.setOnAction(e -> loadPDBFile());
+			itemLoadPDBFile.setOnAction(e -> loadPDBLigand(false));
 
 			javafx.scene.control.MenuItem itemLoadPDBDBLigand = new javafx.scene.control.MenuItem("Load Ligand From PDB Database...");
-			itemLoadPDBDBLigand.setOnAction(e -> loadPDBLigand());
+			itemLoadPDBDBLigand.setOnAction(e -> loadPDBLigand(true));
 
 			popup.getItems().add(itemLoadMolecule);
 			popup.getItems().add(itemLoadMolecules);
@@ -105,7 +105,7 @@ public class ConformerViewController implements V3DPopupMenuController {
 		SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mConformerPanel, msg) );
 		}
 
-	private void loadPDBFile() {
+/*	private void loadPDBFile() {
 		SwingUtilities.invokeLater(() -> {
 			File selectedFile = FileHelper.getFile(mConformerPanel, "Choose PDB-File", FileHelper.cFileTypePDB);
 			if (selectedFile != null) {
@@ -113,19 +113,27 @@ public class ConformerViewController implements V3DPopupMenuController {
 					PDBFileParser parser = new PDBFileParser();
 					V3DScene scene = mConformerPanel.getV3DScene();
 					try {
-						List<Molecule3D> ligands = parser.parse(selectedFile).extractMols().get(StructureAssembler.LIGAND_GROUP);
+						PDBCoordEntryFile entryFile = parser.parse(selectedFile);
+						List<Molecule3D> ligands = entryFile.extractMols().get(StructureAssembler.LIGAND_GROUP);
 						if (ligands == null || ligands.isEmpty()) {
-							showMessageInEDT("No ligands found in file.");
+							ligands = entryFile.extractMols(true).get(StructureAssembler.LIGAND_GROUP);
+							if (ligands == null || ligands.isEmpty())
+								showMessageInEDT("No ligands found in file.");
+							else
+								showMessageInEDT("Covalent bound ligands were found and diconnected from the protein.");
 							}
-						else if (ligands.size() == 1) {
-							Molecule3D mol = ligands.get(0);
-							mol.center();
-							scene.addMolecule(new V3DMolecule(mol));
-							}
-						else {
-							for (Molecule3D mol : ligands)
+
+						if (ligands != null && !ligands.isEmpty()) {
+							if (ligands.size() == 1) {
+								Molecule3D mol = ligands.get(0);
+								mol.center();
 								scene.addMolecule(new V3DMolecule(mol));
+								}
+							else {
+								for (Molecule3D mol : ligands)
+									scene.addMolecule(new V3DMolecule(mol));
 							}
+						}
 					} catch (Exception e) {
 						showMessageInEDT(e.getMessage());
 						e.printStackTrace();
@@ -133,25 +141,37 @@ public class ConformerViewController implements V3DPopupMenuController {
 					} );
 				}
 			} );
-		}
+		}*/
 
-	private void loadPDBLigand() {
+	private void loadPDBLigand(boolean fromRemote) {
 		mPDBCode = null;
 		try {
 			SwingUtilities.invokeLater(() -> {
-				mPDBCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
-				if (mPDBCode == null || mPDBCode.isEmpty())
-					return;
+				File pdbFile = null;
+				if (fromRemote) {
+					mPDBCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
+					if (mPDBCode == null || mPDBCode.isEmpty())
+						return;
+				}
+				else {
+					pdbFile = FileHelper.getFile(mConformerPanel, "Choose PDB-File", FileHelper.cFileTypePDB);
+					if (pdbFile == null)
+						return;
+				}
 
 				PDBFileParser parser = new PDBFileParser();
 				try {
-					Map<String, List<Molecule3D>> map = parser.getFromPDB(mPDBCode).extractMols();
-					List<Molecule3D> ligands = map.get(StructureAssembler.LIGAND_GROUP);
+					PDBCoordEntryFile entryFile = (mPDBCode != null) ? parser.getFromPDB(mPDBCode) : parser.parse(pdbFile);
+					List<Molecule3D> ligands = entryFile.extractMols().get(StructureAssembler.LIGAND_GROUP);
 
 					if (ligands == null || ligands.isEmpty()) {
-						showMessageInEDT("No ligand structure found in PDB entry '"+mPDBCode+"'.");
+						ligands = entryFile.extractMols(true).get(StructureAssembler.LIGAND_GROUP);
+						if (ligands == null || ligands.isEmpty())
+							showMessageInEDT("No ligand structure found in "+(mPDBCode != null ? "PDB entry '"+mPDBCode : "'"+pdbFile.getName())+"'.");
+						else
+							showMessageInEDT("Only covalent ligand(s) were found and disconnected from the protein structure.");
 					}
-					else {
+					if (ligands != null && !ligands.isEmpty()) {
 						int index = -1;
 						if (ligands.size() == 1) {
 							index = 0;

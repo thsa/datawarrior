@@ -26,6 +26,8 @@ import com.actelion.research.chem.conf.MolecularFlexibilityCalculator;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.prediction.*;
+import com.actelion.research.chem.ugly.NastyFunctionDetector;
+import com.actelion.research.chem.ugly.PainsDetector;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETableView;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
@@ -66,7 +68,8 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final int PREDICTOR_DRUGLIKENESS		= 4;
 	private static final int PREDICTOR_TOXICITY			= 5;
 	private static final int PREDICTOR_NASTY_FUNCTIONS	= 6;
-	private static final int PREDICTOR_FLEXIBILITY		= 7;
+	private static final int PREDICTOR_PAINS        	= 7;
+	private static final int PREDICTOR_FLEXIBILITY		= 8;
 
 	private static final int PREDICTOR_FLAG_LOGP			= (1 << PREDICTOR_LOGP);
 	private static final int PREDICTOR_FLAG_LOGS			= (1 << PREDICTOR_LOGS);
@@ -75,9 +78,10 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final int PREDICTOR_FLAG_DRUGLIKENESS	= (1 << PREDICTOR_DRUGLIKENESS);
 	private static final int PREDICTOR_FLAG_TOXICITY		= (1 << PREDICTOR_TOXICITY);
 	private static final int PREDICTOR_FLAG_NASTY_FUNCTIONS	= (1 << PREDICTOR_NASTY_FUNCTIONS);
+	private static final int PREDICTOR_FLAG_PAINS       	= (1 << PREDICTOR_PAINS);
 	private static final int PREDICTOR_FLAG_FLEXIBILITY		= (1 << PREDICTOR_FLEXIBILITY);
 
-	private static final int PROPERTY_COUNT = 68;
+	private static final int PROPERTY_COUNT = 69;
 
 	private static final int TOTAL_WEIGHT = 0;
 	private static final int FRAGMENT_WEIGHT = 1;
@@ -102,64 +106,65 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final int REPRODUCTIVE_EFECTIVE = 18;
 	private static final int IRRITANT = 19;
 	private static final int NASTY_FUNCTIONS = 20;
-	private static final int SHAPE = 21;
-	private static final int FLEXIBILITY = 22;
-	private static final int COMPLEXITY = 23;
+	private static final int PAINS_PATTERNS = 21;
+	private static final int SHAPE = 22;
+	private static final int FLEXIBILITY = 23;
+	private static final int COMPLEXITY = 24;
 
-	private static final int FRAGMENTS = 24;
-	private static final int HEAVY_ATOMS = 25;
-	private static final int NONCARBON_ATOMS = 26;
-	private static final int METAL_ATOMS = 27;
-	private static final int NEGATIVE_ATOMS = 28;
-	private static final int STEREOCENTERS = 29;
-	private static final int ROTATABLE_BONDS = 30;
-	private static final int RING_CLOSURES = 31;
-	private static final int AROMATIC_ATOMS = 32;
-	private static final int SP3_CARBON_FRACTION = 33;
-	private static final int SP3_ATOMS = 34;
-	private static final int SYMMETRIC_ATOMS = 35;
+	private static final int FRAGMENTS = 25;
+	private static final int HEAVY_ATOMS = 26;
+	private static final int NONCARBON_ATOMS = 27;
+	private static final int METAL_ATOMS = 28;
+	private static final int NEGATIVE_ATOMS = 29;
+	private static final int STEREOCENTERS = 30;
+	private static final int ROTATABLE_BONDS = 31;
+	private static final int RING_CLOSURES = 32;
+	private static final int AROMATIC_ATOMS = 33;
+	private static final int SP3_CARBON_FRACTION = 34;
+	private static final int SP3_ATOMS = 35;
+	private static final int SYMMETRIC_ATOMS = 36;
 
-	private static final int SMALL_RINGS = 36;
-	private static final int SMALL_CARBO_RINGS = 37;
-	private static final int SMALL_HETERO_RINGS = 38;
-	private static final int SATURATED_RINGS = 39;
-	private static final int NON_AROMATIC_RINGS = 40;
-	private static final int AROMATIC_RINGS = 41;
-	private static final int CARBO_SATURATED_RINGS = 42;
-	private static final int CARBO_NON_AROMATIC_RINGS = 43;
-	private static final int CARBO_AROMATIC_RINGS = 44;
-	private static final int HETERO_SATURATED_RINGS = 45;
-	private static final int HETERO_NON_AROMATIC_RINGS = 46;
-	private static final int HETERO_AROMATIC_RINGS = 47;
+	private static final int SMALL_RINGS = 37;
+	private static final int SMALL_CARBO_RINGS = 38;
+	private static final int SMALL_HETERO_RINGS = 39;
+	private static final int SATURATED_RINGS = 40;
+	private static final int NON_AROMATIC_RINGS = 41;
+	private static final int AROMATIC_RINGS = 42;
+	private static final int CARBO_SATURATED_RINGS = 43;
+	private static final int CARBO_NON_AROMATIC_RINGS = 44;
+	private static final int CARBO_AROMATIC_RINGS = 45;
+	private static final int HETERO_SATURATED_RINGS = 46;
+	private static final int HETERO_NON_AROMATIC_RINGS = 47;
+	private static final int HETERO_AROMATIC_RINGS = 48;
 
-	private static final int ALL_AMIDES = 48;
-	private static final int ALL_AMINES = 49;
-	private static final int ALKYL_AMINES = 50;
-	private static final int ARYL_AMINES = 51;
-	private static final int AROMATIC_NITROGEN = 52;
-	private static final int BASIC_NITROGEN = 53;
-	private static final int ACIDIC_OXYGEN = 54;
-	private static final int STEREO_CONFIGURATION = 55;
+	private static final int ALL_AMIDES = 49;
+	private static final int ALL_AMINES = 50;
+	private static final int ALKYL_AMINES = 51;
+	private static final int ARYL_AMINES = 52;
+	private static final int AROMATIC_NITROGEN = 53;
+	private static final int BASIC_NITROGEN = 54;
+	private static final int ACIDIC_OXYGEN = 55;
+	private static final int STEREO_CONFIGURATION = 56;
 
-	private static final int ACIDIC_PKA = 56;
-	private static final int BASIC_PKA = 57;
-	private static final int FRACTION_IA = 58;
-	private static final int FRACTION_IB = 59;
-	private static final int FRACTION_ZI = 60;
-	private static final int FRACTION_CHARGED = 61;
-	private static final int FRACTION_UNCHARGED = 62;
-	private static final int CHARGE74 = 63;
+	private static final int ACIDIC_PKA = 57;
+	private static final int BASIC_PKA = 58;
+	private static final int FRACTION_IA = 59;
+	private static final int FRACTION_IB = 60;
+	private static final int FRACTION_ZI = 61;
+	private static final int FRACTION_CHARGED = 62;
+	private static final int FRACTION_UNCHARGED = 63;
+	private static final int CHARGE74 = 64;
 
-	private static final int GLOBULARITY_SVD = 64;
-	private static final int GLOBULARITY_VOL = 65;
-	private static final int SURFACE_3D = 66;
-	private static final int VOLUME_3D = 67;
+	private static final int GLOBULARITY_SVD = 65;
+	private static final int GLOBULARITY_VOL = 66;
+	private static final int SURFACE_3D = 67;
+	private static final int VOLUME_3D = 68;
 
 	private static final Color[] TOX_COLOR_LIST = { Color.RED, Color.YELLOW, Color.GREEN };
 
 	private static final String[] PROPERTY_CODE = { "totalWeight", "fragmentWeight", "fragmentAbsWeight", "logP", "logS", "logD",
 													"acceptors", "donors", "sasa", "rpsa", "tpsa", "druglikeness", "permeability",
-													"le", /*"se",*/ "lle", "lelp", "mutagenic", "tumorigenic", "reproEffective", "irritant", "nasty",
+													"le", /*"se",*/ "lle", "lelp", "mutagenic", "tumorigenic", "reproEffective", "irritant", "nasty", "pains",
 													"shape", "flexibility", "complexity", "fragments", "heavyAtoms", "nonCHAtoms", "metalAtoms", "negAtoms",
 													"stereoCenters", "rotBonds", "closures", "aromAtoms", "sp3CFraction", "sp3Atoms", "symmetricAtoms",
 													"rings", "carbo", "heteroRings", "satRings", "nonAromRings", "aromRings", "carboSatRings", "carboNonAromRings", "carboAromRings",
@@ -494,6 +499,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 							  : (flag == PREDICTOR_FLAG_DRUGLIKENESS) ? new DruglikenessPredictorWithIndex()
 							  : (flag == PREDICTOR_FLAG_TOXICITY) ? new ToxicityPredictor()
 							  : (flag == PREDICTOR_FLAG_NASTY_FUNCTIONS) ? new NastyFunctionDetector()
+							  : (flag == PREDICTOR_FLAG_PAINS) ? new PainsDetector()
 							  : (flag == PREDICTOR_FLAG_FLEXIBILITY) ? new MolecularFlexibilityCalculator()
 //		  				  : (flag == PREDICTOR_HERG) ? new RiskOf_hERGActPredictor()
 							  : null;
@@ -528,6 +534,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		addProperty(REPRODUCTIVE_EFECTIVE, 1, "Reproductive Effective", "Reproductive Effective", null, null, PREDICTOR_FLAG_TOXICITY);
 		addProperty(IRRITANT, 1, "Irritant", "Irritant", null, null, PREDICTOR_FLAG_TOXICITY);
 		addProperty(NASTY_FUNCTIONS, 1, "Nasty Functions", "Nasty Functions", null, DescriptorConstants.DESCRIPTOR_FFP512.shortName, PREDICTOR_FLAG_NASTY_FUNCTIONS);
+		addProperty(PAINS_PATTERNS, 1, "PAINS Patterns", "PAINS Patterns", null, DescriptorConstants.DESCRIPTOR_FFP512.shortName, PREDICTOR_FLAG_PAINS);
 		addProperty(SHAPE, 1, "Shape Index", "Molecular Shape Index (spherical < 0.5 < linear; 2D-graph based method)");
 		addProperty(FLEXIBILITY, 1, "Molecular Flexibility", "Molecular Flexibility (low < 0.5 < high)", null, null, PREDICTOR_FLAG_FLEXIBILITY);
 		addProperty(COMPLEXITY, 1, "Molecular Complexity", "Molecular Complexity (low < 0.5 < high)");
@@ -795,6 +802,10 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		if (propertyType == NASTY_FUNCTIONS)
 			return ((NastyFunctionDetector)mPredictor[PREDICTOR_NASTY_FUNCTIONS]).getNastyFunctionString(rowInfo.mol,
 				(long[])mTableModel.getTotalRecord(row).getData(mFragFpColumn));
+
+		if (propertyType == PAINS_PATTERNS)
+			return ((PainsDetector)mPredictor[PREDICTOR_PAINS]).getPainsString(rowInfo.mol,
+					(long[])mTableModel.getTotalRecord(row).getData(mFragFpColumn));
 
 		Double numValue = rowInfo.cache.get(propertyType);
 		double value = Double.NaN;

@@ -39,6 +39,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableModel;
 import java.io.File;
+import java.io.Serial;
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.util.*;
@@ -50,6 +51,7 @@ import java.util.regex.PatternSyntaxException;
 
 public class CompoundTableModel extends AbstractTableModel
 			implements CompoundTableConstants,DescriptorConstants,TableModel {
+	@Serial
 	private static final long serialVersionUID = 0x20060821;
 
 		// visible standard columns
@@ -72,9 +74,9 @@ public class CompoundTableModel extends AbstractTableModel
 	private CompoundTableListHandler mHitlistHandler;
 	private CompoundTableDetailHandler  mDetailHandler;
 	private CompoundTableExtensionHandler  mExtensionHandler;
-	private ArrayList<ProgressListener> mProgressListener;
-	private ArrayList<CompoundTableListener> mCompoundTableListener;
-	private ArrayList<HighlightListener>   mHighlightListener;
+	private final ArrayList<ProgressListener> mProgressListener;
+	private final ArrayList<CompoundTableListener> mCompoundTableListener;
+	private final ArrayList<HighlightListener> mHighlightListener;
 	private TreeMap<String,Object> mTableExtensionMap;
 	private CompoundRecord[]	mRecord,mNonExcludedRecord,mSMPRecord;
 	private CompoundRecord		mHighlightedRow,mActiveRow;
@@ -94,9 +96,9 @@ public class CompoundTableModel extends AbstractTableModel
 	private volatile AtomicInteger mSMPIndex,mSMPThreadIndex,mSimRecordIndex,mSMPDescriptorThreads,mSMPSimilarityThreads;
 	private volatile DescriptorColumnSpec[] mSMPColumnSpec;
 	private volatile int		mSMPSimilarityErrors;
-	private volatile AtomicBoolean mLock;
+	private final AtomicBoolean mLock;
 	private volatile ConcurrentHashMap<String,float[]> mFlexophoreSimilarityListCache;	// TODO prevent this to grow to much
-	private volatile ConcurrentHashMap<Integer,ArrayList<Object>> mStoppableSearcherMap;	// flagNo->SSSearcherList to notify that search is stopped
+	private final ConcurrentHashMap<Integer,ArrayList<Object>> mStoppableSearcherMap;	// flagNo->SSSearcherList to notify that search is stopped
 	private volatile MolDistHist mMostRecentExclusionFlexophore;
 	private volatile FlexophoreAtomContributionColors mMostRecentExclusionFlexophoreColors;
 	private volatile int mMostRecentExclusionFlexophoreFlagNo,mMostRecentExclusionFlexophoreColumn,mMostRecentExclusionFlexophoreAtomCount;
@@ -110,7 +112,7 @@ public class CompoundTableModel extends AbstractTableModel
 	@SuppressWarnings("rawtypes")
     public static DescriptorHandler getDefaultDescriptorHandler(String shortName) {
 		DescriptorHandler descriptorHandler = getDefaultDescriptorHandlerFactory().getDefaultDescriptorHandler(shortName);
-		if (descriptorHandler != null && descriptorHandler instanceof DescriptorHandlerFlexophore)
+		if (descriptorHandler instanceof DescriptorHandlerFlexophore)
 			((DescriptorHandlerFlexophore)descriptorHandler).setIncludeNodeAtoms(true);
 		return descriptorHandler;
 		}
@@ -257,10 +259,8 @@ public class CompoundTableModel extends AbstractTableModel
 		mMostRecentExclusionFlexophoreColumn = -1;
 
 		if (fireEvents)
-			fireEventsNow(new CompoundTableEvent(this,
-								CompoundTableEvent.cNewTable,
-								-1,
-								CompoundTableEvent.cSpecifierNoRuntimeProperties),
+			fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cNewTable,
+						 -1, CompoundTableEvent.cSpecifierNoRuntimeProperties, -1),
 						  new TableModelEvent(this, TableModelEvent.HEADER_ROW));
 
 		mRecord = new CompoundRecord[rows];
@@ -1263,7 +1263,7 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	public Object decodeData(String data, int column) {
-		return (data == null || data.length() == 0) ? null
+		return (data == null || data.isEmpty()) ? null
 				: (mColumnInfo[column].descriptorHandler == null) ?
 				  data.getBytes()
 				: mColumnInfo[column].descriptorHandler.decode(data);
@@ -1281,7 +1281,7 @@ public class CompoundTableModel extends AbstractTableModel
 
 	public void setColumnAlias(String alias, int column) {
 		if (alias != null
-		 && (alias.length() == 0
+		 && (alias.isEmpty()
 		  || alias.equals(mColumnInfo[column].name)))
 			alias = null;
 
@@ -1302,7 +1302,7 @@ public class CompoundTableModel extends AbstractTableModel
 
 	public void setColumnDescription(String description, int column) {
 		if (description != null
-		 && description.length() == 0)
+		 && description.isEmpty())
 			description = null;
 		mColumnInfo[column].description = description;
 		}
@@ -1354,13 +1354,15 @@ public class CompoundTableModel extends AbstractTableModel
 			mColumnInfo[column].logarithmicViewMode = mode;
 
 			if (column < mAllColumns) {	// if we change the mode of already finalized columns
+				int oldCategoryCount = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
+
 				setupDoubleValues(column, 0);
 
 						// mean calculation is different in logarithmic view mode
 				TableModelEvent tme = (mColumnInfo[column].summaryMode != cSummaryModeNormal) ?
 						new TableModelEvent(this, 0, mNonExcludedRecords-1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE) : null;
 	
-				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column), tme);
+				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1, oldCategoryCount), tme);
 				}
 			}
 		}
@@ -1414,7 +1416,9 @@ public class CompoundTableModel extends AbstractTableModel
 			else
 				updateMinAndMaxFromDouble(column);
 
-			fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column), null);
+			int oldCategoryCount = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
+
+			fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1, oldCategoryCount), null);
 			}
 		}
 
@@ -1434,9 +1438,10 @@ public class CompoundTableModel extends AbstractTableModel
 			mColumnInfo[column].forceCategories = forceCategories;
 
 			if (column < mAllColumns) {	// if we change the mode of already finalized columns
+				int oldCategoryCount = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
 				analyzeColumn(column, 0, false);
 
-				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1),
+				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1, oldCategoryCount),
 						new TableModelEvent(this, 0, mNonExcludedRecords-1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE));
 			}
 		}
@@ -1459,8 +1464,10 @@ public class CompoundTableModel extends AbstractTableModel
 					setupDateValues(column, 0);
 				else
 					setupDoubleValues(column, 0);
-	
-				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column),
+
+				int oldCategoryCount = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
+
+				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1, oldCategoryCount),
 						   new TableModelEvent(this, 0, mNonExcludedRecords-1,
 								   			   mColumnToDisplayableColumn[column], TableModelEvent.UPDATE));
 				}
@@ -1535,9 +1542,11 @@ public class CompoundTableModel extends AbstractTableModel
 		if (mColumnInfo[column].hiliteMode != mode) {
 			mColumnInfo[column].hiliteMode = mode;
 
-			if (column < mAllColumns)	// if we change the mode of already finalized columns
-				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column),
-							  new TableModelEvent(this, 0, mNonExcludedRecords-1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE));
+			if (column < mAllColumns) {    // if we change the mode of already finalized columns
+				int oldCategoryCount = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
+				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1, oldCategoryCount),
+						new TableModelEvent(this, 0, mNonExcludedRecords - 1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE));
+				}
 			}
 		}
 
@@ -1550,9 +1559,11 @@ public class CompoundTableModel extends AbstractTableModel
 		if (mColumnInfo[column].significantDigits != digits) {
 			mColumnInfo[column].significantDigits = digits;
 
-			if (column < mAllColumns)	// if we change the mode of already finalized columns
-				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column),
-							  new TableModelEvent(this, 0, mNonExcludedRecords-1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE));
+			if (column < mAllColumns) {    // if we change the mode of already finalized columns
+				int oldCategoryCount = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
+				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1, oldCategoryCount),
+						new TableModelEvent(this, 0, mNonExcludedRecords - 1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE));
+				}
 			}
 		}
 
@@ -1943,9 +1954,11 @@ public class CompoundTableModel extends AbstractTableModel
 		 && mColumnInfo[column].excludeModifierValues != value) {
 			mColumnInfo[column].excludeModifierValues = value;
 
+			int oldCategoryCount = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
+
 			setupDoubleValues(column, 0);
 
-			fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column),
+			fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1, oldCategoryCount),
 						  new TableModelEvent(this, 0, mNonExcludedRecords-1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE));
 			}
 		}
@@ -2088,7 +2101,7 @@ public class CompoundTableModel extends AbstractTableModel
 												  removalCount,
 												  TableModelEvent.DELETE);
 
-		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cRemoveColumns, columnMapping), tme);
+		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cRemoveColumns, -1, -1, -1, columnMapping, null), tme);
 
 		if (stopDescriptorCalculation) {
 			updateDescriptors();
@@ -2101,10 +2114,14 @@ public class CompoundTableModel extends AbstractTableModel
 	 * @param listener may be null
 	 */
 	public void finalizeNewRows(int firstRow, ProgressListener listener) {
+		int[] oldCategoryCount = new int[mAllColumns];
+		for (int column=0; column<mAllColumns; column++)
+			oldCategoryCount[column] = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
+
 		analyzeData(firstRow, listener);
 		createDisplayableColumnMap();
 		compileVisibleRecords();
-		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cAddRows, -1, firstRow),
+		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cAddRows, -1, firstRow, -1, null, oldCategoryCount),
 					  new TableModelEvent(this, firstRow, mNonExcludedRecords-1, TableModelEvent.ALL_COLUMNS, TableModelEvent.INSERT));
 		updateDescriptors();
 		}
@@ -2145,7 +2162,7 @@ public class CompoundTableModel extends AbstractTableModel
 			if (cColumnType2DCoordinates.equals(getColumnSpecialType(column))) {
 				int chemistryColumn = getParentColumn(column);
 				if (chemistryColumn < firstNewColumn)
-					fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, chemistryColumn),
+					fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, chemistryColumn, -1, -1),
 								  new TableModelEvent(this, 0, mNonExcludedRecords-1, mColumnToDisplayableColumn[chemistryColumn], TableModelEvent.UPDATE));
 				}
 			}
@@ -2161,6 +2178,7 @@ public class CompoundTableModel extends AbstractTableModel
 	 * @param column
 	 */
 	public void finalizeChangeCell(CompoundRecord record, int column) {
+		int oldCategoryCount = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
 		analyzeColumn(column, 0, false);
 
 		for (int i=0; i<mColumnInfo.length; i++) {
@@ -2173,11 +2191,11 @@ public class CompoundTableModel extends AbstractTableModel
 				else
 					mColumnInfo[i].isComplete &= spec.isComplete;
 
-				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, i, record.getID()), null);
+				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, i, record.getID(), -1), null);
 				}
 			}
 
-		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, record.getID()),
+		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, record.getID(), oldCategoryCount),
 					  new TableModelEvent(this, 0, mNonExcludedRecords-1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE));
 		}
 
@@ -2190,9 +2208,10 @@ public class CompoundTableModel extends AbstractTableModel
 	 * @param toIndex last row index + 1
 	 */
 	public void finalizeChangeAlphaNumericalColumn(int column, int fromIndex, int toIndex) {
+		int oldCategoryCount = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
 		analyzeColumn(column, 0, false);
 		int row = (fromIndex + 1 == toIndex) ? mNonExcludedRecord[fromIndex].getID() : -1;
-		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, row),
+		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, row, oldCategoryCount),
 					  new TableModelEvent(this, 0, mNonExcludedRecords-1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE));
 		}
 
@@ -2210,6 +2229,7 @@ public class CompoundTableModel extends AbstractTableModel
 	 * @param removeAllDescriptors if false, then the caller has to remove all descriptor in changed rows
 	 */
 	public void finalizeChangeChemistryColumn(int column, int fromIndex, int toIndex, boolean removeAllDescriptors) {
+		int oldCategoryCount = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
 		analyzeColumn(column, 0, false);
 
 		boolean startDescriptorThread = false;
@@ -2235,7 +2255,7 @@ public class CompoundTableModel extends AbstractTableModel
 
 		mFlexophoreSimilarityListCache = null;
 
-		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column),
+		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1, oldCategoryCount),
 					  new TableModelEvent(this, 0, mNonExcludedRecords-1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE));
 		}
 
@@ -2310,7 +2330,7 @@ public class CompoundTableModel extends AbstractTableModel
 		setColumnProperty(column, cColumnPropertyDetailSource+detail, source);
 		int[] detailList = new int[1];
 		detailList[0] = detail;
-		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnDetailSource, column, detailList), null);
+		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnDetailSource, column, -1, -1, detailList, null), null);
 		}
 
 	public int getColumnLookupCount(int column) {
@@ -2429,6 +2449,10 @@ public class CompoundTableModel extends AbstractTableModel
 			}
 
 		if (removalCount != 0) {
+			int[] oldCategoryCounts = new int[mAllColumns];
+			for (int column=0; column<mAllColumns; column++)
+				oldCategoryCounts[column] = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
+
 			removeDeadReferences(mask);
 
 			boolean calculateDescriptors = (mSMPDescriptorThreads != null);
@@ -2466,7 +2490,7 @@ public class CompoundTableModel extends AbstractTableModel
 				tme = new TableModelEvent(this, 0, mNonExcludedRecords-1,
 								TableModelEvent.ALL_COLUMNS, TableModelEvent.DELETE);
 				}
-			fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cDeleteRows, mapping), tme);
+			fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cDeleteRows, -1, -1, -1, mapping, oldCategoryCounts), tme);
 			}
 		}
 
@@ -4144,7 +4168,7 @@ public class CompoundTableModel extends AbstractTableModel
 			}
 		mColumnInfo[column].categoryList = setupCategoryList(column);
 		assignRecordsToCategories(column);
-		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column), null);
+		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1, -1), null);
 		}
 
 	public void setHighlightedRow(CompoundRecord record) {
@@ -4404,7 +4428,7 @@ public class CompoundTableModel extends AbstractTableModel
 			for (int i=0; i<detailCount; i++)
 				if (!detailFound[i])
 					newDetailIndex[i] = -1;
-			fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cRemoveColumnDetails, column, newDetailIndex), null);
+			fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cRemoveColumnDetails, column, -1, -1, newDetailIndex, null), null);
 			}
 		}
 
@@ -5631,7 +5655,7 @@ public class CompoundTableModel extends AbstractTableModel
 
 							if (!mSMPStopDescriptorCalculation)
 								if (spec.updateCount != 0)
-									fireEventsLater(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, spec.descriptorColumn), null);
+									fireEventsLater(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, spec.descriptorColumn, -1, -1), null);
 							}
 						}
 

@@ -72,6 +72,11 @@ public class DockingPanelController implements V3DPopupMenuController {
 			popup.getItems().add(itemLoadLigand);
 			popup.getItems().add(new SeparatorMenuItem());
 		}
+		if (type == V3DPopupMenuController.TYPE_VIEW) {
+			javafx.scene.control.CheckMenuItem itemShowInteractions = new javafx.scene.control.CheckMenuItem("Show Interactions");
+			itemShowInteractions.setOnAction(e -> toggleShowInteractions(itemShowInteractions));
+			popup.getItems().add(itemShowInteractions);
+		}
 	}
 
 	private void showMessageInEDT(String msg) {
@@ -266,5 +271,11 @@ public class DockingPanelController implements V3DPopupMenuController {
 				}
 			}
 		});
+	}
+
+	private void toggleShowInteractions(javafx.scene.control.CheckMenuItem item) {
+		V3DScene scene = mConformerPanel.getV3DScene();
+		boolean isShowInteractions = scene.isShowInteractions();
+		scene.setShowInteractions(!isShowInteractions);
 	}
 }

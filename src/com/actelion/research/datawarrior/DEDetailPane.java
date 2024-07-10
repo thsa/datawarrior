@@ -24,7 +24,6 @@ import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.flexophore.FlexophoreAtomContributionColors;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
-import com.actelion.research.datawarrior.task.table.DETaskSetColumnProperties;
 import com.actelion.research.gui.*;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.form.*;
@@ -34,10 +33,6 @@ import com.actelion.research.table.JDetailTable;
 import com.actelion.research.table.model.*;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.util.ArrayUtils;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.SeparatorMenuItem;
-import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
 import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
@@ -47,7 +42,6 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 
 public class DEDetailPane extends JMultiPanelView implements HighlightListener,CompoundTableListener,CompoundTableColorHandler.ColorListener {
 	private static final long serialVersionUID = 0x20060904;
@@ -218,7 +212,6 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
 				final JFXConformerPanel view = new JFXConformerPanel(false, settings);
 				view.adaptToLookAndFeelChanges();
-//				view.setBackground(new java.awt.Color(24, 24, 96));
 				String overlay = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);
 				StereoMolecule overlayMol = (overlay == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(overlay);
 				if (overlayMol != null)
@@ -234,8 +227,8 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				if (ligandMol != null)
 					view.setOverlayMolecule(ligandMol);
 
-				DetailViewInfo viewInfo = addColumnDetailView(view, mTableModel.getParentColumn(column), column, TYPE_STRUCTURE_3D, mTableModel.getColumnTitle(column));
-				view.setPopupMenuController(new Detail3DViewController(viewInfo));
+				addColumnDetailView(view, mTableModel.getParentColumn(column), column, TYPE_STRUCTURE_3D, mTableModel.getColumnTitle(column));
+				view.setPopupMenuController(new FXMolPopupMenuController(view, mTableModel, column, true));
 				continue;
 			}
 			if (columnName.equalsIgnoreCase("imagefilename")
@@ -298,12 +291,11 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		return null;
 	}
 
-	protected DetailViewInfo addColumnDetailView(JComponent view, int column, int detail, String type, String title) {
+	protected void addColumnDetailView(JComponent view, int column, int detail, String type, String title) {
 		boolean split3DFragments = "true".equals(mTableModel.getColumnProperty(detail, CompoundTableModel.cColumnProperty3DFragmentSplit));
 		DetailViewInfo viewInfo = new DetailViewInfo(view, column, detail, type, split3DFragments);
 		mDetailViewList.add(viewInfo);
 		add(view, title);
-		return viewInfo;
 	}
 
 	public void highlightChanged(CompoundRecord record) {
@@ -345,7 +337,9 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			case TYPE_STRUCTURE_3D -> {
 				boolean isSuperpose = CompoundTableConstants.cSuperposeValueReferenceRow.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperpose));
 				boolean isAlign = CompoundTableConstants.cSuperposeAlignValueShape.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperposeAlign));
-				update3DView(viewInfo, isSuperpose, isAlign);
+				FXMolPopupMenuController controller = (FXMolPopupMenuController)((JFXConformerPanel)viewInfo.view).getPopupMenuController();
+				controller.setParentRecord(mCurrentRecord);
+				controller.update3DView(isSuperpose, isAlign);
 			}
 			case TYPE_IMAGE -> ((JImagePanel)viewInfo.view).setFileName((mCurrentRecord == null) ? null
 					: mTableModel.encodeData(mCurrentRecord, viewInfo.column));
@@ -438,83 +432,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		return null;
 	}
 
-	private void setSuperposeMode(DetailViewInfo viewInfo, boolean isSuperpose, boolean isShapeAlign, boolean isShowNaturalLigand) {
-		SwingUtilities.invokeLater(() -> {
-			HashMap<String, String> map = new HashMap<>();
-			map.put(CompoundTableConstants.cColumnPropertySuperpose, isSuperpose ? CompoundTableConstants.cSuperposeValueReferenceRow : null);
-			map.put(CompoundTableConstants.cColumnPropertySuperposeAlign, isShapeAlign ? CompoundTableConstants.cSuperposeAlignValueShape : null);
-			new DETaskSetColumnProperties(mFrame, viewInfo.detail, map, false).defineAndRun();
-			update3DView(viewInfo, isSuperpose, isShapeAlign);
-		});
-	}
-
-	private void setShowNaturalLigand(DetailViewInfo viewInfo, boolean isShowNaturalLigand) {
-		String ligand = isShowNaturalLigand ? mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyNaturalLigand) : null;
-		StereoMolecule ligandMol = (ligand == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligand);
-		((JFXConformerPanel)viewInfo.view).setOverlayMolecule(ligandMol);
-		SwingUtilities.invokeLater(() -> {
-			HashMap<String, String> map = new HashMap<>();
-			map.put(CompoundTableConstants.cColumnPropertyShowNaturalLigand, isShowNaturalLigand ? null : "false");
-			new DETaskSetColumnProperties(mFrame, viewInfo.detail, map, false).defineAndRun();
-		});
-	}
-
-	private void setShowInteractions(DetailViewInfo viewInfo, boolean showInteractions) {
-		((JFXConformerPanel)viewInfo.view).getV3DScene().setShowInteractions(showInteractions);
-	}
-
-	class Detail3DViewController implements V3DPopupMenuController {
-		public DetailViewInfo viewInfo;
-
-		public Detail3DViewController(DetailViewInfo viewInfo) {
-			this.viewInfo = viewInfo;
-		}
-
-		@Override
-		public void addExternalMenuItems(ContextMenu popup, int type) {
-			if (type == V3DPopupMenuController.TYPE_VIEW) {
-				boolean hasCavity = mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyProteinCavity) != null;
-				boolean hasLigand = mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyNaturalLigand) != null;
-				boolean isShowLigand = !"false".equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyShowNaturalLigand));
-				boolean isSuperpose = CompoundTableConstants.cSuperposeValueReferenceRow.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperpose));
-				boolean isShapeAlign = CompoundTableConstants.cSuperposeAlignValueShape.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperposeAlign));
-
-				if (hasLigand) {
-					javafx.scene.control.CheckMenuItem itemShowLigand = new CheckMenuItem("Show Natural Ligand");
-					itemShowLigand.setSelected(isShowLigand);
-					itemShowLigand.setOnAction(e -> setShowNaturalLigand(viewInfo, !isShowLigand));
-					popup.getItems().add(itemShowLigand);
-				}
-
-				javafx.scene.control.CheckMenuItem itemSuperpose = new CheckMenuItem("Show Reference Row Structure");
-				itemSuperpose.setSelected(isSuperpose);
-				itemSuperpose.setOnAction(e -> setSuperposeMode(viewInfo, !isSuperpose, isShapeAlign, isShowLigand));
-				popup.getItems().add(itemSuperpose);
-
-				if (!hasCavity && isSuperpose) {
-					// don't allow shape alignment if we show a protein cavity
-					javafx.scene.control.CheckMenuItem itemAlignShape = new CheckMenuItem("Align Shown Structures");
-					itemAlignShape.setSelected(isShapeAlign);
-					itemAlignShape.setDisable(false);
-					itemAlignShape.setOnAction(e -> setSuperposeMode(viewInfo, isSuperpose, !isShapeAlign, isShowLigand));
-					popup.getItems().add(itemAlignShape);
-				}
-
-				if (hasCavity) {
-					boolean isShowInteractions = (hasLigand && ((JFXConformerPanel)viewInfo.view).getV3DScene().isShowInteractions());
-					javafx.scene.control.CheckMenuItem itemShowInteractions = new CheckMenuItem("Show Interactions");
-					itemShowInteractions.setSelected(isShowInteractions);
-					itemShowInteractions.setDisable(!hasLigand);
-					itemShowInteractions.setOnAction(e -> setShowInteractions(viewInfo, !isShowInteractions));
-					popup.getItems().add(itemShowInteractions);
-				}
-
-				popup.getItems().add(new SeparatorMenuItem());
-			}
-		}
-	}
-
-	class DetailViewInfo {
+	static class DetailViewInfo {
 		public JComponent view;
 		public int column, detail;
 		public String type;

@@ -669,7 +669,12 @@ public abstract class VisualizationPanel extends JPanel
 
 							double dataLow = mVisualization.getVisibleMin(axis);
 							double dataHigh = mVisualization.getVisibleMax(axis);
-							if (mVisualization.isLogarithmicAxis(axis) && !mTableModel.isLogarithmicViewMode(column)) {
+							if (mTableModel.isColumnTypeCategory(column) && !mTableModel.isColumnTypeDouble(column)
+							 && mVisualization.isCategoryAxis(axis) && e.getOldCategoryCount(column) != mTableModel.getCategoryCount(column)) {
+								dataLow = -0.5;
+								dataHigh = mTableModel.getCategoryCount(column) + 0.5;
+								}
+							else if (mVisualization.isLogarithmicAxis(axis) && !mTableModel.isLogarithmicViewMode(column)) {
 								dataLow = (float)Math.pow(10, dataLow);
 								dataHigh = (float)Math.pow(10, dataHigh);
 								}
@@ -694,9 +699,8 @@ public abstract class VisualizationPanel extends JPanel
 
 							// silently update sliders in case of logMode change
 							mPruningBar[axis].setLowAndHigh(newMin, newMax, true);
-							mPruningBar[axis].setUseRedColor(column != JVisualization.cColumnUnassigned
-									&& !mTableModel.isColumnDataComplete(column)
-									&& mTableModel.isColumnTypeDouble(column));
+							mPruningBar[axis].setUseRedColor(!mTableModel.isColumnDataComplete(column)
+														  && mTableModel.isColumnTypeDouble(column));
 
 							for (VisualizationPanel vp:mSynchronizationChildList)
 								vp.getVisualization().updateVisibleRange(axis, newMin, newMax, false);

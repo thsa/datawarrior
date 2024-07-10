@@ -26,6 +26,7 @@ import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Point3D;
 import javafx.scene.image.WritableImage;
+import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
 import org.openmolecules.fx.viewer3d.V3DScene;
 
 import java.awt.*;
@@ -45,6 +46,10 @@ public class JStructure3DFormObject extends AbstractFormObject {
 		((JFXConformerPanel)mComponent).adaptToLookAndFeelChanges();
 		}
 
+	public void setPopupMenuController(V3DPopupMenuController controller) {
+		((JFXConformerPanel)mComponent).setPopupMenuController(controller);
+	}
+
 	public void setReferenceMolecule(StereoMolecule refMol) {
 		((JFXConformerPanel)mComponent).setOverlayMolecule(refMol);
 		mOverlayMol = refMol;
@@ -52,6 +57,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
 
 	public void setCavityMolecule(StereoMolecule cavityMol, StereoMolecule ligandMol) {
 		((JFXConformerPanel)mComponent).setProteinCavity(cavityMol, ligandMol, true);
+		((JFXConformerPanel)mComponent).setOverlayMolecule(ligandMol);
 		mCavityMol = cavityMol;
 		mLigandMol = ligandMol;
 		}
@@ -65,7 +71,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
     @Override
 	public void setData(Object data) {
 		if (data == null) {
-			((JFXConformerPanel) mComponent).clear();
+			((JFXConformerPanel)mComponent).clear();
 			}
 		else if (data instanceof StereoMolecule) {
 			((JFXConformerPanel)mComponent).clear();

@@ -24,7 +24,7 @@ public class CompoundTableEvent extends EventObject {
     private static final long serialVersionUID = 0x20060831;
 
 	public static final int cNewTable = 1;
-	public static final int cChangeColumnData = 2;	// change of column values, column type or log mode may also have changed
+	public static final int cChangeColumnData = 2;	// change of column values, column type or log mode may also have changed, specifier may be row-ID
 	public static final int cAddRows = 3;			// specifier is first new row
     public static final int cDeleteRows = 4;		// mapping is row mapping
 
@@ -50,8 +50,9 @@ public class CompoundTableEvent extends EventObject {
 	public static final int cSpecifierDefaultFilters = 3;			// used as specifier if type = cNewTable
 	public static final int cSpecifierDefaultViews = 4; 			// used as specifier if type = cNewTable
 
-	private int		mType,mColumn,mSpecifier;
+	private int		mType,mColumn,mSpecifier,mOldCategoryCount;
 	private int[]	mMapping;    // maps new to original columns/rows after column/row removal
+	private int[]   mOldCategoryCounts;
 	private boolean	mIsAdjusting;
 
 	/**
@@ -60,7 +61,7 @@ public class CompoundTableEvent extends EventObject {
 	 * @param column absolute column index, or index of first column if multiple columns are concerned
 	 */
     public CompoundTableEvent(Object source, int type, int column) {
-		this(source, type, column, -1);
+		this(source, type, column, -1, -1, null, null);
 	    }
 
 	/**
@@ -70,24 +71,31 @@ public class CompoundTableEvent extends EventObject {
 	 * @param specifier special meaning in case of cNewTable,cAddRows,cChangeColumnData,cChangeExcluded,cChangeExtensionData
 	 */
     public CompoundTableEvent(Object source, int type, int column, int specifier) {
+		this(source, type, column, specifier, -1, null, null);
+	    }
+
+	/**
+	 * @param source
+	 * @param type
+	 * @param column absolute column index, or index of first column if multiple columns are concerned
+	 * @param specifier special meaning in case of cNewTable,cAddRows,cChangeColumnData,cChangeExcluded,cChangeExtensionData
+	 * @param oldCategoryCount category count of column before the change happened; -1 if column didn't contain categories
+	 */
+	public CompoundTableEvent(Object source, int type, int column, int specifier, int oldCategoryCount) {
+		this(source, type, column, specifier, oldCategoryCount, null, null);
+		}
+
+	public CompoundTableEvent(Object source, int type, int column, int specifier, int oldCategoryCount, int[] mapping, int[] oldCategoryCounts) {
 		super(source);
 		mType = type;
 		mColumn = column;
 		mSpecifier = specifier;
-	    }
-
-    public CompoundTableEvent(Object source, int type, int[] mapping) {
-		this(source, type, -1, mapping);
-	    }
-
-    public CompoundTableEvent(Object source, int type, int column, int[] mapping) {
-		super(source);
-		mType = type;
-		mColumn = column;
+		mOldCategoryCount = oldCategoryCount;
 		mMapping = mapping;
+		mOldCategoryCounts = oldCategoryCounts;
 	    }
 
-    public CompoundTableEvent(Object source, int type, int specifier, boolean isAdjusting) {
+	public CompoundTableEvent(Object source, int type, int specifier, boolean isAdjusting) {
 		super(source);
 		mType = type;
 		mSpecifier = specifier;
@@ -109,6 +117,10 @@ public class CompoundTableEvent extends EventObject {
 	public int[] getMapping() {
 		return mMapping;
 		}
+
+	public int getOldCategoryCount(int column) {
+		return mOldCategoryCounts == null ? mOldCategoryCount : mOldCategoryCounts[column];
+	}
 
 	public boolean isAdjusting() {
 		return mIsAdjusting;

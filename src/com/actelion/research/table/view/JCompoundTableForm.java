@@ -21,6 +21,7 @@ package com.actelion.research.table.view;
 import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.FXMolPopupMenuController;
 import com.actelion.research.gui.form.*;
 import com.actelion.research.table.CompoundTableColorHandler;
 import com.actelion.research.table.model.*;
@@ -39,12 +40,12 @@ public class JCompoundTableForm extends JFormView implements CompoundTableColorH
     public static final int PRINT_MODE_VISIBLE_RECORDS = 1;
     public static final int PRINT_MODE_ALL_RECORDS = 2;
 
-    private Frame				mParentFrame;
-	private CompoundTableModel mTableModel;
-	private CompoundTableColorHandler	mColorHandler;
-	private int					mLastPageIndex;
-	private int					mPrintMode,mPrintColumns,mPrintRows;
-	private PageFormat			mPageFormat;
+    private final Frame mParentFrame;
+	private final CompoundTableModel mTableModel;
+	private final CompoundTableColorHandler	mColorHandler;
+	private int mLastPageIndex;
+	private int mPrintMode,mPrintColumns,mPrintRows;
+	private PageFormat mPageFormat;
 
 	public JCompoundTableForm(Frame parent, CompoundTableModel tableModel, CompoundTableColorHandler colorHandler) {
 		super();
@@ -118,6 +119,9 @@ public class JCompoundTableForm extends JFormView implements CompoundTableColorH
 					StereoMolecule ligandMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
 					if (cavityMol != null)
 						((JStructure3DFormObject)formObject).setCavityMolecule(cavityMol, ligandMol);
+
+					((JStructure3DFormObject)formObject).setPopupMenuController(new FXMolPopupMenuController(
+							(JFXConformerPanel)formObject.getComponent(), mTableModel, column, false));
 					}
 				}
 			}

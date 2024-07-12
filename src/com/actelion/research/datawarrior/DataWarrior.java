@@ -75,6 +75,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 	public static final String QUERY_REACTION_TEMPLATE_FILE = "template/reactionqueries.txt";
 
 	private boolean mIsCapkaAvailable;
+	private String mRootPath;
 
 	public enum LookAndFeel {
 		NIGHT("Night", "org.pushingpixels.radiance.theming.api.skin.RadianceNightShadeLookAndFeel", true, 0x592090, 0x2e0951, 0xbc8beb),
@@ -168,11 +169,10 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 * @return null or full path to resource directory
 	 */
 	public File resolveResourcePath(String resourceDir) {
-		File directory = Platform.isWindows() ?
-			  new File("C:\\Program Files\\DataWarrior\\" + resourceDir.toLowerCase())
-					   : Platform.isMacintosh() ?
-			  new File("/Applications/DataWarrior.app/"+resourceDir.toLowerCase())
-			: new File("/opt/datawarrior/"+resourceDir.toLowerCase());
+		File directory = new File(mRootPath != null ? mRootPath + File.separator + resourceDir.toLowerCase()
+			: Platform.isWindows() ? "C:\\Program Files\\DataWarrior\\" + resourceDir.toLowerCase()
+			: Platform.isMacintosh() ? "/Applications/DataWarrior.app/"+resourceDir.toLowerCase()
+			: "/opt/datawarrior/"+resourceDir.toLowerCase());
 
 		return FileHelper.fileExists(directory) ? directory : null;
 		}
@@ -238,6 +238,9 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 
 	public DataWarrior() {
+		if (System.getProperty("rootpath") != null)
+			mRootPath = System.getProperty("rootpath");
+
 		mPluginRegistry = new PluginRegistry(this, Thread.currentThread().getContextClassLoader());
 		setInitialLookAndFeel();
 
@@ -253,6 +256,10 @@ public abstract class DataWarrior implements WindowFocusListener {
 		DEMacroRecorder.getInstance().setTaskFactory(mTaskFactory);
 
 		sApplication = this;
+		}
+
+	public String getRootPath() {
+		return mRootPath;
 		}
 
 	public boolean isCapkaAvailable() {

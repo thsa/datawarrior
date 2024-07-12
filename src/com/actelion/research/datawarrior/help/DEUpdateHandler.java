@@ -557,11 +557,14 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 				&& filename.length() == 25;
 		}
 
-	public static String getUpdatePath(final Frame parent) {
+	public static String getUpdatePath(final DEFrame parent) {
 		Preferences prefs = DataWarrior.getPreferences();
 		String baseDir = prefs.get(PREFERENCES_KEY_UPDATE_PATH, null);
 		if (baseDir != null)
 			baseDir = getWritableDir(baseDir, null);
+
+		if (baseDir == null)
+			baseDir = getWritableDir(parent.getApplication().getRootPath(), "update");
 
 		if (baseDir == null) {
 			if (Platform.isWindows()) {

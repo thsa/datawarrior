@@ -129,8 +129,9 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 			String params = "?what=properties&os="+os+"&current="+DATAWARRIOR_VERSION+"&id="+id;
 			String error = getPostInstallInfo(URL1+params);
 			if (error != null) {
-				String url = prefs.get(PREFERENCES_2ND_POST_INSTALL_INFO_SERVER, URL2);
-				error = getPostInstallInfo(url + params);
+				String url = prefs.get(PREFERENCES_2ND_POST_INSTALL_INFO_SERVER, null);
+				if (url != null)
+					error = getPostInstallInfo(url + params);
 				}
 			if (error != null)
 				error = getPostInstallInfo(URL2 + params);
@@ -161,8 +162,9 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 					handleUpdate(parent, updateMode);
 				}
 
-			handleTrustesPlugins(parent, prefs);
-		} ).start();
+			if (!sPostInstallInfo.isEmpty())	// skip creating trusted plugin menu, if we couldn't download any data
+				handleTrustesPlugins(parent, prefs);
+			} ).start();
 		}
 
 	private static void updateServerURLs(Preferences prefs) {
@@ -522,10 +524,11 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 
 	private static String getPostInstallInfo(final String url) {
 		try {
-			InputStream is = new URL(url).openStream();
+			InputStream is = new URI(url).toURL().openStream();
 			if (is != null) {
 				sPostInstallInfo.load(is);
 				is.close();
+				return null;
 			}
 		}
 		catch (MalformedURLException mue) {
@@ -543,7 +546,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 		catch (Exception e) {
 			return e.toString();
 		}
-		return null;
+		return "Unexpected error when getting post install info.";
 	}
 
 	private static boolean isDataWarriorUpdateJar(File file) {

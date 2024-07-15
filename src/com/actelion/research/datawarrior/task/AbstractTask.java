@@ -46,10 +46,11 @@ public abstract class AbstractTask implements ProgressController {
 	private JDialog				mDialog;
 	private TaskUIDelegate		mUIDelegate;
 	private boolean				mStatusOK,mIsLive;
-	private volatile Frame		mParentFrame;
+	private final Frame		    mParentFrame;
 	private volatile ProgressController	mProgressController;
 	private volatile Properties	mTaskConfiguration,mPredefinedConfiguration;
-	private volatile boolean	mUseOwnThread,mIsInteractive,mIsExecuting;
+	private final boolean       mUseOwnThread;
+	private volatile boolean    mIsInteractive,mIsExecuting;
 
 	public static String configurationToString(Properties configuration) {
 		try {
@@ -265,14 +266,14 @@ public abstract class AbstractTask implements ProgressController {
 			return predefinedConfiguration;
 			}
 
+		mDialog = new JDialog(mParentFrame, getDialogTitle(), true);
+
 		JComponent content = getUIDelegate().createDialogContent();
 		if (content == null) {
 			mStatusOK = false;
 			return configuration;
 			}
 
-// TODO Consider to move dialog creation before createDialogContent() to allow the content to use getDialog() and to make PluginGUIHelper.getDialog() not return null
-		mDialog = new JDialog(mParentFrame, getDialogTitle(), true);
 		mDialog.setModalityType(Dialog.ModalityType.DOCUMENT_MODAL);
 		mDialog.getContentPane().setLayout(new BorderLayout());
 		mDialog.getContentPane().add(content, BorderLayout.CENTER);

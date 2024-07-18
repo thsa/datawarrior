@@ -45,17 +45,19 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 	private static final String[] SD_VERSION_CODE = { "v2", "v3" };
 	private static final String[] COMPOUND_NAME_OPTIONS = { "<Use row number>", "<Automatic>" };
 	private static final String[] COMPOUND_NAME_CODE = { "<rowNo>", "<idColumn>" };
-	private static final String[] COORDINATE_OPTIONS = { "2D", "3D (1st of multiple)" };
-	private static final String[] COORDINATE_CODE = { "2D", "prefer3D" };
-	private static final int INDEX_PREFER_2D = 0;
-	private static final int INDEX_PREFER_3D = 1;
+	private static final String COORDINATE_OPTION_2D = "2D";
+	private static final String COORDINATE_OPTION_3D = "3D (1st of multiple)";
+	private static final String COORDINATE_CODE_2D = "2D";
+	private static final String COORDINATE_CODE_3D = "prefer3D";
+	private static final int INDEX_2D = 0;
 	private static final int INDEX_VERSION_3 = 1;
 	private static final String OPTION_NO_STRUCTURE = "<none>";
 	private static final int COMPOUND_NAME_OPTION_ROW_NUMBER = 0;
 	private static final int COMPOUND_NAME_OPTION_COLUMN_PROPERTY = 1;
 
+	private boolean mMaxAtomWarningShown;
 	private Properties mPredefinedConfiguration;
-	private JComboBox mComboBoxVersion,mComboBoxStructureColumn,mComboBoxCompoundName,mComboBoxCoordinateMode;
+	private JComboBox<String> mComboBoxVersion,mComboBoxStructureColumn,mComboBoxCompoundName,mComboBoxCoordinateMode;
 	private JCheckBox mCheckBoxIncludeRefMol;
 
 	/**
@@ -116,7 +118,7 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 
 		int[] columnList = getTableModel().getSpecialColumnList(CompoundTableConstants.cColumnTypeIDCode);
 		p.add(new JLabel("Structure column:"), "1,1");
-		mComboBoxStructureColumn = new JComboBox();
+		mComboBoxStructureColumn = new JComboBox<>();
 		if (columnList != null)
 			for (int column:columnList)
 				mComboBoxStructureColumn.addItem(getTableModel().getColumnTitle(column));
@@ -126,21 +128,23 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 		p.add(mComboBoxStructureColumn, "3,1");
 
 		p.add(new JLabel("SD-file version:"), "1,3");
-		mComboBoxVersion = new JComboBox(SD_VERSION_OPTIONS);
+		mComboBoxVersion = new JComboBox<>(SD_VERSION_OPTIONS);
+		mComboBoxVersion.addActionListener(this);
 		p.add(mComboBoxVersion, "3,3");
 
 		p.add(new JLabel("Atom coordinates:"), "1,5");
-		mComboBoxCoordinateMode = new JComboBox(COORDINATE_OPTIONS);
+		mComboBoxCoordinateMode = new JComboBox<>();
+		mComboBoxCoordinateMode.addItem(COORDINATE_OPTION_2D);
 		mComboBoxCoordinateMode.setEditable(!isInteractive());
 		mComboBoxCoordinateMode.addActionListener(this);
 		p.add(mComboBoxCoordinateMode, "3,5");
 
 		mCheckBoxIncludeRefMol = new JCheckBox("Include Reference Molecule");
-		mCheckBoxIncludeRefMol.setEnabled(false);
+		mCheckBoxIncludeRefMol.addActionListener(this);
 		p.add(mCheckBoxIncludeRefMol, "1,7,3,7");
 
 		p.add(new JLabel("Compound name column:"), "1,9");
-		mComboBoxCompoundName = new JComboBox(COMPOUND_NAME_OPTIONS);
+		mComboBoxCompoundName = new JComboBox<>(COMPOUND_NAME_OPTIONS);
 		mComboBoxCompoundName.setEditable(!isInteractive());
 		for (int column=0; column<getTableModel().getTotalColumnCount(); column++)
 			if (!getTableModel().isMultiCategoryColumn(column)
@@ -151,45 +155,72 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 		return p;
 		}
 
+	private void updateCheckBoxIncludeRefCompound() {
+		boolean hasRefCompound = false;
+		int column3D = getSelected3DColumn();
+		if (column3D != -1) {
+			if (getTableModel().getColumnProperty(column3D, CompoundTableConstants.cColumnPropertySuperposeMolecule) != null) {
+				mCheckBoxIncludeRefMol.setText("Include Superposed Molecule");
+				hasRefCompound = true;
+				}
+			if (getTableModel().getColumnProperty(column3D, CompoundTableConstants.cColumnPropertyNaturalLigand) != null
+			 || getTableModel().getColumnProperty(column3D, CompoundTableConstants.cColumnPropertyProteinCavity) != null) {
+				mCheckBoxIncludeRefMol.setText("Include Cavity & Natural Ligand");
+				hasRefCompound = true;
+				}
+			}
+		mCheckBoxIncludeRefMol.setEnabled(hasRefCompound);
+		}
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == mComboBoxStructureColumn)
+		checkV2000AtomCountLimit();
+		if (e.getSource() == mComboBoxStructureColumn) {
 			update3DCoordinateOptions();
+			mComboBoxCoordinateMode.setSelectedIndex(mComboBoxCoordinateMode.getItemCount() > 1 ? 1 : 0);
+			updateCheckBoxIncludeRefCompound();
+			}
 		else if (e.getSource() == mComboBoxCoordinateMode) {
-			boolean hasRefCompound = false;
-			if (mComboBoxCoordinateMode.getSelectedIndex() != INDEX_PREFER_2D) {
-				int column3D = mComboBoxCoordinateMode.getSelectedIndex() == INDEX_PREFER_3D ? -1
-							: getTableModel().findColumn((String)mComboBoxCoordinateMode.getSelectedItem());
-				if (column3D == -1) {
-					int structureColumn = getTableModel().findColumn((String)mComboBoxStructureColumn.getSelectedItem());
-					if (structureColumn != -1) {
-						for (int column=0; column<getTableModel().getTotalColumnCount(); column++) {
-							String specialType = getTableModel().getColumnSpecialType(column);
-							if (CompoundTableModel.cColumnType3DCoordinates.equals(specialType)
-							 && getTableModel().getParentColumn(column) == structureColumn) {
-								column3D = column;
-								break;
-								}
-							}
-						}
-					}
-				if (column3D != -1) {
-					if (getTableModel().getColumnProperty(column3D, CompoundTableConstants.cColumnPropertySuperposeMolecule) != null) {
-						mCheckBoxIncludeRefMol.setText("Include Superposed Molecule");
-						hasRefCompound = true;
-						}
-					if (getTableModel().getColumnProperty(column3D, CompoundTableConstants.cColumnPropertyNaturalLigand) != null
-					 || getTableModel().getColumnProperty(column3D, CompoundTableConstants.cColumnPropertyProteinCavity) != null) {
-						mCheckBoxIncludeRefMol.setText("Include Cavity & Natural Ligand");
-						hasRefCompound = true;
-						}
-					}
-
-				}
-			mCheckBoxIncludeRefMol.setEnabled(hasRefCompound);
+			updateCheckBoxIncludeRefCompound();
 			}
 		else
 			super.actionPerformed(e);
+		}
+
+	/**
+	 * Provided we are interactive and 3D-coords are selected
+	 * @return
+	 */
+	private int getSelected3DColumn() {
+		if (!isInteractive()
+		 || mComboBoxCoordinateMode.getSelectedIndex() == INDEX_2D)
+			return -1;
+
+		int column3D = getTableModel().findColumn((String)mComboBoxCoordinateMode.getSelectedItem());
+		if (column3D != -1)
+			return column3D;
+
+		int structureColumn = getTableModel().findColumn((String)mComboBoxStructureColumn.getSelectedItem());
+		return (structureColumn == -1) ? -1 : getTableModel().getChildColumn(structureColumn, CompoundTableModel.cColumnType3DCoordinates);
+		}
+
+	private void checkV2000AtomCountLimit() {
+		if (!mMaxAtomWarningShown
+		 && isInteractive()
+		 && mComboBoxVersion.getSelectedIndex() == 0    // V2000
+		 && mCheckBoxIncludeRefMol.isSelected()) {
+			int column3D = getSelected3DColumn();
+			if (column3D != -1) {
+				String cavityIDCode = getTableModel().getColumnProperty(column3D, CompoundTableConstants.cColumnPropertyProteinCavity);
+				if (cavityIDCode != null) {
+					StereoMolecule cavityMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavityIDCode);
+					if (cavityMol.getAllAtoms() > 999) {
+						JOptionPane.showMessageDialog(getParentFrame(), "Your protein cavity contains more than 999 atoms.\nSelect V3 if you want the protein to be interpretable.");
+						mMaxAtomWarningShown = true;
+						}
+					}
+				}
+			}
 		}
 
 	/*	private void enableCoordinateMenu() {
@@ -217,15 +248,19 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 
 	private void update3DCoordinateOptions() {
 		mComboBoxCoordinateMode.removeAllItems();
-		for (String item:COORDINATE_OPTIONS)
-			mComboBoxCoordinateMode.addItem(item);
+		mComboBoxCoordinateMode.addItem(COORDINATE_OPTION_2D);
 
-		int structureColumn = getTableModel().findColumn((String)mComboBoxStructureColumn.getSelectedItem());
-		int[] coordinateColumn = getTableModel().getSpecialColumnList(CompoundTableConstants.cColumnType3DCoordinates);
-		if (coordinateColumn != null)
-			for (int column:coordinateColumn)
-				if (getTableModel().getParentColumn(column) == structureColumn)
-					mComboBoxCoordinateMode.addItem(getTableModel().getColumnTitle(column));
+		if (!isInteractive()) {
+			mComboBoxCoordinateMode.addItem(COORDINATE_OPTION_3D);
+			}
+		else {
+			int structureColumn = getTableModel().findColumn((String)mComboBoxStructureColumn.getSelectedItem());
+			int[] coordinateColumn = getTableModel().getSpecialColumnList(CompoundTableConstants.cColumnType3DCoordinates);
+			if (coordinateColumn != null)
+				for (int column:coordinateColumn)
+					if (getTableModel().getParentColumn(column) == structureColumn)
+						mComboBoxCoordinateMode.addItem(getTableModel().getColumnTitle(column));
+			}
 		}
 
 	@Override
@@ -235,7 +270,8 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 		mComboBoxStructureColumn.setSelectedIndex(0);
 		mComboBoxVersion.setSelectedIndex(1);
 		update3DCoordinateOptions();
-		mComboBoxCoordinateMode.setSelectedIndex(0);
+		mComboBoxCoordinateMode.setSelectedIndex(mComboBoxCoordinateMode.getItemCount() > 1 ? 1 : 0);
+		updateCheckBoxIncludeRefCompound();
 		mCheckBoxIncludeRefMol.setSelected(false);
 
 		int compoundOption = COMPOUND_NAME_OPTION_ROW_NUMBER;
@@ -255,13 +291,22 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 		mComboBoxVersion.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_SD_VERSION), SD_VERSION_CODE, 1));
 
 		update3DCoordinateOptions();
-		String coordsCode = configuration.getProperty(PROPERTY_COORDINATE_MODE, COORDINATE_CODE[INDEX_PREFER_2D]);
-		int index = findListIndex(coordsCode, COORDINATE_CODE, -1);
-		if (index == -1)
-			mComboBoxCoordinateMode.setSelectedItem(coordsCode);
-		else
-			mComboBoxCoordinateMode.setSelectedIndex(index);
+		String coordsCode = configuration.getProperty(PROPERTY_COORDINATE_MODE, COORDINATE_CODE_2D);
+		int index = 0;
+		if (!coordsCode.equals(COORDINATE_CODE_2D) && mComboBoxCoordinateMode.getItemCount() > 1) {
+			index = 1;
+			if (!coordsCode.equals(COORDINATE_CODE_3D)) {
+				for (int i=1; i<mComboBoxCoordinateMode.getItemCount(); i++) {
+					if (coordsCode.equals(mComboBoxCoordinateMode.getItemAt(i))) {
+						index = i;
+						break;
+						}
+					}
+				}
+			}
+		mComboBoxCoordinateMode.setSelectedIndex(index);
 
+		updateCheckBoxIncludeRefCompound();
 		mCheckBoxIncludeRefMol.setSelected("true".equals(configuration.getProperty(PROPERTY_INCLUDE_REFERENCE_COMPOUND)));
 
 		String nameCode = configuration.getProperty(PROPERTY_NAME_COLUMN, COMPOUND_NAME_CODE[COMPOUND_NAME_OPTION_COLUMN_PROPERTY]);
@@ -278,8 +323,9 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 		configuration.setProperty(PROPERTY_STRUCTURE_COLUMN, (String)mComboBoxStructureColumn.getSelectedItem());
 		configuration.setProperty(PROPERTY_SD_VERSION, SD_VERSION_CODE[mComboBoxVersion.getSelectedIndex()]);
 		int index = mComboBoxCoordinateMode.getSelectedIndex();
-		configuration.setProperty(PROPERTY_COORDINATE_MODE, index < COORDINATE_CODE.length ?
-				COORDINATE_CODE[index] : getTableModel().getColumnTitleNoAlias((String)mComboBoxCoordinateMode.getSelectedItem()));
+		configuration.setProperty(PROPERTY_COORDINATE_MODE, index == 0 ? COORDINATE_CODE_2D
+				: COORDINATE_OPTION_3D.equals(mComboBoxCoordinateMode.getSelectedItem()) ? COORDINATE_CODE_3D
+				: getTableModel().getColumnTitleNoAlias((String)mComboBoxCoordinateMode.getSelectedItem()));
 		configuration.setProperty(PROPERTY_INCLUDE_REFERENCE_COMPOUND, mCheckBoxIncludeRefMol.isSelected() ? "true" : "false");
 		index = mComboBoxCompoundName.getSelectedIndex();
 		configuration.setProperty(PROPERTY_NAME_COLUMN, index < COMPOUND_NAME_CODE.length ?
@@ -320,8 +366,8 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 		String structureTitle = configuration.getProperty(PROPERTY_STRUCTURE_COLUMN, OPTION_NO_STRUCTURE);
 		int structureColumn = structureTitle.equals(OPTION_NO_STRUCTURE) ? -1 : getTableModel().findColumn(structureTitle);
 		String coordinateMode = configuration.getProperty(PROPERTY_COORDINATE_MODE);
-		boolean prefer2D = COORDINATE_CODE[INDEX_PREFER_2D].equals(coordinateMode);
-		boolean prefer3D = COORDINATE_CODE[INDEX_PREFER_3D].equals(coordinateMode);
+		boolean prefer2D = COORDINATE_CODE_2D.equals(coordinateMode);
+		boolean first3D = COORDINATE_CODE_3D.equals(coordinateMode);
 		boolean version3 = SD_VERSION_CODE[INDEX_VERSION_3].equals(configuration.getProperty(PROPERTY_SD_VERSION));
 		int fileType = version3 ? CompoundFileHelper.cFileTypeSDV3 : CompoundFileHelper.cFileTypeSDV2;
 
@@ -338,7 +384,7 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 		if (structureColumn != -1) {
 			if (nameColumn == CompoundTableSaver.ID_USE_PROPERTY)
 				nameColumn = tableModel.findColumn(tableModel.getColumnProperty(structureColumn, CompoundTableModel.cColumnPropertyRelatedIdentifierColumn));
-			if (prefer2D || prefer3D) {
+			if (prefer2D || first3D) {
 				for (int column=0; column<tableModel.getTotalColumnCount(); column++) {
 					String specialType = tableModel.getColumnSpecialType(column);
 					if (specialType != null && tableModel.getParentColumn(column) == structureColumn) {
@@ -346,7 +392,7 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 							coordsColumn = column;
 							break;
 							}
-						if (prefer3D && specialType.equals(CompoundTableModel.cColumnType3DCoordinates)) {
+						if (first3D && specialType.equals(CompoundTableModel.cColumnType3DCoordinates)) {
 							coordsColumn = column;
 							break;
 							}
@@ -360,36 +406,38 @@ public class DETaskSaveSDFileAs extends DETaskAbstractSaveFile {
 
 		StereoMolecule[] refMol = null;
 		if ("true".equals(configuration.getProperty(PROPERTY_INCLUDE_REFERENCE_COMPOUND))
-		 && CompoundTableModel.cColumnType3DCoordinates.equals(tableModel.getColumnSpecialType(coordsColumn))) {
-			ArrayList<StereoMolecule> molList = new ArrayList<>();
-			String superposeIDCode = getTableModel().getColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertySuperposeMolecule);
-			if (superposeIDCode != null) {
-				StereoMolecule superposeMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(superposeIDCode);
-				if (superposeMol != null && superposeMol.getAllAtoms() != 0) {
-					superposeMol.setName("Superposed Molecule");
-					molList.add(superposeMol);
-					}
-				}
-			String cavityIDCode = getTableModel().getColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertyProteinCavity);
-			if (cavityIDCode != null) {
-				StereoMolecule cavityMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavityIDCode);
-				if (cavityMol != null && cavityMol.getAllAtoms() != 0) {
-					cavityMol.setName("Protein Cavity");
-					molList.add(cavityMol);
-					}
-				}
-			String ligandIDCode = getTableModel().getColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertyNaturalLigand);
-			if (ligandIDCode != null) {
-				StereoMolecule ligandMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
-				if (ligandMol != null && ligandMol.getAllAtoms() != 0) {
-					ligandMol.setName("Natural Ligand");
-					molList.add(ligandMol);
-					}
-				}
-			if (molList.size() != 0)
-				refMol = molList.toArray(new StereoMolecule[0]);
-			}
+		 && CompoundTableModel.cColumnType3DCoordinates.equals(tableModel.getColumnSpecialType(coordsColumn)))
+			refMol = getRefMols(coordsColumn);
 
 		new CompoundTableSaver(getParentFrame(), tableModel, table).saveSDFile(file,  fileType, structureColumn, nameColumn, coordsColumn, refMol);
+		}
+
+	private StereoMolecule[] getRefMols(int coordsColumn ) {
+		ArrayList<StereoMolecule> molList = new ArrayList<>();
+		String superposeIDCode = getTableModel().getColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertySuperposeMolecule);
+		if (superposeIDCode != null) {
+			StereoMolecule superposeMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(superposeIDCode);
+			if (superposeMol != null && superposeMol.getAllAtoms() != 0) {
+				superposeMol.setName("Superposed Molecule");
+				molList.add(superposeMol);
+				}
+			}
+		String cavityIDCode = getTableModel().getColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertyProteinCavity);
+		if (cavityIDCode != null) {
+			StereoMolecule cavityMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavityIDCode);
+			if (cavityMol != null && cavityMol.getAllAtoms() != 0) {
+				cavityMol.setName("Protein Cavity");
+				molList.add(cavityMol);
+				}
+			}
+		String ligandIDCode = getTableModel().getColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertyNaturalLigand);
+		if (ligandIDCode != null) {
+			StereoMolecule ligandMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
+			if (ligandMol != null && ligandMol.getAllAtoms() != 0) {
+				ligandMol.setName("Natural Ligand");
+				molList.add(ligandMol);
+				}
+			}
+		return molList.isEmpty() ? null : molList.toArray(new StereoMolecule[0]);
 		}
 	}

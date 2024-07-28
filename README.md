@@ -11,7 +11,7 @@ https://openmolecules.org/datawarrior.
 *DataWarrior* is built on the open-source projects *OpenChemLib* and *FXMolViewer*. 
 
 ### Dependencies
-Apart from a working JDK11 or higher that includes JavaFX, *DataWarrior* needs various free-to-use/open-source
+Apart from a working JDK21 or higher that includes JavaFX, *DataWarrior* needs various free-to-use/open-source
 dependencies. All required dependency files are provided as part of this project in the ./lib folder.
 The most important ones are:
 * OpenChemLib: Cheminformatics base functionality to handle molecules and reactions

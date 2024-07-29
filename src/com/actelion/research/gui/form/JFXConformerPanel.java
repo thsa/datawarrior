@@ -260,33 +260,42 @@ public class JFXConformerPanel extends JFXPanel {
 		});
 	}
 
+	/**
+	 * Note: Don't use this, if this 3D-View can be edited by the user, because editings
+	 * are not reflected by the locally cached variable mOverlayMol. Use getMolecules()
+	 * instead.
+	 * @return the molecule originally passed with setOverlayMolecule()
+	 */
 	public StereoMolecule getOverlayMolecule() {
 		return mOverlayMol == null ? null : mOverlayMol.getMolecule();
 	}
 
 	/**
 	 * Adds the given small molecule into the scene.
-	 *
 	 * @param mol
 	 */
 	public void setOverlayMolecule(StereoMolecule mol) {
 		Platform.runLater(() -> {
+			if (mOverlayMol != null) {
+				mScene.delete(mOverlayMol);
+				mOverlayMol = null;
+			}
 			if (mol != null) {
 				mOverlayMol = new V3DMolecule(mol, 0, V3DMolecule.MoleculeRole.LIGAND);
 				mOverlayMol.setColor(OVERLAY_MOLECULE_COLOR);
 				mScene.addMolecule(mOverlayMol);
-			} else if (mOverlayMol != null) {
-				mScene.delete(mOverlayMol);
 			}
 		});
 	}
 
 	/**
-	 * Adds the given cropped protein cavity and its surface into the scene. If the natural ligand is given, then
-	 * the ligand atom coordinates are used to determine the cavity surface in the ligand's vicinity.
-	 *
+	 * Adds the given, typically cropped, protein cavity into the scene using color LIGHT_GRAY.
+	 * If a ligand is given, all cavity atoms being in a distance of about CAVITY_CROP_DISTANCE
+	 * of any ligad atom are marked. Then, a surface for the protein is generated, which covers
+	 * unmarked atoms only.<br>
+	 * NOTE: The ligand structure is not added to the scene!
 	 * @param cavity
-	 * @param ligand
+	 * @param ligand may be null
 	 * @param optimizeView whether the view shall be centered after adding cavity
 	 */
 	public void setProteinCavity(StereoMolecule cavity, StereoMolecule ligand, boolean optimizeView) {
@@ -483,7 +492,8 @@ public class JFXConformerPanel extends JFXPanel {
 		Platform.runLater(() -> {
 			for (Node node : mScene.getWorld().getChildren())
 				if (node instanceof V3DMolecule
-						&& role == null || ((V3DMolecule)node).getRole() == role)
+				 && (role == null
+				  || role == ((V3DMolecule)node).getRole()))
 					conformerList.add(((V3DMolecule)node).getMolecule());
 			latch.countDown();
 		});
@@ -492,6 +502,18 @@ public class JFXConformerPanel extends JFXPanel {
 			latch.await();
 		} catch (InterruptedException ie) {
 		}
+		return conformerList;
+	}
+
+	public ArrayList<StereoMolecule> getMoleculesInFXThread(V3DMolecule.MoleculeRole role) {
+		final ArrayList<StereoMolecule> conformerList = new ArrayList<>();
+
+		for (Node node : mScene.getWorld().getChildren())
+			if (node instanceof V3DMolecule
+			 && (role == null
+			  || role == ((V3DMolecule)node).getRole()))
+				conformerList.add(((V3DMolecule)node).getMolecule());
+
 		return conformerList;
 	}
 
@@ -541,10 +563,10 @@ public class JFXConformerPanel extends JFXPanel {
 		URLStreamHandler streamHandler = new URLStreamHandler() {
 			@Override
 			protected URLConnection openConnection(URL url) throws IOException {
-				if (url.toString().toLowerCase().endsWith(".css")) {
-					return new StringURLConnection(url);
-				}
-				throw new FileNotFoundException();
+			if (url.toString().toLowerCase().endsWith(".css")) {
+				return new StringURLConnection(url);
+			}
+			throw new FileNotFoundException();
 			}
 		};
 

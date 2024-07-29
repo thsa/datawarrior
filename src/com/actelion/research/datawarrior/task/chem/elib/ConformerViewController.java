@@ -57,6 +57,11 @@ public class ConformerViewController implements V3DPopupMenuController {
 			}
 		}
 
+	@Override
+	public void markCropDistanceForSurface(V3DMolecule fxmol, int type, V3DMolecule.SurfaceMode mode) {
+
+	}
+
 	private void loadMolecule() {
 		SwingUtilities.invokeLater(() -> {
 			int fileTypes = FileHelper.cFileTypeMOL | FileHelper.cFileTypeMOL2;

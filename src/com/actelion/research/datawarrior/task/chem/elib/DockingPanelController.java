@@ -79,6 +79,14 @@ public class DockingPanelController implements V3DPopupMenuController {
 		}
 	}
 
+	@Override
+	public void markCropDistanceForSurface(V3DMolecule fxmol, int type, V3DMolecule.SurfaceMode mode) {
+		List<StereoMolecule> protein = mConformerPanel.getMoleculesInFXThread(V3DMolecule.MoleculeRole.MACROMOLECULE);
+		List<StereoMolecule> ligand = mConformerPanel.getMoleculesInFXThread(V3DMolecule.MoleculeRole.LIGAND);
+		if (protein.size() == 1 && ligand.size() == 1)
+			JFXConformerPanel.markAtomsInCropDistance(protein.get(0), ligand.get(0), ligand.get(0).getCenterOfGravity());
+	}
+
 	private void showMessageInEDT(String msg) {
 		SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mConformerPanel, msg) );
 	}
@@ -196,7 +204,7 @@ public class DockingPanelController implements V3DPopupMenuController {
 				V3DScene scene = mConformerPanel.getV3DScene();
 				scene.clearAll();
 				mConformerPanel.setProteinCavity(_cavity, _ligand, true);
-				scene.addMolecule(new V3DMolecule(_ligand, 0, V3DMolecule.MoleculeRole.LIGAND));
+				mConformerPanel.setOverlayMolecule(_ligand);
 			});
 		}
 		// if we have only the protein, we don't add hydrogen, but surface and just add the protein to the scene

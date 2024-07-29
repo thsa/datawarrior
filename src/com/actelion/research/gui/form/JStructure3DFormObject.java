@@ -153,10 +153,10 @@ public class JStructure3DFormObject extends AbstractFormObject {
 				JFXConformerPanel fxp = new JFXConformerPanel(false, (int)(4*r.width), (int)(4*r.height), settings);
 			    fxp.waitForCompleteConstruction();
 				fxp.setBackground(Color.WHITE);
-				if (mOverlayMol != null)
-					fxp.setOverlayMolecule(mOverlayMol);
 			    if (mCavityMol != null)
 				    fxp.setProteinCavity(mCavityMol, mLigandMol, false);
+			    if (mOverlayMol != null)
+				    fxp.setOverlayMolecule(mOverlayMol);
 
 			    final CountDownLatch latch = new CountDownLatch(1);
 			    final StereoMolecule[] mols_ = mols;

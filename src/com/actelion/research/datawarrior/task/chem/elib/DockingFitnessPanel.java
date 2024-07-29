@@ -6,7 +6,6 @@ import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.gui.form.JFXConformerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
-import javafx.application.Platform;
 import org.openmolecules.fx.viewer3d.V3DMolecule;
 import org.openmolecules.fx.viewer3d.V3DScene;
 
@@ -47,12 +46,8 @@ public class DockingFitnessPanel extends FitnessPanel {
 			StereoMolecule cavity = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(param[index++]);
 			StereoMolecule ligand = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(param[index++]);
 			if (cavity != null && ligand != null) {
-				Platform.runLater(() -> {
-					mConformerPanel.setProteinCavity(cavity, ligand, true);
-					V3DMolecule ligand3D = new V3DMolecule(ligand, 0, V3DMolecule.MoleculeRole.LIGAND);
-					ligand3D.setColor(javafx.scene.paint.Color.CORAL);
-					mConformerPanel.getV3DScene().addMolecule(ligand3D);
-				} );
+				mConformerPanel.setProteinCavity(cavity, ligand, true);
+				mConformerPanel.setOverlayMolecule(ligand);
 			}
 		}
 	}

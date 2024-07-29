@@ -30,7 +30,6 @@ import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
-import javafx.application.Platform;
 import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.fx.viewer3d.V3DMolecule;
 import org.openmolecules.fx.viewer3d.V3DScene;
@@ -136,12 +135,9 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 		String ligandIDCode = configuration.getProperty(PROPERTY_LIGAND);
 		StereoMolecule ligand = (ligandIDCode == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
 		if (cavity != null) {
-			Platform.runLater(() -> {
-				mConformerPanel.setProteinCavity(cavity, ligand, true);
-				V3DMolecule ligand3D = new V3DMolecule(ligand, 0, V3DMolecule.MoleculeRole.LIGAND);
-				ligand3D.setColor(javafx.scene.paint.Color.CORAL);
-				mConformerPanel.getV3DScene().addMolecule(ligand3D);
-				} );
+			mConformerPanel.setProteinCavity(cavity, ligand, true);
+			if (ligand != null)
+				mConformerPanel.setOverlayMolecule(ligand);
 			}
 		}
 

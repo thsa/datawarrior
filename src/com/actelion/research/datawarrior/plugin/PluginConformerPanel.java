@@ -99,6 +99,8 @@ public class PluginConformerPanel extends JFXConformerPanel implements IConforme
 		StereoMolecule ligand = getStructureFromIDCode(ligandIDCode);
 		if (cavity != null)
 			setProteinCavity(cavity, ligand, true);
+		if (ligand != null)
+			setOverlayMolecule(ligand);
 	}
 
 	private StereoMolecule getStructureFromIDCode(String idcode) {

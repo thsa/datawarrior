@@ -60,7 +60,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final String PROPERTY_CHEMPROPERTY_LIST = "propertyList";
 	private static final String PROPERTY_TARGET_COLUMN = "targetColumn";
 
-	private static final int PREDICTOR_COUNT			= 8;
+	private static final int PREDICTOR_COUNT			= 9;
 	private static final int PREDICTOR_LOGP				= 0;
 	private static final int PREDICTOR_LOGS				= 1;
 	private static final int PREDICTOR_PKA				= 2;

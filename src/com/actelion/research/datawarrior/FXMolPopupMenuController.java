@@ -12,6 +12,7 @@ import com.actelion.research.util.ArrayUtils;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.SeparatorMenuItem;
+import org.openmolecules.fx.viewer3d.V3DMolecule;
 import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
 
 import javax.swing.*;
@@ -25,6 +26,13 @@ public class FXMolPopupMenuController implements V3DPopupMenuController {
 	private final int mIDCodeColumn,mCoordsColumn;
 	private final boolean mAllowSuperposeReference;
 
+	/**
+	 * This controller adds menu items and functionality to 3D-Views in the detail area or in form views.
+	 * @param conformerPanel
+	 * @param tableModel
+	 * @param coordsColumn
+	 * @param allowSuperposeReference
+	 */
 	public FXMolPopupMenuController(JFXConformerPanel conformerPanel, CompoundTableModel tableModel, int coordsColumn, boolean allowSuperposeReference) {
 		mConformerPanel = conformerPanel;
 		mTableModel = tableModel;
@@ -83,6 +91,16 @@ public class FXMolPopupMenuController implements V3DPopupMenuController {
 			}
 
 			popup.getItems().add(new SeparatorMenuItem());
+		}
+	}
+
+	@Override
+	public void markCropDistanceForSurface(V3DMolecule fxmol, int type, V3DMolecule.SurfaceMode mode) {
+		boolean hasCavity = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyProteinCavity) != null;
+		boolean hasLigand = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyNaturalLigand) != null;
+		if (hasLigand && hasCavity && fxmol.getRole() == V3DMolecule.MoleculeRole.MACROMOLECULE) {
+			StereoMolecule ligand = mConformerPanel.getOverlayMolecule();
+			JFXConformerPanel.markAtomsInCropDistance(fxmol.getMolecule(), ligand, ligand.getCenterOfGravity());
 		}
 	}
 

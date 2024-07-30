@@ -39,6 +39,7 @@ import org.openmolecules.chem.conf.gen.ConformerDiagnostics;
 import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.chem.conf.so.ConformationSelfOrganizer;
 import org.openmolecules.chem.conf.so.SelfOrganizedConformer;
+import org.openmolecules.fx.viewer3d.V3DMolecule;
 import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
 import org.openmolecules.fx.viewer3d.V3DScene;
 
@@ -129,6 +130,9 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 					}
 				}
 			}
+
+			@Override
+			public void markCropDistanceForSurface(V3DMolecule fxmol, int type, V3DMolecule.SurfaceMode mode) {}
 		});
 
 		int gap = HiDPIHelper.scale(8);

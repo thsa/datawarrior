@@ -225,7 +225,6 @@ public class DockingPanelController implements V3DPopupMenuController {
 				protein.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.FILLED);
 				protein.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS);
 				scene.addMolecule(protein);
-
 				scene.optimizeView();
 			});
 		}

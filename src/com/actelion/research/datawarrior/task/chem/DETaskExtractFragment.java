@@ -124,7 +124,7 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 	@Override
 	public Properties getDialogConfiguration() {
 		Properties configuration = super.getDialogConfiguration();
-		configuration.setProperty(PROPERTY_SUBSTRUCTURE, MODE_CODE[mComboBoxMode.getSelectedIndex()]);
+		configuration.setProperty(PROPERTY_MODE, MODE_CODE[mComboBoxMode.getSelectedIndex()]);
 		if (mComboBoxMode.getSelectedIndex() == MODE_SUBSTRUCTURE) {
 			StereoMolecule mol = mSubstructureView.getMolecule();
 			if (mol.getAllAtoms() != 0) {

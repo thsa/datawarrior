@@ -756,7 +756,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 		}
 
 	private void createDocument(EvolutionResult[] result, FitnessOption[] fitnessOption, boolean hasMultipleRuns, int runCount) {
-		Arrays.sort(result, (r1, r2) -> (r1.getID() == r2.getID()) ? 0 : (r1.getID() < r2.getID()) ? -1 : 1);
+		Arrays.sort(result, (r1, r2) -> Integer.compare(r1.getID(), r2.getID()));
 
 		ArrayList<String> columnNameList = new ArrayList<>();
 		columnNameList.add("ID");
@@ -782,11 +782,14 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 		for (String columnName:columnNameList)
 			tableModel.setColumnName(columnName, column++);
 
-		tableModel.setColumnProperty(3, CompoundTableModel.cColumnPropertyReferencedColumn, "ID");
-		tableModel.setColumnProperty(3, CompoundTableModel.cColumnPropertyReferenceType,
+		int parentIDColumn = 3;
+		int parentGenColumn = hasMultipleRuns ? 7 : 6;
+
+		tableModel.setColumnProperty(parentIDColumn, CompoundTableModel.cColumnPropertyReferencedColumn, "ID");
+		tableModel.setColumnProperty(parentIDColumn, CompoundTableModel.cColumnPropertyReferenceType,
 										CompoundTableModel.cColumnPropertyReferenceTypeTopDown);
-		tableModel.setColumnProperty(5, CompoundTableModel.cColumnPropertyReferencedColumn, "Generation");
-		tableModel.setColumnProperty(5, CompoundTableModel.cColumnPropertyReferenceType,
+		tableModel.setColumnProperty(parentGenColumn, CompoundTableModel.cColumnPropertyReferencedColumn, "Generation");
+		tableModel.setColumnProperty(parentGenColumn, CompoundTableModel.cColumnPropertyReferenceType,
 										CompoundTableModel.cColumnPropertyReferenceTypeTopDown);
 
 		column = firstFitnessOptionColumn;

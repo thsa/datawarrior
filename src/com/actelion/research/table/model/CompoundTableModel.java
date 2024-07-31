@@ -65,7 +65,7 @@ public class CompoundTableModel extends AbstractTableModel
 		// Their category lists are, once created, never changed or sorted
 
 		// a comma (',') cannot be a delimiter, because it would interfere with the date format
-	private static final String cSeparatorRegex = " *"+cEntrySeparator+" *|"+" *"+cLineSeparator.replace("\n", "\\n")+" *";
+	private static final String cSeparatorRegex = " *"+cLineSeparator.replace("\n", "\\n")+" *"+"| *; *";
 
 	public static final int ATOM_COLOR_MODE_NONE = 0;
 	public static final int ATOM_COLOR_MODE_EXPLICIT = 1;
@@ -2508,20 +2508,20 @@ public class CompoundTableModel extends AbstractTableModel
 				for (int row=0; row<mRecords; row++) {
 					if ((mRecord[row].mFlags & deletionMask) != 0) {
 						String id = encodeData(mRecord[row], idColumn);
-						if (id.length() != 0)
+						if (!id.isEmpty())
 							idSet.add(id);
 						}
 					}
 
-				if (idSet.size() != 0) {
+				if (!idSet.isEmpty()) {
 					for (int row=0; row<mRecords; row++) {
 						if ((mRecord[row].mFlags & deletionMask) == 0) {
 							String references = encodeData(mRecord[row], column);
-							if (references.length() != 0) {
+							if (!references.isEmpty()) {
 								String[] reference = separateEntries(references);
 								int count = reference.length;
 								for (int i=0; i<reference.length; i++) {
-									if (reference[i].length() == 0 || idSet.contains(reference[i])) {
+									if (reference[i].isEmpty() || idSet.contains(reference[i])) {
 										reference[i] = null;
 										count--;
 										}
@@ -3152,14 +3152,14 @@ public class CompoundTableModel extends AbstractTableModel
 						}
 					if (queryString.charAt(index-1) != '\\') {
 						String q = queryString.substring(start, index).replace("\\,", ",");
-						if (q.length() != 0)
+						if (!q.isEmpty())
 							list.add(q);
 						start = index+1;
 						}
 					index = queryString.indexOf(',', index+1);
 					}
 
-				if (list.size() == 0) {  // evidently the comma was not meant to separate search terms
+				if (list.isEmpty()) {  // evidently the comma was not meant to separate search terms
 					queryList[0] = queryString;
 					}
 				else {
@@ -3212,7 +3212,7 @@ public class CompoundTableModel extends AbstractTableModel
 							found = true;
 						break;
 					case cTextExclusionTypeContains:
-						if (theString.indexOf(query) != -1)
+						if (theString.contains(query))
 							found = true;
 						break;
 					case cTextExclusionTypeRegEx:
@@ -3403,8 +3403,8 @@ public class CompoundTableModel extends AbstractTableModel
 
 		// optionally invert flag
 		if (inverse)
-			for (int row=0; row<mRecord.length; row++)
-				mRecord[row].mFlags ^= mask;
+			for (CompoundRecord record : mRecord)
+				record.mFlags ^= mask;
 
 		if (SwingUtilities.isEventDispatchThread()) {
 			mDirtyCompoundFlags |= mask;
@@ -3469,8 +3469,8 @@ public class CompoundTableModel extends AbstractTableModel
 				rxn.getMolecule(m).ensureHelperArrays(Molecule.cHelperParities);
 
 		// set flag: excluded as default
-		for (int row=0; row<mRecord.length; row++)
-			mRecord[row].mFlags |= mask;
+		for (CompoundRecord record : mRecord)
+			record.mFlags |= mask;
 
 		ArrayList<Object> sssList = new ArrayList<>();
 		mStoppableSearcherMap.put(exclusionFlagNo, sssList);
@@ -3830,7 +3830,7 @@ public class CompoundTableModel extends AbstractTableModel
 					  || (mol.getAtomColor(atom) == Molecule.cAtomColorBlue && color == Molecule.cAtomColorRed))	// minimum color mixing
 					mol.setAtomColor(atom, Molecule.cAtomColorMagenta);
 
-				if (label != null && label.length() != 0) {
+				if (label != null && !label.isEmpty()) {
 					if (mol.getAtomCustomLabel(atom) != null && mol.getAtomCustomLabel(atom).startsWith("]"))
 						mol.setAtomCustomLabel(atom, mol.getAtomCustomLabel(atom).concat("; ").concat(label));
 					else
@@ -4949,7 +4949,7 @@ public class CompoundTableModel extends AbstractTableModel
 								return Float.NaN;  // don't support different modifier types
 								}
 
-							if (mParseDoubleModifier.length() == 0)
+							if (mParseDoubleModifier.isEmpty())
 								mParseDoubleModifier = analysis.getModifier();
 							else if (!mParseDoubleModifier.equals(analysis.getModifier()))
 								mParseDoubleModifier = EntryAnalysis.getDefaultModifier(analysis.getModifierType());
@@ -5369,7 +5369,7 @@ public class CompoundTableModel extends AbstractTableModel
 	 * @return
 	 */
 	public static String validateColumnName(String name, int skipColumn, String[] externalName, int externalNameCount, CompoundTableModel refModel) {
-		if (name == null || name.trim().length() == 0) {
+		if (name == null || name.trim().isEmpty()) {
 			name = "Column 1";
 			}
 		else {
@@ -5433,9 +5433,8 @@ public class CompoundTableModel extends AbstractTableModel
 	 * @return complete list of entries in original order or String[1] with empty String, if data is empty
 	 */
 	public String[] separateEntries(String data) {
-		if (data == null || data.length() == 0) {
-			String[] entry = { "" };
-			return entry;
+		if (data == null || data.isEmpty()) {
+			return new String[]{ "" };
 			}
 
 		return data.split(cSeparatorRegex, -1);
@@ -5449,7 +5448,7 @@ public class CompoundTableModel extends AbstractTableModel
 		SortedStringList list = new SortedStringList();
 		String[] entries = separateEntries(data);
 		for (String entry:entries)
-			if (entry.length() != 0)
+			if (!entry.isEmpty())
 				list.addString(entry);
 		return list.getSize() == 0 ? null : list.toArray();
 		}

@@ -36,7 +36,7 @@ import java.util.Properties;
 public class DETaskImportMacro extends DETaskAbstractOpenFile {
 	public static final String TASK_NAME = "Import Macro";
 
-	private CompoundTableModel mTableModel;
+	private final CompoundTableModel mTableModel;
 
 	public DETaskImportMacro(DataWarrior application) {
 		super(application, "Import DataWarrior Macro", FileHelper.cFileTypeDataWarriorMacro);

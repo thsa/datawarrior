@@ -19,6 +19,8 @@
 package com.actelion.research.table.view;
 
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.datawarrior.task.macro.DETaskRunMacro;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableListEvent;
@@ -36,21 +38,26 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
+import java.io.Serial;
 
 import static javafx.geometry.Orientation.HORIZONTAL;
 import static javafx.geometry.Orientation.VERTICAL;
 
 
 public class ExplanationView extends JFXPanel implements CompoundTableConstants,CompoundTableView {
+	@Serial
 	private static final long serialVersionUID = 0x20130114;
 
 	private ViewSelectionHelper mViewSelectionHelper;
-	private CompoundTableModel mTableModel;
+	private final CompoundTableModel mTableModel;
 	private WebEngine mEngine;
 	private String mHTMLText;
 
@@ -59,8 +66,6 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 
 	public ExplanationView(CompoundTableModel tableModel) {
 		mTableModel = tableModel;
-
-//		Handler.install();
 
 		Platform.runLater(() -> {
 			WebView view = new WebView();
@@ -74,6 +79,17 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 			mEngine.getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) -> {
 				if(newValue.equals(Worker.State.SUCCEEDED)){
 					view.setEventDispatcher(webEventDispatcher);
+
+					Document document = mEngine.getDocument();
+					NodeList nodeList = document.getElementsByTagName("a");
+					for (int i=0 ; i<nodeList.getLength() ; i++) {
+						String link = nodeList.item(i).toString();
+						if (link.startsWith("macro:")) {
+							((com.sun.webkit.dom.HTMLAnchorElementImpl)nodeList.item(i)).addEventListener("click", e ->
+									SwingUtilities.invokeLater(() ->
+										new DETaskRunMacro(DataWarrior.getApplication().getActiveFrame(), link.substring(6)).defineAndRun() ), false );
+						}
+					}
 				}
 			});
 
@@ -164,12 +180,12 @@ class WebEventDispatcher implements EventDispatcher {
 
 	@Override
 	public javafx.event.Event dispatchEvent(javafx.event.Event event, EventDispatchChain tail) {
-		if (event instanceof MouseEvent){
+		if (event instanceof MouseEvent m){
 			double[] limit = getLimit();
 
-			MouseEvent m = (MouseEvent)event;
 			if (event.getEventType().equals(MouseEvent.MOUSE_CLICKED) ||
-					event.getEventType().equals(MouseEvent.MOUSE_PRESSED)) {
+				event.getEventType().equals(MouseEvent.MOUSE_PRESSED)) {
+
 				Point2D origin=new Point2D(m.getX(),m.getY());
 				allowDrag=!(origin.getX()<limit[0] && origin.getY()<limit[1]);
 			}
@@ -184,8 +200,7 @@ class WebEventDispatcher implements EventDispatcher {
 				event.consume();
 			}
 		}
-		if (event instanceof KeyEvent && event.getEventType().equals(KeyEvent.KEY_PRESSED)){
-			KeyEvent k= (KeyEvent)event;
+		if (event instanceof KeyEvent k && event.getEventType().equals(KeyEvent.KEY_PRESSED)){
 
 			// only allow navigation keys
 			if (k.getCode() != KeyCode.LEFT

@@ -314,6 +314,8 @@ public class JFXConformerPanel extends JFXPanel {
 
 			if (optimizeView)
 				mScene.optimizeView();
+
+			mScene.setShowInteractions(true);
 		});
 	}
 

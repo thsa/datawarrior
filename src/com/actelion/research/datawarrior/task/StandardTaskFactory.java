@@ -177,6 +177,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskGotoLabel.TASK_NAME) ? new DETaskGotoLabel(frame)
 			 : codeMatches(taskCode, DETaskHideTableColumnGroup.TASK_NAME) ? new DETaskHideTableColumnGroup(frame, mainPane.getTableView(), frame.getTableModel())
 			 : codeMatches(taskCode, DETaskHideTableColumns.TASK_NAME) ? new DETaskHideTableColumns(frame, mainPane.getTableView(), mainPane.getTableModel(), null)
+			 : codeMatches(taskCode, DETaskIfThen.TASK_NAME) ? new DETaskIfThen(frame)
 			 : codeMatches(taskCode, DETaskImportHitlist.TASK_NAME) ? new DETaskImportHitlist(application)
 			 : codeMatches(taskCode, DETaskImportMacro.TASK_NAME) ? new DETaskImportMacro(application)
 			 : codeMatches(taskCode, DETaskInvertSelection.TASK_NAME) ? new DETaskInvertSelection(frame)
@@ -410,6 +411,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskGotoLabel.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TABLE, DETaskHideTableColumnGroup.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TABLE, DETaskHideTableColumns.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskIfThen.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskImportHitlist.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskImportMacro.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_EDIT, DETaskInvertSelection.TASK_NAME));

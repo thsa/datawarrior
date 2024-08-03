@@ -241,7 +241,14 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 						continue;	// If label is found, then continue with task after the label. Otherwise just continue.
 						}
 
-		    		if (cf instanceof DETaskRepeatNextTask && currentTask<mRunningMacro.getTaskCount()-1) {
+					if (cf instanceof DETaskIfThen) {
+						Properties config = mRunningMacro.getTaskConfiguration(currentTask);
+						if (!((DETaskIfThen)cf).isConditionMet(config, mFrontFrame))
+							currentTask++;
+						continue;
+						}
+
+					if (cf instanceof DETaskRepeatNextTask && currentTask<mRunningMacro.getTaskCount()-1) {
 		    			Properties config = mRunningMacro.getTaskConfiguration(currentTask);
 					    int lastTask = currentTask+1;
 					    int taskCountMode = ((DETaskRepeatNextTask)cf).getTaskCountMode(config);

@@ -206,6 +206,15 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 			}
 		}
 
+	private int findNextTask(String taskName, int fromIndex) {
+		String code = mTaskFactory.getTaskCodeFromName(taskName);
+		for (int i=fromIndex; i<mRunningMacro.getTaskCount(); i++)
+			if (code.equals(mRunningMacro.getTask(i).getCode()))
+				return i;
+
+		return -1;
+		}
+
 	private int findLabel(DEMacro macro, String name) {
 		for (int i = 0; i < macro.getTaskCount(); i++) {
 			DEMacro.Task task = macro.getTask(i);
@@ -215,7 +224,6 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 			}
 		return -1;
 		}
-
 
 	@Override
 	public void run() {
@@ -243,10 +251,32 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 
 					if (cf instanceof DETaskIfThen) {
 						Properties config = mRunningMacro.getTaskConfiguration(currentTask);
-						if (!((DETaskIfThen)cf).isConditionMet(config, mFrontFrame))
-							currentTask++;
+						boolean conditionMet = ((DETaskIfThen)cf).isConditionMet(config, mFrontFrame);
+
+						int indexEndIf = findNextTask(DETaskEndIf.TASK_NAME, currentTask+1);
+						if (indexEndIf == -1)
+							indexEndIf = mRunningMacro.getTaskCount();  // default: open end
+
+						if (!conditionMet) {   // otherwise just continue after DETaskIfThen
+							int indexElse = findNextTask(DETaskElse.TASK_NAME, currentTask+1);
+							if (indexElse == -1 || indexElse > indexEndIf)
+								currentTask = indexEndIf;
+							else
+								currentTask = indexElse;
+							}
 						continue;
 						}
+
+					if (cf instanceof DETaskElse) {
+						currentTask = findNextTask(DETaskEndIf.TASK_NAME, currentTask+1);
+						if (currentTask == -1)
+							currentTask = mRunningMacro.getTaskCount();  // default: open end
+						continue;
+					}
+
+					if (cf instanceof DETaskExitMacro) {
+						break;
+					}
 
 					if (cf instanceof DETaskRepeatNextTask && currentTask<mRunningMacro.getTaskCount()-1) {
 		    			Properties config = mRunningMacro.getTaskConfiguration(currentTask);

@@ -90,7 +90,7 @@ public abstract class DETaskAbstractSetViewOptions extends AbstractViewTask impl
 			return createViewOptionContent();
 
 		int gap = HiDPIHelper.scale(8);
-		double size[][] = { {TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL}, {TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
+		double[][] size = { {TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL}, {TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
 
 		JPanel p = new JPanel();
 		p.setLayout(new TableLayout(size));
@@ -131,7 +131,7 @@ public abstract class DETaskAbstractSetViewOptions extends AbstractViewTask impl
 	 */
 	public JVisualization getInteractiveVisualization() {
 		CompoundTableView view  = getInteractiveView();
-		return (view == null || !(view instanceof VisualizationPanel)) ? null : ((VisualizationPanel)view).getVisualization();
+		return (!(view instanceof VisualizationPanel)) ? null : ((VisualizationPanel)view).getVisualization();
 		}
 
 	@Override

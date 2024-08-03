@@ -21,6 +21,7 @@ package com.actelion.research.datawarrior.task;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.gui.dock.Dockable;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.CompoundTableView;
 import info.clearthought.layout.TableLayout;
@@ -38,9 +39,9 @@ public abstract class AbstractViewTask extends ConfigurableTask {
 	private static final String PROPERTY_VIEW_NAME = "viewName";
 	private static final String ITEM_SELECTED_VIEW = "<Selected View>";
 
-	private DEMainPane			mMainPane;
-	private JComboBox			mComboBox;
-	private CompoundTableView	mView;
+	private final DEMainPane mMainPane;
+	private JComboBox<String> mComboBox;
+	private final CompoundTableView mView;
 
 	/**
 	 * @param parent
@@ -62,13 +63,14 @@ public abstract class AbstractViewTask extends ConfigurableTask {
 		if (hasInteractiveView())
 			return createInnerDialogContent();
 
+		int gap = HiDPIHelper.scale(8);
 		JPanel p = new JPanel();
-		double[][] size = { {8, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 8},
-		        			{8, TableLayout.PREFERRED, 8, TableLayout.PREFERRED} };
+		double[][] size = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap},
+		        			{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
         p.setLayout(new TableLayout(size));
 
         p.add(new JLabel("View name:"), "1,1");
-        mComboBox = new JComboBox();
+        mComboBox = new JComboBox<>();
         if (allowsSelectedView())
 	    	mComboBox.addItem(ITEM_SELECTED_VIEW);
         for (Dockable d:mMainPane.getDockables())

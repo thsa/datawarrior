@@ -32,7 +32,7 @@ import java.awt.event.WindowEvent;
 
 public class FXExplanationEditor extends JFrame {
 	private HTMLEditor mEditor;
-	private CompoundTableModel mTableModel;
+	private final CompoundTableModel mTableModel;
 
 	public FXExplanationEditor(Frame parent, CompoundTableModel tableModel) {
 		super("Explanation Editor");

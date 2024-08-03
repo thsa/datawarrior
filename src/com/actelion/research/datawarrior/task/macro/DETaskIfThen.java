@@ -16,17 +16,18 @@ public class DETaskIfThen extends ConfigurableTask {
 	private static final String PROPERTY_VALUE = "value";
 	private static final String PROPERTY_INVERSE = "inverse";
 	private static final String PROPERTY_MODE = "mode";
-	private static final String[] MODE_TEXT = { "Column exists", "File exists" };
-	private static final String[] MODE_CODE = { "column", "file" };
+	private static final String[] MODE_TEXT = { "Column exists", "View Exists", "File exists" };
+	private static final String[] MODE_CODE = { "column", "view", "file" };
 	private static final int MODE_COLUMN = 0;
-	private static final int MODE_FILE = 1;
+	private static final int MODE_VIEW = 1;
+	private static final int MODE_FILE = 2;
 
 	private JComboBox<String> mComboBoxMode;
 	private JTextField mTextFieldValue;
 	private JCheckBox mCheckBoxInverse;
 
 	public DETaskIfThen(Frame parent) {
-		super(parent, true);
+		super(parent, false);
 	}
 
 	@Override
@@ -52,13 +53,12 @@ public class DETaskIfThen extends ConfigurableTask {
 		content.add(new JLabel("Mode:"), "1,1");
 		content.add(mComboBoxMode, "3,1");
 
-		content.add(new JLabel("Label name:"), "1,3");
+		content.add(new JLabel("Value:"), "1,3");
 		mTextFieldValue = new JTextField(6);
 		content.add(mTextFieldValue, "3,3");
 
-		content.add(new JLabel("Inverse:"), "1,5");
-		mCheckBoxInverse = new JCheckBox();
-		content.add(mCheckBoxInverse, "3,5");
+		mCheckBoxInverse = new JCheckBox("Inverse");
+		content.add(mCheckBoxInverse, "1,5,3,5");
 
 		return content;
 	}
@@ -103,6 +103,8 @@ public class DETaskIfThen extends ConfigurableTask {
 		boolean inverse = "true".equals(configuration.getProperty(PROPERTY_INVERSE));
 		if (mode == MODE_COLUMN)
 			return inverse ^ (parentFrame.getTableModel().findColumn(value) != -1);
+		if (mode == MODE_VIEW)
+			return inverse ^ (parentFrame.getMainFrame().getMainPane().getView(value) != null);
 		if (mode == MODE_FILE)
 			return inverse ^ (new File(value).exists());
 

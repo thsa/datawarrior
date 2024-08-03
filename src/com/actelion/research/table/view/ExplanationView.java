@@ -19,7 +19,9 @@
 package com.actelion.research.table.view;
 
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.datawarrior.task.macro.DETaskRunMacro;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
@@ -86,8 +88,13 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 						String link = nodeList.item(i).toString();
 						if (link.startsWith("macro:")) {
 							((com.sun.webkit.dom.HTMLAnchorElementImpl)nodeList.item(i)).addEventListener("click", e ->
-									SwingUtilities.invokeLater(() ->
-										new DETaskRunMacro(DataWarrior.getApplication().getActiveFrame(), link.substring(6)).defineAndRun() ), false );
+									SwingUtilities.invokeLater(() -> {
+										DEFrame frame = DataWarrior.getApplication().getActiveFrame();
+										if (DEMacroRecorder.getInstance().isRunningMacro())
+											JOptionPane.showMessageDialog(frame, "A macro is running already. Please wait until that macro has finished.");
+										else
+											new DETaskRunMacro(frame, link.substring(6)).defineAndRun();
+							} ), false );
 						}
 					}
 				}

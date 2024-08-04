@@ -134,7 +134,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 
 	private JMenuItem jMenuFileNew,jMenuFileNewFromVisible,jMenuFileNewFromSelection,jMenuFileNewFromPivoting,jMenuFileNewFromReversePivoting,jMenuFileNewFromTransposition,
 					  jMenuFileOpen,jMenuFileOpenMacro,jMenuFileOpenTemplate,jMenuFileOpenMDLReactions,jMenuFileMerge,
-					  jMenuFileAppend,jMenuFileClose,jMenuFileCloseAll,jMenuFileSave,jMenuFileSaveAs,jMenuFileSaveText,
+					  jMenuFileAppend,jMenuFileClose,jMenuFileCloseAll,jMenuFileSave,jMenuFileSaveAs,jMenuFileSaveTXT,jMenuFileSaveCSV,
 					  jMenuFileSaveSDF,jMenuFileSaveTemplate,jMenuFileSaveVisibleAs,jMenuFilePageFormat,
 					  jMenuFilePreview,jMenuFilePrint, jMenuFileQuit,jMenuEditCut,jMenuEditCopy,jMenuEditPaste,
 					  jMenuEditPasteWithHeader,jMenuEditPasteWithoutHeader,jMenuEditDelete,jMenuEditPasteAppend,jMenuEditPasteMerge,
@@ -501,7 +501,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuFileSave = new JMenuItem();
 		jMenuFileSaveAs = new JMenuItem();
 		jMenuFileSaveSpecial = new JMenu();
-		jMenuFileSaveText = new JMenuItem();
+		jMenuFileSaveTXT = new JMenuItem();
+		jMenuFileSaveCSV = new JMenuItem();
 		jMenuFileSaveSDF = new JMenuItem();
 		jMenuFileSaveTemplate = new JMenuItem();
 		jMenuFileSaveVisibleAs = new JMenuItem();
@@ -554,8 +555,10 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuFileSaveAs.setAccelerator(KeyStroke.getKeyStroke('S', Event.SHIFT_MASK | MENU_MASK));
 		jMenuFileSaveAs.addActionListener(this);
 		jMenuFileSaveSpecial.setText("Save Special");
-		jMenuFileSaveText.setText("Textfile...");
-		jMenuFileSaveText.addActionListener(this);
+		jMenuFileSaveTXT.setText("TAB-Delimited Textfile...");
+		jMenuFileSaveTXT.addActionListener(this);
+		jMenuFileSaveCSV.setText("Comma-Separated Textfile...");
+		jMenuFileSaveCSV.addActionListener(this);
 		jMenuFileSaveSDF.setText("SD-File...");
 		jMenuFileSaveSDF.addActionListener(this);
 		jMenuFileSaveTemplate.setText("Template...");
@@ -608,7 +611,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuFile.addSeparator();
 		jMenuFile.add(jMenuFileSave);
 		jMenuFile.add(jMenuFileSaveAs);
-		jMenuFileSaveSpecial.add(jMenuFileSaveText);
+		jMenuFileSaveSpecial.add(jMenuFileSaveTXT);
+		jMenuFileSaveSpecial.add(jMenuFileSaveCSV);
 		jMenuFileSaveSpecial.add(jMenuFileSaveSDF);
 		jMenuFileSaveSpecial.add(jMenuFileSaveTemplate);
 		jMenuFile.add(jMenuFileSaveSpecial);
@@ -1651,8 +1655,10 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					new DETaskSaveFile(mParentFrame).defineAndRun();
 			} else if (source == jMenuFileSaveAs)
 				new DETaskSaveFileAs(mParentFrame).defineAndRun();
-			else if (source == jMenuFileSaveText)
-				new DETaskSaveTextFileAs(mParentFrame).defineAndRun();
+			else if (source == jMenuFileSaveTXT)
+				new DETaskSaveTextFileAs(mParentFrame, FileHelper.cFileTypeTextTabDelimited).defineAndRun();
+			else if (source == jMenuFileSaveCSV)
+				new DETaskSaveTextFileAs(mParentFrame, FileHelper.cFileTypeTextCommaSeparated).defineAndRun();
 			else if (source == jMenuFileSaveSDF)
 				new DETaskSaveSDFileAs(mParentFrame).defineAndRun();
 			else if (source == jMenuFileSaveTemplate)

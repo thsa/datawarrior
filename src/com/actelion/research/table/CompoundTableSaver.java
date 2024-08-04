@@ -109,11 +109,12 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 	 */
 	public void saveText(File file) {
 		mRuntimeProperties = null;
-		mDataType = FileHelper.cFileTypeTextTabDelimited;
+		mDataType = ((FileHelper.getFileType(file.getName()) & FileHelper.cFileTypeTextAnyCSV) != 0) ?
+				FileHelper.cFileTypeTextCommaSeparated : FileHelper.cFileTypeTextTabDelimited;  // no '|' or ';' for now!
 		mFile = file;
 		mVisibleOnly = false;
 		mEmbedDetails = false;
-		
+
 		saveFile();
 		}
 
@@ -240,12 +241,14 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 		if (mToClipboard && mTable == null)	// just to make sure
 			return;
 
+		String separator = (mDataType == FileHelper.cFileTypeTextCommaSeparated) ? "\",\"" : "\t";
+
 		// first write non-displayable columns
 		if (mDataType == FileHelper.cFileTypeDataWarrior) {
 			for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 				if (!mTableModel.isColumnDisplayable(column)) {
 					theWriter.write(mTableModel.getColumnTitleNoAlias(column));
-					theWriter.write("\t");
+					theWriter.write(separator);
 					}
 				}
 			}
@@ -261,7 +264,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 					else
 						theWriter.write(mTableModel.getColumnTitleNoAlias(column));
 					if (i < selectedColumn.length-1)
-						theWriter.write("\t");
+						theWriter.write(separator);
 					}
 				theWriter.write("\n");
 				}
@@ -269,20 +272,27 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 		else {
 			// now write displayable columns in table model order
 			int tabs = mTableModel.getColumnCount() - 1;
+			if ((mDataType == FileHelper.cFileTypeTextCommaSeparated))
+				theWriter.write("\"");
 			for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 				if (mTableModel.isColumnDisplayable(column)) {
-					if (mDataType == FileHelper.cFileTypeTextTabDelimited)
-						theWriter.write(mTableModel.getColumnTitleNoAliasWithSpecialType(column));
-					else
-						theWriter.write(mTableModel.getColumnTitleNoAlias(column));
+					String title = (mDataType == FileHelper.cFileTypeTextTabDelimited
+								 || mDataType == FileHelper.cFileTypeTextCommaSeparated) ?
+							mTableModel.getColumnTitleNoAliasWithSpecialType(column)
+						  : mTableModel.getColumnTitleNoAlias(column);
+					if ((mDataType == FileHelper.cFileTypeTextCommaSeparated))
+						title = title.replace("\"", "\"\"");
+					theWriter.write(title);
 					if (tabs-- > 0)
-						theWriter.write("\t");
+						theWriter.write(separator);
 					}
 				}
+			if ((mDataType == FileHelper.cFileTypeTextCommaSeparated))
+				theWriter.write("\"");
 			}
 
 		if (!mToClipboard)
-			theWriter.newLine();
+			theWriter.write("\n");
 
 		int rowCount = mVisibleOnly ? mTableModel.getRowCount() : mTableModel.getTotalRowCount();
 
@@ -305,7 +315,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 					for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 						if (!mTableModel.isColumnDisplayable(column)) {
 							theWriter.write(convertNewlines(getValue(record, column)));
-							theWriter.write("\t");
+							theWriter.write(separator);
 							}
 						}
 					}
@@ -317,19 +327,26 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 									 mTable.convertColumnIndexToModel(selectedColumn[i]));
 						theWriter.write(convertNewlines(getValue(record, column)));
 						if (i < selectedColumn.length-1)
-							theWriter.write("\t");
+							theWriter.write(separator);
 						}
 					theWriter.write("\n");
 					}
 				else {
+					if ((mDataType == FileHelper.cFileTypeTextCommaSeparated))
+						theWriter.write("\"");
 					int tabs = mTableModel.getColumnCount() - 1;
 					for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 						if (mTableModel.isColumnDisplayable(column)) {
-							theWriter.write(convertNewlines(getValue(record, column)));
+							String value = convertNewlines(getValue(record, column));
+							if ((mDataType == FileHelper.cFileTypeTextCommaSeparated))
+								value = value.replace("\"", "\"\"");
+							theWriter.write(value);
 							if (tabs-- > 0)
-								theWriter.write("\t");
+								theWriter.write(separator);
 							}
 						}
+					if ((mDataType == FileHelper.cFileTypeTextCommaSeparated))
+						theWriter.write("\"");
 					}
 
 				if (!mToClipboard)
@@ -350,7 +367,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 
 	private String getIDCodeAndCoords(CompoundRecord record, int column) {
 		String idcode = mTableModel.getValue(record, column);
-		if (idcode.length() == 0)
+		if (idcode.isEmpty())
 			return idcode;
 		int coordsColumn = mTableModel.getChildColumn(column, CompoundTableConstants.cColumnType2DCoordinates);
 		if (coordsColumn == -1)
@@ -358,12 +375,12 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 		if (coordsColumn == -1)
 			return idcode;
 		String coords = mTableModel.getValue(record, coordsColumn);
-		return (coords.length() == 0) ? idcode : idcode.concat(" ").concat(coords);
+		return (coords.isEmpty()) ? idcode : idcode.concat(" ").concat(coords);
 		}
 
 	private String getRXNCodeWithCoordsAndMapping(CompoundRecord record, int column) {
 		String rxncode = mTableModel.getValue(record, column);
-		if (rxncode.length() == 0)
+		if (rxncode.isEmpty())
 			return rxncode;
 
 		int coordsColumn = mTableModel.getChildColumn(column, CompoundTableConstants.cColumnType2DCoordinates);
@@ -372,16 +389,16 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 		int mappingColumn = mTableModel.getChildColumn(column, CompoundTableConstants.cColumnTypeReactionMapping);
 		String mapping = (mappingColumn == -1) ? "" : mTableModel.getValue(record, mappingColumn);
 
-		if (mapping.length() != 0 || coords.length() != 0)
+		if (!mapping.isEmpty() || !coords.isEmpty())
 			rxncode = rxncode + ReactionEncoder.OBJECT_DELIMITER;
 
-		if (mapping.length() != 0) {
+		if (!mapping.isEmpty()) {
 			rxncode = rxncode + mapping;
-			if (coords.length() != 0)
+			if (!coords.isEmpty())
 				rxncode = rxncode + ReactionEncoder.OBJECT_DELIMITER;
 			}
 
-		if (coords.length() != 0)
+		if (!coords.isEmpty())
 			rxncode = rxncode + coords;
 
 		return rxncode;
@@ -732,6 +749,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 			case FileHelper.cFileTypeDataWarrior:
 			case FileHelper.cFileTypeDataWarriorTemplate:
 			case FileHelper.cFileTypeTextTabDelimited:
+			case FileHelper.cFileTypeTextCommaSeparated:
 				writeTextData();
 				break;
 			case FileHelper.cFileTypeSDV2:

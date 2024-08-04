@@ -26,6 +26,7 @@ import com.actelion.research.datawarrior.task.chem.elib.DETaskBuildEvolutionaryL
 import com.actelion.research.datawarrior.task.data.*;
 import com.actelion.research.datawarrior.task.data.fuzzy.DETaskCalculateFuzzyScore;
 import com.actelion.research.datawarrior.task.db.DETaskBuildingBlockQuery;
+import com.actelion.research.datawarrior.task.file.DETaskSaveTextFileAs;
 import com.actelion.research.datawarrior.task.table.DETaskCopyTableCells;
 import com.actelion.research.datawarrior.task.table.DETaskJumpToReferenceRow;
 import com.actelion.research.datawarrior.task.view.*;
@@ -406,6 +407,8 @@ public class DEMacro implements CompoundTableConstants {
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskBuildingBlockQuery.TASK_NAME);
 		else if (taskCode.equals("automaticSARAnalysis") || taskCode.equals("coreBasedSARAnalysis"))
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskDecomposeRGroups.TASK_NAME);
+		else if (taskCode.equals("saveTextFile"))
+			return StandardTaskFactory.constructTaskCodeFromName(DETaskSaveTextFileAs.TASK_NAME_TXT);
 
 		return taskCode;
 		}

@@ -37,17 +37,17 @@ public abstract class DETaskAbstractSaveFile extends ConfigurableTask implements
 	protected static final String PROPERTY_FILENAME = "fileName";
 	private static final String ASK_FOR_FILE = "#ask#";
 
-	private DataWarrior		mApplication;
-	private JFilePathLabel	mFilePathLabel;
-	private JButton			mButtonEdit;
-	private JCheckBox		mCheckBoxInteractive;
-	private String			mDialogTitle;
-	private CompoundTableModel	mTableModel;
+	private final DataWarrior mApplication;
+	private JFilePathLabel mFilePathLabel;
+	private JButton mButtonEdit;
+	private JCheckBox mCheckBoxInteractive;
+	private final String mDialogTitle;
+	private final CompoundTableModel mTableModel;
 
 	/**
 	 * Creates a SaveAs/ExportAs task which only shows a configuration dialog,
 	 * if the task is not invoked interactively.
-	 * Otherwise a file chooser is shown to directly select the file to be saved.
+	 * Otherwise, a file chooser is shown to directly select the file to be saved.
 	 * @param parent
 	 * @param dialogTitle
 	 */
@@ -122,7 +122,7 @@ public abstract class DETaskAbstractSaveFile extends ConfigurableTask implements
 			return true;
 		if (isLive && !isFileAndPathValid(fileName, true, false))
 			return false;
-		if (FileHelper.getFileType(fileName) != getFileType()) {
+		if ((FileHelper.getFileType(fileName) & getFileType()) == 0) {
 			showErrorMessage("Incompatible file type.");
 			return false;
 			}

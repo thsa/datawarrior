@@ -18,32 +18,34 @@
 
 package com.actelion.research.datawarrior.task.file;
 
+import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.gui.FileHelper;
+import com.actelion.research.table.CompoundTableSaver;
+import com.actelion.research.table.model.CompoundTableModel;
+
+import javax.swing.*;
 import java.io.File;
 import java.util.Properties;
 
-import javax.swing.JComponent;
-import javax.swing.JTable;
-
-import com.actelion.research.chem.io.CompoundFileHelper;
-import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.CompoundTableSaver;
-
 public class DETaskSaveTextFileAs extends DETaskAbstractSaveFile {
-    public static final String TASK_NAME = "Save Text-File";
+    public static final String TASK_NAME_TXT = "Save TAB-Delimited File";
+	public static final String TASK_NAME_CSV = "Save Comma-Separated File";
 
-	public DETaskSaveTextFileAs(DEFrame parent) {
+	private final int mFileType;
+
+	public DETaskSaveTextFileAs(DEFrame parent, int fileType) {
 		super(parent, "");
+		mFileType = fileType;
 		}
 
 	@Override
 	public String getTaskName() {
-		return TASK_NAME;
+		return (mFileType == FileHelper.cFileTypeTextCommaSeparated) ? TASK_NAME_CSV : TASK_NAME_TXT ;
 		}
 
 	@Override
 	public int getFileType() {
-		return CompoundFileHelper.cFileTypeTextTabDelimited;
+		return mFileType;
 		}
 
 	@Override

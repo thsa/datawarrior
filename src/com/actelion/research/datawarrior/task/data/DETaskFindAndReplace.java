@@ -80,12 +80,12 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 	public static final String[] MODE_NAME = { "All rows", "Selected rows", "Visible rows" };
 	public static final String[] MODE_CODE = { "all", "selected", "visible" };
 
-	private DEFrame				mParentFrame;
-	private CompoundTableModel	mTableModel;
+	private final DEFrame mParentFrame;
+	private final CompoundTableModel mTableModel;
 	private JPanel				mDialogPanel;
 	private JTextField			mTextFieldWhat,mTextFieldWith;
 	private JEditableStructureView	mStructureFieldWhat,mStructureFieldWith;
-	private JComboBox			mComboBoxColumn,mComboBoxWhat,mComboBoxMode;
+	private JComboBox<String>	mComboBoxColumn,mComboBoxWhat,mComboBoxMode;
 	private JCheckBox			mCheckBoxIsStructureColumn,mCheckBoxCaseSensitive,mCheckBoxAllowSubstituents;
 	private JLabel				mLabelUseRGroups;
 	private JPanel				mCheckBoxPanel;
@@ -145,8 +145,8 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		mDialogPanel = new JPanel();
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
-							{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2,
-								  TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+							{gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1,
+								  TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		mDialogPanel.setLayout(new TableLayout(size));
 
 		mDialogPanel.add(new JLabel("Column:", SwingConstants.RIGHT), "1,1");
@@ -159,7 +159,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		mDialogPanel.add(mTextFieldWith, "3,7");
 		mDialogPanel.add(mCheckBoxCaseSensitive, "3,9");
 
-		mComboBoxMode = new JComboBox(MODE_NAME);
+		mComboBoxMode = new JComboBox<>(MODE_NAME);
 		mDialogPanel.add(new JLabel("Target:", SwingConstants.RIGHT), "1,13");
 		mDialogPanel.add(mComboBoxMode, "3,13");
 
@@ -945,6 +945,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 
 		mReplacements = 0;
 		mColumns = 0;
+		boolean[] rowChanged = new boolean[mTableModel.getTotalRowCount()];
 
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
 			int viewColumn = table.convertTotalColumnIndexToView(column);
@@ -960,22 +961,27 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 				final int _column = column;
 				final String _what = what;
 				try {
-					SwingUtilities.invokeAndWait(() -> replaceTextInOneColumn(_what, with, _column, mode, isRegex, isCaseSensitive));
+					SwingUtilities.invokeAndWait(() -> replaceTextInOneColumn(_what, with, _column, mode, isRegex, isCaseSensitive, rowChanged));
 					} catch (Exception e) {}
 				}
 			}
 
 		if (isInteractive()) {
+			int rows = 0;
+			for (int row=0; row<mTableModel.getTotalRowCount(); row++)
+				if (rowChanged[row])
+					rows++;
+
 			String msg = what.equals(CODE_WHAT_ANY) ?
 					"The cell content was replaced " + mReplacements + " times in " + mColumns + " columns."
 							  : what.equals(CODE_WHAT_EMPTY) ?
-					"" + mReplacements + " empty cells in " + mColumns + " columns were filled with '" + with + "'."
-				  : "'" + what + "' was replaced " + mReplacements + " times in " + mColumns + " columns.";
+					mReplacements + " empty cells in " + mColumns + " columns were filled with '" + with + "'."
+				  : "'" + what + "' was replaced " + mReplacements + " times in " + rows + " rows and " + mColumns + " columns.";
 			showInteractiveTaskMessage(msg, JOptionPane.INFORMATION_MESSAGE);
 			}
 		}
 
-	private int replaceTextInOneColumn(String what, String with, int column, int mode, boolean isRegex, boolean isCaseSensitive) {
+	private int replaceTextInOneColumn(String what, String with, int column, int mode, boolean isRegex, boolean isCaseSensitive, boolean[] rowChanged) {
 		int replacements = 0;
 
 		for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
@@ -989,46 +995,70 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 				if (value.isEmpty()) {
 					mTableModel.setTotalValueAt(with, row, column);
 					replacements++;
+					rowChanged[row] = true;
 					}
 				}
 			else if (what.equals(CODE_WHAT_ANY)) {
 				mTableModel.setTotalValueAt(with, row, column);
 				replacements++;
+				rowChanged[row] = true;
 				}
 			else if (isRegex) {
 				String newValue = value.replaceAll(what, with);
 				if (!newValue.equals(value)) {
 					mTableModel.setTotalValueAt(newValue, row, column);
 					replacements++;
+					rowChanged[row] = true;
 					}
 				}
 			else if (isCaseSensitive) {
 				if (value.contains(what)) {
-					mTableModel.setTotalValueAt(value.replace(what, with), row, column);
-					replacements++;
-					}
-				}
-			else {
-				if (value.toLowerCase().contains(what)) {
 					StringBuilder newValue = new StringBuilder();
-					String lowerValue = value.toLowerCase();
 					int oldValueIndex = 0;
-					int index = lowerValue.indexOf(what);
+					int index = value.indexOf(what);
 					while (index != -1) {
 						if (oldValueIndex < index)
-							newValue.append(value.substring(oldValueIndex, index));
+							newValue.append(value, oldValueIndex, index);
 
 						newValue.append(with);
 						oldValueIndex = index + what.length();
 
-						index = lowerValue.indexOf(what, oldValueIndex);
+						index = value.indexOf(what, oldValueIndex);
+
+						replacements++;
+						rowChanged[row] = true;
+					}
+
+					if (oldValueIndex < value.length())
+						newValue.append(value.substring(oldValueIndex));
+
+					mTableModel.setTotalValueAt(newValue.toString(), row, column);
+					}
+				}
+			else {
+				String lowerWhat = what.toLowerCase();
+				if (value.toLowerCase().contains(lowerWhat)) {
+					StringBuilder newValue = new StringBuilder();
+					String lowerValue = value.toLowerCase();
+					int oldValueIndex = 0;
+					int index = lowerValue.indexOf(lowerWhat);
+					while (index != -1) {
+						if (oldValueIndex < index)
+							newValue.append(value, oldValueIndex, index);
+
+						newValue.append(with);
+						oldValueIndex = index + what.length();
+
+						index = lowerValue.indexOf(lowerWhat, oldValueIndex);
+
+						replacements++;
+						rowChanged[row] = true;
 						}
 
 					if (oldValueIndex < value.length())
 						newValue.append(value.substring(oldValueIndex));
 
 					mTableModel.setTotalValueAt(newValue.toString(), row, column);
-					replacements++;
 					}
 				}
 			}

@@ -268,7 +268,7 @@ https://pubs.acs.org/doi/10.1021/acs.jcim.4c00516</a></p>
 <p><b>Rigid Alignment:</b> If your dataset doesn't contain at least one column with one or multiple
 conformers, then you need to generate conformers for any of the molecules to be screened as
 described in <a href="help/conformers.html#Generate">generate conformers</a>. Otherwise, or afterward
-you configure the superpositioning task with <span class="menu">Superpose Conformers...</span> from the
+you configure the superpositioning task with <span class="menu">Superpose Conformers->Rigid...</span> from the
 <span class="menu">Chemistry</span> menu. A simple dialog opens, where you first select the
 column containing your conformers. You also need to specify the query conformer, which shall be
 PheSA-matched against all conformers.
@@ -303,9 +303,45 @@ visible with a right mouse click on the table header and choosing <span class="m
 'PheSA Score' column for each query structure. You would also have got distinct new columns for the
 best matching isomers and 3D-superpositions.</p><br>
 
+<p><b>Flexible Alignment:</b> To 3D-align all molecules from an open <span class="keyword">DataWarrior</span>
+file with a specific 3D-query molecule (conformer), your <span class="keyword">DataWarrior</span> file
+doesn't need to contain molecule coordinates in 3D. Instead, an initial conformer is calculated on the fly,
+which is then optimized in an step-wise fashion to optimally overlap with the query structure. Typically,
+flexible alignment produces better matches than the rigid variant of the algorithm, because in most cases
+even large rigid conformer sets don't contain perfectly matching conformers, especially, if a molecule
+has a high flexibility. i.e. many rotatable bonds. In order to align your molecules with a given conformer
+choose <span class="menu">Superpose Conformers->Flexible...</span> from the menu and continue as described above.</p>
+<br>
+
 <h3><a name="Docking"></a>Protein-Ligand Docking</h3>
 
+<p><span class="keyword">DataWarrior</span> uses a state-of-the-art docking algorithm that is about to be
+published. More details will be described here later...</p>
 
+<p>In order to dock the molecules of an open <span class="keyword">DataWarrior</span> window into a specific
+protein cavity choose <span class="menu">Dock Structures Into Protein Cavity...</span> from the
+<span class="menu">Chemistry</span> menu. A dialog opens. Now define a protein cavity from the popup menu
+that appears after a right mouse click into the protein area of the open dialog. Typically, you will open
+a local PDB file or specify a PDB-Code to retrieve protein structure from the PDB-database. The PDB-entry
+must contain at least one ligand molecule. In case of multiple ligand molecules you need to select one
+by selecting its molecular formula. Then <span class="keyword">DataWarrior</span> crops all parts of the
+protein that are more than 10 Angstrom away from the ligand and are not needed for the docking procedure.
+It also calculates the Conolly surface inside the cavity and starts docking your molecules as potential
+ligands into the cavity. This may take a few hours for thousands of molecules.</p>
+
+<p align="center"><img src="help/img/conf/dockingResult.jpeg" width="532" height="363"></p>
+<p><center><i>Docked molecule into complement factor B protease domain, PDB-ID: 6RAV).</i></center></p>
+
+<p>Once the docking calculation has finished, the <span class="keyword">DataWarrior</span> table contains
+two new columns, a docking score and a docked structure. The latter column's structures may differ slightly
+from the original structure column, because basic acidic atoms may be (de-)protonated and small
+unconnected fragments are removed. Another invisible column containes the 3D-atom coordinates of the docked
+pose. This column also knows about the natural ligand and the protein cavity. A detail view display the
+cavity with the docked structure. Optionally, the cavity surface, major interactions, and the natural ligand
+can be shown. If you have a device that is capable of displaying stereoscopic content, you may open a daughter
+view that mirrors the detail view for real 3D-perception. Interactions are calculated and shown according to
+S. Salentin, S. Schreiber, V. J. Haupt, M. F. Adasme, M. Schroeder; <i>PLIP: fully automated protein–ligand
+interaction profiler</i>; Nucleic Acids Research, 2015 1; doi: 10.1093/nar/gkv315</p>
 
 <br>
 

@@ -115,8 +115,7 @@ public class DockingPanelController implements V3DPopupMenuController {
 						addProteinAndLigand(new PDBFileParser().getFromPDB(pdbCode));
 					}
 					catch (Exception e) {
-						showMessageInEDT(e.getMessage());
-						e.printStackTrace();
+						showMessageInEDT("Couldn't retrieve file from PDB-database: '"+e.getMessage()+"'.\nHowever that file may by available for manual download from 'https://www.rcsb.org'");
 					}
 				}
 

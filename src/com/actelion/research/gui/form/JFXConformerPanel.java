@@ -3,6 +3,7 @@ package com.actelion.research.gui.form;
 import com.actelion.research.chem.Coordinates;
 import com.actelion.research.chem.Molecule;
 import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.hidpi.HiDPIIcon;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -19,6 +20,8 @@ import org.openmolecules.mesh.MoleculeSurfaceAlgorithm;
 import org.openmolecules.render.MoleculeArchitect;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +38,7 @@ import java.util.concurrent.FutureTask;
 public class JFXConformerPanel extends JFXPanel {
 	public static final double CAVITY_CROP_DISTANCE = 10.0;
 	private static boolean sURLStreamHandlerSet = false;
+	private static final String EDIT_MESSAGE = "<right mouse click to add content>";
 
 	private final Color REFERENCE_MOLECULE_COLOR = Color.INDIANRED;
 	private final Color OVERLAY_MOLECULE_COLOR = Color.LIGHTGRAY;
@@ -45,7 +49,7 @@ public class JFXConformerPanel extends JFXPanel {
 	private V3DPopupMenuController mController;
 	private FutureTask<Object> mConstructionTask;
 	private volatile int mCurrentUpdateID;
-	private boolean mAdaptToLookAndFeelChanges;
+	private boolean mAdaptToLookAndFeelChanges,mIsEditable;
 	private java.awt.Color mSceneBackground, mLookAndFeelSpotColor,
 			mMenuItemBackground,mMenuItemForeground,/*mMenuItemSelectionBackground,*/mMenuItemSelectionForeground;
 
@@ -63,6 +67,8 @@ public class JFXConformerPanel extends JFXPanel {
 			URL.setURLStreamHandlerFactory(new StringURLStreamHandlerFactory());
 			sURLStreamHandlerSet = true;
 		}
+
+		mIsEditable = settings.contains(V3DScene.ViewerSettings.EDITING);
 
 		collectLookAndFeelColors(); // we have to do this on the EDT
 
@@ -86,6 +92,25 @@ public class JFXConformerPanel extends JFXPanel {
 		}, null);
 		Platform.runLater(mConstructionTask);
 	}
+
+	@Override
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+
+		if (mIsEditable
+		 && (mScene == null || mScene.getWorld().getGroups().isEmpty())) {
+			Dimension theSize = getSize();
+			Insets insets = getInsets();
+			theSize.width -= insets.left + insets.right;
+			theSize.height -= insets.top + insets.bottom;
+
+			g.setFont(g.getFont().deriveFont(Font.PLAIN, HiDPIHelper.scale(10)));
+			FontMetrics metrics = g.getFontMetrics();
+			Rectangle2D bounds = metrics.getStringBounds(EDIT_MESSAGE, g);
+			g.drawString(EDIT_MESSAGE, (int)(insets.left+theSize.width-bounds.getWidth())/2,
+					(insets.top+theSize.height-metrics.getHeight())/2+metrics.getAscent());
+			}
+		}
 
 	/**
 	 * This waits for the constructor's with runLater() deferred initialization to complete

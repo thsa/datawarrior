@@ -287,7 +287,8 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskSplitRows.TASK_NAME) ? new DETaskSplitRows(frame, frame.getTableModel())
 			 : codeMatches(taskCode, DETaskSplitView.TASK_NAME) ? new DETaskSplitView(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskSQLQuery.TASK_NAME) ? new DETaskSQLQuery(frame, application)
-			 : codeMatches(taskCode, DETaskSuperposeConformers.TASK_NAME) ? new DETaskSuperposeConformers(frame)
+			 : codeMatches(taskCode, DETaskSuperposeConformers.TASK_NAME_FLEX) ? new DETaskSuperposeConformers(frame, true)
+			 : codeMatches(taskCode, DETaskSuperposeConformers.TASK_NAME_RIGID) ? new DETaskSuperposeConformers(frame, false)
 			 : codeMatches(taskCode, DETaskSynchronizeView.TASK_NAME) ? new DETaskSynchronizeView(frame, mainPane, null, null)
 			 : codeMatches(taskCode, DETaskRemoveColumnGroup.TASK_NAME) ? new DETaskRemoveColumnGroup(frame, mainPane.getTableView(), mainPane.getTableModel())
 			 : codeMatches(taskCode, DETaskUseAsFilter.TASK_NAME) ? new DETaskUseAsFilter(frame, mainPane, null)
@@ -525,7 +526,8 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskSplitRows.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSplitView.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskSQLQuery.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskSuperposeConformers.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskSuperposeConformers.TASK_NAME_FLEX));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskSuperposeConformers.TASK_NAME_RIGID));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSynchronizeView.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TABLE, DETaskRemoveColumnGroup.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskUseAsFilter.TASK_NAME));

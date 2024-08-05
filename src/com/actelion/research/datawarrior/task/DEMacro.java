@@ -22,6 +22,7 @@ import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.task.chem.DETaskClusterCompounds;
 import com.actelion.research.datawarrior.task.chem.DETaskDecomposeRGroups;
 import com.actelion.research.datawarrior.task.chem.DETaskExtractFragment;
+import com.actelion.research.datawarrior.task.chem.DETaskSuperposeConformers;
 import com.actelion.research.datawarrior.task.chem.elib.DETaskBuildEvolutionaryLibrary;
 import com.actelion.research.datawarrior.task.data.*;
 import com.actelion.research.datawarrior.task.data.fuzzy.DETaskCalculateFuzzyScore;
@@ -409,6 +410,8 @@ public class DEMacro implements CompoundTableConstants {
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskDecomposeRGroups.TASK_NAME);
 		else if (taskCode.equals("saveTextFile"))
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskSaveTextFileAs.TASK_NAME_TXT);
+		else if (taskCode.equals("superposeConformers"))
+			return StandardTaskFactory.constructTaskCodeFromName(DETaskSuperposeConformers.TASK_NAME_RIGID);
 
 		return taskCode;
 		}

@@ -221,7 +221,7 @@ public class DETaskAdd2DCoordinates extends DETaskAbstractFromStructure implemen
 		mCoordinateColumn = getTableModel().getChildColumn(idcodeColumn, CompoundTableConstants.cColumnType2DCoordinates);
 
 		String scaffolds = configuration.getProperty(PROPERTY_SCAFFOLD_LIST, "");
-		if (scaffolds.length() != 0) {
+		if (!scaffolds.isEmpty()) {
 			mExplicitScaffoldList = new ArrayList<>();
 			SSSearcherWithIndex ffpCreator = new SSSearcherWithIndex();
 			String[] idcodeList = scaffolds.split("\\t");

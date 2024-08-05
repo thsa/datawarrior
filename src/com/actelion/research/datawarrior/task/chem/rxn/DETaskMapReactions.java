@@ -147,15 +147,17 @@ public class DETaskMapReactions extends DETaskAbstractFromReaction {
 
 		rxn.removeAtomMapping(false);
 		try {
+/*
 AtomicBoolean b = new AtomicBoolean();
 new Thread(() -> {
  try { Thread.sleep(5000); } catch (InterruptedException ie) {}
  if (!b.get())
   System.out.println("sleepy row:"+row);
 }).start();
+*/
 			ChemicalRuleEnhancedReactionMapper mapper = new ChemicalRuleEnhancedReactionMapper();
 			mapper.map(rxn);
-b.set(true);
+// b.set(true);
 
 			String[] encoding = ReactionEncoder.encode(rxn, false);
 			if (encoding != null) {

@@ -20,8 +20,8 @@ package com.actelion.research.datawarrior.help;
 
 import com.actelion.research.chem.conf.TorsionDB;
 import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.gui.hidpi.HiDPIIcon;
 import com.actelion.research.gui.hidpi.HiDPIIconButton;
 import com.actelion.research.gui.hidpi.ScaledEditorKit;
 import com.sun.webkit.WebPage;
@@ -37,15 +37,15 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.html.HTMLEditorKit;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 
 public class DEHelpFrame extends JFrame implements HyperlinkListener {
+    @Serial
     private static final long serialVersionUID = 0x20061025;
 
     private static final String[][] CONTENT_PAGES = {
@@ -75,24 +75,55 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 
 	private static DEHelpFrame sHelpFrame;
 	private final JEditorPane mIndexArea;
-	private WebEngine	mEngine;
-	private final JTextField  mTextFieldSearch;
-	private final JLabel      mLabelMatchCount;
+	private WebEngine mEngine;
+	private final JTextField mTextFieldSearch;
+	private final JLabel mLabelMatchCount;
 	private final JLabel mLabelCurrentChapter;
-	private byte[][]    mSearchCache;
-	private int[]       mPageMatchCount;
-	private int         mTotalMatchCount,mTotalMatch,mChapterMatch,mCurrentChapter;
+	private byte[][] mSearchCache;
+	private int[] mPageMatchCount;
+	private int mTotalMatchCount,mTotalMatch,mChapterMatch,mCurrentChapter;
+	private static String sIndexHTML;
 
 	public static void updateLookAndFeel() {
 		if (sHelpFrame != null) {
 			SwingUtilities.updateComponentTreeUI(sHelpFrame);
+			sHelpFrame.mIndexArea.setText(getLAFAdaptedIndexHTML());  // timing is tricky; this does not change hyperlinks defined with setPage()
 			}
+		}
+
+	private static String getLAFAdaptedIndexHTML() {
+		if (sIndexHTML == null) {
+			try {
+				InputStream is = DEHelpFrame.class.getResource("/html/help/content.html").openStream();
+				BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+				sIndexHTML = reader.lines().collect(Collectors.joining("\n"));
+				}
+			catch (IOException ioe) {
+				sIndexHTML = "Loading Error";
+				}
+			}
+
+		int rgb1 = HiDPIIcon.getThemeSpotRGBs()[0] | 0xFF000000;
+		String trgb1 = Integer.toHexString(rgb1);
+		trgb1 = "#"+trgb1.substring(trgb1.length()-6);
+
+//		int rgb2 = HiDPIIcon.getThemeSpotRGBs()[1] | 0xFF000000;
+//		String trgb2 = Integer.toHexString(rgb2);
+//		trgb2 = "#"+trgb2.substring(trgb2.length()-6);
+
+		return sIndexHTML.replace("#3030AA", trgb1)/*.replace("#8080FF", trgb2)*/;
 		}
 
 	public static void showInstance(DEFrame parent) {
 		if (sHelpFrame == null) {
 			sHelpFrame = new DEHelpFrame(parent);
 			sHelpFrame.setVisible(true);
+			sHelpFrame.addComponentListener(new ComponentAdapter() {
+				@Override
+				public void componentShown(ComponentEvent e) {
+					SwingUtilities.invokeLater(() -> updateLookAndFeel() ); // for some reason we need to delay...
+					}
+				} );
 			}
 		else {
 			sHelpFrame.toFront();
@@ -105,8 +136,8 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 		final int scaled250 = HiDPIHelper.scale(250);
 		final int gap = HiDPIHelper.scale(8);
 
-		double[][] size = { {gap, TableLayout.FILL, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED,
-							 gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, HiDPIHelper.scale(80), gap },
+		double[][] size = { {gap, TableLayout.FILL, gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED,
+							 gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap, HiDPIHelper.scale(80), gap },
 							{gap, TableLayout.PREFERRED, gap} };
 		JPanel searchPanel = new JPanel();
 		searchPanel.setLayout(new TableLayout(size));
@@ -144,14 +175,11 @@ public class DEHelpFrame extends JFrame implements HyperlinkListener {
 		mIndexArea.setEditable(false);
 		mIndexArea.addHyperlinkListener(this);
 		mIndexArea.setContentType("text/html");
+
 		try {
-			DataWarrior app = parent.getApplication();
-			mIndexArea.setPage(getClass().getResource("/html/help/content.html"));
-			}
-		catch (IOException e) {
-			JOptionPane.showMessageDialog(parent,e.getMessage());
-			return;
-			}
+			mIndexArea.setPage(getClass().getResource("/html/help/content.html"));  // for hyperlinks to work, we have to use setPage()
+		} catch (IOException ioe) {}
+
 		JScrollPane spIndexArea = new JScrollPane(mIndexArea);
 		spIndexArea.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		spIndexArea.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);

@@ -98,7 +98,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 	private static final String[] FILE_TYPE_CODE = { "dwar", "sdf2", "sdf3" };
 	private static final int[] FILE_TYPE = { FileHelper.cFileTypeDataWarrior, FileHelper.cFileTypeSDV2, FileHelper.cFileTypeSDV3 };
 
-	private JComboBox			mComboBoxAlgorithm,mComboBoxTorsionSource,mComboBoxMinimize,mComboBoxFileType;
+	private JComboBox<String>	mComboBoxAlgorithm,mComboBoxTorsionSource,mComboBoxMinimize,mComboBoxFileType;
 	private JCheckBox			mCheckBoxExportFile,mCheckBoxPoolConformers,mCheckBoxLargestFragment,mCheckBoxNeutralize,mCheckBoxSkip,mCheckBoxProtonate;
 	private JFilePathLabel		mLabelFileName;
 	private JTextField			mTextFieldMaxCount,mTextFieldSkip,mTextFieldPH,mTextFieldPHSpan;
@@ -138,21 +138,21 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 	public JPanel getExtendedDialogContent() {
 		JPanel ep = new JPanel();
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED},
+		double[][] size = { {TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED},
 							{TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
 							3*gap, TableLayout.PREFERRED,
-							gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
-							gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED} };
+							gap>>1, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
+							gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED} };
 		ep.setLayout(new TableLayout(size));
 		ep.add(new JLabel("Algorithm:"), "0,0");
-		mComboBoxAlgorithm = new JComboBox(ALGORITHM_TEXT);
+		mComboBoxAlgorithm = new JComboBox<>(ALGORITHM_TEXT);
 		mComboBoxAlgorithm.addActionListener(this);
 		ep.add(mComboBoxAlgorithm, "2,0,4,0");
 		ep.add(new JLabel("Initial torsions:"), "0,2");
-		mComboBoxTorsionSource = new JComboBox(TORSION_SOURCE_TEXT);
+		mComboBoxTorsionSource = new JComboBox<>(TORSION_SOURCE_TEXT);
 		ep.add(mComboBoxTorsionSource, "2,2,4,2");
 		ep.add(new JLabel("Minimize energy:"), "0,4");
-		mComboBoxMinimize = new JComboBox(MINIMIZE_TEXT);
+		mComboBoxMinimize = new JComboBox<>(MINIMIZE_TEXT);
 		ep.add(mComboBoxMinimize, "2,4,4,4");
 
 		ep.add(new JLabel("Max. conformer count:"), "0,6");
@@ -172,7 +172,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		ep.add(mButtonEdit, "4,8");
 
 		ep.add(new JLabel("File type:"), "0,10");
-		mComboBoxFileType = new JComboBox(FILE_TYPE_TEXT);
+		mComboBoxFileType = new JComboBox<>(FILE_TYPE_TEXT);
 		mComboBoxFileType.addActionListener(this);
 		ep.add(mComboBoxFileType, "2,10");
 
@@ -289,7 +289,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 				}
 			if (mCheckBoxProtonate.isSelected()) {
 				configuration.setProperty(PROPERTY_PROTONATION_PH, mTextFieldPH.getText());
-				if (mTextFieldPHSpan.getText().length() != 0 && !mTextFieldPHSpan.getText().equals("0"))
+				if (!mTextFieldPHSpan.getText().isEmpty() && !mTextFieldPHSpan.getText().equals("0"))
 					configuration.setProperty(PROPERTY_PROTONATION_SPAN, mTextFieldPHSpan.getText());
 				}
 			}
@@ -405,7 +405,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 				}
 			String pH = configuration.getProperty(PROPERTY_PROTONATION_PH);
 			if (pH != null) {
-				if (pH.length() == 0) {
+				if (pH.isEmpty()) {
 					showErrorMessage("No pH-value given.");
 					return false;
 					}
@@ -557,7 +557,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 	private void consumeRows() {
 		String row;
 		try {
-			while ((row = mRowQueue.take()).length() != 0) {
+			while (!(row = mRowQueue.take()).isEmpty()) {
 				try {
 					mFileWriter.write(row);
 					} catch (IOException ioe) { break; }
@@ -709,13 +709,13 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 						System.out.println("new: "+canonizer.getIDCode());
 						}
 
-					if (coordsBuilder.length() != 0)
+					if (!coordsBuilder.isEmpty())
 						coordsBuilder.append(' ');
 					coordsBuilder.append(canonizer.getEncodedCoordinates(true));
 
 					if (mMinimization == MINIMIZE_MMFF94sPlus || mMinimization == MINIMIZE_MMFF94s) {
 						String energyText = (result.errorMessage != null) ? result.errorMessage : DoubleFormat.toString(result.energy);
-						if (energyBuilder.length() != 0)
+						if (!energyBuilder.isEmpty())
 							energyBuilder.append("; ");
 						energyBuilder.append(energyText);
 						}
@@ -723,7 +723,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 				}
 			}
 
-		if (coordsBuilder.length() != 0) {
+		if (!coordsBuilder.isEmpty()) {
 			getTableModel().setTotalValueAt(coordsBuilder.toString(), row, firstNewColumn);
 			if (mMinimization == MINIMIZE_MMFF94sPlus || mMinimization == MINIMIZE_MMFF94s) {
 				getTableModel().setTotalValueAt(energyBuilder.toString(), row, firstNewColumn+1);
@@ -763,7 +763,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		if (Float.isNaN(mPH1)) {
 			StringBuilder builder = new StringBuilder();
 			addConformersToQueue2(row, -1, mol, builder);
-			if (builder.length() != 0)
+			if (!builder.isEmpty())
 				mRowQueue.put(builder.toString());
 
 			return;
@@ -809,7 +809,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 			mol.setAtomCharge(pKa[i].atom, pKa[i].isBasic ? 0 : -1);
 			addConformersToQueue2(row, i-i1+1, new StereoMolecule(mol), builder);
 			}
-		if (builder.length() != 0)
+		if (!builder.isEmpty())
 			mRowQueue.put(builder.toString());
 		}
 
@@ -875,7 +875,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 			}
 
 		@Override public int compareTo(PKa o) {
-			return this.pKa > o.pKa ? 1 : this.pKa == o.pKa ? 0 : -1;
+			return Double.compare(this.pKa, o.pKa);
 			}
 		}
 
@@ -1003,14 +1003,14 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 						canonizer1.invalidateCoordinates();
 
 					if (mPoolConformers) {
-						if (coordsBuilder1.length() != 0)
+						if (!coordsBuilder1.isEmpty())
 							coordsBuilder1.append(' ');
 						coordsBuilder1.append(canonizer1.getEncodedCoordinates(true));
 						if (mMinimization != MINIMIZE_NONE) {
-							if (energyBuilder1.length() != 0)
+							if (!energyBuilder1.isEmpty())
 								energyBuilder1.append("; ");
 							energyBuilder1.append(result.energy());
-							if (errorBuilder1.length() != 0)
+							if (!errorBuilder1.isEmpty())
 								errorBuilder1.append("; ");
 							errorBuilder1.append(result.error());
 							}
@@ -1035,14 +1035,14 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 							canonizer2.invalidateCoordinates();
 
 						if (mPoolConformers) {
-							if (coordsBuilder2.length() != 0)
+							if (!coordsBuilder2.isEmpty())
 								coordsBuilder2.append(' ');
 							coordsBuilder2.append(canonizer2.getEncodedCoordinates(true));
 							if (mMinimization != MINIMIZE_NONE) {
-								if (energyBuilder2.length() != 0)
+								if (!energyBuilder2.isEmpty())
 									energyBuilder2.append("; ");
 								energyBuilder2.append(result.energy());
-								if (errorBuilder2.length() != 0)
+								if (!errorBuilder2.isEmpty())
 									errorBuilder2.append("; ");
 								errorBuilder2.append(result.error());
 								}

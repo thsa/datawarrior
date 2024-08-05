@@ -121,7 +121,7 @@ public class DETaskAddCanonicalCode extends DETaskAbstractFromStructure {
 		long hash = 0L;
 		if (mDistinguishStereoIsomers && mDistinguishTautomers && !mLargestFragmentOnly) {
 			String idcode = getTableModel().getTotalValueAt(row, getChemistryColumn());
-			if (idcode.length() != 0)
+			if (!idcode.isEmpty())
 				hash = CanonizerUtil.StrongHasher.hash(idcode);
 			}
 		else {

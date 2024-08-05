@@ -248,30 +248,38 @@ catena-Poly[[(2,2'-dimethyl-4,4'-bi-1,3-thiazole-N,N')cadmium]-di-bromido]</i></
 
 <h3><a name="Superpose"></a>Superposing Conformers</h3>
 
-<p>If the binding conformer of a protein's ligand is known or at least suspected, then this
-is often used to search compound collections for similar conformers regarding shape and
-pharmacophore features. With <span class="keyword">DataWarrior</span> you can perform such
-a virtual screening in two steps: First you <a href="help/conformers.html#Generate">generate
-conformers</a> from any of the molecules to be screened.
-Then you try superposing these conformers onto the query conformer and assign a score to each
-molecule representing the best conformer's degree of shape and pharmacophore feature overlap.
-For this purpose <span class="keyword">DataWarrior</span> uses an algorithm called
-<a href="help/phesa.html">PheSA (Pharmacophore enhanced shape alignment)</a>, which uses
+<p>If the binding conformer of a protein's ligand is known or at least suspected, then its
+3D-structure is often used to search compound collections for similar conformers regarding shape
+and pharmacophore features. With <span class="keyword">DataWarrior</span> you can perform such
+a virtual screening in two different ways, either by aligning the query conformer to a dataset
+with rigid, pre-computed conformers, or by generating conformers on the fly and optimizing their
+torsion angles to maximize query overlap while retaining low energy torsion angles at the same time.</p>
+In either of the two options you end up with conformers best-possible aligned to your query
+conformer and with a score that describes how much your aligned conformers overlap and how well
+any pharmacophiric features match. In fact, you get tree scores, one for the overlap, one for
+te pharmacophore match and one that summarizes both. For aligning and scoring
+<span class="keyword">DataWarrior</span> uses an algorithm called
+<a href="help/phesa.html">PheSA</a> (Pharmacophore enhanced shape alignment), which uses
 Gaussian functions to calculate and optimize the shared volume of two molecules' conformers
-while considering pharmacophore feature overlay at the same time.</p>
+while considering pharmacophore feature overlay at the same time. The PheSA algorithm was
+engineered by Joel Wahl and is described in <a href="https://pubs.acs.org/doi/10.1021/acs.jcim.4c00516">
+https://pubs.acs.org/doi/10.1021/acs.jcim.4c00516</a></p>
 
-<p>If your dataset contains at least one column with one or multiple conformers, then you may
-configure the superpositioning task with <span class="menu">Superpose Conformers...</span> from the
-<span class="menu">Chemistry</span> menu. A simple dialog opens, where you select the
-column containing the conformers. You also need to specify the query conformer, which shall be
+<p><b>Rigid Alignment:</b> If your dataset doesn't contain at least one column with one or multiple
+conformers, then you need to generate conformers for any of the molecules to be screened as
+described in <a href="help/conformers.html#Generate">generate conformers</a>. Otherwise, or afterward
+you configure the superpositioning task with <span class="menu">Superpose Conformers...</span> from the
+<span class="menu">Chemistry</span> menu. A simple dialog opens, where you first select the
+column containing your conformers. You also need to specify the query conformer, which shall be
 PheSA-matched against all conformers.
-This is done with a right mouse click in the blue initially empty area. A popup menu lets
+This is done with a right mouse click within the initially empty area. A popup menu lets
 you import a molecule from either a molfile, mol2-file, the ligand from a PDB-file or from the PDB-database.
 Alternatively, you can also paste in a structure. If the clipboard contains a molecule without
 3D-atom coordinates, then a low-energy conformer is created on the fly. Of course, in this case,
-the conformer is not a perfect query, because it is not necessarily close to any binding conformation.</p>
+the conformer is not a perfect query, because it is not necessarily close to any binding conformation.
+Don't select <span class="menu">Use Flexible Alignment</span>.</p>
 
-<p align="center"><img src="help/img/conf/superposeDialog.jpeg" width="465" height="318"></p>
+<p align="center"><img src="help/img/conf/superposeDialog.jpeg" width="333" height="280"></p>
 <p><center><i>Dialog configured to superpose all energy-minimized 3D-Structures of a data set
 with a given conformer of the CNS-drug Alpidem.</i></center></p>
 
@@ -296,6 +304,8 @@ visible with a right mouse click on the table header and choosing <span class="m
 best matching isomers and 3D-superpositions.</p><br>
 
 <h3><a name="Docking"></a>Protein-Ligand Docking</h3>
+
+
 
 <br>
 

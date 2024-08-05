@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * This class simplifies creating new tasks that calculate some stuff based on an existing
  * chemical structure column with or without the need of an associated descriptor.
- * Typically the configuration doesn't need anything except the definition of the structure
+ * Typically, the configuration doesn't need anything except the definition of the structure
  * column used and one or more calculated columns are finally attached to the table.
  * Derived classes may(!) do some pre-processing and must(!) implement either processRow(),
  * which is expected write calculated values directly into the tablemodel, or getNewColumnValue(),
@@ -60,18 +60,18 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 	private static final String PROPERTY_COORDS3D_COLUMN = "coords3D";
 	private static final String PROPERTY_NEW_COLUMN_NAME = "columnName";
 
-	private JComboBox			mComboBoxStructureColumn, mComboBoxChildColumn;
-	private JTextField[]		mTextFieldColumnName;
+	private JComboBox<String> mComboBoxStructureColumn, mComboBoxChildColumn;
+	private JTextField[] mTextFieldColumnName;
 
 	private volatile CompoundTableModel	mTableModel;
-	private volatile int				mChildColumnClass,mChemistryColumn,mChildColumn;
-	private volatile boolean			mUseMultipleCores,mEditableColumnNames;
-	private AtomicInteger				mSMPRecordIndex,mSMPWorkingThreads,mSMPErrorCount;
+	private volatile int mChildColumnClass,mChemistryColumn,mChildColumn;
+	private volatile boolean mUseMultipleCores,mEditableColumnNames;
+	private AtomicInteger mSMPRecordIndex,mSMPWorkingThreads,mSMPErrorCount;
 
 	/**
 	 *
 	 * @param parent
-	 * @param descriptorClass may use DESCRIPTOR_3D_COORDINATES to request 3D-coords column instead of descriptor column
+	 * @param descriptorClass may use DESCRIPTOR_3D_COORDINATES[_OPTIONAL] to request 3D-coords column instead of descriptor column
 	 * @param editableColumnNames
 	 * @param useMultipleCores
 	 */
@@ -203,18 +203,18 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 			sizeY[index++] = TableLayout.PREFERRED;
 			}
 		if (extentionPanel != null) {
-			sizeY[index++] = gap+gap/2;
+			sizeY[index++] = gap+gap>>1;
 			sizeY[index++] = TableLayout.PREFERRED;
 			sizeY[index++] = gap;
 			}
 		if (mEditableColumnNames) {
 			for (int i=0; i<getNewColumnCount(); i++) {
-				sizeY[index++] = gap/2;
+				sizeY[index++] = gap>>1;
 				sizeY[index++] = TableLayout.PREFERRED;
 				}
 			}
 		sizeY[index++] = gap;
-		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap}, sizeY };
+		double[][] size = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap}, sizeY };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
@@ -222,7 +222,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 		int[] structureColumn = getCompatibleChemistryColumnList();
 
 		// create components
-		mComboBoxStructureColumn = new JComboBox();
+		mComboBoxStructureColumn = new JComboBox<>();
 		if (structureColumn != null)
 			for (int i=0; i<structureColumn.length; i++)
 				mComboBoxStructureColumn.addItem(mTableModel.getColumnTitle(structureColumn[i]));
@@ -233,9 +233,10 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 
 		index = 3;
 		if (mChildColumnClass != DESCRIPTOR_NONE) {
-			mComboBoxChildColumn = new JComboBox();
+			mComboBoxChildColumn = new JComboBox<>();
 			populateComboBoxChildColumn(structureColumn == null? -1 : structureColumn[0]);
-			String text = (mChildColumnClass == DESCRIPTOR_3D_COORDINATES) ? "3D-Coordinates:" : "Descriptor:";
+			String text = (mChildColumnClass == DESCRIPTOR_3D_COORDINATES) ?
+					"3D-Coordinates:" : "Descriptor:";
 			content.add(new JLabel(text), "1,"+index);
 			content.add(mComboBoxChildColumn, "3,"+index);
 			index += 2;
@@ -324,7 +325,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
 		String value = configuration.getProperty(PROPERTY_CHEMISTRY_COLUMN, "");
-		if (value.length() != 0) {
+		if (!value.isEmpty()) {
 			int column = mTableModel.findColumn(value);
 			if (column != -1) {
 				mComboBoxStructureColumn.setSelectedItem(mTableModel.getColumnTitle(column));
@@ -415,7 +416,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 
 		if (mEditableColumnNames)
 			for (int i=0; i<getNewColumnCount(); i++)
-				if (mTextFieldColumnName[i].getText().length() != 0 && !mTextFieldColumnName[i].getText().equals(getNewColumnName(i)))
+				if (!mTextFieldColumnName[i].getText().isEmpty() && !mTextFieldColumnName[i].getText().equals(getNewColumnName(i)))
 					configuration.setProperty(PROPERTY_NEW_COLUMN_NAME+i, mTextFieldColumnName[i].getText());
 
 		return configuration;

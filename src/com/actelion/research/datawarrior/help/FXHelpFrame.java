@@ -45,17 +45,17 @@ public class FXHelpFrame extends JFrame {
 	private static byte[] sSearchCache;
 	private static String sURL;
 
-	private JTextField  mTextFieldSearch;
-	private JLabel      mLabelMatchCount;
-	private int         mMatchCount,mMatch;
+	private final JTextField mTextFieldSearch;
+	private final JLabel mLabelMatchCount;
+	private int mMatchCount,mMatch;
 
 	private FXHelpFrame(Frame parent) {
 		super("DataWarrior Help");
 
 		final int gap = HiDPIHelper.scale(8);
 
-		double[][] size = { {TableLayout.FILL, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED,
-				gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, HiDPIHelper.scale(80), gap },
+		double[][] size = { {TableLayout.FILL, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED,
+				gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap, HiDPIHelper.scale(80), gap },
 				{gap, TableLayout.PREFERRED, gap} };
 		JPanel searchPanel = new JPanel();
 		searchPanel.setLayout(new TableLayout(size));
@@ -132,7 +132,7 @@ public class FXHelpFrame extends JFrame {
 		String query = mTextFieldSearch.getText();
 		countMatches(query);
 
-		if (mMatchCount == 0 || query.length() == 0) {
+		if (mMatchCount == 0 || query.isEmpty()) {
 			mLabelMatchCount.setText("");
 			}
 		else {
@@ -179,7 +179,7 @@ public class FXHelpFrame extends JFrame {
 	private void countMatches(String query) {
 		mMatchCount = 0;
 
-		if (query.length() != 0) {
+		if (!query.isEmpty()) {
 			if (sSearchCache == null) {
 				int index = sURL.indexOf('#');
 				sSearchCache = DEHelpFrame.getHTMLBytes(index == -1 ? sURL : sURL.substring(0, index));
@@ -211,30 +211,6 @@ public class FXHelpFrame extends JFrame {
 			}
 		return count;
 		}
-
-/*	private static void addHyperLinkListener() {
-		sEngine.getLoadWorker().stateProperty().addListener(new ChangeListener<State>() {
-			public void changed(ObservableValue ov, State oldState, State newState) {
-				if (newState == Worker.State.SUCCEEDED) {
-					// note next classes are from org.w3c.dom domain
-					EventListener listener = new EventListener() {
-						@Override
-						public void handleEvent(Event ev) {
-							String href = ((Element)ev.getTarget()).getAttribute("href");
-							System.out.println(href);
-						}
-					};
-
-					Document doc = sEngine.getDocument();
-					Element el = doc.getElementById("a");
-					NodeList lista = doc.getElementsByTagName("a");
-					System.out.println("Liczba elementow: "+ lista.getLength());
-					for (int i=0; i<lista.getLength(); i++)
-						((EventTarget)lista.item(i)).addEventListener("click", listener, false);
-				}
-			}
-		});
-	}*/
 
 	public static URL createURL(String urlText) {
 		String ref = null;

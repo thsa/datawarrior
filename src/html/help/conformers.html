@@ -301,16 +301,17 @@ visible with a right mouse click on the table header and choosing <span class="m
 
 <p>If you had defined multiple query structures in the dialog, then you would have received one new
 'PheSA Score' column for each query structure. You would also have got distinct new columns for the
-best matching isomers and 3D-superpositions.</p><br>
+best matching isomers and 3D-superpositions.</p>
 
-<p><b>Flexible Alignment:</b> To 3D-align all molecules from an open <span class="keyword">DataWarrior</span>
-file with a specific 3D-query molecule (conformer), your <span class="keyword">DataWarrior</span> file
-doesn't need to contain molecule coordinates in 3D. Instead, an initial conformer is calculated on the fly,
-which is then optimized in an step-wise fashion to optimally overlap with the query structure. Typically,
-flexible alignment produces better matches than the rigid variant of the algorithm, because in most cases
-even large rigid conformer sets don't contain perfectly matching conformers, especially, if a molecule
-has a high flexibility. i.e. many rotatable bonds. In order to align your molecules with a given conformer
-choose <span class="menu">Superpose Conformers->Flexible...</span> from the menu and continue as described above.</p>
+<p><b>Flexible Alignment:</b> To flexibly align all molecules of an open <span class="keyword">DataWarrior</span>
+file with a given 3D-query molecule (conformer), your <span class="keyword">DataWarrior</span> file
+doesn't need to contain molecule coordinates in 3D. Instead, an initial conformer is calculated on the fly 
+from every molecule, which is then optimized in a step-wise fashion to optimally overlap with the query structure. 
+Typically, flexible PheSA alignment produces better matches than the rigid variant of the algorithm, 
+because in most cases even large conformer sets don't contain perfectly matching conformers, especially, 
+if a molecule has a high flexibility due to many rotatable bonds. In order to flexibly align your molecules 
+with a given conformer choose <span class="menu">Superpose Conformers->Flexible...</span> from the menu and 
+continue as described above.</p>
 <br>
 
 <h3><a name="Docking"></a>Protein-Ligand Docking</h3>

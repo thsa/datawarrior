@@ -72,11 +72,12 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 	private static TreeMap<String,DatabaseSpec> sKnownDatabaseMap;	// map from database name to connect string
 	private static TreeMap<String,Connection> sConnectionCache;	// map from connect string to connection
 
-	private DEFrame			mSourceFrame,mTargetFrame;
-	private DataWarrior		mApplication;
-	private JComboBox		mComboBoxDatabase;
-	private JTextArea		mTextAreaSQL;
-	private JTextField		mTextFieldConnectString;
+	private final DEFrame mSourceFrame;
+	private DEFrame mTargetFrame;
+	private final DataWarrior mApplication;
+	private JComboBox<String> mComboBoxDatabase;
+	private JTextArea mTextAreaSQL;
+	private JTextField mTextFieldConnectString;
 
 	/**
 	 * When calling this method before actually using this task, then the dialog will show
@@ -100,7 +101,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 	@Override
 	public void doOKAction() {
 		String sql = mTextAreaSQL.getText();
-		if (sql.length() != 0)
+		if (!sql.isEmpty())
 			DataWarrior.getPreferences().put(PREFS_KEY_SQL, sql);
 
 		super.doOKAction();
@@ -228,7 +229,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		if (connector != null) {
 			openConnectionUsingConnector(connector, owner, connectString);
 			}
-		else if ((user != null && user.length() != 0 && password != null)
+		else if ((user != null && !user.isEmpty() && password != null)
 			  || connectString.startsWith("ucanaccess:")) {
 			openConnection(connectString, user, password);
 			}
@@ -240,7 +241,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 								try {
 									String _user = sLoginDialog.getUserID();
 									String _password = sLoginDialog.getPassword();
-									if (_user.length() == 0)
+									if (_user.isEmpty())
 										return;
 
 									openConnection(connectString, _user, _password);
@@ -371,7 +372,8 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.FILL, gap},
 							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
-							 gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
+							 gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED,
+							 gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap} };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
@@ -386,7 +388,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 			mTextAreaSQL.setText(sql);
 
 		if (sKnownDatabaseMap != null) {
-			mComboBoxDatabase = new JComboBox();
+			mComboBoxDatabase = new JComboBox<>();
 			for (String databaseName:sKnownDatabaseMap.keySet())
 				mComboBoxDatabase.addItem(databaseName);
 			mComboBoxDatabase.addItem(ITEM_EXPLICIT);
@@ -434,7 +436,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 			}
 		else {
 			mTextFieldConnectString.setEnabled(false);
-			if (mTextFieldConnectString.getText().length() != 0)
+			if (!mTextFieldConnectString.getText().isEmpty())
 				DataWarrior.getPreferences().put(PREFS_KEY_CONNECT_STRING, mTextFieldConnectString.getText());
 			mTextFieldConnectString.setText(sKnownDatabaseMap.get(mComboBoxDatabase.getSelectedItem()).connectString);
 			}
@@ -456,9 +458,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		}
 
 	private String normalizeConnectString(String connectString) {
-		// return connectString.toLowerCase().startsWith("jdbc:") ? connectString.substring(5) : connectString;
-
-		return connectString.startsWith("jdbc:") ? connectString.substring(5) : connectString;
+		return connectString.toLowerCase().startsWith("jdbc:") ? connectString.substring(5) : connectString;
 		}
 
 	@Override
@@ -489,11 +489,11 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 			showErrorMessage("Database '"+databaseName+"' is not supported");
 			return false;
 			}
-		if (databaseName == null && configuration.getProperty(PROPERTY_CONNECT_STRING, "").length() == 0) {
+		if (databaseName == null && configuration.getProperty(PROPERTY_CONNECT_STRING, "").isEmpty()) {
 			showErrorMessage("No connect string defined.");
 			return false;
 			}
-		if (configuration.getProperty(PROPERTY_SQL, "").length() == 0) {
+		if (configuration.getProperty(PROPERTY_SQL, "").isEmpty()) {
 			showErrorMessage("No SQL-query defined.");
 			return false;
 			}
@@ -597,7 +597,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 				for (int row=0; row<tableModel.getTotalRowCount(); row++) {
 					String[] entries = tableModel.separateEntries(tableModel.getTotalValueAt(row, column));
 					for (String entry:entries)
-						if (entry.length() != 0)
+						if (!entry.isEmpty())
 							list.addString(entry);
 					}
 				StringBuilder sb = new StringBuilder();
@@ -680,7 +680,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 					}
 				}
 			}
-		return (resultList.size() != 0 && found == resultList.size());
+		return (!resultList.isEmpty() && found == resultList.size());
 		}
 
 	private boolean isValidSmiles(StereoMolecule mol, byte[] smiles) {

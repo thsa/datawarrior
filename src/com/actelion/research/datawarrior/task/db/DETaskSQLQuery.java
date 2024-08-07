@@ -68,7 +68,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 	private static final String STRUCTURE_COLUMN_NAME_START ="Structure of ";
 
 	private static JLoginDialog sLoginDialog;
-	private static boolean	sOracleDriverRegistered,sMySQLDriverRegistered,sPostgreSQLDriverRegistered,sSQLServerDriverRegistered,sMSAccessDriverRegistered;
+	private static boolean	sOracleDriverRegistered,sMySQLDriverRegistered,sPostgreSQLDriverRegistered,sSQLServerDriverRegistered,sMSAccessDriverRegistered,sIRISDriverRegistered;
 	private static TreeMap<String,DatabaseSpec> sKnownDatabaseMap;	// map from database name to connect string
 	private static TreeMap<String,Connection> sConnectionCache;	// map from connect string to connection
 
@@ -139,6 +139,16 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		if (connectString.startsWith("jdbc:"))
 			connectString = connectString.substring(5);
 
+		if (connectString.startsWith("IRIS:")) {
+				try {
+					registerIRISDriver();
+					connection = DriverManager.getConnection("jdbc:"+connectString, user, password);
+					}
+				catch (Exception ex) {
+					ex.printStackTrace();
+					showErrorMessage(ex.getMessage());
+					}
+				}
 		if (connectString.startsWith("oracle:")) {
 			if (registerOracleDriver()) {
 				try {
@@ -286,6 +296,19 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		return sMySQLDriverRegistered;
 		}
 
+	private boolean registerIRISDriver() {
+			if (!sIRISDriverRegistered) {
+				try {
+					Class.forName("com.intersystems.jdbc.IRISDriver");
+					sIRISDriverRegistered = true;
+					}
+				catch (Exception ex) {
+					ex.printStackTrace();
+					showErrorMessage(ex.getMessage());
+					}
+				}
+			return sIRISDriverRegistered;
+			}	
 	private boolean registerPostgreSQLDriver() {
 		if (!sPostgreSQLDriverRegistered) {
 			try {
@@ -381,9 +404,10 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		content.add(new JLabel("postgresql://some.server.com/test_db"), "3,11,5,11");
 		content.add(new JLabel("oracle:thin:@some.server.com:1521:my_sid"), "3,13,5,13");
 		content.add(new JLabel("sqlserver://some.server.com:1433;databaseName=test_db"), "3,15,5,15");
+		content.add(new JLabel("IRIS://some.server.com:1972/IRISAPP"), "3,17,5,17");
 		try {
 			Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
-			content.add(new JLabel("ucanaccess://c:/sample.mdb;memory=true"), "3,17,5,17");
+			content.add(new JLabel("ucanaccess://c:/sample.mdb;memory=true"), "3,19,5,19");
 			}
 		catch (ClassNotFoundException cnfe) {}
 
@@ -432,7 +456,9 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		}
 
 	private String normalizeConnectString(String connectString) {
-		return connectString.toLowerCase().startsWith("jdbc:") ? connectString.substring(5) : connectString;
+		// return connectString.toLowerCase().startsWith("jdbc:") ? connectString.substring(5) : connectString;
+
+		return connectString.startsWith("jdbc:") ? connectString.substring(5) : connectString;
 		}
 
 	@Override

@@ -1,4 +1,4 @@
-package com.actelion.research.datawarrior.task.chem.elib;
+package com.actelion.research.datawarrior.fx;
 
 import com.actelion.research.chem.MolecularFormula;
 import com.actelion.research.chem.Molecule3D;
@@ -9,7 +9,6 @@ import com.actelion.research.chem.io.pdb.parser.PDBCoordEntryFile;
 import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
 import com.actelion.research.chem.io.pdb.parser.StructureAssembler;
 import com.actelion.research.gui.FileHelper;
-import com.actelion.research.gui.form.JFXConformerPanel;
 import javafx.application.Platform;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.SeparatorMenuItem;
@@ -24,12 +23,15 @@ import java.awt.*;
 import java.io.File;
 import java.util.List;
 
-public class ConformerViewController implements V3DPopupMenuController {
-	private Frame mParentFrame;
-	private JFXConformerPanel mConformerPanel;
+public class ConformerMenuController implements V3DPopupMenuController {
+	private final Frame mParentFrame;
+	private final JFXMolViewerPanel mConformerPanel;
 	private volatile String mPDBCode;
 
-	public ConformerViewController(Frame owner, JFXConformerPanel conformerPanel) {
+	/**
+	 * This controller adds menu items to change and add  conformers to the associated 3D-view.
+	 */
+	public ConformerMenuController(Frame owner, JFXMolViewerPanel conformerPanel) {
 		mParentFrame = owner;
 		mConformerPanel = conformerPanel;
 		}
@@ -198,7 +200,7 @@ public class ConformerViewController implements V3DPopupMenuController {
 								V3DScene scene = mConformerPanel.getV3DScene();
 
 								ligand.center();
-								scene.addMolecule(new V3DMolecule(ligand, MoleculeArchitect.ConstructionMode.BALL_AND_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true));
+								scene.addMolecule(new V3DMolecule(ligand, MoleculeArchitect.CONSTRUCTION_MODE_BALL_AND_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true));
 
 								scene.optimizeView();
 							});

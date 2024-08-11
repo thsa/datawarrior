@@ -1,4 +1,4 @@
-package com.actelion.research.gui.form;
+package com.actelion.research.datawarrior.fx;
 
 import com.actelion.research.chem.Molecule3D;
 import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
@@ -43,7 +43,8 @@ public class JFXPDBViewer extends JFXPanel {
 	}
 
 	public void setPDBData(final byte[] pdbData) {
-		mLatestRunnable = new Runnable() {
+		mLatestRunnable = null;
+		Runnable r = new Runnable() {
 			@Override
 			public void run () {
 				if (this == mLatestRunnable) {
@@ -63,7 +64,7 @@ public class JFXPDBViewer extends JFXPanel {
 							}
 						V3DMolecule vm = null;
 						if (this == mLatestRunnable && pdbData != null) {
-							vm = new V3DMolecule(mol, MoleculeArchitect.ConstructionMode.WIRES, 0, V3DMolecule.MoleculeRole.MACROMOLECULE);
+							vm = new V3DMolecule(mol, MoleculeArchitect.CONSTRUCTION_MODE_WIRES, 0, V3DMolecule.MoleculeRole.MACROMOLECULE);
 							vm.setSurface(0, V3DMolecule.SurfaceMode.FILLED, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS, 0.5);
 //							vm.activateEvents();
 							}
@@ -80,6 +81,7 @@ public class JFXPDBViewer extends JFXPanel {
 					}
 				}
 			};
+		mLatestRunnable = r;
 		Platform.runLater(mLatestRunnable);
 		}
 	}

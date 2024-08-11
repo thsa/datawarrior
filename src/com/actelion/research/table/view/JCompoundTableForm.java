@@ -21,7 +21,8 @@ package com.actelion.research.table.view;
 import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.io.CompoundTableConstants;
-import com.actelion.research.datawarrior.FXMolPopupMenuController;
+import com.actelion.research.datawarrior.fx.CompoundRecordMenuController;
+import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.form.*;
 import com.actelion.research.table.CompoundTableColorHandler;
 import com.actelion.research.table.model.*;
@@ -120,8 +121,8 @@ public class JCompoundTableForm extends JFormView implements CompoundTableColorH
 					if (cavityMol != null)
 						((JStructure3DFormObject)formObject).setCavityMolecule(cavityMol, ligandMol);
 
-					((JStructure3DFormObject)formObject).setPopupMenuController(new FXMolPopupMenuController(
-							(JFXConformerPanel)formObject.getComponent(), mTableModel, column, false));
+					((JStructure3DFormObject)formObject).setPopupMenuController(new CompoundRecordMenuController(
+							(JFXMolViewerPanel)formObject.getComponent(), mTableModel, column, false));
 					}
 				}
 			}

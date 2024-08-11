@@ -1,11 +1,11 @@
-package com.actelion.research.datawarrior;
+package com.actelion.research.datawarrior.fx;
 
 import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.alignment3d.PheSAAlignmentOptimizer;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.table.DETaskSetColumnProperties;
-import com.actelion.research.gui.form.JFXConformerPanel;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.util.ArrayUtils;
@@ -19,8 +19,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 
-public class FXMolPopupMenuController implements V3DPopupMenuController {
-	private final JFXConformerPanel mConformerPanel;
+public class CompoundRecordMenuController implements V3DPopupMenuController {
+	private final JFXMolViewerPanel mConformerPanel;
 	private final CompoundTableModel mTableModel;
 	private CompoundRecord mParentRecord;
 	private final int mIDCodeColumn,mCoordsColumn;
@@ -28,12 +28,13 @@ public class FXMolPopupMenuController implements V3DPopupMenuController {
 
 	/**
 	 * This controller adds menu items and functionality to 3D-Views in the detail area or in form views.
+	 * It allows to change display options, but not to change any structures.
 	 * @param conformerPanel
 	 * @param tableModel
 	 * @param coordsColumn
 	 * @param allowSuperposeReference
 	 */
-	public FXMolPopupMenuController(JFXConformerPanel conformerPanel, CompoundTableModel tableModel, int coordsColumn, boolean allowSuperposeReference) {
+	public CompoundRecordMenuController(JFXMolViewerPanel conformerPanel, CompoundTableModel tableModel, int coordsColumn, boolean allowSuperposeReference) {
 		mConformerPanel = conformerPanel;
 		mTableModel = tableModel;
 		mIDCodeColumn = tableModel.getParentColumn(coordsColumn);
@@ -100,7 +101,7 @@ public class FXMolPopupMenuController implements V3DPopupMenuController {
 		boolean hasLigand = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyNaturalLigand) != null;
 		if (hasLigand && hasCavity && fxmol.getRole() == V3DMolecule.MoleculeRole.MACROMOLECULE) {
 			StereoMolecule ligand = mConformerPanel.getOverlayMolecule();
-			JFXConformerPanel.markAtomsInCropDistance(fxmol.getMolecule(), ligand, ligand.getCenterOfGravity());
+			JFXMolViewerPanel.markAtomsInCropDistance(fxmol.getMolecule(), ligand, ligand.getCenterOfGravity());
 		}
 	}
 

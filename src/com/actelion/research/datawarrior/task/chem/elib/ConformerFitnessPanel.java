@@ -21,7 +21,8 @@ package com.actelion.research.datawarrior.task.chem.elib;
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.StereoMolecule;
-import com.actelion.research.gui.form.JFXConformerPanel;
+import com.actelion.research.datawarrior.fx.ConformerMenuController;
+import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
 import org.openmolecules.fx.viewer3d.V3DScene;
@@ -35,7 +36,7 @@ public class ConformerFitnessPanel extends FitnessPanel {
 	private static final long serialVersionUID = 20200218L;
 
 	protected JComboBox mComboBoxDescriptor;
-	protected JFXConformerPanel mConformerPanel;
+	protected JFXMolViewerPanel mConformerPanel;
 
 	/**
 	 * Creates a new ConformerFitnessPanel, which is configured according to the given configuration.
@@ -63,11 +64,11 @@ public class ConformerFitnessPanel extends FitnessPanel {
 
 		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
 		settings.add(V3DScene.ViewerSettings.EDITING);
-		mConformerPanel = new JFXConformerPanel(false, settings);
+		mConformerPanel = new JFXMolViewerPanel(false, settings);
 		mConformerPanel.adaptToLookAndFeelChanges();
 //		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(160), HiDPIHelper.scale(120)));
-		mConformerPanel.setPopupMenuController(new ConformerViewController(owner, mConformerPanel));
+		mConformerPanel.setPopupMenuController(new ConformerMenuController(owner, mConformerPanel));
 
 		int gap = HiDPIHelper.scale(4);
 		double[][] cpsize = {

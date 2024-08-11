@@ -1,4 +1,4 @@
-package com.actelion.research.gui.form;
+package com.actelion.research.datawarrior.fx;
 
 import com.actelion.research.chem.Coordinates;
 import com.actelion.research.chem.Molecule;
@@ -35,7 +35,7 @@ import java.util.EnumSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 
-public class JFXConformerPanel extends JFXPanel {
+public class JFXMolViewerPanel extends JFXPanel {
 	public static final double CAVITY_CROP_DISTANCE = 10.0;
 	private static boolean sURLStreamHandlerSet = false;
 	private static final String EDIT_MESSAGE = "<right mouse click to add content>";
@@ -53,15 +53,15 @@ public class JFXConformerPanel extends JFXPanel {
 	private java.awt.Color mSceneBackground, mLookAndFeelSpotColor,
 			mMenuItemBackground,mMenuItemForeground,/*mMenuItemSelectionBackground,*/mMenuItemSelectionForeground;
 
-	public JFXConformerPanel(boolean withSidePanel) {
+	public JFXMolViewerPanel(boolean withSidePanel) {
 		this(withSidePanel, 512, 384, V3DScene.CONFORMER_VIEW_MODE);
 	}
 
-	public JFXConformerPanel(boolean withSidePanel, EnumSet<V3DScene.ViewerSettings> settings) {
+	public JFXMolViewerPanel(boolean withSidePanel, EnumSet<V3DScene.ViewerSettings> settings) {
 		this(withSidePanel, 512, 384, settings);
 	}
 
-	public JFXConformerPanel(boolean withSidePanel, int width, int height, EnumSet<V3DScene.ViewerSettings> settings) {
+	public JFXMolViewerPanel(boolean withSidePanel, int width, int height, EnumSet<V3DScene.ViewerSettings> settings) {
 		super();
 		if (!sURLStreamHandlerSet) {
 			URL.setURLStreamHandlerFactory(new StringURLStreamHandlerFactory());
@@ -328,7 +328,7 @@ public class JFXConformerPanel extends JFXPanel {
 			if (ligand != null)
 				markAtomsInCropDistance(cavity, ligand, calculateCOG(ligand));
 
-			mCavityMol = new V3DMolecule(cavity, MoleculeArchitect.ConstructionMode.WIRES, 0, V3DMolecule.MoleculeRole.MACROMOLECULE);
+			mCavityMol = new V3DMolecule(cavity, MoleculeArchitect.CONSTRUCTION_MODE_WIRES, 0, V3DMolecule.MoleculeRole.MACROMOLECULE);
 			mCavityMol.setColor(Color.LIGHTGRAY);
 			mCavityMol.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.FILLED);
 			mCavityMol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS);
@@ -359,7 +359,7 @@ public class JFXConformerPanel extends JFXPanel {
 		for (int i = 0; i<ligand.getAllAtoms(); i++)
 			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getCoordinates(i)));
 
-		double cropDistance = JFXConformerPanel.CAVITY_CROP_DISTANCE;
+		double cropDistance = JFXMolViewerPanel.CAVITY_CROP_DISTANCE;
 		maxDistance += cropDistance;
 
 		// mark all protein atoms within crop distance
@@ -428,7 +428,7 @@ public class JFXConformerPanel extends JFXPanel {
 		for (int i = 0; i<ligand.getAllAtoms(); i++)
 			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getCoordinates(i)));
 
-		double markDistance = JFXConformerPanel.CAVITY_CROP_DISTANCE - 3.2;
+		double markDistance = JFXMolViewerPanel.CAVITY_CROP_DISTANCE - 3.2;
 		maxDistance += markDistance;
 
 		for (int i = 0; i<cavity.getAllAtoms(); i++)
@@ -566,7 +566,7 @@ public class JFXConformerPanel extends JFXPanel {
 	private static class StringURLConnection extends URLConnection {
 		private static String sCSS;
 
-		private static void updateCSS(JFXConformerPanel conformerPanel, final String css) {
+		private static void updateCSS(JFXMolViewerPanel conformerPanel, final String css) {
 			sCSS = css;
 //			Platform.runLater(() ->
 					conformerPanel.getScene().getStylesheets().setAll("internal:"+System.nanoTime()+"stylesheet.css");

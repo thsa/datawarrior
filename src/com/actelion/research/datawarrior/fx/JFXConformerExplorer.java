@@ -16,7 +16,7 @@
  * @author Thomas Sander
  */
 
-package com.actelion.research.datawarrior;
+package com.actelion.research.datawarrior.fx;
 
 import com.actelion.research.calc.Matrix;
 import com.actelion.research.calc.SingularValueDecomposition;
@@ -28,7 +28,6 @@ import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
 import com.actelion.research.datawarrior.task.chem.DETaskAdd3DCoordinates;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.editor.SwingEditorDialog;
-import com.actelion.research.gui.form.JFXConformerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
@@ -58,7 +57,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 
-public class FXConformerDialog extends JDialog implements ActionListener,ChangeListener {
+public class JFXConformerExplorer extends JDialog implements ActionListener,ChangeListener {
 	private static final long serialVersionUID = 0x20130605;
 
 	private static final String DATAWARRIOR_DEBUG_FILE = "/home/thomas/data/debug/conformationGeneratorConformers.dwar";
@@ -90,14 +89,14 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 
 	private static final int DEFAULT_COUNT = 16;
 
-	private StereoMolecule		mMol;
-	private JComboBox			mComboBoxCount, mComboBoxAlgo, mComboBoxMinimization,mComboBoxSurface;
-	private JFXConformerPanel	mConformationPanel;
-	private JSlider             mSliderSplitting;
-	private int					mPreviousAlgo,mPreviousMinimization;
-	private int[]               mSuperposeAtoms;
+	private StereoMolecule mMol;
+	private final JComboBox<String> mComboBoxCount,mComboBoxAlgo,mComboBoxMinimization,mComboBoxSurface;
+	private final JFXMolViewerPanel mConformationPanel;
+	private final JSlider mSliderSplitting;
+	private int mPreviousAlgo,mPreviousMinimization;
+	private int[] mSuperposeAtoms;
 
-	public FXConformerDialog(Frame parent, StereoMolecule mol) {
+	public JFXConformerExplorer(Frame parent, StereoMolecule mol) {
 		super(parent, "Conformer Explorer", false);
 
 		mMol = new StereoMolecule(mol);
@@ -105,7 +104,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 
 		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
 		settings.add(V3DScene.ViewerSettings.INDIVIDUAL_ROTATION);
-		mConformationPanel = new JFXConformerPanel(true, V3DScene.CONFORMER_VIEW_MODE);
+		mConformationPanel = new JFXMolViewerPanel(true, V3DScene.CONFORMER_VIEW_MODE);
 		mConformationPanel.adaptToLookAndFeelChanges();
 		mConformationPanel.setPopupMenuController(new V3DPopupMenuController() {
 			@Override
@@ -143,15 +142,15 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new TableLayout(size));
 
-		mComboBoxCount = new JComboBox(OPTION_COUNT);
+		mComboBoxCount = new JComboBox<>(OPTION_COUNT);
 		mComboBoxCount.setSelectedItem(Integer.toString(DEFAULT_COUNT).concat(" conformers"));
 		buttonPanel.add(mComboBoxCount, "1,1");
 
-		mComboBoxAlgo = new JComboBox(ALGO_TEXT);
+		mComboBoxAlgo = new JComboBox<>(ALGO_TEXT);
 		mComboBoxAlgo.setSelectedIndex(DEFAULT_ALGO);
 		buttonPanel.add(mComboBoxAlgo, "3,1");
 
-		mComboBoxMinimization = new JComboBox(MINIMIZE_TEXT);
+		mComboBoxMinimization = new JComboBox<>(MINIMIZE_TEXT);
 		mComboBoxMinimization.setSelectedIndex(DEFAULT_MINIMIZATION);
 		buttonPanel.add(mComboBoxMinimization, "5,1");
 
@@ -165,7 +164,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 		buttonPanel.add(new JLabel("Separate:"), "9,1");
 		buttonPanel.add(mSliderSplitting, "10,1");
 
-		mComboBoxSurface = new JComboBox(SURFACE_TEXT);
+		mComboBoxSurface = new JComboBox<>(SURFACE_TEXT);
 		mComboBoxSurface.setSelectedIndex(DEFAULT_SURFACE);
 		mComboBoxSurface.addActionListener(this);
 		buttonPanel.add(new JLabel("Surface:"), "12,1");
@@ -272,7 +271,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 		ConformerGenerator cg = null;
 		ConformationSelfOrganizer cs = null;
 
-		ArrayList<StereoMolecule> conformerList = new ArrayList<StereoMolecule>();
+		ArrayList<StereoMolecule> conformerList = new ArrayList<>();
 
 		int maxTorsionSets = (int) Math.max(2 * maxConformers, (1000 * Math.sqrt(maxConformers)));
 
@@ -283,7 +282,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 
 		StereoMolecule mol = new StereoMolecule(mMol);
 		TorsionDescriptorHelper torsionHelper = new TorsionDescriptorHelper(mol);
-		ArrayList<TorsionDescriptor> torsionDescriptorList = new ArrayList<TorsionDescriptor>();
+		ArrayList<TorsionDescriptor> torsionDescriptorList = new ArrayList<>();
 
 		for (int i = 0; i < maxConformers; i++) {
 			Conformer conformer = null;
@@ -356,11 +355,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 					minimizeMMFF(mol, result, ForceFieldMMFF94.MMFF94S);
 				}
 
-				if (conformer == null)
-					conformer = new Conformer(mol);
-				else
-					conformer.copyFrom(mol);
-
+				conformer.copyFrom(mol);
 				conformer.setEnergy(result.energy);
 				message = (result.errorMessage != null) ? result.errorMessage : "E:" + DoubleFormat.toString(result.energy, 3) + " kcal/mol";
 			}
@@ -368,17 +363,17 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 			if (!isRedundantConformer(torsionHelper, torsionDescriptorList)) {
 				StereoMolecule uniqueConformer = conformer.toMolecule(null);
 				uniqueConformer.setName("Conf" + (i + 1) + (message == null ? "" : NAME_ENERGY_SEPARATOR + message));
-				uniqueConformer.setUserData(Double.valueOf(conformer.getEnergy()));
+				uniqueConformer.setUserData(conformer.getEnergy());
 				conformerList.add(uniqueConformer);
 			}
 		}
 
 		conformerList.sort((c1, c2) -> {
-			double energy1 = (c1.getUserData() != null && c1.getUserData() instanceof Double) ? ((Double)c1.getUserData()).doubleValue() : Double.NaN;
-			double energy2 = (c2.getUserData() != null && c2.getUserData() instanceof Double) ? ((Double)c2.getUserData()).doubleValue() : Double.NaN;
+			double energy1 = (c1.getUserData() != null && c1.getUserData() instanceof Double) ? (Double)c1.getUserData() : Double.NaN;
+			double energy2 = (c2.getUserData() != null && c2.getUserData() instanceof Double) ? (Double)c2.getUserData() : Double.NaN;
 			if (Double.isNaN(energy1) || Double.isNaN(energy2))
 				return !Double.isNaN(energy1) ? -1 : !Double.isNaN(energy2) ? 1 : 0;
-			int comparison = energy1 < energy2 ? -1 : energy1 == energy2 ? 0 : 1;
+			int comparison = Double.compare(energy1, energy2);
 			return c1.getName().endsWith("%") ? -comparison : comparison;
 		});
 
@@ -672,7 +667,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 					bw.write("</column properties>");
 					bw.newLine();
 					bw.write("Conformer\tcoords\tName");
-					if (energyTitle.length() != 0)
+					if (!energyTitle.isEmpty())
 						bw.write("\t"+energyTitle);
 					bw.newLine();
 					for (StereoMolecule conformer:conformerList) {
@@ -683,7 +678,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 						bw.write('\t');
 						bw.write(conformer.getName());
 						bw.write('\t');
-						if (energyTitle.length() != 0) {
+						if (!energyTitle.isEmpty()) {
 							bw.write(DoubleFormat.toString(((Double)conformer.getUserData()).doubleValue()));
 							bw.newLine();
 							}
@@ -702,7 +697,7 @@ public class FXConformerDialog extends JDialog implements ActionListener,ChangeL
 						bw.newLine();
 						bw.newLine();
 
-						if (energyTitle.length() != 0) {
+						if (!energyTitle.isEmpty()) {
 							bw.write(">  <"+energyTitle+">");
 							bw.newLine();
 							bw.write(DoubleFormat.toString(((Double)conformer.getUserData()).doubleValue()));

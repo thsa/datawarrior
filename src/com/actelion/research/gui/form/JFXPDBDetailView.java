@@ -18,11 +18,11 @@
 
 package com.actelion.research.gui.form;
 
+import com.actelion.research.datawarrior.fx.JFXPDBViewer;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 

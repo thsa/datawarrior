@@ -19,7 +19,6 @@
 package com.actelion.research.datawarrior;
 
 import com.actelion.research.chem.*;
-import com.actelion.research.chem.alignment3d.PheSAAlignmentOptimizer;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.flexophore.FlexophoreAtomContributionColors;
 import com.actelion.research.chem.io.CompoundTableConstants;
@@ -28,13 +27,15 @@ import com.actelion.research.datawarrior.fx.CompoundRecordMenuController;
 import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.*;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
-import com.actelion.research.gui.form.*;
+import com.actelion.research.gui.form.JHTMLDetailView;
+import com.actelion.research.gui.form.JImageDetailView;
+import com.actelion.research.gui.form.JResultDetailView;
+import com.actelion.research.gui.form.JSVGDetailView;
 import com.actelion.research.table.CompoundTableChemistryCellRenderer;
 import com.actelion.research.table.CompoundTableColorHandler;
 import com.actelion.research.table.JDetailTable;
 import com.actelion.research.table.model.*;
 import com.actelion.research.table.view.VisualizationColor;
-import com.actelion.research.util.ArrayUtils;
 import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
@@ -57,7 +58,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 
 	private final DEFrame mFrame;
 	private final CompoundTableModel mTableModel;
-	private CompoundRecord mCurrentRecord;
+	private CompoundRecord mHighlightedRecord, mActiveRecord;
 	private final JDetailTable mDetailTable;
 	private final ArrayList<DetailViewInfo> mDetailViewList;
 
@@ -100,7 +101,8 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			for (int i = firstNewView; i < mDetailViewList.size(); i++)
 				updateDetailView(mDetailViewList.get(i));
 		} else if (e.getType() == CompoundTableEvent.cNewTable) {
-			mCurrentRecord = null;
+			mHighlightedRecord = null;
+			mActiveRecord = null;
 
 			for (DetailViewInfo viewInfo : mDetailViewList)
 				remove(viewInfo.view);
@@ -173,6 +175,14 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 						mDetailViewList.remove(i);
 					}
 				}
+			}
+		} else if (e.getType() == CompoundTableEvent.cChangeActiveRow) {
+			if (mActiveRecord != mTableModel.getActiveRow()) {
+				mActiveRecord = mTableModel.getActiveRow();
+
+				for (DetailViewInfo viewInfo : mDetailViewList)
+					if (viewInfo.type.equals(TYPE_STRUCTURE_3D))    // currently, only the 3D-view may show the reference (active) compound
+						updateDetailView(viewInfo);
 			}
 		}
 	}
@@ -301,8 +311,8 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 	}
 
 	public void highlightChanged(CompoundRecord record) {
-		if (mCurrentRecord != record && record != null) {
-			mCurrentRecord = record;
+		if (mHighlightedRecord != record && record != null) {
+			mHighlightedRecord = record;
 
 			for (DetailViewInfo viewInfo : mDetailViewList)
 				updateDetailView(viewInfo);
@@ -310,46 +320,45 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 	}
 
 	private void updateDetailView(DetailViewInfo viewInfo) {
-		if (viewInfo.type.equals(TYPE_STRUCTURE_2D)) {
-			StereoMolecule mol = null;
-			StereoMolecule displayMol = null;
-			if (mCurrentRecord != null) {
-				byte[] idcode = (byte[]) mCurrentRecord.getData(viewInfo.column);
-				if (idcode != null) {
-					int coordinateColumn = (viewInfo.column == -1) ? -1
-							: mTableModel.getChildColumn(viewInfo.column, CompoundTableModel.cColumnType2DCoordinates);
-					if ((coordinateColumn != -1 && mCurrentRecord.getData(coordinateColumn) != null)
-							|| new IDCodeParser().getAtomCount(idcode, 0) <= CompoundTableChemistryCellRenderer.ON_THE_FLY_COORD_MAX_ATOMS) {
-						mol = mTableModel.getChemicalStructure(mCurrentRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
-						displayMol = mTableModel.getChemicalStructure(mCurrentRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_ALL, null);
-						addFlexophoreContributions(viewInfo);
+		switch (viewInfo.type) {
+			case TYPE_STRUCTURE_2D -> {
+				StereoMolecule mol = null;
+				StereoMolecule displayMol = null;
+				if (mHighlightedRecord != null) {
+					byte[] idcode = (byte[]) mHighlightedRecord.getData(viewInfo.column);
+					if (idcode != null) {
+						int coordinateColumn = (viewInfo.column == -1) ? -1
+								: mTableModel.getChildColumn(viewInfo.column, CompoundTableModel.cColumnType2DCoordinates);
+						if ((coordinateColumn != -1 && mHighlightedRecord.getData(coordinateColumn) != null)
+								|| new IDCodeParser().getAtomCount(idcode, 0) <= CompoundTableChemistryCellRenderer.ON_THE_FLY_COORD_MAX_ATOMS) {
+							mol = mTableModel.getChemicalStructure(mHighlightedRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
+							displayMol = mTableModel.getChemicalStructure(mHighlightedRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_ALL, null);
+							addFlexophoreContributions(viewInfo);
+						}
 					}
 				}
-			}
-
-			((JStructureView) viewInfo.view).structureChanged(mol, displayMol);
-		}
-		switch (viewInfo.type) {
-			case TYPE_REACTION -> {
-				Reaction rxn = null;
-				if (mCurrentRecord != null)
-					rxn = mTableModel.getChemicalReaction(mCurrentRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_ALL);
-				((JChemistryView)viewInfo.view).setContent(rxn);
+				((JStructureView) viewInfo.view).structureChanged(mol, displayMol);
 			}
 			case TYPE_STRUCTURE_3D -> {
 				boolean isSuperpose = CompoundTableConstants.cSuperposeValueReferenceRow.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperpose));
 				boolean isAlign = CompoundTableConstants.cSuperposeAlignValueShape.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperposeAlign));
 				CompoundRecordMenuController controller = (CompoundRecordMenuController)((JFXMolViewerPanel)viewInfo.view).getPopupMenuController();
-				controller.setParentRecord(mCurrentRecord);
+				controller.setParentRecord(mHighlightedRecord);
 				controller.update3DView(isSuperpose, isAlign);
 			}
-			case TYPE_IMAGE -> ((JImagePanel)viewInfo.view).setFileName((mCurrentRecord == null) ? null
-					: mTableModel.encodeData(mCurrentRecord, viewInfo.column));
+			case TYPE_REACTION -> {
+				Reaction rxn = null;
+				if (mHighlightedRecord != null)
+					rxn = mTableModel.getChemicalReaction(mHighlightedRecord, viewInfo.column, CompoundTableModel.ATOM_COLOR_MODE_ALL);
+				((JChemistryView)viewInfo.view).setContent(rxn);
+			}
+			case TYPE_IMAGE -> ((JImagePanel)viewInfo.view).setFileName((mHighlightedRecord == null) ? null
+					: mTableModel.encodeData(mHighlightedRecord, viewInfo.column));
 			case TYPE_DETAIL -> {
-				if (mCurrentRecord == null) {
+				if (mHighlightedRecord == null) {
 					((JResultDetailView)viewInfo.view).setReferences(null);
 				} else {
-					String[][] reference = mCurrentRecord.getDetailReferences(viewInfo.column);
+					String[][] reference = mHighlightedRecord.getDetailReferences(viewInfo.column);
 					((JResultDetailView)viewInfo.view).setReferences(reference == null
 							|| reference.length<=viewInfo.detail ?
 							null : reference[viewInfo.detail]);
@@ -371,67 +380,6 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				facc = mTableModel.getMostRecentExclusionFlexophoreColors(flexophoreColumn);
 			}
 		((JStructureView)viewInfo.view).setAtomHighlightColors(facc == null ? null : facc.getMolARGB(), facc == null ? null : facc.getMolRadius());
-	}
-
-	private void update3DView(DetailViewInfo viewInfo, boolean isSuperpose, boolean isAlign) {
-		new Thread(() -> {
-			StereoMolecule[] rowMol = null;
-			if (mCurrentRecord != null)
-				rowMol = getConformers(mCurrentRecord, true, viewInfo);
-
-			StereoMolecule[] refMol = null;
-			if (isSuperpose && mTableModel.getActiveRow() != null && mTableModel.getActiveRow() != mCurrentRecord)
-				refMol = getConformers(mTableModel.getActiveRow(), false, viewInfo);
-
-			if (rowMol != null) {
-				StereoMolecule best = null;
-				if (isAlign && refMol != null) {
-					double maxFit = 0;
-					for (StereoMolecule stereoMolecule : rowMol) {
-						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol[0], stereoMolecule);
-						if (fit>maxFit) {
-							maxFit = fit;
-							best = stereoMolecule;
-						}
-					}
-
-					rowMol = new StereoMolecule[1];
-					rowMol[0] = best;
-					}
-				}
-
-			JFXMolViewerPanel view = (JFXMolViewerPanel)viewInfo.view;
-			int rowID = (mCurrentRecord == null || isSuperpose || view.getOverlayMolecule() != null) ? -1 : mCurrentRecord.getID();
-			view.updateConformers(rowMol, rowID, refMol == null ? null : refMol[0]);
-			}).start();
-		}
-
-	private StereoMolecule[] getConformers(CompoundRecord record, boolean allowMultiple, DetailViewInfo viewInfo) {
-		byte[] idcode = (byte[]) record.getData(viewInfo.column);
-		byte[] coords = (byte[]) record.getData(viewInfo.detail);
-		if (idcode != null && coords != null) {
-			if (viewInfo.split3DFragments) {
-				return new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode, coords).getFragments();
-			}
-			else {
-				int count = 1;
-				int index = ArrayUtils.indexOf(coords, (byte) 32);
-				if (index != -1 && allowMultiple) {
-					count++;
-					for (int i = index + 1; i < coords.length; i++)
-						if (coords[i] == (byte) 32)
-							count++;
-					index = -1;
-				}
-				StereoMolecule[] mol = new StereoMolecule[count];
-				for (int i=0; i<count; i++) {
-					mol[i] = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode, coords, 0, index + 1);
-					index = ArrayUtils.indexOf(coords, (byte) 32, index + 1);
-				}
-				return mol;
-			}
-		}
-		return null;
 	}
 
 	static class DetailViewInfo {

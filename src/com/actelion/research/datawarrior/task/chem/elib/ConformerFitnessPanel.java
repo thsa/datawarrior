@@ -21,7 +21,7 @@ package com.actelion.research.datawarrior.task.chem.elib;
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.StereoMolecule;
-import com.actelion.research.datawarrior.fx.ConformerMenuController;
+import com.actelion.research.datawarrior.fx.EditableSmallMolMenuController;
 import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
@@ -68,7 +68,7 @@ public class ConformerFitnessPanel extends FitnessPanel {
 		mConformerPanel.adaptToLookAndFeelChanges();
 //		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(160), HiDPIHelper.scale(120)));
-		mConformerPanel.setPopupMenuController(new ConformerMenuController(owner, mConformerPanel));
+		mConformerPanel.setPopupMenuController(new EditableSmallMolMenuController(owner, mConformerPanel));
 
 		int gap = HiDPIHelper.scale(4);
 		double[][] cpsize = {

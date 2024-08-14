@@ -23,7 +23,7 @@ import java.awt.*;
 import java.io.File;
 import java.util.List;
 
-public class ConformerMenuController implements V3DPopupMenuController {
+public class EditableSmallMolMenuController implements V3DPopupMenuController {
 	private final Frame mParentFrame;
 	private final JFXMolViewerPanel mConformerPanel;
 	private volatile String mPDBCode;
@@ -31,7 +31,7 @@ public class ConformerMenuController implements V3DPopupMenuController {
 	/**
 	 * This controller adds menu items to change and add  conformers to the associated 3D-view.
 	 */
-	public ConformerMenuController(Frame owner, JFXMolViewerPanel conformerPanel) {
+	public EditableSmallMolMenuController(Frame owner, JFXMolViewerPanel conformerPanel) {
 		mParentFrame = owner;
 		mConformerPanel = conformerPanel;
 		}

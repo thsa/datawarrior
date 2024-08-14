@@ -21,14 +21,14 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-public class ProteinLigandMenuController implements V3DPopupMenuController {
+public class EditableLargeMolMenuController implements V3DPopupMenuController {
 	private final JFXMolViewerPanel mConformerPanel;
 	private StereoMolecule mProtein,mLigand;
 
 	/**
 	 * This controller adds menu items to change and add ligand-protein complexes to the associated 3D-view.
 	 */
-	public ProteinLigandMenuController(JFXMolViewerPanel conformerPanel) {
+	public EditableLargeMolMenuController(JFXMolViewerPanel conformerPanel) {
 		mConformerPanel = conformerPanel;
 		Platform.runLater(() ->
 			mConformerPanel.getV3DScene().addSceneListener(new V3DSceneListener() {

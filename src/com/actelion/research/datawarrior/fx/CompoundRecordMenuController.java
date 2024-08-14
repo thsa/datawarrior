@@ -55,13 +55,22 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 		if (type == V3DPopupMenuController.TYPE_VIEW) {
 			boolean hasCavity = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyProteinCavity) != null;
 			boolean hasLigand = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyNaturalLigand) != null;
+			boolean hasQuery = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperposeMolecule) != null;
 			boolean isShowLigand = !"false".equals(mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyShowNaturalLigand));
+			boolean isShowQuery = !"false".equals(mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyShowSuperposeMolecule));
 			boolean isSuperpose = CompoundTableConstants.cSuperposeValueReferenceRow.equals(mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperpose));
 			boolean isShapeAlign = CompoundTableConstants.cSuperposeAlignValueShape.equals(mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperposeAlign));
 
-			if (hasLigand) {
+			if (hasQuery) {
+				javafx.scene.control.CheckMenuItem itemShowQuery = new CheckMenuItem("Show Query Molecule");
+				itemShowQuery.setSelected(isShowQuery);
+				itemShowQuery.setOnAction(e -> setShowQueryMolecule(!isShowQuery));
+				popup.getItems().add(itemShowQuery);
+			}
+
+			if (!hasQuery && hasLigand) {   // query and ligand display are done via setOverlayMolecule(). Thus, we cannot have both!
 				javafx.scene.control.CheckMenuItem itemShowLigand = new CheckMenuItem("Show Natural Ligand");
-				itemShowLigand.setSelected(isShowLigand);
+				itemShowLigand.setSelected(isShowQuery);
 				itemShowLigand.setOnAction(e -> setShowNaturalLigand(!isShowLigand));
 				popup.getItems().add(itemShowLigand);
 			}
@@ -122,6 +131,17 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 		SwingUtilities.invokeLater(() -> {
 			HashMap<String, String> map = new HashMap<>();
 			map.put(CompoundTableConstants.cColumnPropertyShowNaturalLigand, isShowNaturalLigand ? null : "false");
+			new DETaskSetColumnProperties(getFrame(), mCoordsColumn, map, false).defineAndRun();
+		});
+	}
+
+	private void setShowQueryMolecule(boolean isShowQuery) {
+		String query = isShowQuery ? mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperposeMolecule) : null;
+		StereoMolecule queryMol = (query == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(query);
+		mConformerPanel.setOverlayMolecule(queryMol);
+		SwingUtilities.invokeLater(() -> {
+			HashMap<String, String> map = new HashMap<>();
+			map.put(CompoundTableConstants.cColumnPropertyShowSuperposeMolecule, isShowQuery ? null : "false");
 			new DETaskSetColumnProperties(getFrame(), mCoordsColumn, map, false).defineAndRun();
 		});
 	}

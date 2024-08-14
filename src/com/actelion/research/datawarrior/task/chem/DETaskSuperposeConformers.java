@@ -7,7 +7,7 @@ import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.phesaflex.FlexibleShapeAlignment;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETable;
-import com.actelion.research.datawarrior.fx.ConformerMenuController;
+import com.actelion.research.datawarrior.fx.EditableSmallMolMenuController;
 import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
@@ -58,7 +58,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 		mConformerPanel.adaptToLookAndFeelChanges();
 //		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(400), HiDPIHelper.scale(200)));
-		mConformerPanel.setPopupMenuController(new ConformerMenuController(getParentFrame(), mConformerPanel));
+		mConformerPanel.setPopupMenuController(new EditableSmallMolMenuController(getParentFrame(), mConformerPanel));
 
 		JPanel ep = new JPanel();
 		ep.setLayout(new TableLayout(size));

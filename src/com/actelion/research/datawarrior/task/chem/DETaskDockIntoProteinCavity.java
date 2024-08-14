@@ -24,7 +24,7 @@ import com.actelion.research.chem.docking.DockingEngine;
 import com.actelion.research.chem.docking.DockingFailedException;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.fx.ProteinLigandMenuController;
+import com.actelion.research.datawarrior.fx.EditableLargeMolMenuController;
 import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
@@ -86,7 +86,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
 		settings.add(V3DScene.ViewerSettings.EDITING);
 		mConformerPanel = new JFXMolViewerPanel(false, settings);
-		mConformerPanel.setPopupMenuController(new ProteinLigandMenuController(mConformerPanel));
+		mConformerPanel.setPopupMenuController(new EditableLargeMolMenuController(mConformerPanel));
 		mConformerPanel.adaptToLookAndFeelChanges();
 //		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(320), HiDPIHelper.scale(240)));

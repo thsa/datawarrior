@@ -19,8 +19,8 @@
 package com.actelion.research.datawarrior.plugin;
 
 import com.actelion.research.chem.*;
-import com.actelion.research.datawarrior.fx.ConformerMenuController;
-import com.actelion.research.datawarrior.fx.ProteinLigandMenuController;
+import com.actelion.research.datawarrior.fx.EditableSmallMolMenuController;
+import com.actelion.research.datawarrior.fx.EditableLargeMolMenuController;
 import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import org.openmolecules.datawarrior.plugin.IConformerPanel;
@@ -38,11 +38,11 @@ public class PluginConformerPanel extends JFXMolViewerPanel implements IConforme
 //		setBackground(new java.awt.Color(24, 24, 96));
 		if (mode == MODE_LIGAND_AND_PROTEIN) {
 			setPreferredSize(new Dimension(HiDPIHelper.scale(320), HiDPIHelper.scale(240)));
-			setPopupMenuController(new ProteinLigandMenuController(this));
+			setPopupMenuController(new EditableLargeMolMenuController(this));
 		}
 		else {
 			setPreferredSize(new Dimension(HiDPIHelper.scale(240), HiDPIHelper.scale(180)));
-			setPopupMenuController(new ConformerMenuController(owner, this));
+			setPopupMenuController(new EditableSmallMolMenuController(owner, this));
 		}
 	}
 

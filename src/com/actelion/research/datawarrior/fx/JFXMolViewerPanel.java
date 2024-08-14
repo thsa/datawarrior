@@ -478,8 +478,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 	 * @param refConformer optional second conformer or ligand structure for comparison (not the natural ligand or PheSA query)
 	 */
 	public void updateConformers(StereoMolecule[] conformers, int rowID, StereoMolecule refConformer) {
-		mCurrentUpdateID++;
-		final int updateID = mCurrentUpdateID;
+		final int updateID = ++mCurrentUpdateID;
 		Platform.runLater(() -> {
 			boolean isTorsionStrainVisible = false;
 			for (V3DMolecule fxmol : mScene.getMolsInScene())

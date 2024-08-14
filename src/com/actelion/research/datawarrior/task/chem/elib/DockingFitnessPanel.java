@@ -3,7 +3,8 @@ package com.actelion.research.datawarrior.task.chem.elib;
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
 import com.actelion.research.chem.StereoMolecule;
-import com.actelion.research.gui.form.JFXConformerPanel;
+import com.actelion.research.datawarrior.fx.ProteinLigandMenuController;
+import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
 import org.openmolecules.fx.viewer3d.V3DMolecule;
@@ -19,7 +20,7 @@ public class DockingFitnessPanel extends FitnessPanel {
 
 	protected static final String CODE_SKIP_PROTONATION = "protonate=false";
 
-	protected JFXConformerPanel mConformerPanel;
+	protected JFXMolViewerPanel mConformerPanel;
 	protected JCheckBox mCheckBoxProtonateLigand;
 
 	/**
@@ -57,8 +58,8 @@ public class DockingFitnessPanel extends FitnessPanel {
 
 		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
 		settings.add(V3DScene.ViewerSettings.EDITING);
-		mConformerPanel = new JFXConformerPanel(false, settings);
-		mConformerPanel.setPopupMenuController(new DockingPanelController(mConformerPanel));
+		mConformerPanel = new JFXMolViewerPanel(false, settings);
+		mConformerPanel.setPopupMenuController(new ProteinLigandMenuController(mConformerPanel));
 		mConformerPanel.adaptToLookAndFeelChanges();
 //		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(240), HiDPIHelper.scale(180)));

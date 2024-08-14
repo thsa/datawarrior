@@ -24,6 +24,8 @@ import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.flexophore.FlexophoreAtomContributionColors;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
+import com.actelion.research.datawarrior.fx.CompoundRecordMenuController;
+import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.*;
 import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.form.*;
@@ -210,7 +212,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			}
 			if (CompoundTableModel.cColumnType3DCoordinates.equals(specialType)) {
 				EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
-				final JFXConformerPanel view = new JFXConformerPanel(false, settings);
+				final JFXMolViewerPanel view = new JFXMolViewerPanel(false, settings);
 				view.adaptToLookAndFeelChanges();
 				String overlay = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);
 				StereoMolecule overlayMol = (overlay == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(overlay);
@@ -228,7 +230,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 					view.setOverlayMolecule(ligandMol);
 
 				addColumnDetailView(view, mTableModel.getParentColumn(column), column, TYPE_STRUCTURE_3D, mTableModel.getColumnTitle(column));
-				view.setPopupMenuController(new FXMolPopupMenuController(view, mTableModel, column, true));
+				view.setPopupMenuController(new CompoundRecordMenuController(view, mTableModel, column, true));
 				continue;
 			}
 			if (columnName.equalsIgnoreCase("imagefilename")
@@ -337,7 +339,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			case TYPE_STRUCTURE_3D -> {
 				boolean isSuperpose = CompoundTableConstants.cSuperposeValueReferenceRow.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperpose));
 				boolean isAlign = CompoundTableConstants.cSuperposeAlignValueShape.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperposeAlign));
-				FXMolPopupMenuController controller = (FXMolPopupMenuController)((JFXConformerPanel)viewInfo.view).getPopupMenuController();
+				CompoundRecordMenuController controller = (CompoundRecordMenuController)((JFXMolViewerPanel)viewInfo.view).getPopupMenuController();
 				controller.setParentRecord(mCurrentRecord);
 				controller.update3DView(isSuperpose, isAlign);
 			}
@@ -398,7 +400,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 					}
 				}
 
-			JFXConformerPanel view = (JFXConformerPanel)viewInfo.view;
+			JFXMolViewerPanel view = (JFXMolViewerPanel)viewInfo.view;
 			int rowID = (mCurrentRecord == null || isSuperpose || view.getOverlayMolecule() != null) ? -1 : mCurrentRecord.getID();
 			view.updateConformers(rowMol, rowID, refMol == null ? null : refMol[0]);
 			}).start();

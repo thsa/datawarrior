@@ -19,9 +19,9 @@
 package com.actelion.research.datawarrior.plugin;
 
 import com.actelion.research.chem.*;
-import com.actelion.research.datawarrior.task.chem.elib.ConformerViewController;
-import com.actelion.research.datawarrior.task.chem.elib.DockingPanelController;
-import com.actelion.research.gui.form.JFXConformerPanel;
+import com.actelion.research.datawarrior.fx.ConformerMenuController;
+import com.actelion.research.datawarrior.fx.ProteinLigandMenuController;
+import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import org.openmolecules.datawarrior.plugin.IConformerPanel;
 import org.openmolecules.fx.viewer3d.V3DMolecule;
@@ -31,18 +31,18 @@ import java.awt.*;
 import java.util.EnumSet;
 import java.util.List;
 
-public class PluginConformerPanel extends JFXConformerPanel implements IConformerPanel {
+public class PluginConformerPanel extends JFXMolViewerPanel implements IConformerPanel {
 	public PluginConformerPanel(Frame owner, int mode) {
 		super(false, buildSettings());
 		adaptToLookAndFeelChanges();
 //		setBackground(new java.awt.Color(24, 24, 96));
 		if (mode == MODE_LIGAND_AND_PROTEIN) {
 			setPreferredSize(new Dimension(HiDPIHelper.scale(320), HiDPIHelper.scale(240)));
-			setPopupMenuController(new DockingPanelController(this));
+			setPopupMenuController(new ProteinLigandMenuController(this));
 		}
 		else {
 			setPreferredSize(new Dimension(HiDPIHelper.scale(240), HiDPIHelper.scale(180)));
-			setPopupMenuController(new ConformerViewController(owner, this));
+			setPopupMenuController(new ConformerMenuController(owner, this));
 		}
 	}
 

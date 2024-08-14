@@ -24,6 +24,7 @@ import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.datawarrior.chem.InchiBuilder;
+import com.actelion.research.datawarrior.fx.JFXConformerExplorer;
 import com.actelion.research.datawarrior.task.chem.DETaskSortReactionsBySimilarity;
 import com.actelion.research.datawarrior.task.chem.DETaskSortStructuresBySimilarity;
 import com.actelion.research.datawarrior.task.table.DETaskCopyTableCells;
@@ -1169,7 +1170,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 			final int idcodeColumn = mTableModel.findColumn(actionCommand.substring(CONFORMERS.length(), index));
 			StereoMolecule mol = mTableModel.getChemicalStructure(mRecord, idcodeColumn, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
 			if (mol != null)
-				new FXConformerDialog(getParentFrame(), mol).generateConformers();
+				new JFXConformerExplorer(getParentFrame(), mol).generateConformers();
 		} else if (actionCommand.startsWith(PATENT_SEARCH)
 				|| actionCommand.startsWith(SCHOLAR_SEARCH)
 				|| actionCommand.startsWith(SPAYA_SEARCH)

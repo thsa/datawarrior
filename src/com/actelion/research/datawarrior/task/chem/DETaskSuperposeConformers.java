@@ -7,8 +7,8 @@ import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.phesaflex.FlexibleShapeAlignment;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETable;
-import com.actelion.research.datawarrior.task.chem.elib.ConformerViewController;
-import com.actelion.research.gui.form.JFXConformerPanel;
+import com.actelion.research.datawarrior.fx.ConformerMenuController;
+import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.util.DoubleFormat;
@@ -30,7 +30,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 	private static final int COLUMNS_PER_CONFORMER = 3;
 
 	private final DETable mTable;
-	protected JFXConformerPanel mConformerPanel;
+	protected JFXMolViewerPanel mConformerPanel;
 	private String[] mConformerIDCode;
 	private StereoMolecule[] mConformer;
 	private final boolean mIsFlexible;
@@ -54,11 +54,11 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 
 		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
 		settings.add(V3DScene.ViewerSettings.EDITING);
-		mConformerPanel = new JFXConformerPanel(false, settings);
+		mConformerPanel = new JFXMolViewerPanel(false, settings);
 		mConformerPanel.adaptToLookAndFeelChanges();
 //		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(400), HiDPIHelper.scale(200)));
-		mConformerPanel.setPopupMenuController(new ConformerViewController(getParentFrame(), mConformerPanel));
+		mConformerPanel.setPopupMenuController(new ConformerMenuController(getParentFrame(), mConformerPanel));
 
 		JPanel ep = new JPanel();
 		ep.setLayout(new TableLayout(size));

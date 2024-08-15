@@ -70,9 +70,12 @@ public class FormObjectBorder extends AbstractBorder {
 				mMetrics = c.getGraphics().getFontMetrics(mFont);
 
 			int titleWidth = (int)mMetrics.getStringBounds(" "+mTitle+": ", c.getGraphics()).getWidth();
-			
-			if (size.height >= minContentHeight + 2*BORDER + mMetrics.getHeight())
-				insets = new Insets(BORDER+mMetrics.getHeight(), BORDER, BORDER, BORDER);
+			int fontHeight = mMetrics.getHeight();
+
+			if (size.height >= minContentHeight + 2*BORDER + 2*fontHeight && size.width < BORDER+titleWidth)
+				insets = new Insets(BORDER+2*fontHeight, BORDER, BORDER, BORDER);
+			else if (size.height >= minContentHeight + 2*BORDER + fontHeight)
+				insets = new Insets(BORDER+fontHeight, BORDER, BORDER, BORDER);
 			else if (size.height >= minContentHeight + 2 * BORDER)
 				insets = new Insets(BORDER, Math.min(size.width/2, BORDER+titleWidth), BORDER, BORDER);
 			else
@@ -111,13 +114,20 @@ public class FormObjectBorder extends AbstractBorder {
 
 		Insets insets = getBorderInsets(c);
 		if (mTitle != null) {
+			int fontHeight = mMetrics.getHeight();
 			String title = " "+mTitle+": ";
-			if (insets.top > BORDER) {	// title on top
+			if (insets.top > BORDER) {	// title line(s) on top
 				g.setColor(titleBackground);
 				g.fillRect(x+BORDER, y+BORDER, width-2*BORDER, insets.top-BORDER);
 				g.setColor(titleForeground);
 				g.setFont(mFont);
-				g.drawString(title, x, y+BORDER+mMetrics.getAscent());
+				if (insets.top > BORDER+fontHeight) {    // two title lines on top
+					if (!drawMultiLineTitle(title, x, y, width, fontHeight, false, g))
+						drawMultiLineTitle(title, x, y, width, fontHeight, true, g);
+					}
+				else {    // one title line on top
+					g.drawString(title, x, y + BORDER + mMetrics.getAscent());
+					}
 				}
 			else {	// title on left side
 				g.setColor(titleBackground);
@@ -132,6 +142,23 @@ public class FormObjectBorder extends AbstractBorder {
 //			g.setColor(mIsEditMode ? editBorderColor : borderColor);
 //			g.drawRect(x, y, width-1, height-1);
 //			}
+		}
+
+	private boolean drawMultiLineTitle(String title, int x, int y, int width, int fontHeight, boolean wrapAnywhere, Graphics g) {
+		for (int i=title.length()-2; i>=2; i--) {
+			if (title.charAt(i) == ' ' || wrapAnywhere) {
+				String title1 = title.substring(0, i);
+				if (mMetrics.getStringBounds(title1, g).getWidth() < width) {
+					String title2 = title.substring(i+1);
+					if (mMetrics.getStringBounds(title2, g).getWidth() < width || wrapAnywhere) {
+						g.drawString(title1, x, y + BORDER + mMetrics.getAscent());
+						g.drawString(title2, x, y + BORDER + fontHeight + mMetrics.getAscent());
+						return true;
+						}
+					}
+				}
+			}
+		return false;
 		}
 
 	public void printBorder(Graphics2D g2D, Rectangle2D.Double rect, float scale) {

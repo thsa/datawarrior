@@ -247,10 +247,37 @@ public class JFormDesigner extends JComponent implements ActionListener,MouseLis
 
 		g.drawRect(itemRect.x, itemRect.y, itemRect.width-1, itemRect.height-1);
 
-		g.drawString(item.title,
-					 itemRect.x+(itemRect.width-g.getFontMetrics().stringWidth(item.title))/2,
-					 itemRect.y+itemRect.height/2+4);
+		FontMetrics metrics = g.getFontMetrics();
+		int titleY = itemRect.y + (itemRect.height - metrics.getHeight()) / 2 + metrics.getAscent();
+		int titleWidth = metrics.stringWidth(item.title);
+		if (titleWidth <= itemRect.width || itemRect.height < 2*metrics.getHeight() || item.title.length() < 6) {
+			g.drawString(item.title, itemRect.x+(itemRect.width-titleWidth)/2, titleY);
+			}
+		else {
+			if (!drawMultiLineTitle(item.title, itemRect, titleY, false, g))
+				drawMultiLineTitle(item.title, itemRect, titleY, true, g);
+			}
 		}
+
+	private boolean drawMultiLineTitle(String title, Rectangle itemRect, int titleY, boolean wrapAnywhere, Graphics g) {
+		FontMetrics metrics = g.getFontMetrics();
+		for (int i=title.length()-2; i>=1; i--) {
+			if (title.charAt(i) == ' ' || wrapAnywhere) {
+				String title1 = title.substring(0, i);
+				int title1Width = (int)metrics.getStringBounds(title1, g).getWidth();
+				if (title1Width < itemRect.width) {
+					String title2 = title.substring(i+1);
+					int title2Width = (int)metrics.getStringBounds(title2, g).getWidth();
+					if (title2Width < itemRect.width || wrapAnywhere) {
+						g.drawString(title1, itemRect.x+(itemRect.width-title1Width)/2, titleY - metrics.getHeight() / 2);
+						g.drawString(title2, itemRect.x+(itemRect.width-title2Width)/2, titleY + metrics.getHeight() / 2);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
 
 	private Rectangle getCloseBoxRect(Rectangle itemRect) {
 		Rectangle closeBoxRect = new Rectangle();

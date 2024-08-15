@@ -100,6 +100,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask implements Actio
 		parser.addFunction("len", new JEPLenFunction());
 		parser.addFunction("max", new JEPMaxFunction());
 		parser.addFunction("min", new JEPMinFunction());
+		parser.addFunction("num", new JEPNumFunction());
 		parser.addFunction("str", new JEPMyStrFunction());
 		parser.addFunction("isempty", new JEPEmptyFunction());
 		parser.addFunction("replaceempty", new JEPReplaceEmptyFunction());

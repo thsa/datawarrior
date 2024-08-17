@@ -72,7 +72,7 @@ public class JFXPDBViewer extends JFXPanel {
 							System.out.print("adding molecule to scene...  ");
 							mScene.deleteAllMolecules();
 							if (vm != null)
-								mScene.addMolecule(vm);
+								mScene.addMolecule(vm, false);
 							System.out.println("done");
 							System.out.println("scene3D.width:" + mScene.getWidth() + " scene3D.height:" + mScene.getHeight());
 							}

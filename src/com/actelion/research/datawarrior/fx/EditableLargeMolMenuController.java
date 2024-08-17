@@ -225,7 +225,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 				protein.setColor(Color.LIGHTGRAY);
 				protein.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.FILLED);
 				protein.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS);
-				scene.addMolecule(protein);
+				scene.addMolecule(protein, false);
 				scene.optimizeView();
 			});
 		}
@@ -244,7 +244,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 					}
 				}
 
-				scene.addMolecule(new V3DMolecule(ligand, 1, V3DMolecule.MoleculeRole.LIGAND));
+				scene.addMolecule(new V3DMolecule(ligand, 1, V3DMolecule.MoleculeRole.LIGAND), false);
 				scene.optimizeView();
 			});
 		}

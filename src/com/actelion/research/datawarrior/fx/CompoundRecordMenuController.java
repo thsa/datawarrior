@@ -70,7 +70,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 
 			if (!hasQuery && hasLigand) {   // query and ligand display are done via setOverlayMolecule(). Thus, we cannot have both!
 				javafx.scene.control.CheckMenuItem itemShowLigand = new CheckMenuItem("Show Natural Ligand");
-				itemShowLigand.setSelected(isShowQuery);
+				itemShowLigand.setSelected(isShowLigand);
 				itemShowLigand.setOnAction(e -> setShowNaturalLigand(!isShowLigand));
 				popup.getItems().add(itemShowLigand);
 			}
@@ -185,8 +185,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				}
 			}
 
-			int rowID = (mParentRecord == null || isSuperpose || mConformerPanel.getOverlayMolecule() != null) ? -1 : mParentRecord.getID();
-			mConformerPanel.updateConformers(rowMol, rowID, refMol == null ? null : refMol[0]);
+			mConformerPanel.updateConformers(rowMol, refMol == null ? null : refMol[0]);
 		}).start();
 	}
 

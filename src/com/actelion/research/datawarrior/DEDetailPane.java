@@ -202,6 +202,10 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		return mTableModel;
 	}
 
+	public ArrayList<DetailViewInfo> getDetailViewInfos() {
+		return mDetailViewList;
+	}
+
 	protected void addColumnDetailViews(int firstColumn) {
 		for (int column = firstColumn; column < mTableModel.getTotalColumnCount(); column++) {
 			String columnName = mTableModel.getColumnTitleNoAlias(column);
@@ -382,7 +386,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		((JStructureView)viewInfo.view).setAtomHighlightColors(facc == null ? null : facc.getMolARGB(), facc == null ? null : facc.getMolRadius());
 	}
 
-	static class DetailViewInfo {
+	public static class DetailViewInfo {
 		public JComponent view;
 		public int column, detail;
 		public String type;

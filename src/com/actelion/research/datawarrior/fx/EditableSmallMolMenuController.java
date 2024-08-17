@@ -86,7 +86,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 					if (mol != null && mol.getAllAtoms() != 0) {
 						mol.center();
 						V3DScene scene = mConformerPanel.getV3DScene();
-						scene.addMolecule(new V3DMolecule(mol));
+						scene.addMolecule(new V3DMolecule(mol), false);
 						scene.optimizeView();
 						}
 					});
@@ -200,7 +200,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 								V3DScene scene = mConformerPanel.getV3DScene();
 
 								ligand.center();
-								scene.addMolecule(new V3DMolecule(ligand, MoleculeArchitect.CONSTRUCTION_MODE_BALL_AND_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true));
+								scene.addMolecule(new V3DMolecule(ligand, MoleculeArchitect.CONSTRUCTION_MODE_BALL_AND_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true), false);
 
 								scene.optimizeView();
 							});

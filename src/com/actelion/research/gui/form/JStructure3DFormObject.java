@@ -162,7 +162,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
 			    final CountDownLatch latch = new CountDownLatch(1);
 			    final StereoMolecule[] mols_ = mols;
 			    Platform.runLater(() -> {
-				    fxp.updateConformers(mols_, -1, null);
+				    fxp.updateConformers(mols_, null);
 				    latch.countDown();
 			    } );
 			    try { latch.await(); } catch (InterruptedException ie) {}

@@ -20,6 +20,7 @@ package com.actelion.research.datawarrior;
 
 import com.actelion.research.calc.CorrelationCalculator;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
+import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.datawarrior.task.view.DETaskSetStructureDisplayMode;
 import com.actelion.research.gui.JMultiPanelView;
@@ -74,6 +75,10 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMainViewDockInfo = "mainViewDockInfo";
 	private static final String cMainViewInFront = "mainViewInFront";
 	private static final String cDetailView = "detailView";
+	private static final String cMolViewerOverlayMolColor = "fxmvOverlayMolColor";
+	private static final String cMolViewerCavityColor = "fxmvCavityColor";
+	private static final String cMolViewerRefMolColor = "fxmvRefMolColor";
+	private static final String cMolViewerSingleConformerColor = "fxmvSingleConformerColor";
 	private static final String cTableRowHeight = "rowHeight";
 	private static final String cTableHeaderLines = "headerLines";
 	private static final String cTableColumnWidth = "columnWidth";
@@ -412,6 +417,25 @@ public class DERuntimeProperties extends RuntimeProperties {
 					mDetailPane.setProperties("height[Structure]=0.5;height[Data]=0.5");
 				else
 					mDetailPane.setProperties("height["+detail+"]=1.0");
+				}
+			}
+
+		for (DEDetailPane.DetailViewInfo viewInfo : mDetailPane.getDetailViewInfos()) {
+			if (viewInfo.view instanceof JFXMolViewerPanel panel3D) {
+				int column3D = viewInfo.detail;
+				String column3DName = mTableModel.getColumnTitleNoAlias(column3D);
+				String overlayColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerOverlayMolColor);
+				if (overlayColor != null)
+					panel3D.setOverlayMolColor(overlayColor);
+				String cavityColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityColor);
+				if (cavityColor != null)
+					panel3D.setCavityMolColor(cavityColor);
+				String refMolColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolColor);
+				if (refMolColor != null)
+					panel3D.setRefMolColor(refMolColor);
+				String confColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerColor);
+				if (confColor != null)
+					panel3D.setSingleConformerColor(confColor);
 				}
 			}
 		}
@@ -1871,6 +1895,25 @@ public class DERuntimeProperties extends RuntimeProperties {
 					else if (((FocusableView)view).getFocusList() != FocusableView.cFocusNone)
 						setProperty(cFocusList +viewName, mTableModel.getListHandler().getListNames()[((FocusableView)view).getFocusList()]);
 					}
+				}
+			}
+
+		for (DEDetailPane.DetailViewInfo viewInfo : mDetailPane.getDetailViewInfos()) {
+			if (viewInfo.view instanceof JFXMolViewerPanel panel3D) {
+				int column3D = viewInfo.detail;
+				String column3DName = mTableModel.getColumnTitleNoAlias(column3D);
+				String overlayColor = panel3D.getOverlayMolColor();
+				if (overlayColor != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerOverlayMolColor, overlayColor);
+				String cavityColor = panel3D.getCavityMolColor();
+				if (cavityColor != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityColor, cavityColor);
+				String refMolColor = panel3D.getRefMolColor();
+				if (refMolColor != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolColor, refMolColor);
+				String confColor = panel3D.getSingleConformerColor();
+				if (confColor != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerColor, confColor);
 				}
 			}
 

@@ -3,6 +3,7 @@ package com.actelion.research.datawarrior.fx;
 import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.alignment3d.PheSAAlignmentOptimizer;
+import com.actelion.research.chem.conf.AtomAssembler;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.table.DETaskSetColumnProperties;
@@ -138,6 +139,8 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	private void setShowQueryMolecule(boolean isShowQuery) {
 		String query = isShowQuery ? mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperposeMolecule) : null;
 		StereoMolecule queryMol = (query == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(query);
+		if (queryMol != null)
+			new AtomAssembler(queryMol).addImplicitHydrogens();
 		mConformerPanel.setOverlayMolecule(queryMol);
 		SwingUtilities.invokeLater(() -> {
 			HashMap<String, String> map = new HashMap<>();

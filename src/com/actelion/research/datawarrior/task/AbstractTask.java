@@ -217,7 +217,7 @@ public abstract class AbstractTask implements ProgressController {
 		}
 
 	/**
-	 * Provided the dialog is visible, this methods returns the configuration dialog,
+	 * Provided the dialog is visible, this method returns the configuration dialog,
 	 * which is the parent of the configuration panel.
 	 * @return configuration dialog
 	 */

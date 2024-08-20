@@ -520,7 +520,7 @@ public class DEMacro implements CompoundTableConstants {
 			}
 
 		private void updateFileVariable() {
-			if (filelist.size() > 0) {
+			if (!filelist.isEmpty()) {
 				File file = filelist.remove(0);
 				variableMap.put(VARIABLE_NAME_FILENAME, file.getAbsolutePath());
 				}

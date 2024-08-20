@@ -16,8 +16,10 @@
  * @author Thomas Sander
  */
 
-package com.actelion.research.chem;
+package com.actelion.research.datawarrior.chem;
 
+import com.actelion.research.chem.AbstractDepictor;
+import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.gui.generic.GenericPolygon;
 import org.jmol.g3d.Graphics3D;
 

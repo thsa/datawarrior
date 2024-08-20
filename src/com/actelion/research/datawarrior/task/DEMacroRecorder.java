@@ -246,7 +246,7 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 						int index = findLabel(mRunningMacro, label);
 						if (index != -1)
 							currentTask = index;
-						continue;	// If label is found, then continue with task after the label. Otherwise just continue.
+						continue;	// If label is found, then continue with task after the label. Otherwise, just continue.
 						}
 
 					if (cf instanceof DETaskIfThen) {

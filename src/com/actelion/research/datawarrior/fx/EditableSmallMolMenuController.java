@@ -4,6 +4,7 @@ import com.actelion.research.chem.MolecularFormula;
 import com.actelion.research.chem.Molecule3D;
 import com.actelion.research.chem.MolfileParser;
 import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.chem.conf.AtomAssembler;
 import com.actelion.research.chem.io.Mol2FileParser;
 import com.actelion.research.chem.io.pdb.parser.PDBCoordEntryFile;
 import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
@@ -199,8 +200,8 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 							Platform.runLater(() -> {
 								V3DScene scene = mConformerPanel.getV3DScene();
 
-								ligand.center();
-								scene.addMolecule(new V3DMolecule(ligand, MoleculeArchitect.CONSTRUCTION_MODE_BALL_AND_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true), false);
+								new AtomAssembler(ligand).addImplicitHydrogens();
+								scene.addMolecule(new V3DMolecule(ligand, MoleculeArchitect.CONSTRUCTION_MODE_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true), false);
 
 								scene.optimizeView();
 							});
@@ -215,43 +216,4 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 			}
 		catch (Exception ie) {}
 		}
-
-/*	private void loadPDBLigand() {      MMTF is not supported anymore from July 2nd, 2024
-		mPDBCode = null;
-		try {
-			SwingUtilities.invokeLater(() -> {
-				mPDBCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
-				if (mPDBCode == null || mPDBCode.isEmpty())
-					return;
-
-				Molecule3D[] mol = MMTFParser.getStructureFromName(mPDBCode, MMTFParser.MODE_SPLIT_CHAINS);
-				if (mol == null)
-					return;
-
-				MMTFParser.centerMolecules(mol);
-
-				Platform.runLater(() -> {
-					V3DScene scene = mConformerPanel.getV3DScene();
-
-					int count = 0;
-					for (int i=0; i<mol.length; i++) {
-						if (mol[i].getAllBonds() != 0 && mol[i].getAllAtoms() < 100) {
-							if (mol.length == 1)
-								mol[0].center();
-							scene.addMolecule(new V3DMolecule(mol[i], MoleculeArchitect.ConstructionMode.BALL_AND_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true));
-							count++;
-							}
-						}
-
-					if (count == 0)
-						showMessageInEDT("No ligand structure found in PDB entry.");
-					else if (count > 1)
-						showMessageInEDT("Multiple ligand structures found.\nRemove all but one for proper results.");
-
-					scene.optimizeView();
-					});
-				});
-			}
-		catch (Exception ie) {}
-		} */
 	}

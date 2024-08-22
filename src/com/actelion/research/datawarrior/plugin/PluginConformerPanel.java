@@ -19,6 +19,7 @@
 package com.actelion.research.datawarrior.plugin;
 
 import com.actelion.research.chem.*;
+import com.actelion.research.chem.conf.AtomAssembler;
 import com.actelion.research.datawarrior.fx.EditableSmallMolMenuController;
 import com.actelion.research.datawarrior.fx.EditableLargeMolMenuController;
 import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
@@ -82,15 +83,21 @@ public class PluginConformerPanel extends JFXMolViewerPanel implements IConforme
 	@Override public void setConformerFromIDCode(String idcode) {
 		clear();
 		StereoMolecule mol = getStructureFromIDCode(idcode);
-		if (mol != null)
+		if (mol != null) {
+			new AtomAssembler(mol).addImplicitHydrogens();
 			addMolecule(mol, null, null);
+			optimizeView();
+		}
 	}
 
 	@Override public void setConformerFromMolfile(String molfile) {
 		clear();
 		StereoMolecule mol = (molfile == null) ? null : new MolfileParser().getCompactMolecule(molfile);
-		if (mol != null)
+		if (mol != null) {
+			new AtomAssembler(mol).addImplicitHydrogens();
 			addMolecule(mol, null, null);
+			optimizeView();
+		}
 	}
 
 	@Override public void setProteinCavity(String proteinIDCode, String ligandIDCode) {
@@ -101,6 +108,8 @@ public class PluginConformerPanel extends JFXMolViewerPanel implements IConforme
 			setProteinCavity(cavity, ligand, true);
 		if (ligand != null)
 			setOverlayMolecule(ligand);
+		if (cavity != null || ligand != null)
+			optimizeView();
 	}
 
 	private StereoMolecule getStructureFromIDCode(String idcode) {

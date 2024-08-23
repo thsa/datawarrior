@@ -109,7 +109,7 @@ public class DETaskSetMarkerJittering extends DETaskAbstractSetViewOptions {
 		int axes = 7;
 		try {
 			jitter = Float.parseFloat(configuration.getProperty(PROPERTY_JITTER, "0"));
-			axes = Integer.parseInt(configuration.getProperty(PROPERTY_JITTER, "7"));
+			axes = Integer.parseInt(configuration.getProperty(PROPERTY_AXES, "7"));
 			}
 		catch (NumberFormatException nfe) {}
 

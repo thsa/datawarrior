@@ -24,7 +24,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	private final JFXMolViewerPanel mConformerPanel;
 	private final CompoundTableModel mTableModel;
 	private CompoundRecord mParentRecord;
-	private final int mIDCodeColumn,mCoordsColumn;
+	private int mCoordsColumn;
 	private final boolean mAllowSuperposeReference;
 
 	/**
@@ -38,9 +38,16 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	public CompoundRecordMenuController(JFXMolViewerPanel conformerPanel, CompoundTableModel tableModel, int coordsColumn, boolean allowSuperposeReference) {
 		mConformerPanel = conformerPanel;
 		mTableModel = tableModel;
-		mIDCodeColumn = tableModel.getParentColumn(coordsColumn);
 		mCoordsColumn = coordsColumn;
 		mAllowSuperposeReference = allowSuperposeReference;
+	}
+
+	/**
+	 * Must be updated from outside, if columns are deleted from the table and coordsColumn index changes
+	 * @param coordsColumn
+	 */
+	public void updateCoordsColumn(int coordsColumn) {
+		mCoordsColumn = coordsColumn;
 	}
 
 	/**
@@ -165,11 +172,11 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 		new Thread(() -> {
 			StereoMolecule[] rowMol = null;
 			if (mParentRecord != null)
-				rowMol = getConformers(mParentRecord, true);
+				rowMol = getConformers(mCoordsColumn, mParentRecord, true);
 
 			StereoMolecule[] refMol = null;
 			if (isSuperpose && mTableModel.getActiveRow() != null && mTableModel.getActiveRow() != mParentRecord)
-				refMol = getConformers(mTableModel.getActiveRow(), false);
+				refMol = getConformers(mCoordsColumn, mTableModel.getActiveRow(), false);
 
 			if (rowMol != null) {
 				StereoMolecule best = null;
@@ -192,11 +199,11 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 		}).start();
 	}
 
-	private StereoMolecule[] getConformers(CompoundRecord record, boolean allowMultiple) {
-		byte[] idcode = (byte[]) record.getData(mIDCodeColumn);
-		byte[] coords = (byte[]) record.getData(mCoordsColumn);
+	private StereoMolecule[] getConformers(int coordsColumn, CompoundRecord record, boolean allowMultiple) {
+		byte[] idcode = (byte[]) record.getData(mTableModel.getParentColumn(coordsColumn));
+		byte[] coords = (byte[]) record.getData(coordsColumn);
 		if (idcode != null && coords != null) {
-			boolean split3DFragments = "true".equals(mTableModel.getColumnProperty(mCoordsColumn, CompoundTableModel.cColumnProperty3DFragmentSplit));
+			boolean split3DFragments = "true".equals(mTableModel.getColumnProperty(coordsColumn, CompoundTableModel.cColumnProperty3DFragmentSplit));
 			if (split3DFragments) {
 				return new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode, coords).getFragments();
 			}

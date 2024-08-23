@@ -47,6 +47,10 @@ public class JStructure3DFormObject extends AbstractFormObject {
 		((JFXMolViewerPanel)mComponent).adaptToLookAndFeelChanges();
 		}
 
+	public V3DPopupMenuController getPopupMenuController() {
+		return ((JFXMolViewerPanel)mComponent).getPopupMenuController();
+	}
+
 	public void setPopupMenuController(V3DPopupMenuController controller) {
 		((JFXMolViewerPanel)mComponent).setPopupMenuController(controller);
 	}

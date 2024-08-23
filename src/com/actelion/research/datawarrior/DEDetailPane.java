@@ -142,6 +142,8 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 					viewInfo.detail = e.getMapping()[viewInfo.detail];
 					if (viewInfo.detail == -1)  // remove view if 3D-coords missing
 						viewInfo.column = -1;
+					else
+						((CompoundRecordMenuController)((JFXMolViewerPanel)viewInfo.view).getPopupMenuController()).updateCoordsColumn(viewInfo.detail);
 				}
 
 				if (viewInfo.column == -1) {

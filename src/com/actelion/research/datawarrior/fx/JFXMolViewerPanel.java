@@ -74,7 +74,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 		mCavityMolColor = DEFAULT_CAVITY_MOL_COLOR;
 		mOverlayMolColor = DEFAULT_OVERLAY_MOL_COLOR;
 		mRefMolColor = DEFAULT_REFMOL_COLOR;
-		mSingleConformerColor = DEFAULT_SINGLE_CONF_COLOR;
+		mSingleConformerColor = null;
 
 		collectLookAndFeelColors(); // we have to do this on the EDT
 

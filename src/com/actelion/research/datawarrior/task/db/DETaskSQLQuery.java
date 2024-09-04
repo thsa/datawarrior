@@ -70,7 +70,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 	private static final String STRUCTURE_COLUMN_NAME_START ="Structure of ";
 
 	private static JLoginDialog sLoginDialog;
-	private static boolean	sOracleDriverRegistered,sMySQLDriverRegistered,sPostgreSQLDriverRegistered,sSQLServerDriverRegistered,sMSAccessDriverRegistered;
+	private static boolean	sOracleDriverRegistered,sMySQLDriverRegistered,sPostgreSQLDriverRegistered,sSQLServerDriverRegistered,sMSAccessDriverRegistered,sIRISDriverRegistered;
 	private static TreeMap<String,DatabaseSpec> sKnownDatabaseMap;	// map from database name to connect string
 	private static TreeMap<String,Connection> sConnectionCache;	// map from connect string to connection
 
@@ -203,6 +203,17 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 			}
 		}
 
+		if (connectString.startsWith("IRIS:")) {
+			try {
+				registerIRISDriver();
+				connection = DriverManager.getConnection("jdbc:"+connectString, user, password);
+			}
+			catch (Exception ex) {
+				ex.printStackTrace();
+				showErrorMessage(ex.getMessage());
+			}
+		}
+
 		if (connection != null) {
 			if (sConnectionCache == null)
 				sConnectionCache = new TreeMap<>();
@@ -278,7 +289,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 	private boolean registerMySQLDriver() {
 		if (!sMySQLDriverRegistered) {
 			try {
-				Class.forName("com.mysql.jdbc.Driver").newInstance();
+				Class.forName("com.mysql.jdbc.Driver").getDeclaredConstructor().newInstance();
 				sMySQLDriverRegistered = true;
 				}
 			catch (Exception ex) {
@@ -292,7 +303,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 	private boolean registerPostgreSQLDriver() {
 		if (!sPostgreSQLDriverRegistered) {
 			try {
-				Class.forName("org.postgresql.Driver").newInstance();
+				Class.forName("org.postgresql.Driver").getDeclaredConstructor().newInstance();
 				sPostgreSQLDriverRegistered = true;
 			}
 			catch (Exception ex) {
@@ -306,7 +317,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 	private boolean registerSQLServerDriver() {
 		if (!sSQLServerDriverRegistered) {
 			try {
-				Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+				Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").getDeclaredConstructor().newInstance();
 				sSQLServerDriverRegistered = true;
 			}
 			catch (Exception ex) {
@@ -320,7 +331,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 	private boolean registerMSAccessDriver() {
 		if (!sMSAccessDriverRegistered) {
 			try {
-				Class.forName("net.ucanaccess.jdbc.UcanaccessDriver").newInstance();
+				Class.forName("net.ucanaccess.jdbc.UcanaccessDriver").getDeclaredConstructor().newInstance();
 				sMSAccessDriverRegistered = true;
 			}
 			catch (Exception ex) {
@@ -329,6 +340,20 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 			}
 		}
 		return sMSAccessDriverRegistered;
+	}
+
+	private boolean registerIRISDriver() {
+		if (!sIRISDriverRegistered) {
+			try {
+				Class.forName("com.intersystems.jdbc.IRISDriver");
+				sIRISDriverRegistered = true;
+			}
+			catch (Exception ex) {
+				ex.printStackTrace();
+				showErrorMessage(ex.getMessage());
+			}
+		}
+		return sIRISDriverRegistered;
 	}
 
 	@Override
@@ -351,7 +376,8 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.FILL, gap},
 							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
-							 gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
+							 gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1,
+									TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap} };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
@@ -384,9 +410,10 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		content.add(new JLabel("postgresql://some.server.com/test_db"), "3,11,5,11");
 		content.add(new JLabel("oracle:thin:@some.server.com:1521:my_sid"), "3,13,5,13");
 		content.add(new JLabel("sqlserver://some.server.com:1433;databaseName=test_db"), "3,15,5,15");
+		content.add(new JLabel("IRIS://some.server.com:1972/IRISAPP"), "3,17,5,17");
 		try {
 			Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
-			content.add(new JLabel("ucanaccess://c:/sample.mdb;memory=true"), "3,17,5,17");
+			content.add(new JLabel("ucanaccess://c:/sample.mdb;memory=true"), "3,19,5,19");
 			}
 		catch (ClassNotFoundException cnfe) {}
 
@@ -466,7 +493,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 			showErrorMessage("Database '"+databaseName+"' is not supported");
 			return false;
 			}
-		if (databaseName == null && configuration.getProperty(PROPERTY_CONNECT_STRING, "").length() == 0) {
+		if (databaseName == null && configuration.getProperty(PROPERTY_CONNECT_STRING, "").isEmpty()) {
 			showErrorMessage("No connect string defined.");
 			return false;
 			}
@@ -500,7 +527,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		startProgress("Retrieving data ...", 0, 0);
 
 		String[] columnName = null;
-		ArrayList<byte[][]> resultList = new ArrayList<byte[][]>();
+		ArrayList<byte[][]> resultList = new ArrayList<>();
 		try {
 			String sql = resolveINClauses(resolveVariables(configuration.getProperty(PROPERTY_SQL).replace(NEWLINE_STRING, " ")));
 			sql = resolveVariables(sql);

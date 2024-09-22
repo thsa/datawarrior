@@ -30,8 +30,8 @@ import info.clearthought.layout.TableLayout;
 import javax.swing.*;
 import java.util.Properties;
 
-public class DETaskExtractFragment extends DETaskAbstractFromStructure {
-	public static final String TASK_NAME = "Extract Fragment";
+public class DETaskExtractUnconnectedFragment extends DETaskAbstractFromStructure {
+	public static final String TASK_NAME = "Extract Unconnected Fragment";
 
 	private static final String PROPERTY_NEUTRALIZE = "neutralize";
 	private static final String PROPERTY_AS_SUBSTRUCTURE = "asSubstructure";
@@ -52,7 +52,7 @@ public class DETaskExtractFragment extends DETaskAbstractFromStructure {
 	private SSSearcherWithIndex[] mSearcherWithIndex;
 	private int mExtractOption,mFFPColumn;
 
-    public DETaskExtractFragment(DEFrame parent) {
+    public DETaskExtractUnconnectedFragment(DEFrame parent) {
 		super(parent, DESCRIPTOR_NONE, false, true);
 		}
 

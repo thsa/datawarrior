@@ -930,7 +930,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemAddCanonicalCode.addActionListener(this);
 		jMenuChemAddSubstructureCount.setText("Add Substructure Count...");
 		jMenuChemAddSubstructureCount.addActionListener(this);
-		jMenuChemExtractFragment.setText("Extract Fragment...");
+		jMenuChemExtractFragment.setText("Extract Unconnected Fragment...");
 		jMenuChemExtractFragment.addActionListener(this);
 		jMenuChemAddStructureFromName.setText("Add Structures From Name...");
 		jMenuChemAddStructureFromName.addActionListener(this);
@@ -1782,7 +1782,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuChemAddSubstructureCount)
 				new DETaskAddSubstructureCount(mParentFrame).defineAndRun();
 			else if (source == jMenuChemExtractFragment)
-				new DETaskExtractFragment(mParentFrame).defineAndRun();
+				new DETaskExtractUnconnectedFragment(mParentFrame).defineAndRun();
 			else if (source == jMenuChemAddStructureFromName)
 				new DETaskAddChemistryFromName(mParentFrame).defineAndRun();
 			else if (source == jMenuChemExtractReactants)

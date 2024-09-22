@@ -21,7 +21,7 @@ package com.actelion.research.datawarrior.task;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.task.chem.DETaskClusterCompounds;
 import com.actelion.research.datawarrior.task.chem.DETaskDecomposeRGroups;
-import com.actelion.research.datawarrior.task.chem.DETaskExtractFragment;
+import com.actelion.research.datawarrior.task.chem.DETaskExtractUnconnectedFragment;
 import com.actelion.research.datawarrior.task.chem.DETaskSuperposeConformers;
 import com.actelion.research.datawarrior.task.chem.elib.DETaskBuildEvolutionaryLibrary;
 import com.actelion.research.datawarrior.task.data.*;
@@ -383,7 +383,7 @@ public class DEMacro implements CompoundTableConstants {
 		else if (taskCode.equals("addFuzzyScore"))
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskCalculateFuzzyScore.TASK_NAME);
 		else if (taskCode.equals("addLargestFragment"))
-			return StandardTaskFactory.constructTaskCodeFromName(DETaskExtractFragment.TASK_NAME);
+			return StandardTaskFactory.constructTaskCodeFromName(DETaskExtractUnconnectedFragment.TASK_NAME);
 		else if (taskCode.equals("copy"))
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskCopyTableCells.TASK_NAME);
 		else if (taskCode.equals("createBinsFromNumbers"))
@@ -396,6 +396,8 @@ public class DEMacro implements CompoundTableConstants {
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskAddCalculatedValues.TASK_NAME);
 		else if (taskCode.equals("deleteRedundantRows"))
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskDeleteDuplicateRows.TASK_NAME[DETaskDeleteDuplicateRows.MODE_REMOVE_DUPLICATE]);
+		else if (taskCode.equals("extractFragment"))
+			return StandardTaskFactory.constructTaskCodeFromName(DETaskExtractUnconnectedFragment.TASK_NAME);
 		else if (taskCode.equals("jumpToCurrentRow"))
 			return StandardTaskFactory.constructTaskCodeFromName(DETaskJumpToReferenceRow.TASK_NAME);
 		else if (taskCode.equals("searchAndReplace"))

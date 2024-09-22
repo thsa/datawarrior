@@ -762,26 +762,32 @@ public class DETaskAddCalculatedValues extends ConfigurableTask implements Actio
 			}
 
 		String formula = resolveVariables(configuration.getProperty(PROPERTY_FORMULA, "").replace("\n", "").replace("<NL>", ""));
-		if (formula.length() == 0) {
+		if (formula.isEmpty()) {
 			showErrorMessage("No formula specified.");
 			return false;
 			}
 
 		if (isLive) {
+			int column = mTableModel.findColumn(columnName);
+
+			if (column != -1 && !mTableModel.isColumnDisplayable(column)) {
+				showErrorMessage("Target column name cannot be used, because it is used by an invisible column.");
+				return false;
+				}
+
+			if (column != -1 && mTableModel.getColumnSpecialType(column) != null) {
+				showErrorMessage("Target column is not alpha-numerical.");
+				return false;
+				}
+
 			boolean isOverwrite = "true".equals(configuration.getProperty(PROPERTY_OVERWRITE_COLUMN));
 			if (isOverwrite) {
-				int column = mTableModel.findColumn(columnName);
 				if (column == -1) {
 					showErrorMessage("Target column not found.");
 					return false;
 					}
-				if (mTableModel.getColumnSpecialType(column) != null) {
-					showErrorMessage("Target column is not alpha-numerical.");
-					return false;
-					}
 				}
 			else {
-				int column = mTableModel.findColumn(columnName);
 				if (column != -1) {
 					showErrorMessage("Target column exists, but you have chosen not to overwrite.");
 					return false;

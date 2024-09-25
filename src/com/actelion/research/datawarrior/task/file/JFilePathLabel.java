@@ -18,14 +18,12 @@
 
 package com.actelion.research.datawarrior.task.file;
 
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 
 public class JFilePathLabel extends JLabel {
 	private static final long serialVersionUID = 20130228L;
@@ -82,7 +80,7 @@ public class JFilePathLabel extends JLabel {
 	 * @param path null or a file path and name
 	 */
 	public void setPath(String path) {
-		if (path == null || path.length() == 0) {
+		if (path == null || path.isEmpty()) {
 			super.setText(NO_FILE_SPECIFIED);
 			mPath = null;
 			}

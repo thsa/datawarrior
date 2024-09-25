@@ -130,7 +130,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 	protected JMenu jMenuFileNewFrom,jMenuFileOpenSpecial,jMenuFileOpenRecent,jMenuFileSaveSpecial,jMenuEditPasteSpecial,jMenuDataRemoveRows,
 				  jMenuDataSelfOrganizingMap,jMenuDataSetRange,jMenuDataViewLogarithmic,jMenuChemAddMoleculeDescriptor,
 				  jMenuChemAddReactionDescriptor,jMenuListCreate,jMenuMacroExport,jMenuMacroCopy,jMenuMacroRun,jMenuHelp,jMenuHelpNews,jMenuHelpLaF,
-				  jMenuHelpDPIScaling,jMenuHelpUpdate,jMenuHelpTrustedPlugins,jMenuChemSuperpose,jMenuChemMachineLearning;
+				  jMenuHelpDPIScaling,jMenuHelpUpdate,jMenuHelpTrustedPlugins,jMenuChemSuperpose,jMenuChem3DFragments,jMenuChemMachineLearning;
 
 	private JMenuItem jMenuFileNew,jMenuFileNewFromVisible,jMenuFileNewFromSelection,jMenuFileNewFromPivoting,jMenuFileNewFromReversePivoting,jMenuFileNewFromTransposition,
 					  jMenuFileOpen,jMenuFileOpenMacro,jMenuFileOpenTemplate,jMenuFileOpenMDLReactions,jMenuFileMerge,
@@ -149,10 +149,10 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuChemExtractReactants,jMenuChemExtractCatalysts,jMenuChemExtractProducts,jMenuChemExtractTransformation,
 					  jMenuChemCCLibrary,jMenuChemEALibrary,jMenuChemEnumerateMarkush,jMenuChemAddProperties,jMenuChemAddFormula,jMenuChemAddSmiles,
 					  jMenuChemAddInchi,jMenuChemAddInchiKey,jMenuChemAddCanonicalCode,jMenuChemCreate2DCoords,jMenuChemCreate3DCoords,
-					  jMenuChemSuperposeFlexible,jMenuChemSuperposeRigid,jMenuChemDock, jMenuChemExtractFragment,
+					  jMenuChemSuperposeFlexible,jMenuChemSuperposeRigid,jMenuChemDock, jMenuChem3DFragmentsBuildLib, jMenuChem3DFragmentsReplace,
 					  jMenuChemAddSubstructureCount,jMenuChemAddStructureFromName, jMenuChemDecomposeRGroups,jMenuChemInteractiveSARTable,
 					  jMenuChemAnalyzeScaffolds,jMenuChemAnalyzeCliffs,jMenuChemMatchFile,jMenuChemSelectDiverse,
-					  jMenuChemCluster,jMenuChemExtract3DFragments,jMenuChemMapReactions,jMenuChemCompareReactionMapping,jMenuChemAddReactionSmiles,
+					  jMenuChemCluster, jMenuChemExtractFragment,jMenuChemMapReactions,jMenuChemCompareReactionMapping,jMenuChemAddReactionSmiles,
 					  jMenuChemCreateGenericTautomers,jMenuChemCompareDescriptorSimilarityDistribution,jMenuChemGenerateRandomMolecules,
 					  jMenuChemCreateTaggedSmiles,
 					  jMenuChemExtractPairwiseCompoundSimilarities,jMenuChemExtractPairwiseStuff,jMenuChemCountAtomTypes,jMenuChemCheckIDCodes,
@@ -872,7 +872,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemSuperposeFlexible = new JMenuItem();
 		jMenuChemSuperposeRigid = new JMenuItem();
 		jMenuChemDock = new JMenuItem();
-		jMenuChemExtract3DFragments = new JMenuItem();
+		jMenuChem3DFragments = new JMenu();
+		jMenuChem3DFragmentsBuildLib = new JMenuItem();
+		jMenuChem3DFragmentsReplace = new JMenuItem();
 		jMenuChemMachineLearning = new JMenu();
 		jMenuChemAssessPredictionQuality = new JMenuItem();
 		jMenuChemPredictMissingValues = new JMenuItem();
@@ -938,15 +940,18 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemCreate2DCoords.addActionListener(this);
 		jMenuChemCreate3DCoords.setText("Generate Conformers...");
 		jMenuChemCreate3DCoords.addActionListener(this);
+		jMenuChemSuperpose.setText("Superpose Conformers");
 		jMenuChemSuperposeFlexible.setText("Flexible...");
 		jMenuChemSuperposeFlexible.addActionListener(this);
 		jMenuChemSuperposeRigid.setText("Rigid...");
 		jMenuChemSuperposeRigid.addActionListener(this);
 		jMenuChemDock.setText("Dock Structures Into Protein Cavity...");
 		jMenuChemDock.addActionListener(this);
-		jMenuChemExtract3DFragments.setText("Build 3D-Fragment Library...");
-		jMenuChemExtract3DFragments.addActionListener(this);
-		jMenuChemSuperpose.setText("Superpose Conformers");
+		jMenuChem3DFragments.setText("3D-Fragments");
+		jMenuChem3DFragmentsBuildLib.setText("Build Library...");
+		jMenuChem3DFragmentsBuildLib.addActionListener(this);
+		jMenuChem3DFragmentsReplace.setText("Replace Scaffolds...");
+		jMenuChem3DFragmentsReplace.addActionListener(this);
 		jMenuChemMachineLearning.setText("Machine Learning");
 		jMenuChemAssessPredictionQuality.setText("Assess Prediction Quality...");
 		jMenuChemAssessPredictionQuality.addActionListener(this);
@@ -1045,7 +1050,9 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChem.add(jMenuChemDock);
 		jMenuChem.addSeparator();
 		if (System.getProperty("development") != null) {
-			jMenuChem.add(jMenuChemExtract3DFragments);
+			jMenuChem.add(jMenuChem3DFragments);
+			jMenuChem3DFragments.add(jMenuChem3DFragmentsBuildLib);
+			jMenuChem3DFragments.add(jMenuChem3DFragmentsReplace);
 			jMenuChem.addSeparator();
 			}
 		jMenuChem.add(jMenuChemMachineLearning);
@@ -1803,8 +1810,10 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskSuperposeConformers(mParentFrame, false).defineAndRun();
 			else if (source == jMenuChemDock)
 				new DETaskDockIntoProteinCavity(mParentFrame).defineAndRun();
-			else if (source == jMenuChemExtract3DFragments)
+			else if (source == jMenuChem3DFragmentsBuildLib)
 				new DETaskBuild3DFragmentLibrary(mParentFrame).defineAndRun();
+			else if (source == jMenuChem3DFragmentsReplace)
+				new DETaskReplaceScaffold3D(mParentFrame).defineAndRun();
 			else if (source == jMenuChemDecomposeRGroups)
 				new DETaskDecomposeRGroups(mParentFrame).defineAndRun();
 			else if (source == jMenuChemInteractiveSARTable) {

@@ -17,13 +17,15 @@ import com.actelion.research.util.ArrayUtils;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 	public static final String TASK_NAME = "Build 3D-Fragment Library";
+
+	private static final int MIN_EXIT_VECTORS = 2;
+	private static final int MAX_EXIT_VECTORS = 5;
 
 	private static final String PROPERTY_STRUCTURE_COLUMN = "structureColumn";
 	private static final String PROPERTY_MAX_BOND_FLEXIBILITY_SUM = "maxBondFlexibilitySum";
@@ -212,7 +214,7 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 			if (maxAtoms < minAtoms) {
 				showErrorMessage("Value for maximum fragment atoms must not be smaller than the minimum.");
 				return false;
-			}
+				}
 			}
 		catch (NumberFormatException nfe) {
 			showErrorMessage("Value for maximum fragment atom count is not numerical.");
@@ -220,22 +222,22 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 			}
 
 		try {
-			int maxBonds = Integer.parseInt(configuration.getProperty(PROPERTY_MIN_FRAGMENT_ATOMS, ""));
-			if (maxBonds < 0 || maxBonds > 8) {
-				showErrorMessage("Value for maximum rotatable fragment bonds be smaller than 9.");
+			float maxBondFlexibilitySum = Float.parseFloat(configuration.getProperty(PROPERTY_MAX_BOND_FLEXIBILITY_SUM, ""));
+			if (maxBondFlexibilitySum < 0 || maxBondFlexibilitySum >= 5) {
+				showErrorMessage("The maximum sum of bond flexibilities should be (much) smaller than 5.");
 				return false;
 				}
 			}
 		catch (NumberFormatException nfe) {
-			showErrorMessage("Value for minimum fragment atom count is not numerical.");
+			showErrorMessage("The maximum sum of bond flexibilities is not numerical.");
 			return false;
 			}
 
 		int minExits = 0;
 		try {
 			minExits = Integer.parseInt(configuration.getProperty(PROPERTY_MIN_EXIT_VECTORS, ""));
-			if (minExits < 1) {
-				showErrorMessage("Value for minimum exit vectors cannot be smaller than 1.");
+			if (minExits < 2) {
+				showErrorMessage("Value for minimum exit vectors cannot be smaller than "+MIN_EXIT_VECTORS+".");
 				return false;
 				}
 			}
@@ -246,8 +248,8 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 
 		try {
 			int maxExits = Integer.parseInt(configuration.getProperty(PROPERTY_MAX_EXIT_VECTORS, ""));
-			if (maxExits < minExits) {
-				showErrorMessage("Value for maximum exit vectors must not be smaller than the minimum.");
+			if (maxExits < minExits || maxExits > MAX_EXIT_VECTORS) {
+				showErrorMessage("Maximum exit vector value must not be smaller than the minimum nor larger than "+MAX_EXIT_VECTORS);
 				return false;
 				}
 			}
@@ -329,14 +331,12 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 			tableModel.setColumnName("Exit Vectors", 3);
 
 			int row = 0;
-			Iterator<Fragment3D> iterator = fragmentSet.iterator();
-			while (iterator.hasNext()) {
-				Fragment3D f = iterator.next();
-				tableModel.setTotalValueAt(f.getIDCode(), row, 0);
-				tableModel.setTotalValueAt(f.getIDCoordinates(), row, 2);
-				tableModel.setTotalValueAt(Integer.toString(f.getExitAtoms().length), row, 3);
+			for (Fragment3D fragment : fragmentSet) {
+				tableModel.setTotalValueAt(fragment.getIDCode(), row, 0);
+				tableModel.setTotalValueAt(fragment.getIDCoordinates(), row, 2);
+				tableModel.setTotalValueAt(Integer.toString(fragment.getExitAtoms().length), row, 3);
 				row++;
-				}
+			}
 
 			tableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, this);
 

@@ -24,9 +24,9 @@ import com.actelion.research.chem.conf.TorsionDescriptor;
 import com.actelion.research.chem.conf.TorsionDescriptorHelper;
 import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.chem.shredder.FragmentGeometry3D;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
-import com.actelion.research.datawarrior.fx.JFXConformerExplorer;
 import com.actelion.research.datawarrior.task.file.JFilePathLabel;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -693,7 +693,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 						refCoords = new Coordinates[superposeAtom.length];
 						for (int j=0; j<superposeAtom.length; j++)
 							refCoords[j] = new Coordinates(mol.getCoordinates(superposeAtom[j]));
-						refCOG = JFXConformerExplorer.kabschCOG(refCoords);
+						refCOG = FragmentGeometry3D.centerOfGravity(refCoords);
 						}
 					else {	// superpose onto first conformer
 						for (int j=0; j<superposeAtom.length; j++)
@@ -738,8 +738,8 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		}
 
 	private void superpose(StereoMolecule mol, Coordinates[] coords, Coordinates[] refCoords, Coordinates refCOG) {
-		Coordinates cog = JFXConformerExplorer.kabschCOG(coords);
-		double[][] matrix = JFXConformerExplorer.kabschAlign(refCoords, coords, refCOG, cog);
+		Coordinates cog = FragmentGeometry3D.centerOfGravity(coords);
+		double[][] matrix = FragmentGeometry3D.kabschAlign(refCoords, coords, refCOG, cog);
 		for (int atom=0; atom<mol.getAllAtoms(); atom++) {
 			Coordinates c = mol.getCoordinates(atom);
 			c.sub(cog);
@@ -988,7 +988,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 					refCoords = new Coordinates[superposeAtom.length];
 					for (int j=0; j<superposeAtom.length; j++)
 						refCoords[j] = new Coordinates(mol.getCoordinates(superposeAtom[j]));
-					refCOG = JFXConformerExplorer.kabschCOG(refCoords);
+					refCOG = FragmentGeometry3D.centerOfGravity(refCoords);
 					}
 				else {	// superpose onto first conformer
 					for (int j=0; j<superposeAtom.length; j++)

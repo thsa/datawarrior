@@ -18,13 +18,12 @@
 
 package com.actelion.research.datawarrior.fx;
 
-import com.actelion.research.calc.Matrix;
-import com.actelion.research.calc.SingularValueDecomposition;
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.conf.Conformer;
 import com.actelion.research.chem.conf.TorsionDescriptor;
 import com.actelion.research.chem.conf.TorsionDescriptorHelper;
 import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
+import com.actelion.research.chem.shredder.FragmentGeometry3D;
 import com.actelion.research.datawarrior.task.chem.DETaskAdd3DCoordinates;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.editor.SwingEditorDialog;
@@ -53,7 +52,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 
@@ -409,15 +407,15 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 					for (int i=0; i<mSuperposeAtoms.length; i++)
 						refCoords[i] = conformer.getCoordinates(mSuperposeAtoms[i]);
 
-					refCOG = kabschCOG(refCoords);
+					refCOG = FragmentGeometry3D.centerOfGravity(refCoords);
 					}
 				}
 			else {
 				for (int i=0; i<mSuperposeAtoms.length; i++)
 					coords[i] = conformer.getCoordinates(mSuperposeAtoms[i]);
 
-				Coordinates cog = kabschCOG(coords);
-				matrix = kabschAlign(refCoords, coords, refCOG, cog);
+				Coordinates cog = FragmentGeometry3D.centerOfGravity(coords);
+				matrix = FragmentGeometry3D.kabschAlign(refCoords, coords, refCOG, cog);
 				for (int atom=0; atom<conformer.getAllAtoms(); atom++) {
 					Coordinates c = conformer.getCoordinates(atom);
 					c.sub(cog);
@@ -576,50 +574,6 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 		// Here we move the conformer's internal coordinates to center it around its COG!!!!!!!
 		for (int atom=0; atom<mol.getAllAtoms(); atom++)
 			mol.getCoordinates(atom).sub(cog);
-		}
-
-	public static Coordinates kabschCOG(Coordinates[] coords) {
-		int counter = 0;
-		Coordinates cog = new Coordinates();
-		for(Coordinates c:coords) {
-			cog.add(c);
-			counter++;
-			}
-		cog.scale(1.0/counter);
-		return cog;
-		}
-
-	public static double[][] kabschAlign(Coordinates[] coords1, Coordinates[] coords2, Coordinates cog1, Coordinates cog2) {
-		double[][] m = new double[3][3];
-		double[][] c1 = Arrays.stream(coords1).map(e -> new double[] {e.x-cog1.x,e.y-cog1.y,e.z-cog1.z}).toArray(double[][]::new);
-		double[][] c2 = Arrays.stream(coords2).map(e -> new double[] {e.x-cog2.x,e.y-cog2.y,e.z-cog2.z}).toArray(double[][]::new);
-		for(int i=0;i<3;i++) {
-			for(int j=0;j<3;j++) {
-				double rij = 0.0;
-				for(int a=0; a<c1.length; a++)
-					rij+= c2[a][i]* c1[a][j];
-				m[i][j] = rij;
-				}
-			}
-
-		SingularValueDecomposition svd = new SingularValueDecomposition(m,null,null);
-
-		Matrix u = new Matrix(svd.getU());
-		Matrix v = new Matrix(svd.getV());
-		Matrix ut = u.getTranspose();
-		Matrix vut = v.multiply(ut);
-		double det = vut.det();
-
-		Matrix ma = new Matrix(3,3);
-		ma.set(0,0,1.0);
-		ma.set(1,1,1.0);
-		ma.set(2,2,det);
-
-		Matrix rot = ma.multiply(ut);
-		rot = v.multiply(rot);
-		assert(rot.det()>0.0);
-		rot = rot.getTranspose();
-		return rot.getArray();
 		}
 
 	private boolean isRedundantConformer(TorsionDescriptorHelper torsionHelper, ArrayList<TorsionDescriptor> torsionDescriptorList) {

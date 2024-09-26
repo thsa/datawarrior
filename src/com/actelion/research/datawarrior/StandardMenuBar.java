@@ -1049,12 +1049,10 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemSuperpose.add(jMenuChemSuperposeRigid);
 		jMenuChem.add(jMenuChemDock);
 		jMenuChem.addSeparator();
-		if (System.getProperty("development") != null) {
-			jMenuChem.add(jMenuChem3DFragments);
-			jMenuChem3DFragments.add(jMenuChem3DFragmentsBuildLib);
-			jMenuChem3DFragments.add(jMenuChem3DFragmentsReplace);
-			jMenuChem.addSeparator();
-			}
+		jMenuChem.add(jMenuChem3DFragments);
+		jMenuChem3DFragments.add(jMenuChem3DFragmentsBuildLib);
+		jMenuChem3DFragments.add(jMenuChem3DFragmentsReplace);
+		jMenuChem.addSeparator();
 		jMenuChem.add(jMenuChemMachineLearning);
 		jMenuChemMachineLearning.add(jMenuChemAssessPredictionQuality);
 		jMenuChemMachineLearning.add(jMenuChemPredictMissingValues);

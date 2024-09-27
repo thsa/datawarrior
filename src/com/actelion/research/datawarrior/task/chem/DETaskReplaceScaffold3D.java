@@ -38,6 +38,8 @@ import com.actelion.research.gui.VerticalFlowLayout;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.table.view.VisualizationColor;
+import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 import org.openmolecules.fx.viewer3d.V3DScene;
@@ -55,7 +57,7 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 
 	private static final double MAX_ROOT_RMSD = 0.5;
 	private static final double MAX_EXIT_VECTOR_DIVERSION = 30 * Math.PI / 180;
-	private static final double MIN_MOLECULE_PHESA = 0.6;
+	private static final double MIN_PHESA_FLEX = 0.6;
 
 	private static final String PROPERTY_QUERY = "query";
 	private static final String PROPERTY_SIMILARITY = "similarity";
@@ -65,9 +67,16 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 	private static final String PROPERTY_MINIMIZE = "minimize";
 
 	private static final String[] NEW_COLUMN_NAME = {
-			"Structure", "flexibly superposed", DescriptorConstants.DESCRIPTOR_FFP512.shortName, "PheSA Flex Score",
-			"Scaffold Similarity", "Energy Dif", "PheSA Rigid Score", "minimized and rigid superposition"
-			};
+			"Structure", "flexibly superposed", "minimized and rigidly aligned", DescriptorConstants.DESCRIPTOR_FFP512.shortName,
+			"PheSA Flex Score", "PheSA Rigid Score", "Scaffold Similarity", "Energy Dif Flex Rigid" };
+	private static final int STRUCTURE_COLUMN = 0;
+	private static final int COORDS3D_FLEX_COLUMN = 1;
+	private static final int COORDS3D_RIGID_COLUMN = 2;
+	private static final int FFP_COLUMN = 3;
+	private static final int PHESA_FLEX_COLUMN = 4;
+	private static final int PHESA_RIGID_COLUMN = 5;
+	private static final int SCAFFOLD_SIM_COLUMN = 6;
+	private static final int ENERGY_DIF_COLUMN = 7;
 
 	public static final String TASK_NAME = "Replace Scaffold By 3D-Fragment";
 	private static final int MIN_SIMILARITY = 60;
@@ -145,13 +154,16 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		JPanel atomPanel = new JPanel();
 		atomPanel.add(new JLabel("Allow "));
 		atomPanel.add(mTextFieldAtomsLess);
-		atomPanel.add(new JLabel(" less to "));
+		atomPanel.add(new JLabel(" less and "));
 		atomPanel.add(mTextFieldAtomsMore);
-		atomPanel.add(new JLabel(" more non-H atoms than selected atoms"));
+		atomPanel.add(new JLabel(" more non-H atoms than original"));
 		content.add(atomPanel, "1,11,3,11");
 
+// TODO Allow finding linkers for closing rings! (e.g. select two independent H-atoms)
+
+// TODO finalize options (slider checkboxes...)
 		mCheckBoxMinimize = new JCheckBox("Energy-minimize structures after scaffold replacement");
-		content.add(mCheckBoxMinimize, "1,13,3,13");
+//		content.add(mCheckBoxMinimize, "1,13,3,13");
 
 		return content;
 		}
@@ -473,24 +485,26 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 
 //					double phesaScore = PheSAAlignmentOptimizer.alignTwoMolsInPlace(mQueryMol, queryWithNewCore, 0.5);
 					FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(mQueryMol, flexQuery);
-					double phesaScore1 = fsa.align()[0];
+					double phesaFlexScore = fsa.align()[0];
 
 					Canonizer canonizer = new Canonizer(flexQuery);
 					String idcode = canonizer.getIDCode();
 					String flexCoords = canonizer.getEncodedCoordinates();
 
-					double energy2 = getTotalEnergy(flexQuery);
+					String tableSet = ForceFieldMMFF94.MMFF94SPLUS;
+					ForceFieldMMFF94 ff = new ForceFieldMMFF94(flexQuery, tableSet, new HashMap<>());
+					double energy1 = getTotalEnergy(ff, flexQuery);
 
-					double energy3 = minimize(flexQuery);
-					double phesaScore2 = PheSAAlignmentOptimizer.alignTwoMolsInPlace(mQueryMol, flexQuery, 0.5);
+					double energy2 = minimize(ff, flexQuery);
+					double phesaRigidScore = PheSAAlignmentOptimizer.alignTwoMolsInPlace(mQueryMol, flexQuery, 0.5);
 
 					String rigidCoords = new Canonizer(flexQuery).getEncodedCoordinates();
 
-					if (phesaScore1 > MIN_MOLECULE_PHESA) {
+					if (phesaFlexScore >MIN_PHESA_FLEX) {
 						try {
 							DescriptorHandlerSkeletonSpheres dh = DescriptorHandlerSkeletonSpheres.getDefaultInstance();
 							double similarity = dh.getSimilarity(origScaffoldSkelSpheres, dh.createDescriptor(fragment));
-							mResultTableQueue.put(constructRow(idcode, flexCoords, rigidCoords, phesaScore1, similarity, energy2-energy3, phesaScore2));
+							mResultTableQueue.put(constructRow(idcode, flexCoords, rigidCoords, phesaFlexScore, phesaRigidScore, similarity, energy1-energy2));
 						}
 					catch (InterruptedException ie) {
 							ie.printStackTrace();
@@ -501,22 +515,17 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		}
 	}
 
-	private double getTotalEnergy(StereoMolecule mol) {
-		String tableSet = ForceFieldMMFF94.MMFF94SPLUS;
-		ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, tableSet, new HashMap<>());
-
+	private double getTotalEnergy(ForceFieldMMFF94 ff, StereoMolecule mol) {
 		double[] pos = new double[3*mol.getAllAtoms()];
 		for (int i=0; i<mol.getAllAtoms(); i++) {
-			pos[3*i    ] = mol.getAtomX(i); //+ delta[0];
-			pos[3*i + 1] = mol.getAtomY(i); //+ delta[1];
-			pos[3*i + 2] = mol.getAtomZ(i); //+ delta[2];
+			pos[3*i]   = mol.getAtomX(i);
+			pos[3*i+1] = mol.getAtomY(i);
+			pos[3*i+2] = mol.getAtomZ(i);
 		}
 		return ff.getTotalEnergy(pos);
 	}
 
-	private double minimize(StereoMolecule mol) {
-		String tableSet = ForceFieldMMFF94.MMFF94SPLUS;
-		ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, tableSet, new HashMap<>());
+	private double minimize(ForceFieldMMFF94 ff, StereoMolecule mol) {
 		int error = ff.minimise(10000, 0.0001, 1.0e-6);
 		return error != 0 ? Float.NaN : ff.getTotalEnergy();
 		}
@@ -540,18 +549,18 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		mTargetFrame = DataWarrior.getApplication().getEmptyFrame("Scaffold Replacement");
 
 		CompoundTableModel tableModel = mTargetFrame.getTableModel();
-		tableModel.initializeTable(rowList.size(), 8);
+		tableModel.initializeTable(rowList.size(), NEW_COLUMN_NAME.length);
 		for (int i=0; i<NEW_COLUMN_NAME.length; i++)
 			tableModel.setColumnName(NEW_COLUMN_NAME[i], i);
 
-		tableModel.setColumnProperty(0, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnTypeIDCode);
-		tableModel.setColumnProperty(1, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType3DCoordinates);
-		tableModel.setColumnProperty(1, CompoundTableConstants.cColumnPropertyParentColumn, NEW_COLUMN_NAME[0]);
-		tableModel.setColumnProperty(1, CompoundTableConstants.cColumnPropertySuperposeMolecule, queryIDCode);
-		tableModel.prepareDescriptorColumn(2, 0, null, DescriptorConstants.DESCRIPTOR_FFP512.shortName);
-		tableModel.setColumnProperty(7, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType3DCoordinates);
-		tableModel.setColumnProperty(7, CompoundTableConstants.cColumnPropertyParentColumn, NEW_COLUMN_NAME[0]);
-		tableModel.setColumnProperty(7, CompoundTableConstants.cColumnPropertySuperposeMolecule, queryIDCode);
+		tableModel.setColumnProperty(STRUCTURE_COLUMN, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnTypeIDCode);
+		tableModel.setColumnProperty(COORDS3D_FLEX_COLUMN, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType3DCoordinates);
+		tableModel.setColumnProperty(COORDS3D_FLEX_COLUMN, CompoundTableConstants.cColumnPropertyParentColumn, NEW_COLUMN_NAME[STRUCTURE_COLUMN]);
+		tableModel.setColumnProperty(COORDS3D_FLEX_COLUMN, CompoundTableConstants.cColumnPropertySuperposeMolecule, queryIDCode);
+		tableModel.setColumnProperty(COORDS3D_RIGID_COLUMN, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType3DCoordinates);
+		tableModel.setColumnProperty(COORDS3D_RIGID_COLUMN, CompoundTableConstants.cColumnPropertyParentColumn, NEW_COLUMN_NAME[STRUCTURE_COLUMN]);
+		tableModel.setColumnProperty(COORDS3D_RIGID_COLUMN, CompoundTableConstants.cColumnPropertySuperposeMolecule, queryIDCode);
+		tableModel.prepareDescriptorColumn(FFP_COLUMN, STRUCTURE_COLUMN, null, DescriptorConstants.DESCRIPTOR_FFP512.shortName);
 
 		int row = 0;
 		for (byte[][] line : rowList) {
@@ -565,17 +574,34 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 			}
 
 		tableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, this);
+
+		try {
+			SwingUtilities.invokeAndWait(() -> {
+				mTargetFrame.getMainFrame().setMainSplitting(0.7);
+				mTargetFrame.getMainFrame().setRightSplitting(0);
+				mTargetFrame.getMainFrame().getDetailPane().setProperties("height[Data]=0.15;height["+NEW_COLUMN_NAME[STRUCTURE_COLUMN]
+						+"]=0.25;height["+NEW_COLUMN_NAME[COORDS3D_FLEX_COLUMN]+"]=0.3;height["+NEW_COLUMN_NAME[COORDS3D_RIGID_COLUMN]+"]=0.3");
+
+				VisualizationPanel2D vpanel1 = mTargetFrame.getMainFrame().getMainPane().add2DView("PheSA Scores", "Table\tright\t0.5");
+				vpanel1.setAxisColumnName(0, NEW_COLUMN_NAME[PHESA_FLEX_COLUMN]);
+				vpanel1.setAxisColumnName(1, NEW_COLUMN_NAME[PHESA_RIGID_COLUMN]);
+				int colorListMode1 = VisualizationColor.cColorListModeHSBLong;
+				Color[] colorList1 = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode1, null);
+				vpanel1.getVisualization().getMarkerColor().setColor(ENERGY_DIF_COLUMN, colorList1, colorListMode1);
+			});
+		}
+		catch (Exception e) {}
 		}
 
-	private byte[][] constructRow(String idcode, String flexCoords, String rigidCoords, double phesaScore1, double scaffoldSimilarity, double energyDif, double phesaScore2) {
-		byte[][] row = new byte[8][];
-		row[0] = idcode.getBytes();
-		row[1] = flexCoords.getBytes();
-		row[3] = DoubleFormat.toString(phesaScore1).getBytes();
-		row[4] = DoubleFormat.toString(scaffoldSimilarity).getBytes();
-		row[5] = DoubleFormat.toString(energyDif).getBytes();
-		row[6] = DoubleFormat.toString(phesaScore2).getBytes();
-		row[7] = rigidCoords.getBytes();
+	private byte[][] constructRow(String idcode, String flexCoords, String rigidCoords, double phesaFlexScore, double phesaRigidScore, double scaffoldSimilarity, double energyDif) {
+		byte[][] row = new byte[NEW_COLUMN_NAME.length][];
+		row[STRUCTURE_COLUMN] = idcode.getBytes();
+		row[COORDS3D_FLEX_COLUMN] = flexCoords.getBytes();
+		row[COORDS3D_RIGID_COLUMN] = rigidCoords.getBytes();
+		row[PHESA_FLEX_COLUMN] = DoubleFormat.toString(phesaFlexScore).getBytes();
+		row[PHESA_RIGID_COLUMN] = DoubleFormat.toString(phesaRigidScore).getBytes();
+		row[SCAFFOLD_SIM_COLUMN] = DoubleFormat.toString(scaffoldSimilarity).getBytes();
+		row[ENERGY_DIF_COLUMN] = DoubleFormat.toString(energyDif).getBytes();
 		return row;
 		}
 	}

@@ -204,9 +204,12 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 			return false;
 			}
 		int selectedAtomCount = 0;
+		int selectedLonelyHydrogenCount = 0;
 		query.ensureHelperArrays(Molecule.cHelperNeighbours);
 		for (int atom=0; atom<query.getAllAtoms(); atom++) {
-			if (query.isSelectedAtom(atom))
+			if (isLonelySelectedHydrogen(query, atom))
+				selectedLonelyHydrogenCount++;
+			else if (query.isSelectedAtom(atom))
 				selectedAtomCount++;
 			else {
 				int selectedNeighbourCount = 0;
@@ -219,17 +222,18 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 				}
 			}
 		}
-		if (selectedAtomCount < 3) {
+		if (selectedLonelyHydrogenCount < 2
+		 && selectedAtomCount < 3) {
 			showErrorMessage("Your query molecule doesn't contain sufficient selected atoms.");
 			return false;
 		}
-		if (query.getAllAtoms() < selectedAtomCount + 2) {
+		if (query.getAllAtoms() < selectedAtomCount + selectedLonelyHydrogenCount + 2) {
 			showErrorMessage("Your query molecule needs at least two non-selected atoms.");
 			return false;
 		}
 
 		for (int atom=0; atom<query.getAllAtoms(); atom++)
-			if (query.isSelectedAtom(atom))
+			if (query.isSelectedAtom(atom) && !isLonelySelectedHydrogen(query, atom))
 				query.setAtomMarker(atom, true);
 		if (query.getFragmentNumbers(new int[query.getAllAtoms()], true, true) > 1) {
 			showErrorMessage("Your atom selection covers multiple disconnected core structures.");
@@ -266,6 +270,13 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 			}
 
 		return true;
+		}
+
+	private boolean isLonelySelectedHydrogen(StereoMolecule query, int atom) {
+		return query.isSelectedAtom(atom)
+			&& query.getAtomicNo(atom) == 1
+			&& query.getConnAtoms(atom) == 1
+			&& !query.isSelectedAtom(query.getConnAtom(atom, 0));
 		}
 
 	@Override
@@ -361,6 +372,7 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 					includeAtom[mQueryMol.getConnAtom(atom, i)] = true;
 			}
 		}
+// TODO handle lonely hydrogens
 		StereoMolecule origScaffold = new StereoMolecule();
 		mQueryMol.copyMoleculeByAtoms(origScaffold, includeAtom, false, null);
 		origScaffold.ensureHelperArrays(Molecule.cHelperNeighbours);

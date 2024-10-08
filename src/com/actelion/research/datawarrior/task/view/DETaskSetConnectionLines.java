@@ -66,7 +66,7 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 	private static final String PROPERTY_INVERT_TREE = "invert";
 
 	JSlider             mSliderLineWidth,mSliderRadius;
-	JComboBox			mComboBox1,mComboBox2,mComboBox3,mComboBoxHide,mComboBoxList1,mComboBoxList2;
+	JComboBox<String>	mComboBox1,mComboBox2,mComboBox3,mComboBoxHide,mComboBoxList1,mComboBoxList2;
 	JCheckBox			mCheckBoxInvertArrows,mCheckBoxShowAll,mCheckBoxIsDynamic,mCheckBoxInvertTree;
 	JLabel				mLabelLevels,mLabelRadius;
 
@@ -98,21 +98,21 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 	public JComponent createViewOptionContent() {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap },
-    						{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2,
-								TableLayout.PREFERRED, gap*3, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2,
-							    TableLayout.PREFERRED, gap*3, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/4,
-								TableLayout.PREFERRED, gap/4, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap } };
+    						{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1,
+								TableLayout.PREFERRED, gap*3, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1,
+							    TableLayout.PREFERRED, gap*3, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>2,
+								TableLayout.PREFERRED, gap>>2, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap } };
 		JPanel cp = new JPanel();
 		cp.setLayout(new TableLayout(size));
 
-		mComboBox1 = new JComboBox();
+		mComboBox1 = new JComboBox<>();
 		mComboBox1.addItem(ITEM_CONNECTION_NONE);
 		if (getInteractiveVisualization() == null
 		 || getInteractiveVisualization().getChartType().isDistributionPlot()) {
 			mComboBox1.addItem(ITEM_CONNECTION_CASES);
 			}
 		if (getInteractiveVisualization() == null
-		 || (getInteractiveVisualization().getChartType().isDistributionPlot())) {
+		 || (!getInteractiveVisualization().getChartType().isDistributionPlot())) {
 			mComboBox1.addItem(ITEM_CONNECTION_ALL);
 			}
 		for (int i=0; i<getTableModel().getTotalColumnCount(); i++)
@@ -124,7 +124,7 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		cp.add(new JLabel("Group & connect by: "), "1,1");
 		cp.add(mComboBox1, "3,1,5,1");
 
-		mComboBox2 = new JComboBox();
+		mComboBox2 = new JComboBox<>();
 		mComboBox2.addItem(ITEM_ORDER_X_AXIS);
 		for (int i=0; i<getTableModel().getTotalColumnCount(); i++) {
 		    if (getTableModel().isColumnTypeCategory(i)
@@ -150,12 +150,12 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		mCheckBoxInvertArrows.addActionListener(this);
 		cp.add(mCheckBoxInvertArrows, "1,7,5,7");
 
-		mComboBoxHide = new JComboBox(JVisualization.cConnectionListModeText);
+		mComboBoxHide = new JComboBox<>(JVisualization.cConnectionListModeText);
 		mComboBoxHide.addItemListener(this);
 		cp.add(mComboBoxHide, "1,9");
 		cp.add(new JLabel("connection lines if they connect"), "3,9,5,9");
 
-		mComboBoxList1 = new JComboBox();
+		mComboBoxList1 = new JComboBox<>();
 		for (int i = 0; i<getTableModel().getListHandler().getListCount(); i++)
 			mComboBoxList1.addItem(getTableModel().getListHandler().getListName(i));
 		mComboBoxList1.setEditable(!hasInteractiveView());
@@ -163,7 +163,7 @@ public class DETaskSetConnectionLines extends DETaskAbstractSetViewOptions {
 		cp.add(new JLabel("a member of row list", JLabel.RIGHT), "1,11");
 		cp.add(mComboBoxList1, "3,11,5,11");
 
-		mComboBoxList2 = new JComboBox();
+		mComboBoxList2 = new JComboBox<>();
 		mComboBoxList2.addItem(TEXT_ANY);
 		for (int i = 0; i<getTableModel().getListHandler().getListCount(); i++)
 			mComboBoxList2.addItem(getTableModel().getListHandler().getListName(i));

@@ -51,13 +51,13 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionListener {
-	static final long serialVersionUID = 0x20140205;
+	static final long serialVersionUID = 0x20240930;
 
-	private static final double MAX_ROOT_RMSD = 0.5;
+	private static final double MAX_ROOT_RMSD = 0.6;
 	private static final double MAX_EXIT_VECTOR_DIVERSION = 30 * Math.PI / 180;
-	private static final double MIN_PHESA_FLEX = 0.6;
 
 	private static final String PROPERTY_QUERY = "query";
 	private static final String PROPERTY_SIMILARITY = "similarity";
@@ -94,6 +94,7 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 	private volatile int mThreadCount;
 	private volatile StereoMolecule mQueryMol;
 	private volatile FragmentGeometry3D mQueryGeometry;
+	private volatile AtomicInteger mPheSAFlexMatchCount,mEVTypeMatchCount,mEVAngleMatchCount,mEVPermutationCount,mEVRMSDMatchCount;
 
 
 	public DETaskReplaceScaffold3D(DEFrame parent) {
@@ -222,6 +223,7 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 				}
 			}
 		}
+
 		if (selectedLonelyHydrogenCount < 2
 		 && selectedAtomCount < 3) {
 			showErrorMessage("Your query molecule doesn't contain sufficient selected atoms.");
@@ -260,11 +262,29 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 			}
 
 		if (isLive) {
-			DWARFileParser parser = new DWARFileParser(inFileName);
+			DWARFileParser parser = new DWARFileParser(inFileName, DWARFileParser.MODE_COORDINATES_PREFER_3D);
 			boolean has3DStructures = parser.hasStructureCoordinates3D();
+			if (!parser.next()) {
+				showErrorMessage("The supplied fragment file doesn't contain any rows.");
+				return false;
+				}
+			StereoMolecule fragment = parser.getMolecule();
 			parser.close();
+
 			if (!has3DStructures) {
-				showErrorMessage("The DataWarrior input-file doesn't contain 3-dimensional structures.");
+				showErrorMessage("The supplied fragment file doesn't contain 3-dimensional structures.");
+				return false;
+			}
+
+			boolean attachmentPointFound = false;
+			for (int atom=0; atom<fragment.getAllAtoms(); atom++) {
+				if (fragment.getAtomicNo(atom) == 0 || "*".equals(fragment.getAtomCustomLabel(atom))) {
+					attachmentPointFound = true;
+					break;
+					}
+				}
+			if (!attachmentPointFound) {
+				showErrorMessage("The supplied fragment file's 3D-structures don't contains attachment points.");
 				return false;
 				}
 			}
@@ -381,6 +401,12 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		DescriptorHandlerSkeletonSpheres dhSkelSpheres = DescriptorHandlerSkeletonSpheres.getDefaultInstance();
 		byte[] origScaffoldSkelSpheres = dhSkelSpheres.createDescriptor(origScaffold);
 
+		mEVTypeMatchCount = new AtomicInteger();
+		mEVPermutationCount = new AtomicInteger();
+		mEVRMSDMatchCount = new AtomicInteger();
+		mEVAngleMatchCount = new AtomicInteger();
+		mPheSAFlexMatchCount = new AtomicInteger();
+
 		mThreadCount = Runtime.getRuntime().availableProcessors();
 		mFragmentQueue = new SynchronousQueue<>();
 		for (int i=0; i<mThreadCount; i++) {
@@ -442,9 +468,22 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		if (!mQueryGeometry.equals(fragmentGeometry))
 			return;
 
+		mEVTypeMatchCount.incrementAndGet();
+
+		fragment.ensureHelperArrays(Molecule.cHelperNeighbours);
+		for (int i=0; i<fragment.getAtoms(); i++) {
+			if (fragment.getImplicitHydrogens(i) != 0) {
+				System.out.println("WARNING: Implicit hydrogens found in 3D-fragment.");
+				return;
+			}
+		}
+
 		for (int p=0; p<mQueryGeometry.getPermutationCount(); p++) {
+			mEVPermutationCount.incrementAndGet();
+
 			double[][] matrix = mQueryGeometry.alignRootAndExitAtoms(fragmentGeometry, p, MAX_ROOT_RMSD);
 			if (matrix != null) {	// TODO should we also check how well COG of scaffold and replacement match???
+				mEVRMSDMatchCount.incrementAndGet();
 
 				// Create new atom coordinates for complete aligned fragment
 				Coordinates[] fragCoords = new Coordinates[fragment.getAllAtoms()];
@@ -458,6 +497,8 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 				// Check, whether exit vector directions are compatible
 				if (mQueryGeometry.hasMatchingExitVectors(fragmentGeometry, fragCoords, p, MAX_EXIT_VECTOR_DIVERSION)) {
 					// Copy query molecule and remove selected part
+					mEVAngleMatchCount.incrementAndGet();
+
 					StereoMolecule flexQuery = new StereoMolecule(mQueryMol);
 					for (int atom=0; atom<flexQuery.getAllAtoms(); atom++)
 						if (flexQuery.isSelectedAtom(atom))
@@ -475,19 +516,19 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 					}
 
 					for (int i=0; i<mQueryGeometry.getExitVectorCount(); i++) {
-						int exitAtomQery = origToNewAtomInQuery[mQueryGeometry.getExitAtom(i)];
+						int exitAtomQuery = origToNewAtomInQuery[mQueryGeometry.getExitAtom(i)];
 						int rootAtomFrag = origToNewAtomInFrag[fragmentGeometry.getRootAtom(mQueryGeometry.getPermutedExitVectorIndex(p, i))];
 						int exitAtomFrag = origToNewAtomInFrag[fragmentGeometry.getExitAtom(mQueryGeometry.getPermutedExitVectorIndex(p, i))];
 						for (int bond=queryBonds; bond<flexQuery.getAllBonds(); bond++) {
 							if (flexQuery.getBondAtom(0, bond) == rootAtomFrag
 							 && flexQuery.getBondAtom(1, bond) == exitAtomFrag) {
-								flexQuery.setBondAtom(1, bond, exitAtomQery);
+								flexQuery.setBondAtom(1, bond, exitAtomQuery);
 								flexQuery.markAtomForDeletion(exitAtomFrag);
 								break;
 							}
 							else if (flexQuery.getBondAtom(1, bond) == rootAtomFrag
 								  && flexQuery.getBondAtom(0, bond) == exitAtomFrag) {
-								flexQuery.setBondAtom(0, bond, exitAtomQery);
+								flexQuery.setBondAtom(0, bond, exitAtomQuery);
 								flexQuery.markAtomForDeletion(exitAtomFrag);
 								break;
 							}
@@ -512,16 +553,19 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 
 					String rigidCoords = new Canonizer(flexQuery).getEncodedCoordinates();
 
-					if (phesaFlexScore >MIN_PHESA_FLEX) {
+					// Especially when finding linkers for marked hydrogen atoms,
+					// phesaFlexScore should not be a cut-off criterion
+//					if (phesaFlexScore > MIN_PHESA_FLEX) {
+						mPheSAFlexMatchCount.incrementAndGet();
 						try {
 							DescriptorHandlerSkeletonSpheres dh = DescriptorHandlerSkeletonSpheres.getDefaultInstance();
 							double similarity = dh.getSimilarity(origScaffoldSkelSpheres, dh.createDescriptor(fragment));
 							mResultTableQueue.put(constructRow(idcode, flexCoords, rigidCoords, phesaFlexScore, phesaRigidScore, similarity, energy1-energy2));
 						}
-					catch (InterruptedException ie) {
+						catch (InterruptedException ie) {
 							ie.printStackTrace();
 						}
-					}
+//					}
 				}
 			}
 		}
@@ -554,8 +598,11 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 				}
 			} catch (InterruptedException ie) {}
 
+		System.out.println("EV-type matches:"+ mEVTypeMatchCount +", EV-permutations:"+ mEVPermutationCount +", EV-RMSD matches:"+ mEVRMSDMatchCount +" EV-angle matches:"+ mEVAngleMatchCount +" final PheSA-Flex matches:"+mPheSAFlexMatchCount);
+
 		if (rowList.isEmpty()) {
 			showErrorMessage("No matching fragment could be found.");
+			return;
 		}
 
 		mTargetFrame = DataWarrior.getApplication().getEmptyFrame("Scaffold Replacement");

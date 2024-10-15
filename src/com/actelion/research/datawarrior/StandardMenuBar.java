@@ -1811,7 +1811,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuChem3DFragmentsBuildLib)
 				new DETaskBuild3DFragmentLibrary(mParentFrame).defineAndRun();
 			else if (source == jMenuChem3DFragmentsReplace)
-				new DETaskReplaceScaffold3D(mParentFrame).defineAndRun();
+				new DETaskReplaceAndLink3D(mParentFrame).defineAndRun();
 			else if (source == jMenuChemDecomposeRGroups)
 				new DETaskDecomposeRGroups(mParentFrame).defineAndRun();
 			else if (source == jMenuChemInteractiveSARTable) {

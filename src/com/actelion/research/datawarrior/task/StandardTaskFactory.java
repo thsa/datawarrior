@@ -220,7 +220,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskRemoveSelectionFromList.TASK_NAME) ? new DETaskRemoveSelectionFromList(frame, -1)
 			 : codeMatches(taskCode, DETaskRenameView.TASK_NAME) ? new DETaskRenameView(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskRepeatNextTask.TASK_NAME) ? new DETaskRepeatNextTask(frame)
-			 : codeMatches(taskCode, DETaskReplaceScaffold3D.TASK_NAME) ? new DETaskReplaceScaffold3D(frame)
+			 : codeMatches(taskCode, DETaskReplaceAndLink3D.TASK_NAME) ? new DETaskReplaceAndLink3D(frame)
 			 : codeMatches(taskCode, DETaskRetrieveDataFromURL.TASK_NAME) ? new DETaskRetrieveDataFromURL(frame, application)
 			 : codeMatches(taskCode, DETaskRetrieveWikipediaCompounds.TASK_NAME) ? new DETaskRetrieveWikipediaCompounds(frame, application)
 			 : codeMatches(taskCode, DETaskResetAllFilters.TASK_NAME) ? new DETaskResetAllFilters(frame)
@@ -461,7 +461,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskRemoveSelectionFromList.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskRenameView.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskRepeatNextTask.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskReplaceScaffold3D.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskReplaceAndLink3D.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskRetrieveDataFromURL.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskRetrieveWikipediaCompounds.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskResetAllFilters.TASK_NAME));

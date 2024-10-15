@@ -25,7 +25,7 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 	public static final String TASK_NAME = "Build 3D-Fragment Library";
 
 	private static final int MIN_EXIT_VECTORS = 2;
-	private static final int MAX_EXIT_VECTORS = 5;
+	public static final int MAX_EXIT_VECTORS = 5;
 
 	private static final String PROPERTY_STRUCTURE_COLUMN = "structureColumn";
 	private static final String PROPERTY_MAX_BOND_FLEXIBILITY_SUM = "maxBondFlexibilitySum";
@@ -295,14 +295,19 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 						byte[] idcode = (byte[])record.getData(idcodeColumn);
 						byte[] coords = (byte[])record.getData(coordsColumn);
 						if (idcode != null && coords != null) {
-							int coordsIndex = -1;
-							while (true) {
-								parser.parse(mol, idcode, coords, 0, coordsIndex+1);
-								coordsIndex = ArrayUtils.indexOf(coords, (byte)' ', coordsIndex+1);
-								if (mol.getAllAtoms() != 0)
-									fragmentSet.addAll(fragmenter.buildFragments(mol, true));
-								if (coordsIndex == -1)
-									break;
+							try {
+								int coordsIndex = -1;
+								while (true) {
+									parser.parse(mol, idcode, coords, 0, coordsIndex+1);
+									coordsIndex = ArrayUtils.indexOf(coords, (byte)' ', coordsIndex+1);
+									if (mol.getAllAtoms() != 0)
+										fragmentSet.addAll(fragmenter.buildFragments(mol, true));
+									if (coordsIndex == -1)
+										break;
+									}
+								}
+							catch (Exception e) {
+								e.printStackTrace();
 								}
 							}
 						m = remaining.decrementAndGet();

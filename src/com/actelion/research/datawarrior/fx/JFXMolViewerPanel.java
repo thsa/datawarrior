@@ -510,7 +510,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 	}
 
 	private V3DMolecule addMoleculeNow(StereoMolecule mol, Color color, Point3D centerOfRotation, boolean showTorsionStrain) {
-		V3DMolecule fxmol = new V3DMolecule(mol);
+		V3DMolecule fxmol = new V3DMolecule(mol, true, mScene.isSplitAllBonds());
 		fxmol.setColor(color);
 		fxmol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_INHERIT);
 		fxmol.setCenterOfRotation(centerOfRotation);

@@ -34,10 +34,10 @@ import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.datawarrior.task.file.JFilePathLabel;
 import com.actelion.research.gui.FileHelper;
-import com.actelion.research.gui.VerticalFlowLayout;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.table.view.ExplanationView;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.util.DoubleFormat;
@@ -49,55 +49,66 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Properties;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionListener {
-	static final long serialVersionUID = 0x20240930;
-
-	private static final double MAX_ROOT_RMSD = 0.6;
-	private static final double MAX_EXIT_VECTOR_DIVERSION = 30 * Math.PI / 180;
+public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionListener {
+	private static final int DEFAULT_ATOMS_LESS = 5;
+	private static final int DEFAULT_ATOMS_MORE = 10;
+	private static final double DEFAULT_MAX_EV_RMSD = 0.6;
+	private static final double DEFAULT_MAX_EV_DIVERGENCE = 30;
+	private static final double DEFAULT_MIN_PHESA_FLEX = 0.5;
 
 	private static final String PROPERTY_QUERY = "query";
-	private static final String PROPERTY_SIMILARITY = "similarity";
 	private static final String PROPERTY_IN_FILE_NAME = "inFile";
 	private static final String PROPERTY_ATOMS_LESS = "atomsLess";
 	private static final String PROPERTY_ATOMS_MORE = "atomsMore";
-	private static final String PROPERTY_MINIMIZE = "minimize";
+	private static final String PROPERTY_MAX_EV_RMSD = "maxEVRMSD";
+	private static final String PROPERTY_MAX_EV_DIV = "maxEVDivergence";
+	private static final String PROPERTY_MIN_PHESA_FLEX = "minPhesaFlex";
 
 	private static final String[] NEW_COLUMN_NAME = {
-			"Structure", "flexibly superposed", "minimized and rigidly aligned", DescriptorConstants.DESCRIPTOR_FFP512.shortName,
-			"PheSA Flex Score", "PheSA Rigid Score", "Scaffold Similarity", "Energy Dif Flex Rigid" };
+			"Structure", "MMFF94+ minimized & retained atoms aligned", "MMFF94+ minimized & PheSA aligned", "PheSA-flex aligned", DescriptorConstants.DESCRIPTOR_FFP512.shortName,
+			"New Fragment", "New Fragment 3D", "Fragment RMSD", "Angle Divergence", "Retained Atom RMSD",
+			"MMFF94+ PheSA Rigid Score", "PheSA Flex Score", "Scaffold Similarity", "Energy Dif Flex Rigid" };
 	private static final int STRUCTURE_COLUMN = 0;
-	private static final int COORDS3D_FLEX_COLUMN = 1;
+	private static final int COORDS3D_MINIMIZED_COLUMN = 1;
 	private static final int COORDS3D_RIGID_COLUMN = 2;
-	private static final int FFP_COLUMN = 3;
-	private static final int PHESA_FLEX_COLUMN = 4;
-	private static final int PHESA_RIGID_COLUMN = 5;
-	private static final int SCAFFOLD_SIM_COLUMN = 6;
-	private static final int ENERGY_DIF_COLUMN = 7;
+	private static final int COORDS3D_FLEX_COLUMN = 3;
+	private static final int FFP_COLUMN = 4;
+	private static final int FRAGMENT_COLUMN = 5;
+	private static final int FRAGMENT_COORDS_COLUMN = 6;
+	private static final int FRAGMENT_RMSD_COLUMN = 7;
+	private static final int FRAGMENT_ANGLE_COLUMN = 8;
+	private static final int QUERY_RMSD_COLUMN = 9;
+	private static final int PHESA_FLEX_COLUMN = 10;
+	private static final int PHESA_RIGID_COLUMN = 11;
+	private static final int SCAFFOLD_SIM_COLUMN = 12;
+	private static final int ENERGY_DIF_COLUMN = 13;
 
 	public static final String TASK_NAME = "Replace Scaffold By 3D-Fragment";
-	private static final int MIN_SIMILARITY = 60;
-	private static final int DEFAULT_SIMILARITY = 80;
-
 
 	private DEFrame mTargetFrame;
 	private JFXMolViewerPanel mConformerPanel;
-	private JCheckBox mCheckBoxMinimize;
-	private JTextField mTextFieldAtomsLess,mTextFieldAtomsMore;
-	private JSlider mSimilaritySlider;
+	private JTextField mTextFieldAtomsLess,mTextFieldAtomsMore,mTextFieldMaxEVRMSD,mTextFieldMaxEVDivergence,mTextFieldMinPheSAFlex;
 	private JFilePathLabel mLabelInFileName;
 	private volatile SynchronousQueue<StereoMolecule> mFragmentQueue;
 	private volatile SynchronousQueue<byte[][]> mResultTableQueue;
 	private volatile int mThreadCount;
+	private volatile boolean mSeekLinker;
+	private volatile double mMaxEVRMSD,mMaxEVDivergence,mMinPheSAFlex;
+	private volatile String mOrigScaffoldIDCodeWithCoords;
 	private volatile StereoMolecule mQueryMol;
 	private volatile FragmentGeometry3D mQueryGeometry;
 	private volatile AtomicInteger mPheSAFlexMatchCount,mEVTypeMatchCount,mEVAngleMatchCount,mEVPermutationCount,mEVRMSDMatchCount;
+	private volatile Coordinates[] mQueryStaticAtomCoords;
 
 
-	public DETaskReplaceScaffold3D(DEFrame parent) {
+	public DETaskReplaceAndLink3D(DEFrame parent) {
 		super(parent, true);
 		}
 
@@ -117,13 +128,14 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.FILL, gap},
 							{gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED,
 									2*gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED,
-									2*gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+									2*gap, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap} };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
 		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
 		settings.add(V3DScene.ViewerSettings.EDITING);
+		settings.add(V3DScene.ViewerSettings.ATOM_LEVEL_SELECTION);
 		mConformerPanel = new JFXMolViewerPanel(false, settings);
 		mConformerPanel.adaptToLookAndFeelChanges();
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(400), HiDPIHelper.scale(200)));
@@ -137,18 +149,9 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		mLabelInFileName = new JFilePathLabel(!isInteractive());
 		content.add(mLabelInFileName, "3,7");
 
-//		JPanel inFilePanel = new JPanel();
-//		inFilePanel.setLayout(new BorderLayout());
-//		inFilePanel.add(new JLabel("3D-Fragment File:  "), BorderLayout.WEST);
-//		mLabelInFileName = new JFilePathLabel(!isInteractive());
-//		inFilePanel.add(mLabelInFileName, BorderLayout.CENTER);
-//		content.add(inFilePanel, "1,6");
-
 		JButton buttonEdit = new JButton(JFilePathLabel.BUTTON_TEXT);
 		buttonEdit.addActionListener(this);
 		content.add(buttonEdit, "1,9");
-
-		createSimilaritySlider();
 
 		mTextFieldAtomsLess = new JTextField(2);
 		mTextFieldAtomsMore = new JTextField(2);
@@ -160,37 +163,36 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		atomPanel.add(new JLabel(" more non-H atoms than original"));
 		content.add(atomPanel, "1,11,3,11");
 
-// TODO Allow finding linkers for closing rings! (e.g. select two independent H-atoms)
+		double[][] tpSize = { {TableLayout.FILL, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL},
+							  {TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED} };
+		JPanel thresholdPanel = new JPanel();
+		thresholdPanel.setLayout(new TableLayout(tpSize));
 
-// TODO finalize options (slider checkboxes...)
-		mCheckBoxMinimize = new JCheckBox("Energy-minimize structures after scaffold replacement");
-//		content.add(mCheckBoxMinimize, "1,13,3,13");
+		mTextFieldMaxEVRMSD = new JTextField(2);
+		mTextFieldMaxEVDivergence = new JTextField(2);
+		mTextFieldMinPheSAFlex = new JTextField(2);
+
+		thresholdPanel.add(new JLabel("Geometric constraints for 3D-fragments:"), "1,0,5,0");
+
+		thresholdPanel.add(new JLabel("Maximum exit vector RMSD:"), "1,2");
+		thresholdPanel.add(mTextFieldMaxEVRMSD, "3,2");
+
+		thresholdPanel.add(new JLabel("Maximum exit vector angle divergence:"), "1,4");
+		thresholdPanel.add(mTextFieldMaxEVDivergence, "3,4");
+		thresholdPanel.add(new JLabel("degrees"), "5,4");
+
+		thresholdPanel.add(new JLabel("Minimum PheSA-flex score"), "1,6");
+		thresholdPanel.add(mTextFieldMinPheSAFlex, "3,6");
+
+		content.add(thresholdPanel, "1,13,3,13");
 
 		return content;
 		}
 
-	private JComponent createSimilaritySlider() {
-		Hashtable<Integer,JLabel> labels = new Hashtable<Integer,JLabel>();
-		labels.put(MIN_SIMILARITY, new JLabel(Integer.toString(MIN_SIMILARITY)+"%"));
-		labels.put(50+MIN_SIMILARITY/2, new JLabel(Integer.toString(50+MIN_SIMILARITY/2)+"%"));
-		labels.put(100, new JLabel("100%"));
-		mSimilaritySlider = new JSlider(JSlider.HORIZONTAL, MIN_SIMILARITY, 100, DEFAULT_SIMILARITY);
-		mSimilaritySlider.setMinorTickSpacing(5);
-		mSimilaritySlider.setMajorTickSpacing(10);
-		mSimilaritySlider.setLabelTable(labels);
-		mSimilaritySlider.setPaintLabels(true);
-		mSimilaritySlider.setPaintTicks(true);
-//		mSimilaritySlider.setPreferredSize(new Dimension(120, mSimilaritySlider.getPreferredSize().height));
-		JPanel spanel = new JPanel(new VerticalFlowLayout());
-		spanel.add(new JLabel("Similarity limit:"));
-		spanel.add(mSimilaritySlider);
-		return spanel;
+	@Override
+	public String getHelpURL() {
+		return "/html/help/conformers.html#ReplaceScaffold";
 		}
-
-//	@Override
-//	public String getHelpURL() {
-//		return "/html/help/chemistry.html#ReplaceScaffold";
-//		}
 
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
@@ -206,7 +208,7 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 			}
 		int selectedAtomCount = 0;
 		int selectedLonelyHydrogenCount = 0;
-		query.ensureHelperArrays(Molecule.cHelperNeighbours);
+		query.ensureHelperArrays(Molecule.cHelperRings);
 		for (int atom=0; atom<query.getAllAtoms(); atom++) {
 			if (isLonelySelectedHydrogen(query, atom))
 				selectedLonelyHydrogenCount++;
@@ -218,7 +220,9 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 					if (query.isSelectedAtom(query.getConnAtom(atom, i)))
 						selectedNeighbourCount++;
 				if (selectedNeighbourCount > 1) {
-					showErrorMessage("An exit vector atom must not connect to more than one core atoms.");
+					showErrorMessage("Non-selected atoms must not connect to more than one selected atoms,\n"
+									+"which means that none of the remaining query atoms is allowed to\n"
+									+"connect to two different atoms of the new fragment at the same time.");
 					return false;
 				}
 			}
@@ -234,19 +238,65 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 			return false;
 		}
 
-		for (int atom=0; atom<query.getAllAtoms(); atom++)
-			if (query.isSelectedAtom(atom) && !isLonelySelectedHydrogen(query, atom))
-				query.setAtomMarker(atom, true);
-		if (query.getFragmentNumbers(new int[query.getAllAtoms()], true, true) > 1) {
-			showErrorMessage("Your atom selection covers multiple disconnected core structures.");
+		int bondCount = 0;
+		for (int bond=0; bond<query.getAllBonds(); bond++) {
+			for (int i=0; i<2; i++) {
+				if (query.isSelectedAtom(query.getBondAtom(i, bond)) && !query.isSelectedAtom(query.getBondAtom(1-i, bond))) {
+					if (query.getBondOrder(bond) != 1) {
+						showErrorMessage("You may not cut double or triple bonds.");
+						return false;
+					}
+					if (query.isAromaticBond(bond)) {
+						showErrorMessage("You may not cut delocalized bonds.");
+						return false;
+					}
+					bondCount++;
+				}
+			}
+		}
+		if (bondCount > DETaskBuild3DFragmentLibrary.MAX_EXIT_VECTORS) {
+			showErrorMessage("You may not cut more "+DETaskBuild3DFragmentLibrary.MAX_EXIT_VECTORS+" bonds.");
+			return false;
+		}
+
+//		for (int atom=0; atom<query.getAllAtoms(); atom++)
+//			if (query.isSelectedAtom(atom) && !isLonelySelectedHydrogen(query, atom))
+//				query.setAtomMarker(atom, true);
+//		if (query.getFragmentNumbers(new int[query.getAllAtoms()], true, true) > 1) {
+//			showErrorMessage("Your atom selection covers multiple disconnected core structures.");
+//			return false;
+//		}
+
+		try {
+			int less = Integer.parseInt(configuration.getProperty(PROPERTY_ATOMS_LESS));
+			int more = Integer.parseInt(configuration.getProperty(PROPERTY_ATOMS_MORE));
+			if (less + more < 0) {
+				showErrorMessage("While negative values are allowed,\nyour definition of the allowed atom span is excludes everything.");
+				return false;
+			}
+		} catch (NumberFormatException nfe) {
+			showErrorMessage("The setting for the allowed non-hydrogen atom span is not numerical.");
 			return false;
 		}
 
 		try {
-			Integer.parseInt(configuration.getProperty(PROPERTY_ATOMS_LESS));
-			Integer.parseInt(configuration.getProperty(PROPERTY_ATOMS_MORE));
+			double maxRMSD = Double.parseDouble(configuration.getProperty(PROPERTY_MAX_EV_RMSD));
+			if (maxRMSD < 0 || maxRMSD > 10) {
+				showErrorMessage("The maximum exit vector RMSD must be between 0 and 10.");
+				return false;
+			}
+			double maxDiv = Double.parseDouble(configuration.getProperty(PROPERTY_MAX_EV_DIV));
+			if (maxDiv < 0 || maxDiv > 90) {
+				showErrorMessage("The maximum exit vector angle divergence must be between 0 and 90 degrees.");
+				return false;
+			}
+			double minPhesa = Double.parseDouble(configuration.getProperty(PROPERTY_MIN_PHESA_FLEX));
+			if (minPhesa < 0 || minPhesa > 1) {
+				showErrorMessage("The minimum PheSA-flex cutoff value must be between 0.0 and 1.0.");
+				return false;
+			}
 		} catch (NumberFormatException nfe) {
-			showErrorMessage("The setting for the allowed non-hydrogen atom span is not numerical.");
+			showErrorMessage("At least one of your geometry constraints is not numerical.");
 			return false;
 		}
 
@@ -311,22 +361,20 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		value = configuration.getProperty(PROPERTY_IN_FILE_NAME);
 		mLabelInFileName.setPath(value == null ? null : isFileAndPathValid(value, false, false) ? value : null);
 
-		value = configuration.getProperty(PROPERTY_SIMILARITY, Integer.toString(DEFAULT_SIMILARITY));
-		try { mSimilaritySlider.setValue(Math.min(100, Math.max(MIN_SIMILARITY, Integer.parseInt(value)))); }
-		catch (NumberFormatException nfe) { mSimilaritySlider.setValue(DEFAULT_SIMILARITY); }
-
-		mTextFieldAtomsLess.setText(configuration.getProperty(PROPERTY_ATOMS_LESS, ""));
-		mTextFieldAtomsMore.setText(configuration.getProperty(PROPERTY_ATOMS_MORE, ""));
-
-		mCheckBoxMinimize.setSelected("true".equals(configuration.getProperty(PROPERTY_MINIMIZE, "true")));
+		mTextFieldAtomsLess.setText(configuration.getProperty(PROPERTY_ATOMS_LESS, Integer.toString(DEFAULT_ATOMS_LESS)));
+		mTextFieldAtomsMore.setText(configuration.getProperty(PROPERTY_ATOMS_MORE, Integer.toString(DEFAULT_ATOMS_MORE)));
+		mTextFieldMaxEVRMSD.setText(configuration.getProperty(PROPERTY_MAX_EV_RMSD, Double.toString(DEFAULT_MAX_EV_RMSD)));
+		mTextFieldMaxEVDivergence.setText(configuration.getProperty(PROPERTY_MAX_EV_DIV, Double.toString(DEFAULT_MAX_EV_DIVERGENCE)));
+		mTextFieldMinPheSAFlex.setText(configuration.getProperty(PROPERTY_MIN_PHESA_FLEX, Double.toString(DEFAULT_MIN_PHESA_FLEX)));
 		}
 
 	@Override
 	public void setDialogConfigurationToDefault() {
-		mSimilaritySlider.setValue(DEFAULT_SIMILARITY);
-		mTextFieldAtomsLess.setText("3");
-		mTextFieldAtomsMore.setText("5");
-		mCheckBoxMinimize.setSelected(true);
+		mTextFieldAtomsLess.setText(Integer.toString(DEFAULT_ATOMS_LESS));
+		mTextFieldAtomsMore.setText(Integer.toString(DEFAULT_ATOMS_MORE));
+		mTextFieldMaxEVRMSD.setText(Double.toString(DEFAULT_MAX_EV_RMSD));
+		mTextFieldMaxEVDivergence.setText(Double.toString(DEFAULT_MAX_EV_DIVERGENCE));
+		mTextFieldMinPheSAFlex.setText(Double.toString(DEFAULT_MIN_PHESA_FLEX));
 		}
 
 	@Override
@@ -344,12 +392,11 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		if (fileName != null)
 			configuration.setProperty(PROPERTY_IN_FILE_NAME, fileName);
 
-		configuration.setProperty(PROPERTY_SIMILARITY, ""+mSimilaritySlider.getValue());
-
 		configuration.setProperty(PROPERTY_ATOMS_LESS, mTextFieldAtomsLess.getText());
 		configuration.setProperty(PROPERTY_ATOMS_MORE, mTextFieldAtomsMore.getText());
-
-		configuration.setProperty(PROPERTY_MINIMIZE, mCheckBoxMinimize.isSelected() ? "true" : "false");
+		configuration.setProperty(PROPERTY_MAX_EV_RMSD, mTextFieldMaxEVRMSD.getText());
+		configuration.setProperty(PROPERTY_MAX_EV_DIV, mTextFieldMaxEVDivergence.getText());
+		configuration.setProperty(PROPERTY_MIN_PHESA_FLEX, mTextFieldMinPheSAFlex.getText());
 
 		return configuration;
 		}
@@ -377,29 +424,73 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 	@Override
 	public void runTask(Properties configuration) {
 		final String fileName = resolvePathVariables(configuration.getProperty(PROPERTY_IN_FILE_NAME));
-		final boolean minimize = "true".equals(configuration.getProperty(PROPERTY_MINIMIZE, "true"));
+
+		mMaxEVRMSD = Double.parseDouble(configuration.getProperty(PROPERTY_MAX_EV_RMSD));
+		mMaxEVDivergence = Double.parseDouble(configuration.getProperty(PROPERTY_MAX_EV_DIV));
+		mMinPheSAFlex = Double.parseDouble(configuration.getProperty(PROPERTY_MIN_PHESA_FLEX));
 
 		String queryIDCode = configuration.getProperty(PROPERTY_QUERY);
 		mQueryMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(queryIDCode);
 		mQueryMol.ensureHelperArrays(Molecule.cHelperParities);
 		mQueryGeometry = new FragmentGeometry3D(mQueryMol, FragmentGeometry3D.MODE_SELECTED_ATOMS);
 
+		int selectedAtomCount = 0;
 		boolean[] includeAtom = new boolean[mQueryMol.getAllAtoms()];
 		for (int atom=0; atom<mQueryMol.getAllAtoms(); atom++) {
 			if (mQueryMol.isSelectedAtom(atom)) {
 				includeAtom[atom] = true;
-				for (int i=0; i<mQueryMol.getAllConnAtoms(atom); i++)
-					includeAtom[mQueryMol.getConnAtom(atom, i)] = true;
+				selectedAtomCount++;
 			}
 		}
-// TODO handle lonely hydrogens
+
+		// Copy selected part and determine, whether we have multiple disconnected fragments, i.e. whether we look for a linker!
+		StereoMolecule testMol = new StereoMolecule();
+		mQueryMol.copyMoleculeByAtoms(testMol, includeAtom, false, null);
+		mSeekLinker = (testMol.getFragmentNumbers(new int[testMol.getAllAtoms()], false, true) > 1);
+
+		// Extend selection by one atom to include exit atoms (and possibly missed hydrogens)
+		for (int atom=0; atom<mQueryMol.getAllAtoms(); atom++) {
+			if (mQueryMol.isSelectedAtom(atom)) {
+				for (int i = 0; i<mQueryMol.getAllConnAtoms(atom); i++) {
+					int connAtom = mQueryMol.getConnAtom(atom, i);
+					if (!mQueryMol.isSelectedAtom(connAtom)) {
+						includeAtom[connAtom] = true;
+						if (connAtom >=mQueryMol.getAtoms()) {	// select attached hydrogens, if they were forgotten to select
+							mQueryMol.setAtomSelection(connAtom, true);
+							selectedAtomCount++;
+						}
+					}
+				}
+			}
+		}
+
+		mQueryStaticAtomCoords = new Coordinates[mQueryMol.getAllAtoms()-selectedAtomCount];
+		int index = 0;
+		for (int atom=0; atom<mQueryMol.getAllAtoms(); atom++)
+			if (!mQueryMol.isSelectedAtom(atom))
+				mQueryStaticAtomCoords[index++] = mQueryMol.getCoordinates(atom);
+
+		// Copy selected part of query molecule including exit atoms and convert them to attachment points (add label "*")
 		StereoMolecule origScaffold = new StereoMolecule();
-		mQueryMol.copyMoleculeByAtoms(origScaffold, includeAtom, false, null);
-		origScaffold.ensureHelperArrays(Molecule.cHelperNeighbours);
-		int minAtoms = origScaffold.getAtoms() - Integer.parseInt(configuration.getProperty(PROPERTY_ATOMS_LESS));
-		int maxAtoms = origScaffold.getAtoms() + Integer.parseInt(configuration.getProperty(PROPERTY_ATOMS_MORE));
+		int[] atomMap = new int[mQueryMol.getAllAtoms()];
+		mQueryMol.copyMoleculeByAtoms(origScaffold, includeAtom, false, atomMap);
+		for (int atom=0; atom<mQueryMol.getAllAtoms(); atom++)
+			if (mQueryMol.isSelectedAtom(atom))
+				for (int i=0; i<mQueryMol.getAllConnAtoms(atom); i++)
+					if (!mQueryMol.isSelectedAtom(mQueryMol.getConnAtom(atom, i)))
+						origScaffold.setAtomCustomLabel(atomMap[mQueryMol.getConnAtom(atom, i)], "*");
+
+		// Create idcode and skelSpheres from original scaffold with exit atoms
+		origScaffold.setFragment(false);
+		Canonizer canonizer = new Canonizer(origScaffold, Canonizer.ENCODE_ATOM_CUSTOM_LABELS);
+		mOrigScaffoldIDCodeWithCoords = canonizer.getIDCode() + " " + canonizer.getEncodedCoordinates();
 		DescriptorHandlerSkeletonSpheres dhSkelSpheres = DescriptorHandlerSkeletonSpheres.getDefaultInstance();
 		byte[] origScaffoldSkelSpheres = dhSkelSpheres.createDescriptor(origScaffold);
+
+		int minAtoms = origScaffold.getAtoms() - Integer.parseInt(configuration.getProperty(PROPERTY_ATOMS_LESS));
+		int maxAtoms = origScaffold.getAtoms() + Integer.parseInt(configuration.getProperty(PROPERTY_ATOMS_MORE));
+
+		ForceFieldMMFF94.initialize(ForceFieldMMFF94.MMFF94SPLUS);
 
 		mEVTypeMatchCount = new AtomicInteger();
 		mEVPermutationCount = new AtomicInteger();
@@ -407,20 +498,21 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		mEVAngleMatchCount = new AtomicInteger();
 		mPheSAFlexMatchCount = new AtomicInteger();
 
+		// Start worker threads that process all scaffolds/linkers from the fragment file
 		mThreadCount = Runtime.getRuntime().availableProcessors();
 		mFragmentQueue = new SynchronousQueue<>();
 		for (int i=0; i<mThreadCount; i++) {
-			Thread t = new Thread(() -> consumeFragments(minimize, origScaffoldSkelSpheres), "Scaffold Replacer " + (i + 1));
+			Thread t = new Thread(() -> consumeFragments(origScaffoldSkelSpheres), "Scaffold Replacer " + (i + 1));
 			t.setPriority(Thread.MIN_PRIORITY);
 			t.start();
-			}
+		}
 
-		ForceFieldMMFF94.initialize(ForceFieldMMFF94.MMFF94SPLUS);
-
+		// Start worker thread that collects all qualifying results
 		mResultTableQueue = new SynchronousQueue<>();
 		Thread collectionThread = new Thread(() -> consumeResultRows(queryIDCode));
 		collectionThread.start();
 
+		// Read and construct all candidate 3D-fragments from the input file and put into the worker queue
 		DWARFileParser parser = new DWARFileParser(fileName);
 		int rowCount = parser.getRowCount();
 		int row = 0;
@@ -452,18 +544,18 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		try { collectionThread.join(); } catch (InterruptedException e) {}
 		}
 
-	private void consumeFragments(final boolean minimize, final byte[] origScaffoldSkelSpheres) {
+	private void consumeFragments(final byte[] origScaffoldSkelSpheres) {
 		StereoMolecule fragment;
 		try {
 			while ((fragment = mFragmentQueue.take()).getAllAtoms() != 0)
-				generateReplacements(fragment, minimize, origScaffoldSkelSpheres);
+				generateReplacements(fragment, origScaffoldSkelSpheres);
 		} catch (InterruptedException ie) {
 			ie.printStackTrace();
 		}
 		try { mResultTableQueue.put(new byte[0][]); } catch (InterruptedException ie) { ie.printStackTrace(); }
 	}
 
-	private void generateReplacements(StereoMolecule fragment, boolean minimize, byte[] origScaffoldSkelSpheres) {
+	private void generateReplacements(StereoMolecule fragment, byte[] origScaffoldSkelSpheres) {
 		FragmentGeometry3D fragmentGeometry = new FragmentGeometry3D(fragment, FragmentGeometry3D.MODE_FRAGMENT_WITH_EXIT_VECTORS);
 		if (!mQueryGeometry.equals(fragmentGeometry))
 			return;
@@ -481,7 +573,8 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		for (int p=0; p<mQueryGeometry.getPermutationCount(); p++) {
 			mEVPermutationCount.incrementAndGet();
 
-			double[][] matrix = mQueryGeometry.alignRootAndExitAtoms(fragmentGeometry, p, MAX_ROOT_RMSD);
+			double[] rmsdHolder = new double[1];
+			double[][] matrix = mQueryGeometry.alignRootAndExitAtoms(fragmentGeometry, p, rmsdHolder, mMaxEVRMSD);
 			if (matrix != null) {	// TODO should we also check how well COG of scaffold and replacement match???
 				mEVRMSDMatchCount.incrementAndGet();
 
@@ -495,77 +588,99 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 					}
 
 				// Check, whether exit vector directions are compatible
-				if (mQueryGeometry.hasMatchingExitVectors(fragmentGeometry, fragCoords, p, MAX_EXIT_VECTOR_DIVERSION)) {
+				double[][] angleHolder = new double[1][];
+				if (mQueryGeometry.hasMatchingExitVectors(fragmentGeometry, fragCoords, p, angleHolder, mMaxEVDivergence)) {
 					// Copy query molecule and remove selected part
 					mEVAngleMatchCount.incrementAndGet();
 
-					StereoMolecule flexQuery = new StereoMolecule(mQueryMol);
-					for (int atom=0; atom<flexQuery.getAllAtoms(); atom++)
-						if (flexQuery.isSelectedAtom(atom))
-							flexQuery.markAtomForDeletion(atom);
-					int[] origToNewAtomInQuery = flexQuery.deleteMarkedAtomsAndBonds();
+					StereoMolecule modifiedQuery = new StereoMolecule(mQueryMol);
+					for (int atom=0; atom<modifiedQuery.getAllAtoms(); atom++)
+						if (modifiedQuery.isSelectedAtom(atom))
+							modifiedQuery.markAtomForDeletion(atom);
+					int[] origToNewAtomInQuery = modifiedQuery.deleteMarkedAtomsAndBonds();
 
-					// add aligned fragment
-					int queryAtoms = flexQuery.getAllAtoms();
-					int queryBonds = flexQuery.getAllBonds();
-					int[] origToNewAtomInFrag = flexQuery.addMolecule(fragment);
+					// Build array of unselected atom coordinate references for aligning these atoms later
+					Coordinates[] minimizedStaticAtomCoords = new Coordinates[modifiedQuery.getAllAtoms()];
+					for (int atom=0; atom<modifiedQuery.getAllAtoms(); atom++)
+						minimizedStaticAtomCoords[atom] = modifiedQuery.getCoordinates(atom);
+
+					// Then add the aligned fragment
+					int queryAtoms = modifiedQuery.getAllAtoms();
+					int queryBonds = modifiedQuery.getAllBonds();
+					int[] origToNewAtomInFrag = modifiedQuery.addMolecule(fragment);
 					for (int i=0; i<fragment.getAllAtoms(); i++) {
-						flexQuery.setAtomX(queryAtoms + i, fragCoords[i].x);
-						flexQuery.setAtomY(queryAtoms + i, fragCoords[i].y);
-						flexQuery.setAtomZ(queryAtoms + i, fragCoords[i].z);
+						modifiedQuery.setAtomX(queryAtoms + i, fragCoords[i].x);
+						modifiedQuery.setAtomY(queryAtoms + i, fragCoords[i].y);
+						modifiedQuery.setAtomZ(queryAtoms + i, fragCoords[i].z);
 					}
 
+					// Remove exit atoms of fragment and re-connect fragment root atoms with corresponding partners in query molecule
 					for (int i=0; i<mQueryGeometry.getExitVectorCount(); i++) {
 						int exitAtomQuery = origToNewAtomInQuery[mQueryGeometry.getExitAtom(i)];
 						int rootAtomFrag = origToNewAtomInFrag[fragmentGeometry.getRootAtom(mQueryGeometry.getPermutedExitVectorIndex(p, i))];
 						int exitAtomFrag = origToNewAtomInFrag[fragmentGeometry.getExitAtom(mQueryGeometry.getPermutedExitVectorIndex(p, i))];
-						for (int bond=queryBonds; bond<flexQuery.getAllBonds(); bond++) {
-							if (flexQuery.getBondAtom(0, bond) == rootAtomFrag
-							 && flexQuery.getBondAtom(1, bond) == exitAtomFrag) {
-								flexQuery.setBondAtom(1, bond, exitAtomQuery);
-								flexQuery.markAtomForDeletion(exitAtomFrag);
+						for (int bond=queryBonds; bond<modifiedQuery.getAllBonds(); bond++) {
+							if (modifiedQuery.getBondAtom(0, bond) == rootAtomFrag
+							 && modifiedQuery.getBondAtom(1, bond) == exitAtomFrag) {
+								modifiedQuery.setBondAtom(1, bond, exitAtomQuery);
+								modifiedQuery.markAtomForDeletion(exitAtomFrag);
 								break;
 							}
-							else if (flexQuery.getBondAtom(1, bond) == rootAtomFrag
-								  && flexQuery.getBondAtom(0, bond) == exitAtomFrag) {
-								flexQuery.setBondAtom(0, bond, exitAtomQuery);
-								flexQuery.markAtomForDeletion(exitAtomFrag);
+							else if (modifiedQuery.getBondAtom(1, bond) == rootAtomFrag
+								  && modifiedQuery.getBondAtom(0, bond) == exitAtomFrag) {
+								modifiedQuery.setBondAtom(0, bond, exitAtomQuery);
+								modifiedQuery.markAtomForDeletion(exitAtomFrag);
 								break;
 							}
 						}
 					}
-					flexQuery.deleteMarkedAtomsAndBonds();
+					modifiedQuery.deleteMarkedAtomsAndBonds();
 
-//					double phesaScore = PheSAAlignmentOptimizer.alignTwoMolsInPlace(mQueryMol, queryWithNewCore, 0.5);
-					FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(mQueryMol, flexQuery);
+					// optimize changed structure using MMFF94
+					ForceFieldMMFF94 ff = null;
+					double mmffEnergy = Double.NaN;
+					try {
+						String tableSet = ForceFieldMMFF94.MMFF94SPLUS;
+						ff = new ForceFieldMMFF94(modifiedQuery, tableSet, new HashMap<>());
+						mmffEnergy = minimize(ff, modifiedQuery);
+					}
+					catch (RuntimeException rte) {}
+
+					// Kabsch-align minimized structure to query using non-changing atoms.
+					// Then, determine RSMD.
+					double queryRMSD = alignAndGetRMSD(mQueryStaticAtomCoords, minimizedStaticAtomCoords, modifiedQuery);
+
+					Canonizer modifiedQueryCanonizer = new Canonizer(modifiedQuery);
+					String idcode = modifiedQueryCanonizer.getIDCode();
+					String idcoordsMinimized = modifiedQueryCanonizer.getEncodedCoordinates();
+
+					double phesaRigidScore = PheSAAlignmentOptimizer.alignTwoMolsInPlace(mQueryMol, modifiedQuery, 0.5);
+					String idcoordsPheSARigid = modifiedQueryCanonizer.getEncodedCoordinates();
+
+					FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(mQueryMol, modifiedQuery);
 					double phesaFlexScore = fsa.align()[0];
-
-					Canonizer canonizer = new Canonizer(flexQuery);
-					String idcode = canonizer.getIDCode();
-					String flexCoords = canonizer.getEncodedCoordinates();
-
-					String tableSet = ForceFieldMMFF94.MMFF94SPLUS;
-					ForceFieldMMFF94 ff = new ForceFieldMMFF94(flexQuery, tableSet, new HashMap<>());
-					double energy1 = getTotalEnergy(ff, flexQuery);
-
-					double energy2 = minimize(ff, flexQuery);
-					double phesaRigidScore = PheSAAlignmentOptimizer.alignTwoMolsInPlace(mQueryMol, flexQuery, 0.5);
-
-					String rigidCoords = new Canonizer(flexQuery).getEncodedCoordinates();
+					String idcoordsPheSAFlex = modifiedQueryCanonizer.getEncodedCoordinates();
+					double energyDif = Double.isNaN(mmffEnergy) ? Double.NaN : getTotalEnergy(ff, modifiedQuery) - mmffEnergy;
 
 					// Especially when finding linkers for marked hydrogen atoms,
 					// phesaFlexScore should not be a cut-off criterion
-//					if (phesaFlexScore > MIN_PHESA_FLEX) {
+					if (mSeekLinker || phesaFlexScore > mMinPheSAFlex) {
 						mPheSAFlexMatchCount.incrementAndGet();
+
+						Canonizer fragCanonizer = new Canonizer(fragment, Canonizer.ENCODE_ATOM_CUSTOM_LABELS);
+						String fragmentIDCode = fragCanonizer.getIDCode();
+						String fragmentCoords = fragCanonizer.getEncodedCoordinates(true, fragCoords);
+
 						try {
 							DescriptorHandlerSkeletonSpheres dh = DescriptorHandlerSkeletonSpheres.getDefaultInstance();
 							double similarity = dh.getSimilarity(origScaffoldSkelSpheres, dh.createDescriptor(fragment));
-							mResultTableQueue.put(constructRow(idcode, flexCoords, rigidCoords, phesaFlexScore, phesaRigidScore, similarity, energy1-energy2));
+							mResultTableQueue.put(constructRow(idcode, idcoordsMinimized, idcoordsPheSARigid, idcoordsPheSAFlex, fragmentIDCode, fragmentCoords,
+									rmsdHolder[0], angleHolder[0], queryRMSD, phesaRigidScore, phesaFlexScore, similarity, energyDif));
 						}
 						catch (InterruptedException ie) {
 							ie.printStackTrace();
 						}
-//					}
+					}
 				}
 			}
 		}
@@ -598,10 +713,17 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 				}
 			} catch (InterruptedException ie) {}
 
-		System.out.println("EV-type matches:"+ mEVTypeMatchCount +", EV-permutations:"+ mEVPermutationCount +", EV-RMSD matches:"+ mEVRMSDMatchCount +" EV-angle matches:"+ mEVAngleMatchCount +" final PheSA-Flex matches:"+mPheSAFlexMatchCount);
+		StringBuilder message = new StringBuilder("The task '"+TASK_NAME+"' has found:\n");
+		message.append(mEVTypeMatchCount.get() + " fragments with matching exit vector atom types\n");
+		if (mEVTypeMatchCount.get() != mEVPermutationCount.get())
+			message.append(mEVPermutationCount + " fragment-to-query atom type matches\n");
+		message.append(mEVRMSDMatchCount + " matches with exit vector RMSD < "+ mMaxEVRMSD +" (root and exit atoms)\n");
+		message.append(mEVAngleMatchCount + " matches with exit vector angle divergence < "+ mMaxEVDivergence +" degrees\n");
+		if (!mSeekLinker)
+			message.append(mPheSAFlexMatchCount + " built molecules with a PheSA-flex-overlap > "+mMinPheSAFlex+"\n");
 
 		if (rowList.isEmpty()) {
-			showErrorMessage("No matching fragment could be found.");
+			showErrorMessage(message.toString());
 			return;
 		}
 
@@ -613,6 +735,9 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 			tableModel.setColumnName(NEW_COLUMN_NAME[i], i);
 
 		tableModel.setColumnProperty(STRUCTURE_COLUMN, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnTypeIDCode);
+		tableModel.setColumnProperty(COORDS3D_MINIMIZED_COLUMN, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType3DCoordinates);
+		tableModel.setColumnProperty(COORDS3D_MINIMIZED_COLUMN, CompoundTableConstants.cColumnPropertyParentColumn, NEW_COLUMN_NAME[STRUCTURE_COLUMN]);
+		tableModel.setColumnProperty(COORDS3D_MINIMIZED_COLUMN, CompoundTableConstants.cColumnPropertySuperposeMolecule, queryIDCode);
 		tableModel.setColumnProperty(COORDS3D_FLEX_COLUMN, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType3DCoordinates);
 		tableModel.setColumnProperty(COORDS3D_FLEX_COLUMN, CompoundTableConstants.cColumnPropertyParentColumn, NEW_COLUMN_NAME[STRUCTURE_COLUMN]);
 		tableModel.setColumnProperty(COORDS3D_FLEX_COLUMN, CompoundTableConstants.cColumnPropertySuperposeMolecule, queryIDCode);
@@ -620,6 +745,10 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 		tableModel.setColumnProperty(COORDS3D_RIGID_COLUMN, CompoundTableConstants.cColumnPropertyParentColumn, NEW_COLUMN_NAME[STRUCTURE_COLUMN]);
 		tableModel.setColumnProperty(COORDS3D_RIGID_COLUMN, CompoundTableConstants.cColumnPropertySuperposeMolecule, queryIDCode);
 		tableModel.prepareDescriptorColumn(FFP_COLUMN, STRUCTURE_COLUMN, null, DescriptorConstants.DESCRIPTOR_FFP512.shortName);
+		tableModel.setColumnProperty(FRAGMENT_COLUMN, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnTypeIDCode);
+		tableModel.setColumnProperty(FRAGMENT_COORDS_COLUMN, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType3DCoordinates);
+		tableModel.setColumnProperty(FRAGMENT_COORDS_COLUMN, CompoundTableConstants.cColumnPropertyParentColumn, NEW_COLUMN_NAME[FRAGMENT_COLUMN]);
+		tableModel.setColumnProperty(FRAGMENT_COORDS_COLUMN, CompoundTableConstants.cColumnPropertySuperposeMolecule, mOrigScaffoldIDCodeWithCoords);
 
 		int row = 0;
 		for (byte[][] line : rowList) {
@@ -639,28 +768,63 @@ public class DETaskReplaceScaffold3D extends ConfigurableTask implements ActionL
 				mTargetFrame.getMainFrame().setMainSplitting(0.7);
 				mTargetFrame.getMainFrame().setRightSplitting(0);
 				mTargetFrame.getMainFrame().getDetailPane().setProperties("height[Data]=0.15;height["+NEW_COLUMN_NAME[STRUCTURE_COLUMN]
-						+"]=0.25;height["+NEW_COLUMN_NAME[COORDS3D_FLEX_COLUMN]+"]=0.3;height["+NEW_COLUMN_NAME[COORDS3D_RIGID_COLUMN]+"]=0.3");
+						+"]=0.16;height["+NEW_COLUMN_NAME[mSeekLinker ? COORDS3D_MINIMIZED_COLUMN : COORDS3D_FLEX_COLUMN]
+						+"]=0.23;height["+NEW_COLUMN_NAME[COORDS3D_RIGID_COLUMN]
+						+"]=0.23;height["+NEW_COLUMN_NAME[FRAGMENT_COORDS_COLUMN]+"]=0.23");
 
-				VisualizationPanel2D vpanel1 = mTargetFrame.getMainFrame().getMainPane().add2DView("PheSA Scores", "Table\tright\t0.5");
-				vpanel1.setAxisColumnName(0, NEW_COLUMN_NAME[PHESA_FLEX_COLUMN]);
-				vpanel1.setAxisColumnName(1, NEW_COLUMN_NAME[PHESA_RIGID_COLUMN]);
+				String title1 = mSeekLinker ? "RMDS" : "RMSD & PheSA-flex";
+				VisualizationPanel2D vpanel1 = mTargetFrame.getMainFrame().getMainPane().add2DView(title1, "Table\tbottom\t0.5");
+				vpanel1.setAxisColumnName(0, NEW_COLUMN_NAME[QUERY_RMSD_COLUMN]);
+				vpanel1.setAxisColumnName(1, NEW_COLUMN_NAME[mSeekLinker ? FRAGMENT_RMSD_COLUMN : PHESA_FLEX_COLUMN]);
 				int colorListMode1 = VisualizationColor.cColorListModeHSBLong;
 				Color[] colorList1 = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode1, null);
-				vpanel1.getVisualization().getMarkerColor().setColor(ENERGY_DIF_COLUMN, colorList1, colorListMode1);
+				vpanel1.getVisualization().getMarkerColor().setColor(SCAFFOLD_SIM_COLUMN, colorList1, colorListMode1);
+
+				ExplanationView expView = mTargetFrame.getMainFrame().getMainPane().addExplanationView("Explanation", title1+"\tleft\t0.5");
 			});
 		}
 		catch (Exception e) {}
-		}
 
-	private byte[][] constructRow(String idcode, String flexCoords, String rigidCoords, double phesaFlexScore, double phesaRigidScore, double scaffoldSimilarity, double energyDif) {
+		showMessage(message.toString(), INFORMATION_MESSAGE);
+	}
+
+	private byte[][] constructRow(String idcode, String minimizedCoords, String rigidCoords, String flexCoords, String fragmentIDCode, String fragmentCoords,
+								  double fragmentRMSD, double[] fragmentAngles, double queryRMSD,
+								  double phesaRigidScore, double phesaFlexScore, double scaffoldSimilarity, double energyDif) {
 		byte[][] row = new byte[NEW_COLUMN_NAME.length][];
 		row[STRUCTURE_COLUMN] = idcode.getBytes();
-		row[COORDS3D_FLEX_COLUMN] = flexCoords.getBytes();
+		row[COORDS3D_MINIMIZED_COLUMN] = minimizedCoords.getBytes();
 		row[COORDS3D_RIGID_COLUMN] = rigidCoords.getBytes();
-		row[PHESA_FLEX_COLUMN] = DoubleFormat.toString(phesaFlexScore).getBytes();
+		row[COORDS3D_FLEX_COLUMN] = flexCoords.getBytes();
 		row[PHESA_RIGID_COLUMN] = DoubleFormat.toString(phesaRigidScore).getBytes();
+		row[PHESA_FLEX_COLUMN] = DoubleFormat.toString(phesaFlexScore).getBytes();
+		row[FRAGMENT_COLUMN] = fragmentIDCode.getBytes();
+		row[FRAGMENT_COORDS_COLUMN] = fragmentCoords.getBytes();
+		row[FRAGMENT_RMSD_COLUMN] = DoubleFormat.toString(fragmentRMSD).getBytes();
+		StringBuilder angles = new StringBuilder();
+		for (double angle : fragmentAngles) {
+			if (!angles.isEmpty())
+				angles.append("; ");
+			angles.append(DoubleFormat.toString(angle, 2));
+		}
+		row[FRAGMENT_ANGLE_COLUMN] = angles.toString().getBytes();
+		row[QUERY_RMSD_COLUMN] = DoubleFormat.toString(queryRMSD).getBytes();
 		row[SCAFFOLD_SIM_COLUMN] = DoubleFormat.toString(scaffoldSimilarity).getBytes();
 		row[ENERGY_DIF_COLUMN] = DoubleFormat.toString(energyDif).getBytes();
 		return row;
 		}
+
+	private double alignAndGetRMSD(Coordinates[] queryCoords, Coordinates[] minimizedCoords, StereoMolecule modifiedQuery) {
+		Coordinates queryCOG = FragmentGeometry3D.centerOfGravity(queryCoords);
+		Coordinates minimizedCOG = FragmentGeometry3D.centerOfGravity(minimizedCoords);
+		double[][] matrix = FragmentGeometry3D.kabschAlign(queryCoords, minimizedCoords, queryCOG, minimizedCOG);
+
+		for (Coordinates c : modifiedQuery.getAtomCoordinates()) {
+			c.sub(minimizedCOG);
+			c.rotate(matrix);
+			c.add(queryCOG);
+		}
+
+		return Coordinates.getRmsd(queryCoords, minimizedCoords);
 	}
+}

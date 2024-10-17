@@ -81,7 +81,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final int PREDICTOR_FLAG_PAINS       	= (1 << PREDICTOR_PAINS);
 	private static final int PREDICTOR_FLAG_FLEXIBILITY		= (1 << PREDICTOR_FLEXIBILITY);
 
-	private static final int PROPERTY_COUNT = 69;
+	private static final int PROPERTY_COUNT = 70;
 
 	private static final int TOTAL_WEIGHT = 0;
 	private static final int FRAGMENT_WEIGHT = 1;
@@ -124,41 +124,42 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final int SP3_ATOMS = 35;
 	private static final int SYMMETRIC_ATOMS = 36;
 
-	private static final int SMALL_RINGS = 37;
-	private static final int SMALL_CARBO_RINGS = 38;
-	private static final int SMALL_HETERO_RINGS = 39;
-	private static final int SATURATED_RINGS = 40;
-	private static final int NON_AROMATIC_RINGS = 41;
-	private static final int AROMATIC_RINGS = 42;
-	private static final int CARBO_SATURATED_RINGS = 43;
-	private static final int CARBO_NON_AROMATIC_RINGS = 44;
-	private static final int CARBO_AROMATIC_RINGS = 45;
-	private static final int HETERO_SATURATED_RINGS = 46;
-	private static final int HETERO_NON_AROMATIC_RINGS = 47;
-	private static final int HETERO_AROMATIC_RINGS = 48;
+	private static final int LARGEST_RING_SIZE = 37;
+	private static final int SMALL_RINGS = 38;
+	private static final int SMALL_CARBO_RINGS = 39;
+	private static final int SMALL_HETERO_RINGS = 40;
+	private static final int SATURATED_RINGS = 41;
+	private static final int NON_AROMATIC_RINGS = 42;
+	private static final int AROMATIC_RINGS = 43;
+	private static final int CARBO_SATURATED_RINGS = 44;
+	private static final int CARBO_NON_AROMATIC_RINGS = 45;
+	private static final int CARBO_AROMATIC_RINGS = 46;
+	private static final int HETERO_SATURATED_RINGS = 47;
+	private static final int HETERO_NON_AROMATIC_RINGS = 48;
+	private static final int HETERO_AROMATIC_RINGS = 49;
 
-	private static final int ALL_AMIDES = 49;
-	private static final int ALL_AMINES = 50;
-	private static final int ALKYL_AMINES = 51;
-	private static final int ARYL_AMINES = 52;
-	private static final int AROMATIC_NITROGEN = 53;
-	private static final int BASIC_NITROGEN = 54;
-	private static final int ACIDIC_OXYGEN = 55;
-	private static final int STEREO_CONFIGURATION = 56;
+	private static final int ALL_AMIDES = 50;
+	private static final int ALL_AMINES = 51;
+	private static final int ALKYL_AMINES = 52;
+	private static final int ARYL_AMINES = 53;
+	private static final int AROMATIC_NITROGEN = 54;
+	private static final int BASIC_NITROGEN = 55;
+	private static final int ACIDIC_OXYGEN = 56;
+	private static final int STEREO_CONFIGURATION = 57;
 
-	private static final int ACIDIC_PKA = 57;
-	private static final int BASIC_PKA = 58;
-	private static final int FRACTION_IA = 59;
-	private static final int FRACTION_IB = 60;
-	private static final int FRACTION_ZI = 61;
-	private static final int FRACTION_CHARGED = 62;
-	private static final int FRACTION_UNCHARGED = 63;
-	private static final int CHARGE74 = 64;
+	private static final int ACIDIC_PKA = 58;
+	private static final int BASIC_PKA = 59;
+	private static final int FRACTION_IA = 60;
+	private static final int FRACTION_IB = 61;
+	private static final int FRACTION_ZI = 62;
+	private static final int FRACTION_CHARGED = 63;
+	private static final int FRACTION_UNCHARGED = 64;
+	private static final int CHARGE74 = 65;
 
-	private static final int GLOBULARITY_SVD = 65;
-	private static final int GLOBULARITY_VOL = 66;
-	private static final int SURFACE_3D = 67;
-	private static final int VOLUME_3D = 68;
+	private static final int GLOBULARITY_SVD = 66;
+	private static final int GLOBULARITY_VOL = 67;
+	private static final int SURFACE_3D = 68;
+	private static final int VOLUME_3D = 69;
 
 	private static final Color[] TOX_COLOR_LIST = { Color.RED, Color.YELLOW, Color.GREEN };
 
@@ -167,7 +168,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 													"le", /*"se",*/ "lle", "lelp", "mutagenic", "tumorigenic", "reproEffective", "irritant", "nasty", "pains",
 													"shape", "flexibility", "complexity", "fragments", "heavyAtoms", "nonCHAtoms", "metalAtoms", "negAtoms",
 													"stereoCenters", "rotBonds", "closures", "aromAtoms", "sp3CFraction", "sp3Atoms", "symmetricAtoms",
-													"rings", "carbo", "heteroRings", "satRings", "nonAromRings", "aromRings", "carboSatRings", "carboNonAromRings", "carboAromRings",
+													"largestRing", "rings", "carbo", "heteroRings", "satRings", "nonAromRings", "aromRings", "carboSatRings", "carboNonAromRings", "carboAromRings",
 													"heteroSatRings", "heteroNonAromRings", "heteroAromRings",
 													"amides", "amines", "alkylAmines", "arylAmines", "aromN", "basicN", "acidicO", "stereoConfiguration",
 													"acidicPKA", "basicPKA", "acidicFI", "basicFI", "zwitterFI", "chargedF", "unchargedF", "charge74",
@@ -176,14 +177,15 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final String[] TAB_GROUP = { "Druglikeness", "LE, Tox, Shape", "Atom Counts", "Ring Counts", "Functional Groups", "Ionization", "3D" };
 	private static final String[][] TAB_HEADER = {null, {null, "Ki or IC50 in nmol/l"}, null, null, null, null, null};
 
-	private DEFrame						mParentFrame;
-	private CompoundTableModel			mTableModel;
+	private final DEFrame				mParentFrame;
+	private final CompoundTableModel	mTableModel;
 	private DEProperty[]				mPropertyTable;
 	private TreeMap<String,DEProperty>	mPropertyMap;
 	private ArrayList<DEPropertyOrder>	mPropertyOrderList;
 	private Object[]					mPredictor;
-	private volatile int				mIDCodeColumn,mFragFpColumn,mFlexophoreColumn,mTargetColumn,mPropertyIndex;
-	private JComboBox					mComboBoxStructureColumn;
+	private volatile int				mIDCodeColumn,mFragFpColumn,mFlexophoreColumn,mPropertyIndex;
+	private final int					mTargetColumn;
+	private JComboBox<String>			mComboBoxStructureColumn;
 	private JTabbedPane					mTabbedPane;
 	private DEPropertyGUI[]				mPropertyGUI;
 	private AtomicInteger				mSMPRecordIndex,mSMPWorkingThreads,mSMPErrorCount;
@@ -229,13 +231,13 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size1));
 
-		int[] structureColumn = mTableModel.getSpecialColumnList(CompoundTableModel.cColumnTypeIDCode);
+		int[] structureColumns = mTableModel.getSpecialColumnList(CompoundTableModel.cColumnTypeIDCode);
 
 		// create components
-		mComboBoxStructureColumn = new JComboBox();
-		if (structureColumn != null)
-			for (int i=0; i<structureColumn.length; i++)
-				mComboBoxStructureColumn.addItem(mTableModel.getColumnTitle(structureColumn[i]));
+		mComboBoxStructureColumn = new JComboBox<>();
+		if (structureColumns != null)
+			for (int column : structureColumns)
+				mComboBoxStructureColumn.addItem(mTableModel.getColumnTitle(column));
 		if (!isInteractive())
 			mComboBoxStructureColumn.setEditable(true);
 		content.add(new JLabel("Structure column:", JLabel.RIGHT), "1,1");
@@ -552,6 +554,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		addProperty(SP3_ATOMS, 2, "sp3-Atoms", "sp3-Atom Count (Considering C,N,O,P,S)");
 		addProperty(SYMMETRIC_ATOMS, 2, "Symmetric atoms", "Symmetric Atom Count");
 
+		addProperty(LARGEST_RING_SIZE, 3, "Largest Ring Size", "The size of the largest of these rings: For every bond the smallest ring of which the bond is member of.");
 		addProperty(SMALL_RINGS, 3, "Small Rings", "Small Ring Count (all rings up to 7 members)");
 		addProperty(SMALL_CARBO_RINGS, 3, "Carbo-Rings", "Small Ring Count without Hereo Atoms");
 		addProperty(SMALL_HETERO_RINGS, 3, "Hetero-Rings", "Small Ring Count with Hetero Atoms");
@@ -626,7 +629,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		for (String code:codeList)
 			addPropertyOrderIfValid(code);
 
-		if (mPropertyOrderList.size() == 0)
+		if (mPropertyOrderList.isEmpty())
 			return;
 
 		String[] columnName = new String[mPropertyOrderList.size()];
@@ -788,7 +791,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 
 	/**
 	 * If the property is numerical and if it is in the cache, then it is returned from the cache.
-	 * Otherwise it is predicted, cached (if numerical) and returned.
+	 * Otherwise, it is predicted, cached (if numerical) and returned.
 	 * Properties that depend on other properties call this function recursively.
 	 * @param row
 	 * @param propertyType
@@ -810,7 +813,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		Double numValue = rowInfo.cache.get(propertyType);
 		double value = Double.NaN;
 		if (numValue != null) {
-			value = numValue.doubleValue();
+			value = numValue;
 			}
 		else {
 			try {
@@ -837,6 +840,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 			case ROTATABLE_BONDS:
 			case FRAGMENTS:
 			case RING_CLOSURES:
+			case LARGEST_RING_SIZE:
 			case SMALL_RINGS:
 			case AROMATIC_RINGS:
 			case AROMATIC_ATOMS:
@@ -867,7 +871,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 
 	/**
 	 * If the property is numerical and if it is in the cache, then it is returned from the cache.
-	 * Otherwise it is predicted, cached (if numerical) and returned.
+	 * Otherwise, it is predicted, cached (if numerical) and returned.
 	 * Properties that depend on other properties call this function recursively.
 	 * @param row
 	 * @param propertyType
@@ -1085,6 +1089,12 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 					if (maxRank < mol.getSymmetryRank(atom))
 						maxRank = mol.getSymmetryRank(atom);
 				value = (mol.getAtoms()-maxRank);
+				break;
+			case LARGEST_RING_SIZE:
+				mol.ensureHelperArrays(Molecule.cHelperRings);
+				value = 0;
+				for (int bond=0; bond<mol.getBonds(); bond++)
+					value = Math.max(value, mol.getBondRingSize(bond));
 				break;
 			case SMALL_RINGS:
 				mol.ensureHelperArrays(Molecule.cHelperRings);

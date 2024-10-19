@@ -78,10 +78,13 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 
 	public DETable(Frame parentFrame, DEMainPane mainPane, ListSelectionModel sm) {
 		super(mainPane.getTableModel(), null, sm);
+		setShowHorizontalLines(false);
 
 		mParentFrame = parentFrame;
 		mMainPane = mainPane;
 		mainPane.getTableModel().addCompoundTableListener(this);
+		mainPane.getTableModel().addHighlightListener(e -> setHighlightedRow(mainPane.getTableModel().getHighlightedRowIndex(), false));
+		addHighlightListener(row -> mainPane.getTableModel().setHighlightedRow(row));
 
 		mPreviousClickableCellVisRow = -1;
 		mPreviousClickableCellColumn = -1;
@@ -740,9 +743,23 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 					if (((CompoundTableModel)getModel()).getRecord(row) == mCurrentRecord) {
 						int tableWidth = getWidth();
 						Rectangle cellRect = getCellRect(row, 0, false);
-						g.setColor(Color.red);
-						g.drawRect(0, cellRect.y-1, tableWidth-1, cellRect.height+1);
-						g.drawRect(1, cellRect.y, tableWidth-3, cellRect.height-1);
+						g.setColor(Color.RED);
+						int x1 = 0;
+						int x2 = tableWidth-1;
+						int y1 = cellRect.y -1;
+						int y2 = cellRect.y + cellRect.height;
+						for (int i=0; i<HiDPIHelper.scale(2); i++) {
+							// it seems, we cannot use a drawRect, because drawRect coordinates are affected by rounding
+							// artefacts when using y values above 500'000'000, which happens with millions of records!
+							g.drawLine(x1, y1, x2, y1);
+							g.drawLine(x1, y2, x2, y2);
+							g.drawLine(x1, y1, x1, y2);
+							g.drawLine(x2, y1, x2, y2);
+							x1++;
+							x2--;
+							y1++;
+							y2--;
+						}
 						break;
 						}
 					}

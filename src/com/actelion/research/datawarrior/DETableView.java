@@ -354,7 +354,7 @@ public class DETableView extends JScrollPane
 	public void mouseMoved(MouseEvent e) {
 		if (e.getSource() == mTable)
 			mTableModel.setHighlightedRow(mTable.rowAtPoint(e.getPoint()));
-			}
+		}
 
 	public void setDetailPopupProvider(DetailPopupProvider detailPopupProvider) {
 		mDetailPopupProvider = detailPopupProvider;

@@ -4188,6 +4188,14 @@ public class CompoundTableModel extends AbstractTableModel
 		return mHighlightedRow;
 		}
 
+	public int getHighlightedRowIndex() {
+		for (int row=0; row<mNonExcludedRecords; row++)
+			if (mNonExcludedRecord[row] == mHighlightedRow)
+				return row;
+
+		return -1;
+		}
+
 	public void setActiveRow(CompoundRecord record) {
 		if (mActiveRow != record) {
 			mActiveRow = record;

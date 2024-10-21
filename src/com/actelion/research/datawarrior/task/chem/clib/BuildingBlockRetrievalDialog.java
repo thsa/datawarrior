@@ -35,14 +35,14 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 
 	private volatile JProgressDialog mProgressDialog;
 
-	private Frame		mParentFrame;
-	private JTextField	mTextFieldAmount,mTextFieldPrice,mTextFieldMax;
-	private JComboBox	mComboBoxPruningMode,mComboBoxProviders;
-	private JCheckBox   mCheckBoxSingleMatchOnly;
-	private JLabel      mLabelCustomProviders;
-	private String		mIDCode;
-	private String[]    mProviderList;
-	private CompoundCollectionModel<String[]> mModel;
+	private final Frame mParentFrame;
+	private final JTextField mTextFieldAmount,mTextFieldPrice,mTextFieldMax;
+	private final JComboBox<String> mComboBoxPruningMode,mComboBoxProviders;
+	private final JCheckBox mCheckBoxSingleMatchOnly;
+	private JLabel mLabelCustomProviders;
+	private final String mIDCode;
+	private final String[] mProviderList;
+	private final CompoundCollectionModel<String[]> mModel;
 
 	public BuildingBlockRetrievalDialog(Frame parent, String idcode, CompoundCollectionModel<String[]> model) {
 		super(parent, "Suggest Commercially Available Building Blocks", true);
@@ -53,8 +53,8 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 		int gap = HiDPIHelper.scale(8);
 		JPanel p = new JPanel();
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, HiDPIHelper.scale(160), gap},
-							{gap, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2,
-									TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap } };
+							{gap, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1,
+									TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap } };
 		p.setLayout(new TableLayout(size));
 
 		mProviderList = new BBCommunicator(null, "datawarrior").getProviderList();
@@ -93,7 +93,7 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 		p.add(new JLabel("Maximum building block count:"), "1,7");
 		p.add(mTextFieldMax, "3,7");
 
-		mComboBoxPruningMode = new JComboBox(sPruningModes);
+		mComboBoxPruningMode = new JComboBox<>(sPruningModes);
 		mComboBoxPruningMode.setSelectedItem(sPruningMode);
 		p.add(new JLabel("If maximum count is exceeded get"), "1,9");
 		p.add(mComboBoxPruningMode, "3,9");
@@ -127,9 +127,9 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		if (!e.getActionCommand().equals("Cancel")) {
+		if (e.getActionCommand().equals("OK")) {
 			float amount = 0;
-			if (mTextFieldAmount.getText().length() != 0) {
+			if (!mTextFieldAmount.getText().isEmpty()) {
 				try {
 					amount = Float.parseFloat(mTextFieldAmount.getText());
 				}
@@ -139,7 +139,7 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 				}
 
 			float price = 0;
-			if (mTextFieldPrice.getText().length() != 0) {
+			if (!mTextFieldPrice.getText().isEmpty()) {
 				try {
 					price = Float.parseFloat(mTextFieldPrice.getText());
 					}
@@ -149,7 +149,7 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 				}
 
 			int maxbb = 0;
-			if (mTextFieldMax.getText().length() != 0) {
+			if (!mTextFieldMax.getText().isEmpty()) {
 				try {
 					maxbb = Integer.parseInt(mTextFieldMax.getText());
 					}
@@ -198,7 +198,6 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 
 		setVisible(false);
 		dispose();
-		return;
 		}
 
 	private byte[][][] retrieveBuildingBlocks() {

@@ -56,6 +56,7 @@ import java.util.Properties;
 
 public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEventListener<EditorEvent>,ItemListener,TaskConstantsCLib,TaskUIDelegate {
 	private static final int EDITOR_HEIGHT = 360;
+	private static final int REACTANT_WIDTH = 88;
 
 	private static final String COMMAND_RETRIEVE = "retrieve";
 	private static final String COMMAND_OPEN_REACTION = "Open Reaction...";
@@ -122,12 +123,13 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 //		{"Passerini", "gC``@dfZ@pb@ eM`PfzO`` eMHAIXLJ@!defL@DBaRY[yjjZLHB#IXUx Q^ Idj IWDJIhVx#!Rm?rw?_x@hvHB !R_?x@?jMx_@ !R_vq?DzMl@` !R?`Bw@h`BmwvH__x@b@K~@Ha}h}kB##"},
 		};
 
-	private Component	mParent;
-	private CompoundTableModel mTableModel;
-	private SwingEditorPanel	mDrawPanel;
-	private JPanel		mReactantPanel;
-	private JComboBox	mComboBoxMode,mComboBoxReaction;
-	private ArrayList<CompoundCollectionPane<String[]>> mReactantPaneList;
+	private final Component mParent;
+	private final CompoundTableModel mTableModel;
+	private SwingEditorPanel mDrawPanel;
+	private JPanel mReactantPanel;
+	private JComboBox<String> mComboBoxMode,mComboBoxReaction;
+	private JLabel mLabelReactantCounts;
+	private final ArrayList<CompoundCollectionPane<String[]>> mReactantPaneList;
 	private Reaction	mCustomReaction;
 	private boolean		mDisableEvents;
 	private JStructureView[]	mReactantView;
@@ -174,22 +176,54 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 		bsave.addActionListener(this);
 		editorPanel.add(bsave, "7,3");
 
-		double[][] size2 = { {gap, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL, gap},
-							 {gap, TableLayout.PREFERRED, gap, TableLayout.FILL, gap} };
+		double[][] size2 = { {gap, HiDPIHelper.scale(REACTANT_WIDTH), gap, TableLayout.FILL, gap},
+							 {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL} };
 		mReactantPanel = new JPanel();
 		mReactantPanel.setLayout(new TableLayout(size2));
 
-		mComboBoxMode = new JComboBox(MODE_TEXT);
+		double[][] size3 = { {TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL},
+							 {TableLayout.PREFERRED} };
+		mComboBoxMode = new JComboBox<>(MODE_TEXT);
+		mLabelReactantCounts = new JLabel("", JLabel.RIGHT);
 		JPanel cbp = new JPanel();
-		cbp.add(new JLabel("Generate"));
-		cbp.add(mComboBoxMode);
-		cbp.add(new JLabel("multiple possible products"));
-		mReactantPanel.add(cbp, "2,3");
+		cbp.setLayout(new TableLayout(size3));
+		cbp.add(new JLabel("Generate"), "0,0");
+		cbp.add(mComboBoxMode, "2,0");
+		cbp.add(new JLabel("multiple possible products"), "4,0");
+		cbp.add(mLabelReactantCounts, "5,0");
+		mReactantPanel.add(cbp, "3,3");
 
 		tabbedPane.add("Generic Reaction", editorPanel);
 		tabbedPane.add("Reactants", mReactantPanel);
 
 		return tabbedPane;
+		}
+
+	private void updateCountLabel() {
+		if (mReactantPaneList == null || mReactantPaneList.isEmpty()) {
+			mLabelReactantCounts.setText("");
+			return;
+			}
+
+		StringBuilder text = new StringBuilder();
+		int productCount = 1;
+		for (CompoundCollectionPane<String[]> pane : mReactantPaneList) {
+			if (text.isEmpty()) {
+				text.append("Products: ");
+				if (mComboBoxMode.getSelectedIndex() != 0)
+					text.append(">= ");
+				}
+			else {
+				text.append(" * ");
+				}
+			text.append(pane.getModel().getSize());
+			productCount *= pane.getModel().getSize();
+			}
+
+		text.append(" = ");
+		text.append(productCount);
+
+		mLabelReactantCounts.setText(text.toString());
 		}
 
 	private void updateReactantPanel() {
@@ -207,42 +241,43 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 		if (mReactantPanel.getComponentCount() > 1)
 			mReactantPanel.remove(1);
 
-		if (mReactantPaneList.size() > reactantCount)
-			for (int i=mReactantPaneList.size()-1; i>=reactantCount; i--)
-				mReactantPaneList.remove(i);
+		mReactantView = new JStructureView[reactantCount];
+		mReactantPaneList.clear();
+
+		if (reactantCount == 0)
+			return;
 
 		JPanel reactantPanel = new JPanel();
 		int gap = HiDPIHelper.scale(8);
-		double[] sizeH = {gap, TableLayout.PREFERRED, gap, TableLayout.FILL};
+		double[] sizeH = {HiDPIHelper.scale(REACTANT_WIDTH), gap, TableLayout.FILL};
 		double[] sizeV = new double[6*reactantCount-1];
 		for (int i=0; i<reactantCount; i++) {
-			sizeV[6*i] = gap/2;
+			sizeV[6*i] = gap>>1;
 			sizeV[6*i+1] = HiDPIHelper.scale(74);
-			sizeV[6*i+2] = gap/2;
+			sizeV[6*i+2] = gap>>1;
 			sizeV[6*i+3] = TableLayout.PREFERRED;
-			sizeV[6*i+4] = gap/2;
+			sizeV[6*i+4] = gap>>1;
 			if (i != reactantCount-1)
 				sizeV[6*i+5] = gap;
 			}
 		double[][] size = {sizeH, sizeV};
 		reactantPanel.setLayout(new TableLayout(size));
 
-		mReactantView = new JStructureView[reactantCount];
-		mReactantPaneList.clear();
 		for (int i=0; i<reactantCount; i++) {
 			mReactantView[i] = new JStructureView(reaction.getReactant(i), DnDConstants.ACTION_COPY_OR_MOVE, DnDConstants.ACTION_NONE);
 			mReactantView[i].setClipboardHandler(new ClipboardHandler());
-			reactantPanel.add(mReactantView[i], "1,"+(6*i+1));
+			reactantPanel.add(mReactantView[i], "0,"+(6*i+1));
 			JButton bload = new JButton("Suggest...");
 			bload.setActionCommand(COMMAND_RETRIEVE+i);
 			bload.addActionListener(this);
-			reactantPanel.add(bload, "1,"+(6*i+3));
+			reactantPanel.add(bload, "0,"+(6*i+3));
 
 			MoleculeFilter filter = new SubstructureFilter(reaction.getReactant(i));
 			CompoundCollectionPane reactantPane = new CompoundCollectionPane<>(new DefaultCompoundCollectionModel.IDCodeWithName(), false);
 			reactantPane.setClipboardHandler(new ClipboardHandler());
 			reactantPane.setCompoundFilter(filter);
 			reactantPane.setEditable(true);
+			reactantPane.getModel().addCompoundCollectionListener((a,b) -> updateCountLabel());
 
 			JMenu columnMenu = new JMenu("Add From Column");
 			for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
@@ -259,7 +294,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 							else
 								errorCount++;
 							}
-						if (reactantList.size() != 0)
+						if (!reactantList.isEmpty())
 							reactantPane.getModel().addMoleculeList(reactantList);
 						if (errorCount != 0)
 							JOptionPane.showMessageDialog(mParent, Integer.toString(errorCount).concat(" compounds were not added, because they don't have the required substructure."));
@@ -273,7 +308,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 			mCompoundCollectionHelper.addPopupItems(mParent);
 
 			mReactantPaneList.add(reactantPane);
-			reactantPanel.add(reactantPane, "3,"+(6*i)+",2,"+(6*i+4));
+			reactantPanel.add(reactantPane, "2,"+(6*i)+",2,"+(6*i+4));
 			}
 
 		if (reactantCount <= 3)
@@ -442,7 +477,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 				for (int j=0; j<idcode.length; j++) {
 					String[] idcodeWithName = new String[2];
 					idcodeWithName[0] = idcode[j];
-					idcodeWithName[1] = (j >= name.length || name[j].length() == 0) ? Integer.toString(j+1) : name[j];
+					idcodeWithName[1] = (j >= name.length || name[j].isEmpty()) ? Integer.toString(j+1) : name[j];
 					ccp.getModel().addCompound(idcodeWithName);
 					}
 				}

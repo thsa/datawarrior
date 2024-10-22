@@ -184,6 +184,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 		double[][] size3 = { {TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL},
 							 {TableLayout.PREFERRED} };
 		mComboBoxMode = new JComboBox<>(MODE_TEXT);
+		mComboBoxMode.addActionListener(e -> updateCountLabel());
 		mLabelReactantCounts = new JLabel("", JLabel.RIGHT);
 		JPanel cbp = new JPanel();
 		cbp.setLayout(new TableLayout(size3));

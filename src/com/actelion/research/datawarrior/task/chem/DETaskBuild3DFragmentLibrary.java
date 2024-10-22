@@ -120,10 +120,10 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 		return content;
 		}
 
-//	@Override
-//	public String getHelpURL() {
-//		return "/html/help/chemistry.html#Fragments3D";
-//	}
+	@Override
+	public String getHelpURL() {
+		return "/html/help/conformers.html#FragmentLib";
+		}
 
 	@Override
 	public Properties getDialogConfiguration() {

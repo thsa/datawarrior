@@ -90,7 +90,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 	private static final int SCAFFOLD_SIM_COLUMN = 12;
 	private static final int ENERGY_DIF_COLUMN = 13;
 
-	public static final String TASK_NAME = "Replace Scaffold By 3D-Fragment";
+	public static final String TASK_NAME = "Replace Scaffold And Link";
 
 	private DEFrame mTargetFrame;
 	private JFXMolViewerPanel mConformerPanel;
@@ -191,7 +191,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 
 	@Override
 	public String getHelpURL() {
-		return "/html/help/conformers.html#ReplaceScaffold";
+		return "/html/help/conformers.html#ReplaceAndLink";
 		}
 
 	@Override

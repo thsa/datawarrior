@@ -376,6 +376,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 		}
 	}
 
+
 	/**
 	 * If a Flexophore similarity filter is active, then this method calculates atom contributions to the
 	 * Flexophore match and adds them as proper color/radius encodings to the 2D structure display.

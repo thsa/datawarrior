@@ -85,8 +85,8 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 	private static final int FRAGMENT_RMSD_COLUMN = 7;
 	private static final int FRAGMENT_ANGLE_COLUMN = 8;
 	private static final int QUERY_RMSD_COLUMN = 9;
-	private static final int PHESA_FLEX_COLUMN = 10;
-	private static final int PHESA_RIGID_COLUMN = 11;
+	private static final int PHESA_RIGID_COLUMN = 10;
+	private static final int PHESA_FLEX_COLUMN = 11;
 	private static final int SCAFFOLD_SIM_COLUMN = 12;
 	private static final int ENERGY_DIF_COLUMN = 13;
 
@@ -383,6 +383,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 
 		ArrayList<StereoMolecule> mols = mConformerPanel.getMolecules(null);
 		if (!mols.isEmpty() && mols.get(0).getAllAtoms() != 0) {
+			mols.get(0).center(); // We need to center because of PheSA-flex scoring, which doesn't work with non-centered molecules.
 			Canonizer canonizer = new Canonizer(mols.get(0), Canonizer.ENCODE_ATOM_SELECTION);
 			String idcode = canonizer.getIDCode() + " " + canonizer.getEncodedCoordinates();
 			configuration.setProperty(PROPERTY_QUERY, idcode);
@@ -526,11 +527,11 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 				if (mol.getAtoms() >= minAtoms && mol.getAtoms() <= maxAtoms) {
 					try {
 						mFragmentQueue.put(mol);
-						if (rowCount != -1)
-							updateProgress(++row);
 					} catch (InterruptedException ie) {}
 				}
 			}
+			if (rowCount != -1)
+				updateProgress(++row);
 		}
 
 		StereoMolecule empty = new StereoMolecule();
@@ -658,13 +659,18 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 					String idcoordsPheSARigid = modifiedQueryCanonizer.getEncodedCoordinates();
 
 					FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(mQueryMol, modifiedQuery);
-					double phesaFlexScore = fsa.align()[0];
+					double phesaFlexScore = fsa.align()[0];	// returns 0 if it cannot align, e.g. because of inexistant forcefield parameters
+
+					if (phesaFlexScore == 0)
+						phesaFlexScore = Double.NaN;
+					modifiedQueryCanonizer.invalidateCoordinates();
 					String idcoordsPheSAFlex = modifiedQueryCanonizer.getEncodedCoordinates();
+
 					double energyDif = Double.isNaN(mmffEnergy) ? Double.NaN : getTotalEnergy(ff, modifiedQuery) - mmffEnergy;
 
-					// Especially when finding linkers for marked hydrogen atoms,
+					// When finding linkers for marked hydrogen atoms,
 					// phesaFlexScore should not be a cut-off criterion
-					if (mSeekLinker || phesaFlexScore > mMinPheSAFlex) {
+					if (mSeekLinker || Double.isNaN(phesaFlexScore) || phesaFlexScore >= mMinPheSAFlex) {
 						mPheSAFlexMatchCount.incrementAndGet();
 
 						Canonizer fragCanonizer = new Canonizer(fragment, Canonizer.ENCODE_ATOM_CUSTOM_LABELS);

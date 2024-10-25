@@ -223,7 +223,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(conformer, containerMol, 0.5);
 						if (mIsFlexible) {
 							FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(conformer, containerMol);
-							fit = fsa.align()[0];
+							fit = fsa.align()[0];	// WARNING: refMol must be centered for the scoring to work!!!
 							}
 						if (bestFit<fit) {
 							bestFit = fit;

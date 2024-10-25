@@ -27,7 +27,7 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 	private static final int MIN_EXIT_VECTORS = 2;
 	public static final int MAX_EXIT_VECTORS = 5;
 
-	private static final String PROPERTY_STRUCTURE_COLUMN = "structureColumn";
+	private static final String PROPERTY_3D_COORDS_COLUMN = "coords3DColumn";
 	private static final String PROPERTY_MAX_BOND_FLEXIBILITY_SUM = "maxBondFlexibilitySum";
 	private static final String PROPERTY_MIN_FRAGMENT_ATOMS = "minFragmentAtoms";
 	private static final String PROPERTY_MAX_FRAGMENT_ATOMS = "maxFragmentAtoms";
@@ -60,15 +60,11 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 
 	@Override
 	public boolean isConfigurable() {
-		int[] idcodeColumn = mTableModel.getSpecialColumnList(CompoundTableModel.cColumnTypeIDCode);
-		if (idcodeColumn == null) {
+		if (mTableModel.getSpecialColumnList(CompoundTableModel.cColumnTypeIDCode) == null) {
 			showErrorMessage("No column with chemical structures found.");
 			return false;
 			}
-		for (int column:idcodeColumn) {
-			if (mTableModel.getChildColumn(column, CompoundTableConstants.cColumnType3DCoordinates) != -1)
-				break;
-
+		if (mTableModel.getSpecialColumnList(CompoundTableModel.cColumnType3DCoordinates) == null) {
 			showErrorMessage("No structure column with 3-dimensional atom coordinates found.\nYou may generate conformers or get 3D-structures from the COD database.");
 			return false;
 			}
@@ -85,14 +81,14 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 							 gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap} };
 		content.setLayout(new TableLayout(size));
 
-		int[] idcodeColumn = mTableModel.getSpecialColumnList(CompoundTableModel.cColumnTypeIDCode);
+		int[] idcodeColumn = mTableModel.getSpecialColumnList(CompoundTableModel.cColumnType3DCoordinates);
 		mComboBoxStructureColumn = new JComboBox<>();
 		if (idcodeColumn != null)
 			for (int column:idcodeColumn)
 				mComboBoxStructureColumn.addItem(mTableModel.getColumnTitle(column));
 
 		mComboBoxStructureColumn.setEditable(!isInteractive());
-		content.add(new JLabel("Structure column:"), "1,1");
+		content.add(new JLabel("3D-structure column:"), "1,1");
 		content.add(mComboBoxStructureColumn, "3,1");
 
 		content.add(new JLabel("3D-Fragment properties"), "1,3");
@@ -128,7 +124,7 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 	@Override
 	public Properties getDialogConfiguration() {
 		Properties configuration = new Properties();
-		configuration.setProperty(PROPERTY_STRUCTURE_COLUMN, mTableModel.getColumnTitleNoAlias((String)mComboBoxStructureColumn.getSelectedItem()));
+		configuration.setProperty(PROPERTY_3D_COORDS_COLUMN, mTableModel.getColumnTitleNoAlias((String)mComboBoxStructureColumn.getSelectedItem()));
 		configuration.setProperty(PROPERTY_MIN_FRAGMENT_ATOMS, mTextFieldMinAtoms.getText());
 		configuration.setProperty(PROPERTY_MAX_FRAGMENT_ATOMS, mTextFieldMaxAtoms.getText());
 		configuration.setProperty(PROPERTY_MAX_BOND_FLEXIBILITY_SUM, mTextFieldMaxBondFlexibilitySum.getText());
@@ -139,10 +135,10 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
-		String structureColumn = configuration.getProperty(PROPERTY_STRUCTURE_COLUMN, "");
+		String structureColumn = configuration.getProperty(PROPERTY_3D_COORDS_COLUMN, "");
 		if (!structureColumn.isEmpty()) {
 			int column = mTableModel.findColumn(structureColumn);
-			if (column != -1 && mTableModel.isColumnTypeStructure(column))
+			if (column != -1 && CompoundTableConstants.cColumnType3DCoordinates.equals(mTableModel.getColumnSpecialType(column)))
 				mComboBoxStructureColumn.setSelectedItem(mTableModel.getColumnTitle(column));
 			else if (!isInteractive())
 				mComboBoxStructureColumn.setSelectedItem(structureColumn);
@@ -150,7 +146,7 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 				mComboBoxStructureColumn.setSelectedIndex(0);
 			}
 		else if (!isInteractive()) {
-			mComboBoxStructureColumn.setSelectedItem("Structure");
+			mComboBoxStructureColumn.setSelectedItem(CompoundTableConstants.cColumnType3DCoordinates);
 			}
 
 		mTextFieldMinAtoms.setText(configuration.getProperty(PROPERTY_MIN_FRAGMENT_ATOMS, ""));
@@ -165,9 +161,9 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 		if (mComboBoxStructureColumn.getItemCount() != 0)
 			mComboBoxStructureColumn.setSelectedIndex(0);
 		else if (!isInteractive())
-			mComboBoxStructureColumn.setSelectedItem("Structure");
+			mComboBoxStructureColumn.setSelectedItem(CompoundTableConstants.cColumnType3DCoordinates);
 		mTextFieldMinAtoms.setText("5");
-		mTextFieldMaxAtoms.setText("24");
+		mTextFieldMaxAtoms.setText("15");
 		mTextFieldMaxBondFlexibilitySum.setText("1");
 		mTextFieldMinExits.setText("2");
 		mTextFieldMaxExits.setText("4");
@@ -175,9 +171,9 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
-		String structureColumn = configuration.getProperty(PROPERTY_STRUCTURE_COLUMN, "");
+		String structureColumn = configuration.getProperty(PROPERTY_3D_COORDS_COLUMN, "");
 		if (structureColumn.isEmpty()) {
-			showErrorMessage("No structure column defined.");
+			showErrorMessage("No 3D-structure column defined.");
 			return false;
 			}
 		if (isLive) {
@@ -186,12 +182,8 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 				showErrorMessage("Structure column '"+structureColumn+"' not found.");
 				return false;
 				}
-			if (!mTableModel.isColumnTypeStructure(column)) {
-				showErrorMessage("Column '"+structureColumn+"' does not contain chemical structures.");
-				return false;
-				}
-			if (mTableModel.getChildColumn(column, CompoundTableConstants.cColumnType3DCoordinates) == -1) {
-				showErrorMessage("Column '"+structureColumn+"' does not contain 3D-coordinates.\nBefore building a 3D-fragment library, you need to generate conformers.");
+			if (!CompoundTableConstants.cColumnType3DCoordinates.equals(mTableModel.getColumnSpecialType(column))) {
+				showErrorMessage("Column '"+structureColumn+"' does not contain 3D-structures.");
 				return false;
 				}
 			}
@@ -263,8 +255,8 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 
 	@Override
 	public void runTask(Properties configuration) {
-		int idcodeColumn = mTableModel.findColumn(configuration.getProperty(PROPERTY_STRUCTURE_COLUMN));
-		int coordsColumn = mTableModel.getChildColumn(idcodeColumn, CompoundTableConstants.cColumnType3DCoordinates);
+		int coordsColumn = mTableModel.findColumn(configuration.getProperty(PROPERTY_3D_COORDS_COLUMN));
+		int idcodeColumn = mTableModel.getParentColumn(coordsColumn);
 
 		int minAtoms = Integer.parseInt(configuration.getProperty(DETaskBuild3DFragmentLibrary.PROPERTY_MIN_FRAGMENT_ATOMS));
 		int maxAtoms = Integer.parseInt(configuration.getProperty(DETaskBuild3DFragmentLibrary.PROPERTY_MAX_FRAGMENT_ATOMS));

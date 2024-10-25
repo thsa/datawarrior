@@ -570,7 +570,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 				mRefMol = addMoleculeNow(refConformer, mRefMolColor, null, isTorsionStrainVisible);
 			}
 
-			if ((conformers != null || refConformer != null) && mOverlayMol == null && mCavityMol == null && updateID == mCurrentUpdateID)
+			if ((conformers != null || refConformer != null || mOverlayMol == null || mCavityMol == null) && updateID == mCurrentUpdateID)
 				mScene.optimizeView();
 		});
 	}

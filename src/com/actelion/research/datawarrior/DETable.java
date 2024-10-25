@@ -800,11 +800,12 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 			@Override
 			public void paintComponent(Graphics g) {
 				// This shouldn't be necessary, but without clearing the background we sometimes
-				// have double buffering artefacts and see pixel conten t from other views in the background!
-				// TODO Check with >JRE8 and updated Substance LaF, whether this is still necessary:
+				// have double buffering artefacts and see pixel content from other views in the background!
+				// _TODO_ Check with >JRE8 and updated Substance LaF, whether this is still necessary:
 				// Open worldfactbock and click a few table cells and see, whether table header shows artefacts!
-				g.setColor(getBackground());
-				g.fillRect(0,0, getWidth(), getHeight());
+//				g.setColor(getBackground());
+//				g.fillRect(0,0, getWidth(), getHeight());
+				// With JRE21 this seems no issue anymore. TLS 24-Oct-2024
 
 				super.paintComponent(g);
 

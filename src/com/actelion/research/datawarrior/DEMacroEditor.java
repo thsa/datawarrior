@@ -504,7 +504,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		if (e.getActionCommand().equals("Rename Macro...")) {
 			String newName = JOptionPane.showInputDialog(mParentFrame, "New macro name:", mCurrentMacro.getName());
 			
-			if (newName != null && newName.length() != 0)
+			if (newName != null && !newName.isEmpty())
 				mCurrentMacro.setName(newName, mMacroList);
 
 			mParentFrame.getTableModel().setExtensionData(CompoundTableConstants.cExtensionNameMacroList, mMacroList);
@@ -667,7 +667,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		DEMacro.Task macroTask = macro.getTask(taskIndex);
 		AbstractTask task = mTaskFactory.createTaskFromCode(mParentFrame, macroTask.getCode());
 		DEMacro singleTaskMacro = new DEMacro("Single-Task Macro", new ArrayList<DEMacro>());
-		singleTaskMacro.addTask(macroTask.getCode(), macroTask.getConfiguration());
+		singleTaskMacro.addTask(macroTask.getCode(), macroTask.getConfiguration(), null);
 		ArrayList<DEFrame> frameList = mParentFrame.getApplication().getFrameList();
 		DEMacroRecorder.getInstance().runMacro(singleTaskMacro, frameList.get(frameIndex));
 		}

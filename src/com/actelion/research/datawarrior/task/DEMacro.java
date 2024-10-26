@@ -36,6 +36,7 @@ import com.actelion.research.io.BOMSkipper;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -69,7 +70,7 @@ public class DEMacro implements CompoundTableConstants {
 		}
 
 	public static boolean isAutoStarting(String headerLine) {
-		return headerLine.startsWith(MACRO_START) && headerLine.indexOf(AUTOSTART) != -1;
+		return headerLine.startsWith(MACRO_START) && headerLine.contains(AUTOSTART);
 		}
 
 	/**
@@ -99,7 +100,10 @@ public class DEMacro implements CompoundTableConstants {
 		if (sourceMacro != null) {
 			for (int i=0; i<sourceMacro.getTaskCount(); i++) {
 				Task sourceTask = sourceMacro.getTask(i);
-				mTaskList.add(new Task(sourceTask.getCode(), new Properties(sourceTask.getConfiguration())));
+				String[] comment = null;
+				if (sourceTask.getComment() != null)
+					comment = Arrays.copyOf(sourceTask.getComment(), sourceTask.getComment().length);
+				mTaskList.add(new Task(sourceTask.getCode(), new Properties(sourceTask.getConfiguration()), comment));
 				}
 			}
 		}
@@ -203,7 +207,7 @@ public class DEMacro implements CompoundTableConstants {
 		}
 
 	public boolean isEmpty() {
-		return mTaskList.size() == 0;
+		return mTaskList.isEmpty();
 		}
 
 	public void clear() {
@@ -211,8 +215,8 @@ public class DEMacro implements CompoundTableConstants {
 		fireContentChanged();
 		}
 
-	public void addTask(String taskCode, Properties configuration) {
-		mTaskList.add(new Task(taskCode, configuration));
+	public void addTask(String taskCode, Properties configuration, String[] comment) {
+		mTaskList.add(new Task(taskCode, configuration, comment));
 		fireContentChanged();
 		}
 
@@ -222,7 +226,10 @@ public class DEMacro implements CompoundTableConstants {
 		Properties newConfiguration = new Properties();
 		for (String key:oldConfiguration.stringPropertyNames())
 			newConfiguration.put(key, oldConfiguration.getProperty(key));
-		mTaskList.add(index+1, new Task(task.getCode(), newConfiguration));
+		String[] comment = null;
+		if (task.getComment() != null)
+			comment = Arrays.copyOf(task.getComment(), task.getComment().length);
+		mTaskList.add(index+1, new Task(task.getCode(), newConfiguration, comment));
 		fireContentChanged();
 		}
 
@@ -278,6 +285,12 @@ public class DEMacro implements CompoundTableConstants {
 		for (Task task:mTaskList) {
 			writer.write(TASK_START+task.getCode()+"\">");
 			writer.newLine();
+			if (task.getComment() != null) {
+				for (String comment : task.getComment()) {
+					writer.write("# " + comment);
+					writer.newLine();
+					}
+				}
 			if (task.configuration != null) {
 				for (String key:task.configuration.stringPropertyNames()) {
 					writer.write(key+"="+encode(task.configuration.getProperty(key)));
@@ -322,21 +335,28 @@ public class DEMacro implements CompoundTableConstants {
 			if (theLine != null)
 				theLine = reader.readLine();
 			}
+		ArrayList<String> comment = new ArrayList<>();
 		while (theLine != null && theLine.startsWith(TASK_START)) {
 			String taskCode = theLine.substring(12, theLine.indexOf('\"', 12));
+			comment.clear();
 
 			Properties configuration = new Properties();
 			theLine = reader.readLine();
 			while (theLine != null && !theLine.startsWith(TASK_END)) {
-				int index = theLine.indexOf("=");
-				if (index != -1)
-					configuration.setProperty(theLine.substring(0, index), decode(theLine.substring(index+1)));
+				if (theLine.startsWith("#")) {
+					comment.add(theLine.substring(theLine.startsWith("# ") ? 2 : 1));
+					}
+				else {
+					int index = theLine.indexOf("=");
+					if (index != -1)
+						configuration.setProperty(theLine.substring(0, index), decode(theLine.substring(index + 1)));
+					}
 				theLine = reader.readLine();
 				}
 
 			taskCode = updateLegacyTasks(taskCode, configuration);
 
-			mTaskList.add(new Task(taskCode, configuration));
+			mTaskList.add(new Task(taskCode, configuration, comment.isEmpty() ? null : comment.toArray(new String[0])));
 			theLine = reader.readLine();
 			if (theLine == null || theLine.startsWith(MACRO_END))
 				break;
@@ -467,20 +487,26 @@ public class DEMacro implements CompoundTableConstants {
 
 	public class Task {
 		private String code;
+		private String[] comment;
 		private Properties configuration;
 
 		public Task() {
-			this(null, null);
+			this(null, null, null);
 			}
 
-		public Task(String code, Properties configuration) {
+		public Task(String code, Properties configuration, String[] comment) {
 			this.code = code;
 			this.configuration = configuration;
+			this.comment = comment;
 			}
 
 		public String getCode() {
 			return code;
 			}
+
+		public String[] getComment() {
+			return comment;
+		}
 
 		public Properties getConfiguration() {
 			return configuration;
@@ -489,6 +515,10 @@ public class DEMacro implements CompoundTableConstants {
 		public void setCode(String code) {
 			this.code = code;
 			}
+
+		public void setComment(String[] comment) {
+			this.comment = comment;
+		}
 
 		public void setConfiguration(Properties configuration) {
 			this.configuration = configuration;

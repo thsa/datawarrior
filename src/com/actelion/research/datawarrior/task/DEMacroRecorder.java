@@ -186,7 +186,7 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 		 && task.isRedundant(mRecordingMacro.getTaskConfiguration(previous), configuration))
 			mRecordingMacro.setTaskConfiguration(previous, configuration);
 		else
-			mRecordingMacro.addTask(taskCode, configuration);
+			mRecordingMacro.addTask(taskCode, configuration, null);
 		mRecordingMacroOwner.setDirty(true);
 		}
 

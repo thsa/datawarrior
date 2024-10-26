@@ -32,6 +32,7 @@ import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 
@@ -49,10 +50,12 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private V3DPopupMenuController mController;
 	private FutureTask<Object> mConstructionTask;
 	private volatile int mCurrentUpdateID;
-	private boolean mAdaptToLookAndFeelChanges,mIsEditable;
+	private boolean mAdaptToLookAndFeelChanges;
+	private final boolean mIsEditable;
 	private Color mCavityMolColor,mRefMolColor,mOverlayMolColor,mSingleConformerColor;
 	private java.awt.Color mSceneBackground, mLookAndFeelSpotColor,
 			mMenuItemBackground,mMenuItemForeground,/*mMenuItemSelectionBackground,*/mMenuItemSelectionForeground;
+	private Vector<StructureChangeListener> mListeners;
 
 	public JFXMolViewerPanel(boolean withSidePanel) {
 		this(withSidePanel, 512, 384, V3DScene.CONFORMER_VIEW_MODE);
@@ -97,6 +100,24 @@ public class JFXMolViewerPanel extends JFXPanel {
 			mScene.setPopupMenuController(mController);
 		}, null);
 		Platform.runLater(mConstructionTask);
+	}
+
+	public void addStructureChangeListener(StructureChangeListener l) {
+		if (mListeners == null)
+			mListeners = new Vector<>();
+
+		mListeners.add(l);
+	}
+
+	public void removeStructureChangeListener(StructureChangeListener l) {
+		if (mListeners != null)
+			mListeners.remove(l);
+	}
+
+	private void fireStructureChanged() {
+		if (mListeners != null)
+			for (StructureChangeListener l : mListeners)
+				l.structureChanged();
 	}
 
 	public String getOverlayMolColor() {
@@ -200,10 +221,15 @@ public class JFXMolViewerPanel extends JFXPanel {
 	 */
 	public void clear() {
 		Platform.runLater(() -> {
-			for (V3DMolecule fxmol : mScene.getMolsInScene())
-				if (fxmol != mOverlayMol
-						&& fxmol != mCavityMol)
+			boolean changed = false;
+			for (V3DMolecule fxmol : mScene.getMolsInScene()) {
+				if (fxmol != mOverlayMol && fxmol != mCavityMol) {
 					mScene.delete(fxmol);
+					changed = true;
+				}
+			}
+			if (changed)
+				SwingUtilities.invokeLater(() -> fireStructureChanged());
 		});
 	}
 
@@ -354,16 +380,21 @@ public class JFXMolViewerPanel extends JFXPanel {
 	 */
 	public void setOverlayMolecule(StereoMolecule mol) {
 		Platform.runLater(() -> {
+			boolean changed = false;
 			if (mOverlayMol != null) {
 				mOverlayMolColor = mOverlayMol.getColor();
 				mScene.delete(mOverlayMol);
 				mOverlayMol = null;
+				changed = true;
 			}
 			if (mol != null) {
 				mOverlayMol = new V3DMolecule(mol, 0, V3DMolecule.MoleculeRole.LIGAND);
 				mOverlayMol.setColor(mOverlayMolColor);
 				mScene.addMolecule(mOverlayMol, false);
+				changed = true;
 			}
+			if (changed)
+				SwingUtilities.invokeLater(() -> fireStructureChanged());
 		});
 	}
 
@@ -395,6 +426,8 @@ public class JFXMolViewerPanel extends JFXPanel {
 				mScene.optimizeView();
 
 			mScene.setShowInteractions(true);
+
+			SwingUtilities.invokeLater(() -> fireStructureChanged());
 		});
 	}
 
@@ -517,6 +550,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 		if (showTorsionStrain)
 			fxmol.addTorsionStrainVisualization();
 		mScene.addMolecule(fxmol, false);
+		SwingUtilities.invokeLater(() -> fireStructureChanged());
 		return fxmol;
 	}
 
@@ -550,6 +584,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 				 && updateID == mCurrentUpdateID) {
 					isTorsionStrainVisible |= (fxmol.getTorsionStrainVis() != null);
 					mScene.delete(fxmol);
+					SwingUtilities.invokeLater(() -> fireStructureChanged());
 				}
 
 			if (conformers != null) {

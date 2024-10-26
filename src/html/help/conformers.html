@@ -404,10 +404,10 @@ i.e. conformer(s), that will be the molecule source for generating 3-dimensional
 fragments. Neither hydrogen atoms not exit vectors are included in these atom counts.</p>
 
 <p><b>Maximum bond flexibility sum:</b> Typically, 3D-fragments are used as replacements for existing
-scaffolds or as linker, e.g. to form a macrocycle. In both cases highly flexible fragments may be avoided,
+scaffolds or as linker, e.g. to form a macrocycle. In both cases highly flexible fragments should be avoided,
 because more rigid molecules tend to better bind to proteins. <span class="keyword">DataWarrior</span>
 calculates for every source molecule the flexibility of every rotatable bond as a value from 0.0 to 1.0.
-The cut-off value refers to the sum of flexibility values of all bonds being part of the fragment.</p>
+The cut-off value refers to the flexibility sum of all rotatable bonds in a fragment.</p>
 
 <p><b>Minimum / Maximum exit vectors:</b> This limits generated fragments to those that fit within
 a defined span of allowed exit vector counts.</p>
@@ -422,10 +422,121 @@ and patentability. Such changes include replacing a molecule's core structure by
 Usually, the starting compound possesses some target activity, which would be unfortunate to be lost.
 Therefore, one aims for replacents that keep the molecule's 3D-geometry largely unchanged.</p>
 
+<span class="keyword">DataWarrior</span> offers an easy way to search a pre-build library of fragments
+for those, which satisfy customizable geometry criteria and therefore qualify as replacement for an unwanted
+part of a given 3-dimensional query molecule. First, you paste in the query molecule or load it from a file,
+then you select atoms to be replaced, select a fragment library to be searched, optionally change geometry constraints,
+and start the search. For every fragment that matches in terms of connecting atom types and geometry
+<span class="keyword">DataWarrior</span> constructs a new molecule where the selected part is replaced
+by the found fragment. Then, the new molecule is energy-minimizes the modified molecule and both, rigidly and
+flexibly, aligned to the original. All potential solutions are shown in a new window together with
+alignment visualizations and various scores that allow to rank the solutions in various regards.
+To open the configration dialog choose <span class="menu">3D-Fragments -> Replace Scaffolds...</span>
+from the <span class="menu">Chemistry</span> menu.<p>
+
 <p align="center"><img src="help/img/conf/replaceDialog.png" width="453" height="593"></p>
 <p><center><i>Dialog to replace the central ribose fragment of Molnupiravir.</i></center></p>
 
-<p>more to come...</p>
+<p><b>3D-structure:</b> At the top of the dialog you define the query molecule as a 3D-structure.
+When pressing the right mouse button in the empty molecule area an up-coming popup menu offers
+various option of how to populate the area. These include loading a molecule from a mol-, mol2-,
+SD-, or DataWarrior-file. Ideally, the file should just contain one molecule. Alternatively, you
+can load a ligand structure from a local pdb-file or from the remote PDB-database by specifying
+a PDB-code. Of course, you may also paste a structure into the area.<br>
+Once a structure is loaded, you need to define that substructure, which you intend to replace.
+To do so, simply select some of the structures atoms by surrounding them with the mouse. If you
+press <span class="menu">Shift</span> when starting the selection, the surrounded atoms are
+added to previously selected atoms. Use <span class="menu">Ctrl</span> to unselect atoms.
+Typical selections would be a set of connected atoms, e.g. a ring system in the center of the
+molecule. But you could also select two or three small substituents or even just hydrogen atoms.
+In any case the new fragment comes in one piece and connects all open valences created by
+cutting away all selected atoms.</p>
+
+<p><b>3D-fragment file:</b> Click the <span class="menu">Choose...</span> button to select a
+previously generated fragment-file, which must be a DataWarrior file created ealier by the method
+described in the <a href="help/conformers.html#FragmentLib">previous chapter</a>. In most cases
+a fragment file generated from diverse organic crystal structures is a good choice.
+However, if you want to close an oligo-peptide chain to create a macrocycle, you may prefer
+fragments generated from a peptide or protein structure source. <b>Note:</b> When the fragment
+file is searched for qualifying fragments, then only those fragments are considered where
+exit vector atom types (represented by cone colors) match the type of the new neighbour atoms
+to which they get connected.</p>
+
+<p><b>Allow m less and n more non-H atom:</b> This defines the accepted size of introduced
+fragments in regard to the replaced query molecule part. Allowed fragments are those of which the number
+of non-hydrogen atoms is between <b>x-m</b> and <b>x+n</b> where <b>x</b> is the number of replaced
+(i.e. in the query molecule selected) non-hydrogen atoms.</p>
+
+<p><b>Maximum exit vector RMSD:</b> After atom type filtering, all qualifying fragments are
+passed through a geometry match. For that the exit vector bonds are aligned to the corresponding bonds
+in the query molecule. Then, the RMSD between the fragment's exit vector bonds (both atoms)
+and the respective query molecule's bonds is calculated. Only if the RMSD is below the value
+defined here the fragment is considered further on. Of course, if a fragment has multiple
+exit vectors of the same atom type, then all permutations are checked.</p>
+
+<p><b>Maximum exit vector angle divergence:</b> Fragments that pass the RMSD check above,
+while still being aligned, are then compared regarding exit vector directions. If an exit
+vector diverges more from the corresponding query bond's direction than the allowed value
+then the fragment is sorted out.</p>
+
+<p><b>Minimum PheSA-flex score:</b> After replacing a scaffold by a new fragment, a flexible alignment
+of the constructed nolecule to the query molecule is performed to check, whether it can adapt the query
+molecule's shape in a low energy conformation. The quality of the alignment is represented by the PheSA
+score, which represents both, the shape overlap and the overlap of pharmacophore features.
+Use this setting to eliminate solutions that cannot
+assume the query molecule's shape. <b>Note:</b> This setting is not used, if multiple disconnected
+parts of the query molecule are selected and, thus, a ring closure is intended.</p>
+
+<p>If your settings are valid you can start the fragment replacement process by clicking
+<span class="menu">Shift</span>. Depending on your fragment file size you will get a result message
+like the following after some seconds or minutes.</p>
+
+<p align="center"><img src="help/img/conf/replaceMessage.png" width="439" height="198"></p>
+<p><center><i>Message after running the task "Replace Scaffold And Link".</i></center></p>
+
+<p>After closing the message you can access all constructed molecules in a new
+<span class="keyword">DataWarrior</span> window. Its table view contains a structure column with
+the used fragments themselfes and another one with these fragments built into the query molecule.
+Associated to these constructed molecules are three sets of 3D-atom coordinates. Therefore,
+the detail area on the right contains three 3D-molecule views, which need some explanation:</p>
+
+<p><ul>
+<li><b>MMFF94+ minimized & retained atoms aligned:</b> This conformer shows atom coordinates after
+replacing the fragment and after MMFF94+ energy minimization, which should relax strain introduced
+by new bonds with torsion potentials different to hte original ones. Thus, the conformer should
+more or less resemble the query molecule. In addition, this conformer was aligned to the query
+molecule using only those atoms that exist in both molecules. In all 3D-views the query molecule
+is shown in white color. In particular, this view is useful if you have introduced a larger fragment
+or a linker, because the alignment does not consider the new fragment and just shows the influence
+of the newly introduced fragment on the conformation of the retained part of the molecule.
+The RMSD of the retained atoms after alignment can be found in the table column
+  'MMFF94+ PheSA Rigid Score'.</li>
+
+<li><b>MMFF94+ minimized & PheSA aligned:</b> This is the same conformer as above: the energy
+relaxed molecule after construction. However, this time it is PheSA-aligned to the query molecule.
+This (rigid) PheSA alignment results in the best possible overlap the two fixed conformers concerning
+their volume and pharmacophore features. Thus, the quality of this alignment is relevant
+when replacing a central scaffold in order to get new molecules with a similar target binding
+characteristic. The numerical value for the alignment quality can be found in the table column
+'Retained Atom RMSD'.</li>
+
+<li><b>PheSA-flex aligned:</b> This view shows a conformer of the built molecule that was flexibly
+aligned to the query conformer. Again, PheSA was used to optimize volume and pharmacophore overlap,
+but the conformer was allowed to change bond torsion angles in favor of a better alignment.
+Again a good overlap is a good indication for a potentially similar binding behaviour.
+However, this conformer may not necessarily be a low energy conformer. The flexible alignment score
+can be found in the table column 'PheSA-flex aligned', while the diversion of this conformer from
+the energy minimum in kcal/mol is found in 'Energy Dif Flex Rigid'.</li>
+</ul>
+</p>
+
+<p align="center"><img src="help/img/conf/replaceResult.png" width="680" height="530"></p>
+<p><center><i>Result window after task "Replace Scaffold And Link".</i></center></p>
+
+<p>Finally, you need to rank your results depending on what you intend to achieve and probably
+also by judging the synthetic accessibility, which is beyond the scope of this method. The two
+graphical views may guide you to select the most promising replacements based on alignment scores
+and possibly considering the dissimilarity to the replaced fragment.</p>
 <br>
 
 <h3><a name="3DDevices"></a>Stereoscopic Screens and Glasses</h3>

@@ -37,7 +37,6 @@ import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.view.ExplanationView;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.util.DoubleFormat;
@@ -145,7 +144,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 		content.add(new JLabel("First, define a bio-active 3D-structure.", JLabel.CENTER), "1,3,3,3");
 		content.add(new JLabel("Then, select scaffold atoms to be replaced.", JLabel.CENTER), "1,5,3,5");
 
-		content.add(new JLabel("3D-Fragment File:"), "1,7");
+		content.add(new JLabel("3D-fragment file:"), "1,7");
 		mLabelInFileName = new JFilePathLabel(!isInteractive());
 		content.add(mLabelInFileName, "3,7");
 
@@ -778,15 +777,21 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 						+"]=0.23;height["+NEW_COLUMN_NAME[COORDS3D_RIGID_COLUMN]
 						+"]=0.23;height["+NEW_COLUMN_NAME[FRAGMENT_COORDS_COLUMN]+"]=0.23");
 
-				String title1 = mSeekLinker ? "RMDS" : "RMSD & PheSA-flex";
+				String title1 = "Fragment RMSD & Angle Divergence";
 				VisualizationPanel2D vpanel1 = mTargetFrame.getMainFrame().getMainPane().add2DView(title1, "Table\tbottom\t0.5");
-				vpanel1.setAxisColumnName(0, NEW_COLUMN_NAME[QUERY_RMSD_COLUMN]);
-				vpanel1.setAxisColumnName(1, NEW_COLUMN_NAME[mSeekLinker ? FRAGMENT_RMSD_COLUMN : PHESA_FLEX_COLUMN]);
+				vpanel1.setAxisColumnName(0, NEW_COLUMN_NAME[FRAGMENT_ANGLE_COLUMN]);
+				vpanel1.setAxisColumnName(1, NEW_COLUMN_NAME[FRAGMENT_RMSD_COLUMN]);
 				int colorListMode1 = VisualizationColor.cColorListModeHSBLong;
 				Color[] colorList1 = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode1, null);
 				vpanel1.getVisualization().getMarkerColor().setColor(SCAFFOLD_SIM_COLUMN, colorList1, colorListMode1);
 
-				ExplanationView expView = mTargetFrame.getMainFrame().getMainPane().addExplanationView("Explanation", title1+"\tleft\t0.5");
+				String title2 = mSeekLinker ? "RMDS" : "RMSD & PheSA-flex";
+				VisualizationPanel2D vpanel2 = mTargetFrame.getMainFrame().getMainPane().add2DView(title2, title1 + "\tright\t0.5");
+				vpanel2.setAxisColumnName(0, NEW_COLUMN_NAME[QUERY_RMSD_COLUMN]);
+				vpanel2.setAxisColumnName(1, NEW_COLUMN_NAME[mSeekLinker ? FRAGMENT_RMSD_COLUMN : PHESA_FLEX_COLUMN]);
+				int colorListMode2 = VisualizationColor.cColorListModeHSBLong;
+				Color[] colorList2 = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode2, null);
+				vpanel2.getVisualization().getMarkerColor().setColor(SCAFFOLD_SIM_COLUMN, colorList2, colorListMode2);
 			});
 		}
 		catch (Exception e) {}

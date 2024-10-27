@@ -60,8 +60,8 @@ neighbor atoms and bonds of the rotatable bond. <span class="keyword">DataWarrio
 about 5000 distinct rotatable bond environments, which have been extracted from experimental, i.e. crystallographic
 data. Every one of these rotatable bond classes comes with a list of preferred torsion angles and frequency data
 about how often these torsion angles have been found in the crystallographic database. From the frequency data
-<span class="keyword">DataWarrior</span> derives a likelyhood for any of the torsion angles. Now using bond classes
-<span class="keyword">DataWarrior</span> assigns a set of preferred torsion angles along with their likelyhoods
+<span class="keyword">DataWarrior</span> derives a likelihood for any of the torsion angles. Now using bond classes
+<span class="keyword">DataWarrior</span> assigns a set of preferred torsion angles along with their likelihoods
 to any rotatable bond of the molecule.
 <br>
 In a third step, the fragments are then assembled after choosing one of the preferred torsion angles for every
@@ -71,20 +71,20 @@ the algorithm creates a rule about a torsion combination, which leads to a colli
 when constructing new conformers.<br>
 Potentially, the number of constructable conformers may be very high, depending on the number of rotatable bonds,
 the number of torsions per bond and the number of self-organized fragment conformers. Therefore, one of multiple
-strategies must be chosen, which prioritize how torsion angles are permutated, how atom collisions are handled
-and to which extend likely torsions are preferred:
+strategies must be chosen, which prioritize how torsion angles are permuted, how atom collisions are handled
+and to which extent likely torsions are preferred:
 <ul>
 <li><span class="keyword">Random, low energy bias:</span> This strategy randomly selects for every new conformer
 a new set of torsions and fragments. However, a weighted random method is used giving more likely torsion angles
-and better scoring fragments a higher chance of being selected than the less likely ones. This is a well balanced
+and better scoring fragments a higher chance of being selected than the less likely ones. This is a well-balanced
 strategy leading to diverse low energy conformers.</li>
 <li><span class="keyword">Pure random:</span> The degrees of freedom are selected randomly neglecting any
-likelyhoods. This produces the most diverse conformers, but not necessarily low energy ones.</li>
+likelihoods. This produces the most diverse conformers, but not necessarily low energy ones.</li>
 <li><span class="keyword">Adaptive collision avoidance, low energy bias:</span> This strategy starts and works
 like the <span class="keyword">low energy biased random</span> strategy until a set of torsion angles causes
-atom collisions. Then, for every rotatable bond is determined to which extend its current rotation state
+atom collisions. Then, for every rotatable bond is determined to which extent its current rotation state
 contributes to atom collisions. With a weighted random approach one of the rotatable bonds is chosen to be modified
-next, such that the likelyhood for the next conformer is high to escape the collision.</li>
+next, such that the likelihood for the next conformer is high to escape the collision.</li>
 <li><span class="keyword">Systematic, low energy bias:</span> The starting point for this algorithm is that
 conformer, which uses for any degree of freedom the lowest energy option, i.e. for every rotatable bond the
 lowest energy torsion angle for every fragment conformation choice the best scoring one. For the next conformer
@@ -102,7 +102,7 @@ works best with highly constrained, i.e. rigid structures like bridged ring syst
 </p>
 <p><b>Initial torsion:</b> Since using crystallographic data derived torsion angles introduces a certain bias
 and in order to mimic other conformer generator's construction principles, <span class="keyword">DataWarrior's</span>
-conformer generator may also forgo using experimental torsion data. Instead it may use six torsion angles per rotatable
+conformer generator may also forgo using experimental torsion data. Instead, it may use six torsion angles per rotatable
 bond with 60 degree steps. In this case all six torsion angles are considered equally likely. Of course, conformers constructed this
 way are often far off the local energy minimum and probably should be energy minimized afterwards.</p>
 
@@ -172,13 +172,13 @@ then the <span class="keyword">Detail Area</span> contains a dedicated 3D-struct
 moves over a row in any main view, this detail view is updated to display the row's 3D-structure.
 3D-structures can be rotated with the right mouse button, moved in x,y and z dimensions with the middle mouse
 button and the scroll wheel, respectively. A right mouse click opens a popup menu with options to show molecular
-surfaces, change dispay or color modes, or measure angles, torsions and distances among atoms and bonds.</p>
+surfaces, change display or color modes, or measure angles, torsions and distances among atoms and bonds.</p>
 
 <p>One useful application for the 3D-viewer would be the visual inspection of docking results, i.e.
 comparing the position of the natural ligand with the locations of docked small molecules. For this
 purpose the natural ligand needs to be superposed with any docked molecule in the same coordinate system.
 This can be achieved in <span class="keyword">DataWarrior</span> if a file contains the natural ligand and the
-docked molecules, by selecting the menu item <span class="menu">Superpose Reference Row</span>. In addition
+docked molecules, by selecting the menu item <span class="menu">Superpose Reference Row</span>. In addition,
 one needs to make the natural ligand the reference row by clicking it in any view such that it gets a red frame.
 Now, when moving the mouse from row to row, the 3D-detail-view is updated to show the row's docked molecule
 structure together with the natural ligand.</p>
@@ -200,7 +200,7 @@ select <span class="menu">Explore conformers of 'Structure'...</span> from the p
 the right mouse button on top of any structure or marker within any main view. Conformers may be shown with a small delay,
 because one set of conformers is generated immediately. You may use the mouse wheel for zooming and moving conformers
 within the screen plane. Conformers may be rotated using the right mouse button. A right mouse click on a conformer
-opens a context sensitive popup menu with options for rendering, molecular surface display and distance and angle measurement.
+opens a context-sensitive popup menu with options for rendering, molecular surface display and distance and angle measurement.
 </p>
 <p align="center"><img src="help/img/conf/explorer1.jpeg" width="680" height="433"></p>
 <p><center><i>Conformer Explorer with superposed conformers</i></center></p>
@@ -335,7 +335,7 @@ ligands into the cavity. This may take a few hours for thousands of molecules.</
 <p>Once the docking calculation has finished, the <span class="keyword">DataWarrior</span> table contains
 two new columns, a docking score and a docked structure. The latter column's structures may differ slightly
 from the original structure column, because basic acidic atoms may be (de-)protonated and small
-unconnected fragments are removed. Another invisible column containes the 3D-atom coordinates of the docked
+unconnected fragments are removed. Another invisible column contains the 3D-atom coordinates of the docked
 pose. This column also knows about the natural ligand and the protein cavity. A detail view display the
 cavity with the docked structure. Optionally, the cavity surface, major interactions, and the natural ligand
 can be shown. If you have a device that is capable of displaying stereoscopic content, you may open a daughter
@@ -352,13 +352,13 @@ compound may be a natural ligand, a competitor's drug, or an own lead compound. 
 structure is patented, if its activity is not sufficient, or if it has other unwanted properties
 related to parts of its structure, then modification of the structure may solve the issue.
 Usually, tiny modifications followed by property measurements are done to systematically explore
-the property space of the chemical neighbourhood of a lead compound. If an issue is related to
+the property space of the chemical neighborhood of a lead compound. If an issue is related to
 an entire class of compounds, then a larger structural change may be necessary. However, in order to
 keep the activity on the target, the molecule's 3D-geometry and pharmacophoric point positions should
 essentially be kept unchanged. The hope is that this can be achieved by replacing a central part of
 the molecule by another fragment that resembles the replaced one in terms of size and exit vector angles.
-A potential pitfall may occurr, if the newly
-constructed molecule is far from its energy minimum, e.g. because of substancially different torsion
+A potential pitfall may occur, if the newly
+constructed molecule is far from its energy minimum, e.g. because of substantially different torsion
 potentials of the constructed exit vector bonds. Luckily, these cases are easily detected when letting
 the built conformer equilibrate into the next energy minimum by applying a force field minimization.
 If a constructed and energy-minimized molecule still superposes well with the original molecule,
@@ -384,7 +384,7 @@ or rotatability values for these bonds, which basically describe how many substa
 angles are populated for similar bonds in a crystallographic database. After that it compiles all substructures
 of the original molecule that can be constructed by cutting any possible combination of rotatable bonds.
 For those substructures that qualify certain conditions regarding size and overall flexibility, open valences
-are connected to a pseudo atom with the same atom type and coordinates than the original neighbour atom at
+are connected to a pseudo atom with the same atom type and coordinates than the original neighbor atom at
 that position. That pseudo atom is marked to be an exit vector. Duplicate fragments with the same structure
 and similar 3D-geometry are not collected again. Finally, generated 3D-fragments look like this:</p>
 
@@ -420,18 +420,19 @@ towards improved biological activity, suitable pharmacokinetic properties, toler
 and patentability. Such changes include replacing a molecule's core structure by a new one or replacing two
 (or even three) independent substituents by one new fragment, which in this case closes a ring.
 Usually, the starting compound possesses some target activity, which would be unfortunate to be lost.
-Therefore, one aims for replacents that keep the molecule's 3D-geometry largely unchanged.</p>
+Therefore, one aims for replacements that keep the molecule's 3D-geometry largely unchanged.</p>
 
-<span class="keyword">DataWarrior</span> offers an easy way to search a pre-build library of fragments
+<span class="keyword">DataWarrior</span> offers an easy way to search a pre-built library of fragments
 for those, which satisfy customizable geometry criteria and therefore qualify as replacement for an unwanted
 part of a given 3-dimensional query molecule. First, you paste in the query molecule or load it from a file,
 then you select atoms to be replaced, select a fragment library to be searched, optionally change geometry constraints,
 and start the search. For every fragment that matches in terms of connecting atom types and geometry
 <span class="keyword">DataWarrior</span> constructs a new molecule where the selected part is replaced
-by the found fragment. Then, the new molecule is energy-minimizes the modified molecule and both, rigidly and
-flexibly, aligned to the original. All potential solutions are shown in a new window together with
-alignment visualizations and various scores that allow to rank the solutions in various regards.
-To open the configration dialog choose <span class="menu">3D-Fragments -> Replace Scaffolds...</span>
+by the fragment found. Then, the new molecule is energy-minimized, which basically equilibrates bond
+torsion angles into the next local energy minimum. This relaxed conformer is now aligned to the original
+query molecule in two ways, rigid and flexibly. All constructed molecules are shown in a new window together
+with multiple alignment visualizations and multiple scores that allow solution ranking in various regards.
+To open the configuration dialog choose <span class="menu">3D-Fragments -> Replace Scaffolds...</span>
 from the <span class="menu">Chemistry</span> menu.<p>
 
 <p align="center"><img src="help/img/conf/replaceDialog.png" width="453" height="593"></p>
@@ -453,13 +454,13 @@ In any case the new fragment comes in one piece and connects all open valences c
 cutting away all selected atoms.</p>
 
 <p><b>3D-fragment file:</b> Click the <span class="menu">Choose...</span> button to select a
-previously generated fragment-file, which must be a DataWarrior file created ealier by the method
+previously generated fragment-file, which must be a DataWarrior file created earlier by the method
 described in the <a href="help/conformers.html#FragmentLib">previous chapter</a>. In most cases
 a fragment file generated from diverse organic crystal structures is a good choice.
 However, if you want to close an oligo-peptide chain to create a macrocycle, you may prefer
 fragments generated from a peptide or protein structure source. <b>Note:</b> When the fragment
 file is searched for qualifying fragments, then only those fragments are considered where
-exit vector atom types (represented by cone colors) match the type of the new neighbour atoms
+exit vector atom types (represented by cone colors) match the type of the new neighbor atoms
 to which they get connected.</p>
 
 <p><b>Allow m less and n more non-H atom:</b> This defines the accepted size of introduced
@@ -480,7 +481,7 @@ vector diverges more from the corresponding query bond's direction than the allo
 then the fragment is sorted out.</p>
 
 <p><b>Minimum PheSA-flex score:</b> After replacing a scaffold by a new fragment, a flexible alignment
-of the constructed nolecule to the query molecule is performed to check, whether it can adapt the query
+of the constructed molecule to the query molecule is performed to check, whether it can adapt the query
 molecule's shape in a low energy conformation. The quality of the alignment is represented by the PheSA
 score, which represents both, the shape overlap and the overlap of pharmacophore features.
 Use this setting to eliminate solutions that cannot
@@ -496,7 +497,7 @@ like the following after some seconds or minutes.</p>
 
 <p>After closing the message you can access all constructed molecules in a new
 <span class="keyword">DataWarrior</span> window. Its table view contains a structure column with
-the used fragments themselfes and another one with these fragments built into the query molecule.
+the used fragments themselves and another one with these fragments built into the query molecule.
 Associated to these constructed molecules are three sets of 3D-atom coordinates. Therefore,
 the detail area on the right contains three 3D-molecule views, which need some explanation:</p>
 
@@ -545,7 +546,7 @@ and possibly considering the dissimilarity to the replaced fragment.</p>
 allows to open a second stereoscopic full screen view that dynamically mirrors the original view content
 in stereoscopic mode. Both view are synchronized regarding zoom and rotation state. Typically, one
 uses the mouse to navigate in the flat 3D-view while perceiving 3D-content in the stereoscopic view.
-Thus, if you have a screen or other device connected to your computer that supports steroscopic output,
+Thus, if you have a screen or other device connected to your computer that supports stereoscopic output,
 then you can view and analyze 3D-structures in real 3D. The only requirement is that the device supports
 one of these input modes: side-by-side (SBS), half-side-by-side (HSBS), over-under (OU), or half-over-under (HOU).
 To open a new stereoscopic full screen view from any flat 3D-molecule view do a right mouse click and

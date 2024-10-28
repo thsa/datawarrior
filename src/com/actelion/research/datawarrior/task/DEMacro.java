@@ -250,6 +250,14 @@ public class DEMacro implements CompoundTableConstants {
 		return mTaskList.get(index).getCode();
 		}
 
+	public String[] getTaskComment(int index) {
+		return mTaskList.get(index).getComment();
+		}
+
+	public void setTaskComment(int index, String[] comment) {
+		mTaskList.get(index).setComment(comment);
+		}
+
 	public Properties getTaskConfiguration(int index) {
 		return mTaskList.get(index).getConfiguration();
 		}

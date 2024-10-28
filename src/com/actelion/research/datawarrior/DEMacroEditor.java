@@ -52,20 +52,21 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
     private static final String COMMAND_DELETE = "delete";
 	private static final String COMMAND_DUPLICATE = "duplicate";
     private static final String COMMAND_EDIT = "edit";
+	private static final String COMMAND_COMMENT = "comment";
 	private static final String COMMAND_RUN = "run";
 
  //   private static ImageIcon sPopupIcon;
 
-    private DEFrame				mParentFrame;
-    private JTree				mTree;
-    private JComboBox			mComboBoxMacro;
-    private JList				mList;
-    private ArrayList<DEMacro>	mMacroList;
-    private boolean				mItemListenerDisabled,mMacroListChangedDisabled;
-    private StandardTaskFactory	mTaskFactory;
-    private DEMacro				mCurrentMacro;
-	private JPopupMenu			mMacroPopup;
-	private JCheckBoxMenuItem	mItemAutoStart;
+    private final DEFrame mParentFrame;
+    private final JTree mTree;
+    private final JComboBox<String> mComboBoxMacro;
+    private final JList<String> mList;
+    private ArrayList<DEMacro> mMacroList;
+    private boolean mItemListenerDisabled,mMacroListChangedDisabled;
+    private final StandardTaskFactory mTaskFactory;
+    private DEMacro mCurrentMacro;
+	private JPopupMenu mMacroPopup;
+	private JCheckBoxMenuItem mItemAutoStart;
 	private ViewSelectionHelper	mViewSelectionHelper;
 
 	@SuppressWarnings("unchecked")
@@ -132,7 +133,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		bp.add(mComboBoxMacro, "3,1,3,3");
 		bp.add(popupButton, "5,2");
 
-		mList = new JList(new DefaultListModel()) {
+		mList = new JList<>(new DefaultListModel<>()) {
 			private static final long serialVersionUID = 20131206L;
 
 			@Override
@@ -140,7 +141,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 				super.paintComponent(g);
 				if (getModel().getSize() == 0) {
 					Dimension size = getSize();
-					String msg = (mMacroList.size() == 0) ?
+					String msg = (mMacroList.isEmpty()) ?
 							"<create new macro to edit>" : "<drop tasks here>";
 					FontMetrics metrics = g.getFontMetrics();
 					g.setColor(Color.GRAY);
@@ -212,7 +213,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 
 		// If the drop target is constantly active, then drag&drop of the docking framework
 		// is not working over the macro-JList, because drag events are consumed.
-		// Therefore we enable the droptarget just for 5 seconds from starting the drag.
+		// Therefore, we enable the droptarget just for 5 seconds from starting the drag.
 		mList.getDropTarget().setActive(false);
 		mTree.addMouseListener(new MouseAdapter() {
 			@Override
@@ -388,7 +389,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 			}
 
 		mList.setDragEnabled(macro != null);
-		DefaultListModel model = (DefaultListModel)mList.getModel();
+		DefaultListModel<String> model = (DefaultListModel<String>)mList.getModel();
 		model.clear();
 		if (macro != null) {
 			for (int i=0; i<macro.getTaskCount(); i++) {
@@ -443,23 +444,28 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		        popup.addSeparator();
 				}
 
-			JMenuItem item2 = new JMenuItem("Duplicate Task");
+			JMenuItem item2 = new JMenuItem("Edit Task Comment...");
 			item2.addActionListener(this);
-			item2.setActionCommand(COMMAND_DUPLICATE+taskIndex);
+			item2.setActionCommand(COMMAND_COMMENT+taskIndex);
 			popup.add(item2);
+
+			JMenuItem item3 = new JMenuItem("Duplicate Task");
+			item3.addActionListener(this);
+			item3.setActionCommand(COMMAND_DUPLICATE+taskIndex);
+			popup.add(item3);
 
 			popup.addSeparator();
 
-			JMenuItem item3 = new JMenuItem("Delete Task");
-	        item3.addActionListener(this);
-	        item3.setActionCommand(COMMAND_DELETE+taskIndex);
-	        popup.add(item3);
+			JMenuItem item4 = new JMenuItem("Delete Task");
+	        item4.addActionListener(this);
+	        item4.setActionCommand(COMMAND_DELETE+taskIndex);
+	        popup.add(item4);
 
 	        if (mList.getSelectedValuesList().size() > 1) {
-				JMenuItem item4 = new JMenuItem("Delete Selected Tasks");
-		        item4.addActionListener(this);
-		        item4.setActionCommand(COMMAND_DELETE_SELECTED);
-		        popup.add(item4);
+				JMenuItem item5 = new JMenuItem("Delete Selected Tasks");
+		        item5.addActionListener(this);
+		        item5.setActionCommand(COMMAND_DELETE_SELECTED);
+		        popup.add(item5);
 	        	}
 
 			popup.addSeparator();
@@ -482,7 +488,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		}
 
 	private void enableItems() {
-		boolean enabled = (mMacroList.size() != 0);
+		boolean enabled = (!mMacroList.isEmpty());
 		mComboBoxMacro.setEnabled(enabled);
 		mList.repaint();
 		}
@@ -535,6 +541,10 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 			editTask(Integer.parseInt(e.getActionCommand().substring(COMMAND_EDIT.length())));
 			return;
 			}
+		if (e.getActionCommand().startsWith(COMMAND_COMMENT)) {
+			editTaskComment(Integer.parseInt(e.getActionCommand().substring(COMMAND_COMMENT.length())));
+			return;
+			}
 		if (e.getActionCommand().startsWith(COMMAND_DUPLICATE)) {
 			duplicateTask(Integer.parseInt(e.getActionCommand().substring(COMMAND_DUPLICATE.length())));
 			return;
@@ -560,7 +570,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		String suggestedName = (macroToBeCloned == null) ? "Untitled Macro" : "Copy of " + macroToBeCloned.getName();
 		String message = (macroToBeCloned == null) ? "Name of new empty macro" : "Name of duplicated macro";
 		String name = JOptionPane.showInputDialog(frame, message, suggestedName);
-		if (name == null || name.length() == 0)
+		if (name == null || name.isEmpty())
 			return null;
 
 		return addNewMacro(frame, name, macroToBeCloned);
@@ -580,7 +590,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		DEMacro macro = new DEMacro(name, macroList, macroToBeCloned);
 
 		if (macroList == null)
-			macroList = new ArrayList<DEMacro>();
+			macroList = new ArrayList<>();
 
 		int index = 0;
 		while (index<macroList.size() && macroList.get(index).getName().compareTo(macro.getName()) < 0)
@@ -655,6 +665,25 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 					macroTask.setConfiguration(newConfiguration);
 					mParentFrame.setDirty(true);
 					}
+				}
+			}
+		}
+
+	private void editTaskComment(int taskIndex) {
+		if (taskIndex != -1) {
+			DEMacro macro = mMacroList.get(mComboBoxMacro.getSelectedIndex());
+			String[] lines = macro.getTaskComment(taskIndex);
+			StringBuilder comment = new StringBuilder();
+			if (lines != null)
+				for (String line : lines)
+					comment.append(line).append('\n');
+
+			DEMultiLineTextDialog dialog = new DEMultiLineTextDialog(mParentFrame, "Edit Task Comment", comment.toString());
+			String newComment = dialog.getNewValue();
+			if (newComment != null) {
+				newComment = newComment.trim();
+				lines = newComment.isEmpty() ? null : newComment.split("\\n");
+				macro.setTaskComment(taskIndex, lines);
 				}
 			}
 		}

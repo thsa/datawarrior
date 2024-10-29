@@ -267,7 +267,7 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 	 */
 	public void reportException(Exception e) {}
 
-	private Object getResponseWithURL(String serverURL, String request, boolean plainResponse, String... keyValuePair) throws IOException {
+	public Object getResponseWithURL(String serverURL, String request, boolean plainResponse, String... keyValuePair) throws IOException {
 		if (mWithSessions && mSessionID == null) {
 			getNewSession();
 			if (mSessionID == null)

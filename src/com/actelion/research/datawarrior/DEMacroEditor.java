@@ -55,8 +55,6 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 	private static final String COMMAND_COMMENT = "comment";
 	private static final String COMMAND_RUN = "run";
 
- //   private static ImageIcon sPopupIcon;
-
     private final DEFrame mParentFrame;
     private final JTree mTree;
     private final JComboBox<String> mComboBoxMacro;
@@ -100,7 +98,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 			};
 		setLeftComponent(treePane);
 
-		mComboBoxMacro = new JComboBox();
+		mComboBoxMacro = new JComboBox<>();
 		mMacroList = (ArrayList<DEMacro>)parentFrame.getTableModel().getExtensionData(CompoundTableConstants.cExtensionNameMacroList);
 		if (mMacroList == null) {
 			mMacroList = new ArrayList<DEMacro>();
@@ -416,38 +414,35 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 		}
 
 	private void createTaskConfigurationLater(final DEMacro.Task macroTask, final int taskIndex) {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				AbstractTask task = mTaskFactory.createTaskFromCode(mParentFrame, macroTask.getCode());
-				if (!task.isTaskWithoutConfiguration()) {
-					Properties configuation = task.showDialog(null, false);
-					if (task.isStatusOK())
-						macroTask.setConfiguration(configuation);
-					else
-						deleteTask(taskIndex);
-					}
+		SwingUtilities.invokeLater(() -> {
+			AbstractTask task = mTaskFactory.createTaskFromCode(mParentFrame, macroTask.getCode());
+			if (!task.isTaskWithoutConfiguration()) {
+				Properties configuation = task.showDialog(null, false);
+				if (task.isStatusOK())
+					macroTask.setConfiguration(configuation);
+				else
+					deleteTask(taskIndex);
 				}
-			} );
+			});
 		}
 
 	private void showPopupMenu(int x, int y, int taskIndex) {
 		if (taskIndex != -1) {
 			JPopupMenu popup = new JPopupMenu();
 
-			String taskName = (String)mList.getModel().getElementAt(taskIndex);
+			String taskName = mList.getModel().getElementAt(taskIndex);
 			if (! mTaskFactory.createTaskFromName(mParentFrame, taskName).isTaskWithoutConfiguration()) {
-				JMenuItem item1 = new JMenuItem("Edit Task...");
+				JMenuItem item1 = new JMenuItem("Edit Task Configuration...");
 		        item1.addActionListener(this);
 		        item1.setActionCommand(COMMAND_EDIT+taskIndex);
 		        popup.add(item1);
-		        popup.addSeparator();
 				}
 
 			JMenuItem item2 = new JMenuItem("Edit Task Comment...");
 			item2.addActionListener(this);
 			item2.setActionCommand(COMMAND_COMMENT+taskIndex);
 			popup.add(item2);
+			popup.addSeparator();
 
 			JMenuItem item3 = new JMenuItem("Duplicate Task");
 			item3.addActionListener(this);
@@ -480,8 +475,6 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 				runItem.setActionCommand(COMMAND_RUN+i+'_'+taskIndex);
 				runMenu.add(runItem);
 				}
-
-			mParentFrame.getApplication().getFrameList();
 
 			popup.show(mList, x, y);
 			}

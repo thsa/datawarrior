@@ -317,6 +317,7 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 						}
 	
 					cf.execute(mRunningMacro.getTaskConfiguration(currentTask), this);
+
 					if (cf.getNewFrontFrame() != null) {
 						mFrontFrame = cf.getNewFrontFrame();
 						try {
@@ -324,6 +325,9 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 							}
 	                    catch (Exception e) {}
 						}
+
+					if (cf.isStopMacro())
+						break;
 					}
 
 				int gotoIndex = mRunningMacro.getLoopStart(currentTask);

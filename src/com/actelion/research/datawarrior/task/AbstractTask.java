@@ -45,7 +45,7 @@ public abstract class AbstractTask implements ProgressController {
 
 	private JDialog				mDialog;
 	private TaskUIDelegate		mUIDelegate;
-	private boolean				mStatusOK,mIsLive;
+	private boolean				mStatusOK,mIsLive, mStopMacro;
 	private final Frame		    mParentFrame;
 	private volatile ProgressController	mProgressController;
 	private volatile Properties	mTaskConfiguration,mPredefinedConfiguration;
@@ -311,13 +311,28 @@ public abstract class AbstractTask implements ProgressController {
 	public abstract TaskUIDelegate createUIDelegate();
 
 	/**
+	 * The task may call this method during execution, typically in case of failure.
+	 * If this task is executed as part of a macro, and if this task calls this method,
+	 * then the macro will be stopped after this task.
+	 * Usually, then the task is configured to stop macro execution on failure.
+	 * DETaskRunInteractive is using this feature.
+	 */
+	public void setStopMacro() {
+		mStopMacro = true;
+		}
+
+	public boolean isStopMacro() {
+		return mStopMacro;
+		}
+
+	/**
 	 * When overriding showDialog() to suppress actually showing a dialog,
 	 * then this method can be used to simulate that the OK button has been pressed
 	 * and that the configuration is valid.
 	 */
 	public void setStatusOK() {
 		mStatusOK = true;
-		}
+	}
 
 	/**
 	 * Checks whether the task if fully configured to run on an external dataset.

@@ -17,6 +17,7 @@ public class DETaskRunTaskInteractive extends ConfigurableTask {
 	public static final String TASK_NAME = "Run Task Interactive";
 
 	private static final String PROPERTY_TASK_CODE = "taskCode";
+	private static final String PROPERTY_EXIT_ON_CANCEL = "exitOnCancel";
 
 	private JComboBox<String> mComboBoxGroup,mComboBoxTask;
 
@@ -106,17 +107,22 @@ public class DETaskRunTaskInteractive extends ConfigurableTask {
 	@Override
 	public void runTask(Properties configuration) {
 		String taskCode = configuration.getProperty(PROPERTY_TASK_CODE);
+		boolean exitOnCancel = "true".equals(configuration.getProperty(PROPERTY_EXIT_ON_CANCEL));
+
 		DataWarrior application = DataWarrior.getApplication();
 
 		AbstractTask task = application.getTaskFactory().createTaskFromCode((DEFrame)getParentFrame(), taskCode);
 
 		final Properties[] configurationHolder = new Properties[1];
 		try {
-			SwingUtilities.invokeAndWait(() -> configurationHolder[0] = task.showDialog(getRecentConfiguration(), true));
+			SwingUtilities.invokeAndWait(() -> configurationHolder[0] = task.showDialog(configuration, true));
 		}
 		catch (Exception ie) {}
 
-		task.execute(configurationHolder[0], getProgressController());
+		if (task.isStatusOK())
+			task.execute(configurationHolder[0], getProgressController());
+		else if (exitOnCancel)
+			setStopMacro();
 		}
 
 	@Override

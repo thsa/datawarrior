@@ -163,9 +163,8 @@ public class JFXMolViewerPanel extends JFXPanel {
 			String[] value = config.split(";");
 
 			int index = 0;
-			mScene.getCamera().setTranslateX(Double.parseDouble(value[index++]));
-			mScene.getCamera().setTranslateY(Double.parseDouble(value[index++]));
-			mScene.getCamera().setTranslateZ(Double.parseDouble(value[index++]));
+			mScene.setCameraXY(Double.parseDouble(value[index++]), Double.parseDouble(value[index++]));
+			mScene.setCameraZ(Double.parseDouble(value[index++]));
 
 			mScene.getWorld().setTransform(Transform.affine(
 					Double.parseDouble(value[index++]),

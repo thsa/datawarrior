@@ -20,6 +20,7 @@ public class DETaskRunTaskInteractive extends ConfigurableTask {
 	private static final String PROPERTY_EXIT_ON_CANCEL = "exitOnCancel";
 
 	private JComboBox<String> mComboBoxGroup,mComboBoxTask;
+	private JCheckBox mCheckBoxExitOnCancel;
 
 	public DETaskRunTaskInteractive(DEFrame parent) {
 		super(parent, true);
@@ -39,7 +40,7 @@ public class DETaskRunTaskInteractive extends ConfigurableTask {
 	public JPanel createDialogContent() {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap},
-							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
@@ -51,6 +52,9 @@ public class DETaskRunTaskInteractive extends ConfigurableTask {
 		content.add(new JLabel("Task name:"), "1,3");
 		mComboBoxTask = new JComboBox<>();
 		content.add(mComboBoxTask, "3,3");
+
+		mCheckBoxExitOnCancel = new JCheckBox("Stop macro when configuration dialog is cancelled");
+		content.add(mCheckBoxExitOnCancel, "1,5,3,5");
 
 		TreeSet<TaskSpecification> dictionary = DataWarrior.getApplication().getTaskFactory().getTaskDictionary((DEFrame)getParentFrame());
 		String group = "";
@@ -79,6 +83,7 @@ public class DETaskRunTaskInteractive extends ConfigurableTask {
 	public Properties getDialogConfiguration() {
 		Properties configuration = new Properties();
 		configuration.setProperty(PROPERTY_TASK_CODE, StandardTaskFactory.constructTaskCodeFromName((String)mComboBoxTask.getSelectedItem()));
+		configuration.setProperty(PROPERTY_EXIT_ON_CANCEL, mCheckBoxExitOnCancel.isSelected() ? "true" : "false");
 		return configuration;
 	}
 
@@ -91,12 +96,14 @@ public class DETaskRunTaskInteractive extends ConfigurableTask {
 				mComboBoxGroup.setSelectedItem(task.getCategoryName());
 				mComboBoxTask.setSelectedItem(task.getTaskName());
 			}
+		mCheckBoxExitOnCancel.setSelected("true".equals(configuration.getProperty(PROPERTY_EXIT_ON_CANCEL)));
 	}
 
 	@Override
 	public void setDialogConfigurationToDefault() {
 		mComboBoxGroup.setSelectedIndex(0);
 		mComboBoxTask.setSelectedIndex(0);
+		mCheckBoxExitOnCancel.setSelected(false);
 	}
 
 	@Override
@@ -130,4 +137,3 @@ public class DETaskRunTaskInteractive extends ConfigurableTask {
 		return null;
 	}
 }
-

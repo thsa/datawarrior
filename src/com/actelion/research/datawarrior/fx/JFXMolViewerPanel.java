@@ -5,6 +5,7 @@ import com.actelion.research.chem.Molecule;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.gui.hidpi.HiDPIIcon;
+import com.actelion.research.util.DoubleFormat;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.geometry.Point3D;
@@ -14,6 +15,7 @@ import javafx.scene.Scene;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
+import javafx.scene.transform.Transform;
 import org.openmolecules.fx.surface.SurfaceMesh;
 import org.openmolecules.fx.viewer3d.*;
 import org.openmolecules.mesh.MoleculeSurfaceAlgorithm;
@@ -118,6 +120,71 @@ public class JFXMolViewerPanel extends JFXPanel {
 		if (mListeners != null)
 			for (StructureChangeListener l : mListeners)
 				l.structureChanged();
+	}
+
+	/**
+	 * Generates and returns a string encoding of the geometry as camera position and world rotation.
+	 * @return valid encoding of geometry
+	 */
+	public String getGeometry() {
+		StringBuilder config = new StringBuilder();
+
+		config.append(DoubleFormat.toString(mScene.getCamera().getTranslateX())).append(";");
+		config.append(DoubleFormat.toString(mScene.getCamera().getTranslateY())).append(";");
+		config.append(DoubleFormat.toString(mScene.getCamera().getTranslateZ())).append(";");
+
+		Transform t = mScene.getWorld().getRotation();
+		config.append(DoubleFormat.toString(t.getMxx())).append(";");
+		config.append(DoubleFormat.toString(t.getMxy())).append(";");
+		config.append(DoubleFormat.toString(t.getMxz())).append(";");
+		config.append(DoubleFormat.toString(t.getTx())).append(";");
+		config.append(DoubleFormat.toString(t.getMyx())).append(";");
+		config.append(DoubleFormat.toString(t.getMyy())).append(";");
+		config.append(DoubleFormat.toString(t.getMyz())).append(";");
+		config.append(DoubleFormat.toString(t.getTy())).append(";");
+		config.append(DoubleFormat.toString(t.getMzx())).append(";");
+		config.append(DoubleFormat.toString(t.getMzy())).append(";");
+		config.append(DoubleFormat.toString(t.getMzz())).append(";");
+		config.append(DoubleFormat.toString(t.getTz())).append(";");
+
+		config.append(DoubleFormat.toString(mScene.getWorld().getTranslateX())).append(";");
+		config.append(DoubleFormat.toString(mScene.getWorld().getTranslateY())).append(";");
+		config.append(DoubleFormat.toString(mScene.getWorld().getTranslateZ()));
+
+		return config.toString();
+	}
+
+	/**
+	 * Takes the string encoding geometry as camera position and world rotation.
+	 * @param config valid encoding of custom configuration
+	 */
+	public void setGeometry(String config) {
+		Platform.runLater(() -> {
+			String[] value = config.split(";");
+
+			int index = 0;
+			mScene.getCamera().setTranslateX(Double.parseDouble(value[index++]));
+			mScene.getCamera().setTranslateY(Double.parseDouble(value[index++]));
+			mScene.getCamera().setTranslateZ(Double.parseDouble(value[index++]));
+
+			mScene.getWorld().setTransform(Transform.affine(
+					Double.parseDouble(value[index++]),
+					Double.parseDouble(value[index++]),
+					Double.parseDouble(value[index++]),
+					Double.parseDouble(value[index++]),
+					Double.parseDouble(value[index++]),
+					Double.parseDouble(value[index++]),
+					Double.parseDouble(value[index++]),
+					Double.parseDouble(value[index++]),
+					Double.parseDouble(value[index++]),
+					Double.parseDouble(value[index++]),
+					Double.parseDouble(value[index++]),
+					Double.parseDouble(value[index++])));
+
+			mScene.getWorld().setTranslateX(Double.parseDouble(value[index++]));
+			mScene.getWorld().setTranslateY(Double.parseDouble(value[index++]));
+			mScene.getWorld().setTranslateZ(Double.parseDouble(value[index++]));
+		} );
 	}
 
 	public String getOverlayMolColor() {
@@ -605,7 +672,8 @@ public class JFXMolViewerPanel extends JFXPanel {
 				mRefMol = addMoleculeNow(refConformer, mRefMolColor, null, isTorsionStrainVisible);
 			}
 
-			if ((conformers != null || refConformer != null || mOverlayMol == null || mCavityMol == null) && updateID == mCurrentUpdateID)
+			// Don't optimize view if we have a cavity or overlay molecules. User may have optimized the view to look into the cavity
+			if ((conformers != null || refConformer != null) && mOverlayMol == null && mCavityMol == null && updateID == mCurrentUpdateID)
 				mScene.optimizeView();
 		});
 	}

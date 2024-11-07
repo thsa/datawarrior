@@ -79,6 +79,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMolViewerCavityColor = "fxmvCavityColor";
 	private static final String cMolViewerRefMolColor = "fxmvRefMolColor";
 	private static final String cMolViewerSingleConformerColor = "fxmvSingleConformerColor";
+	private static final String cMolViewerGeometry = "fxmvGeometry";
 	private static final String cTableRowHeight = "rowHeight";
 	private static final String cTableHeaderLines = "headerLines";
 	private static final String cTableColumnWidth = "columnWidth";
@@ -436,6 +437,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String confColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerColor);
 				if (confColor != null)
 					panel3D.setSingleConformerColor(confColor);
+				String geometry = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry);
+				if (geometry != null)
+					panel3D.setGeometry(geometry);
 				}
 			}
 		}
@@ -1914,6 +1918,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String confColor = panel3D.getSingleConformerColor();
 				if (confColor != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerColor, confColor);
+				String geometry = panel3D.getGeometry();
+				if (geometry != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry, geometry);
 				}
 			}
 

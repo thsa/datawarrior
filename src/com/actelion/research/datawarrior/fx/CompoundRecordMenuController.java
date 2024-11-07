@@ -168,6 +168,10 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 		mConformerPanel.getV3DScene().setShowInteractions(showInteractions);
 	}
 
+	/**
+	 * @param isSuperpose whether the active row's conformer shall be shown in addition
+	 * @param isAlign whether the shown conformer(s) shall be rigidly aligned to the active row's conformer (if shown)
+	 */
 	public void update3DView(boolean isSuperpose, boolean isAlign) {
 		new Thread(() -> {
 			StereoMolecule[] rowMol = null;

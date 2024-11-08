@@ -28,6 +28,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 	private final Frame mParentFrame;
 	private final JFXMolViewerPanel mConformerPanel;
 	private volatile String mPDBCode;
+	private javafx.scene.paint.Color mMoleculeColor;
 
 	/**
 	 * This controller adds menu items to change and add  conformers to the associated 3D-view.
@@ -35,6 +36,10 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 	public EditableSmallMolMenuController(Frame owner, JFXMolViewerPanel conformerPanel) {
 		mParentFrame = owner;
 		mConformerPanel = conformerPanel;
+		}
+
+	public void setMoleculeColor(javafx.scene.paint.Color c) {
+		mMoleculeColor = c;
 		}
 
 	@Override
@@ -87,7 +92,10 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 					if (mol != null && mol.getAllAtoms() != 0) {
 						mol.center();
 						V3DScene scene = mConformerPanel.getV3DScene();
-						scene.addMolecule(new V3DMolecule(mol, true, scene.isSplitAllBonds()), false);
+						V3DMolecule mol3D = new V3DMolecule(mol, true, scene.isSplitAllBonds());
+						if (mMoleculeColor != null)
+							mol3D.setColor(mMoleculeColor);
+						scene.addMolecule(mol3D, false);
 						scene.optimizeView();
 						}
 					});
@@ -201,7 +209,11 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 								V3DScene scene = mConformerPanel.getV3DScene();
 
 								new AtomAssembler(ligand).addImplicitHydrogens();
-								scene.addMolecule(new V3DMolecule(ligand, MoleculeArchitect.CONSTRUCTION_MODE_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true, false), false);
+
+								V3DMolecule mol3D = new V3DMolecule(ligand, MoleculeArchitect.CONSTRUCTION_MODE_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true, false);
+								if (mMoleculeColor != null)
+									mol3D.setColor(mMoleculeColor);
+								scene.addMolecule(mol3D, false);
 
 								scene.optimizeView();
 							});

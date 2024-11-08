@@ -41,6 +41,7 @@ import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
+import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
 import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
@@ -135,10 +136,13 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
 		settings.add(V3DScene.ViewerSettings.EDITING);
 		settings.add(V3DScene.ViewerSettings.ATOM_LEVEL_SELECTION);
+
 		mConformerPanel = new JFXMolViewerPanel(false, settings);
 		mConformerPanel.adaptToLookAndFeelChanges();
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(400), HiDPIHelper.scale(200)));
-		mConformerPanel.setPopupMenuController(new EditableSmallMolMenuController(getParentFrame(), mConformerPanel));
+		EditableSmallMolMenuController controller = new EditableSmallMolMenuController(getParentFrame(), mConformerPanel);
+		controller.setMoleculeColor(javafx.scene.paint.Color.gray(0.7));
+		mConformerPanel.setPopupMenuController(controller);
 
 		content.add(mConformerPanel, "1,1,3,1");
 		content.add(new JLabel("First, define a bio-active 3D-structure.", JLabel.CENTER), "1,3,3,3");

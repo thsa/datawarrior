@@ -503,8 +503,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 			if (disposeFrameSafely(getActiveFrame(), isInteractive) == 0)
 				return;
 
-		if (!isMacintosh())
-			exit();
+		exit();
 		}
 
 	/**

@@ -2664,8 +2664,9 @@ public class CompoundTableModel extends AbstractTableModel
 
 	/**
 	 * Checks whether the column is considered to contain a category data type,
-	 * which is true for numerical or data columns with less than cMaxDateOrDoubleCategoryCount
-	 * distinct entries or for text columns with less than cMaxTextCategoryCount entries.
+	 * which is true for numerical or data columns with more than one and less than
+	 * cMaxDateOrDoubleCategoryCount distinct entries or for text columns with more
+	 * than one and less than cMaxTextCategoryCount entries.
 	 * Columns of type RangeCategory also belong to type Category.
 	 * If column < 0, then false is returned.
 	 * @param column
@@ -2850,7 +2851,7 @@ public class CompoundTableModel extends AbstractTableModel
 
 	/**
 	 * Checks whether the column is numerical and has some variation in its values
-	 * or whether it contains more than one categories.
+	 * or whether it contains more than one category.
 	 * @param column
 	 * @return true if column getDoubleAt(column) delivers useful and varying values
 	 */

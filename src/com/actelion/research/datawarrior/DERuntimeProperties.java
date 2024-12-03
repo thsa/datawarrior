@@ -37,6 +37,7 @@ import com.actelion.research.table.view.chart.ChartType;
 import com.actelion.research.table.view.config.CardsViewConfiguration;
 import com.actelion.research.table.view.config.ViewConfiguration;
 import com.actelion.research.util.DoubleFormat;
+import org.openmolecules.fx.viewer3d.nodes.Ribbons;
 
 import javax.swing.*;
 import java.awt.*;
@@ -79,6 +80,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMolViewerCavityColor = "fxmvCavityColor";
 	private static final String cMolViewerRefMolColor = "fxmvRefMolColor";
 	private static final String cMolViewerSingleConformerColor = "fxmvSingleConformerColor";
+	private static final String cMolViewerCavityRibbonMode = "fxmvCavityRibbonMode";
 	private static final String cMolViewerGeometry = "fxmvGeometry";
 	private static final String cTableRowHeight = "rowHeight";
 	private static final String cTableHeaderLines = "headerLines";
@@ -437,6 +439,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String confColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerColor);
 				if (confColor != null)
 					panel3D.setSingleConformerColor(confColor);
+				String cavityRibbonMode = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityRibbonMode);
+				if (cavityRibbonMode != null)
+					panel3D.setCavityRibbonMode(decodeProperty(cavityRibbonMode, Ribbons.RIBBON_MODE_CODE));
 				String geometry = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry);
 				if (geometry != null)
 					panel3D.setGeometry(geometry);
@@ -1918,6 +1923,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String confColor = panel3D.getSingleConformerColor();
 				if (confColor != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerColor, confColor);
+				int cavityRibbonMode = panel3D.getCavityRibbonMode();
+				if (cavityRibbonMode != Ribbons.MODE_NONE)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityRibbonMode, Ribbons.RIBBON_MODE_CODE[cavityRibbonMode]);
 				String geometry = panel3D.getGeometry();
 				if (geometry != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry, geometry);

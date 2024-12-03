@@ -18,6 +18,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.transform.Transform;
 import org.openmolecules.fx.surface.SurfaceMesh;
 import org.openmolecules.fx.viewer3d.*;
+import org.openmolecules.fx.viewer3d.nodes.Ribbons;
 import org.openmolecules.mesh.MoleculeSurfaceAlgorithm;
 import org.openmolecules.render.MoleculeArchitect;
 
@@ -51,10 +52,10 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private volatile V3DMolecule mCavityMol,mOverlayMol,mRefMol,mSingleConformer;
 	private V3DPopupMenuController mController;
 	private FutureTask<Object> mConstructionTask;
-	private volatile int mCurrentUpdateID;
+	private volatile int mCurrentUpdateID,mCavityRibbonMode;
 	private boolean mAdaptToLookAndFeelChanges;
 	private final boolean mIsEditable;
-	private Color mCavityMolColor,mRefMolColor,mOverlayMolColor,mSingleConformerColor;
+	private volatile Color mCavityMolColor,mRefMolColor,mOverlayMolColor,mSingleConformerColor;
 	private java.awt.Color mSceneBackground, mLookAndFeelSpotColor,
 			mMenuItemBackground,mMenuItemForeground,/*mMenuItemSelectionBackground,*/mMenuItemSelectionForeground;
 	private Vector<StructureChangeListener> mListeners;
@@ -196,6 +197,10 @@ public class JFXMolViewerPanel extends JFXPanel {
 		return color == null ? "none" : toRGBString(color);
 	}
 
+	public int getCavityRibbonMode() {
+		return mCavityMol != null ? mCavityMol.getRibbonMode() : mCavityRibbonMode;
+	}
+
 	public String getRefMolColor() {
 		Color color = (mRefMol != null) ? mRefMol.getColor() : mRefMolColor;
 		return color == null ? "none" : toRGBString(color);
@@ -208,22 +213,32 @@ public class JFXMolViewerPanel extends JFXPanel {
 
 	public void setOverlayMolColor(String color) {
 		mOverlayMolColor = color.equals("none") ? null : Color.valueOf(color);
-		Platform.runLater(() -> { if (mOverlayMol != null) mOverlayMol.setColor(mOverlayMolColor); } );
+		if (mOverlayMol != null)
+			Platform.runLater(() -> mOverlayMol.setColor(mOverlayMolColor) );
 	}
 
 	public void setCavityMolColor(String color) {
 		mCavityMolColor = color.equals("none") ? null : Color.valueOf(color);
-		Platform.runLater(() -> { if (mCavityMol != null) mCavityMol.setColor(mCavityMolColor); } );
+		if (mCavityMol != null)
+			Platform.runLater(() -> mCavityMol.setColor(mCavityMolColor) );
+	}
+
+	public void setCavityRibbonMode(int mode) {
+		mCavityRibbonMode = mode;
+		if (mCavityMol != null)
+			Platform.runLater(() -> mCavityMol.setRibbonMode(mCavityRibbonMode) );
 	}
 
 	public void setRefMolColor(String color) {
 		mRefMolColor = color.equals("none") ? null : Color.valueOf(color);
-		Platform.runLater(() -> { if (mRefMol != null) mRefMol.setColor(mRefMolColor); } );
+		if (mRefMol != null)
+			Platform.runLater(() -> mRefMol.setColor(mRefMolColor) );
 	}
 
 	public void setSingleConformerColor(String color) {
 		mSingleConformerColor = color.equals("none") ? null : Color.valueOf(color);
-		Platform.runLater(() -> { if (mSingleConformer != null) mSingleConformer.setColor(mSingleConformerColor); } );
+		if (mSingleConformer != null)
+			Platform.runLater(() -> mSingleConformer.setColor(mSingleConformerColor) );
 	}
 
 	private String toRGBString(Color color) {

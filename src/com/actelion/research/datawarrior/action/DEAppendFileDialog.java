@@ -80,7 +80,9 @@ public class DEAppendFileDialog extends JDialog
 		ArrayList<String> categoryColumnList = new ArrayList<String>();
 		categoryColumnList.add("<new column>");
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
-			if (mTableModel.isColumnTypeCategory(column)) {
+			if (mTableModel.getColumnSpecialType(column) == null
+			 && (mTableModel.isColumnTypeCategory(column)
+			  || !mTableModel.hasNumericalVariance(column))) {
 				String columnName = mTableModel.getColumnTitle(column);
 				if (columnName.equals(CompoundTableLoader.DATASET_COLUMN_TITLE))
 					selectedIndex = categoryColumnList.size();

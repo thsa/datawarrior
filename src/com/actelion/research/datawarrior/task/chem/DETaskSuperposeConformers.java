@@ -23,8 +23,8 @@ import java.util.EnumSet;
 import java.util.Properties;
 
 public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
-	public static final String TASK_NAME_FLEX = "Superpose Rigid Conformers";
-	public static final String TASK_NAME_RIGID = "Superpose Conformer Flexibly";
+	public static final String TASK_NAME_RIGID = "Superpose Rigid Conformers";
+	public static final String TASK_NAME_FLEX = "Superpose Conformer Flexibly";
 
 	private static final String PROPERTY_CONFORMERS = "conformers";
 	private static final int COLUMNS_PER_CONFORMER = 3;

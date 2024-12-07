@@ -96,6 +96,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 	private static final String PROPERTY_NEWS_IMAGE = "news_image_";
 	private static final String PROPERTY_NEWS_URL = "news_url_";
 	private static final String PROPERTY_NEWS_TYPE = "news_type_";
+	private static final String PROPERTY_NEWS_TILLDATE = "news_tilldate_";
 	private static final String PROPERTY_NEWS_OS = "news_os_";
 	private static final String PROPERTY_NEWS_MIN_VERSION = "news_minversion_";
 	private static final String PROPERTY_NEWS_MAX_VERSION = "news_maxversion_";
@@ -234,7 +235,8 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 				String image = sPostInstallInfo.getProperty(PROPERTY_NEWS_IMAGE.concat(newsID));
 				String url = sPostInstallInfo.getProperty(PROPERTY_NEWS_URL.concat(newsID));
 				String type = sPostInstallInfo.getProperty(PROPERTY_NEWS_TYPE.concat(newsID));
-				newsMap.put(newsID, new DENews(title, text, image, url, type));
+				String tillDate = sPostInstallInfo.getProperty(PROPERTY_NEWS_TILLDATE.concat(newsID));
+				newsMap.put(newsID, new DENews(title, text, image, url, type, tillDate));
 				}
 			}
 

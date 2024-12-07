@@ -13,20 +13,30 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 public class DENews {
 	private final static String TYPE_PERMANENT = "permanent";
 
 	private final String mTitle, mText, mImageURL, mMoreURL, mType;
+	private long mTillMillis;
 	private BufferedImage mImage;
 	private boolean mImageFailed;
 
-	public DENews(String title, String text, String imageURL, String moreURL, String type) {
+	public DENews(String title, String text, String imageURL, String moreURL, String type, String tillDate) {
 		mTitle = title;
 		mText = text;
 		mImageURL = (imageURL == null) ? null : imageURL.startsWith("http") ? imageURL : "https://".concat(imageURL);
 		mMoreURL = (moreURL == null) ? null : moreURL.startsWith("http") ? moreURL : "https://".concat(moreURL);
 		mType = type;
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+			mTillMillis = sdf.parse(tillDate).getTime();
+		}
+		catch (ParseException pe) {
+			mTillMillis = Long.MAX_VALUE;
+		}
 		if (isPermanent())  // if we need the image anyway, we retrieve it now
 			mImage = getImage();
 	}
@@ -64,23 +74,25 @@ public class DENews {
 	}
 
 	public void show() {
-		if (mText != null) {
-			if (SwingUtilities.isEventDispatchThread())
-				showInEDT();
-			else
-				try { SwingUtilities.invokeAndWait(() -> showInEDT() ); } catch (Exception e) {}
-		}
-		else if (mImageURL != null) {
-			if (getImage() != null) {
+		if (System.currentTimeMillis() < mTillMillis) {
+			if (mText != null) {
 				if (SwingUtilities.isEventDispatchThread())
 					showInEDT();
 				else
 					try { SwingUtilities.invokeAndWait(() -> showInEDT() ); } catch (Exception e) {}
 			}
-		}
+			else if (mImageURL != null) {
+				if (getImage() != null) {
+					if (SwingUtilities.isEventDispatchThread())
+						showInEDT();
+					else
+						try { SwingUtilities.invokeAndWait(() -> showInEDT() ); } catch (Exception e) {}
+				}
+			}
 
-		if (mText == null && mImage == null && mMoreURL != null) {
-			BrowserControl.displayURL(mMoreURL);
+			if (mText == null && mImage == null && mMoreURL != null) {
+				BrowserControl.displayURL(mMoreURL);
+			}
 		}
 	}
 

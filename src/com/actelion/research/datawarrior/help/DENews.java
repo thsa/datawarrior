@@ -30,12 +30,13 @@ public class DENews {
 		mImageURL = (imageURL == null) ? null : imageURL.startsWith("http") ? imageURL : "https://".concat(imageURL);
 		mMoreURL = (moreURL == null) ? null : moreURL.startsWith("http") ? moreURL : "https://".concat(moreURL);
 		mType = type;
-		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-			mTillMillis = sdf.parse(tillDate).getTime();
-		}
-		catch (ParseException pe) {
-			mTillMillis = Long.MAX_VALUE;
+		mTillMillis = Long.MAX_VALUE;	// default
+		if (tillDate != null) {
+			try {
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+				mTillMillis = sdf.parse(tillDate).getTime();
+			}
+			catch (ParseException pe) {}
 		}
 		if (isPermanent())  // if we need the image anyway, we retrieve it now
 			mImage = getImage();

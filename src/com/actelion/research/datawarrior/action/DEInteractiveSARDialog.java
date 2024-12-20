@@ -847,10 +847,10 @@ class BBConnection {
         case Molecule.cBondTypeMetalLigand:
             return 0;
         default:
-            return (((allowedBondTypes & Molecule.cBondTypeSingle) == 0) ? 0 : Molecule.cBondQFSingle)
-                 + (((allowedBondTypes & Molecule.cBondTypeDouble) == 0) ? 0 : Molecule.cBondQFDouble)
-                 + (((allowedBondTypes & Molecule.cBondTypeTriple) == 0) ? 0 : Molecule.cBondQFTriple)
-                 + (((allowedBondTypes & Molecule.cBondTypeDelocalized) == 0) ? 0 : Molecule.cBondQFDelocalized)
+            return (((allowedBondTypes & Molecule.cBondTypeSingle) == 0) ? 0 : Molecule.cBondTypeSingle)
+                 + (((allowedBondTypes & Molecule.cBondTypeDouble) == 0) ? 0 : Molecule.cBondTypeDouble)
+                 + (((allowedBondTypes & Molecule.cBondTypeTriple) == 0) ? 0 : Molecule.cBondTypeTriple)
+                 + (((allowedBondTypes & Molecule.cBondTypeDelocalized) == 0) ? 0 : Molecule.cBondTypeDelocalized)
                  + (((allowedBondTypes & Molecule.cBondTypeMetalLigand) == 0) ? 0 : Molecule.cBondTypeMetalLigand);
             }
         }

@@ -130,10 +130,11 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 	public void setDialogConfiguration(Properties configuration) {
 		super.setDialogConfiguration(configuration);
 		mCheckBoxProtonate.setSelected("true".equals(configuration.getProperty(PROPERTY_PROTONATE)));
+		// $$CAVITY$$ and $$LIGAND$$ are allowed placeholders in macro files to be replaced by external processes!
 		String cavityIDCode = configuration.getProperty(PROPERTY_CAVITY);
-		StereoMolecule cavity = (cavityIDCode == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavityIDCode);
+		StereoMolecule cavity = (cavityIDCode == null || cavityIDCode.equals("$$CAVITY$$")) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavityIDCode);
 		String ligandIDCode = configuration.getProperty(PROPERTY_LIGAND);
-		StereoMolecule ligand = (ligandIDCode == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
+		StereoMolecule ligand = (ligandIDCode == null || ligandIDCode.equals("$$LIGAND$$")) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
 		if (cavity != null) {
 			mConformerPanel.setProteinCavity(cavity, ligand, true);
 			if (ligand != null)

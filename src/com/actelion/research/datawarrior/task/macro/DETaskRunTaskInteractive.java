@@ -118,7 +118,7 @@ public class DETaskRunTaskInteractive extends ConfigurableTask {
 
 		DataWarrior application = DataWarrior.getApplication();
 
-		AbstractTask task = application.getTaskFactory().createTaskFromCode((DEFrame)getParentFrame(), taskCode);
+		final AbstractTask task = application.getTaskFactory().createTaskFromCode((DEFrame)getParentFrame(), taskCode);
 
 		final Properties[] configurationHolder = new Properties[1];
 		try {

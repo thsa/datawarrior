@@ -439,9 +439,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String confColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerColor);
 				if (confColor != null)
 					panel3D.setSingleConformerColor(confColor);
-				String cavityRibbonMode = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityRibbonMode);
-				if (cavityRibbonMode != null)
-					panel3D.setCavityRibbonMode(decodeProperty(cavityRibbonMode, Ribbons.RIBBON_MODE_CODE));
+				int cavityRibbonMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityRibbonMode, Ribbons.RIBBON_MODE_CODE);
+				if (cavityRibbonMode != -1)
+					panel3D.setCavityRibbonMode(cavityRibbonMode);
 				String geometry = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry);
 				if (geometry != null)
 					panel3D.setGeometry(geometry);

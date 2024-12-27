@@ -129,7 +129,7 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 			}
 
 			@Override
-			public void markCropDistanceForSurface(V3DMolecule fxmol, int type, V3DMolecule.SurfaceMode mode) {}
+			public void markCropDistanceForSurface(V3DMolecule fxmol, int type, int mode) {}
 		});
 
 		int gap = HiDPIHelper.scale(8);

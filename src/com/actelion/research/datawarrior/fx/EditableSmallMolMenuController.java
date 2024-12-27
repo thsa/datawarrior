@@ -66,9 +66,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 		}
 
 	@Override
-	public void markCropDistanceForSurface(V3DMolecule fxmol, int type, V3DMolecule.SurfaceMode mode) {
-
-	}
+	public void markCropDistanceForSurface(V3DMolecule fxmol, int type, int mode) {}
 
 	private void loadMolecule() {
 		SwingUtilities.invokeLater(() -> {
@@ -210,7 +208,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 
 								new AtomAssembler(ligand).addImplicitHydrogens();
 
-								V3DMolecule mol3D = new V3DMolecule(ligand, MoleculeArchitect.CONSTRUCTION_MODE_STICKS, MoleculeArchitect.HydrogenMode.ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true, false);
+								V3DMolecule mol3D = new V3DMolecule(ligand, MoleculeArchitect.CONSTRUCTION_MODE_STICKS, MoleculeArchitect.HYDROGEN_MODE_ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true, false);
 								if (mMoleculeColor != null)
 									mol3D.setColor(mMoleculeColor);
 								scene.addMolecule(mol3D, false);

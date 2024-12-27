@@ -65,7 +65,7 @@ public class JFXPDBViewer extends JFXPanel {
 						V3DMolecule vm = null;
 						if (this == mLatestRunnable && pdbData != null) {
 							vm = new V3DMolecule(mol, MoleculeArchitect.CONSTRUCTION_MODE_WIRES, 0, V3DMolecule.MoleculeRole.MACROMOLECULE);
-							vm.setSurface(0, V3DMolecule.SurfaceMode.FILLED, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS, 0.5);
+							vm.setSurface(0, V3DMolecule.SURFACE_MODE_FILLED, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS, 0.5);
 //							vm.activateEvents();
 							}
 						if (this == mLatestRunnable) {

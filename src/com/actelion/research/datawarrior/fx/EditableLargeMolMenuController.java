@@ -82,7 +82,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 	}
 
 	@Override
-	public void markCropDistanceForSurface(V3DMolecule fxmol, int type, V3DMolecule.SurfaceMode mode) {
+	public void markCropDistanceForSurface(V3DMolecule fxmol, int type, int mode) {
 		List<StereoMolecule> protein = mConformerPanel.getMoleculesInFXThread(V3DMolecule.MoleculeRole.MACROMOLECULE);
 		List<StereoMolecule> ligand = mConformerPanel.getMoleculesInFXThread(V3DMolecule.MoleculeRole.LIGAND);
 		if (protein.size() == 1 && ligand.size() == 1)
@@ -223,7 +223,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 
 				V3DMolecule protein = new V3DMolecule(new StereoMolecule(mProtein), MoleculeArchitect.CONSTRUCTION_MODE_WIRES, 0, V3DMolecule.MoleculeRole.MACROMOLECULE);
 				protein.setColor(Color.LIGHTGRAY);
-				protein.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SurfaceMode.FILLED);
+				protein.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, V3DMolecule.SURFACE_MODE_FILLED);
 				protein.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS);
 				scene.addMolecule(protein, false);
 				scene.optimizeView();

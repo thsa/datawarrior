@@ -542,6 +542,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 				mCavityConstructionMode = mCavityMol.getConstructionMode();
 				mCavityHydrogenMode = mCavityMol.getHydrogenMode();
 				mCavityRibbonMode = mCavityMol.getRibbonMode();
+				mCavityMolColor = mCavityMol.getColor();
 				mCavitySurfaceMode = mCavityMol.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY);
 				mCavitySurfaceColorMode = mCavityMol.getSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY);
 				mScene.delete(mCavityMol);

@@ -36,17 +36,20 @@ public class BinningPreview extends JPanel implements MouseMotionListener {
 	private static final int cPreviewHeight = HiDPIHelper.scale(180);
 	private static final int cBorder = HiDPIHelper.scale(6);
 
-	private CompoundTableModel  mTableModel;
 	private Image               mOffImage;
-	private int[]				mMemberCount;
-	private boolean				mPreviewValid,mOffImageValid,mIsLogarithmic,mIsDate;
-	private BinGenerator		mLimits;
-	private double[]            mCustomBinThreshold;
+	private boolean				mOffImageValid;
 	private String[]            mCustomBinName;
-	private int					mColumn,mMaxMemberCount,mMouseX,mMouseY;
-	private double				mBinSize,mBinStart;
+	private int					mMouseX,mMouseY;
 	private String				mMouseText;
 	private Rectangle			mHighlightedRect;
+	private final CompoundTableModel mTableModel;
+	private volatile double		mBinSize,mBinStart;
+	private volatile boolean	mPreviewValid,mIsLogarithmic,mIsDate;
+	private volatile int		mColumn,mMaxMemberCount;
+	private volatile int[]		mMemberCount;
+	private volatile double[]   mCustomBinThreshold;
+	private volatile Thread		mCalculatorThread,mWaitingThread;
+	private volatile BinGenerator mLimits;
 
     public BinningPreview(CompoundTableModel tableModel) {
 		mTableModel = tableModel;
@@ -157,14 +160,14 @@ public class BinningPreview extends JPanel implements MouseMotionListener {
 			}
 		}
 
-	public void update(int column, double[] customBinThreshold, String[] customBinName, boolean isLogarithmic, boolean isDate) {
+	public synchronized void update(int column, double[] customBinThreshold, String[] customBinName, boolean isLogarithmic, boolean isDate) {
 		mColumn = column;
 		mCustomBinThreshold = customBinThreshold == null ? new double[0] : customBinThreshold;
 		mCustomBinName = customBinName;
 		mIsLogarithmic = isLogarithmic;
 		mIsDate = isDate;
 		mPreviewValid = false;
-		repaint();
+		launchCalculation();
 		}
 
 	public void update(int column, double binSize, double binStart, boolean isLogarithmic, boolean isDate) {
@@ -177,7 +180,7 @@ public class BinningPreview extends JPanel implements MouseMotionListener {
 			mPreviewValid = false;
 			mCustomBinThreshold = null;
 			mCustomBinName = null;
-			repaint();
+			launchCalculation();
 			}
 		}
 
@@ -208,6 +211,68 @@ public class BinningPreview extends JPanel implements MouseMotionListener {
 		if (doRepaint)
 			repaint();
 		}
+
+	private void launchCalculation() {
+		mCalculatorThread = new Thread(() -> {
+			calculate();
+
+			if (Thread.currentThread() == mCalculatorThread) {
+				mCalculatorThread = null;
+				SwingUtilities.invokeLater(() -> {
+					mPreviewValid = false;
+					repaint();
+				});
+			}
+		} );
+		mCalculatorThread.start();
+	}
+
+	private void calculate() {
+		if (mColumn != -1) {
+			if (mCustomBinThreshold != null) {
+				mMemberCount = new int[mCustomBinThreshold.length + 1];
+				for (int row=0; row<mTableModel.getTotalRowCount() && Thread.currentThread() == mCalculatorThread; row++) {
+					double value = mTableModel.getDoubleAt(row, mColumn);
+					if (mTableModel.isLogarithmicViewMode(mColumn))
+						value = Math.pow(10.0, value);
+					if (!Double.isNaN(value)) {
+						int index = mCustomBinThreshold.length;
+						for (int i=0; i<mCustomBinThreshold.length; i++) {
+							if (value < mCustomBinThreshold[i]) {
+								index = i;
+								break;
+							}
+						}
+						mMemberCount[index]++;
+					}
+				}
+				mPreviewValid = true;
+			}
+			else {
+				if (!Double.isNaN(mBinStart) && !Double.isNaN(mBinSize)) {
+					mLimits = new BinGenerator(mTableModel, mColumn, new BigDecimal(mBinStart),
+							new BigDecimal(mBinSize), mIsLogarithmic, mIsDate);
+					int binCount = mLimits.getBinCount();
+
+					mMemberCount = new int[binCount];
+					for (int row=0; row<mTableModel.getTotalRowCount() && Thread.currentThread() == mCalculatorThread; row++) {
+						int index = mLimits.getIndex(mTableModel.getDoubleAt(row, mColumn));
+						if (index != binCount)
+							mMemberCount[index]++;
+					}
+
+					mPreviewValid = true;
+				}
+			}
+
+			if (mPreviewValid) {
+				mMaxMemberCount = 0;
+				for (int i=0; i<mMemberCount.length; i++)
+					if (mMaxMemberCount < mMemberCount[i])
+						mMaxMemberCount = mMemberCount[i];
+			}
+		}
+	}
 
 	private String getBinName(int index) {
     	if (mCustomBinThreshold == null)

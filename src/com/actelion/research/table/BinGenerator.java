@@ -18,14 +18,14 @@
 
 package com.actelion.research.table;
 
+import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.util.DoubleFormat;
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.util.Date;
-
-import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.util.DoubleFormat;
 
 public class BinGenerator {
 	private static final int NONE = 0;
@@ -139,10 +139,10 @@ public class BinGenerator {
 		if (!Double.isNaN(value)) {
 			value = validateValue(value);
 			if (mLimit != null) {	// if we have limits, we have log mode
-				BigDecimal bd = new BigDecimal(Math.pow(10.0, value));
+				BigDecimal bd = BigDecimal.valueOf(Math.pow(10.0, value));
 				if (mLimit[0].compareTo(bd) <= 0) {
 					for (int i=0; i<binCount; i++) {
-						if (mLimit[i+1].compareTo(bd) == 1) {
+						if (mLimit[i + 1].compareTo(bd) > 0) {
 							index = i;
 							break;
 							}
@@ -150,7 +150,7 @@ public class BinGenerator {
 					}
 				}
 			else {
-				BigDecimal bd = new BigDecimal(value);
+				BigDecimal bd = BigDecimal.valueOf(value);
 				int likelyIndex = (int)((value - mBinStart.doubleValue()) / mBinSize.doubleValue());
 
 				// check to prevent rounding errors

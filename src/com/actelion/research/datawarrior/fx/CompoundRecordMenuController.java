@@ -26,6 +26,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	private CompoundRecord mParentRecord;
 	private int mCoordsColumn;
 	private final boolean mAllowSuperposeReference;
+	private volatile Thread mUpdateThread;
 
 	/**
 	 * This controller adds menu items and functionality to 3D-Views in the detail area or in form views.
@@ -173,7 +174,10 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	 * @param isAlign whether the shown conformer(s) shall be rigidly aligned to the active row's conformer (if shown)
 	 */
 	public void update3DView(boolean isSuperpose, boolean isAlign, int cavityColumn) {
-		new Thread(() -> {
+		mUpdateThread = new Thread(() -> {
+			// cancel all FX-threads that work on older updates, because a new one is on its way
+			mConformerPanel.increaseUpdateID();
+
 			StereoMolecule[] rowMol = null;
 			if (mParentRecord != null)
 				rowMol = getConformers(mCoordsColumn, mParentRecord, true);
@@ -187,6 +191,9 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				if (isAlign && refMol != null) {
 					double maxFit = 0;
 					for (StereoMolecule stereoMolecule : rowMol) {
+						if (Thread.currentThread() != mUpdateThread)
+							break;
+
 						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol[0], stereoMolecule);
 						if (fit>maxFit) {
 							maxFit = fit;
@@ -199,14 +206,17 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				}
 			}
 
-			if (cavityColumn != -1 && mParentRecord != null) {
+			if (cavityColumn != -1 && mParentRecord != null && Thread.currentThread() == mUpdateThread) {
 				StereoMolecule[] cavity = getConformers(cavityColumn, mParentRecord, false);
 				mConformerPanel.clear();
 				mConformerPanel.setProteinCavity(cavity == null || cavity.length==0 ? null : cavity[0], rowMol == null ? null : rowMol[0], true);
 			}
 
-			mConformerPanel.updateConformers(rowMol, refMol == null ? null : refMol[0]);
-		}).start();
+			if (Thread.currentThread() == mUpdateThread)
+				mConformerPanel.updateConformers(rowMol, refMol == null ? null : refMol[0]);
+		});
+
+		mUpdateThread.start();
 	}
 
 	private StereoMolecule[] getConformers(int coordsColumn, CompoundRecord record, boolean allowMultiple) {

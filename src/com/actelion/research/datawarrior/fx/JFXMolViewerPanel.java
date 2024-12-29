@@ -112,6 +112,15 @@ public class JFXMolViewerPanel extends JFXPanel {
 		Platform.runLater(mConstructionTask);
 	}
 
+	/**
+	 * Call this before a set of calls replaces the content of this panel.
+	 * This allows skipping sets of calls if a newer set of calles is already cued
+	 * to replace the panels content again.
+	 */
+	public void increaseUpdateID() {
+		mCurrentUpdateID++;
+	}
+
 	public void addStructureChangeListener(StructureChangeListener l) {
 		if (mListeners == null)
 			mListeners = new Vector<>();
@@ -537,7 +546,11 @@ public class JFXMolViewerPanel extends JFXPanel {
 	 * @param optimizeView whether the view shall be centered after adding cavity
 	 */
 	public void setProteinCavity(StereoMolecule cavity, StereoMolecule ligand, boolean optimizeView) {
+		final int updateID = mCurrentUpdateID;
 		Platform.runLater(() -> {
+			if (updateID != mCurrentUpdateID)	// skip this, if we have already cued another set of updates
+				return;
+
 			if (mCavityMol != null) {
 				mCavityConstructionMode = mCavityMol.getConstructionMode();
 				mCavityHydrogenMode = mCavityMol.getHydrogenMode();
@@ -547,6 +560,9 @@ public class JFXMolViewerPanel extends JFXPanel {
 				mCavitySurfaceColorMode = mCavityMol.getSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY);
 				mScene.delete(mCavityMol);
 			}
+
+			if (updateID != mCurrentUpdateID)
+				return;
 
 			if (cavity != null) {
 				ArrayList<StereoMolecule> ligands = null;
@@ -560,10 +576,16 @@ public class JFXMolViewerPanel extends JFXPanel {
 				mCavityMol.setColor(mCavityMolColor);
 				mCavityMol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, mCavitySurfaceColorMode);
 
+				if (updateID != mCurrentUpdateID)
+					return;
+
 				mScene.getWorld().clearTransform();
 				mScene.addMolecule(mCavityMol, false);
 
 				mCavityMol.getMolecule().removeAtomMarkers();
+
+				if (updateID != mCurrentUpdateID)
+					return;
 
 				if (optimizeView) {
 					// rotate such that one looks into the cavity
@@ -577,6 +599,9 @@ public class JFXMolViewerPanel extends JFXPanel {
 					}
 					mScene.optimizeView();
 				}
+
+				if (updateID != mCurrentUpdateID)
+					return;
 
 				mScene.setShowInteractions(true);
 
@@ -692,8 +717,16 @@ public class JFXMolViewerPanel extends JFXPanel {
 		}
 	}
 
+	/**
+	 * @param mol
+	 * @param color
+	 * @param centerOfRotation
+	 */
 	public void addMolecule(StereoMolecule mol, Color color, Point3D centerOfRotation) {
-		Platform.runLater(() -> addMoleculeNow(mol, color, centerOfRotation, false));
+		Platform.runLater(() -> {
+			addMoleculeNow(mol, color, centerOfRotation, false);
+			SwingUtilities.invokeLater(() -> fireStructureChanged());
+		} );
 	}
 
 	private V3DMolecule addMoleculeNow(StereoMolecule mol, Color color, Point3D centerOfRotation, boolean showTorsionStrain) {
@@ -704,7 +737,6 @@ public class JFXMolViewerPanel extends JFXPanel {
 		if (showTorsionStrain)
 			fxmol.addTorsionStrainVisualization();
 		mScene.addMolecule(fxmol, false);
-		SwingUtilities.invokeLater(() -> fireStructureChanged());
 		return fxmol;
 	}
 
@@ -715,13 +747,17 @@ public class JFXMolViewerPanel extends JFXPanel {
 	 * Then, adds the passed conformer(s) or docked ligand.
 	 * Then, optionally adds the reference conformer.
 	 * Unless there is a protein cavity or an overlay molecule, it finally optimizes the view.
-	 *
+	 * If you use this call potentially many times in e.g. to update the detail view content upon mose movement,
+	 * then you should call increaseUpdateID() first to allow skipping outdated cued update threads!
 	 * @param conformers   multiple or one conformer, which may also be a ligand structure
 	 * @param refConformer optional second conformer or ligand structure for comparison (not the natural ligand or PheSA query)
 	 */
 	public void updateConformers(StereoMolecule[] conformers, StereoMolecule refConformer) {
-		final int updateID = ++mCurrentUpdateID;
+		final int updateID = mCurrentUpdateID;
 		Platform.runLater(() -> {
+			if (updateID != mCurrentUpdateID)
+				return;
+
 			// store current colors of refmol and single conf for later use
 			if (mRefMol != null)
 				mRefMolColor = mRefMol.getColor();
@@ -738,7 +774,6 @@ public class JFXMolViewerPanel extends JFXPanel {
 				 && updateID == mCurrentUpdateID) {
 					isTorsionStrainVisible |= (fxmol.getTorsionStrainVis() != null);
 					mScene.delete(fxmol);
-					SwingUtilities.invokeLater(() -> fireStructureChanged());
 				}
 
 			if (conformers != null) {
@@ -762,6 +797,8 @@ public class JFXMolViewerPanel extends JFXPanel {
 			// Don't optimize view if we have a cavity or overlay molecules. User may have optimized the view to look into the cavity
 			if ((conformers != null || refConformer != null) && mOverlayMol == null && mCavityMol == null && updateID == mCurrentUpdateID)
 				mScene.optimizeView();
+
+			SwingUtilities.invokeLater(() -> fireStructureChanged());
 		});
 	}
 

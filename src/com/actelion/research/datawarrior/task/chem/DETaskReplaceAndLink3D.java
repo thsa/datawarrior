@@ -41,7 +41,6 @@ import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
-import org.openmolecules.fx.viewer3d.V3DPopupMenuController;
 import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;

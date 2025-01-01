@@ -88,6 +88,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMolViewerCavityRibbonMode = "fxmvCavityRibbonMode";
 	private static final String cMolViewerCavitySurfaceMode = "fxmvCavitySurfaceMode";
 	private static final String cMolViewerCavitySurfaceColorMode = "fxmvCavitySurfaceColorMode";
+	private static final String cMolViewerCavitySurfaceColor = "fxmvCavitySurfaceColor";
+	private static final String cMolViewerCavitySurfaceTransparency = "fxmvCavitySurfaceTransparency";
 	private static final String cMolViewerGeometry = "fxmvGeometry";
 	private static final String cMolViewerIsAnimate = "fxmvIsAnimate";
 	private static final String cTableRowHeight = "rowHeight";
@@ -447,6 +449,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String confColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerColor);
 				if (confColor != null)
 					panel3D.setSingleConformerColor(confColor);
+				String cavitySurfaceColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceColor);
+				if (cavitySurfaceColor != null)
+					panel3D.setCavitySurfaceColor(cavitySurfaceColor);
 				int cavityConstructionMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityConstructionMode, MoleculeArchitect.CONSTRUCTION_MODE_CODE);
 				if (cavityConstructionMode != -1)
 					panel3D.setCavityConstructionMode(cavityConstructionMode);
@@ -462,6 +467,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 				int cavitySurfaceColorMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceColorMode, SurfaceMesh.SURFACE_COLOR_MODE_CODE);
 				if (cavitySurfaceColorMode != -1)
 					panel3D.setCavitySurfaceColorMode(cavitySurfaceColorMode);
+				String cavitySurfaceTransparency = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceTransparency);
+				if (cavitySurfaceTransparency != null)
+					panel3D.setCavitySurfaceTransparency(Double.parseDouble(cavitySurfaceTransparency));
 				String geometry = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry);
 				if (geometry != null)
 					panel3D.setGeometry(geometry);
@@ -1945,6 +1953,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String confColor = panel3D.getSingleConformerColor();
 				if (confColor != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerColor, confColor);
+				String cavitySurfaceColor = panel3D.getCavitySurfaceColor();
+				if (cavitySurfaceColor != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceColor, cavitySurfaceColor);
 				int cavityConstructionMode = panel3D.getCavityConstructionMode();
 				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityConstructionMode, MoleculeArchitect.CONSTRUCTION_MODE_CODE[cavityConstructionMode]);
 				int cavityHydrogenMode = panel3D.getCavityHydrogenMode();
@@ -1955,6 +1966,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceMode, V3DMolecule.SURFACE_MODE_CODE[cavitySurfaceMode]);
 				int cavitySurfaceColorMode = panel3D.getCavitySurfaceColorMode();
 				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceColorMode, SurfaceMesh.SURFACE_COLOR_MODE_CODE[cavitySurfaceColorMode]);
+				double cavitySurfaceTransparency = panel3D.getCavitySurfaceTransparency();
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceTransparency, DoubleFormat.toString(cavitySurfaceTransparency));
 				String geometry = panel3D.getGeometry();
 				if (geometry != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry, geometry);

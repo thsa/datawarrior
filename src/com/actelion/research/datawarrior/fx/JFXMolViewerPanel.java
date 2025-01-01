@@ -56,7 +56,8 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private volatile int mCurrentUpdateID,mCavityConstructionMode,mCavityHydrogenMode,mCavityRibbonMode,mCavitySurfaceMode,mCavitySurfaceColorMode;
 	private boolean mAdaptToLookAndFeelChanges;
 	private final boolean mIsEditable;
-	private volatile Color mCavityMolColor,mRefMolColor,mOverlayMolColor,mSingleConformerColor;
+	private volatile Color mCavityMolColor,mRefMolColor,mOverlayMolColor,mSingleConformerColor,mCavitySurfaceColor;
+	private volatile double mCavitySurfaceTransparency;
 	private java.awt.Color mSceneBackground, mLookAndFeelSpotColor,
 			mMenuItemBackground,mMenuItemForeground,/*mMenuItemSelectionBackground,*/mMenuItemSelectionForeground;
 	private Vector<StructureChangeListener> mListeners;
@@ -88,6 +89,8 @@ public class JFXMolViewerPanel extends JFXPanel {
 		mCavityRibbonMode = Ribbons.MODE_NONE;
 		mCavitySurfaceMode = V3DMolecule.SURFACE_MODE_FILLED;
 		mCavitySurfaceColorMode = SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS;
+		mCavitySurfaceColor = DEFAULT_CAVITY_MOL_COLOR;
+		mCavitySurfaceTransparency = 0.2;
 
 		collectLookAndFeelColors(); // we have to do this on the EDT
 
@@ -221,6 +224,11 @@ public class JFXMolViewerPanel extends JFXPanel {
 		return color == null ? "none" : toRGBString(color);
 	}
 
+	public String getCavitySurfaceColor() {
+		Color color = (mCavityMol != null) ? mCavityMol.getSurfaceColor(MoleculeSurfaceAlgorithm.CONNOLLY) : mCavitySurfaceColor;
+		return color == null ? "none" : toRGBString(color);
+	}
+
 	public int getCavityConstructionMode() {
 		return mCavityMol != null ? mCavityMol.getConstructionMode() : mCavityConstructionMode;
 	}
@@ -239,6 +247,10 @@ public class JFXMolViewerPanel extends JFXPanel {
 
 	public int getCavitySurfaceColorMode() {
 		return mCavityMol != null ? mCavityMol.getSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY) : mCavitySurfaceColorMode;
+	}
+
+	public double getCavitySurfaceTransparency() {
+		return mCavityMol != null ? mCavityMol.getSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY) : mCavitySurfaceTransparency;
 	}
 
 	public String getRefMolColor() {
@@ -261,6 +273,11 @@ public class JFXMolViewerPanel extends JFXPanel {
 		mCavityMolColor = color.equals("none") ? null : Color.valueOf(color);
 		if (mCavityMol != null)
 			Platform.runLater(() -> mCavityMol.setColor(mCavityMolColor) );
+	}
+	public void setCavitySurfaceColor(String color) {
+		mCavitySurfaceColor = color.equals("none") ? null : Color.valueOf(color);
+		if (mCavityMol != null)
+			Platform.runLater(() -> mCavityMol.setSurfaceColor(MoleculeSurfaceAlgorithm.CONNOLLY, mCavitySurfaceColor) );
 	}
 
 	public void setCavityConstructionMode(int mode) {
@@ -291,6 +308,12 @@ public class JFXMolViewerPanel extends JFXPanel {
 		mCavitySurfaceColorMode = mode;
 		if (mCavityMol != null)
 			Platform.runLater(() -> mCavityMol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, mCavitySurfaceColorMode) );
+	}
+
+	public void setCavitySurfaceTransparency(double transparency) {
+		mCavitySurfaceTransparency = transparency;
+		if (mCavityMol != null)
+			Platform.runLater(() -> mCavityMol.setSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY, mCavitySurfaceTransparency) );
 	}
 
 	public void setRefMolColor(String color) {
@@ -566,6 +589,8 @@ public class JFXMolViewerPanel extends JFXPanel {
 				mCavityMolColor = mCavityMol.getColor();
 				mCavitySurfaceMode = mCavityMol.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY);
 				mCavitySurfaceColorMode = mCavityMol.getSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY);
+				mCavitySurfaceColor = mCavityMol.getSurfaceColor(MoleculeSurfaceAlgorithm.CONNOLLY);
+				mCavitySurfaceTransparency = mCavityMol.getSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY);
 				mScene.delete(mCavityMol);
 			}
 
@@ -580,9 +605,9 @@ public class JFXMolViewerPanel extends JFXPanel {
 					ligands.add(ligand);
 				}
 
-				mCavityMol = new V3DMolecule(cavity, ligands, mCavityConstructionMode, mCavityHydrogenMode, mCavityRibbonMode, mCavitySurfaceMode, 0);
+				mCavityMol = new V3DMolecule(cavity, ligands, mCavityConstructionMode, mCavityHydrogenMode, mCavityRibbonMode,
+						mCavitySurfaceMode, mCavitySurfaceColorMode, mCavitySurfaceColor, mCavitySurfaceTransparency, 0);
 				mCavityMol.setColor(mCavityMolColor);
-				mCavityMol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, mCavitySurfaceColorMode);
 
 				if (updateID != mCurrentUpdateID)
 					return;

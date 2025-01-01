@@ -203,6 +203,14 @@ public class JFXMolViewerPanel extends JFXPanel {
 		} );
 	}
 
+	public boolean isAnimate() {
+		return mScene.isAnimate();
+	}
+
+	public void setAnimate(boolean b) {
+		mScene.setAnimate(b);
+	}
+
 	public String getOverlayMolColor() {
 		Color color = (mOverlayMol != null) ? mOverlayMol.getColor() : mOverlayMolColor;
 		return color == null ? "none" : toRGBString(color);
@@ -603,6 +611,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 				if (updateID != mCurrentUpdateID)
 					return;
 
+				mScene.reviveAnimation();	// just in case, there was a stopped anumation
 				mScene.setShowInteractions(true);
 
 				SwingUtilities.invokeLater(() -> fireStructureChanged());

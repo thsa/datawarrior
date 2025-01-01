@@ -89,6 +89,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMolViewerCavitySurfaceMode = "fxmvCavitySurfaceMode";
 	private static final String cMolViewerCavitySurfaceColorMode = "fxmvCavitySurfaceColorMode";
 	private static final String cMolViewerGeometry = "fxmvGeometry";
+	private static final String cMolViewerIsAnimate = "fxmvIsAnimate";
 	private static final String cTableRowHeight = "rowHeight";
 	private static final String cTableHeaderLines = "headerLines";
 	private static final String cTableColumnWidth = "columnWidth";
@@ -464,6 +465,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String geometry = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry);
 				if (geometry != null)
 					panel3D.setGeometry(geometry);
+				if ("true".equals(getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerIsAnimate)))
+					panel3D.setAnimate(true);
 				}
 			}
 		}
@@ -1955,6 +1958,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String geometry = panel3D.getGeometry();
 				if (geometry != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry, geometry);
+				if (panel3D.isAnimate())
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerIsAnimate, "true");
 				}
 			}
 

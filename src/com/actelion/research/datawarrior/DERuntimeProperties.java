@@ -473,8 +473,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String geometry = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry);
 				if (geometry != null)
 					panel3D.setGeometry(geometry);
-				if ("true".equals(getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerIsAnimate)))
-					panel3D.setAnimate(true);
+				panel3D.setAnimate("true".equals(getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerIsAnimate)));
 				}
 			}
 		}
@@ -1971,8 +1970,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String geometry = panel3D.getGeometry();
 				if (geometry != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry, geometry);
-				if (panel3D.isAnimate())
-					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerIsAnimate, "true");
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerIsAnimate, panel3D.isAnimate() ? "true" : "false");
 				}
 			}
 

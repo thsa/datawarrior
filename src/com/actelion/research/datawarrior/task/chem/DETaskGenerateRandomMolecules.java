@@ -46,9 +46,9 @@ public class DETaskGenerateRandomMolecules extends ConfigurableTask implements C
 	private static final int FINAL_KEEP_SIZE_MUTATION_COUNT = 8;
 	private static final int MAX_GROW_MUTATIONS = 128;	// to exit almost endless loops if highly preferred back&forth mutations suppress real changes
 
-	private DataWarrior			mApplication;
+	private final DataWarrior	mApplication;
 	private DEFrame				mTargetFrame;
-	private JComboBox			mComboBoxCreateLike,mComboBoxSizeDistribution;
+	private JComboBox<String>	mComboBoxCreateLike,mComboBoxSizeDistribution;
 	private JSlider				mSliderOxygenBias,mSliderNitrogenBias;
 	private JTextField			mTextFieldMinSize,mTextFieldMaxSize,mTextFieldCount;
 	private JEditableStructureView	mSeedCompoundView;
@@ -78,15 +78,15 @@ public class DETaskGenerateRandomMolecules extends ConfigurableTask implements C
 	public JPanel createDialogContent() {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, HiDPIHelper.scale(48), gap, TableLayout.PREFERRED, gap},
-				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, 2*gap,
-				TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, HiDPIHelper.scale(64), 2*gap,
-				TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap } };
+				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, 2*gap,
+				TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, HiDPIHelper.scale(64), 2*gap,
+				TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap } };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
 		content.add(new JLabel("Create compounds like", JLabel.RIGHT), "1,1");
-		mComboBoxCreateLike = new JComboBox(UIDelegateELib.COMPOUND_KIND_TEXT);
+		mComboBoxCreateLike = new JComboBox<>(UIDelegateELib.COMPOUND_KIND_TEXT);
 		content.add(mComboBoxCreateLike, "3,1,5,1");
 
 		mLabelNitrogenBias = new JLabel("1.0", JLabel.CENTER);
@@ -129,7 +129,7 @@ public class DETaskGenerateRandomMolecules extends ConfigurableTask implements C
 		content.add(mTextFieldMaxSize, "3,16");
 
 		content.add(new JLabel("Molecule size distribution:", JLabel.RIGHT), "1,18");
-		mComboBoxSizeDistribution = new JComboBox(TEXT_DISTRIBUTION);
+		mComboBoxSizeDistribution = new JComboBox<>(TEXT_DISTRIBUTION);
 		content.add(mComboBoxSizeDistribution, "3,18,5,18");
 
 		return content;
@@ -203,7 +203,7 @@ public class DETaskGenerateRandomMolecules extends ConfigurableTask implements C
 		mComboBoxSizeDistribution.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_SIZE_DISTRIBUTION), CODE_DISTRIBUTION, DISTRIBUTION_MIDDLE));
 
 		String idcode = configuration.getProperty(PROPERTY_SEED_FRAGMENT, "");
-		if (idcode.length() != 0) {
+		if (!idcode.isEmpty()) {
 			int index = idcode.indexOf(" ");
 			mSeedCompoundView.setIDCode(idcode.substring(0, index), idcode.substring(index+1));
 			}
@@ -340,7 +340,7 @@ public class DETaskGenerateRandomMolecules extends ConfigurableTask implements C
 
 class AtomBiasProvider implements MutationBiasProvider {
 	private int mNitrogenCount,mOxygenCount;
-	private double mNitrogenFactor,mOxygenFactor;
+	private final double mNitrogenFactor,mOxygenFactor;
 
 	public AtomBiasProvider(double nitrogenFactor, double oxygenFactor) {
 		mNitrogenFactor = nitrogenFactor;

@@ -172,6 +172,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	/**
 	 * @param isSuperpose whether the active row's conformer shall be shown in addition
 	 * @param isAlign whether the shown conformer(s) shall be rigidly aligned to the active row's conformer (if shown)
+	 * @param cavityColumn -1 or coords3D column of cavity column that is assigned to this controller's ligand column to complete a binding site structure
 	 */
 	public void update3DView(boolean isSuperpose, boolean isAlign, int cavityColumn) {
 		mUpdateThread = new Thread(() -> {
@@ -209,7 +210,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 			if (cavityColumn != -1 && mParentRecord != null && Thread.currentThread() == mUpdateThread) {
 				StereoMolecule[] cavity = getConformers(cavityColumn, mParentRecord, false);
 				mConformerPanel.clear();
-				mConformerPanel.setProteinCavity(cavity == null || cavity.length==0 ? null : cavity[0], rowMol == null ? null : rowMol[0], true);
+				mConformerPanel.setProteinCavity(cavity == null || cavity.length==0 ? null : cavity[0], rowMol == null ? null : rowMol[0], true, true);
 			}
 
 			if (Thread.currentThread() == mUpdateThread)

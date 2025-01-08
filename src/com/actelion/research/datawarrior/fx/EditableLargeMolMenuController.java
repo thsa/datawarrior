@@ -204,7 +204,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 			Platform.runLater(() -> {
 				V3DScene scene = mConformerPanel.getV3DScene();
 				scene.clearAll();
-				mConformerPanel.setProteinCavity(_cavity, _ligand, true);
+				mConformerPanel.setProteinCavity(_cavity, _ligand, true, false);
 				mConformerPanel.setOverlayMolecule(_ligand);
 			});
 		}

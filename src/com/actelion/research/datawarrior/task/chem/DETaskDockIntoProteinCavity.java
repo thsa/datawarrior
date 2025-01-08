@@ -136,7 +136,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 		String ligandIDCode = configuration.getProperty(PROPERTY_LIGAND);
 		StereoMolecule ligand = (ligandIDCode == null || ligandIDCode.equals("$$LIGAND$$")) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
 		if (cavity != null) {
-			mConformerPanel.setProteinCavity(cavity, ligand, true);
+			mConformerPanel.setProteinCavity(cavity, ligand, true, false);
 			if (ligand != null)
 				mConformerPanel.setOverlayMolecule(ligand);
 			}

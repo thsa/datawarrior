@@ -247,7 +247,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				String ligand = showLigand ? mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyNaturalLigand) : null;
 				StereoMolecule ligandMol = (ligand == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligand);
 				if (cavityMol != null)
-					view.setProteinCavity(cavityMol, ligandMol, true);
+					view.setProteinCavity(cavityMol, ligandMol, true, false);
 				if (ligandMol != null)
 					view.setOverlayMolecule(ligandMol);
 

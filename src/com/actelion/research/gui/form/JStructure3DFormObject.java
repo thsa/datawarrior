@@ -61,7 +61,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
 		}
 
 	public void setCavityMolecule(StereoMolecule cavityMol, StereoMolecule ligandMol) {
-		((JFXMolViewerPanel)mComponent).setProteinCavity(cavityMol, ligandMol, true);
+		((JFXMolViewerPanel)mComponent).setProteinCavity(cavityMol, ligandMol, true, false);
 		((JFXMolViewerPanel)mComponent).setOverlayMolecule(ligandMol);
 		mCavityMol = cavityMol;
 		mLigandMol = ligandMol;
@@ -159,7 +159,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
 			    fxp.waitForCompleteConstruction();
 				fxp.setBackground(Color.WHITE);
 			    if (mCavityMol != null)
-				    fxp.setProteinCavity(mCavityMol, mLigandMol, false);
+				    fxp.setProteinCavity(mCavityMol, mLigandMol, false, false);
 			    if (mOverlayMol != null)
 				    fxp.setOverlayMolecule(mOverlayMol);
 

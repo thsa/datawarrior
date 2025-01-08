@@ -426,7 +426,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 		collectLookAndFeelColors();
 		if (mAdaptToLookAndFeelChanges) {
 			setLookAndFeelBackground();
-			setLookAndFeelMenuBackground();
+			Platform.runLater(() -> setLookAndFeelMenuBackground());
 		}
 	}
 
@@ -484,10 +484,13 @@ public class JFXMolViewerPanel extends JFXPanel {
 				" -fx-font-size: "+textSize+"\n" +
 				" -fx-background-color: "+lafSpot+"\n" +
 				" -fx-text-fill: "+menuSFG+"\n" +
+				"}\n" +
+			".check-menu-item:checked{\n" +
+				" -fx-mark-color: "+menuFG+"\n" +
 				"}\n";
 	}
 
-	private String toStyleText(java.awt.Color c) {
+	private static String toStyleText(java.awt.Color c) {
 		return "#"+Integer.toHexString(c.getRGB()).substring(2)+";";
 //		return "rgba("+c.getRed()+", "+c.getGreen()+", "+c.getBlue()+", 1.0);";
 	}
@@ -575,11 +578,12 @@ public class JFXMolViewerPanel extends JFXPanel {
 	 * @param cavity
 	 * @param ligand may be null
 	 * @param optimizeView whether the view shall be centered after adding cavity
+	 * @param mayInterrupt whether this method may be interrupted because this method is called again with different content
 	 */
-	public void setProteinCavity(StereoMolecule cavity, StereoMolecule ligand, boolean optimizeView) {
+	public void setProteinCavity(StereoMolecule cavity, StereoMolecule ligand, boolean optimizeView, boolean mayInterrupt) {
 		final int updateID = mCurrentUpdateID;
 		Platform.runLater(() -> {
-			if (updateID != mCurrentUpdateID)	// skip this, if we have already cued another set of updates
+			if (mayInterrupt && updateID != mCurrentUpdateID)	// skip this, if we have already cued another set of updates
 				return;
 
 			if (mCavityMol != null) {
@@ -594,7 +598,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 				mScene.delete(mCavityMol);
 			}
 
-			if (updateID != mCurrentUpdateID)
+			if (mayInterrupt && updateID != mCurrentUpdateID)
 				return;
 
 			if (cavity != null) {
@@ -609,7 +613,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 						mCavitySurfaceMode, mCavitySurfaceColorMode, mCavitySurfaceColor, mCavitySurfaceTransparency, 0);
 				mCavityMol.setColor(mCavityMolColor);
 
-				if (updateID != mCurrentUpdateID)
+				if (mayInterrupt && updateID != mCurrentUpdateID)
 					return;
 
 				mScene.getWorld().clearTransform();
@@ -617,7 +621,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 
 				mCavityMol.getMolecule().removeAtomMarkers();
 
-				if (updateID != mCurrentUpdateID)
+				if (mayInterrupt && updateID != mCurrentUpdateID)
 					return;
 
 				if (optimizeView) {
@@ -633,14 +637,14 @@ public class JFXMolViewerPanel extends JFXPanel {
 					mScene.optimizeView();
 				}
 
-				if (updateID != mCurrentUpdateID)
+				if (mayInterrupt && updateID != mCurrentUpdateID)
 					return;
 
 				mScene.reviveAnimation();	// just in case, there was a stopped anumation
 				mScene.setShowInteractions(true);
-
-				SwingUtilities.invokeLater(() -> fireStructureChanged());
 			}
+
+			SwingUtilities.invokeLater(() -> fireStructureChanged());
 		});
 	}
 
@@ -893,8 +897,8 @@ public class JFXMolViewerPanel extends JFXPanel {
 
 		private static void updateCSS(JFXMolViewerPanel conformerPanel, final String css) {
 			sCSS = css;
-//			Platform.runLater(() ->
-					conformerPanel.getScene().getStylesheets().setAll("internal:"+System.nanoTime()+"stylesheet.css");
+			Platform.runLater(() ->
+					conformerPanel.getScene().getStylesheets().setAll("internal:"+System.nanoTime()+"stylesheet.css"));
 		}
 
 		public StringURLConnection(URL url) {

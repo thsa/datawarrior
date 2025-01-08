@@ -3305,44 +3305,49 @@ public class JVisualization2D extends JVisualization {
 
 	public VisualizationPoint findMarker(int x, int y) {
 		if (mChartType.getType() == ChartType.cTypePies) {
-			if (mChartInfo != null && ((PieChart)mChartInfo).isBarOrPieDataAvailable()) {
-				int catCount = getCategoryVisCount(0)* getCategoryVisCount(1)*mCaseSeparationCategoryCount;
-				for (int hv=mHVCount-1; hv>=0; hv--) {
-					for (int cat=catCount-1; cat>=0; cat--) {
-						float dx = x - ((PieChart)mChartInfo).getPieX(hv, cat);
-						float dy = ((PieChart)mChartInfo).getPieY(hv, cat) - y;
-						float radius = Math.round(((PieChart)mChartInfo).getPieSize(hv, cat)/2f);
-						if (Math.sqrt(dx*dx+dy*dy) < radius) {
-							float angle = (dx==0) ? ((dy>0) ? 0.5f*(float)Math.PI : 1.5f*(float)Math.PI)
-										 : (dx<0) ? (float)Math.PI + (float)Math.atan(dy/dx)
-										 : (dy<0) ? 2*(float)Math.PI + (float)Math.atan(dy/dx) : (float)Math.atan(dy/dx);
-							if (mChartInfo.useProportionalFractions()) {
-								angle *= 180f / (float)Math.PI;
-								for (int i=mDataPoints-1; i>=0; i--)
-									if (mPoint[i].hvIndex == hv
-											&& getChartCategoryIndex(mPoint[i]) == cat
-											&& angle >= mPoint[i].widthOrAngle1
-											&& angle < mPoint[i].heightOrAngle2
-											&& isVisibleInBarsOrPies(mPoint[i]))
-										return mPoint[i];
-								return null;	// should never reach this
-								}
-							else {
-								int index = (int)(mChartInfo.getPointsInCategory(hv, cat) * angle/(2*Math.PI));
-								if (index>=0 && index<mChartInfo.getPointsInCategory(hv, cat)) {
+			try {
+				if (mChartInfo != null && ((PieChart)mChartInfo).isBarOrPieDataAvailable()) {
+					int catCount = getCategoryVisCount(0)* getCategoryVisCount(1)*mCaseSeparationCategoryCount;
+					for (int hv=mHVCount-1; hv>=0; hv--) {
+						for (int cat=catCount-1; cat>=0; cat--) {
+							float dx = x - ((PieChart)mChartInfo).getPieX(hv, cat);
+							float dy = ((PieChart)mChartInfo).getPieY(hv, cat) - y;
+							float radius = Math.round(((PieChart)mChartInfo).getPieSize(hv, cat)/2f);
+							if (Math.sqrt(dx*dx+dy*dy) < radius) {
+								float angle = (dx==0) ? ((dy>0) ? 0.5f*(float)Math.PI : 1.5f*(float)Math.PI)
+											 : (dx<0) ? (float)Math.PI + (float)Math.atan(dy/dx)
+											 : (dy<0) ? 2*(float)Math.PI + (float)Math.atan(dy/dx) : (float)Math.atan(dy/dx);
+								if (mChartInfo.useProportionalFractions()) {
+									angle *= 180f / (float)Math.PI;
 									for (int i=mDataPoints-1; i>=0; i--)
 										if (mPoint[i].hvIndex == hv
-										 && getChartCategoryIndex(mPoint[i]) == cat
-										 && mPoint[i].chartGroupIndex == index
-										 && isVisibleInBarsOrPies(mPoint[i]))
+												&& getChartCategoryIndex(mPoint[i]) == cat
+												&& angle >= mPoint[i].widthOrAngle1
+												&& angle < mPoint[i].heightOrAngle2
+												&& isVisibleInBarsOrPies(mPoint[i]))
 											return mPoint[i];
 									return null;	// should never reach this
+									}
+								else {
+									int index = (int)(mChartInfo.getPointsInCategory(hv, cat) * angle/(2*Math.PI));
+									if (index>=0 && index<mChartInfo.getPointsInCategory(hv, cat)) {
+										for (int i=mDataPoints-1; i>=0; i--)
+											if (mPoint[i].hvIndex == hv
+											 && getChartCategoryIndex(mPoint[i]) == cat
+											 && mPoint[i].chartGroupIndex == index
+											 && isVisibleInBarsOrPies(mPoint[i]))
+												return mPoint[i];
+										return null;	// should never reach this
+										}
 									}
 								}
 							}
 						}
 					}
 				}
+			catch (Exception e) {
+				// Exceptions occurr rarely, if the view is updated on other thread to smaller catCount
+			}
 
 			return null;
 			}

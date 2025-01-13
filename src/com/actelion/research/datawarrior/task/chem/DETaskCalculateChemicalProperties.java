@@ -59,6 +59,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private static final String PROPERTY_STRUCTURE_COLUMN = "structureColumn";
 	private static final String PROPERTY_CHEMPROPERTY_LIST = "propertyList";
 	private static final String PROPERTY_TARGET_COLUMN = "targetColumn";
+	private static final String PROPERTY_LARGEST_FRAGMENT = "largestFragment";
 
 	private static final int PREDICTOR_COUNT			= 9;
 	private static final int PREDICTOR_LOGP				= 0;
@@ -185,8 +186,10 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	private ArrayList<DEPropertyOrder>	mPropertyOrderList;
 	private Object[]					mPredictor;
 	private volatile int				mIDCodeColumn,mFragFpColumn,mFlexophoreColumn,mPropertyIndex;
+	private volatile boolean			mIsLargestFragment;
 	private final int					mTargetColumn;
 	private JComboBox<String>			mComboBoxStructureColumn;
+	private JCheckBox					mCheckBoxLargestFragment;
 	private JTabbedPane					mTabbedPane;
 	private DEPropertyGUI[]				mPropertyGUI;
 	private AtomicInteger				mSMPRecordIndex,mSMPWorkingThreads,mSMPErrorCount;
@@ -226,7 +229,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 			createPropertyMap();
 
 		int gap = HiDPIHelper.scale(8);
-		double[][] size1 = { {TableLayout.FILL, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL},
+		double[][] size1 = { {TableLayout.FILL, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL},
 							 {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED } };
 
 		JPanel content = new JPanel();
@@ -243,6 +246,9 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 			mComboBoxStructureColumn.setEditable(true);
 		content.add(new JLabel("Structure column:", JLabel.RIGHT), "1,1");
 		content.add(mComboBoxStructureColumn, "3,1");
+
+		mCheckBoxLargestFragment = new JCheckBox("LargestFragment Only");
+		content.add(mCheckBoxLargestFragment, "5,1");
 
 		mTabbedPane = new JTabbedPane();
 		mTabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
@@ -296,7 +302,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 			mTabbedPane.add(TAB_GROUP[tab], cbp);
 			}
 
-		content.add(mTabbedPane, "0,3,4,3");
+		content.add(mTabbedPane, "0,3,6,3");
 		return content;
 		}
 
@@ -314,6 +320,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		configuration.setProperty(PROPERTY_STRUCTURE_COLUMN, mTableModel.getColumnTitleNoAlias(mIDCodeColumn));
 		configuration.setProperty(PROPERTY_CHEMPROPERTY_LIST, PROPERTY_CODE[mPropertyIndex]);
 		configuration.setProperty(PROPERTY_TARGET_COLUMN, mTableModel.getColumnTitleNoAlias(mTargetColumn));
+		configuration.setProperty(PROPERTY_LARGEST_FRAGMENT, "true");
 		return configuration;
 		}
 
@@ -322,11 +329,12 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		Properties configuration = new Properties();
 
 		configuration.put(PROPERTY_STRUCTURE_COLUMN, mTableModel.getColumnTitleNoAlias((String)mComboBoxStructureColumn.getSelectedItem()));
+		configuration.put(PROPERTY_LARGEST_FRAGMENT, mCheckBoxLargestFragment.isSelected() ? "true" : "false");
 
 		StringBuilder codeList = new StringBuilder();
 		for (int i=0; i<mPropertyGUI.length; i++) {
 			if (mPropertyGUI[i].getCheckBox().isEnabled() && mPropertyGUI[i].getCheckBox().isSelected()) {
-				if (codeList.length() != 0)
+				if (!codeList.isEmpty())
 					codeList.append(CHEMPROPERTY_LIST_SEPARATOR);
 
 				codeList.append(PROPERTY_CODE[i]);
@@ -350,6 +358,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 			mComboBoxStructureColumn.setSelectedIndex(0);
 		else if (!isInteractive())
 			mComboBoxStructureColumn.setSelectedItem("Structure");
+		mCheckBoxLargestFragment.setSelected(true);
 
 		for (int i=0; i<mPropertyGUI.length; i++) {
 			mPropertyGUI[i].getCheckBox().setSelected(false);
@@ -370,7 +379,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
 		String value = configuration.getProperty(PROPERTY_STRUCTURE_COLUMN, "");
-		if (value.length() != 0) {
+		if (!value.isEmpty()) {
 			int column = mTableModel.findColumn(value);
 			if (column != -1)
 				mComboBoxStructureColumn.setSelectedItem(mTableModel.getColumnTitle(column));
@@ -382,6 +391,8 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		else if (!isInteractive()) {
 			mComboBoxStructureColumn.setSelectedItem("Structure");
 			}
+
+		mCheckBoxLargestFragment.setSelected(!"false".equals(configuration.getProperty(PROPERTY_LARGEST_FRAGMENT)));
 
 		for (int i=0; i<mPropertyGUI.length; i++)
 			mPropertyGUI[i].getCheckBox().setSelected(false);
@@ -619,6 +630,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 	@Override
 	public void runTask(Properties configuration) {
 		mIDCodeColumn = selectStructureColumn(configuration);
+		mIsLargestFragment = !"false".equals(configuration.getProperty(PROPERTY_LARGEST_FRAGMENT));
 
 		String value = configuration.getProperty(PROPERTY_CHEMPROPERTY_LIST);
 		if (value == null) {
@@ -1605,7 +1617,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		public StereoMolecule mol;
 		public chemaxon.struc.Molecule camol;
 		public TreeMap<Integer, Double> cache;
-		private int row;
+		private final int row;
 		private ConformerSet conformerSet;
 
 		public RowInfo(int row, StereoMolecule containerMol) {
@@ -1624,7 +1636,8 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 							}
 						}
 
-					mol.stripSmallFragments(true);
+					if (mIsLargestFragment)
+						mol.stripSmallFragments(true);
 					if (mPredictor[PREDICTOR_PKA] != null)
 						camol = ((PKaPredictor)mPredictor[PREDICTOR_PKA]).convert(mol);
 					}

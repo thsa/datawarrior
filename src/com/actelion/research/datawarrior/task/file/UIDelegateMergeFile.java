@@ -55,8 +55,8 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 	private JPanel				mDialogPanel;
 	private JComponent			mMatchingPanel;
 	private JFilePathLabel		mFilePathLabel;
-	private JComboBox[]			mComboBoxUsage;
-	private JComboBox[]			mComboBoxOldColumn;
+	private JComboBox<String>[]	mComboBoxUsage;
+	private JComboBox<String>[]	mComboBoxOldColumn;
 	private JCheckBox			mCheckBoxAppendRows,mCheckBoxAppendColumns;
 	private CompoundTableLoader	mLoader;
 	private String[]			mTotalFieldName,mFieldName,mFieldAlias;
@@ -212,7 +212,8 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 		boolean selectedFound = false;
 		for (int i=0; i<mFieldName.length; i++) {
 			int displayableType = getDisplayableType(mLoader.getColumnSpecialType(mFieldName[i]));
-			mComboBoxOldColumn[i] = new JComboBox(columnListBySpecialType[displayableType].toArray());
+			mComboBoxOldColumn[i] = new JComboBox<>(columnListBySpecialType[displayableType].toArray(new String[0]));
+			mComboBoxOldColumn[i].setSelectedIndex(0);
 			for (int j=2; j<columnListBySpecialType[displayableType].size(); j++) {
 				int destColumn = mTableModel.findColumn(columnListBySpecialType[displayableType].get(j));
 				String destColumnName = mTableModel.getColumnTitleNoAlias(destColumn);
@@ -233,7 +234,7 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 			if (selected)
 				selectedFound = true;
 
-			mComboBoxUsage[i] = new JComboBox(OPTION_TEXT);
+			mComboBoxUsage[i] = new JComboBox<>(OPTION_TEXT);
 			mComboBoxUsage[i].setSelectedIndex(selected ? CompoundTableLoader.MERGE_MODE_IS_KEY
 				 : (displayableType != IS_NORMAL_DISPLAYABLE) ? CompoundTableLoader.MERGE_MODE_USE_IF_EMPTY : CompoundTableLoader.MERGE_MODE_APPEND);
 			mComboBoxUsage[i].setEnabled(mComboBoxOldColumn[i].getSelectedIndex() > 1);
@@ -345,7 +346,7 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 						break;
 						}
 					}
-				JComboBox cbUsage = mComboBoxUsage[index];
+				JComboBox<String> cbUsage = mComboBoxUsage[index];
 				if (isDestinationItem
 				 && (cbUsage.getSelectedIndex() == CompoundTableLoader.MERGE_MODE_IS_KEY
 				  || cbUsage.getSelectedIndex() == CompoundTableLoader.MERGE_MODE_IS_KEY_NO_CASE
@@ -461,9 +462,9 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 						}
 					}
 				}
-			for (int field=0; field<fieldFound.length; field++)
-				if (!fieldFound[field])
-					mComboBoxOldColumn[field].setSelectedItem(DESTINATION_ITEMS[DESTINATION_ITEM_TRASH]);
+//			for (int field=0; field<fieldFound.length; field++)
+//				if (!fieldFound[field])
+//					mComboBoxOldColumn[field].setSelectedItem(DESTINATION_ITEMS[DESTINATION_ITEM_TRASH]);
 			}
 		catch (NumberFormatException nfe) {}
 

@@ -69,13 +69,17 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 	private static final int cModeSelectedOnly = 1;
 	private static final int cModeVisibleOnly = 2;
 
-	private static final String[] WHAT_NAME = { "Find this:", "Find regex:", "Find empty", "Find any" };
+	private static final String[] WHAT_NAME = { "Find this:", "Find regex:", "Find <empty>", "Find <any>", "Find <start>", "Find <end>" };
 	private static final int WHAT_THIS = 0;
 	private static final int WHAT_REGEX = 1;
 	private static final int WHAT_EMPTY = 2;
 	private static final int WHAT_ANY = 3;
+	private static final int WHAT_START = 4;
+	private static final int WHAT_END = 5;
 	private static final String CODE_WHAT_EMPTY = "<empty>";
 	private static final String CODE_WHAT_ANY = "<any>";
+	private static final String CODE_WHAT_START = "<start>";
+	private static final String CODE_WHAT_END = "<end>";
 
 	public static final String[] MODE_NAME = { "All rows", "Selected rows", "Visible rows" };
 	public static final String[] MODE_CODE = { "all", "selected", "visible" };
@@ -286,6 +290,8 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			StereoMolecule whatMol = mStructureFieldWhat.getMolecule();
 			String what = (mComboBoxWhat.getSelectedIndex() == WHAT_ANY) ? CODE_WHAT_ANY
 						: (mComboBoxWhat.getSelectedIndex() == WHAT_EMPTY) ? CODE_WHAT_EMPTY
+						: (mComboBoxWhat.getSelectedIndex() == WHAT_START) ? CODE_WHAT_START
+						: (mComboBoxWhat.getSelectedIndex() == WHAT_END) ? CODE_WHAT_END
 						: (whatMol.getAllAtoms() == 0) ? "" : new Canonizer(whatMol).getIDCode();
 			if (!what.isEmpty())
 				configuration.setProperty(PROPERTY_WHAT, what);
@@ -300,6 +306,8 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		else {
 			String what = (mComboBoxWhat.getSelectedIndex() == WHAT_ANY) ? CODE_WHAT_ANY
 					    : (mComboBoxWhat.getSelectedIndex() == WHAT_EMPTY) ? CODE_WHAT_EMPTY
+						: (mComboBoxWhat.getSelectedIndex() == WHAT_START) ? CODE_WHAT_START
+						: (mComboBoxWhat.getSelectedIndex() == WHAT_END) ? CODE_WHAT_END
 						: mTextFieldWhat.getText();
 			if (!what.isEmpty()) {
 				if (mComboBoxWhat.getSelectedIndex() == WHAT_REGEX)
@@ -349,6 +357,10 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 					mComboBoxWhat.setSelectedIndex(WHAT_ANY);
 				else if (what.equals(CODE_WHAT_EMPTY))
 					mComboBoxWhat.setSelectedIndex(WHAT_EMPTY);
+				else if (what.equals(CODE_WHAT_START))
+					mComboBoxWhat.setSelectedIndex(WHAT_START);
+				else if (what.equals(CODE_WHAT_END))
+					mComboBoxWhat.setSelectedIndex(WHAT_END);
 				else {
 					mComboBoxWhat.setSelectedIndex(WHAT_THIS);
 					try {
@@ -375,6 +387,10 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 				mComboBoxWhat.setSelectedIndex(WHAT_ANY);
 			else if (what.equals(CODE_WHAT_EMPTY))
 				mComboBoxWhat.setSelectedIndex(WHAT_EMPTY);
+			else if (what.equals(CODE_WHAT_START))
+				mComboBoxWhat.setSelectedIndex(WHAT_START);
+			else if (what.equals(CODE_WHAT_END))
+				mComboBoxWhat.setSelectedIndex(WHAT_END);
 			else {
 				mComboBoxWhat.setSelectedIndex("true".equals(configuration.getProperty(PROPERTY_IS_REGEX)) ?
 						WHAT_REGEX : WHAT_THIS);
@@ -404,6 +420,11 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			return false;
 			}
 		if (isStructureMode) {
+			if (what.equals(CODE_WHAT_START) || what.equals(CODE_WHAT_END)) {
+				showErrorMessage("<start> and <end> options cannot be used for replacing (sub)structures.");
+				return false;
+			}
+
 			String with = configuration.getProperty(PROPERTY_WITH, "");
 
 			StereoMolecule withMol;
@@ -596,7 +617,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 		if ("true".equals(configuration.getProperty(PROPERTY_IS_STRUCTURE))) {
 			if (what.equals(CODE_WHAT_ANY) || what.equals(CODE_WHAT_EMPTY))
 				replaceStructures(what, with, targetColumn, mode);
-			else {
+			else if (!what.equals(CODE_WHAT_START) && !what.equals(CODE_WHAT_END)) {
 				boolean allowSubstituents = "true".equals(configuration.getProperty(PROPERTY_ALLOW_SUBSTITUENTS));
 				replaceSubStructures(what, with, targetColumn, mode, allowSubstituents);
 				}
@@ -907,7 +928,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 
 			CompoundRecord record = mTableModel.getTotalRecord(row);
 			if ((mode == cModeSelectedOnly && !mTableModel.isVisibleAndSelected(record))
-					|| (mode == cModeVisibleOnly && !mTableModel.isVisible(record)))
+			 || (mode == cModeVisibleOnly && !mTableModel.isVisible(record)))
 				continue;
 
 			String value = mTableModel.getTotalValueAt(row, column);
@@ -976,12 +997,14 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 					"The cell content was replaced " + mReplacements + " times in " + mColumns + " columns."
 							  : what.equals(CODE_WHAT_EMPTY) ?
 					mReplacements + " empty cells in " + mColumns + " columns were filled with '" + with + "'."
+							  : what.equals(CODE_WHAT_START) || what.equals(CODE_WHAT_END) ?
+				  	"'" + what + "' was inserted " + mReplacements + " times in " + rows + " rows and " + mColumns + " columns."
 				  : "'" + what + "' was replaced " + mReplacements + " times in " + rows + " rows and " + mColumns + " columns.";
 			showInteractiveTaskMessage(msg, JOptionPane.INFORMATION_MESSAGE);
 			}
 		}
 
-	private int replaceTextInOneColumn(String what, String with, int column, int mode, boolean isRegex, boolean isCaseSensitive, boolean[] rowChanged) {
+	private void replaceTextInOneColumn(String what, String with, int column, int mode, boolean isRegex, boolean isCaseSensitive, boolean[] rowChanged) {
 		int replacements = 0;
 
 		for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
@@ -1002,6 +1025,20 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 				mTableModel.setTotalValueAt(with, row, column);
 				replacements++;
 				rowChanged[row] = true;
+				}
+			else if (what.equals(CODE_WHAT_START)) {
+				if (!with.isEmpty()) {
+					mTableModel.setTotalValueAt(with+value, row, column);
+					replacements++;
+					rowChanged[row] = true;
+					}
+				}
+			else if (what.equals(CODE_WHAT_END)) {
+				if (!with.isEmpty()) {
+					mTableModel.setTotalValueAt(value+with, row, column);
+					replacements++;
+					rowChanged[row] = true;
+					}
 				}
 			else if (isRegex) {
 				String newValue = value.replaceAll(what, with);
@@ -1068,8 +1105,6 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			mColumns++;
 			mReplacements += replacements;
 			}
-
-		return replacements;
 		}
 
 	@Override

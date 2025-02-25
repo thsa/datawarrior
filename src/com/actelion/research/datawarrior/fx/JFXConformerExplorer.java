@@ -272,6 +272,7 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 		ArrayList<StereoMolecule> conformerList = new ArrayList<>();
 
 		int maxTorsionSets = (int) Math.max(2 * maxConformers, (1000 * Math.sqrt(maxConformers)));
+		double lowestEnergy = Double.MAX_VALUE;
 
 		if (minimization == MINIMIZE_MMFFSPLUS)
 			ForceFieldMMFF94.initialize(ForceFieldMMFF94.MMFF94SPLUS);
@@ -355,14 +356,34 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 
 				conformer.copyFrom(mol);
 				conformer.setEnergy(result.energy);
-				message = (result.errorMessage != null) ? result.errorMessage : "E:" + DoubleFormat.toString(result.energy, 3) + " kcal/mol";
+				message = (result.errorMessage != null) ? result.errorMessage : DoubleFormat.toString(result.energy, 3) + " kcal/mol";
 			}
 
 			if (!isRedundantConformer(torsionHelper, torsionDescriptorList)) {
 				StereoMolecule uniqueConformer = conformer.toMolecule(null);
-				uniqueConformer.setName("Conf" + (i + 1) + (message == null ? "" : NAME_ENERGY_SEPARATOR + message));
+				uniqueConformer.setName("C" + (i + 1) + (message == null ? "" : NAME_ENERGY_SEPARATOR + message));
 				uniqueConformer.setUserData(conformer.getEnergy());
 				conformerList.add(uniqueConformer);
+				if (minimization != MINIMIZE_NONE && !Double.isNaN(conformer.getEnergy()) && lowestEnergy > conformer.getEnergy())
+					lowestEnergy = conformer.getEnergy();
+			}
+		}
+
+		if (minimization != MINIMIZE_NONE) {
+			double relPercentageSum = 0.0;
+			for (StereoMolecule conformer : conformerList) {
+				if (conformer.getUserData() != null && conformer.getUserData() instanceof Double && !((Double)conformer.getUserData()).isNaN()) {
+					double energyDif = 4180 * (((Double)conformer.getUserData()) - lowestEnergy);    // value in Joule/mol
+					relPercentageSum += Math.exp(-energyDif / (8.314 * 298));    // equilibrium constant between lowest energy conformer and given conformer
+				}
+			}
+
+			for (StereoMolecule conformer : conformerList) {
+				if (conformer.getUserData() != null && conformer.getUserData() instanceof Double && !((Double)conformer.getUserData()).isNaN()) {
+					double energyDif = 4180 * (((Double)conformer.getUserData()) - lowestEnergy);    // value in Joule/mol
+					double percentage = Math.exp(-energyDif / (8.314 * 298)) / relPercentageSum;
+					conformer.setName(conformer.getName() + NAME_ENERGY_SEPARATOR + DoubleFormat.toString(100*percentage, 2)+"%");
+				}
 			}
 		}
 

@@ -20,6 +20,9 @@ package com.actelion.research.datawarrior.task.chem;
 
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.alignment3d.PheSAAlignmentOptimizer;
+import com.actelion.research.chem.conf.Conformer;
+import com.actelion.research.chem.conf.TorsionDescriptor;
+import com.actelion.research.chem.conf.TorsionDescriptorHelper;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.DescriptorHandlerSkeletonSpheres;
 import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
@@ -37,10 +40,12 @@ import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.table.view.JVisualization;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
+import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
@@ -73,7 +78,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 	private static final String[] NEW_COLUMN_NAME = {
 			"Structure", "MMFF94+ minimized & retained atoms aligned", "MMFF94+ minimized & PheSA aligned", "PheSA-flex aligned", DescriptorConstants.DESCRIPTOR_FFP512.shortName,
 			"New Fragment", "New Fragment 3D", "Fragment RMSD", "Angle Divergence", "Retained Atom RMSD",
-			"MMFF94+ PheSA Rigid Score", "PheSA Flex Score", "Scaffold Similarity", "Energy Dif Flex Rigid" };
+			"MMFF94+ PheSA Rigid Score", "PheSA Flex Score", "Scaffold Similarity", "Energy Dif Flex Rigid", "Conformer Percentage", "Conformer Energy Dif" };
 	private static final int STRUCTURE_COLUMN = 0;
 	private static final int COORDS3D_MINIMIZED_COLUMN = 1;
 	private static final int COORDS3D_RIGID_COLUMN = 2;
@@ -87,7 +92,9 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 	private static final int PHESA_RIGID_COLUMN = 10;
 	private static final int PHESA_FLEX_COLUMN = 11;
 	private static final int SCAFFOLD_SIM_COLUMN = 12;
-	private static final int ENERGY_DIF_COLUMN = 13;
+	private static final int ENERGY_DIF_PHESA_COLUMN = 13;
+	private static final int CONFORMER_PERCENTAGE_COLUMN = 14;
+	private static final int CONFORMER_ENERGY_DIF_COLUMN = 15;
 
 	public static final String TASK_NAME = "Replace Scaffold And Link";
 
@@ -643,8 +650,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 					ForceFieldMMFF94 ff = null;
 					double mmffEnergy = Double.NaN;
 					try {
-						String tableSet = ForceFieldMMFF94.MMFF94SPLUS;
-						ff = new ForceFieldMMFF94(modifiedQuery, tableSet, new HashMap<>());
+						ff = new ForceFieldMMFF94(modifiedQuery, ForceFieldMMFF94.MMFF94SPLUS, new HashMap<>());
 						mmffEnergy = minimize(ff, modifiedQuery);
 					}
 					catch (RuntimeException rte) {}
@@ -668,7 +674,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 					modifiedQueryCanonizer.invalidateCoordinates();
 					String idcoordsPheSAFlex = modifiedQueryCanonizer.getEncodedCoordinates();
 
-					double energyDif = Double.isNaN(mmffEnergy) ? Double.NaN : getTotalEnergy(ff, modifiedQuery) - mmffEnergy;
+					double phESAEnergyDif = Double.isNaN(mmffEnergy) ? Double.NaN : getTotalEnergy(ff, modifiedQuery) - mmffEnergy;
 
 					// When finding linkers for marked hydrogen atoms,
 					// phesaFlexScore should not be a cut-off criterion
@@ -679,11 +685,14 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 						String fragmentIDCode = fragCanonizer.getIDCode();
 						String fragmentCoords = fragCanonizer.getEncodedCoordinates(true, fragCoords);
 
+						double[] confEnergyDifAndPercentage = conformerEnergyDifAndPercentage(modifiedQuery, mmffEnergy);
+
 						try {
 							DescriptorHandlerSkeletonSpheres dh = DescriptorHandlerSkeletonSpheres.getDefaultInstance();
 							double similarity = dh.getSimilarity(origScaffoldSkelSpheres, dh.createDescriptor(fragment));
 							mResultTableQueue.put(constructRow(idcode, idcoordsMinimized, idcoordsPheSARigid, idcoordsPheSAFlex, fragmentIDCode, fragmentCoords,
-									rmsdHolder[0], angleHolder[0], queryRMSD, phesaRigidScore, phesaFlexScore, similarity, energyDif));
+									rmsdHolder[0], angleHolder[0], queryRMSD, phesaRigidScore, phesaFlexScore, similarity, phESAEnergyDif,
+									confEnergyDifAndPercentage[0], confEnergyDifAndPercentage[1]));
 						}
 						catch (InterruptedException ie) {
 							ie.printStackTrace();
@@ -692,6 +701,78 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 				}
 			}
 		}
+	}
+
+	public double[] conformerEnergyDifAndPercentage(StereoMolecule originalMol, double originalEnergy) {
+		double[] energyDifAndPercentage = new double[2];
+
+		if (Double.isNaN(originalEnergy)) {
+			energyDifAndPercentage[0] = Double.NaN;
+			energyDifAndPercentage[1] = Double.NaN;
+			return energyDifAndPercentage;
+		}
+
+		final int MAX_CONFORMERS = 64;
+
+		ConformerGenerator cg = null;
+
+		ArrayList<Double> energyList = new ArrayList<>();
+		double lowestEnergy = originalEnergy;
+
+		int maxTorsionSets = (int) Math.max(2 * MAX_CONFORMERS, (1000 * Math.sqrt(MAX_CONFORMERS)));
+
+		ForceFieldMMFF94.initialize(ForceFieldMMFF94.MMFF94SPLUS);
+
+		StereoMolecule mol = new StereoMolecule(originalMol);
+		TorsionDescriptorHelper torsionHelper = new TorsionDescriptorHelper(mol);
+		ArrayList<TorsionDescriptor> torsionDescriptorList = new ArrayList<>();
+
+		// add original conformer
+		torsionDescriptorList.add(torsionHelper.getTorsionDescriptor());
+		energyList.add(originalEnergy);
+
+		for (int i=0; i<MAX_CONFORMERS; i++) {
+			if (cg == null) {
+				cg = new ConformerGenerator();
+				cg.initializeConformers(mol, ConformerGenerator.STRATEGY_ADAPTIVE_RANDOM, maxTorsionSets, false);
+			}
+
+			Conformer conformer = cg.getNextConformer();
+			if (conformer == null)
+				break;
+
+			conformer.copyTo(mol);
+			ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, ForceFieldMMFF94.MMFF94SPLUS, new HashMap<>());
+			double energy = minimize(ff, mol);
+
+			// check for redundancy again, because we have minimized and changed the conformer
+			if (!isRedundantConformer(torsionHelper, torsionDescriptorList)) {
+				energyList.add(energy);
+				if (lowestEnergy > energy)
+					lowestEnergy = energy;
+			}
+		}
+
+		double relPercentageSum = 0;
+		for (double energy : energyList) {
+			double energyDif = 4180 * (energy - lowestEnergy);	// value in Joule/mol
+			double K = Math.exp(-energyDif/(8.314*298));	// equilibrium constant between lowest energy conformer and given conformer
+			relPercentageSum += K;
+		}
+
+		energyDifAndPercentage[0] = originalEnergy - lowestEnergy;
+		energyDifAndPercentage[1] = 100.0 * Math.exp(-4180*(originalEnergy-lowestEnergy)/(8.314*298)) / relPercentageSum;
+		return energyDifAndPercentage;
+	}
+
+	private boolean isRedundantConformer(TorsionDescriptorHelper torsionHelper, ArrayList<TorsionDescriptor> torsionDescriptorList) {
+		TorsionDescriptor ntd = torsionHelper.getTorsionDescriptor();
+		for (TorsionDescriptor td:torsionDescriptorList)
+			if (td.equals(ntd))
+				return true;
+
+		torsionDescriptorList.add(ntd);
+		return false;
 	}
 
 	private double getTotalEnergy(ForceFieldMMFF94 ff, StereoMolecule mol) {
@@ -787,6 +868,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 				int colorListMode1 = VisualizationColor.cColorListModeHSBLong;
 				Color[] colorList1 = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode1, null);
 				vpanel1.getVisualization().getMarkerColor().setColor(SCAFFOLD_SIM_COLUMN, colorList1, colorListMode1);
+				vpanel1.getVisualization().setFontSize(2.0f, JVisualization.cFontSizeModeRelative, false);
 
 				String title2 = mSeekLinker ? "RMDS" : "RMSD & PheSA-flex";
 				VisualizationPanel2D vpanel2 = mTargetFrame.getMainFrame().getMainPane().add2DView(title2, title1 + "\tright\t0.5");
@@ -795,6 +877,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 				int colorListMode2 = VisualizationColor.cColorListModeHSBLong;
 				Color[] colorList2 = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode2, null);
 				vpanel2.getVisualization().getMarkerColor().setColor(SCAFFOLD_SIM_COLUMN, colorList2, colorListMode2);
+				vpanel2.getVisualization().setFontSize(2.0f, JVisualization.cFontSizeModeRelative, false);
 			});
 		}
 		catch (Exception e) {}
@@ -804,7 +887,8 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 
 	private byte[][] constructRow(String idcode, String minimizedCoords, String rigidCoords, String flexCoords, String fragmentIDCode, String fragmentCoords,
 								  double fragmentRMSD, double[] fragmentAngles, double queryRMSD,
-								  double phesaRigidScore, double phesaFlexScore, double scaffoldSimilarity, double energyDif) {
+								  double phesaRigidScore, double phesaFlexScore, double scaffoldSimilarity,
+								  double phESAEnergyDif, double conformerPercentage, double conformerEnergyDif) {
 		byte[][] row = new byte[NEW_COLUMN_NAME.length][];
 		row[STRUCTURE_COLUMN] = idcode.getBytes();
 		row[COORDS3D_MINIMIZED_COLUMN] = minimizedCoords.getBytes();
@@ -824,7 +908,9 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 		row[FRAGMENT_ANGLE_COLUMN] = angles.toString().getBytes();
 		row[QUERY_RMSD_COLUMN] = DoubleFormat.toString(queryRMSD).getBytes();
 		row[SCAFFOLD_SIM_COLUMN] = DoubleFormat.toString(scaffoldSimilarity).getBytes();
-		row[ENERGY_DIF_COLUMN] = DoubleFormat.toString(energyDif).getBytes();
+		row[ENERGY_DIF_PHESA_COLUMN] = DoubleFormat.toString(phESAEnergyDif).getBytes();
+		row[CONFORMER_PERCENTAGE_COLUMN] = DoubleFormat.toString(conformerPercentage).getBytes();
+		row[CONFORMER_ENERGY_DIF_COLUMN] = DoubleFormat.toString(conformerEnergyDif).getBytes();
 		return row;
 		}
 

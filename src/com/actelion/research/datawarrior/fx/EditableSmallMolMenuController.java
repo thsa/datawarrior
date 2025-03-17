@@ -88,6 +88,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 					}
 
 					if (mol != null && mol.getAllAtoms() != 0) {
+						new AtomAssembler(mol).addImplicitHydrogens();
 						mol.center();
 						V3DScene scene = mConformerPanel.getV3DScene();
 						V3DMolecule mol3D = new V3DMolecule(mol, true, scene.isSplitAllBonds());
@@ -175,7 +176,21 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 
 				PDBFileParser parser = new PDBFileParser();
 				try {
-					PDBCoordEntryFile entryFile = (mPDBCode != null) ? parser.getFromPDB(mPDBCode) : parser.parse(pdbFile);
+					PDBCoordEntryFile entryFile;
+					if (mPDBCode != null) {
+						try {
+							entryFile = parser.getFromPDB(mPDBCode);
+						}
+						catch (Exception e) {
+							showMessageInEDT("Couldn't retrieve pdb-file of '"+mPDBCode+"' from PDB-database:\n"+e.getMessage()+"\nYou may try to download it manually from 'www.rcsb.org'.");
+							e.printStackTrace();
+							return;
+						}
+					}
+					else {
+						entryFile = parser.parse(pdbFile);
+					}
+
 					List<Molecule3D> ligands = entryFile.extractMols(false).get(StructureAssembler.LIGAND_GROUP);
 
 					if (ligands == null || ligands.isEmpty()) {

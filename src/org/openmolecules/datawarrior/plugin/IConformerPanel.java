@@ -44,7 +44,7 @@ public interface IConformerPanel {
 	public static final int ROLE_PROTEIN = 2;
 
 	/**
-	 * @return drawn molecule/fragment as canonical idcode.
+	 * @return drawn molecule/fragment as canonical idcode or as molfile V2 or V3.
 	 */
 	public String getStructure(int role, int format);
 

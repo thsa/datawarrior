@@ -72,7 +72,7 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 		mUsePostMethod = usePost;
 		}
 
-	private URLConnection getConnection(String serverURL) throws IOException {
+	public URLConnection getConnection(String serverURL) throws IOException {
 		try {
 			URL urlServlet = new URI(serverURL).toURL();
 			HttpURLConnection con = (HttpURLConnection)urlServlet.openConnection();

@@ -460,7 +460,10 @@ public abstract class DataWarrior implements WindowFocusListener {
 	public int closeFrameSafely(DEFrame frame, boolean isInteractive) {
 		int result = disposeFrameSafely(frame, isInteractive);
 
-		if (!isMacintosh() && mFrameList.isEmpty())
+		// On the Mac the menu bar should stay open, but in Java the menu bar requires a window.
+		// One could clear the last windows content instead of closing it, but that would at least
+		// be equally weird for Mac users than closing the app, when the last window is closed.
+		if (/* !isMacintosh() && */ mFrameList.isEmpty())
 			exit();
 
 		return result;

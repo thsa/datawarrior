@@ -72,7 +72,7 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 		mUsePostMethod = usePost;
 		}
 
-	public URLConnection getConnection(String serverURL) throws IOException {
+	private URLConnection getConnection(String serverURL) throws IOException {
 		try {
 			URL urlServlet = new URI(serverURL).toURL();
 			HttpURLConnection con = (HttpURLConnection)urlServlet.openConnection();
@@ -88,6 +88,9 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 
 			if (mWithSessions && mSessionID != null)
 				con.addRequestProperty(KEY_SESSION_ID, mSessionID);
+
+			// we want error messages to be returned with HTTP code 200
+			con.addRequestProperty(KEY_ERROR_200, "true");
 
 			return con;
 			}
@@ -308,7 +311,7 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 		else if (response.startsWith("SERVER_MESSAGE"))    // rest server prefix, e.g. hyperspace server
 			return response.substring("SERVER_MESSAGE".length() + 1);
 		else if (response.startsWith(BODY_ERROR))
-			throw new ServerErrorException(response);
+			throw new ServerErrorException("Error: " + response.substring(BODY_ERROR.length() + 1));
         else
 	        throw new ServerErrorException("Unexpected response:" + (response.length()<40 ? response : response.substring(0, 40) + "..."));
 		}

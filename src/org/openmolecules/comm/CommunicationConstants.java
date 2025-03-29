@@ -30,6 +30,7 @@ public interface CommunicationConstants {
     String KEY_APP_NAME = "appname";
     String KEY_USER = "user";
     String KEY_PASSWORD = "password";
+    String KEY_ERROR_200 = "error200";  // if true, then the server uses HTTP code 200 for error messages
 
     String REQUEST_NEW_SESSION = "new";
     String REQUEST_END_SESSION = "end";

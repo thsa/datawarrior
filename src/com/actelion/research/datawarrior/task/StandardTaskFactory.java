@@ -112,6 +112,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskBuildEvolutionaryLibrary.TASK_NAME) ? new DETaskBuildEvolutionaryLibrary(frame, application)
 			 : codeMatches(taskCode, DETaskBuildingBlockQuery.TASK_NAME) ? new DETaskBuildingBlockQuery(frame, application)
 			 : codeMatches(taskCode, DETaskCalculateChemicalProperties.TASK_NAME) ? new DETaskCalculateChemicalProperties(frame)
+			 : codeMatches(taskCode, DETaskCalculateConformerEnergy.TASK_NAME) ? new DETaskCalculateConformerEnergy(frame)
 			 : codeMatches(taskCode, DETaskCalculateDescriptor.TASK_NAME) ? new DETaskCalculateDescriptor(frame, null, null)
 			 : codeMatches(taskCode, DETaskCalculateFuzzyScore.TASK_NAME) ? new DETaskCalculateFuzzyScore(frame)
 			 : codeMatches(taskCode, DETaskCalculateSelectivityScore.TASK_NAME) ? new DETaskCalculateSelectivityScore(frame, mainPane.getTableModel())
@@ -354,6 +355,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskBuildEvolutionaryLibrary.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskBuildingBlockQuery.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskCalculateChemicalProperties.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskCalculateConformerEnergy.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskCalculateDescriptor.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskCalculateSelectivityScore.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskCalculateSOM.TASK_NAME));

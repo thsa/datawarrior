@@ -148,7 +148,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuDataGiniScore,jMenuDataArrangeGraph,jMenuDataCorrelationMatrix,
 					  jMenuChemExtractReactants,jMenuChemExtractCatalysts,jMenuChemExtractProducts,jMenuChemExtractTransformation,
 					  jMenuChemCCLibrary,jMenuChemEALibrary,jMenuChemEnumerateMarkush,jMenuChemAddProperties,jMenuChemAddFormula,jMenuChemAddSmiles,
-					  jMenuChemAddInchi,jMenuChemAddInchiKey,jMenuChemAddCanonicalCode,jMenuChemCreate2DCoords,jMenuChemCreate3DCoords,
+					  jMenuChemAddInchi,jMenuChemAddInchiKey,jMenuChemAddCanonicalCode,jMenuChemCreate2DCoords,jMenuChemCreate3DCoords,jMenuChemCalculateConformerEnergy,
 					  jMenuChemSuperposeFlexible,jMenuChemSuperposeRigid,jMenuChemDock, jMenuChem3DFragmentsBuildLib, jMenuChem3DFragmentsReplace,
 					  jMenuChemAddSubstructureCount,jMenuChemAddStructureFromName, jMenuChemDecomposeRGroups,jMenuChemInteractiveSARTable,
 					  jMenuChemAnalyzeScaffolds,jMenuChemAnalyzeCliffs,jMenuChemMatchFile,jMenuChemSelectDiverse,
@@ -868,6 +868,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemAddStructureFromName = new JMenuItem();
 		jMenuChemCreate2DCoords = new JMenuItem();
 		jMenuChemCreate3DCoords = new JMenuItem();
+		jMenuChemCalculateConformerEnergy = new JMenuItem();
 		jMenuChemSuperpose = new JMenu();
 		jMenuChemSuperposeFlexible = new JMenuItem();
 		jMenuChemSuperposeRigid = new JMenuItem();
@@ -940,6 +941,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemCreate2DCoords.addActionListener(this);
 		jMenuChemCreate3DCoords.setText("Generate Conformers...");
 		jMenuChemCreate3DCoords.addActionListener(this);
+		jMenuChemCalculateConformerEnergy.setText("Calculate Conformer Energy...");
+		jMenuChemCalculateConformerEnergy.addActionListener(this);
 		jMenuChemSuperpose.setText("Superpose Conformers");
 		jMenuChemSuperposeFlexible.setText("Flexible...");
 		jMenuChemSuperposeFlexible.addActionListener(this);
@@ -1044,6 +1047,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChem.addSeparator();
 		jMenuChem.add(jMenuChemCreate2DCoords);
 		jMenuChem.add(jMenuChemCreate3DCoords);
+		if (System.getProperty("development") != null)
+			jMenuChem.add(jMenuChemCalculateConformerEnergy);
 		jMenuChem.add(jMenuChemSuperpose);
 		jMenuChemSuperpose.add(jMenuChemSuperposeFlexible);
 		jMenuChemSuperpose.add(jMenuChemSuperposeRigid);
@@ -1802,6 +1807,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskAdd2DCoordinates(mParentFrame).defineAndRun();
 			else if (source == jMenuChemCreate3DCoords)
 				new DETaskAdd3DCoordinates(mParentFrame).defineAndRun();
+			else if (source == jMenuChemCalculateConformerEnergy)
+				new DETaskCalculateConformerEnergy(mParentFrame).defineAndRun();
 			else if (source == jMenuChemSuperposeFlexible)
 				new DETaskSuperposeConformers(mParentFrame, true).defineAndRun();
 			else if (source == jMenuChemSuperposeRigid)

@@ -25,6 +25,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	private final CompoundTableModel mTableModel;
 	private CompoundRecord mParentRecord;
 	private int mCoordsColumn;
+	private int[] mCoordsColumns;
 	private final boolean mAllowSuperposeReference;
 	private volatile Thread mUpdateThread;
 
@@ -41,6 +42,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 		mTableModel = tableModel;
 		mCoordsColumn = coordsColumn;
 		mAllowSuperposeReference = allowSuperposeReference;
+		mCoordsColumns = mTableModel.getSpecialColumnList(CompoundTableConstants.cColumnType3DCoordinates);
 	}
 
 	/**
@@ -62,13 +64,15 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	@Override
 	public void addExternalMenuItems(ContextMenu popup, int type) {
 		if (type == V3DPopupMenuController.TYPE_VIEW) {
+			String superposeWhat = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperpose);
 			boolean hasCavity = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyProteinCavity) != null;
 			boolean hasLigand = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyNaturalLigand) != null;
 			boolean hasQuery = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperposeMolecule) != null;
 			boolean isShowLigand = !"false".equals(mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyShowNaturalLigand));
 			boolean isShowQuery = !"false".equals(mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyShowSuperposeMolecule));
-			boolean isSuperpose = CompoundTableConstants.cSuperposeValueReferenceRow.equals(mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperpose));
+			boolean isSuperposeRefRow = CompoundTableConstants.cSuperposeValueReferenceRow.equals(superposeWhat);
 			boolean isShapeAlign = CompoundTableConstants.cSuperposeAlignValueShape.equals(mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperposeAlign));
+			int superposeColumn = isSuperposeRefRow ? -1 : mTableModel.findColumn(superposeWhat);
 
 			if (hasQuery) {
 				javafx.scene.control.CheckMenuItem itemShowQuery = new CheckMenuItem("Show Query Molecule");
@@ -85,18 +89,28 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 			}
 
 			if (mAllowSuperposeReference) {
-				javafx.scene.control.CheckMenuItem itemSuperpose = new CheckMenuItem("Show Reference Row Structure");
-				itemSuperpose.setSelected(isSuperpose);
-				itemSuperpose.setOnAction(e -> setSuperposeMode(!isSuperpose, isShapeAlign, -1));
-				popup.getItems().add(itemSuperpose);
+				javafx.scene.control.CheckMenuItem itemSuperposeRefRow = new CheckMenuItem("Show Reference Row Structure");
+				itemSuperposeRefRow.setSelected(isSuperposeRefRow);
+				itemSuperposeRefRow.setOnAction(e -> setSuperposeMode(!isSuperposeRefRow, isShapeAlign, superposeColumn, -1));
+				popup.getItems().add(itemSuperposeRefRow);
 			}
 
-			if (mAllowSuperposeReference && !hasCavity && isSuperpose) {
+			for (int coordsColumn : mCoordsColumns) {
+				if (coordsColumn != mCoordsColumn
+				 && !"none".equals(mTableModel.getColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertyDetailView))) {
+					javafx.scene.control.CheckMenuItem itemSuperposeColumn = new CheckMenuItem("Show '"+mTableModel.getColumnTitle(coordsColumn)+"'");
+					itemSuperposeColumn.setSelected(superposeColumn == coordsColumn);
+					itemSuperposeColumn.setOnAction(e -> setSuperposeMode(false, isShapeAlign, superposeColumn == coordsColumn ? -1 : coordsColumn, -1));
+					popup.getItems().add(itemSuperposeColumn);
+				}
+			}
+
+			if (mAllowSuperposeReference && !hasCavity && (isSuperposeRefRow || superposeColumn != -1)) {
 				// don't allow shape alignment if we show a protein cavity
 				javafx.scene.control.CheckMenuItem itemAlignShape = new CheckMenuItem("Align Shown Structures");
 				itemAlignShape.setSelected(isShapeAlign);
 				itemAlignShape.setDisable(false);
-				itemAlignShape.setOnAction(e -> setSuperposeMode(isSuperpose, !isShapeAlign, -1));
+				itemAlignShape.setOnAction(e -> setSuperposeMode(isSuperposeRefRow, !isShapeAlign, superposeColumn, -1));
 				popup.getItems().add(itemAlignShape);
 			}
 
@@ -123,13 +137,22 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 		}
 	}
 
-	private void setSuperposeMode(boolean isSuperpose, boolean isShapeAlign, int cavityColumn) {
+	/**
+	 *
+	 * @param isSuperposeRefRow whether the reference row's conformer shall be superposed to this row's one
+	 * @param isShapeAlignRefRow whether the reference row's conformer shall be also aligned to this row's one
+	 * @param superposeColumn whether and which other 3D-coord column's conformer of the same row shall be superposed to this column's one
+	 * @param cavityColumn whether and which cavity column shall be shown with this column's ligand structure
+	 */
+	private void setSuperposeMode(boolean isSuperposeRefRow, boolean isShapeAlignRefRow, int superposeColumn, int cavityColumn) {
 		SwingUtilities.invokeLater(() -> {
 			HashMap<String, String> map = new HashMap<>();
-			map.put(CompoundTableConstants.cColumnPropertySuperpose, isSuperpose ? CompoundTableConstants.cSuperposeValueReferenceRow : null);
-			map.put(CompoundTableConstants.cColumnPropertySuperposeAlign, isShapeAlign ? CompoundTableConstants.cSuperposeAlignValueShape : null);
+			String superposeWhat = isSuperposeRefRow ? CompoundTableConstants.cSuperposeValueReferenceRow
+					: (superposeColumn != -1) ? mTableModel.getColumnTitleNoAlias(superposeColumn) : null;
+			map.put(CompoundTableConstants.cColumnPropertySuperpose, superposeWhat);
+			map.put(CompoundTableConstants.cColumnPropertySuperposeAlign, isShapeAlignRefRow ? CompoundTableConstants.cSuperposeAlignValueShape : null);
 			new DETaskSetColumnProperties(getFrame(), mCoordsColumn, map, false).defineAndRun();
-			update3DView(isSuperpose, isShapeAlign, cavityColumn);
+			update3DView(isSuperposeRefRow, isShapeAlignRefRow, superposeColumn, cavityColumn);
 		});
 	}
 
@@ -170,11 +193,12 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	}
 
 	/**
-	 * @param isSuperpose whether the active row's conformer shall be shown in addition
+	 * @param isSuperposeRefRow whether the active row's conformer shall be shown in addition
 	 * @param isAlign whether the shown conformer(s) shall be rigidly aligned to the active row's conformer (if shown)
+	 * @param superposeColumn -1 or coords3D column of another conformer column which shall be superposed to this column's conformer
 	 * @param cavityColumn -1 or coords3D column of cavity column that is assigned to this controller's ligand column to complete a binding site structure
 	 */
-	public void update3DView(boolean isSuperpose, boolean isAlign, int cavityColumn) {
+	public void update3DView(boolean isSuperposeRefRow, boolean isAlign, int superposeColumn, int cavityColumn) {
 		mUpdateThread = new Thread(() -> {
 			// cancel all FX-threads that work on older updates, because a new one is on its way
 			mConformerPanel.increaseUpdateID();
@@ -184,26 +208,42 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				rowMol = getConformers(mCoordsColumn, mParentRecord, true);
 
 			StereoMolecule[] refMol = null;
-			if (isSuperpose && mTableModel.getActiveRow() != null && mTableModel.getActiveRow() != mParentRecord)
-				refMol = getConformers(mCoordsColumn, mTableModel.getActiveRow(), false);
+			if (isSuperposeRefRow) {
+				if (mTableModel.getActiveRow() != null && mTableModel.getActiveRow() != mParentRecord)
+					refMol = getConformers(mCoordsColumn, mTableModel.getActiveRow(), false);
+			}
+			else if (superposeColumn != -1) {
+				if (mParentRecord != null)
+					refMol = getConformers(superposeColumn, mParentRecord, false);
+			}
 
 			if (rowMol != null) {
-				StereoMolecule best = null;
+				StereoMolecule bestRowConf = null;
+				StereoMolecule bestRefConf = null;
 				if (isAlign && refMol != null) {
-					double maxFit = 0;
-					for (StereoMolecule stereoMolecule : rowMol) {
-						if (Thread.currentThread() != mUpdateThread)
-							break;
-
-						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol[0], stereoMolecule);
-						if (fit>maxFit) {
-							maxFit = fit;
-							best = stereoMolecule;
-						}
+					if (rowMol.length == 1) {
+						PheSAAlignmentOptimizer.alignTwoMolsInPlace(rowMol[0], refMol[0]);
 					}
+					else {	// we align the ref-mol on all row conformers and only show the one that fits best
+						double maxFit = 0;
+						for (StereoMolecule rowConf : rowMol) {
+							if (Thread.currentThread() != mUpdateThread)
+								break;
 
-					rowMol = new StereoMolecule[1];
-					rowMol[0] = best;
+							StereoMolecule refConf = new StereoMolecule(refMol[0]);
+							double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(rowConf, refConf);
+							if (fit>maxFit) {
+								maxFit = fit;
+								bestRowConf = rowConf;
+								bestRefConf = refConf;
+							}
+						}
+
+						rowMol = new StereoMolecule[1];
+						rowMol[0] = bestRowConf;
+						refMol = new StereoMolecule[1];
+						refMol[0] = bestRefConf;
+					}
 				}
 			}
 

@@ -122,6 +122,7 @@ public class DECorrelationDialog extends JDialog implements ActionListener {
 
 		    public void paint(Graphics g) {
 		        super.paint(g);
+				((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 				if (font == null)
 					font = new JLabel().getFont().deriveFont((float)HiDPIHelper.scale(FONT_SIZE));
@@ -132,16 +133,20 @@ public class DECorrelationDialog extends JDialog implements ActionListener {
                     g.fillRect(2*SPACING+titleWidth+1, (i+1)*CELL_HEIGHT+1, NUM_CELL_WIDTH-2, CELL_HEIGHT-2);
                     g.fillRect(NUM_CELL_WIDTH+2*SPACING+titleWidth+i*CELL_WIDTH+1, 1, CELL_WIDTH-2, CELL_HEIGHT-2);
                     }
-                g.setColor(Color.WHITE);
-                for (int i=0; i<mNumericalColumn.length; i++) {
-                    g.fillRect(1, (i+1)*CELL_HEIGHT+1, titleWidth+2*SPACING-2, CELL_HEIGHT-2);
-                    }
+				g.setColor(getForeground());
+				for (int i=0; i<mNumericalColumn.length; i++) {
+					String s = ""+(i+1);
+					int stringWidth = g.getFontMetrics().stringWidth(s);
+					g.drawString(s, 2*SPACING+titleWidth+(NUM_CELL_WIDTH-stringWidth)/2, (i+2)*CELL_HEIGHT-3);
+					g.drawString(s, NUM_CELL_WIDTH+2*SPACING+titleWidth+i*CELL_WIDTH+(CELL_WIDTH-stringWidth)/2, CELL_HEIGHT-3);
+				}
+
+				g.setColor(Color.WHITE);
+				for (int i=0; i<mNumericalColumn.length; i++) {
+					g.fillRect(1, (i+1)*CELL_HEIGHT+1, titleWidth+2*SPACING-2, CELL_HEIGHT-2);
+				}
                 g.setColor(Color.BLACK);
                 for (int i=0; i<mNumericalColumn.length; i++) {
-                    String s = ""+(i+1);
-                    int stringWidth = g.getFontMetrics().stringWidth(s);
-                    g.drawString(s, 2*SPACING+titleWidth+(NUM_CELL_WIDTH-stringWidth)/2, (i+2)*CELL_HEIGHT-3);
-                    g.drawString(s, NUM_CELL_WIDTH+2*SPACING+titleWidth+i*CELL_WIDTH+(CELL_WIDTH-stringWidth)/2, CELL_HEIGHT-3);
                     g.drawString(mTableModel.getColumnTitle(mNumericalColumn[i]), SPACING, (i+2)*CELL_HEIGHT-3);
                     }
 

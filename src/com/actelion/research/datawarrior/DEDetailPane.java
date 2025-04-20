@@ -353,12 +353,14 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				((JStructureView) viewInfo.view).structureChanged(mol, displayMol);
 			}
 			case TYPE_STRUCTURE_3D -> {
-				boolean isSuperpose = CompoundTableConstants.cSuperposeValueReferenceRow.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperpose));
+				String superposeWhat = mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperpose);
+				boolean isSuperposeRefRow = CompoundTableConstants.cSuperposeValueReferenceRow.equals(superposeWhat);
 				boolean isAlign = CompoundTableConstants.cSuperposeAlignValueShape.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperposeAlign));
+				int superposeColumn = mTableModel.findColumn(superposeWhat);
 				int cavityColumn = mTableModel.findColumn(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyProteinCavityColumn));
 				CompoundRecordMenuController controller = (CompoundRecordMenuController)((JFXMolViewerPanel)viewInfo.view).getPopupMenuController();
 				controller.setParentRecord(mHighlightedRecord);
-				controller.update3DView(isSuperpose, isAlign, cavityColumn);
+				controller.update3DView(isSuperposeRefRow, isAlign, superposeColumn, cavityColumn);
 			}
 			case TYPE_REACTION -> {
 				Reaction rxn = null;

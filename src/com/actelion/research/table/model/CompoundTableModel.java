@@ -414,7 +414,7 @@ public class CompoundTableModel extends AbstractTableModel
 				String[] separator = getEntrySeparators(encodeData(record, column), entry);
 				StringBuilder buf = null;
 				for (int i=0; i<entry.length; i++) {
-					if (entry[i].length() != 0) {
+					if (!entry[i].isEmpty()) {
 						EntryAnalysis analysis = new EntryAnalysis(entry[i]);
 						if (mColumnInfo[column].significantDigits != 0
 						 && !analysis.isNaN()) {
@@ -672,7 +672,7 @@ public class CompoundTableModel extends AbstractTableModel
 			else if (cReactionPartProducts.equals(reactionPart))
 				return getReactionProducts(rxnCode, coords, mapping);
 			else if ("catalysts".equals(reactionPart)) {	// check for the outdated cReactionPartCatalysts, which is not used anymore
-				// catalysts are not longer stored as part of the reaction. they have their own child column to the reaction
+				// catalysts are no longer stored as part of the reaction. they have their own child column to the reaction
 				int catalystsColumn = getRelatedColumn(reactionColumn, cColumnPropertyRelatedCatalystColumn);
 				if (catalystsColumn != -1)
 					return getChemicalStructure(record, catalystsColumn, ATOM_COLOR_MODE_NONE, null);
@@ -826,7 +826,7 @@ public class CompoundTableModel extends AbstractTableModel
 		compileAtomColors(mol, graphIndex, sb, "orange:", Molecule.cAtomColorOrange);
 		compileAtomColors(mol, graphIndex, sb, "darkGreen:", Molecule.cAtomColorDarkGreen);
 		compileAtomColors(mol, graphIndex, sb, "darkRed:", Molecule.cAtomColorDarkRed);
-		return sb.length() == 0 ? null : sb.toString().getBytes();
+		return sb.isEmpty() ? null : sb.toString().getBytes();
 		}
 
 	private void compileAtomColors(StereoMolecule mol, int[] graphIndex, StringBuilder sb, String colorName, int atomColor) {
@@ -834,13 +834,13 @@ public class CompoundTableModel extends AbstractTableModel
 		for (int atom=0; atom<mol.getAtoms(); atom++) {
 			if (mol.getAtomColor(atom) == atomColor) {
 				if (isFirst) {
-					if (sb.length() != 0)
+					if (!sb.isEmpty())
 						sb.append(cEntrySeparator);
-					sb.append(colorName+graphIndex[atom]);
+					sb.append(colorName).append(graphIndex[atom]);
 					isFirst = false;
 					}
 				else {
-					sb.append(","+graphIndex[atom]);
+					sb.append(",").append(graphIndex[atom]);
 					}
 				}
 			}
@@ -944,8 +944,7 @@ public class CompoundTableModel extends AbstractTableModel
 			return mColumnInfo[parent].name+" ["+getColumnSpecialTypeForDisplay(column)+"]";
 			}
 
-		String name = (mColumnInfo[column].alias != null) ? mColumnInfo[column].alias : mColumnInfo[column].name;
-		return name;
+		return (mColumnInfo[column].alias != null) ? mColumnInfo[column].alias : mColumnInfo[column].name;
 		}
 
 	/**
@@ -1428,7 +1427,7 @@ public class CompoundTableModel extends AbstractTableModel
 	 * or for existing columns. In the latter case the column is re-analyzed and
 	 * the proper column change events are fired.
 	 * @param column total column index
-	 * @param type one of cDataTypeAutomatic,cDataTypeNumerical,cDataTypeDate,cDataTypeString
+	 * @param type one of cDataTypeAutomatic,cDataTypeInteger,cDataTypeFloat,cDataTypeDate,cDataTypeString
 	 * @param forceCategories whether categories are enforced and number of categories is unlimited
 	 */
 	public void setExplicitDataType(int column, int type, boolean forceCategories) {
@@ -5917,8 +5916,9 @@ class DescriptorCacheEntry {
 	}
 
 class DoubleComparator implements Comparator<CompoundRecord> {
-	private int mColumn;
-	private boolean mInverse,mSelectedFirst;
+	private final int mColumn;
+	private final boolean mInverse;
+	private final boolean mSelectedFirst;
 
 	public DoubleComparator(int column, boolean inverse, boolean selectedFirst) {
 		mColumn = column;
@@ -5935,7 +5935,7 @@ class DoubleComparator implements Comparator<CompoundRecord> {
 			return (Float.isNaN(d2)) ? 0 : 1;
 		if (Float.isNaN(d2))
 			return -1;
-		int comparison = (d1 < d2) ? -1 : (d1 == d2) ? 0 : 1;
+		int comparison = Float.compare(d1, d2);
 		return (mInverse) ? -comparison : comparison;
 		}
 	}
@@ -5975,8 +5975,8 @@ class StringComparator implements Comparator<CompoundRecord> {
 	}
 
 class ActNoComparator implements Comparator<CompoundRecord> {
-	private int mColumn;
-	private boolean mInverse,mSelectedFirst;
+	private final int mColumn;
+	private final boolean mInverse,mSelectedFirst;
 
 	public ActNoComparator(int column, boolean inverse, boolean selectedFirst) {
 		mColumn = column;
@@ -6017,9 +6017,9 @@ class ActNoComparator implements Comparator<CompoundRecord> {
 	}
 
 class IDCodeComparator implements Comparator<CompoundRecord> {
-	private int mColumn;
-	private boolean mInverse,mSelectedFirst;
-	private IDCodeParser mParser;
+	private final int mColumn;
+	private final boolean mInverse,mSelectedFirst;
+	private final IDCodeParser mParser;
 
 	public IDCodeComparator(int column, boolean inverse, boolean selectedFirst) {
 		mColumn = column;

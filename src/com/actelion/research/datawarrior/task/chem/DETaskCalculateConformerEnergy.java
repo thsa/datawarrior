@@ -350,12 +350,8 @@ if (!lengthBuilder.isEmpty() || !distanceBuilder.isEmpty()) {
 }
 */
 
-		StringBuilder detail = new StringBuilder();
 		ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, MMFF_TABLE_SET, mMMFFOptions);
-		double absEnergy = ff.getTotalEnergy(detail);
-		System.out.println(detail);
-		System.out.println();
-
+		double absEnergy = ff.getTotalEnergy();
 		getTableModel().setTotalValueAt(DoubleFormat.toString(absEnergy), row, firstNewColumn);
 /* alternatively torsion strain only:		getTableModel().setTotalValueAt(DoubleFormat.toString(calculateTorsionStrain(mol)), row, firstNewColumn); */
 

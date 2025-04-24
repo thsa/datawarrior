@@ -5,7 +5,7 @@ import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.conf.AtomAssembler;
 import com.actelion.research.chem.conf.TorsionDescriptor;
 import com.actelion.research.chem.conf.TorsionDescriptorHelper;
-import com.actelion.research.chem.forcefield.mmff.*;
+import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -16,6 +16,9 @@ import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.chem.conf.gen.RigidFragmentCache;
 
 import javax.swing.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +29,8 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 	private static final boolean WRITE_DEBUG_FILE = true;
 	private BufferedWriter mDebugWriter;
 	*/
+	private static final boolean WRITE_CONTRIBUTION_FILE = true;
+	private BufferedWriter mContributionWriter;
 
 	private static final String MMFF_TABLE_SET = ForceFieldMMFF94.MMFF94SPLUS;
 	public static final String TASK_NAME = "Calculate Conformer Energy";
@@ -146,9 +151,8 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		}
 
 		if (mAddConformers) {
-			int idcodeColumn = firstNewColumn;
-			getTableModel().setColumnName("Min-Energy Structure", firstNewColumn++);
-			getTableModel().setColumnProperty(idcodeColumn, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnTypeIDCode);
+			int idcodeColumn = getChemistryColumn();
+
 			if (mCalcLocal) {
 				getTableModel().setColumnName("Local Min-Energy Conformer", firstNewColumn);
 				getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType3DCoordinates);
@@ -231,7 +235,6 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 			count++;
 
 		if (mAddConformers) {
-			count++;
 			if (mCalcLocal)
 				count++;
 			if (mCalcGlobal)
@@ -271,6 +274,12 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 				ioe.printStackTrace();
 				System.exit(0);
 			} */
+		if (WRITE_CONTRIBUTION_FILE)
+			try { mContributionWriter = new BufferedWriter(new FileWriter("/home/thomas/data/conformers/energies/contributions.sdf")); } catch (
+					IOException ioe) {
+				ioe.printStackTrace();
+				System.exit(0);
+			}
 
 		return true;
 	}
@@ -280,9 +289,6 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		getTableModel().getChemicalStructure(getTableModel().getTotalRecord(row), getCoordinates3DColumn(), CompoundTableModel.ATOM_COLOR_MODE_NONE, mol);
 		if (mol == null || mol.getAllAtoms() == 0)
 			return;
-
-		mol.stripSmallFragments();
-		String idcode = new Canonizer(mol).getIDCode();
 
 // TODO remove!!! this is to check, whether our H-addition procedure contains less strain than whatever was used before
 //mol.removeExplicitHydrogens(true);
@@ -344,82 +350,89 @@ if (!lengthBuilder.isEmpty() || !distanceBuilder.isEmpty()) {
 }
 */
 
+		StringBuilder detail = new StringBuilder();
 		ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, MMFF_TABLE_SET, mMMFFOptions);
-		double absEnergy = ff.getTotalEnergy();
+		double absEnergy = ff.getTotalEnergy(detail);
+		System.out.println(detail);
+		System.out.println();
+
 		getTableModel().setTotalValueAt(DoubleFormat.toString(absEnergy), row, firstNewColumn);
-// torsion strain alone:		getTableModel().setTotalValueAt(DoubleFormat.toString(calculateTorsionStrain(mol)), row, firstNewColumn);
-		firstNewColumn++;
+/* alternatively torsion strain only:		getTableModel().setTotalValueAt(DoubleFormat.toString(calculateTorsionStrain(mol)), row, firstNewColumn); */
 
 		String localCoords = null;
 		double minEnergy = Double.MAX_VALUE;
 		boolean minimizationError = false;
 		if (mCalcLocal) {
+			firstNewColumn++;
 			MinimizationResult result = new MinimizationResult();
 			minimize(mol, result);
-			if (result.error().isEmpty())
+			if (result.error().isEmpty()) {
 				minEnergy = result.energy;
-			else
+				getTableModel().setTotalValueAt(DoubleFormat.toString(absEnergy - result.energy), row, firstNewColumn);
+				localCoords = new Canonizer(mol).getEncodedCoordinates(true);
+			}
+			else {
 				minimizationError = true;
-			getTableModel().setTotalValueAt(result.error().isEmpty() ? DoubleFormat.toString(absEnergy - result.energy) : result.error(), row, firstNewColumn);
-			firstNewColumn++;
-			localCoords = new Canonizer(mol).getEncodedCoordinates(true);
+				getTableModel().setTotalValueAt(result.error(), row, firstNewColumn);
+			}
 		}
 
 		String globalCoords = localCoords;
 		if (mCalcGlobal) {
-			ConformerGenerator cg = null;
+			firstNewColumn++;
 
-			String error = null;
+			if (!minimizationError) {
+				ConformerGenerator cg = null;
 
-			for (int i=0; i<mMaxConformers; i++) {
-				if (cg == null) {
-					cg = new ConformerGenerator(true);
-					cg.initializeConformers(mol, ConformerGenerator.STRATEGY_ADAPTIVE_RANDOM, 1000, false);
-				}
-				mol = cg.getNextConformerAsMolecule(mol);
+				String error = null;
 
-				if (mol != null && mol.getAllAtoms() != 0) {
-					MinimizationResult result = new MinimizationResult();
-					minimize(mol, result);
+				for (int i=0; i<mMaxConformers; i++) {
+					if (cg == null) {
+						cg = new ConformerGenerator(true);
+						cg.initializeConformers(mol, ConformerGenerator.STRATEGY_ADAPTIVE_RANDOM, 1000, false);
+					}
+					mol = cg.getNextConformerAsMolecule(mol);
 
-					if (result.error().isEmpty()) {
-						if (minEnergy > result.energy) {
-							minEnergy = result.energy;
-							Canonizer canonizer = new Canonizer(mol);
-							globalCoords = canonizer.getEncodedCoordinates(true);
+					if (mol != null && mol.getAllAtoms() != 0) {
+						MinimizationResult result = new MinimizationResult();
+						minimize(mol, result);
+
+						if (result.error().isEmpty()) {
+							if (minEnergy > result.energy) {
+								minEnergy = result.energy;
+								globalCoords = new Canonizer(mol).getEncodedCoordinates(true);
+							}
+						}
+						else {
+							error = result.error();
+							minimizationError = true;
 						}
 					}
-					else {
-						error = result.errorMessage;
-						minimizationError = true;
-					}
 				}
-			}
 
-			getTableModel().setTotalValueAt(minEnergy == Double.MAX_VALUE ? error : DoubleFormat.toString(absEnergy - minEnergy), row, firstNewColumn);
-			firstNewColumn++;
+				getTableModel().setTotalValueAt(minimizationError ? error : DoubleFormat.toString(absEnergy - minEnergy), row, firstNewColumn);
+			}
 		}
 
 		if (minimizationError)
 			mMinimizationErrors++;
 
 		if (mAddConformers) {
-			getTableModel().setTotalValueAt(idcode, row, firstNewColumn++);
 			if (mCalcLocal)
-				getTableModel().setTotalValueAt(localCoords, row, firstNewColumn++);
+				getTableModel().setTotalValueAt(localCoords, row, ++firstNewColumn);
 			if (mCalcGlobal)
-				getTableModel().setTotalValueAt(globalCoords, row, firstNewColumn++);
+				getTableModel().setTotalValueAt(globalCoords, row, ++firstNewColumn);
 		}
 	}
 
 	private double calculateTorsionStrain(StereoMolecule mol) {
 		Map<String,Object> options = new HashMap<>();
-		options.put("angle bend", Boolean.TRUE);
+		options.put("angle bend", Boolean.FALSE);
 		options.put("bond stretch", Boolean.FALSE);
 		options.put("electrostatic", Boolean.FALSE);
 		options.put("out of plane", Boolean.FALSE);
 		options.put("stretch bend", Boolean.FALSE);
-		options.put("torsion angle", Boolean.FALSE);
+		options.put("torsion angle", Boolean.TRUE);
 		options.put("van der waals", Boolean.FALSE);
 		ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, MMFF_TABLE_SET, options);
 		return ff.getTotalEnergy();

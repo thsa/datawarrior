@@ -355,12 +355,14 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			case TYPE_STRUCTURE_3D -> {
 				String superposeWhat = mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperpose);
 				boolean isSuperposeRefRow = CompoundTableConstants.cSuperposeValueReferenceRow.equals(superposeWhat);
-				boolean isAlign = CompoundTableConstants.cSuperposeAlignValueShape.equals(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperposeAlign));
+				String alignString = mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertySuperposeAlign);
+				int alignMethod = CompoundTableConstants.cSuperposeAlignValueShape.equals(alignString) ? CompoundRecordMenuController.ALIGN_BY_SHAPE
+								: CompoundTableConstants.cSuperposeAlignValueMCS.equals(alignString) ? CompoundRecordMenuController.ALIGN_BY_MCS : CompoundRecordMenuController.ALIGN_DONT_NONE;
 				int superposeColumn = mTableModel.findColumn(superposeWhat);
 				int cavityColumn = mTableModel.findColumn(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyProteinCavityColumn));
 				CompoundRecordMenuController controller = (CompoundRecordMenuController)((JFXMolViewerPanel)viewInfo.view).getPopupMenuController();
 				controller.setParentRecord(mHighlightedRecord);
-				controller.update3DView(isSuperposeRefRow, isAlign, superposeColumn, cavityColumn);
+				controller.update3DView(isSuperposeRefRow, alignMethod, superposeColumn, cavityColumn);
 			}
 			case TYPE_REACTION -> {
 				Reaction rxn = null;

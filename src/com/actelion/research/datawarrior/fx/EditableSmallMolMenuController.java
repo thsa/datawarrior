@@ -94,6 +94,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 						V3DMolecule mol3D = new V3DMolecule(mol, true, scene.isSplitAllBonds());
 						if (mMoleculeColor != null)
 							mol3D.setColor(mMoleculeColor);
+						scene.clearAll();
 						scene.addMolecule(mol3D, false);
 						scene.optimizeView();
 						}
@@ -109,6 +110,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 			if (selectedFile != null) {
 				Platform.runLater(() -> {
 					V3DScene scene = mConformerPanel.getV3DScene();
+					scene.clearAll();
 					V3DMoleculeParser.readMoleculeFile(scene, selectedFile.toString());
 					scene.optimizeView();
 				});
@@ -219,15 +221,15 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 						if (index != -1 && ligands.get(index).getAllAtoms() != 0) {
 							final Molecule3D ligand = ligands.get(index);
 							Platform.runLater(() -> {
-								V3DScene scene = mConformerPanel.getV3DScene();
-
 								new AtomAssembler(ligand).addImplicitHydrogens();
 
 								V3DMolecule mol3D = new V3DMolecule(ligand, MoleculeArchitect.CONSTRUCTION_MODE_STICKS, MoleculeArchitect.HYDROGEN_MODE_ALL, 0, V3DMolecule.MoleculeRole.LIGAND, true, false);
 								if (mMoleculeColor != null)
 									mol3D.setColor(mMoleculeColor);
-								scene.addMolecule(mol3D, false);
 
+								V3DScene scene = mConformerPanel.getV3DScene();
+								scene.clearAll();
+								scene.addMolecule(mol3D, false);
 								scene.optimizeView();
 							});
 						}

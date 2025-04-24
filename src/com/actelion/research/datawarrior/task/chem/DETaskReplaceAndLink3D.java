@@ -249,22 +249,20 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 
 		int bondCount = 0;
 		for (int bond=0; bond<query.getAllBonds(); bond++) {
-			for (int i=0; i<2; i++) {
-				if (query.isSelectedAtom(query.getBondAtom(i, bond)) && !query.isSelectedAtom(query.getBondAtom(1-i, bond))) {
-					if (query.getBondOrder(bond) != 1) {
-						showErrorMessage("You may not cut double or triple bonds.");
-						return false;
-					}
-					if (query.isAromaticBond(bond)) {
-						showErrorMessage("You may not cut delocalized bonds.");
-						return false;
-					}
-					bondCount++;
+			if (query.isSelectedAtom(query.getBondAtom(0, bond)) != query.isSelectedAtom(query.getBondAtom(1, bond))) {
+				if (query.getBondOrder(bond) != 1) {
+					showErrorMessage("You may not cut double or triple bonds.");
+					return false;
 				}
+				if (query.isAromaticBond(bond)) {
+					showErrorMessage("You may not cut delocalized bonds.");
+					return false;
+				}
+				bondCount++;
 			}
 		}
 		if (bondCount > DETaskBuild3DFragmentLibrary.MAX_EXIT_VECTORS) {
-			showErrorMessage("You may not cut more "+DETaskBuild3DFragmentLibrary.MAX_EXIT_VECTORS+" bonds.");
+			showErrorMessage("You may not cut more than "+DETaskBuild3DFragmentLibrary.MAX_EXIT_VECTORS+" bonds.");
 			return false;
 		}
 
@@ -656,7 +654,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 					catch (RuntimeException rte) {}
 
 					// Kabsch-align minimized structure to query using non-changing atoms.
-					// Then, determine RSMD.
+					// Then, determine RSMD of non-changing atoms.
 					double queryRMSD = alignAndGetRMSD(mQueryStaticAtomCoords, minimizedStaticAtomCoords, modifiedQuery);
 
 					Canonizer modifiedQueryCanonizer = new Canonizer(modifiedQuery);

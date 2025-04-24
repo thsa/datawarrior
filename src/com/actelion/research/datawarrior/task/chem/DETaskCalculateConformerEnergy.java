@@ -25,13 +25,6 @@ import java.util.Map;
 import java.util.Properties;
 
 public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure {
-	/* TODO remove
-	private static final boolean WRITE_DEBUG_FILE = true;
-	private BufferedWriter mDebugWriter;
-	*/
-	private static final boolean WRITE_CONTRIBUTION_FILE = true;
-	private BufferedWriter mContributionWriter;
-
 	private static final String MMFF_TABLE_SET = ForceFieldMMFF94.MMFF94SPLUS;
 	public static final String TASK_NAME = "Calculate Conformer Energy";
 
@@ -268,19 +261,6 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 			RigidFragmentCache.getDefaultInstance().resetAllCounters();
 		}
 
-		/*
-		if (WRITE_DEBUG_FILE)
-			try { mDebugWriter = new BufferedWriter(new FileWriter("/home/thomas/data/conformers/energies/debug.sdf")); } catch (IOException ioe) {
-				ioe.printStackTrace();
-				System.exit(0);
-			} */
-		if (WRITE_CONTRIBUTION_FILE)
-			try { mContributionWriter = new BufferedWriter(new FileWriter("/home/thomas/data/conformers/energies/contributions.sdf")); } catch (
-					IOException ioe) {
-				ioe.printStackTrace();
-				System.exit(0);
-			}
-
 		return true;
 	}
 
@@ -294,61 +274,6 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 //mol.removeExplicitHydrogens(true);
 
 		new AtomAssembler(mol).addImplicitHydrogens();
-
-/* Check all hydrogen bond lengths and any mutual hydrogen distances for too short ones
-// and write all suspicious molecules into a diagnostic sd-file.
-mol.ensureHelperArrays(Molecule.cHelperNeighbours);
-StringBuilder lengthBuilder = new StringBuilder();
-StringBuilder distanceBuilder = new StringBuilder();
-for (int atom1=mol.getAtoms(); atom1<mol.getAllAtoms(); atom1++) {
-	double bondLength = mol.getAtomCoordinates(atom1).distance(mol.getAtomCoordinates(mol.getConnAtom(atom1, 0)));
-	if (bondLength < 0.9) {
-		lengthBuilder.append("H:" + atom1 + " conn:" + mol.getConnAtom(atom1, 0) + " bondLength:" + DoubleFormat.toString(bondLength)+"\n");
-	}
-	for (int atom2=mol.getAtoms(); atom2<mol.getAllAtoms(); atom2++) {
-		if (atom1 != atom2) {
-			double distance = mol.getAtomCoordinates(atom1).distance(mol.getAtomCoordinates(atom2));
-			if (distance < 2.0 && mol.getConnAtom(atom1, 0) != mol.getConnAtom(atom2, 0)) {
-				distanceBuilder.append("a1:" + atom1 + " a2:" + atom2 + " distance:" + DoubleFormat.toString(distance)+"\n");
-				found = true;
-			}
-		}
-	}
-}
-if (!lengthBuilder.isEmpty() || !distanceBuilder.isEmpty()) {
-	if (WRITE_DEBUG_FILE)
-		synchronized (this) {
-			try {
-				mDebugWriter.write(new MolfileCreator(mol).getMolfile());
-				mDebugWriter.newLine();
-				if (!lengthBuilder.isEmpty()) {
-					mDebugWriter.write(">  <Bond length Issues>");
-					mDebugWriter.newLine();
-					mDebugWriter.write(lengthBuilder.toString());
-					mDebugWriter.newLine();
-					mDebugWriter.newLine();
-				}
-				if (!distanceBuilder.isEmpty()) {
-					mDebugWriter.write(">  <Atom Distance Issues>");
-					mDebugWriter.newLine();
-					mDebugWriter.write(distanceBuilder.toString());
-					mDebugWriter.newLine();
-					mDebugWriter.newLine();
-				}
-				mDebugWriter.write("$$$$");
-				mDebugWriter.newLine();
-			} catch (IOException ioe) {}
-		}
-	else {
-		System.out.println();
-		if (!lengthBuilder.isEmpty())
-			System.out.println(lengthBuilder.toString().replace("<NL>", "\\n"));
-		if (!distanceBuilder.isEmpty())
-			System.out.println(distanceBuilder.toString().replace("<NL>", "\\n"));
-		System.out.println(new MolfileCreator(mol).getMolfile());
-	}
-}
-*/
 
 		ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, MMFF_TABLE_SET, mMMFFOptions);
 		double absEnergy = ff.getTotalEnergy();

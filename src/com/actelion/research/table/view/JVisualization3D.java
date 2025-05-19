@@ -1733,6 +1733,7 @@ public class JVisualization3D extends JVisualization implements ComponentListene
 				else if (mChartType.getType() == ChartType.cTypeBars && mChartInfo.getDoubleAxis() == i)
 					label = (mChartType.getMode() == ChartType.cModeCount ? "Count"
 							: mChartType.getMode() == ChartType.cModePercent ? "Percent"
+							: mChartType.getMode() == ChartType.cModeCountLog ? "Log(Count)"
 							: CHART_MODE_AXIS_TEXT[mChartType.getMode()]+"("+mTableModel.getColumnTitle(mChartType.getColumn())+")");
 	
 				Point3i base = new Point3i(x2+surplusX, y2+surplusY, z2+surplusZ);

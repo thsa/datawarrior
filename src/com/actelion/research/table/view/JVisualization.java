@@ -2263,6 +2263,7 @@ public abstract class JVisualization extends JComponent
 		return ChartType.isBarOrPieChart(mPreferredChartType)
 			&& mChartType.getMode() != ChartType.cModeCount
 			&& mChartType.getMode() != ChartType.cModePercent
+			&& mChartType.getMode() != ChartType.cModeCountLog
 			&& mChartType.getColumn() != cColumnUnassigned
 			&& !mTableModel.isDescriptorColumn(mChartType.getColumn());
 		}
@@ -2633,7 +2634,7 @@ public abstract class JVisualization extends JComponent
 			 && mChartType.getMode() != ChartType.cModeCount) {
 				String name = mTableModel.getColumnTitleWithSpecialType(mChartType.getColumn());
 				writer.append(mChartType.getModeText(name));
-				if (mChartType.getMode() != ChartType.cModePercent) {
+				if (mChartType.getMode() != ChartType.cModePercent && mChartType.getMode() != ChartType.cModeCountLog) {
 					boolean isLogarithmic = mTableModel.isLogarithmicViewMode(mChartType.getColumn());
 					writer.append(isLogarithmic ? "\tStandard Deviation (geom.)" : "\tStandard Deviation");
 					writer.append("\tConfidence Interval (95%)");
@@ -2698,7 +2699,7 @@ public abstract class JVisualization extends JComponent
 					if (mChartType.isBarOrPieChart()
 					 && mChartType.getMode() != ChartType.cModeCount) {
 						writer.append("\t" + formatValue(mChartInfo.getBarValue(hv, cat), mChartType.getColumn()));
-						if (mChartType.getMode() != ChartType.cModePercent) {
+						if (mChartType.getMode() != ChartType.cModePercent && mChartType.getMode() != ChartType.cModeCountLog) {
 							writer.append("\t"+formatValue(mChartInfo.getStdDev(hv, cat), mChartType.getColumn()));
 							writer.append("\t"+formatValue(mChartInfo.getMean(hv, cat)-mChartInfo.getErrorMargin(hv, cat), mChartType.getColumn())
 										  +"-"+formatValue(mChartInfo.getMean(hv, cat)+mChartInfo.getErrorMargin(hv, cat), mChartType.getColumn()));
@@ -3458,7 +3459,7 @@ public abstract class JVisualization extends JComponent
 	public void setPreferredChartType(int type, int mode, int column) {
 		if (mode == -1)
 			mode = ChartType.cModeCount;
-		if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && column == cColumnUnassigned)
+		if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mode != ChartType.cModeCountLog && column == cColumnUnassigned)
 			mode = ChartType.cModeCount;
 		if (mPreferredChartType != type
 		 || mChartType.getColumn() != column

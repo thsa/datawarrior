@@ -4526,6 +4526,7 @@ public class JVisualization2D extends JVisualization {
 			String label = (mAxisIndex[0] != cColumnUnassigned) ? getAxisTitle(mAxisIndex[0])
 					: mChartType.getMode() == ChartType.cModeCount ? "Count"
 					: mChartType.getMode() == ChartType.cModePercent ? "Percent"
+					: mChartType.getMode() == ChartType.cModeCountLog ? "Log(Count)"
 					: CHART_MODE_AXIS_TEXT[mChartType.getMode()]+"("+mTableModel.getColumnTitle(mChartType.getColumn())+")";
 			if (mScaleTitleCentered) {
 				g.drawString(label,
@@ -4559,6 +4560,7 @@ public class JVisualization2D extends JVisualization {
 			String label = (mAxisIndex[1] != cColumnUnassigned) ? getAxisTitle(mAxisIndex[1])
 					: mChartType.getMode() == ChartType.cModeCount ? "Count"
 					: mChartType.getMode() == ChartType.cModePercent ? "Percent"
+					: mChartType.getMode() == ChartType.cModeCountLog ? "Log(Count)"
 					: CHART_MODE_AXIS_TEXT[mChartType.getMode()]+"("+mTableModel.getColumnTitle(mChartType.getColumn())+")";
 			if (mScaleTitleCentered) {
 				double labelX = xmin - mScaleSize[1] - mNaNSize[0] - AXIS_TEXT_PADDING * scaleIfSplitView(mFontHeight) - g.getFontMetrics().getDescent();

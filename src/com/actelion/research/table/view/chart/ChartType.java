@@ -17,13 +17,14 @@ public class ChartType {
 
 	public static final int cModeCount = 0;
 	public static final int cModePercent = 1;
-	public static final int cModeMean = 2;
-	public static final int cModeMin = 3;
-	public static final int cModeMax = 4;
-	public static final int cModeSum = 5;
+	public static final int cModeCountLog = 2;
+	public static final int cModeMean = 3;
+	public static final int cModeMin = 4;
+	public static final int cModeMax = 5;
+	public static final int cModeSum = 6;
 
-	public static final String[] MODE_NAME = { "Row Count", "Row Percentage", "Mean Value", "Minimum Value", "Maximum Value", "Sum of Values" };
-	public static final String[] MODE_CODE = { "count", "percent", "mean", "min", "max", "sum" };
+	public static final String[] MODE_NAME = { "Row Count", "Row Percentage", "Log(Row Count)", "Mean Value", "Minimum Value", "Maximum Value", "Sum of Values" };
+	public static final String[] MODE_CODE = { "count", "percent", "countlog", "mean", "min", "max", "sum" };
 
 	private final int mDimensions;
 	private int mType;
@@ -84,11 +85,12 @@ public class ChartType {
 		return mType == cTypeScatterPlot;
 	}
 	/**
-	 * @return whether chart mode is proportional to count (i.e. mode is count or percent)
+	 * @return whether chart mode is related to count, i.e. mode is count or percent or log(count)
 	 */
 	public boolean isSimpleMode() {
 		return mMode == cModeCount
-			|| mMode == cModePercent;
+			|| mMode == cModePercent
+			|| mMode == cModeCountLog;
 	}
 
 	/**
@@ -144,16 +146,18 @@ public class ChartType {
 
 	public boolean supportsShowMeanAndMedian() {
 		if (isBarOrPieChart(mType))
-			return mMode != cModePercent
-				&& mMode != cModeCount;
+			return mMode != cModeCount
+				&& mMode != cModePercent
+				&& mMode != cModeCountLog;
 		return isDistributionPlot(mType);
 	}
 
 	public boolean supportsShowStdDevAndErrorMergin() {
 		if (mType == cTypeBars
 		 || mType == cTypePies)
-			return mMode != cModePercent
-				&& mMode != cModeCount;
+			return mMode != cModeCount
+				&& mMode != cModePercent
+				&& mMode != cModeCountLog;
 		return isDistributionPlot();
 	}
 
@@ -216,6 +220,7 @@ public class ChartType {
 
 	public String getModeText(String columnName) {
 		return (mMode == cModePercent) ? "\tPercent of Rows"
+			 : (mMode == cModeCountLog) ? "\tLog of Row Count"
 			 : (mMode == cModeMean) ? "\tMean of "+columnName
 			 : (mMode == cModeSum) ? "\tSum of "+columnName
 			 : (mMode == cModeMin) ? "\tMinimum of "+columnName

@@ -45,7 +45,8 @@ public abstract class AbstractBarOrPieChart extends AbstractChart {
 		mPointsInColorCategory = new int[mHVCount][mCatCount][mColor.length];
 		mBarValue = new float[mHVCount][mCatCount];
 		if (mChartMode != ChartType.cModeCount
-		 && mChartMode != ChartType.cModePercent) {
+		 && mChartMode != ChartType.cModePercent
+		 && mChartMode != ChartType.cModeCountLog) {
 			mMean = new float[mHVCount][mCatCount];
 			mAbsValueSum = new float[mHVCount][mCatCount];
 			mAbsColorValueSum = new float[mHVCount][mCatCount][mColor.length];
@@ -166,6 +167,7 @@ public abstract class AbstractBarOrPieChart extends AbstractChart {
 			switch (mChartMode) {
 				case ChartType.cModeCount:
 				case ChartType.cModePercent:
+				case ChartType.cModeCountLog:
 					mAxisMin = 0.0f;
 					mAxisMax = dataMinAndMax[1] * (1f + cAnchoredBarSpacing);
 					mBarBase = 0.0f;
@@ -250,6 +252,7 @@ public abstract class AbstractBarOrPieChart extends AbstractChart {
 				switch (mChartMode) {
 					case ChartType.cModeCount:
 					case ChartType.cModePercent:
+					case ChartType.cModeCountLog:
 						barValue[vp.hvIndex][cat]++;
 						break;
 					case ChartType.cModeMin:
@@ -279,6 +282,11 @@ public abstract class AbstractBarOrPieChart extends AbstractChart {
 			for (int i = 0; i<mHVCount; i++)
 				for (int j=0; j<barValue[i].length; j++)
 					barValue[i][j] *= 100f / count;
+		if (mChartMode == ChartType.cModeCountLog)
+			for (int i = 0; i<mHVCount; i++)
+				for (int j=0; j<barValue[i].length; j++)
+					if (barValue[i][j] != 0)
+						barValue[i][j] = (float)Math.log10(barValue[i][j]);
 		if (mChartMode == ChartType.cModeMean)
 			for (int i = 0; i<mHVCount; i++)
 				for (int j=0; j<barValue[i].length; j++)
@@ -309,7 +317,8 @@ public abstract class AbstractBarOrPieChart extends AbstractChart {
 	private int getBarOrPieSizeValueDigits() {
 		if (mChartMode == ChartType.cModeCount)
 			return 1 + (int)Math.log10(mVisualization.getTableModel().getTotalRowCount());
-		if (mChartMode == ChartType.cModePercent)
+		if (mChartMode == ChartType.cModePercent
+		 || mChartMode == ChartType.cModeCountLog)
 			return FLOAT_DIGITS;
 
 		int chartColumn = mVisualization.getChartType().getColumn();
@@ -320,13 +329,14 @@ public abstract class AbstractBarOrPieChart extends AbstractChart {
 	}
 
 	protected int compileStatisticsLines(int hv, int cat, String[] lineText) {
-		boolean usesCounts = (mChartMode == ChartType.cModeCount || mChartMode == ChartType.cModePercent);
+		boolean usesCounts = (mChartMode == ChartType.cModeCount || mChartMode == ChartType.cModePercent || mChartMode == ChartType.cModeCountLog);
 		boolean isLogarithmic = usesCounts ? false : mVisualization.getTableModel().isLogarithmicViewMode(mVisualization.getChartType().getColumn());
 
 		int lineCount = 0;
 		if (mVisualization.isShowBarOrPieSizeValue()) {
 			double value = mChartMode == ChartType.cModeCount
 					|| mChartMode == ChartType.cModePercent
+					|| mChartMode == ChartType.cModeCountLog
 					|| !mVisualization.getTableModel().isLogarithmicViewMode(mVisualization.getChartType().getColumn()) ?
 					mBarValue[hv][cat] : Math.pow(10.0, mBarValue[hv][cat]);
 			lineText[lineCount++] = DoubleFormat.toString(value, getBarOrPieSizeValueDigits());

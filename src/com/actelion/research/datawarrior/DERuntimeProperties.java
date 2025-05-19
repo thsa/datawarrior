@@ -615,7 +615,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 						break;
 						}
 					}
-				if (chartMode != ChartType.cModeCount && chartMode != ChartType.cModePercent) {
+				if (chartMode != ChartType.cModeCount && chartMode != ChartType.cModePercent && chartMode != ChartType.cModeCountLog) {
 					String columnName = getProperty(cChartColumn+viewName);
 					if (columnName != null)
 						chartColumn = mTableModel.findColumn(columnName);
@@ -1647,7 +1647,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 					if (ChartType.supportsProportionalFractions(type.getType())) {
 						int mode = visualization.getPreferredChartMode();
 						setProperty(cChartMode+viewName, ChartType.MODE_CODE[mode]);
-						if (mode != ChartType.cModeCount && mode != ChartType.cModePercent) {
+						if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mode != ChartType.cModeCountLog) {
 							column = visualization.getPreferredChartColumn();
 							setProperty(cChartColumn+viewName, mTableModel.getColumnTitleNoAlias(column));
 							}

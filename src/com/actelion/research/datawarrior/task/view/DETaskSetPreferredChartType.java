@@ -133,7 +133,7 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 		int mode = findListIndex(configuration.getProperty(PROPERTY_MODE), ChartType.MODE_CODE, ChartType.cModeCount);
 		mComboBoxMode.setSelectedItem(ChartType.MODE_NAME[mode]);
 
-		if (mode != ChartType.cModeCount && mode != ChartType.cModePercent) {
+		if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mode != ChartType.cModeCountLog) {
 			String columnName = configuration.getProperty(PROPERTY_COLUMN, "<column name>");
 			int column = getTableModel().findColumn(columnName);
 			mComboBoxColumn.setSelectedItem(!hasInteractiveView() && column == -1 ? columnName : getTableModel().getColumnTitleExtended(column));
@@ -151,8 +151,8 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 		if (ChartType.supportsProportionalFractions(type)) {
 			int mode = mComboBoxMode.getSelectedIndex();
 			configuration.setProperty(PROPERTY_MODE, ChartType.MODE_CODE[mode]);
-			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mComboBoxColumn.getItemCount() != 0)
-				configuration.setProperty(PROPERTY_COLUMN, ""+getTableModel().getColumnTitleNoAlias((String)mComboBoxColumn.getSelectedItem()));
+			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mode != ChartType.cModeCountLog && mComboBoxColumn.getItemCount() != 0)
+				configuration.setProperty(PROPERTY_COLUMN, getTableModel().getColumnTitleNoAlias((String)mComboBoxColumn.getSelectedItem()));
 			}
 		if (ChartType.supportsEdgeSmoothing(type)) {
 			float smoothing = (float)mSliderEdgeSmoothing.getValue()/100f;
@@ -168,7 +168,7 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 		if (ChartType.supportsProportionalFractions(type)) {
 			int mode = visualization.getPreferredChartMode();
 			configuration.setProperty(PROPERTY_MODE, ChartType.MODE_CODE[mode]);
-			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent)
+			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mode != ChartType.cModeCountLog)
 				configuration.setProperty(PROPERTY_COLUMN, ""+getTableModel().getColumnTitleNoAlias(visualization.getPreferredChartColumn()));
 			}
 		if (ChartType.supportsEdgeSmoothing(type))
@@ -180,7 +180,7 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 		int type = findListIndex(configuration.getProperty(PROPERTY_TYPE), ChartType.TYPE_CODE, ChartType.cTypeScatterPlot);
 		if (ChartType.supportsProportionalFractions(type)) {
 			int mode = findListIndex(configuration.getProperty(PROPERTY_MODE), ChartType.MODE_CODE, ChartType.cModeCount);
-			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent) {
+			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mode != ChartType.cModeCountLog) {
 				String columnName = configuration.getProperty(PROPERTY_COLUMN);
 				if (columnName == null) {
 					showErrorMessage("No numerical column available or defined.");
@@ -207,7 +207,10 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 	public void enableItems() {
 		int type = ConfigurableTask.findListIndex((String)mComboBoxType.getSelectedItem(), ChartType.TYPE_NAME, -1);
 		boolean supportsSizeBy = ChartType.supportsProportionalFractions(type);
-		boolean columnEnabled = supportsSizeBy && mComboBoxMode.getSelectedIndex() != ChartType.cModeCount && mComboBoxMode.getSelectedIndex() != ChartType.cModePercent;
+		boolean columnEnabled = supportsSizeBy
+				&& mComboBoxMode.getSelectedIndex() != ChartType.cModeCount
+				&& mComboBoxMode.getSelectedIndex() != ChartType.cModePercent
+				&& mComboBoxMode.getSelectedIndex() != ChartType.cModeCountLog;
 		mLabelSizeBy.setEnabled(supportsSizeBy);
 		mComboBoxMode.setEnabled(supportsSizeBy);
 		mLabelColumn.setEnabled(columnEnabled);
@@ -224,7 +227,7 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 			int column = -1;
 			if (ChartType.supportsProportionalFractions(type)) {
 				mode = findListIndex(configuration.getProperty(PROPERTY_MODE), ChartType.MODE_CODE, ChartType.cModeCount);
-				if (mode != ChartType.cModeCount && mode != ChartType.cModePercent)
+				if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mode != ChartType.cModeCountLog)
 					column = getTableModel().findColumn(configuration.getProperty(PROPERTY_COLUMN));
 				}
 			visualization.setPreferredChartType(type, mode, column);

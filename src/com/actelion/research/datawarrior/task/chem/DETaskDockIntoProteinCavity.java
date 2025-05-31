@@ -19,7 +19,7 @@
 package com.actelion.research.datawarrior.task.chem;
 
 import com.actelion.research.chem.*;
-import com.actelion.research.chem.conf.AtomAssembler;
+import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.docking.DockingEngine;
 import com.actelion.research.chem.docking.DockingFailedException;
 import com.actelion.research.chem.io.CompoundTableConstants;
@@ -184,11 +184,11 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 
 		StereoMolecule protein = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(configuration.getProperty(PROPERTY_CAVITY));
 		assignLikelyProtonationStates(protein);
-		new AtomAssembler(protein).addImplicitHydrogens();
+		new HydrogenAssembler(protein).addImplicitHydrogens();
 
 		StereoMolecule ligand = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(configuration.getProperty(PROPERTY_LIGAND));
 		assignLikelyProtonationStates(ligand);
-		new AtomAssembler(ligand).addImplicitHydrogens();
+		new HydrogenAssembler(ligand).addImplicitHydrogens();
 
 		int threadCount = Runtime.getRuntime().availableProcessors();
 		mDockingEngine = new DockingEngine[threadCount];

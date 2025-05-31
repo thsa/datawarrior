@@ -19,7 +19,7 @@
 package com.actelion.research.datawarrior.plugin;
 
 import com.actelion.research.chem.*;
-import com.actelion.research.chem.conf.AtomAssembler;
+import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.datawarrior.fx.EditableSmallMolMenuController;
 import com.actelion.research.datawarrior.fx.EditableLargeMolMenuController;
 import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
@@ -84,7 +84,7 @@ public class PluginConformerPanel extends JFXMolViewerPanel implements IConforme
 		clear();
 		StereoMolecule mol = getStructureFromIDCode(idcode);
 		if (mol != null) {
-			new AtomAssembler(mol).addImplicitHydrogens();
+			new HydrogenAssembler(mol).addImplicitHydrogens();
 			addMolecule(mol, null, null);
 			optimizeView();
 		}
@@ -94,7 +94,7 @@ public class PluginConformerPanel extends JFXMolViewerPanel implements IConforme
 		clear();
 		StereoMolecule mol = (molfile == null) ? null : new MolfileParser().getCompactMolecule(molfile);
 		if (mol != null) {
-			new AtomAssembler(mol).addImplicitHydrogens();
+			new HydrogenAssembler(mol).addImplicitHydrogens();
 			addMolecule(mol, null, null);
 			optimizeView();
 		}

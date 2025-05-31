@@ -1,7 +1,7 @@
 package com.actelion.research.datawarrior.fx;
 
 import com.actelion.research.chem.*;
-import com.actelion.research.chem.conf.AtomAssembler;
+import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.io.Mol2FileParser;
 import com.actelion.research.chem.io.pdb.parser.PDBCoordEntryFile;
 import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
@@ -112,9 +112,9 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 		try {
 			SwingUtilities.invokeLater(() -> {
 				String pdbCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
-				if (pdbCode != null && !pdbCode.isEmpty()) {
+				if (pdbCode != null && !pdbCode.trim().isEmpty()) {
 					try {
-						addProteinAndLigand(new PDBFileParser().getFromPDB(pdbCode));
+						addProteinAndLigand(new PDBFileParser().getFromPDB(pdbCode.trim()));
 					}
 					catch (Exception e) {
 						showMessageInEDT("Couldn't retrieve file from PDB-database: '"+e.getMessage()+"'.\nHowever that file may by available for manual download from 'https://www.rcsb.org'");
@@ -198,8 +198,8 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 //			_ligand.translate(-cog.x, -cog.y, -cog.z);
 //			_cavity.translate(-cog.x, -cog.y, -cog.z);
 
-			new AtomAssembler(_ligand).addImplicitHydrogens();
-			new AtomAssembler(_cavity).addImplicitHydrogens();
+			new HydrogenAssembler(_ligand).addImplicitHydrogens();
+			new HydrogenAssembler(_cavity).addImplicitHydrogens();
 
 			Platform.runLater(() -> {
 				V3DScene scene = mConformerPanel.getV3DScene();
@@ -232,7 +232,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 		// if we have only the ligand, we add hydrogen and add the ligand then to the scene
 		else {
 			final StereoMolecule ligand = new StereoMolecule(mLigand);
-			new AtomAssembler(ligand).addImplicitHydrogens();
+			new HydrogenAssembler(ligand).addImplicitHydrogens();
 
 			Platform.runLater(() -> {
 				V3DScene scene = mConformerPanel.getV3DScene();

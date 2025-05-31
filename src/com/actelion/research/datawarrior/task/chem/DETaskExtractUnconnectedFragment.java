@@ -220,21 +220,25 @@ public class DETaskExtractUnconnectedFragment extends DETaskAbstractFromStructur
 		CompoundRecord record = getTableModel().getTotalRecord(row);
 		byte[] idcode = (byte[])record.getData(getChemistryColumn());
 		if (idcode != null) {
+			boolean idcodeWritten = false;
 			int count = 0;
 			for (int column=0; column<getTableModel().getTotalColumnCount(); column++) {
-				if (getTableModel().getParentColumn(column) == getChemistryColumn()) {
-					if (record.getData(column) != null && isCoordinateColumn(column)) {
-						count++;
+				if (getTableModel().getParentColumn(column) == getChemistryColumn() && isCoordinateColumn(column)) {
+					count++;
+					if (record.getData(column) != null) {
 						boolean is2D = CompoundTableConstants.cColumnType2DCoordinates.equals(getTableModel().getColumnSpecialType(column));
 						StereoMolecule mol = new IDCodeParser(is2D).getCompactMolecule(idcode, (byte[])record.getData(column));
 						handleMolecule(mol, row, threadIndex);
 						Canonizer canonizer = new Canonizer(mol);
-						getTableModel().setTotalValueAt(canonizer.getIDCode(), row, firstNewColumn);
+						if (!idcodeWritten) {
+							getTableModel().setTotalValueAt(canonizer.getIDCode(), row, firstNewColumn);
+							idcodeWritten = true;
+							}
 						getTableModel().setTotalValueAt(canonizer.getEncodedCoordinates(), row, firstNewColumn+count);
 						}
 					}
 				}
-			if (count == 0) {
+			if (!idcodeWritten) {
 				StereoMolecule mol = getChemicalStructure(row, containerMol);
 				if (mol != null) {
 					handleMolecule(mol, row, threadIndex);

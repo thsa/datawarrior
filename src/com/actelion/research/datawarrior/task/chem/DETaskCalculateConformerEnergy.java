@@ -2,7 +2,7 @@ package com.actelion.research.datawarrior.task.chem;
 
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.StereoMolecule;
-import com.actelion.research.chem.conf.AtomAssembler;
+import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.conf.TorsionDescriptor;
 import com.actelion.research.chem.conf.TorsionDescriptorHelper;
 import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
@@ -16,9 +16,6 @@ import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.chem.conf.gen.RigidFragmentCache;
 
 import javax.swing.*;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -273,7 +270,7 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 // TODO remove!!! this is to check, whether our H-addition procedure contains less strain than whatever was used before
 //mol.removeExplicitHydrogens(true);
 
-		new AtomAssembler(mol).addImplicitHydrogens();
+		new HydrogenAssembler(mol).addImplicitHydrogens();
 
 		ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, MMFF_TABLE_SET, mMMFFOptions);
 		double absEnergy = ff.getTotalEnergy();

@@ -5,7 +5,7 @@ import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
 import com.actelion.research.chem.SSSearcher;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.alignment3d.PheSAAlignmentOptimizer;
-import com.actelion.research.chem.conf.AtomAssembler;
+import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.mcs.MCS;
@@ -271,7 +271,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 		String query = isShowQuery ? mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperposeMolecule) : null;
 		StereoMolecule queryMol = (query == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(query);
 		if (queryMol != null)
-			new AtomAssembler(queryMol).addImplicitHydrogens();
+			new HydrogenAssembler(queryMol).addImplicitHydrogens();
 		mConformerPanel.setOverlayMolecule(queryMol);
 		SwingUtilities.invokeLater(() -> {
 			HashMap<String, String> map = new HashMap<>();

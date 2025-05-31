@@ -5,7 +5,7 @@ import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
 import com.actelion.research.chem.Molecule;
 import com.actelion.research.chem.StereoMolecule;
-import com.actelion.research.chem.conf.AtomAssembler;
+import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.conf.MolecularFlexibilityCalculator;
 import com.actelion.research.chem.docking.DockingEngine;
 import com.actelion.research.chem.docking.DockingFailedException;
@@ -42,8 +42,8 @@ public class DockingFitnessOption extends FitnessOption {
 			mLigand = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(mLigandIDCode);
 			DETaskDockIntoProteinCavity.assignLikelyProtonationStates(mCavity);
 			DETaskDockIntoProteinCavity.assignLikelyProtonationStates(mLigand);
-			new AtomAssembler(mCavity).addImplicitHydrogens();
-			new AtomAssembler(mLigand).addImplicitHydrogens();
+			new HydrogenAssembler(mCavity).addImplicitHydrogens();
+			new HydrogenAssembler(mLigand).addImplicitHydrogens();
 		}
 	}
 

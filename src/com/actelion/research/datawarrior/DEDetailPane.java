@@ -19,7 +19,7 @@
 package com.actelion.research.datawarrior;
 
 import com.actelion.research.chem.*;
-import com.actelion.research.chem.conf.AtomAssembler;
+import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.flexophore.FlexophoreAtomContributionColors;
 import com.actelion.research.chem.io.CompoundTableConstants;
@@ -237,7 +237,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				String overlay = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);
 				StereoMolecule overlayMol = (overlay == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(overlay);
 				if (overlayMol != null) {
-					new AtomAssembler(overlayMol).addImplicitHydrogens();
+					new HydrogenAssembler(overlayMol).addImplicitHydrogens();
 					view.setOverlayMolecule(overlayMol);
 					}
 

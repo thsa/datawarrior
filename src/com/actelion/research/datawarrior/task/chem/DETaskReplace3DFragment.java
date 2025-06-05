@@ -60,7 +60,7 @@ import java.util.Properties;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionListener {
+public class DETaskReplace3DFragment extends ConfigurableTask implements ActionListener {
 	private static final int DEFAULT_ATOMS_LESS = 5;
 	private static final int DEFAULT_ATOMS_MORE = 10;
 	private static final double DEFAULT_MAX_EV_RMSD = 0.6;
@@ -96,7 +96,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 	private static final int CONFORMER_PERCENTAGE_COLUMN = 14;
 	private static final int CONFORMER_ENERGY_DIF_COLUMN = 15;
 
-	public static final String TASK_NAME = "Replace Scaffold And Link";
+	public static final String TASK_NAME = "Replace 3D-Fragment";
 
 	private DEFrame mTargetFrame;
 	private JFXMolViewerPanel mConformerPanel;
@@ -114,7 +114,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 	private volatile Coordinates[] mQueryStaticAtomCoords;
 
 
-	public DETaskReplaceAndLink3D(DEFrame parent) {
+	public DETaskReplace3DFragment(DEFrame parent) {
 		super(parent, true);
 		}
 
@@ -152,7 +152,7 @@ public class DETaskReplaceAndLink3D extends ConfigurableTask implements ActionLi
 
 		content.add(mConformerPanel, "1,1,3,1");
 		content.add(new JLabel("First, define a bio-active 3D-structure.", JLabel.CENTER), "1,3,3,3");
-		content.add(new JLabel("Then, select scaffold atoms to be replaced.", JLabel.CENTER), "1,5,3,5");
+		content.add(new JLabel("Then, select atoms to be replaced by fragment.", JLabel.CENTER), "1,5,3,5");
 
 		content.add(new JLabel("3D-fragment file:"), "1,7");
 		mLabelInFileName = new JFilePathLabel(!isInteractive());

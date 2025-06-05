@@ -400,6 +400,10 @@ and similar 3D-geometry are not collected again. Finally, generated 3D-fragments
 <p><b>3D-structure column:</b> Here you select the structure column with associated 3D-atom coordinates,
 i.e. conformer(s), that will be the molecule source for generating 3-dimensional fragments.</p>
 
+<p><b>Compound-ID column:</b> Here you may select a column that contains identifiers of your 3D-structures.
+If you do so, then the generated 3D-fragment file will get an additional column with the identifiers
+of those 3D-structures from which the fragments have been derived.</p>
+
 <p><b>Minimum / Maximum non-hydrogen atoms:</b> Use these two field to define the size of the generated
 fragments. Neither hydrogen atoms not exit vectors are included in these atom counts.</p>
 
@@ -413,7 +417,7 @@ The cut-off value refers to the flexibility sum of all rotatable bonds in a frag
 a defined span of allowed exit vector counts.</p>
 <br>
 
-<h3><a name="ReplaceAndLink"></a>Replacing Scaffolds and 3D-Linking</h3>
+<h3><a name="ReplaceAndLink"></a>Replacing Scaffolds in 3D or 3D-Linking</h3>
 
 <p>As described in the previous chapter, a central activity in drug discovery is to optimize a compound structure
 towards improved biological activity, suitable pharmacokinetic properties, tolerable toxicological profile,

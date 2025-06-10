@@ -11,9 +11,8 @@ commons-math-2.2.jar
 
 jep.jar (JEP Java Expression parser 2.4.1; GPL3)
 
-jnainchi.jar (Daniel Lowe's JNA wrapper for InChi code 1.0.6 from inchi-trust.org; not including SmilesToInchi)
-- github.com/dan2097/jna-inchi 16Sep2021
-- jna-5.9.0.jar
+jnainchi.jar (Daniel Lowe's JNA wrapper for InChi code 1.0.7): jna-inchi-core, which doesn't include SmilesToInchi)
+used artefact from maven central and merged all dependencies into one file 'jnainchi.jar'
 
 ojdbc8.jar
 Oracle Database 19c (19.7) JDBC Driver (certified for JDK8,9,11)

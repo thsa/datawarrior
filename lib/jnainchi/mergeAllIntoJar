@@ -1,0 +1,9 @@
+# Builds one merged jar file 'jnainchi.jar' from all downloaded jna-inchi-core dependencies
+mkdir bin
+cd bin
+for JAR in ../lib/*.jar ; do (echo "Unpacking $JAR"; jar -xf "$JAR"); done
+cd ..
+echo "Building merged JAR file..."
+jar -cf jnainchi.jar -C ./bin .
+#rm -r bin
+ls -l jnainchi.jar 

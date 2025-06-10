@@ -1,0 +1,5 @@
+# Downloads all dependencies for jni-inchi-core of https://github.com/dan2097/jna-inchi from Maven Central
+rm -rf lib
+mkdir lib
+mvn -f jnainchi_core_pom.xml dependency:copy-dependencies -DoutputDirectory=./lib
+

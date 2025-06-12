@@ -188,7 +188,7 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 		mComboBoxSourceID.setSelectedIndex(0);
 		mTextFieldMinAtoms.setText("5");
 		mTextFieldMaxAtoms.setText("15");
-		mTextFieldMaxBondFlexibilitySum.setText("1");
+		mTextFieldMaxBondFlexibilitySum.setText("1.0");
 		mTextFieldMinExits.setText("2");
 		mTextFieldMaxExits.setText("4");
 		}
@@ -239,8 +239,8 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 
 		try {
 			float maxBondFlexibilitySum = Float.parseFloat(configuration.getProperty(PROPERTY_MAX_BOND_FLEXIBILITY_SUM, ""));
-			if (maxBondFlexibilitySum < 0 || maxBondFlexibilitySum >= 5) {
-				showErrorMessage("The maximum sum of bond flexibilities should be (much) smaller than 5.");
+			if (maxBondFlexibilitySum < 0 || maxBondFlexibilitySum > 5) {
+				showErrorMessage("A meaningful bond flexibility sum should be (much) smaller than 5.");
 				return false;
 				}
 			}
@@ -289,7 +289,7 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 
 		int minAtoms = Integer.parseInt(configuration.getProperty(DETaskBuild3DFragmentLibrary.PROPERTY_MIN_FRAGMENT_ATOMS));
 		int maxAtoms = Integer.parseInt(configuration.getProperty(DETaskBuild3DFragmentLibrary.PROPERTY_MAX_FRAGMENT_ATOMS));
-		int maxBondFlexibilitySum = Integer.parseInt(configuration.getProperty(DETaskBuild3DFragmentLibrary.PROPERTY_MAX_BOND_FLEXIBILITY_SUM));
+		float maxBondFlexibilitySum = Float.parseFloat(configuration.getProperty(DETaskBuild3DFragmentLibrary.PROPERTY_MAX_BOND_FLEXIBILITY_SUM));
 		int minExits = Integer.parseInt(configuration.getProperty(DETaskBuild3DFragmentLibrary.PROPERTY_MIN_EXIT_VECTORS));
 		int maxExits = Integer.parseInt(configuration.getProperty(DETaskBuild3DFragmentLibrary.PROPERTY_MAX_EXIT_VECTORS));
 

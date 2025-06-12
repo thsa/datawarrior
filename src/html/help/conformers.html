@@ -254,16 +254,18 @@ and pharmacophore features. With <span class="keyword">DataWarrior</span> you ca
 a virtual screening in two different ways, either by aligning the query conformer to a dataset
 with rigid, pre-computed conformers, or by generating conformers on the fly and optimizing their
 torsion angles to maximize query overlap while retaining low energy torsion angles at the same time.</p>
-In either of the two options you end up with conformers best-possible aligned to your query
+
+<p>In either of the two options you end up with conformers best-possible aligned to your query
 conformer and with a score that describes how much your aligned conformers overlap and how well
-any pharmacophiric features match. In fact, you get tree scores, one for the overlap, one for
-te pharmacophore match and one that summarizes both. For aligning and scoring
+any pharmacophiric features match. In fact, you get three scores, one for the overlap, one for
+the pharmacophore match and one that summarizes both. For aligning and scoring
 <span class="keyword">DataWarrior</span> uses an algorithm called
 <a href="help/phesa.html">PheSA</a> (Pharmacophore enhanced shape alignment), which uses
 Gaussian functions to calculate and optimize the shared volume of two molecules' conformers
-while considering pharmacophore feature overlay at the same time. The PheSA algorithm was
+while considering a pharmacophore feature overlay at the same time. The PheSA algorithm was
 engineered by Joel Wahl and is described in <a href="https://pubs.acs.org/doi/10.1021/acs.jcim.4c00516">
-https://pubs.acs.org/doi/10.1021/acs.jcim.4c00516</a></p>
+J. Wahl; <i>PheSA: An Open-Source Tool for Pharmacophore-Enhanced Shape Alignment</i>;
+J. Chem. Inf. Model. 2024, 64, 15, 5944–5953; doi 10.1021/acs.jcim.4c00516</a></p>
 
 <p><b>Rigid Alignment:</b> If your dataset doesn't contain at least one column with one or multiple
 conformers, then you need to generate conformers for any of the molecules to be screened as
@@ -315,8 +317,15 @@ continue as described above.</p>
 
 <h3><a name="Docking"></a>Protein-Ligand Docking</h3>
 
-<p><span class="keyword">DataWarrior</span> uses a state-of-the-art docking algorithm that is about to be
-published. More details will be described here later...</p>
+<p><span class="keyword">DataWarrior</span> uses a state-of-the-art docking algorithm designed and implemented
+by Joel Wahl. First, the algorithm determines the shape of the binding site together with pharmacophoric features.
+Then, a <i>Shape Docking</i> algorithm, which is described in the PheSA paper mentioned above, determines initial
+poses. Afterward, these poses are locally optimized by a Metropolis Monte Carlo approach, based on multiple
+starting points from the initial <i>Shape Docking</i>. Finally, a docking score is calculated from the optimized
+poses according to the ChemPLP algorithm described by O. Korb, T. Stuetzle, and T. E. Exner;
+<i>Empirical Scoring Functions for Advanced Protein−Ligand Docking with PLANTS</i>;
+J. Chem. Inf. Model. 2009, 49, 1, 84–96; doi 10.1021/ci800298z. Strain energies, however, are taken from
+the MMFF94S+ forcefield.</p>
 
 <p>In order to dock the molecules of an open <span class="keyword">DataWarrior</span> window into a specific
 protein cavity choose <span class="menu">Dock Structures Into Protein Cavity...</span> from the
@@ -333,11 +342,15 @@ ligands into the cavity. This may take a few hours for thousands of molecules.</
 <p><center><i>Docked molecule into complement factor B protease domain, PDB-ID: 6RAV).</i></center></p>
 
 <p>Once the docking calculation has finished, the <span class="keyword">DataWarrior</span> table contains
-two new columns, a docking score and a docked structure. The latter column's structures may differ slightly
-from the original structure column, because basic acidic atoms may be (de-)protonated and small
-unconnected fragments are removed. Another invisible column contains the 3D-atom coordinates of the docked
-pose. This column also knows about the natural ligand and the protein cavity. A detail view display the
-cavity with the docked structure. Optionally, the cavity surface, major interactions, and the natural ligand
+two new columns, the ChemPLP based docking score and a docked structure itself. This structure
+may slightly differ from the one in the original structure column, because basic acidic atoms may be
+(de-)protonated and small unconnected fragments are removed. This structure has an associated, third
+and invisible column, which contains the structure atom's 3D-coordinates of the docked pose. This third column also
+knows about the natural ligand and the protein cavity; an information that is attached to the third column.
+The thirds column's coordinates together with the cavity information are used by an associated detail view
+to display the docking pose, i.e. the cropped cavity together with the docked structure.</p>
+
+<p>Optionally, the cavity surface, major interactions, and the natural ligand structure at its original position
 can be shown. If you have a device that is capable of displaying stereoscopic content, you may open a daughter
 view that mirrors the detail view for real 3D-perception. Interactions are calculated and shown according to
 S. Salentin, S. Schreiber, V. J. Haupt, M. F. Adasme, M. Schroeder; <i>PLIP: fully automated protein-ligand

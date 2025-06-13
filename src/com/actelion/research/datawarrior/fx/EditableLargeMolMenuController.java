@@ -205,7 +205,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 				V3DScene scene = mConformerPanel.getV3DScene();
 				scene.clearAll();
 				mConformerPanel.setProteinCavity(_cavity, _ligand, true, false);
-				mConformerPanel.setOverlayMolecule(_ligand);
+				mConformerPanel.setOverlayMolecule(_ligand, false);
 			});
 		}
 		// if we have only the protein, we don't add hydrogen, but surface and just add the protein to the scene

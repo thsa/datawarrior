@@ -238,7 +238,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				StereoMolecule overlayMol = (overlay == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(overlay);
 				if (overlayMol != null) {
 					new HydrogenAssembler(overlayMol).addImplicitHydrogens();
-					view.setOverlayMolecule(overlayMol);
+					view.setOverlayMolecule(overlayMol, true);
 					}
 
 				String cavity = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyProteinCavity);
@@ -249,7 +249,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				if (cavityMol != null)
 					view.setProteinCavity(cavityMol, ligandMol, true, false);
 				if (ligandMol != null)
-					view.setOverlayMolecule(ligandMol);
+					view.setOverlayMolecule(ligandMol, cavityMol == null);
 
 				addColumnDetailView(view, mTableModel.getParentColumn(column), column, TYPE_STRUCTURE_3D, mTableModel.getColumnTitle(column));
 				view.setPopupMenuController(new CompoundRecordMenuController(view, mTableModel, column, true));

@@ -48,7 +48,7 @@ public class DockingFitnessPanel extends FitnessPanel {
 			StereoMolecule ligand = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(param[index++]);
 			if (cavity != null && ligand != null) {
 				mConformerPanel.setProteinCavity(cavity, ligand, true, false);
-				mConformerPanel.setOverlayMolecule(ligand);
+				mConformerPanel.setOverlayMolecule(ligand, false);
 			}
 		}
 	}

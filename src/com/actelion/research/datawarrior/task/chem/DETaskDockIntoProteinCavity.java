@@ -138,7 +138,7 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 		if (cavity != null) {
 			mConformerPanel.setProteinCavity(cavity, ligand, true, false);
 			if (ligand != null)
-				mConformerPanel.setOverlayMolecule(ligand);
+				mConformerPanel.setOverlayMolecule(ligand, false);
 			}
 		}
 

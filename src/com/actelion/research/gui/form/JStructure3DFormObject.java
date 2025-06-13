@@ -56,13 +56,13 @@ public class JStructure3DFormObject extends AbstractFormObject {
 	}
 
 	public void setReferenceMolecule(StereoMolecule refMol) {
-		((JFXMolViewerPanel)mComponent).setOverlayMolecule(refMol);
+		((JFXMolViewerPanel)mComponent).setOverlayMolecule(refMol, mCavityMol == null);
 		mOverlayMol = refMol;
 		}
 
 	public void setCavityMolecule(StereoMolecule cavityMol, StereoMolecule ligandMol) {
 		((JFXMolViewerPanel)mComponent).setProteinCavity(cavityMol, ligandMol, true, false);
-		((JFXMolViewerPanel)mComponent).setOverlayMolecule(ligandMol);
+		((JFXMolViewerPanel)mComponent).setOverlayMolecule(ligandMol, false);
 		mCavityMol = cavityMol;
 		mLigandMol = ligandMol;
 		}
@@ -161,7 +161,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
 			    if (mCavityMol != null)
 				    fxp.setProteinCavity(mCavityMol, mLigandMol, false, false);
 			    if (mOverlayMol != null)
-				    fxp.setOverlayMolecule(mOverlayMol);
+				    fxp.setOverlayMolecule(mOverlayMol, false);
 
 			    final CountDownLatch latch = new CountDownLatch(1);
 			    final StereoMolecule[] mols_ = mols;

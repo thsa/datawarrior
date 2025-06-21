@@ -31,7 +31,6 @@ import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DETaskMapReactions extends DETaskAbstractFromReaction {
 	public static final String TASK_NAME = "Map Reaction Atoms";

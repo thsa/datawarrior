@@ -4271,7 +4271,7 @@ public class JVisualization2D extends JVisualization {
 				if (yIsCyclic) {
 					if (bgy<0)
 						bgy += bgFullDataYRange;
-					else if (bgy >= bgWidth)
+					else if (bgy >= bgHeight)
 						bgy -= bgFullDataYRange;
 					}
 

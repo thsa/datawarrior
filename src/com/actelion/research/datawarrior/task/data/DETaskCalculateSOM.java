@@ -61,15 +61,14 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
 	private static final String PROPERTY_FILENAME = "fileName";
 
 	private static final String[] MAP_SIZE_OPTIONS = { "10", "25", "50", "100", "150", "200" };
-	private static final String[] FUNCTION_OPTIONS = {"Gaussean", "Mexican Hat", "Linear"};
+	private static final String[] FUNCTION_OPTIONS = {"Gaussian", "Mexican Hat", "Linear"};
 	private static final String[] FUNCTION_CODE = {"gaussean", "mexicanHat", "linear"};
 
-	private DEFrame				mParentFrame;
-    private CompoundTableModel  mTableModel;
-	private JComboBox			mComboBoxMapSize,mComboBoxFunction,
+	private final DEFrame				mParentFrame;
+    private final CompoundTableModel  mTableModel;
+	private JComboBox<String>	mComboBoxMapSize,mComboBoxFunction,
                                 mComboBoxPivotGroupColumn,mComboBoxPivotDataColumn;
-    private TreeMap<String,Integer> mColumnMap;
-	private JList				mListColumns;
+	private JList<String>		mListColumns;
 	private JTextArea			mTextArea;
 	private JCheckBox			mCheckboxGrow,mCheckboxToroidal,mCheckboxCreateLandscape,mCheckBoxSaveMap,
                                 mCheckboxFastBestMatch,mCheckBoxPivotTable;
@@ -130,34 +129,34 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
 
 	@Override
 	public JComponent createDialogContent() {
-        mColumnMap = new TreeMap<>();
+		TreeMap<String, Integer> columnMap = new TreeMap<>();
         for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {
             String specialType = mTableModel.getColumnSpecialType(column);
             if (mTableModel.isColumnDataComplete(column)
              && ((specialType == null && mTableModel.hasNumericalVariance(column))
               || (mTableModel.isDescriptorColumn(column) && CompoundTableSOM.isDescriptorSupported(specialType))))
-                mColumnMap.put(mTableModel.getColumnTitle(column), Integer.valueOf(column));
+                columnMap.put(mTableModel.getColumnTitle(column), column);
         	}
 
-        String[] columnList = mColumnMap.keySet().toArray(new String[0]);
+        String[] columnList = columnMap.keySet().toArray(new String[0]);
         Arrays.sort(columnList, (s1, s2) -> s1.compareToIgnoreCase(s2));
 
         JPanel optionPanel = new JPanel();
         int gap = HiDPIHelper.scale(8);
         double[][] size = { {gap, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
-                            {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap,
+                            {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap,
         						TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, 2*gap,
-        						TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, 2*gap,
-        						TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, 2*gap} };
+        						TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, 2*gap,
+        						TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, 2*gap} };
         optionPanel.setLayout(new TableLayout(size));
 
-        mComboBoxMapSize = new JComboBox(MAP_SIZE_OPTIONS);
+        mComboBoxMapSize = new JComboBox<>(MAP_SIZE_OPTIONS);
 		mComboBoxMapSize.setEditable(true);
 		mComboBoxMapSize.setSelectedIndex(0);
         optionPanel.add(new JLabel("Neurons per axis:"),"3,3");
         optionPanel.add(mComboBoxMapSize, "5,3,7,3");
 
-        mComboBoxFunction = new JComboBox(FUNCTION_OPTIONS);
+        mComboBoxFunction = new JComboBox<>(FUNCTION_OPTIONS);
 		mComboBoxFunction.setSelectedIndex(0);
         optionPanel.add(new JLabel("Neighbourhood function:"), "3,5");
         optionPanel.add(mComboBoxFunction, "5,5,7,5");
@@ -165,7 +164,7 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
         optionPanel.add(new JLabel("Parameters used:"), "1,1");
         JScrollPane scrollPane = null;
 		if (isInteractive()) {
-	        mListColumns = new JList(columnList);
+	        mListColumns = new JList<>(columnList);
 			scrollPane = new JScrollPane(mListColumns);
 			}
 		else {
@@ -195,11 +194,11 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
         optionPanel.add(mCheckBoxPivotTable, "3,12,7,12");
         optionPanel.add(new JLabel("Group by:", JLabel.RIGHT), "3,14");
         optionPanel.add(new JLabel("Split data by:", JLabel.RIGHT), "3,16");
-        mComboBoxPivotGroupColumn = new JComboBox(categoryColumns);
+        mComboBoxPivotGroupColumn = new JComboBox<>(categoryColumns);
         mComboBoxPivotGroupColumn.setEnabled(false);
         mComboBoxPivotGroupColumn.setEditable(!isInteractive());
         optionPanel.add(mComboBoxPivotGroupColumn, "5,14,7,14");
-        mComboBoxPivotDataColumn = new JComboBox(categoryColumns);
+        mComboBoxPivotDataColumn = new JComboBox<>(categoryColumns);
         mComboBoxPivotDataColumn.setEnabled(false);
         mComboBoxPivotDataColumn.setEditable(!isInteractive());
         optionPanel.add(mComboBoxPivotDataColumn, "5,16,7,16");
@@ -230,7 +229,7 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
 		String columnNames = isInteractive() ?
 				  getSelectedColumnsFromList(mListColumns, mTableModel)
 				: mTextArea.getText().replace('\n', '\t');
-		if (columnNames != null && columnNames.length() != 0)
+		if (columnNames != null && !columnNames.isEmpty())
 			configuration.setProperty(PROPERTY_COLUMN_LIST, columnNames);
 
 		configuration.setProperty(PROPERTY_MAP_SIZE, (String)mComboBoxMapSize.getSelectedItem());
@@ -310,20 +309,20 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
 		boolean doPivot = "true".equals(configuration.getProperty(PROPERTY_PIVOT));
 
 		if (isLive) {
-			String[] columnName = columnList.split("\\t");
+			String[] columnNames = columnList.split("\\t");
 	        int selectedDescriptors = 0;
 	        int selectedParameters = 0;
-			for (int i=0; i<columnName.length; i++) {
-				int column = mTableModel.findColumn(columnName[i]);
+			for (String columnName : columnNames) {
+				int column = mTableModel.findColumn(columnName);
 				if (column == -1) {
-					showErrorMessage("Column '"+columnName[i]+"' not found.");
+					showErrorMessage("Column '" + columnName + "' not found.");
 					return false;
-					}
-	            if (mTableModel.isDescriptorColumn(column))
-	                selectedDescriptors++;
-	            else
-	                selectedParameters++;
 				}
+				if (mTableModel.isDescriptorColumn(column))
+					selectedDescriptors++;
+				else
+					selectedParameters++;
+			}
 	        if (selectedDescriptors > 1) {
 	        	showErrorMessage("More than one descriptor selected.");
 	            return false;
@@ -377,8 +376,7 @@ public class DETaskCalculateSOM extends ConfigurableTask implements ActionListen
 
         if (isLive) {
 	        String fileName = configuration.getProperty(PROPERTY_FILENAME);
-			if (fileName != null && !isFileAndPathValid(fileName, true, mCheckOverwrite))
-				return false;
+			return fileName == null || isFileAndPathValid(fileName, true, mCheckOverwrite);
         	}
 
         return true;

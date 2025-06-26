@@ -167,7 +167,9 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 				File pdbFile = null;
 				if (fromRemote) {
 					mPDBCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
-					if (mPDBCode == null || mPDBCode.isEmpty())
+					if (mPDBCode.trim().isEmpty())
+						mPDBCode = null;
+					if (mPDBCode == null)
 						return;
 				}
 				else {
@@ -181,10 +183,10 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 					PDBCoordEntryFile entryFile;
 					if (mPDBCode != null) {
 						try {
-							entryFile = parser.getFromPDB(mPDBCode);
+							entryFile = parser.getFromPDB(mPDBCode.trim());
 						}
 						catch (Exception e) {
-							showMessageInEDT("Couldn't retrieve pdb-file of '"+mPDBCode+"' from PDB-database:\n"+e.getMessage()+"\nYou may try to download it manually from 'www.rcsb.org'.");
+							showMessageInEDT("Couldn't retrieve pdb-file of '"+mPDBCode.trim()+"' from PDB-database:\n"+e.getMessage()+"\nYou may try to download it manually from 'www.rcsb.org'.");
 							e.printStackTrace();
 							return;
 						}

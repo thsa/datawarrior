@@ -8,6 +8,7 @@ import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.datawarrior.task.chem.elib.TaskConstantsELib;
 import com.actelion.research.datawarrior.task.chem.elib.UIDelegateELib;
 import com.actelion.research.gui.JEditableStructureView;
+import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -114,6 +115,7 @@ public class DETaskGenerateRandomMolecules extends ConfigurableTask implements C
 		content.add(new JLabel("Seed compound:", JLabel.RIGHT), "1,7");
 		content.add(new JLabel("(Select immutable part)", JLabel.RIGHT), "1,9");
 		mSeedCompoundView = new JEditableStructureView();
+		mSeedCompoundView.setClipboardHandler(new ClipboardHandler());
 		content.add(mSeedCompoundView, "3,7,5,10");
 
 		content.add(new JLabel("Molecule count:", JLabel.RIGHT), "1,12");

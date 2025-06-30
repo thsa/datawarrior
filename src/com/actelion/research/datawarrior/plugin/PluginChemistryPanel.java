@@ -20,11 +20,13 @@ package com.actelion.research.datawarrior.plugin;
 
 import com.actelion.research.chem.*;
 import com.actelion.research.gui.JEditableStructureView;
+import com.actelion.research.gui.clipboard.ClipboardHandler;
 import org.openmolecules.datawarrior.plugin.IChemistryPanel;
 
 public class PluginChemistryPanel extends JEditableStructureView implements IChemistryPanel {
 	public PluginChemistryPanel() {
 		super(new StereoMolecule());
+		setClipboardHandler(new ClipboardHandler());
 		}
 
 	@Override public void setMode(int mode) {

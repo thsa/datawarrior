@@ -10,6 +10,7 @@ import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.JEditableStructureView;
 import com.actelion.research.gui.JProgressDialog;
+import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -111,6 +112,7 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 
 		content.add(new JLabel("Reference structure for similarity:"), "1,7,3,7");
 		mStructureView = new JEditableStructureView();
+		mStructureView.setClipboardHandler(new ClipboardHandler());
 		content.add(mStructureView, "1,9,3,9");
 
 		return content;

@@ -35,6 +35,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class CompoundTableSaver implements CompoundTableConstants,Runnable {
@@ -154,7 +155,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 */
 	private void saveFile() {
 		try {
-			mDataWriter = new OutputStreamWriter(new FileOutputStream(mFile),"UTF-8");
+			mDataWriter = new OutputStreamWriter(new FileOutputStream(mFile), StandardCharsets.UTF_8);
 			mToClipboard = false;
 			processData();
 			}
@@ -519,7 +520,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 				}
 			}
 
-		if (detailMap != null && detailMap.size() != 0 && (usedIDSet == null || !usedIDSet.isEmpty())) {
+		if (detailMap != null && !detailMap.isEmpty() && (usedIDSet == null || !usedIDSet.isEmpty())) {
 			theWriter.write(cDetailDataStart);
 			theWriter.newLine();
 			for (String id:detailMap.keySet()) {
@@ -554,11 +555,8 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 					ArrayList<String> keyList = new ArrayList<String>();
 					for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
 						String[][] references = mTableModel.getTotalRecord(row).getDetailReferences(column);
-						if (references != null && references.length>detail && references[detail] != null) {
-							for (int i=0; i<references[detail].length; i++) {
-								keyList.add(references[detail][i]);
-								}
-							}
+						if (references != null && references.length>detail && references[detail] != null)
+							keyList.addAll(Arrays.asList(references[detail]));
 						}
 
 					String type = mTableModel.getColumnDetailType(column, detail);

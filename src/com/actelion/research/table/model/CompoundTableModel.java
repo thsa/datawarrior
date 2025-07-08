@@ -2127,7 +2127,7 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	/**
-	 * Does housekeeping and fresh column analysis after adding new rows.
+	 * Does housekeeping and fresh column analysis after adding new columns.
 //	 * @param splittedColumns may be null
 	 * @param listener may be null
 	 *

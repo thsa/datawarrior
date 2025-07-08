@@ -277,12 +277,13 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 				if (!SmilesParser.isReactionSmiles(value, catalystCountHolder))
 					return false;
 				try {
-					new SmilesParser(smilesMode).parseReaction(value);
+					Reaction reaction = new SmilesParser(smilesMode).parseReaction(value);
 					if (catalystCountHolder[0] != 0)
-						catalystsFound[0] = true;
+						catalystsFound[0] |= (reaction.getCatalysts() != 0);
 					}
 				catch (Exception e) {
-					if (++errorCount == MAX_REACTION_SMILES_ERRORS)
+					errorCount++;
+					if (errorCount == MAX_REACTION_SMILES_ERRORS)
 						return false;
 					}
 				if (++count == MAX_REACTION_SMILES_CHECKS)

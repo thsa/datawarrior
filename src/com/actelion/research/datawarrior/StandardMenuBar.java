@@ -150,7 +150,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuChemCCLibrary,jMenuChemEALibrary,jMenuChemEnumerateMarkush,jMenuChemAddProperties,jMenuChemAddFormula,jMenuChemAddSmiles,
 					  jMenuChemAddInchi,jMenuChemAddInchiKey,jMenuChemAddCanonicalCode,jMenuChemCreate2DCoords,jMenuChemCreate3DCoords,jMenuChemCalculateConformerEnergy,
 					  jMenuChemSuperposeFlexible,jMenuChemSuperposeRigid,jMenuChemDock, jMenuChem3DFragmentsBuildLib, jMenuChem3DFragmentsReplace,
-					  jMenuChemAddSubstructureCount,jMenuChemAddStructureFromName, jMenuChemDecomposeRGroups,jMenuChemInteractiveSARTable,
+					  jMenuChemAddSubstructureCount,jMenuChemAddStructureFromName, jMenuChemDecomposeRGroups,jMenuChemPerformReaction,jMenuChemInteractiveSARTable,
 					  jMenuChemAnalyzeScaffolds,jMenuChemAnalyzeCliffs,jMenuChemMatchFile,jMenuChemSelectDiverse,
 					  jMenuChemCluster, jMenuChemExtractFragment,jMenuChemMapReactions,jMenuChemCompareReactionMapping,jMenuChemAddReactionSmiles,
 					  jMenuChemCreateGenericTautomers,jMenuChemCompareDescriptorSimilarityDistribution,jMenuChemGenerateRandomMolecules,
@@ -880,6 +880,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemAssessPredictionQuality = new JMenuItem();
 		jMenuChemPredictMissingValues = new JMenuItem();
 		jMenuChemDecomposeRGroups = new JMenuItem();
+		jMenuChemPerformReaction = new JMenuItem();
 		jMenuChemInteractiveSARTable = new JMenuItem();
 		jMenuChemAnalyzeScaffolds = new JMenuItem();
 		jMenuChemAnalyzeCliffs = new JMenuItem();
@@ -962,6 +963,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemPredictMissingValues.addActionListener(this);
 		jMenuChemDecomposeRGroups.setText("Decompose R-Groups...");
 		jMenuChemDecomposeRGroups.addActionListener(this);
+		jMenuChemPerformReaction.setText("Perform Reaction...");
+		jMenuChemPerformReaction.addActionListener(this);
 		jMenuChemInteractiveSARTable.setText("Interactive SAR Analysis...");
 		jMenuChemInteractiveSARTable.addActionListener(this);
 		jMenuChemAnalyzeScaffolds.setText("Analyse Scaffolds...");
@@ -1065,6 +1068,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChem.add(jMenuChemDecomposeRGroups);
 		if (System.getProperty("development") != null)
 			jMenuChem.add(jMenuChemInteractiveSARTable);
+		jMenuChem.add(jMenuChemPerformReaction);
 		jMenuChem.add(jMenuChemAnalyzeScaffolds);
 		jMenuChem.addSeparator();
 		jMenuChem.add(jMenuChemAnalyzeCliffs);
@@ -1821,6 +1825,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskReplace3DFragment(mParentFrame).defineAndRun();
 			else if (source == jMenuChemDecomposeRGroups)
 				new DETaskDecomposeRGroups(mParentFrame).defineAndRun();
+			else if (source == jMenuChemPerformReaction)
+				new DETaskPerformReaction(mParentFrame).defineAndRun();
 			else if (source == jMenuChemInteractiveSARTable) {
 				JOptionPane.showMessageDialog(mParentFrame, "Nobody ever asked to complete this.\nTherefore, this functionality is not final yet.\nSuggestions and sample data are welcome.");
 				int idcodeColumn = getStructureColumn(true);

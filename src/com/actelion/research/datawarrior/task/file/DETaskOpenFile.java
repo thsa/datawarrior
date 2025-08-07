@@ -172,7 +172,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 
 	@Override
 	public DEFrame openFile(File file, Properties configuration) {
-		int type = FileHelper.getFileType(file.getName());
+		int type = FileHelper.getFileType(file);
 		if ((type & FileHelper.cFileTypeTextCommaSeparated) != 0) {
 			int delimiter = findListIndex(configuration.getProperty(PROPERTY_CSV_DELIMITER), CompoundTableLoader.DELIMITER_STRING, -1);
 			if (delimiter != -1)

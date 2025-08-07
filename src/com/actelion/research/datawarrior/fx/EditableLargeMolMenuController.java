@@ -3,6 +3,7 @@ package com.actelion.research.datawarrior.fx;
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.io.Mol2FileParser;
+import com.actelion.research.chem.io.pdb.mmcif.MMCIFParser;
 import com.actelion.research.chem.io.pdb.parser.PDBCoordEntryFile;
 import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
 import com.actelion.research.chem.io.pdb.parser.StructureAssembler;
@@ -95,10 +96,14 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 
 	private void loadFromPDBFile() {
 		SwingUtilities.invokeLater(() -> {
-			File selectedFile = FileHelper.getFile(mConformerPanel, "Choose PDB-File", FileHelper.cFileTypePDB);
+			File selectedFile = FileHelper.getFile(mConformerPanel, "Choose PDB/MMCIF-File", FileHelper.cFileTypePDB | FileHelper.cFileTypeMMCIF);
 			if (selectedFile != null) {
 				try {
-					addProteinAndLigand(new PDBFileParser().parse(selectedFile));
+					int fileType = FileHelper.getFileType(selectedFile);
+					if (fileType == FileHelper.cFileTypePDB)
+						addProteinAndLigand(new PDBFileParser().parse(selectedFile));
+					else if (fileType == FileHelper.cFileTypeMMCIF)
+						addProteinAndLigand(MMCIFParser.parse(selectedFile));
 				}
 				catch (Exception e) {
 					showMessageInEDT(e.getMessage());
@@ -114,7 +119,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 				String pdbCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
 				if (pdbCode != null && !pdbCode.trim().isEmpty()) {
 					try {
-						addProteinAndLigand(new PDBFileParser().getFromPDB(pdbCode.trim()));
+						addProteinAndLigand(MMCIFParser.getFromPDB(pdbCode.trim()));
 					}
 					catch (Exception e) {
 						showMessageInEDT("Couldn't retrieve file from PDB-database: '"+e.getMessage()+"'.\nHowever that file may by available for manual download from 'https://www.rcsb.org'");
@@ -257,7 +262,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 			File selectedFile = FileHelper.getFile(mConformerPanel, title, fileTypes);
 			if (selectedFile != null) {
 				StereoMolecule mol = null;
-				if (FileHelper.getFileType(selectedFile.getName()) == FileHelper.cFileTypeMOL) {
+				if (FileHelper.getFileType(selectedFile) == FileHelper.cFileTypeMOL) {
 					mol = new MolfileParser().getCompactMolecule(selectedFile);
 				}
 				else {  // MOL2

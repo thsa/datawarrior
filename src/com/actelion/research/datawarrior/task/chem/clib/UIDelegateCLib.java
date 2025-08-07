@@ -377,7 +377,7 @@ public class UIDelegateCLib implements ActionListener,ChangeListener, GenericEve
 			try {
 				Reaction reaction = null;
 
-				if (FileHelper.getFileType(rxnFile.getName()) == FileHelper.cFileTypeRXN) {
+				if (FileHelper.getFileType(rxnFile) == FileHelper.cFileTypeRXN) {
 					reaction = new RXNFileParser().getReaction(rxnFile);
 					}
 				else {

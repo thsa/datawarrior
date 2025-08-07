@@ -6,6 +6,7 @@ import com.actelion.research.chem.MolfileParser;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.io.Mol2FileParser;
+import com.actelion.research.chem.io.pdb.mmcif.MMCIFParser;
 import com.actelion.research.chem.io.pdb.parser.PDBCoordEntryFile;
 import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
 import com.actelion.research.chem.io.pdb.parser.StructureAssembler;
@@ -51,7 +52,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 			javafx.scene.control.MenuItem itemLoadMolecules = new javafx.scene.control.MenuItem("Load Conformer(s) from DataWarrior-/SD-File...");
 			itemLoadMolecules.setOnAction(e -> loadMolecules());
 
-			javafx.scene.control.MenuItem itemLoadPDBFile = new javafx.scene.control.MenuItem("Load Ligand from PDB File...");
+			javafx.scene.control.MenuItem itemLoadPDBFile = new javafx.scene.control.MenuItem("Load Ligand from PDB/MMCIF File...");
 			itemLoadPDBFile.setOnAction(e -> loadPDBLigand(false));
 
 			javafx.scene.control.MenuItem itemLoadPDBDBLigand = new javafx.scene.control.MenuItem("Load Ligand From PDB Database...");
@@ -75,7 +76,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 			if (selectedFile != null) {
 				Platform.runLater(() -> {
 					StereoMolecule mol = null;
-					if (FileHelper.getFileType(selectedFile.getName()) == FileHelper.cFileTypeMOL) {
+					if (FileHelper.getFileType(selectedFile) == FileHelper.cFileTypeMOL) {
 						mol = new MolfileParser().getCompactMolecule(selectedFile);
 						}
 					else {  // MOL2
@@ -167,23 +168,22 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 				File pdbFile = null;
 				if (fromRemote) {
 					mPDBCode = JOptionPane.showInputDialog(mConformerPanel, "PDB Entry Code?");
-					if (mPDBCode.trim().isEmpty())
+					if (mPDBCode != null && mPDBCode.trim().isEmpty())
 						mPDBCode = null;
 					if (mPDBCode == null)
 						return;
 				}
 				else {
-					pdbFile = FileHelper.getFile(mConformerPanel, "Choose PDB-File", FileHelper.cFileTypePDB);
+					pdbFile = FileHelper.getFile(mConformerPanel, "Choose PDB/MMCIF-File", FileHelper.cFileTypePDB | FileHelper.cFileTypeMMCIF);
 					if (pdbFile == null)
 						return;
 				}
 
-				PDBFileParser parser = new PDBFileParser();
 				try {
 					PDBCoordEntryFile entryFile;
 					if (mPDBCode != null) {
 						try {
-							entryFile = parser.getFromPDB(mPDBCode.trim());
+							entryFile = MMCIFParser.getFromPDB(mPDBCode.trim());
 						}
 						catch (Exception e) {
 							showMessageInEDT("Couldn't retrieve pdb-file of '"+mPDBCode.trim()+"' from PDB-database:\n"+e.getMessage()+"\nYou may try to download it manually from 'www.rcsb.org'.");
@@ -192,7 +192,8 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 						}
 					}
 					else {
-						entryFile = parser.parse(pdbFile);
+						entryFile = FileHelper.getFileType(pdbFile) == FileHelper.cFileTypePDB ?
+								new PDBFileParser().parse(pdbFile) : MMCIFParser.parse(pdbFile);
 					}
 
 					List<Molecule3D> ligands = entryFile.extractMols(false).get(StructureAssembler.LIGAND_GROUP);

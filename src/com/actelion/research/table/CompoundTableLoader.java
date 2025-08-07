@@ -1704,7 +1704,7 @@ try {
 		}
 
 	private boolean initializeReaderFromFile() {
-		boolean isGZipped = CompoundFileHelper.getFileType(mFile.getName()) == CompoundFileHelper.cFileTypeSDGZ;
+		boolean isGZipped = CompoundFileHelper.getFileType(mFile) == CompoundFileHelper.cFileTypeSDGZ;
 		try {
 			mDataReader.close();
 

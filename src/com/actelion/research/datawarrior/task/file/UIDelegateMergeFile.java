@@ -121,7 +121,7 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 			mFilePathLabel.setPath(file.getAbsolutePath());
 
 			// parse the file to be merged
-			int fileType = FileHelper.getFileType(file.getName());
+			int fileType = FileHelper.getFileType(file);
 			mLoader = new CompoundTableLoader(mParentFrame, mParentFrame.getTableModel(), null);
 			mLoader.readFile(file, rtp, fileType, CompoundTableLoader.READ_DATA);
 			}

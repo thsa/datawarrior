@@ -674,8 +674,6 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 				}
 
 			if (mol != null && mol.getAllAtoms() != 0) {
-	//			String rawCoords = (mMinimization != MINIMIZE_MMFF94) ? null : new Canonizer(mol).getEncodedCoordinates(true);
-
 				MinimizationResult result = new MinimizationResult();
 				minimize(mol, result);
 

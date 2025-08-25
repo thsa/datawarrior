@@ -33,7 +33,6 @@ import org.openmolecules.fx.viewer3d.V3DScene;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.concurrent.CountDownLatch;
 
 public class JStructure3DFormObject extends AbstractFormObject {
@@ -153,9 +152,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
 		    	}
 
 		    if (mols != null) {
-			    EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
-			    settings.add(V3DScene.ViewerSettings.EDITING);
-				JFXMolViewerPanel fxp = new JFXMolViewerPanel(false, (int)(4*r.width), (int)(4*r.height), settings);
+				JFXMolViewerPanel fxp = new JFXMolViewerPanel(false, (int)(4*r.width), (int)(4*r.height), V3DScene.CONFORMER_EDIT_MODE);
 			    fxp.waitForCompleteConstruction();
 				fxp.setBackground(Color.WHITE);
 			    if (mCavityMol != null)

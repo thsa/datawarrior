@@ -29,12 +29,15 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 	private static final String PROPERTY_CALC_GLOBAL = "calcGlobal";
 	private static final String PROPERTY_GLOBAL_CONFORMERS = "globalMaxConformers";
 	private static final String PROPERTY_ADD_CONFORMERS = "addConformers";
+	private static final String PROPERTY_ANGLEBEND_AND_TORSION_ONLY = "angleBendAndTorsionOnly";
+	private static final String PROPERTY_SKIP_HYDROGEN = "skipHydrogen";
 	private static final String PROPERTY_DIELECTRIC_CONSTANT = "dielectricConstant";
 
-	private JCheckBox mCheckBoxCalcLocalEnergyDif,mCheckBoxCalcGlobalEnergyDif, mCheckBoxAddConformers;
+	private JCheckBox mCheckBoxCalcLocalEnergyDif,mCheckBoxCalcGlobalEnergyDif,mCheckBoxAngleBendAndTorsionOnly,
+			mCheckBoxSkipHydrogenContributions,mCheckBoxAddConformers;
 	private JTextField mTextFieldConformerCount,mTextFieldDielectricConstant;
 	private volatile int mMaxConformers,mMinimizationErrors;
-	private volatile boolean mAddConformers,mCalcLocal,mCalcGlobal;
+	private volatile boolean mAddConformers,mCalcLocal,mCalcGlobal,mAngleBendAndTorsionOnly,mSkipHydrogen;
 	private volatile Map<String,Object> mMMFFOptions;
 
 	public DETaskCalculateConformerEnergy(DEFrame parent) {
@@ -51,12 +54,15 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		int gap = HiDPIHelper.scale(8);
 		int indent = HiDPIHelper.scale(32);
 		double[][] size = { {indent, indent, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED},
-							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>2, TableLayout.PREFERRED,
-							 gap>>2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
+							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.PREFERRED,
+							 gap>>2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.PREFERRED,
+							 TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
 
 		mTextFieldConformerCount = new JTextField(3);
 		mCheckBoxCalcLocalEnergyDif = new JCheckBox("Local minimum energy conformer");
 		mCheckBoxCalcGlobalEnergyDif = new JCheckBox("Global minimum energy conformer");
+		mCheckBoxSkipHydrogenContributions = new JCheckBox("Skip energy contributions with hydrogen atoms");
+		mCheckBoxAngleBendAndTorsionOnly = new JCheckBox("Torsion and angle bend energies only");
 		mCheckBoxAddConformers = new JCheckBox("Add structures of minimum energy conformer(s)");
 		mCheckBoxCalcGlobalEnergyDif.addActionListener(e -> mTextFieldConformerCount.setEnabled(mCheckBoxCalcGlobalEnergyDif.isSelected()));
 
@@ -71,12 +77,14 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		ep.setLayout(new TableLayout(size));
 		ep.add(new JLabel("Calculate energy difference to:", JLabel.LEFT), "0,1,6,1");
 		ep.add(mCheckBoxCalcLocalEnergyDif, "1,3,6,3");
-		ep.add(mCheckBoxCalcGlobalEnergyDif, "1,5,6,5");
-		ep.add(new JLabel("Generate up to ", JLabel.RIGHT), "2,7");
-		ep.add(mTextFieldConformerCount, "4,7");
-		ep.add(new JLabel("conformers", JLabel.LEFT), "6,7");
-		ep.add(mCheckBoxAddConformers, "1,9,6,9");
-		ep.add(dePanel, "0,11,6,11");
+		ep.add(mCheckBoxCalcGlobalEnergyDif, "1,4,6,4");
+		ep.add(new JLabel("Generate up to ", JLabel.RIGHT), "2,6");
+		ep.add(mTextFieldConformerCount, "4,6");
+		ep.add(new JLabel("conformers", JLabel.LEFT), "6,6");
+		ep.add(mCheckBoxAddConformers, "1,8,6,8");
+		ep.add(mCheckBoxAngleBendAndTorsionOnly, "1,9,6,9");
+		ep.add(mCheckBoxSkipHydrogenContributions, "1,10,6,10");
+		ep.add(dePanel, "1,12,6,12");
 		return ep;
 	}
 
@@ -97,6 +105,8 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		configuration.setProperty(PROPERTY_CALC_LOCAL, mCheckBoxCalcLocalEnergyDif.isSelected() ? "true" : "false");
 		configuration.setProperty(PROPERTY_CALC_GLOBAL, mCheckBoxCalcGlobalEnergyDif.isSelected() ? "true" : "false");
 		configuration.setProperty(PROPERTY_GLOBAL_CONFORMERS, mTextFieldConformerCount.getText());
+		configuration.setProperty(PROPERTY_ANGLEBEND_AND_TORSION_ONLY, mCheckBoxAngleBendAndTorsionOnly.isSelected() ? "true" : "false");
+		configuration.setProperty(PROPERTY_SKIP_HYDROGEN, mCheckBoxSkipHydrogenContributions.isSelected() ? "true" : "false");
 		configuration.setProperty(PROPERTY_ADD_CONFORMERS, mCheckBoxAddConformers.isSelected() ? "true" : "false");
 		configuration.setProperty(PROPERTY_DIELECTRIC_CONSTANT, mTextFieldDielectricConstant.getText());
 
@@ -111,6 +121,8 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		mCheckBoxCalcGlobalEnergyDif.setSelected(configuration.getProperty(PROPERTY_CALC_GLOBAL, "").equals("true"));
 		mTextFieldConformerCount.setText(configuration.getProperty(PROPERTY_GLOBAL_CONFORMERS, "64"));
 		mCheckBoxAddConformers.setSelected(configuration.getProperty(PROPERTY_ADD_CONFORMERS, "").equals("true"));
+		mCheckBoxAngleBendAndTorsionOnly.setSelected(configuration.getProperty(PROPERTY_ANGLEBEND_AND_TORSION_ONLY, "").equals("true"));
+		mCheckBoxSkipHydrogenContributions.setSelected(configuration.getProperty(PROPERTY_SKIP_HYDROGEN, "").equals("true"));
 		mTextFieldDielectricConstant.setText(configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT, "1.0"));
 	}
 
@@ -121,8 +133,10 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		mCheckBoxCalcGlobalEnergyDif.setSelected(false);
 		mTextFieldConformerCount.setText("64");
 		mTextFieldConformerCount.setEnabled(false);
+		mCheckBoxAngleBendAndTorsionOnly.setSelected(false);
+		mCheckBoxSkipHydrogenContributions.setSelected(false);
 		mCheckBoxAddConformers.setSelected(false);
-		mTextFieldDielectricConstant.setText("80.0");
+		mTextFieldDielectricConstant.setText("1.0");
 	}
 
 	@Override
@@ -142,17 +156,22 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 
 		if (mAddConformers) {
 			int idcodeColumn = getChemistryColumn();
+			int coords3DColumn = getCoordinates3DColumn();
 
 			if (mCalcLocal) {
 				getTableModel().setColumnName("Local Min-Energy Conformer", firstNewColumn);
 				getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType3DCoordinates);
 				getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertyParentColumn, getTableModel().getColumnTitleNoAlias(idcodeColumn));
+				getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertySuperpose, getTableModel().getColumnTitleNoAlias(coords3DColumn));
+				getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertySuperposeAlign, CompoundTableConstants.cSuperposeAlignValueMCS);
 				firstNewColumn++;
 			}
 			if (mCalcGlobal) {
 				getTableModel().setColumnName("Global Min-Energy Conformer", firstNewColumn);
 				getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertySpecialType, CompoundTableConstants.cColumnType3DCoordinates);
 				getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertyParentColumn, getTableModel().getColumnTitleNoAlias(idcodeColumn));
+				getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertySuperpose, getTableModel().getColumnTitleNoAlias(coords3DColumn));
+				getTableModel().setColumnProperty(firstNewColumn, CompoundTableConstants.cColumnPropertySuperposeAlign, CompoundTableConstants.cSuperposeAlignValueMCS);
 				firstNewColumn++;
 			}
 		}
@@ -166,6 +185,8 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		mCalcLocal = configuration.getProperty(PROPERTY_CALC_LOCAL, "").equals("true");
 		mCalcGlobal = configuration.getProperty(PROPERTY_CALC_GLOBAL, "").equals("true");
 		mAddConformers = configuration.getProperty(PROPERTY_ADD_CONFORMERS, "").equals("true");
+		mSkipHydrogen = configuration.getProperty(PROPERTY_SKIP_HYDROGEN, "").equals("true");
+		mAngleBendAndTorsionOnly = configuration.getProperty(PROPERTY_ANGLEBEND_AND_TORSION_ONLY, "").equals("true");
 
 		String dielectricConstant = configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT, "");
 		if (dielectricConstant.isEmpty()) {
@@ -273,9 +294,8 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		new HydrogenAssembler(mol).addImplicitHydrogens();
 
 		ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, MMFF_TABLE_SET, mMMFFOptions);
-		double absEnergy = ff.getTotalEnergy();
+		double absEnergy = (mAngleBendAndTorsionOnly || mSkipHydrogen) ? calculateEnergy(mol) : ff.getTotalEnergy();
 		getTableModel().setTotalValueAt(DoubleFormat.toString(absEnergy), row, firstNewColumn);
-/* alternatively torsion strain only:		getTableModel().setTotalValueAt(DoubleFormat.toString(calculateTorsionStrain(mol)), row, firstNewColumn); */
 
 		String localCoords = null;
 		double minEnergy = Double.MAX_VALUE;
@@ -285,8 +305,8 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 			MinimizationResult result = new MinimizationResult();
 			minimize(mol, result);
 			if (result.error().isEmpty()) {
-				minEnergy = result.energy;
-				getTableModel().setTotalValueAt(DoubleFormat.toString(absEnergy - result.energy), row, firstNewColumn);
+				minEnergy = (mAngleBendAndTorsionOnly || mSkipHydrogen) ? calculateEnergy(mol) : result.energy;
+				getTableModel().setTotalValueAt(DoubleFormat.toString(absEnergy - minEnergy), row, firstNewColumn);
 				localCoords = new Canonizer(mol).getEncodedCoordinates(true);
 			}
 			else {
@@ -316,8 +336,9 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 						minimize(mol, result);
 
 						if (result.error().isEmpty()) {
-							if (minEnergy > result.energy) {
-								minEnergy = result.energy;
+							double confEnergy = (mAngleBendAndTorsionOnly || mSkipHydrogen) ? calculateEnergy(mol) : result.energy;
+							if (minEnergy > confEnergy) {
+								minEnergy = confEnergy;
 								globalCoords = new Canonizer(mol).getEncodedCoordinates(true);
 							}
 						}
@@ -343,17 +364,17 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		}
 	}
 
-	private double calculateTorsionStrain(StereoMolecule mol) {
+	private double calculateEnergy(StereoMolecule mol) {
 		Map<String,Object> options = new HashMap<>();
-		options.put("angle bend", Boolean.FALSE);
-		options.put("bond stretch", Boolean.FALSE);
-		options.put("electrostatic", Boolean.FALSE);
-		options.put("out of plane", Boolean.FALSE);
-		options.put("stretch bend", Boolean.FALSE);
+		options.put("angle bend", Boolean.TRUE);
+		options.put("bond stretch", mAngleBendAndTorsionOnly ? Boolean.FALSE : Boolean.TRUE);
+		options.put("electrostatic", mAngleBendAndTorsionOnly ? Boolean.FALSE : Boolean.TRUE);
+		options.put("out of plane", mAngleBendAndTorsionOnly ? Boolean.FALSE : Boolean.TRUE);
+		options.put("stretch bend", mAngleBendAndTorsionOnly ? Boolean.FALSE : Boolean.TRUE);
 		options.put("torsion angle", Boolean.TRUE);
-		options.put("van der waals", Boolean.FALSE);
+		options.put("van der waals", mAngleBendAndTorsionOnly ? Boolean.FALSE : Boolean.TRUE);
 		ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, MMFF_TABLE_SET, options);
-		return ff.getTotalEnergy();
+		return ff.getTotalEnergy(null, mSkipHydrogen);
 	}
 
 	/**
@@ -370,7 +391,7 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 			int error = ff.minimise(10000, 0.0001, 1.0e-6);
 			if (error != 0)
 				throw new Exception("MMFF94 error code "+error);
-			result.energy = (float)ff.getTotalEnergy();
+			result.energy = (float)ff.getTotalEnergy(null, mSkipHydrogen);
 		}
 		catch (Exception e) {
 			result.energy = Double.NaN;

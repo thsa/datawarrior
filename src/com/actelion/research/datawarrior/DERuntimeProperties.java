@@ -80,9 +80,17 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMainViewInFront = "mainViewInFront";
 	private static final String cDetailView = "detailView";
 	private static final String cMolViewerOverlayMolColor = "fxmvOverlayMolColor";
-	private static final String cMolViewerCavityColor = "fxmvCavityColor";
 	private static final String cMolViewerRefMolColor = "fxmvRefMolColor";
+	private static final String cMolViewerRefMolSurfaceMode = "fxmvRefMolSurfaceMode";
+	private static final String cMolViewerRefMolSurfaceColorMode = "fxmvRefMolSurfaceColorMode";
+	private static final String cMolViewerRefMolSurfaceColor = "fxmvRefMolSurfaceColor";
+	private static final String cMolViewerRefMolSurfaceTransparency = "fxmvRefMolSurfaceTransparency";
 	private static final String cMolViewerSingleConformerColor = "fxmvSingleConformerColor";
+	private static final String cMolViewerSingleConformerSurfaceMode = "fxmvSingleConformerSurfaceMode";
+	private static final String cMolViewerSingleConformerSurfaceColorMode = "fxmvSingleConformerSurfaceColorMode";
+	private static final String cMolViewerSingleConformerSurfaceColor = "fxmvSingleConformerSurfaceColor";
+	private static final String cMolViewerSingleConformerSurfaceTransparency = "fxmvSingleConformerSurfaceTransparency";
+	private static final String cMolViewerCavityColor = "fxmvCavityColor";
 	private static final String cMolViewerCavityConstructionMode = "fxmvCavityConstructionMode";
 	private static final String cMolViewerCavityHydrogenMode = "fxmvCavityHydrogenMode";
 	private static final String cMolViewerCavityRibbonMode = "fxmvCavityRibbonMode";
@@ -440,15 +448,39 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String overlayColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerOverlayMolColor);
 				if (overlayColor != null)
 					panel3D.setOverlayMolColor(overlayColor);
-				String cavityColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityColor);
-				if (cavityColor != null)
-					panel3D.setCavityMolColor(cavityColor);
 				String refMolColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolColor);
 				if (refMolColor != null)
 					panel3D.setRefMolColor(refMolColor);
+				String refMolSurfaceColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolSurfaceColor);
+				if (refMolSurfaceColor != null)
+					panel3D.setRefMolSurfaceColor(refMolSurfaceColor);
+				int refMolSurfaceMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolSurfaceMode, V3DMolecule.SURFACE_MODE_CODE);
+				if (refMolSurfaceMode != -1)
+					panel3D.setRefMolSurfaceMode(refMolSurfaceMode);
+				int refMolSurfaceColorMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolSurfaceColorMode, SurfaceMesh.SURFACE_COLOR_MODE_CODE);
+				if (refMolSurfaceColorMode != -1)
+					panel3D.setRefMolSurfaceColorMode(refMolSurfaceColorMode);
+				String refMolSurfaceTransparency = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolSurfaceTransparency);
+				if (refMolSurfaceTransparency != null)
+					panel3D.setRefMolSurfaceTransparency(Double.parseDouble(refMolSurfaceTransparency));
 				String confColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerColor);
 				if (confColor != null)
 					panel3D.setSingleConformerColor(confColor);
+				String confSurfaceColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerSurfaceColor);
+				if (confSurfaceColor != null)
+					panel3D.setSingleConformerSurfaceColor(confSurfaceColor);
+				int confSurfaceMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerSurfaceMode, V3DMolecule.SURFACE_MODE_CODE);
+				if (confSurfaceMode != -1)
+					panel3D.setSingleConformerSurfaceMode(confSurfaceMode);
+				int confSurfaceColorMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerSurfaceColorMode, SurfaceMesh.SURFACE_COLOR_MODE_CODE);
+				if (confSurfaceColorMode != -1)
+					panel3D.setSingleConformerSurfaceColorMode(confSurfaceColorMode);
+				String confSurfaceTransparency = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerSurfaceTransparency);
+				if (confSurfaceTransparency != null)
+					panel3D.setSingleConformerSurfaceTransparency(Double.parseDouble(confSurfaceTransparency));
+				String cavityColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityColor);
+				if (cavityColor != null)
+					panel3D.setCavityMolColor(cavityColor);
 				String cavitySurfaceColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceColor);
 				if (cavitySurfaceColor != null)
 					panel3D.setCavitySurfaceColor(cavitySurfaceColor);
@@ -1943,15 +1975,33 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String overlayColor = panel3D.getOverlayMolColor();
 				if (overlayColor != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerOverlayMolColor, overlayColor);
-				String cavityColor = panel3D.getCavityMolColor();
-				if (cavityColor != null)
-					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityColor, cavityColor);
-				String refMolColor = panel3D.getRefMolColor();
-				if (refMolColor != null)
-					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolColor, refMolColor);
 				String confColor = panel3D.getSingleConformerColor();
 				if (confColor != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerColor, confColor);
+				String confSurfaceColor = panel3D.getSingleConformerSurfaceColor();
+				if (confSurfaceColor != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerSurfaceColor, confSurfaceColor);
+				int confSurfaceMode = panel3D.getSingleConformerSurfaceMode();
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerSurfaceMode, V3DMolecule.SURFACE_MODE_CODE[confSurfaceMode]);
+				int confSurfaceColorMode = panel3D.getSingleConformerSurfaceColorMode();
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerSurfaceColorMode, SurfaceMesh.SURFACE_COLOR_MODE_CODE[confSurfaceColorMode]);
+				double confSurfaceTransparency = panel3D.getSingleConformerSurfaceTransparency();
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerSurfaceTransparency, DoubleFormat.toString(confSurfaceTransparency));
+				String refMolColor = panel3D.getRefMolColor();
+				if (refMolColor != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolColor, refMolColor);
+				String refMolSurfaceColor = panel3D.getRefMolSurfaceColor();
+				if (refMolSurfaceColor != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolSurfaceColor, refMolSurfaceColor);
+				int refMolSurfaceMode = panel3D.getRefMolSurfaceMode();
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolSurfaceMode, V3DMolecule.SURFACE_MODE_CODE[refMolSurfaceMode]);
+				int refMolSurfaceColorMode = panel3D.getRefMolSurfaceColorMode();
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolSurfaceColorMode, SurfaceMesh.SURFACE_COLOR_MODE_CODE[refMolSurfaceColorMode]);
+				double refMolSurfaceTransparency = panel3D.getRefMolSurfaceTransparency();
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolSurfaceTransparency, DoubleFormat.toString(refMolSurfaceTransparency));
+				String cavityColor = panel3D.getCavityMolColor();
+				if (cavityColor != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityColor, cavityColor);
 				String cavitySurfaceColor = panel3D.getCavitySurfaceColor();
 				if (cavitySurfaceColor != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceColor, cavitySurfaceColor);

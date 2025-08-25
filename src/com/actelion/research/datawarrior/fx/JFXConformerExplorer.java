@@ -26,6 +26,7 @@ import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
 import com.actelion.research.chem.shredder.FragmentGeometry3D;
 import com.actelion.research.datawarrior.task.chem.DETaskAdd3DCoordinates;
 import com.actelion.research.gui.FileHelper;
+import com.actelion.research.gui.VerticalFlowLayout;
 import com.actelion.research.gui.editor.SwingEditorDialog;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.util.DoubleFormat;
@@ -54,6 +55,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Map;
 
 public class JFXConformerExplorer extends JDialog implements ActionListener,ChangeListener {
 	private static final long serialVersionUID = 0x20130605;
@@ -72,6 +74,7 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 	private static final int SURFACE_WIRES = 1;
 	private static final int SURFACE_FILLED = 2;
 	private static final int DEFAULT_SURFACE = SURFACE_NONE;
+	private static final double DEFAULT_DIELECTRIC_CONSTANT = 1.0;
 
 	private static final int LOW_ENERGY_RANDOM = 0;
 	private static final int PURE_RANDOM = 1;
@@ -91,6 +94,7 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 	private final JComboBox<String> mComboBoxCount,mComboBoxAlgo,mComboBoxMinimization,mComboBoxSurface;
 	private final JFXMolViewerPanel mConformationPanel;
 	private final JSlider mSliderSplitting;
+	private final JTextField mTextFieldDielectricConstant;
 	private int mPreviousAlgo,mPreviousMinimization;
 	private int[] mSuperposeAtoms;
 
@@ -100,9 +104,9 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 		mMol = new StereoMolecule(mol);
 		mMol.stripSmallFragments(true);
 
-		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
+		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE.clone();
 		settings.add(V3DScene.ViewerSettings.INDIVIDUAL_ROTATION);
-		mConformationPanel = new JFXMolViewerPanel(true, V3DScene.CONFORMER_VIEW_MODE);
+		mConformationPanel = new JFXMolViewerPanel(true, settings);
 		mConformationPanel.adaptToLookAndFeelChanges();
 		mConformationPanel.setPopupMenuController(new V3DPopupMenuController() {
 			@Override
@@ -133,12 +137,11 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 		});
 
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {TableLayout.FILL, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
-				gap, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.PREFERRED, gap,
-				TableLayout.PREFERRED, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL},
+		double[][] size1 = { {TableLayout.FILL, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
+				gap, TableLayout.PREFERRED, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL},
 							{gap, TableLayout.PREFERRED, gap} };
 		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new TableLayout(size));
+		buttonPanel.setLayout(new TableLayout(size1));
 
 		mComboBoxCount = new JComboBox<>(OPTION_COUNT);
 		mComboBoxCount.setSelectedItem(Integer.toString(DEFAULT_COUNT).concat(" conformers"));
@@ -150,31 +153,48 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 
 		mComboBoxMinimization = new JComboBox<>(MINIMIZE_TEXT);
 		mComboBoxMinimization.setSelectedIndex(DEFAULT_MINIMIZATION);
+		mComboBoxMinimization.addActionListener(this);
 		buttonPanel.add(mComboBoxMinimization, "5,1");
 
-		JButton button = new JButton("Generate");
+		mTextFieldDielectricConstant = new JTextField("1.0", 2);
+		buttonPanel.add(new JLabel("Dielectric constant:"), "7,1");
+		buttonPanel.add(mTextFieldDielectricConstant, "8,1");
+
+		JButton button = new JButton("Generate Conformers");
 		button.addActionListener(this);
-		buttonPanel.add(button, "7,1");
+		buttonPanel.add(button, "10,1");
+
+		double[][] size2 = { {TableLayout.FILL, TableLayout.PREFERRED, TableLayout.PREFERRED, gap,
+				TableLayout.PREFERRED, TableLayout.PREFERRED, gap,
+				TableLayout.PREFERRED, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL},
+				{gap, TableLayout.PREFERRED, gap} };
+		JPanel interactionPanel = new JPanel();
+		interactionPanel.setLayout(new TableLayout(size2));
 
 		mSliderSplitting = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
 		mSliderSplitting.addChangeListener(this);
 		mSliderSplitting.setPreferredSize(new Dimension(HiDPIHelper.scale(120), mSliderSplitting.getPreferredSize().height));
-		buttonPanel.add(new JLabel("Separate:"), "9,1");
-		buttonPanel.add(mSliderSplitting, "10,1");
+		interactionPanel.add(new JLabel("Separate:"), "1,1");
+		interactionPanel.add(mSliderSplitting, "2,1");
 
 		mComboBoxSurface = new JComboBox<>(SURFACE_TEXT);
 		mComboBoxSurface.setSelectedIndex(DEFAULT_SURFACE);
 		mComboBoxSurface.addActionListener(this);
-		buttonPanel.add(new JLabel("Surface:"), "12,1");
-		buttonPanel.add(mComboBoxSurface, "13,1");
+		interactionPanel.add(new JLabel("Surface:"), "4,1");
+		interactionPanel.add(mComboBoxSurface, "5,1");
 
-		JButton superposeButton = new JButton("Superpose...");
+		JButton superposeButton = new JButton("Align Atoms...");
 		superposeButton.addActionListener(this);
-		buttonPanel.add(superposeButton, "15,1");
+		interactionPanel.add(superposeButton, "7,1");
+
+		JPanel controlPanel = new JPanel();
+		controlPanel.setLayout(new VerticalFlowLayout());
+		controlPanel.add(interactionPanel);
+		controlPanel.add(buttonPanel);
 
 		getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(mConformationPanel, BorderLayout.CENTER);
-		getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+		getContentPane().add(controlPanel, BorderLayout.SOUTH);
 
 		setSize(HiDPIHelper.scale(1024), HiDPIHelper.scale(768));
 		setLocationRelativeTo(parent);
@@ -182,6 +202,11 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 		}
 
 	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == mComboBoxMinimization) {
+			mTextFieldDielectricConstant.setEnabled(mComboBoxMinimization.getSelectedIndex() != MINIMIZE_NONE);
+			return;
+		}
+
 		if (e.getSource() == mComboBoxSurface) {
 			mConformationPanel.setConollySurfaceMode(mComboBoxSurface.getSelectedIndex());
 			return;
@@ -193,10 +218,10 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 			return;
 			}
 
-		if (e.getActionCommand().equals("Superpose...")) {
+		if (e.getActionCommand().equals("Align Atoms...")) {
 			String idcode1 = new Canonizer(mMol).getIDCode();
 			SwingEditorDialog dd = new SwingEditorDialog((Frame)getOwner(), new StereoMolecule(mMol));
-			dd.setTitle("Select Atoms to be Superposed...");
+			dd.setTitle("Select atoms to be aligned...");
 			dd.setVisible(true);
 
 			if (!dd.isCancelled()) {
@@ -231,19 +256,27 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 					int algo = mComboBoxAlgo.getSelectedIndex();
 					int minimization = mComboBoxMinimization.getSelectedIndex();
 					count = (1 << mComboBoxCount.getSelectedIndex());
-					generateConformers(algo, minimization, count);
+					double dielectricConstant = DEFAULT_DIELECTRIC_CONSTANT;
+					try {
+						dielectricConstant = Math.max(1.0, Double.parseDouble(mTextFieldDielectricConstant.getText()));
+					} catch (NumberFormatException nfe) {}
+					generateConformers(algo, minimization, count, dielectricConstant);
 					}
 				}
 
 			return;
 			}
 
-		if (e.getActionCommand().equals("Generate")) {
+		if (e.getActionCommand().equals("Generate Conformers")) {
 			int algo = mComboBoxAlgo.getSelectedIndex();
 			int minimization = mComboBoxMinimization.getSelectedIndex();
 			int count = (1 << mComboBoxCount.getSelectedIndex());
-			generateConformers(algo, minimization, count);
-			return;
+			double dielectricConstant = DEFAULT_DIELECTRIC_CONSTANT;
+			try {
+				dielectricConstant = Math.max(1.0, Double.parseDouble(mTextFieldDielectricConstant.getText()));
+			} catch (NumberFormatException nfe) {}
+
+			generateConformers(algo, minimization, count, dielectricConstant);
 			}
 		}
 
@@ -254,10 +287,10 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 		}
 
 	public void generateConformers() {
-		generateConformers(DEFAULT_ALGO, MINIMIZE_MMFFSPLUS, DEFAULT_COUNT);
+		generateConformers(DEFAULT_ALGO, MINIMIZE_MMFFSPLUS, DEFAULT_COUNT, DEFAULT_DIELECTRIC_CONSTANT);
 		}
 
-	public void generateConformers(int algo, int minimization, int maxConformers) {
+	public void generateConformers(int algo, int minimization, int maxConformers, double dielectricConstant) {
 		mConformationPanel.clear();
 
 		mPreviousAlgo = algo;
@@ -337,7 +370,7 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 					message = DoubleFormat.toString(100*conformer.getLikelihood(), 3) + "%";
 					conformer.setEnergy(conformer.getLikelihood());
 					conformer.copyTo(mol);
-				} else if (cs != null) {
+				} else {
 					message = "Strain:" + DoubleFormat.toString(((SelfOrganizedConformer) conformer).getTotalStrain(), 3);
 					conformer.setEnergy(((SelfOrganizedConformer) conformer).getTotalStrain());
 					conformer.copyTo(mol);
@@ -345,13 +378,16 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 			} else {
 				result = new MinimizationResult();
 
+				Map<String,Object> options = new HashMap<>();
+				options.put("dielectric constant", dielectricConstant);
+
 				if (minimization == MINIMIZE_MMFFSPLUS) {
 					conformer.copyTo(mol);
-					minimizeMMFF(mol, result, ForceFieldMMFF94.MMFF94SPLUS);
+					minimizeMMFF(mol, result, ForceFieldMMFF94.MMFF94SPLUS, options);
 				}
 				else if (minimization == MINIMIZE_MMFFS) {
 					conformer.copyTo(mol);
-					minimizeMMFF(mol, result, ForceFieldMMFF94.MMFF94S);
+					minimizeMMFF(mol, result, ForceFieldMMFF94.MMFF94S, options);
 				}
 
 				conformer.copyFrom(mol);
@@ -426,19 +462,19 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 					coords = new Coordinates[mSuperposeAtoms.length];
 					refCoords = new Coordinates[mSuperposeAtoms.length];
 					for (int i=0; i<mSuperposeAtoms.length; i++)
-						refCoords[i] = conformer.getCoordinates(mSuperposeAtoms[i]);
+						refCoords[i] = conformer.getAtomCoordinates(mSuperposeAtoms[i]);
 
 					refCOG = FragmentGeometry3D.centerOfGravity(refCoords);
 					}
 				}
 			else {
 				for (int i=0; i<mSuperposeAtoms.length; i++)
-					coords[i] = conformer.getCoordinates(mSuperposeAtoms[i]);
+					coords[i] = conformer.getAtomCoordinates(mSuperposeAtoms[i]);
 
 				Coordinates cog = FragmentGeometry3D.centerOfGravity(coords);
 				matrix = FragmentGeometry3D.kabschAlign(refCoords, coords, refCOG, cog);
 				for (int atom=0; atom<conformer.getAllAtoms(); atom++) {
-					Coordinates c = conformer.getCoordinates(atom);
+					Coordinates c = conformer.getAtomCoordinates(atom);
 					c.sub(cog);
 					c.rotate(matrix);
 					c.add(refCOG);
@@ -510,12 +546,12 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 	 * @param mol receives minimized coodinates; taken as start conformer if ffmol == null
 	 * @param result receives energy and possibly error message
 	 */
-	private void minimizeMMFF(StereoMolecule mol, MinimizationResult result, String tableSet) {
+	private void minimizeMMFF(StereoMolecule mol, MinimizationResult result, String tableSet, Map<String,Object> options) {
 		try {
 			int[] fragmentNo = new int[mol.getAllAtoms()];
 			int fragmentCount = mol.getFragmentNumbers(fragmentNo, false, true);
 			if (fragmentCount == 1) {
-				ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, tableSet, new HashMap<String, Object>());
+				ForceFieldMMFF94 ff = new ForceFieldMMFF94(mol, tableSet, options);
 				int error = ff.minimise(10000, 0.0001, 1.0e-6);
 				if (error != 0)
 					throw new Exception("MMFF94 error code "+error);
@@ -527,7 +563,7 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 				StereoMolecule[] fragment = mol.getFragments(fragmentNo, fragmentCount);
 				for (StereoMolecule f:fragment) {
 					if (f.getAllAtoms() > 2) {
-						ForceFieldMMFF94 ff = new ForceFieldMMFF94(f, tableSet, new HashMap<String, Object>());
+						ForceFieldMMFF94 ff = new ForceFieldMMFF94(f, tableSet, options);
 						int error = ff.minimise(10000, 0.0001, 1.0e-6);
 						if (error != 0)
 							throw new Exception("MMFF94 error code "+error);
@@ -584,7 +620,7 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 		Coordinates cog = new Coordinates();
 		double atomicNoSum = 0.0;
 		for (int atom=0; atom<mol.getAllAtoms(); atom++) {
-			Coordinates c = mol.getCoordinates(atom);
+			Coordinates c = mol.getAtomCoordinates(atom);
 			cog.add(c.x * mol.getAtomicNo(atom),
 					c.y * mol.getAtomicNo(atom),
 					c.z * mol.getAtomicNo(atom));
@@ -594,7 +630,7 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 
 		// Here we move the conformer's internal coordinates to center it around its COG!!!!!!!
 		for (int atom=0; atom<mol.getAllAtoms(); atom++)
-			mol.getCoordinates(atom).sub(cog);
+			mol.getAtomCoordinates(atom).sub(cog);
 		}
 
 	private boolean isRedundantConformer(TorsionDescriptorHelper torsionHelper, ArrayList<TorsionDescriptor> torsionDescriptorList) {

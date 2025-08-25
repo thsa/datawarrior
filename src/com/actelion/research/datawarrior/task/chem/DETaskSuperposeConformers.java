@@ -19,7 +19,6 @@ import org.openmolecules.fx.viewer3d.V3DScene;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.Properties;
 
 public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
@@ -52,9 +51,7 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 		double[][] size = { {TableLayout.PREFERRED},
 							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
 
-		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
-		settings.add(V3DScene.ViewerSettings.EDITING);
-		mConformerPanel = new JFXMolViewerPanel(false, settings);
+		mConformerPanel = new JFXMolViewerPanel(false, V3DScene.CONFORMER_EDIT_MODE);
 		mConformerPanel.adaptToLookAndFeelChanges();
 //		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(400), HiDPIHelper.scale(200)));

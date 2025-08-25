@@ -48,15 +48,20 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private static final Color DEFAULT_REFMOL_COLOR = Color.INDIANRED;
 	private static final Color DEFAULT_OVERLAY_MOL_COLOR = Color.LIGHTGRAY;
 	private static final Color DEFAULT_SINGLE_CONF_COLOR = Color.GRAY.darker(); // for some reason, DARKGREY is lighter than GREY
+	private static final int MAX_ATOMS_FOR_SURFACE = 2400;
 
 	private V3DScene mScene;
 	private volatile V3DMolecule mCavityMol,mOverlayMol,mRefMol,mSingleConformer;
 	private V3DPopupMenuController mController;
 	private FutureTask<Object> mConstructionTask;
-	private volatile int mCurrentUpdateID,mCavityConstructionMode,mCavityHydrogenMode,mCavityRibbonMode,mCavitySurfaceMode,mCavitySurfaceColorMode;
+	private volatile int mCurrentUpdateID,mCavityConstructionMode,mCavityHydrogenMode,mCavityRibbonMode,mCavitySurfaceMode,
+			mCavitySurfaceColorMode,mLargeCavityConstructionMode,mLargeCavitySurfaceMode,mLargeCavityRibbonMode,
+			mRefMolSurfaceMode,mRefMolSurfaceColorMode,mSingleConformerSurfaceMode,mSingleConformerSurfaceColorMode;
+	private volatile double mRefMolSurfaceTransparency,mSingleConformerSurfaceTransparency;
 	private boolean mAdaptToLookAndFeelChanges;
 	private final boolean mIsEditable;
-	private volatile Color mCavityMolColor,mRefMolColor,mOverlayMolColor,mSingleConformerColor,mCavitySurfaceColor;
+	private volatile Color mCavityMolColor,mRefMolColor,mOverlayMolColor,mSingleConformerColor,mCavitySurfaceColor,
+			mRefMolSurfaceColor,mSingleConformerSurfaceColor;
 	private volatile double mCavitySurfaceTransparency;
 	private java.awt.Color mSceneBackground, mLookAndFeelSpotColor,
 			mMenuItemBackground,mMenuItemForeground,/*mMenuItemSelectionBackground,*/mMenuItemSelectionForeground;
@@ -82,7 +87,15 @@ public class JFXMolViewerPanel extends JFXPanel {
 		mCavityMolColor = DEFAULT_CAVITY_MOL_COLOR;
 		mOverlayMolColor = DEFAULT_OVERLAY_MOL_COLOR;
 		mRefMolColor = DEFAULT_REFMOL_COLOR;
+		mRefMolSurfaceMode = V3DMolecule.SURFACE_MODE_NONE;
+		mRefMolSurfaceColorMode = SurfaceMesh.SURFACE_COLOR_INHERIT;
+		mRefMolSurfaceColor = DEFAULT_REFMOL_COLOR;
+		mRefMolSurfaceTransparency = 0.1;
 		mSingleConformerColor = null;
+		mSingleConformerSurfaceMode = V3DMolecule.SURFACE_MODE_NONE;
+		mSingleConformerSurfaceColorMode = SurfaceMesh.SURFACE_COLOR_INHERIT;
+		mSingleConformerSurfaceColor = DEFAULT_SINGLE_CONF_COLOR;
+		mSingleConformerSurfaceTransparency = 0.1;
 
 		mCavityConstructionMode = MoleculeArchitect.CONSTRUCTION_MODE_WIRES;
 		mCavityHydrogenMode = MoleculeArchitect.HYDROGEN_MODE_ALL;
@@ -91,6 +104,10 @@ public class JFXMolViewerPanel extends JFXPanel {
 		mCavitySurfaceColorMode = SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS;
 		mCavitySurfaceColor = DEFAULT_CAVITY_MOL_COLOR;
 		mCavitySurfaceTransparency = 0.2;
+
+		mLargeCavityConstructionMode = MoleculeArchitect.CONSTRUCTION_MODE_NONE;
+		mLargeCavitySurfaceMode = V3DMolecule.SURFACE_MODE_NONE;
+		mLargeCavityRibbonMode = Ribbons.MODE_CARTOON;
 
 		collectLookAndFeelColors(); // we have to do this on the EDT
 
@@ -253,13 +270,47 @@ public class JFXMolViewerPanel extends JFXPanel {
 		return mCavityMol != null ? mCavityMol.getSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY) : mCavitySurfaceTransparency;
 	}
 
+	public int getRefMolSurfaceMode() {
+		return mRefMol != null ? mRefMol.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY) : mRefMolSurfaceMode;
+	}
+
+	public int getRefMolSurfaceColorMode() {
+		return mRefMol != null ? mRefMol.getSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY) : mRefMolSurfaceColorMode;
+	}
+
+	public double getRefMolSurfaceTransparency() {
+		return mRefMol != null ? mRefMol.getSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY) : mRefMolSurfaceTransparency;
+	}
+
 	public String getRefMolColor() {
 		Color color = (mRefMol != null) ? mRefMol.getColor() : mRefMolColor;
 		return color == null ? "none" : toRGBString(color);
 	}
 
+	public String getRefMolSurfaceColor() {
+		Color color = (mRefMol != null) ? mRefMol.getSurfaceColor(MoleculeSurfaceAlgorithm.CONNOLLY) : mRefMolSurfaceColor;
+		return color == null ? "none" : toRGBString(color);
+	}
+
+	public int getSingleConformerSurfaceMode() {
+		return mSingleConformer != null ? mSingleConformer.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY) : mSingleConformerSurfaceMode;
+	}
+
+	public int getSingleConformerSurfaceColorMode() {
+		return mSingleConformer != null ? mSingleConformer.getSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY) : mSingleConformerSurfaceColorMode;
+	}
+
+	public double getSingleConformerSurfaceTransparency() {
+		return mSingleConformer != null ? mSingleConformer.getSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY) : mSingleConformerSurfaceTransparency;
+	}
+
 	public String getSingleConformerColor() {
 		Color color = (mSingleConformer != null) ? mSingleConformer.getColor() : mSingleConformerColor;
+		return color == null ? "none" : toRGBString(color);
+	}
+
+	public String getSingleConformerSurfaceColor() {
+		Color color = (mSingleConformer != null) ? mSingleConformer.getSurfaceColor(MoleculeSurfaceAlgorithm.CONNOLLY) : mSingleConformerSurfaceColor;
 		return color == null ? "none" : toRGBString(color);
 	}
 
@@ -274,6 +325,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 		if (mCavityMol != null)
 			Platform.runLater(() -> mCavityMol.setColor(mCavityMolColor) );
 	}
+
 	public void setCavitySurfaceColor(String color) {
 		mCavitySurfaceColor = color.equals("none") ? null : Color.valueOf(color);
 		if (mCavityMol != null)
@@ -281,9 +333,16 @@ public class JFXMolViewerPanel extends JFXPanel {
 	}
 
 	public void setCavityConstructionMode(int mode) {
-		mCavityConstructionMode = mode;
-		if (mCavityMol != null)
-			Platform.runLater(() -> mCavityMol.setConstructionMode(mCavityConstructionMode) );
+		if (mCavityMol != null) {
+			if (mCavityMol.getMolecule().getAllAtoms() > MAX_ATOMS_FOR_SURFACE)
+				mLargeCavityConstructionMode = mode;
+			else
+				mCavityConstructionMode = mode;
+			Platform.runLater(() -> mCavityMol.setConstructionMode(mode));
+		}
+		else {
+			mCavityConstructionMode = mode;
+		}
 	}
 
 	public void setCavityHydrogenMode(int mode) {
@@ -293,15 +352,29 @@ public class JFXMolViewerPanel extends JFXPanel {
 	}
 
 	public void setCavityRibbonMode(int mode) {
-		mCavityRibbonMode = mode;
-		if (mCavityMol != null)
-			Platform.runLater(() -> mCavityMol.setRibbonMode(mCavityRibbonMode) );
+		if (mCavityMol != null) {
+			if (mCavityMol.getMolecule().getAllAtoms() > MAX_ATOMS_FOR_SURFACE)
+				mLargeCavityRibbonMode = mode;
+			else
+				mCavityRibbonMode = mode;
+			Platform.runLater(() -> mCavityMol.setRibbonMode(mode));
+		}
+		else {
+			mCavityRibbonMode = mode;
+		}
 	}
 
 	public void setCavitySurfaceMode(int mode) {
-		mCavitySurfaceMode = mode;
-		if (mCavityMol != null)
-			Platform.runLater(() -> mCavityMol.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, mCavitySurfaceMode) );
+		if (mCavityMol != null) {
+			if (mCavityMol.getMolecule().getAllAtoms() > MAX_ATOMS_FOR_SURFACE)
+				mLargeCavitySurfaceMode = mode;
+			else
+				mCavitySurfaceMode = mode;
+			Platform.runLater(() -> mCavityMol.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, mode) );
+		}
+		else {
+			mCavitySurfaceMode = mode;
+		}
 	}
 
 	public void setCavitySurfaceColorMode(int mode) {
@@ -322,10 +395,58 @@ public class JFXMolViewerPanel extends JFXPanel {
 			Platform.runLater(() -> mRefMol.setColor(mRefMolColor) );
 	}
 
+	public void setRefMolSurfaceColor(String color) {
+		mRefMolSurfaceColor = color.equals("none") ? null : Color.valueOf(color);
+		if (mRefMol != null)
+			Platform.runLater(() -> mRefMol.setSurfaceColor(MoleculeSurfaceAlgorithm.CONNOLLY, mRefMolSurfaceColor) );
+	}
+
+	public void setRefMolSurfaceMode(int mode) {
+		mRefMolSurfaceMode = mode;
+		if (mRefMol != null)
+			Platform.runLater(() -> mRefMol.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, mode) );
+	}
+
+	public void setRefMolSurfaceColorMode(int mode) {
+		mRefMolSurfaceColorMode = mode;
+		if (mRefMol != null)
+			Platform.runLater(() -> mRefMol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, mode) );
+	}
+
+	public void setRefMolSurfaceTransparency(double transparency) {
+		mRefMolSurfaceTransparency = transparency;
+		if (mRefMol != null)
+			Platform.runLater(() -> mRefMol.setSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY, transparency) );
+	}
+
 	public void setSingleConformerColor(String color) {
 		mSingleConformerColor = color.equals("none") ? null : Color.valueOf(color);
 		if (mSingleConformer != null)
 			Platform.runLater(() -> mSingleConformer.setColor(mSingleConformerColor) );
+	}
+
+	public void setSingleConformerSurfaceColor(String color) {
+		mSingleConformerSurfaceColor = color.equals("none") ? null : Color.valueOf(color);
+		if (mSingleConformer != null)
+			Platform.runLater(() -> mSingleConformer.setSurfaceColor(MoleculeSurfaceAlgorithm.CONNOLLY, mSingleConformerSurfaceColor) );
+	}
+
+	public void setSingleConformerSurfaceMode(int mode) {
+		mSingleConformerSurfaceMode = mode;
+		if (mSingleConformer != null)
+			Platform.runLater(() -> mSingleConformer.setSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY, mode) );
+	}
+
+	public void setSingleConformerSurfaceColorMode(int mode) {
+		mSingleConformerSurfaceColorMode = mode;
+		if (mSingleConformer != null)
+			Platform.runLater(() -> mSingleConformer.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, mode) );
+	}
+
+	public void setSingleConformerSurfaceTransparency(double transparency) {
+		mSingleConformerSurfaceTransparency = transparency;
+		if (mSingleConformer != null)
+			Platform.runLater(() -> mSingleConformer.setSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY, transparency) );
 	}
 
 	private String toRGBString(Color color) {
@@ -590,11 +711,18 @@ public class JFXMolViewerPanel extends JFXPanel {
 				return;
 
 			if (mCavityMol != null) {
-				mCavityConstructionMode = mCavityMol.getConstructionMode();
+				if (mCavityMol.getMolecule().getAllAtoms() > MAX_ATOMS_FOR_SURFACE) {
+					mLargeCavityConstructionMode = mCavityMol.getConstructionMode();
+					mLargeCavityRibbonMode = mCavityMol.getRibbonMode();
+					mLargeCavitySurfaceMode = mCavityMol.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY);
+				}
+				else {
+					mCavityConstructionMode = mCavityMol.getConstructionMode();
+					mCavityRibbonMode = mCavityMol.getRibbonMode();
+					mCavitySurfaceMode = mCavityMol.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY);
+				}
 				mCavityHydrogenMode = mCavityMol.getHydrogenMode();
-				mCavityRibbonMode = mCavityMol.getRibbonMode();
 				mCavityMolColor = mCavityMol.getColor();
-				mCavitySurfaceMode = mCavityMol.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY);
 				mCavitySurfaceColorMode = mCavityMol.getSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY);
 				mCavitySurfaceColor = mCavityMol.getSurfaceColor(MoleculeSurfaceAlgorithm.CONNOLLY);
 				mCavitySurfaceTransparency = mCavityMol.getSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY);
@@ -607,13 +735,18 @@ public class JFXMolViewerPanel extends JFXPanel {
 			if (cavity != null) {
 				ArrayList<StereoMolecule> ligands = null;
 				if (ligand != null) {
+					// cavity was already cropped, but now we crop again for the specific ligand
 					markAtomsInCropDistance(cavity, ligand, calculateCOG(ligand));
 					ligands = new ArrayList<>();
 					ligands.add(ligand);
 				}
 
-				mCavityMol = new V3DMolecule(cavity, ligands, mCavityConstructionMode, mCavityHydrogenMode, mCavityRibbonMode,
-						mCavitySurfaceMode, mCavitySurfaceColorMode, mCavitySurfaceColor, mCavitySurfaceTransparency, 0);
+				int constructionMode = (cavity.getAllAtoms() > MAX_ATOMS_FOR_SURFACE) ? mLargeCavityConstructionMode : mCavityConstructionMode;
+				int ribbonMode = (cavity.getAllAtoms() > MAX_ATOMS_FOR_SURFACE) ? mLargeCavityRibbonMode : mCavityRibbonMode;
+				int surfaceMode = (cavity.getAllAtoms() > MAX_ATOMS_FOR_SURFACE) ? mLargeCavitySurfaceMode : mCavitySurfaceMode;
+
+				mCavityMol = new V3DMolecule(cavity, ligands, constructionMode, mCavityHydrogenMode, ribbonMode,
+						surfaceMode, mCavitySurfaceColorMode, mCavitySurfaceColor, mCavitySurfaceTransparency, 0);
 				mCavityMol.setColor(mCavityMolColor);
 
 				if (mayInterrupt && updateID != mCurrentUpdateID)
@@ -652,9 +785,9 @@ public class JFXMolViewerPanel extends JFXPanel {
 	}
 
 	public static Coordinates calculateCOG(StereoMolecule mol) {
-		Coordinates cog = new Coordinates(mol.getCoordinates(0));
+		Coordinates cog = new Coordinates(mol.getAtomCoordinates(0));
 		for (int i = 1; i<mol.getAllAtoms(); i++)
-			cog.add(mol.getCoordinates(i));
+			cog.add(mol.getAtomCoordinates(i));
 		cog.scale(1.0 / mol.getAllAtoms());
 		return cog;
 	}
@@ -664,7 +797,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 
 		double maxDistance = 0;
 		for (int i = 0; i<ligand.getAllAtoms(); i++)
-			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getCoordinates(i)));
+			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getAtomCoordinates(i)));
 
 		double cropDistance = JFXMolViewerPanel.CAVITY_CROP_DISTANCE;
 		maxDistance += cropDistance;
@@ -672,13 +805,13 @@ public class JFXMolViewerPanel extends JFXPanel {
 		// mark all protein atoms within crop distance
 		boolean[] isInCropRadius = new boolean[protein.getAllAtoms()];
 		for (int i = 0; i<protein.getAllAtoms(); i++) {
-			Coordinates pc = protein.getCoordinates(i);
+			Coordinates pc = protein.getAtomCoordinates(i);
 			if (Math.abs(pc.x - ligandCOG.x)<maxDistance
 					&& Math.abs(pc.y - ligandCOG.y)<maxDistance
 					&& Math.abs(pc.z - ligandCOG.z)<maxDistance
 					&& pc.distance(ligandCOG)<maxDistance) {
 				for (int j = 0; j<ligand.getAllAtoms(); j++) {
-					if (pc.distance(ligand.getCoordinates(j))<cropDistance) {
+					if (pc.distance(ligand.getAtomCoordinates(j))<cropDistance) {
 						isInCropRadius[i] = true;
 						break;
 					}
@@ -733,7 +866,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 	public static void markAtomsInCropDistance(StereoMolecule cavity, StereoMolecule ligand, Coordinates ligandCOG) {
 		double maxDistance = 0;
 		for (int i = 0; i<ligand.getAllAtoms(); i++)
-			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getCoordinates(i)));
+			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getAtomCoordinates(i)));
 
 		double markDistance = JFXMolViewerPanel.CAVITY_CROP_DISTANCE - 3.2;
 		maxDistance += markDistance;
@@ -743,13 +876,13 @@ public class JFXMolViewerPanel extends JFXPanel {
 
 		// reset mark for all cavity atoms near any ligand atom
 		for (int i = 0; i<cavity.getAllAtoms(); i++) {
-			Coordinates pc = cavity.getCoordinates(i);
+			Coordinates pc = cavity.getAtomCoordinates(i);
 			if (Math.abs(pc.x - ligandCOG.x)<maxDistance
 					&& Math.abs(pc.y - ligandCOG.y)<maxDistance
 					&& Math.abs(pc.z - ligandCOG.z)<maxDistance
 					&& pc.distance(ligandCOG)<maxDistance) {
 				for (int j = 0; j<ligand.getAllAtoms(); j++) {
-					if (pc.distance(ligand.getCoordinates(j))<markDistance) {
+					if (pc.distance(ligand.getAtomCoordinates(j))<markDistance) {
 						cavity.setAtomMarker(i, false);
 						break;
 					}
@@ -765,15 +898,19 @@ public class JFXMolViewerPanel extends JFXPanel {
 	 */
 	public void addMolecule(StereoMolecule mol, Color color, Point3D centerOfRotation) {
 		Platform.runLater(() -> {
-			addMoleculeNow(mol, color, centerOfRotation, false);
+			addMoleculeNow(mol, color, centerOfRotation);
 			SwingUtilities.invokeLater(() -> fireStructureChanged());
 		} );
 	}
 
-	private V3DMolecule addMoleculeNow(StereoMolecule mol, Color color, Point3D centerOfRotation, boolean showTorsionStrain) {
+	private V3DMolecule addMoleculeNow(StereoMolecule mol, Color color, Point3D centerOfRotation) {
+		return addMoleculeNow(mol, color, centerOfRotation, V3DMolecule.SURFACE_MODE_NONE, SurfaceMesh.SURFACE_COLOR_INHERIT, 0.2, false);
+	}
+
+	private V3DMolecule addMoleculeNow(StereoMolecule mol, Color color, Point3D centerOfRotation, int surfaceMode, int surfaceColorMode, double surfaceTransparency, boolean showTorsionStrain) {
 		V3DMolecule fxmol = new V3DMolecule(mol, true, mScene.isSplitAllBonds());
 		fxmol.setColor(color);
-		fxmol.setSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY, SurfaceMesh.SURFACE_COLOR_INHERIT);
+		fxmol.setSurface(MoleculeSurfaceAlgorithm.CONNOLLY, surfaceMode, surfaceColorMode, surfaceTransparency);
 		fxmol.setCenterOfRotation(centerOfRotation);
 		if (showTorsionStrain)
 			fxmol.addTorsionStrainVisualization();
@@ -800,15 +937,24 @@ public class JFXMolViewerPanel extends JFXPanel {
 				return;
 
 			// store current colors of refmol and single conf for later use
-			if (mRefMol != null)
+			if (mRefMol != null) {
 				mRefMolColor = mRefMol.getColor();
+				mRefMolSurfaceMode = mRefMol.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY);
+				mRefMolSurfaceColorMode = mRefMol.getSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY);
+				mRefMolSurfaceTransparency = mRefMol.getSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY);
+			}
 			mRefMol = null;
 
-			if (mSingleConformer != null)
+			if (mSingleConformer != null) {
 				mSingleConformerColor = mSingleConformer.getColor();
+				mSingleConformerSurfaceMode = mSingleConformer.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY);
+				mSingleConformerSurfaceColorMode = mSingleConformer.getSurfaceColorMode(MoleculeSurfaceAlgorithm.CONNOLLY);
+				mSingleConformerSurfaceTransparency = mSingleConformer.getSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY);
+			}
 			mSingleConformer = null;
 
 			boolean isTorsionStrainVisible = false;
+			int surfaceMode = V3DMolecule.SURFACE_MODE_NONE;
 			for (V3DMolecule fxmol : mScene.getMolsInScene())
 				if (fxmol != mOverlayMol
 				 && fxmol != mCavityMol
@@ -820,19 +966,19 @@ public class JFXMolViewerPanel extends JFXPanel {
 			if (conformers != null) {
 				if (conformers.length == 1) {
 					if (updateID == mCurrentUpdateID) {
-						mSingleConformer = addMoleculeNow(conformers[0], mSingleConformerColor, null, isTorsionStrainVisible);
+						mSingleConformer = addMoleculeNow(conformers[0], mSingleConformerColor, null, mSingleConformerSurfaceMode, mSingleConformerSurfaceColorMode, mSingleConformerSurfaceTransparency, isTorsionStrainVisible);
 					}
 				} else {
 					Point3D cor = new Point3D(0, 0, 0);
 					for (int i = 0; i<conformers.length && updateID == mCurrentUpdateID; i++) {
 						Color c = Color.hsb(360f * i / conformers.length, 0.75, 0.6);
-						addMoleculeNow(conformers[i], c, cor, false);
+						addMoleculeNow(conformers[i], c, cor);
 					}
 				}
 			}
 
 			if (refConformer != null && updateID == mCurrentUpdateID) {
-				mRefMol = addMoleculeNow(refConformer, mRefMolColor, null, isTorsionStrainVisible);
+				mRefMol = addMoleculeNow(refConformer, mRefMolColor, null, mRefMolSurfaceMode, mRefMolSurfaceColorMode, mRefMolSurfaceTransparency, isTorsionStrainVisible);
 			}
 
 			// Don't optimize view if we have a cavity or overlay molecules. User may have optimized the view to look into the cavity

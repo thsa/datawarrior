@@ -125,7 +125,7 @@ public abstract class JVisualization extends JComponent
 	public static final int cMaxCaseSeparationCategoryCount = 128;	// this is for one axis
 	public static final int cMaxSplitViewCount = 10000;
 
-	private static final float MAX_SCATTERPLOT_MARGIN = 0.05f;
+	public static final float MAX_SCATTERPLOT_MARGIN = 0.1f;
 
 	private static final float MARKER_ZOOM_ADAPTION_FACTOR = 0.75f;   // value < 1f to keep marker zoom adaption sub-proportional
 	private static final float LABEL_ZOOM_ADAPTION_FACTOR = 0.50f;    // label zoom adaption is smaller than marker zoom adaption
@@ -3095,7 +3095,7 @@ public abstract class JVisualization extends JComponent
 	}
 
 	public static float getDefaultScatterplotMargin() {
-		return 0.5f * MAX_SCATTERPLOT_MARGIN;
+		return 0.25f * MAX_SCATTERPLOT_MARGIN;
 		}
 
 	public float getScatterPlotMargin() {
@@ -3105,7 +3105,8 @@ public abstract class JVisualization extends JComponent
 	public void setScatterPlotMargin(float margin) {
 		if (mScatterPlotMargin != margin) {
 			mScatterPlotMargin = margin;
-			if (mChartType.isScatterPlot()) {
+			if (mChartType.isScatterPlot()
+			 || mChartType.isDistributionPlot()) {
 				for (int i = 0; i<mDimensions; i++)
 					updateVisibleRange(i, mPruningBarLow[i], mPruningBarHigh[i], false);
 				invalidateOffImage(true);

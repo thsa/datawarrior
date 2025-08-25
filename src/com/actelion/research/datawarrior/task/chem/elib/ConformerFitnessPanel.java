@@ -30,7 +30,6 @@ import org.openmolecules.fx.viewer3d.V3DScene;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.EnumSet;
 
 public class ConformerFitnessPanel extends FitnessPanel {
 	private static final long serialVersionUID = 20200218L;
@@ -51,7 +50,7 @@ public class ConformerFitnessPanel extends FitnessPanel {
 			mComboBoxDescriptor.setSelectedItem(param[0]);
 			mSlider.setValue(Integer.parseInt(param[1]));
 			for (int i=2; i<param.length-1; i++)
-				if (param[i].length() != 0 && param[i+1].length() != 0)
+				if (!param[i].isEmpty() && !param[i + 1].isEmpty())
 					mConformerPanel.addMolecule(new IDCodeParser(false).getCompactMolecule(param[i], param[i+1]), null, null);
 		}
 	}
@@ -59,12 +58,10 @@ public class ConformerFitnessPanel extends FitnessPanel {
 	protected ConformerFitnessPanel(Frame owner, UIDelegateELib delegate) {
 		super();
 
-		mComboBoxDescriptor = new JComboBox(ConformerFitnessOption.ALGORITHM_TEXT);
+		mComboBoxDescriptor = new JComboBox<>(ConformerFitnessOption.ALGORITHM_TEXT);
 		mComboBoxDescriptor.setSelectedIndex(0);
 
-		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
-		settings.add(V3DScene.ViewerSettings.EDITING);
-		mConformerPanel = new JFXMolViewerPanel(false, settings);
+		mConformerPanel = new JFXMolViewerPanel(false, V3DScene.CONFORMER_EDIT_MODE);
 		mConformerPanel.adaptToLookAndFeelChanges();
 //		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(160), HiDPIHelper.scale(120)));

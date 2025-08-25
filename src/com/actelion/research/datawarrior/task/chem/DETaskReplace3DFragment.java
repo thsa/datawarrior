@@ -139,8 +139,7 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
-		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
-		settings.add(V3DScene.ViewerSettings.EDITING);
+		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_EDIT_MODE.clone();
 		settings.add(V3DScene.ViewerSettings.ATOM_LEVEL_SELECTION);
 
 		mConformerPanel = new JFXMolViewerPanel(false, settings);
@@ -476,7 +475,7 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 		int index = 0;
 		for (int atom=0; atom<mQueryMol.getAllAtoms(); atom++)
 			if (!mQueryMol.isSelectedAtom(atom))
-				mQueryStaticAtomCoords[index++] = mQueryMol.getCoordinates(atom);
+				mQueryStaticAtomCoords[index++] = mQueryMol.getAtomCoordinates(atom);
 
 		// Copy selected part of query molecule including exit atoms and convert them to attachment points (add label "*")
 		StereoMolecule origScaffold = new StereoMolecule();
@@ -589,7 +588,7 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 				// Create new atom coordinates for complete aligned fragment
 				Coordinates[] fragCoords = new Coordinates[fragment.getAllAtoms()];
 				for (int atom=0; atom<fragment.getAllAtoms(); atom++) {
-					fragCoords[atom] = new Coordinates(fragment.getCoordinates(atom));
+					fragCoords[atom] = new Coordinates(fragment.getAtomCoordinates(atom));
 					fragCoords[atom].sub(fragmentGeometry.getAlignmentCOG());
 					fragCoords[atom].rotate(matrix);
 					fragCoords[atom].add(mQueryGeometry.getAlignmentCOG());
@@ -610,7 +609,7 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 					// Build array of unselected atom coordinate references for aligning these atoms later
 					Coordinates[] minimizedStaticAtomCoords = new Coordinates[modifiedQuery.getAllAtoms()];
 					for (int atom=0; atom<modifiedQuery.getAllAtoms(); atom++)
-						minimizedStaticAtomCoords[atom] = modifiedQuery.getCoordinates(atom);
+						minimizedStaticAtomCoords[atom] = modifiedQuery.getAtomCoordinates(atom);
 
 					// Then add the aligned fragment
 					int queryAtoms = modifiedQuery.getAllAtoms();
@@ -917,7 +916,8 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 		Coordinates minimizedCOG = FragmentGeometry3D.centerOfGravity(minimizedCoords);
 		double[][] matrix = FragmentGeometry3D.kabschAlign(queryCoords, minimizedCoords, queryCOG, minimizedCOG);
 
-		for (Coordinates c : modifiedQuery.getAtomCoordinates()) {
+		for (int atom=0; atom<modifiedQuery.getAllAtoms(); atom++) {
+			Coordinates c = modifiedQuery.getAtomCoordinates(atom);
 			c.sub(minimizedCOG);
 			c.rotate(matrix);
 			c.add(queryCOG);

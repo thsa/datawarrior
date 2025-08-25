@@ -54,6 +54,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 	private static final String PROPERTY_ALGORITHM = "algorithm";
 	private static final String PROPERTY_TORSION_SOURCE = "torsionSource";
 	private static final String PROPERTY_MINIMIZE = "minimize";
+	private static final String PROPERTY_DIELECTRIC_CONSTANT = "dielectricConstant";
 	private static final String PROPERTY_FILE_NAME = "fileName";
 	private static final String PROPERTY_FILE_TYPE = "fileType";
 	private static final String PROPERTY_POOL_CONFORMERS = "poolConformers";
@@ -101,7 +102,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 	private JComboBox<String>	mComboBoxAlgorithm,mComboBoxTorsionSource,mComboBoxMinimize,mComboBoxFileType;
 	private JCheckBox			mCheckBoxExportFile,mCheckBoxPoolConformers,mCheckBoxLargestFragment,mCheckBoxNeutralize,mCheckBoxSkip,mCheckBoxProtonate;
 	private JFilePathLabel		mLabelFileName;
-	private JTextField			mTextFieldMaxCount,mTextFieldSkip,mTextFieldPH,mTextFieldPHSpan;
+	private JTextField			mTextFieldDielectricConstant,mTextFieldMaxCount,mTextFieldSkip,mTextFieldPH,mTextFieldPHSpan;
 	private JButton				mButtonEdit;
 	private int                 mCacheSizeAtStart;
 	private long                mStartMillis;
@@ -139,8 +140,8 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		JPanel ep = new JPanel();
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED},
-							{TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
-							3*gap, TableLayout.PREFERRED,
+							{TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap,
+							 TableLayout.PREFERRED, gap, TableLayout.PREFERRED, 3*gap, TableLayout.PREFERRED,
 							gap>>1, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
 							gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED} };
 		ep.setLayout(new TableLayout(size));
@@ -153,40 +154,45 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		ep.add(mComboBoxTorsionSource, "2,2,4,2");
 		ep.add(new JLabel("Minimize energy:"), "0,4");
 		mComboBoxMinimize = new JComboBox<>(MINIMIZE_TEXT);
+		mComboBoxMinimize.addActionListener(this);
 		ep.add(mComboBoxMinimize, "2,4,4,4");
 
-		ep.add(new JLabel("Max. conformer count:"), "0,6");
-		mTextFieldMaxCount = new JTextField();
-		ep.add(mTextFieldMaxCount, "2,6");
-		ep.add(new JLabel(" per stereo isomer"), "3,6,4,6");
+		ep.add(new JLabel("Dielectric constant:"), "0,6");
+		mTextFieldDielectricConstant = new JTextField(2);
+		ep.add(mTextFieldDielectricConstant, "2,6");
+
+		ep.add(new JLabel("Max. conformer count:"), "0,8");
+		mTextFieldMaxCount = new JTextField(2);
+		ep.add(mTextFieldMaxCount, "2,8");
+		ep.add(new JLabel(" per stereo isomer"), "3,8,4,8");
 
 		mCheckBoxExportFile = new JCheckBox("Write into file:");
-		ep.add(mCheckBoxExportFile, "0,8");
+		ep.add(mCheckBoxExportFile, "0,10");
 		mCheckBoxExportFile.addActionListener(this);
 
 		mLabelFileName = new JFilePathLabel(!isInteractive());
-		ep.add(mLabelFileName, "2,8,3,8");
+		ep.add(mLabelFileName, "2,10,3,10");
 
 		mButtonEdit = new JButton("Edit");
 		mButtonEdit.addActionListener(this);
-		ep.add(mButtonEdit, "4,8");
+		ep.add(mButtonEdit, "4,10");
 
-		ep.add(new JLabel("File type:"), "0,10");
+		ep.add(new JLabel("File type:"), "0,12");
 		mComboBoxFileType = new JComboBox<>(FILE_TYPE_TEXT);
 		mComboBoxFileType.addActionListener(this);
-		ep.add(mComboBoxFileType, "2,10");
+		ep.add(mComboBoxFileType, "2,12");
 
 		mCheckBoxPoolConformers = new JCheckBox("Pool conformers of same compound");
 		mCheckBoxPoolConformers.addActionListener(this);
-		ep.add(mCheckBoxPoolConformers, "2,12,4,12");
+		ep.add(mCheckBoxPoolConformers, "2,14,4,14");
 
 		mCheckBoxLargestFragment = new JCheckBox("Remove small fragments");
 		mCheckBoxLargestFragment.addActionListener(this);
-		ep.add(mCheckBoxLargestFragment, "2,14,4,14");
+		ep.add(mCheckBoxLargestFragment, "2,16,4,16");
 
 		mCheckBoxNeutralize = new JCheckBox("Neutralize remaining fragment");
 		mCheckBoxNeutralize.addActionListener(this);
-		ep.add(mCheckBoxNeutralize, "2,16,4,16");
+		ep.add(mCheckBoxNeutralize, "2,18,4,18");
 
 		mCheckBoxSkip = new JCheckBox("Skip compounds with more than ");
 		mCheckBoxSkip.addActionListener(this);
@@ -195,7 +201,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		skipPanel.add(mCheckBoxSkip);
 		skipPanel.add(mTextFieldSkip);
 		skipPanel.add(new JLabel(" stereo isomers"));
-		ep.add(skipPanel, "0,18,4,18");
+		ep.add(skipPanel, "0,20,4,20");
 
 		mCheckBoxProtonate = new JCheckBox("Create proper protonation state(s) for pH=");
 		mCheckBoxProtonate.addActionListener(this);
@@ -206,7 +212,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		protonationPanel.add(mTextFieldPH);
 		protonationPanel.add(new JLabel(" +-"));
 		protonationPanel.add(mTextFieldPHSpan);
-		ep.add(protonationPanel, "0,20,4,20");
+		ep.add(protonationPanel, "0,22,4,22");
 
 		return ep;
 		}
@@ -217,6 +223,10 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 			mComboBoxTorsionSource.setEnabled(ALGORITHM_NEEDS_TORSIONS[mComboBoxAlgorithm.getSelectedIndex()]);
 			return;
 			}
+		if (e.getSource() == mComboBoxMinimize) {
+			mTextFieldDielectricConstant.setEnabled(mComboBoxMinimize.getSelectedIndex() != MINIMIZE_NONE);
+			return;
+		}
 		if (e.getSource() == mButtonEdit) {
 			String filename = new FileHelper(getParentFrame()).selectFileToSave(
 					"Write Conformers To File", FILE_TYPE[mComboBoxFileType.getSelectedIndex()], "conformers");
@@ -276,6 +286,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		configuration.setProperty(PROPERTY_TORSION_SOURCE, TORSION_SOURCE_CODE[mComboBoxTorsionSource.getSelectedIndex()]);
 		configuration.setProperty(PROPERTY_MINIMIZE, MINIMIZE_CODE[mComboBoxMinimize.getSelectedIndex()]);
 		configuration.setProperty(PROPERTY_MAX_CONFORMERS, mTextFieldMaxCount.getText());
+		configuration.setProperty(PROPERTY_DIELECTRIC_CONSTANT, mTextFieldDielectricConstant.getText());
 
 		if (mCheckBoxExportFile.isSelected()) {
 			configuration.setProperty(PROPERTY_FILE_NAME, mLabelFileName.getPath());
@@ -303,6 +314,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		mComboBoxAlgorithm.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_ALGORITHM), ALGORITHM_CODE, DEFAULT_ALGORITHM));
 		mComboBoxTorsionSource.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_TORSION_SOURCE), TORSION_SOURCE_CODE, DEFAULT_TORSION_SOURCE));
 		mComboBoxMinimize.setSelectedIndex(findListIndex(configuration.getProperty(PROPERTY_MINIMIZE), MINIMIZE_CODE, DEFAULT_MINIMIZATION));
+		mTextFieldDielectricConstant.setText(configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT, "1.0"));
 
 		String value = configuration.getProperty(PROPERTY_FILE_NAME);
 		mCheckBoxExportFile.setSelected(value != null);
@@ -332,6 +344,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		mComboBoxAlgorithm.setSelectedIndex(DEFAULT_ALGORITHM);
 		mComboBoxTorsionSource.setSelectedIndex(DEFAULT_TORSION_SOURCE);
 		mComboBoxMinimize.setSelectedIndex(DEFAULT_MINIMIZATION);
+		mTextFieldDielectricConstant.setText("1.0");
 		mCheckBoxExportFile.setSelected(false);
 		mCheckBoxPoolConformers.setSelected(false);
 		mTextFieldMaxCount.setText(DEFAULT_MAX_CONFORMERS_IN_TABLE);
@@ -366,6 +379,22 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		if (!super.isConfigurationValid(configuration, isLive))
 			return false;
+
+		String dielectricConstant = configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT, "");
+		if (dielectricConstant.isEmpty()) {
+			showErrorMessage("Dielectric constant is undefined.");
+			return false;
+		}
+		try {
+			double constant = Double.parseDouble(dielectricConstant);
+			if (constant < 1.0) {
+				showErrorMessage("Dielectric constant cannot be smaller than 1.0.");
+				return false;
+			}
+		} catch (NumberFormatException e) {
+			showErrorMessage("Dielectric constant is not numerical.");
+			return false;
+		}
 
 		try {
 			int count = Integer.parseInt(configuration.getProperty(PROPERTY_MAX_CONFORMERS));
@@ -491,10 +520,14 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		if (mMinimization == MINIMIZE_MMFF94s) {
 			ForceFieldMMFF94.initialize(ForceFieldMMFF94.MMFF94S);
 			mMMFFOptions = new HashMap<>();
+			double dielectricConstant = Double.parseDouble(configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT));
+			mMMFFOptions.put("dielectric constant", dielectricConstant);
 			}
 		else if (mMinimization == MINIMIZE_MMFF94sPlus) {
 			ForceFieldMMFF94.initialize(ForceFieldMMFF94.MMFF94SPLUS);
 			mMMFFOptions = new HashMap<>();
+			double dielectricConstant = Double.parseDouble(configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT));
+			mMMFFOptions.put("dielectric constant", dielectricConstant);
 			}
 		mMinimizationErrors = 0;
 
@@ -690,12 +723,12 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 						coords = new Coordinates[superposeAtom.length];
 						refCoords = new Coordinates[superposeAtom.length];
 						for (int j=0; j<superposeAtom.length; j++)
-							refCoords[j] = new Coordinates(mol.getCoordinates(superposeAtom[j]));
+							refCoords[j] = new Coordinates(mol.getAtomCoordinates(superposeAtom[j]));
 						refCOG = FragmentGeometry3D.centerOfGravity(refCoords);
 						}
 					else {	// superpose onto first conformer
 						for (int j=0; j<superposeAtom.length; j++)
-							coords[j] = new Coordinates(mol.getCoordinates(superposeAtom[j]));
+							coords[j] = new Coordinates(mol.getAtomCoordinates(superposeAtom[j]));
 						superpose(mol, coords, refCoords, refCOG);
 						}
 
@@ -739,7 +772,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		Coordinates cog = FragmentGeometry3D.centerOfGravity(coords);
 		double[][] matrix = FragmentGeometry3D.kabschAlign(refCoords, coords, refCOG, cog);
 		for (int atom=0; atom<mol.getAllAtoms(); atom++) {
-			Coordinates c = mol.getCoordinates(atom);
+			Coordinates c = mol.getAtomCoordinates(atom);
 			c.sub(cog);
 			c.rotate(matrix);
 			c.add(refCOG);
@@ -985,12 +1018,12 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 					coords = new Coordinates[superposeAtom.length];
 					refCoords = new Coordinates[superposeAtom.length];
 					for (int j=0; j<superposeAtom.length; j++)
-						refCoords[j] = new Coordinates(mol.getCoordinates(superposeAtom[j]));
+						refCoords[j] = new Coordinates(mol.getAtomCoordinates(superposeAtom[j]));
 					refCOG = FragmentGeometry3D.centerOfGravity(refCoords);
 					}
 				else {	// superpose onto first conformer
 					for (int j=0; j<superposeAtom.length; j++)
-						coords[j] = new Coordinates(mol.getCoordinates(superposeAtom[j]));
+						coords[j] = new Coordinates(mol.getAtomCoordinates(superposeAtom[j]));
 					superpose(mol, coords, refCoords, refCOG);
 					}
 

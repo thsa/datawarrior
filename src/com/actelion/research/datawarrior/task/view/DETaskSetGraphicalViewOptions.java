@@ -65,14 +65,14 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 
 	private static final String ITEM_AUTO_ZOOM_NONE = "<none>";
 
-	private JComboBox       mComboBoxScaleMode,mComboBoxGridMode,mComboBoxCrossHairMode,mComboBoxExclusionList,
+	private JComboBox<String> mComboBoxScaleMode,mComboBoxGridMode,mComboBoxCrossHairMode,mComboBoxExclusionList,
 							mComboBoxFontSizeMode;
 	private JCheckBox[]     mCheckBoxAutoZoom;
-	private JComboBox[]     mComboBoxAutoZoomColumn;
-	private JSlider			mSliderScaleFontSize;
+	private JComboBox<String>[] mComboBoxAutoZoomColumn;
+	private JSlider			mSliderScaleFontSize,mSliderMargin;
 	private JCheckBox	    mCheckBoxHideLegend,mCheckBoxShowNaN,mCheckBoxGlobalExclusion,mCheckBoxFastRendering,
 							mCheckBoxShowArrowTips,mCheckBoxIgnoreFilters,mCheckBoxDrawBoxOutline,mCheckBoxDrawMarkerOutline,
-							mCheckBoxDynamicScale,mCheckBoxScatterplotMargin;
+							mCheckBoxDynamicScale;
 	private DEColorPanel    mDefaultDataColorPanel,mMissingDataColorPanel,mBackgroundColorPanel,mLabelBackgroundColorPanel,
 							mGraphFaceColorPanel,mTitleBackgroundPanel;
 	private JTextField[]    mTextFieldAutoZoomFactor;
@@ -107,7 +107,7 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		int gap = HiDPIHelper.scale(8);
 		double[][] sizeScalePanel = { {gap, TableLayout.FILL, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL, gap},
 									  {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap,
-											TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, gap/2} };
+											TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.PREFERRED, gap/2} };
 		scalePanel.setLayout(new TableLayout(sizeScalePanel));
 
 		scalePanel.add(new JLabel("Show scales:"), "2,1");
@@ -138,23 +138,25 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		scalePanel.add(mComboBoxFontSizeMode, "2,7");
 		scalePanel.add(mSliderScaleFontSize, "4,7");
 
-		mCheckBoxHideLegend = new JCheckBox("Hide legend", false);
-		mCheckBoxHideLegend.addActionListener(this);
-		scalePanel.add(mCheckBoxHideLegend, "2,9,4,9");
+		mSliderMargin = new JSlider(JSlider.HORIZONTAL, 0, 100, 25);
+		mSliderMargin.setPreferredSize(new Dimension(HiDPIHelper.scale(150), mSliderMargin.getPreferredSize().height));
+		mSliderMargin.addChangeListener(this);
+		scalePanel.add(new JLabel("Margin on numerical axes:"), "2,9");
+		scalePanel.add(mSliderMargin, "4,9");
 
 		mCheckBoxDynamicScale = new JCheckBox("Adapt scale dynamically (bar charts only)", false);
 		mCheckBoxDynamicScale.addActionListener(this);
-		scalePanel.add(mCheckBoxDynamicScale, "2,10,4,10");
+		scalePanel.add(mCheckBoxDynamicScale, "2,11,4,11");
 
 		if (!hasInteractiveView() || getInteractiveVisualization() instanceof JVisualization2D) {
 			mCheckBoxShowArrowTips = new JCheckBox("Show arrow tips", false);
 			mCheckBoxShowArrowTips.addActionListener(this);
-			scalePanel.add(mCheckBoxShowArrowTips, "2,11,4,11");
+			scalePanel.add(mCheckBoxShowArrowTips, "2,12,4,12");
 			}
 
 		JPanel staticColorPanel = new JPanel();
 		double[][] sizeStaticColorPanel = { {gap, TableLayout.FILL, TableLayout.PREFERRED, gap, HiDPIHelper.scale(64),
-											 gap+gap/2, TableLayout.PREFERRED, TableLayout.FILL, gap},
+											 gap*3/2, TableLayout.PREFERRED, TableLayout.FILL, gap},
 											{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED,
 											 gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
 		staticColorPanel.setLayout(new TableLayout(sizeStaticColorPanel));
@@ -229,21 +231,22 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 
 		JPanel renderPanel = new JPanel();
 		double[][] sizeRenderPanel = { {gap, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL, gap},
-									   {gap, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, gap} };
+									   {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, gap} };
 		renderPanel.setLayout(new TableLayout(sizeRenderPanel));
+
+		mCheckBoxHideLegend = new JCheckBox("Hide legend", false);
+		mCheckBoxHideLegend.addActionListener(this);
+		renderPanel.add(mCheckBoxHideLegend, "2,1");
 		mCheckBoxFastRendering = new JCheckBox("Fast rendering / lower quality", false);
 		mCheckBoxFastRendering.addActionListener(this);
-		renderPanel.add(mCheckBoxFastRendering, "2,1");
-		mCheckBoxScatterplotMargin = new JCheckBox("Use margin in scatter plots", true);
-		mCheckBoxScatterplotMargin.addActionListener(this);
-		renderPanel.add(mCheckBoxScatterplotMargin, "2,2");
+		renderPanel.add(mCheckBoxFastRendering, "2,3");
 		if (!hasInteractiveView() || getInteractiveVisualization() instanceof JVisualization2D) {
 			mCheckBoxDrawBoxOutline = new JCheckBox("Draw bar/pie/box/violine outlines", false);
 			mCheckBoxDrawBoxOutline.addActionListener(this);
-			renderPanel.add(mCheckBoxDrawBoxOutline, "2,3");
+			renderPanel.add(mCheckBoxDrawBoxOutline, "2,4");
 			mCheckBoxDrawMarkerOutline = new JCheckBox("Draw marker outlines", false);
 			mCheckBoxDrawMarkerOutline.addActionListener(this);
-			renderPanel.add(mCheckBoxDrawMarkerOutline, "2,4");
+			renderPanel.add(mCheckBoxDrawMarkerOutline, "2,5");
 			}
 
 		JTabbedPane tabbedPane = new JTabbedPane();
@@ -284,7 +287,7 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		mCheckBoxShowNaN.setSelected(false);
 		mCheckBoxGlobalExclusion.setSelected(true);
 		mCheckBoxFastRendering.setSelected(false);
-		mCheckBoxScatterplotMargin.setSelected(true);
+		mSliderMargin.setValue(25);
 		if (mCheckBoxDrawBoxOutline != null)
 			mCheckBoxDrawBoxOutline.setSelected(false);
 		if (mCheckBoxDrawMarkerOutline != null)
@@ -333,7 +336,8 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		mCheckBoxIgnoreFilters.setSelected("true".equals(configuration.getProperty(PROPERTY_IGNORE_FILTERS)));
 		mCheckBoxGlobalExclusion.setSelected(!"false".equals(configuration.getProperty(PROPERTY_GLOBAL_EXCLUSION)));
 		mCheckBoxFastRendering.setSelected("true".equals(configuration.getProperty(PROPERTY_FAST_RENDERING)));
-		mCheckBoxScatterplotMargin.setSelected(!"0".equals(configuration.getProperty(PROPERTY_SCATTERPLOT_MARGIN)));
+		mSliderMargin.setValue((int)(Double.parseDouble(configuration.getProperty(PROPERTY_SCATTERPLOT_MARGIN,
+				"0.025"))/JVisualization.MAX_SCATTERPLOT_MARGIN*100));
 		if (mCheckBoxDrawBoxOutline != null)
 			mCheckBoxDrawBoxOutline.setSelected("true".equals(configuration.getProperty(PROPERTY_DRAW_BOX_OUTLINE)));
 		if (mCheckBoxDrawMarkerOutline != null)
@@ -388,8 +392,8 @@ public class DETaskSetGraphicalViewOptions extends DETaskAbstractSetViewOptions 
 		configuration.setProperty(PROPERTY_IGNORE_FILTERS, mCheckBoxIgnoreFilters.isSelected() ? "true" : "false");
 		configuration.setProperty(PROPERTY_GLOBAL_EXCLUSION, mCheckBoxGlobalExclusion.isSelected() ? "true" : "false");
 		configuration.setProperty(PROPERTY_FAST_RENDERING, mCheckBoxFastRendering.isSelected() ? "true" : "false");
-		configuration.setProperty(PROPERTY_SCATTERPLOT_MARGIN, mCheckBoxScatterplotMargin.isSelected() ?
-				DoubleFormat.toString(JVisualization.getDefaultScatterplotMargin()) : "0");
+		configuration.setProperty(PROPERTY_SCATTERPLOT_MARGIN,
+				DoubleFormat.toString(JVisualization.MAX_SCATTERPLOT_MARGIN*mSliderMargin.getValue()/100));
 		if (mCheckBoxDrawBoxOutline != null)
 			configuration.setProperty(PROPERTY_DRAW_BOX_OUTLINE, mCheckBoxDrawBoxOutline.isSelected() ? "true" : "false");
 		if (mCheckBoxDrawMarkerOutline != null)

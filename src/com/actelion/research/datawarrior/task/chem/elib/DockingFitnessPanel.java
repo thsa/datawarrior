@@ -12,7 +12,6 @@ import org.openmolecules.fx.viewer3d.V3DScene;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.EnumSet;
 import java.util.List;
 
 public class DockingFitnessPanel extends FitnessPanel {
@@ -56,9 +55,7 @@ public class DockingFitnessPanel extends FitnessPanel {
 	protected DockingFitnessPanel(Frame owner, UIDelegateELib delegate) {
 		super();
 
-		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
-		settings.add(V3DScene.ViewerSettings.EDITING);
-		mConformerPanel = new JFXMolViewerPanel(false, settings);
+		mConformerPanel = new JFXMolViewerPanel(false, V3DScene.CONFORMER_EDIT_MODE);
 		mConformerPanel.setPopupMenuController(new EditableLargeMolMenuController(mConformerPanel));
 		mConformerPanel.adaptToLookAndFeelChanges();
 //		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));

@@ -20,8 +20,8 @@ package com.actelion.research.datawarrior.plugin;
 
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.conf.HydrogenAssembler;
-import com.actelion.research.datawarrior.fx.EditableSmallMolMenuController;
 import com.actelion.research.datawarrior.fx.EditableLargeMolMenuController;
+import com.actelion.research.datawarrior.fx.EditableSmallMolMenuController;
 import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import org.openmolecules.datawarrior.plugin.IConformerPanel;
@@ -29,12 +29,11 @@ import org.openmolecules.fx.viewer3d.V3DMolecule;
 import org.openmolecules.fx.viewer3d.V3DScene;
 
 import java.awt.*;
-import java.util.EnumSet;
 import java.util.List;
 
 public class PluginConformerPanel extends JFXMolViewerPanel implements IConformerPanel {
 	public PluginConformerPanel(Frame owner, int mode) {
-		super(false, buildSettings());
+		super(false, V3DScene.CONFORMER_EDIT_MODE);
 		adaptToLookAndFeelChanges();
 //		setBackground(new java.awt.Color(24, 24, 96));
 		if (mode == MODE_LIGAND_AND_PROTEIN) {
@@ -45,12 +44,6 @@ public class PluginConformerPanel extends JFXMolViewerPanel implements IConforme
 			setPreferredSize(new Dimension(HiDPIHelper.scale(240), HiDPIHelper.scale(180)));
 			setPopupMenuController(new EditableSmallMolMenuController(owner, this));
 		}
-	}
-
-	private static EnumSet<V3DScene.ViewerSettings> buildSettings() {
-		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE;
-		settings.add(V3DScene.ViewerSettings.EDITING);
-		return settings;
 	}
 
 	@Override public String getStructure(int role, int format) {

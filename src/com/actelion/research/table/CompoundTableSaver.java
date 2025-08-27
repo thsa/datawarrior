@@ -534,7 +534,7 @@ public class CompoundTableSaver implements CompoundTableConstants,Runnable {
 						encoder.initialize(8, detail.length);
 						for (int i=0; i<detail.length; i++)
 							encoder.write(detail[i]);
-						encoder.finalize();
+						encoder.finish();
 
 						theWriter.write("</"+cDetailID+">");
 						theWriter.newLine();

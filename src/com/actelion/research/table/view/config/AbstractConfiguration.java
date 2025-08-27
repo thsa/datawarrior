@@ -154,7 +154,7 @@ public abstract class AbstractConfiguration extends TreeMap<String,Object> {
 				encoder.initialize(8, data.length);
 				for (int i = 0; i < data.length; i++)
 					encoder.write(data[i]);
-				encoder.finalize();
+				encoder.finish();
 
 				writer.write("</" + key.replace("=", "==") + ">");
 				writer.newLine();

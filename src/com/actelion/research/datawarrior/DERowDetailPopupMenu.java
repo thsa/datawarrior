@@ -65,6 +65,7 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 import java.util.prefs.Preferences;
@@ -548,11 +549,10 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 										if (mTableModel.isSelected(row)) {
 											key = mTableModel.separateUniqueEntries(mTableModel.encodeData(mTableModel.getRecord(row), column));
 											if (key != null)
-												for (String k : key)
-													keyList.add(k);
+												keyList.addAll(Arrays.asList(key));
 											}
 										}
-									if (keyList.size() != 0)
+									if (!keyList.isEmpty())
 										addLaunchItems(keyList.toArray(new String[0]), column, i,true);
 									}
 								}
@@ -571,7 +571,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 				}
 			catch (NumberFormatException e) {}
 
-			if (idcodeColumnList.size() != 0 && databaseActions != null) {
+			if (!idcodeColumnList.isEmpty() && databaseActions != null) {
 				if (getComponentCount() > 0)
 					addSeparator();
 
@@ -963,7 +963,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 		// The URLEncoder replaces ' ' by a '+', which seems to be the old way of doing it,
 		// which is not compatible with wikipedia and molecule names that contain spaces.
 		// (Wikipedia detects "%20" and converts them into '_', which they use in their page names instead of spaces)
-		return URLEncoder.encode(params, "UTF-8").replace("+", "%20");
+		return URLEncoder.encode(params, StandardCharsets.UTF_8).replace("+", "%20");
 		}
 
 	private Reaction getReaction(String actionCommand) {
@@ -1181,12 +1181,12 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 			StereoMolecule mol = (reactionPart != null) ? mTableModel.getChemicalStructureFromReaction(mRecord, chemColumn, reactionPart, false)
 														: mTableModel.getChemicalStructure(mRecord, chemColumn, CompoundTableModel.ATOM_COLOR_MODE_NONE, null);
 			if (mol != null && mol.getAllAtoms() != 0) {
-				String smiles = new SmilesCreator().generateSmiles(mol);
-				if (smiles != null && smiles.length() != 0) {
+				String smiles = new IsomericSmilesCreator(mol).getSmiles();
+				if (smiles != null && !smiles.isEmpty()) {
 					if (actionCommand.startsWith(SPAYA_SEARCH)) {
 						Preferences prefs = DataWarrior.getPreferences();
 						String server = prefs.get(DataWarrior.PREFERENCES_KEY_SPAYA_SERVER, "");
-						String url = server.length() == 0 ? SPAYA_URL : SPAYA_URL.replace(SPAYA_DEFAULT, server);
+						String url = server.isEmpty() ? SPAYA_URL : SPAYA_URL.replace(SPAYA_DEFAULT, server);
 						try {
 							BrowserControl.displayURL(url.replace("%s", encodeParams(smiles)));
 							}
@@ -1212,7 +1212,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 				JOptionPane.showMessageDialog(getParentFrame(), "Please use the domain name only, e.g. 'myspaya.mycompany.com'");
 				}
 			else if (!server.equals(current)) {
-				if (server.length() == 0)
+				if (server.isEmpty())
 					prefs.remove(DataWarrior.PREFERENCES_KEY_SPAYA_SERVER);
 				else
 					prefs.put(DataWarrior.PREFERENCES_KEY_SPAYA_SERVER, server);
@@ -1431,7 +1431,7 @@ public class DERowDetailPopupMenu extends JPopupMenu implements ActionListener {
 					}
 				}
 				if(applicability== DECardsViewHelper.Applicability.SELECTED) {
-					if(ceListSelected.size()==0){return;}
+					if(ceListSelected.isEmpty()){return;}
 					try {
 						List<Point2D> pos = cpX.positionAllCards(mTableModel, ceListSelected);
 						for (int zi = 0; zi < pos.size(); zi++) {

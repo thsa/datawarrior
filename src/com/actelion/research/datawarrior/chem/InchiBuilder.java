@@ -130,7 +130,8 @@ public class InchiBuilder {
 			int connCount = mol.getConnAtoms(atom);
 			if (connCount >= 3 && connCount <= 4) {
 				int parity = mol.getAtomParity(atom);
-				if (parity == Molecule.cAtomParity1 || parity == Molecule.cAtomParity2) {
+				if ((parity == Molecule.cAtomParity1 || parity == Molecule.cAtomParity2)
+				 && mol.getAtomESRType(atom) == Molecule.cESRTypeAbs) {
 					int[] c = new int[4];
 					for (int i=0; i<connCount; i++)
 						c[i] = mol.getConnAtom(atom, i);
@@ -151,7 +152,8 @@ public class InchiBuilder {
 
 		for (int bond=0; bond<mol.getBonds(); bond++) {
 			int parity = mol.getBondParity(bond);
-			if (mol.getBondParity(bond) != Molecule.cBondParityNone) {
+			if (mol.getBondParity(bond) != Molecule.cBondParityNone
+			 && (!mol.isBINAPChiralityBond(bond) || mol.getBondESRType(bond) == Molecule.cESRTypeAbs)) {
 				InchiAtom[] a = new InchiAtom[4];
 				for (int i=0; i<2; i++) {
 					int atom1 = mol.getBondAtom(i, bond);

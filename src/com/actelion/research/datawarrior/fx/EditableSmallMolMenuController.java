@@ -196,15 +196,16 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 								new PDBFileParser().parse(pdbFile) : MMCIFParser.parse(pdbFile);
 					}
 
-					List<Molecule3D> ligands = entryFile.extractMols(false).get(StructureAssembler.LIGAND_GROUP);
+					List<Molecule3D> ligands = entryFile.extractMols(true).get(StructureAssembler.LIGAND_GROUP);
+					int covalentCount = 0;
+					if (ligands != null)
+						for (Molecule3D ligand : ligands)
+							if (ligand.isCovalentLigand())
+								covalentCount++;
 
-					if (ligands == null || ligands.isEmpty()) {
-						ligands = entryFile.extractMols(true).get(StructureAssembler.LIGAND_GROUP);
-						if (ligands == null || ligands.isEmpty())
-							showMessageInEDT("No ligand structure found in "+(mPDBCode != null ? "PDB entry '"+mPDBCode : "'"+pdbFile.getName())+"'.");
-						else
-							showMessageInEDT("Only covalent ligand(s) were found and disconnected from the protein structure.");
-					}
+					if (covalentCount != 0)
+						showMessageInEDT(covalentCount+" of "+ligands.size()+" ligands were covalently bound and disconnected from the protein structure.");
+
 					if (ligands != null && !ligands.isEmpty()) {
 						int index = -1;
 						if (ligands.size() == 1) {
@@ -212,9 +213,12 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 						}
 						else {
 							String[] ligandName = new String[ligands.size()];
+							ligands.sort((o1, o2) -> Integer.compare(o2.getAllAtoms(), o1.getAllAtoms()));
 							for (int i=0; i<ligands.size(); i++) {
-								String formula = new MolecularFormula(ligands.get(i)).getFormula();
-								ligandName[i] = (i + 1) + ": " + formula + "; " + (ligands.get(i).getName() == null ? "Unnamed" : ligands.get(i).getName());
+								Molecule3D ligand = ligands.get(i);
+								String formula = " " + new MolecularFormula(ligand).getFormula();
+								String covalent = ligand.isCovalentLigand() ? " (covalent)" : "";
+								ligandName[i] = (i+1) + ": " + (ligands.get(i).getName() == null ? "Unnamed" : ligands.get(i).getName()) + formula + covalent;
 							}
 							String name = (String)JOptionPane.showInputDialog(mConformerPanel, "Select one of multiple ligands:", "Select Ligand", JOptionPane.QUESTION_MESSAGE, null, ligandName, ligandName[0]);
 							if (name != null)

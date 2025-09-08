@@ -148,14 +148,16 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 	}
 
 	private void addProteinAndLigand(PDBCoordEntryFile entryFile) {
-		Map<String, List<Molecule3D>> map = entryFile.extractMols(false);
+		Map<String, List<Molecule3D>> map = entryFile.extractMols(true);
 		List<Molecule3D> ligands = map.get(StructureAssembler.LIGAND_GROUP);
-		if (ligands == null || ligands.isEmpty()) {
-			map = entryFile.extractMols(true);
-			ligands = map.get(StructureAssembler.LIGAND_GROUP);
-			if (ligands != null && !ligands.isEmpty())
-				JOptionPane.showMessageDialog(mConformerPanel, "Only covalent ligand(s) were found and disconnected from the protein structure.");
-		}
+
+		int covalentCount = 0;
+		if (ligands != null)
+			for (Molecule3D ligand : ligands)
+				if (ligand.isCovalentLigand())
+					covalentCount++;
+		if (covalentCount != 0)
+			JOptionPane.showMessageDialog(mConformerPanel, covalentCount+" of "+ligands.size()+" ligands were covalently bound and disconnected from the protein structure.");
 
 		List<Molecule3D> proteins = map.get(StructureAssembler.PROTEIN_GROUP);
 

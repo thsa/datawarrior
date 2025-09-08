@@ -7,7 +7,7 @@ import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.io.Mol2FileParser;
 import com.actelion.research.chem.io.pdb.mmcif.MMCIFParser;
-import com.actelion.research.chem.io.pdb.parser.PDBCoordEntryFile;
+import com.actelion.research.chem.io.pdb.parser.PDBFileEntry;
 import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
 import com.actelion.research.chem.io.pdb.parser.StructureAssembler;
 import com.actelion.research.gui.FileHelper;
@@ -180,7 +180,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 				}
 
 				try {
-					PDBCoordEntryFile entryFile;
+					PDBFileEntry entryFile;
 					if (mPDBCode != null) {
 						try {
 							entryFile = MMCIFParser.getFromPDB(mPDBCode.trim());

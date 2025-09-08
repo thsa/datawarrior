@@ -4,7 +4,7 @@ import com.actelion.research.chem.*;
 import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.io.Mol2FileParser;
 import com.actelion.research.chem.io.pdb.mmcif.MMCIFParser;
-import com.actelion.research.chem.io.pdb.parser.PDBCoordEntryFile;
+import com.actelion.research.chem.io.pdb.parser.PDBFileEntry;
 import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
 import com.actelion.research.chem.io.pdb.parser.StructureAssembler;
 import com.actelion.research.gui.FileHelper;
@@ -147,7 +147,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 		catch (Exception ie) {}
 	}
 
-	private void addProteinAndLigand(PDBCoordEntryFile entryFile) {
+	private void addProteinAndLigand(PDBFileEntry entryFile) {
 		Map<String, List<Molecule3D>> map = entryFile.extractMols(true);
 		List<Molecule3D> ligands = map.get(StructureAssembler.LIGAND_GROUP);
 

@@ -54,8 +54,8 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private volatile V3DMolecule mCavityMol,mOverlayMol,mRefMol,mSingleConformer;
 	private V3DPopupMenuController mController;
 	private FutureTask<Object> mConstructionTask;
-	private volatile int mCurrentUpdateID,mCavityConstructionMode,mCavityHydrogenMode,mCavityRibbonMode,mCavitySurfaceMode,
-			mCavitySurfaceColorMode,mLargeCavityConstructionMode,mLargeCavitySurfaceMode,mLargeCavityRibbonMode,
+	private volatile int mCurrentUpdateID,mCavityConstructionMode,mCavityHydrogenMode,mCavityRibbonMode,mCavitySideChainMode,mCavitySurfaceMode,
+			mCavitySurfaceColorMode,mLargeCavityConstructionMode,mLargeCavitySurfaceMode,mLargeCavityRibbonMode,mLargeCavitySideChainMode,
 			mRefMolSurfaceMode,mRefMolSurfaceColorMode,mSingleConformerSurfaceMode,mSingleConformerSurfaceColorMode;
 	private volatile double mRefMolSurfaceTransparency,mSingleConformerSurfaceTransparency;
 	private boolean mAdaptToLookAndFeelChanges;
@@ -100,6 +100,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 		mCavityConstructionMode = MoleculeArchitect.CONSTRUCTION_MODE_WIRES;
 		mCavityHydrogenMode = MoleculeArchitect.HYDROGEN_MODE_ALL;
 		mCavityRibbonMode = Ribbons.MODE_NONE;
+		mCavitySideChainMode = V3DMolecule.SIDECHAIN_MODE_NEAR_LIGAND;
 		mCavitySurfaceMode = V3DMolecule.SURFACE_MODE_FILLED;
 		mCavitySurfaceColorMode = SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS;
 		mCavitySurfaceColor = DEFAULT_CAVITY_MOL_COLOR;
@@ -108,6 +109,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 		mLargeCavityConstructionMode = MoleculeArchitect.CONSTRUCTION_MODE_NONE;
 		mLargeCavitySurfaceMode = V3DMolecule.SURFACE_MODE_NONE;
 		mLargeCavityRibbonMode = Ribbons.MODE_CARTOON;
+		mLargeCavitySideChainMode = V3DMolecule.SIDECHAIN_MODE_NONE;
 
 		collectLookAndFeelColors(); // we have to do this on the EDT
 
@@ -258,6 +260,10 @@ public class JFXMolViewerPanel extends JFXPanel {
 		return mCavityMol != null ? mCavityMol.getRibbonMode() : mCavityRibbonMode;
 	}
 
+	public int getCavitySideChainMode() {
+		return mCavityMol != null ? mCavityMol.getSideChainMode() : mCavitySideChainMode;
+	}
+
 	public int getCavitySurfaceMode() {
 		return mCavityMol != null ? mCavityMol.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY) : mCavitySurfaceMode;
 	}
@@ -361,6 +367,22 @@ public class JFXMolViewerPanel extends JFXPanel {
 		}
 		else {
 			mCavityRibbonMode = mode;
+		}
+	}
+
+	public void setCavitySideChainMode(int mode) {
+		if (mCavityMol != null) {
+			if (mCavityMol.getMolecule().getAllAtoms() > MAX_ATOMS_FOR_SURFACE)
+				mLargeCavitySideChainMode = mode;
+			else
+				mCavitySideChainMode = mode;
+			Platform.runLater(() -> {
+				mScene.setShowInteractions(mode != V3DMolecule.SIDECHAIN_MODE_NONE);
+				mCavityMol.setSideChainMode(mode);
+			} );
+		}
+		else {
+			mCavitySideChainMode = mode;
 		}
 	}
 
@@ -714,11 +736,13 @@ public class JFXMolViewerPanel extends JFXPanel {
 				if (mCavityMol.getMolecule().getAllAtoms() > MAX_ATOMS_FOR_SURFACE) {
 					mLargeCavityConstructionMode = mCavityMol.getConstructionMode();
 					mLargeCavityRibbonMode = mCavityMol.getRibbonMode();
+					mLargeCavitySideChainMode = mCavityMol.getSideChainMode();
 					mLargeCavitySurfaceMode = mCavityMol.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY);
 				}
 				else {
 					mCavityConstructionMode = mCavityMol.getConstructionMode();
 					mCavityRibbonMode = mCavityMol.getRibbonMode();
+					mCavitySideChainMode = mCavityMol.getSideChainMode();
 					mCavitySurfaceMode = mCavityMol.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY);
 				}
 				mCavityHydrogenMode = mCavityMol.getHydrogenMode();
@@ -743,9 +767,10 @@ public class JFXMolViewerPanel extends JFXPanel {
 
 				int constructionMode = (cavity.getAllAtoms() > MAX_ATOMS_FOR_SURFACE) ? mLargeCavityConstructionMode : mCavityConstructionMode;
 				int ribbonMode = (cavity.getAllAtoms() > MAX_ATOMS_FOR_SURFACE) ? mLargeCavityRibbonMode : mCavityRibbonMode;
+				int sideChainMode = (cavity.getAllAtoms() > MAX_ATOMS_FOR_SURFACE) ? mLargeCavitySideChainMode : mCavitySideChainMode;
 				int surfaceMode = (cavity.getAllAtoms() > MAX_ATOMS_FOR_SURFACE) ? mLargeCavitySurfaceMode : mCavitySurfaceMode;
 
-				mCavityMol = new V3DMolecule(cavity, ligands, constructionMode, mCavityHydrogenMode, ribbonMode,
+				mCavityMol = new V3DMolecule(cavity, ligands, constructionMode, mCavityHydrogenMode, ribbonMode, sideChainMode,
 						surfaceMode, mCavitySurfaceColorMode, mCavitySurfaceColor, mCavitySurfaceTransparency, 0);
 				mCavityMol.setColor(mCavityMolColor);
 
@@ -777,7 +802,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 					return;
 
 				mScene.reviveAnimation();	// just in case, there was a stopped animation
-				mScene.setShowInteractions(true);
+				mScene.setShowInteractions(sideChainMode != V3DMolecule.SIDECHAIN_MODE_NONE);
 			}
 
 			SwingUtilities.invokeLater(() -> fireStructureChanged());

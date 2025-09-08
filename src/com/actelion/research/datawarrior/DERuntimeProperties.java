@@ -94,6 +94,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMolViewerCavityConstructionMode = "fxmvCavityConstructionMode";
 	private static final String cMolViewerCavityHydrogenMode = "fxmvCavityHydrogenMode";
 	private static final String cMolViewerCavityRibbonMode = "fxmvCavityRibbonMode";
+	private static final String cMolViewerCavitySideChainMode = "fxmvCavitySideChainMode";
 	private static final String cMolViewerCavitySurfaceMode = "fxmvCavitySurfaceMode";
 	private static final String cMolViewerCavitySurfaceColorMode = "fxmvCavitySurfaceColorMode";
 	private static final String cMolViewerCavitySurfaceColor = "fxmvCavitySurfaceColor";
@@ -493,6 +494,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 				int cavityRibbonMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityRibbonMode, Ribbons.RIBBON_MODE_CODE);
 				if (cavityRibbonMode != -1)
 					panel3D.setCavityRibbonMode(cavityRibbonMode);
+				int cavitySideChainMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySideChainMode, V3DMolecule.SIDECHAIN_MODE_CODE);
+				if (cavitySideChainMode != -1)
+					panel3D.setCavitySideChainMode(cavitySideChainMode);
 				int cavitySurfaceMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceMode, V3DMolecule.SURFACE_MODE_CODE);
 				if (cavitySurfaceMode != -1)
 					panel3D.setCavitySurfaceMode(cavitySurfaceMode);
@@ -2011,6 +2015,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityHydrogenMode, MoleculeArchitect.HYDROGEN_MODE_CODE[cavityHydrogenMode]);
 				int cavityRibbonMode = panel3D.getCavityRibbonMode();
 				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityRibbonMode, Ribbons.RIBBON_MODE_CODE[cavityRibbonMode]);
+				int cavitySideChainMode = panel3D.getCavitySideChainMode();
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySideChainMode, V3DMolecule.SIDECHAIN_MODE_CODE[cavitySideChainMode]);
 				int cavitySurfaceMode = panel3D.getCavitySurfaceMode();
 				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceMode, V3DMolecule.SURFACE_MODE_CODE[cavitySurfaceMode]);
 				int cavitySurfaceColorMode = panel3D.getCavitySurfaceColorMode();

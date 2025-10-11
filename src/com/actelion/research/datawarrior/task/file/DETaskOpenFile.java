@@ -18,6 +18,7 @@
 
 package com.actelion.research.datawarrior.task.file;
 
+import com.actelion.research.chem.io.CompoundFileHelper;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DERuntimeProperties;
@@ -37,6 +38,8 @@ import java.util.Properties;
 public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	public static final String TASK_NAME = "Open File";
 
+	private static final int COMPATIBLE_FILE_TYPES = FileHelper.cFileTypeDataWarriorCompatibleData | CompoundFileHelper.cFileTypeMOL2;
+
 	private static final String PROPERTY_DEFAULT_FILTERS = "defaultFilters";
 	private static final String PROPERTY_DEFAULT_VIEWS = "defaultViews";
 	private static final String PROPERTY_ASSUME_CHIRAL = "assumeChiral";
@@ -52,12 +55,12 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
     private JCheckBox mCheckBoxCreateDefaultFilters,mCheckBoxCreateDefaultViews,mCheckBoxAssumeChiralTrue,mCheckBoxMakeRacemic,mCheckBoxAddMapping;
 
     public DETaskOpenFile(DataWarrior application) {
-		super(application, "Open DataWarrior-, SD-, gzipped SD- or Text-File", FileHelper.cFileTypeDataWarriorCompatibleData);
+		super(application, "Open DataWarrior-, SD-, gzipped SD- or Text-File", COMPATIBLE_FILE_TYPES);
 		mApplication = application;
 		}
 
     public DETaskOpenFile(DataWarrior application, String filePath) {
-		super(application, "Open DataWarrior-, SD-, gzipped SD-, or Text-File", FileHelper.cFileTypeDataWarriorCompatibleData, filePath);
+		super(application, "Open DataWarrior-, SD-, gzipped SD-, or Text-File", COMPATIBLE_FILE_TYPES, filePath);
 		mApplication = application;
 		}
 

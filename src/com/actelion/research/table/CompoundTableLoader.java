@@ -23,10 +23,7 @@ import com.actelion.research.calc.ProgressListener;
 import com.actelion.research.chem.*;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.DescriptorHandler;
-import com.actelion.research.chem.io.CompoundFileHelper;
-import com.actelion.research.chem.io.CompoundTableConstants;
-import com.actelion.research.chem.io.RDFileParser;
-import com.actelion.research.chem.io.SDFileParser;
+import com.actelion.research.chem.io.*;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.chem.reaction.ReactionEncoder;
 import com.actelion.research.chem.reaction.mapping.ChemicalRuleEnhancedReactionMapper;
@@ -47,6 +44,7 @@ import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
@@ -1721,6 +1719,76 @@ try {
 			}
 		}
 
+
+	private boolean readMol2File() {
+		mProgressController.startProgress("Examining Records...", 0, 0);
+
+		Mol2FileParser mol2Parser = new Mol2FileParser();
+
+		mFieldNames = new String[3];
+		mFieldNames[0] = "Structure";
+		mFieldNames[1] = cColumnType3DCoordinates;
+		mFieldNames[2] = "Molecule Name";   // use record no as default column
+
+		ArrayList<Object[]> fieldDataList = new ArrayList<Object[]>();
+
+		try {
+			List<Molecule3D> molList = mol2Parser.loadGroup(mFile == null ? null : mFile.getName(), mDataReader, 0, -1);
+			for (Molecule3D mol : molList) {
+				Object[] fieldData = new Object[mFieldNames.length];
+
+				try {
+					if (mol.getAllAtoms() != 0) {
+						mol.normalizeAmbiguousBonds();
+						mol.canonizeCharge(true);
+
+						Canonizer canonizer = new Canonizer(mol);
+						byte[] idcode = getBytes(canonizer.getIDCode());
+						byte[] coords = getBytes(canonizer.getEncodedCoordinates());
+
+						fieldData[0] = idcode;
+						fieldData[1] = coords;
+
+						if (!mol.getName().isEmpty()) {
+							mMolnameFound = true;
+							fieldData[2] = getBytes(mol.getName());
+							}
+						}
+					}
+				catch (Exception e) {
+					mErrorCount++;
+					}
+
+				fieldDataList.add(fieldData);
+				}
+			}
+		catch (Exception e) {
+			return false;
+			}
+
+		addColumnProperty("Structure", cColumnPropertySpecialType, cColumnTypeIDCode);
+		addColumnProperty(cColumnType3DCoordinates, cColumnPropertySpecialType, cColumnType3DCoordinates);
+		addColumnProperty(cColumnType3DCoordinates, cColumnPropertyParentColumn, "Structure");
+
+		mFieldData = fieldDataList.toArray(new Object[0][]);
+
+		if (mMolnameFound) {
+			addColumnProperty("Structure", cColumnPropertyRelatedIdentifierColumn, mFieldNames[2]);
+			}
+		else {
+			mFieldNames[2] = "Structure No";
+			for (int row=0; row<mFieldData.length; row++)
+				mFieldData[row][2] = (""+(row+1)).getBytes();
+			}
+
+		if (mErrorCount > 0) {
+			final String message = mErrorCount + " compound structures could not be generated because of mol2-file parsing errors.";
+			showMessageOnEDT(message, "Import Errors", JOptionPane.WARNING_MESSAGE);
+		}
+
+		return true;
+	}
+
 	private boolean readSDFile() {
 		mProgressController.startProgress("Examining Records...", 0, 0);
 
@@ -2385,6 +2453,8 @@ try {
 				return readRDFile();
 			if ((mDataType & FileHelper.cFileTypeSD) != 0)
 				return readSDFile();
+			if ((mDataType & FileHelper.cFileTypeMOL2) != 0)
+				return readMol2File();
 			}
 		catch (OutOfMemoryError err) {
 			showMessageOnEDT("Out of memory. Launch this application with Java option -Xms???m or -Xmx???m.", "Memory Error", JOptionPane.WARNING_MESSAGE);

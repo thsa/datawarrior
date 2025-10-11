@@ -154,7 +154,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					  jMenuChemAnalyzeScaffolds,jMenuChemAnalyzeCliffs,jMenuChemMatchFile,jMenuChemSelectDiverse,
 					  jMenuChemCluster, jMenuChemExtractFragment,jMenuChemMapReactions,jMenuChemCompareReactionMapping,jMenuChemAddReactionSmiles,
 					  jMenuChemCreateGenericTautomers,jMenuChemCompareDescriptorSimilarityDistribution,jMenuChemGenerateRandomMolecules,
-					  jMenuChemCreateTaggedSmiles,
+					  jMenuChemCreateTaggedSmiles,jMenuChemAddDockingScore,
 					  jMenuChemExtractPairwiseCompoundSimilarities,jMenuChemExtractPairwiseStuff,jMenuChemCountAtomTypes,jMenuChemCheckIDCodes,
 					  jMenuChemRunSurfacePLS,jMenuChemClassifyReactions,jMenuDBWikipedia,jMenuDBReadChEMBL,jMenuDBFindChEMBLActives,jMenuDBPatentReactions,
 					  jMenuDBSearchCOD, jMenuDBSearchBuildingBlocks,jMenuDBSearchChemSpace,jMenuDBRetrieveDataFromURL,jMenuDBRetrieveSQLData,jMenuDBGooglePatents,
@@ -864,6 +864,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemAddInchiKey = new JMenuItem();
 		jMenuChemAddCanonicalCode = new JMenuItem();
 		jMenuChemExtractFragment = new JMenuItem();
+		jMenuChemAddDockingScore = new JMenuItem();
 		jMenuChemAddSubstructureCount = new JMenuItem();
 		jMenuChemAddStructureFromName = new JMenuItem();
 		jMenuChemCreate2DCoords = new JMenuItem();
@@ -936,6 +937,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemAddSubstructureCount.addActionListener(this);
 		jMenuChemExtractFragment.setText("Extract Unconnected Fragment...");
 		jMenuChemExtractFragment.addActionListener(this);
+		jMenuChemAddDockingScore.setText("Add Docking Score...");
+		jMenuChemAddDockingScore.addActionListener(this);
 		jMenuChemAddStructureFromName.setText("Add Structures From Name...");
 		jMenuChemAddStructureFromName.addActionListener(this);
 		jMenuChemCreate2DCoords.setText("Generate 2D Atom Coordinates...");
@@ -1016,6 +1019,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemFromStructure.add(jMenuChemAddCanonicalCode);
 		jMenuChemFromStructure.add(jMenuChemAddSubstructureCount);
 		jMenuChemFromStructure.add(jMenuChemExtractFragment);
+		if (System.getProperty("development") != null)
+			jMenuChemFromStructure.add(jMenuChemAddDockingScore);
 
 		JMenu jMenuChemFromReaction = new JMenu("From Chemical Reaction");
 		jMenuChemFromReaction.add(jMenuChemAddReactionDescriptor);
@@ -1797,6 +1802,8 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				new DETaskAddSubstructureCount(mParentFrame).defineAndRun();
 			else if (source == jMenuChemExtractFragment)
 				new DETaskExtractUnconnectedFragment(mParentFrame).defineAndRun();
+			else if (source == jMenuChemAddDockingScore)
+				new DETaskAddDockingScore(mParentFrame).defineAndRun();
 			else if (source == jMenuChemAddStructureFromName)
 				new DETaskAddChemistryFromName(mParentFrame).defineAndRun();
 			else if (source == jMenuChemExtractReactants)

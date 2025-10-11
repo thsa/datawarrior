@@ -144,14 +144,14 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				popup.getItems().addAll(new SeparatorMenuItem(), itemAlignShape, itemAlignMCS);
 			}
 
-			if (hasCavity) {
-				boolean isShowInteractions = (hasLigand && mConformerPanel.getV3DScene().isShowInteractions());
-				javafx.scene.control.CheckMenuItem itemShowInteractions = new CheckMenuItem("Show Interactions");
-				itemShowInteractions.setSelected(isShowInteractions);
-				itemShowInteractions.setDisable(!hasLigand);
-				itemShowInteractions.setOnAction(e -> setShowInteractions(!isShowInteractions));
-				popup.getItems().add(itemShowInteractions);
-			}
+//			if (hasCavity) {
+//				boolean isShowInteractions = (hasLigand && mConformerPanel.getV3DScene().isShowInteractions());
+//				javafx.scene.control.CheckMenuItem itemShowInteractions = new CheckMenuItem("Show Interactions");
+//				itemShowInteractions.setSelected(isShowInteractions);
+//				itemShowInteractions.setDisable(!hasLigand);
+//				itemShowInteractions.setOnAction(e -> setShowInteractions(!isShowInteractions));
+//				popup.getItems().add(itemShowInteractions);
+//			}
 
 			// TODO remove this and the following TEMPLATE
 			if (System.getProperty("development") != null) {
@@ -285,10 +285,6 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 			c = c.getParent();
 
 		return (DEFrame)c;
-	}
-
-	private void setShowInteractions(boolean showInteractions) {
-		mConformerPanel.getV3DScene().setShowInteractions(showInteractions);
 	}
 
 	/**

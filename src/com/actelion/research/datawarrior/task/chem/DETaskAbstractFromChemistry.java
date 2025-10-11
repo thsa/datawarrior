@@ -63,9 +63,11 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 	private JComboBox<String> mComboBoxStructureColumn, mComboBoxChildColumn;
 	private JTextField[] mTextFieldColumnName;
 
-	private volatile CompoundTableModel	mTableModel;
-	private volatile int mChildColumnClass,mChemistryColumn,mChildColumn;
-	private volatile boolean mUseMultipleCores,mEditableColumnNames;
+	private final CompoundTableModel mTableModel;
+	private final int mChildColumnClass;
+	private final boolean mUseMultipleCores;
+	private final boolean mEditableColumnNames;
+	private volatile int mChemistryColumn,mChildColumn;
 	private AtomicInteger mSMPRecordIndex,mSMPWorkingThreads,mSMPErrorCount;
 
 	/**

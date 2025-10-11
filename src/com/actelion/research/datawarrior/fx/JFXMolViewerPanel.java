@@ -377,7 +377,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 			else
 				mCavitySideChainMode = mode;
 			Platform.runLater(() -> {
-				mScene.setShowInteractions(mode != V3DMolecule.SIDECHAIN_MODE_NONE);
+				mScene.setSuspendInteractions(mode == V3DMolecule.SIDECHAIN_MODE_NONE);
 				mCavityMol.setSideChainMode(mode);
 			} );
 		}
@@ -802,7 +802,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 					return;
 
 				mScene.reviveAnimation();	// just in case, there was a stopped animation
-				mScene.setShowInteractions(sideChainMode != V3DMolecule.SIDECHAIN_MODE_NONE);
+				mScene.setSuspendInteractions(sideChainMode == V3DMolecule.SIDECHAIN_MODE_NONE);
 			}
 
 			SwingUtilities.invokeLater(() -> fireStructureChanged());

@@ -554,8 +554,17 @@ public class JFXMolViewerPanel extends JFXPanel {
 			int r = bg.getRed();
 			int g = bg.getGreen();
 			int b = bg.getBlue();
-			mScene.setFill(Color.rgb(r, g, b, 1));
+			mScene.setBackground(Color.rgb(r, g, b, 1), true);
 		});
+	}
+
+	public String getBackgroundColor() {
+		return mScene.isDefaultBackground() ? null : toRGBString(mScene.getBackground());
+	}
+
+	public void setBackgroundColor(String color) {
+		Color bg = color.equals("none") ? null : Color.valueOf(color);
+		Platform.runLater(() -> mScene.setBackground(bg, false) );
 	}
 
 	public void adaptToLookAndFeelChanges() {

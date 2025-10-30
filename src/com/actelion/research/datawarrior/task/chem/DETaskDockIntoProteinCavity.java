@@ -42,7 +42,7 @@ import java.util.Properties;
 public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 	public static final String TASK_NAME = "Dock Into Protein Cavity";
 
-	private static final String[] COLUMN_TITLE = {"Docking Score", "Docked Structure", "Docking Pose"};
+	private static final String[] COLUMN_TITLE = {"ChemPLP Docking Score", "Docked Structure", "Docking Pose"};
 	private static final int SCORE_COLUMN = 0;
 	private static final int POSE_COLUMN = 1;
 	private static final int COORDS_COLUMN = 2;

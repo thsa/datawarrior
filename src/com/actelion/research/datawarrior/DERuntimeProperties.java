@@ -79,6 +79,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMainViewDockInfo = "mainViewDockInfo";
 	private static final String cMainViewInFront = "mainViewInFront";
 	private static final String cDetailView = "detailView";
+	private static final String cMolViewerBackgroundColor = "fxmvBackgroundColor";
 	private static final String cMolViewerOverlayMolColor = "fxmvOverlayMolColor";
 	private static final String cMolViewerRefMolColor = "fxmvRefMolColor";
 	private static final String cMolViewerRefMolSurfaceMode = "fxmvRefMolSurfaceMode";
@@ -446,6 +447,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 			if (viewInfo.view instanceof JFXMolViewerPanel panel3D) {
 				int column3D = viewInfo.detail;
 				String column3DName = mTableModel.getColumnTitleNoAlias(column3D);
+				String backgroundColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerBackgroundColor);
+				if (backgroundColor != null)
+					panel3D.setBackgroundColor(backgroundColor);
 				String overlayColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerOverlayMolColor);
 				if (overlayColor != null)
 					panel3D.setOverlayMolColor(overlayColor);
@@ -1976,6 +1980,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 			if (viewInfo.view instanceof JFXMolViewerPanel panel3D) {
 				int column3D = viewInfo.detail;
 				String column3DName = mTableModel.getColumnTitleNoAlias(column3D);
+				String backgroundColor = panel3D.getBackgroundColor();
+				if (backgroundColor != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerBackgroundColor, backgroundColor);
 				String overlayColor = panel3D.getOverlayMolColor();
 				if (overlayColor != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerOverlayMolColor, overlayColor);

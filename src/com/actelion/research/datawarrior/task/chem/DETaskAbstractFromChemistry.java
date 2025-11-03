@@ -193,7 +193,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 		JPanel extentionPanel = getExtendedDialogContent();
 
 		double[] sizeY = new double[3 + (mChildColumnClass != DESCRIPTOR_NONE? 2:0)
-		                              + (extentionPanel != null? 3:0)
+		                              + (extentionPanel != null? 4:0)
 									  + (mEditableColumnNames? 2*getNewColumnCount() : 0)];
 
 		int gap = HiDPIHelper.scale(8);
@@ -207,6 +207,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 		if (extentionPanel != null) {
 			sizeY[index++] = gap+gap>>1;
 			sizeY[index++] = TableLayout.PREFERRED;
+			sizeY[index++] = TableLayout.FILL;
 			sizeY[index++] = gap;
 			}
 		if (mEditableColumnNames) {
@@ -216,7 +217,7 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 				}
 			}
 		sizeY[index++] = gap;
-		double[][] size = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap}, sizeY };
+		double[][] size = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL, gap}, sizeY };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
@@ -245,8 +246,8 @@ public abstract class DETaskAbstractFromChemistry extends ConfigurableTask imple
 			}
 
 		if (extentionPanel != null) {
-			content.add(extentionPanel, "1,"+index+",3,"+index);
-			index += 3;
+			content.add(extentionPanel, "1,"+index+",4,"+(index+1));
+			index += 4;
 			}
 
 		if (mEditableColumnNames) {

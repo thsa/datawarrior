@@ -78,21 +78,21 @@ public class DETaskDockIntoProteinCavity extends DETaskAbstractFromStructure {
 	@Override
 	public JPanel getExtendedDialogContent() {
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {TableLayout.PREFERRED}, {TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED} };
+		double[][] size = { {TableLayout.PREFERRED, TableLayout.FILL}, {TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL} };
 
 		mCheckBoxProtonate = new JCheckBox("Use likely ligand protonation states");
 
 		mConformerPanel = new JFXMolViewerPanel(false, V3DScene.CONFORMER_EDIT_MODE);
 		mConformerPanel.setPopupMenuController(new EditableLargeMolMenuController(mConformerPanel));
 		mConformerPanel.adaptToLookAndFeelChanges();
-//		mConformerPanel.setBackground(new java.awt.Color(24, 24, 96));
 		mConformerPanel.setPreferredSize(new Dimension(HiDPIHelper.scale(320), HiDPIHelper.scale(240)));
 
 		JPanel ep = new JPanel();
 		ep.setLayout(new TableLayout(size));
 		ep.add(mCheckBoxProtonate, "0,0");
 		ep.add(new JLabel("Protein cavity with natural ligand"), "0,2");
-		ep.add(mConformerPanel, "0,4");
+
+		ep.add(mConformerPanel, "0,4,1,5");
 		return ep;
 		}
 

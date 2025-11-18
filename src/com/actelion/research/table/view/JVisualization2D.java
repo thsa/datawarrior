@@ -863,6 +863,23 @@ public class JVisualization2D extends JVisualization {
 					firstFocusIndex++;
 					}
 				}
+			if (mLabelHelper != null && mLabelHelper.hasLabelsOnSomeMarkersOnly()) {
+				int firstLabelIndex = firstFocusIndex;
+				int index2 = mDataPoints-1;
+				while (firstLabelIndex<index2) {
+					if (mLabelHelper.hasLabels(mPoint[firstLabelIndex])) {
+						while (mLabelHelper.hasLabels(mPoint[index2])
+							&& index2 > firstLabelIndex)
+							index2--;
+						if (index2 == firstLabelIndex)
+							break;
+						VisualizationPoint temp = mPoint[firstLabelIndex];
+						mPoint[firstLabelIndex] = mPoint[index2];
+						mPoint[index2] = temp;
+					}
+					firstLabelIndex++;
+					}
+				}
 
 			boolean isTreeView = isTreeViewGraph();
 			boolean isDarkBackground = (ColorHelper.perceivedBrightness(getViewBackground()) <= 0.5);
@@ -5234,6 +5251,11 @@ protected void paintLegend(Rectangle bounds, boolean transparentBG) {
 			for (int i=0; i<mLabelColumn.length; i++)
 				if (mLabelColumn[i] != -1)
 					mLabelInfo[i] = new MarkerLabelInfo();
+			}
+
+		public boolean hasLabelsOnSomeMarkersOnly() {
+			return (mLabelList != cLabelsOnAllRows && mLabelFlagNo != -1)
+				|| mOneLabelPerCategoryMap != null;
 			}
 
 		public boolean hasLabels(VisualizationPoint vp) {

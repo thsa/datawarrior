@@ -38,6 +38,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.util.Properties;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipInputStream;
 
 
 public class DETaskRetrieveDataFromURL extends ConfigurableTask {
@@ -59,8 +61,9 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 	public static final int FORMAT_DWAM = 5;
 	public static final int FORMAT_SDF = 6;
 	public static final int FORMAT_SDF_GZ = 7;
+	public static final int FORMAT_SDF_ZIP = 8;
 
-	public static final String[] FORMAT_CODE = { "td", "cs", "ss", "vls", "dwar", "dwam", "sdf", "sdgz" };
+	public static final String[] FORMAT_CODE = { "td", "cs", "ss", "vls", "dwar", "dwam", "sdf", "sdgz", "sdzip" };
 	private static final int[] FORMAT = { FileHelper.cFileTypeTextTabDelimited,
 										  FileHelper.cFileTypeTextCommaSeparated,
 										  FileHelper.cFileTypeTextSemicolonSeparated,
@@ -68,7 +71,8 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 										  FileHelper.cFileTypeDataWarrior,
 										  FileHelper.cFileTypeDataWarriorMacro,
 										  FileHelper.cFileTypeSD,
-										  FileHelper.cFileTypeSDGZ };
+										  FileHelper.cFileTypeSDGZ,
+										  FileHelper.cFileTypeSDZIP };
 
 	private final DataWarrior mApplication;
 	private DEFrame mTargetFrame;
@@ -207,6 +211,15 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 						: new DERuntimeProperties(mTargetFrame.getMainFrame());
 				int format = FORMAT[findListIndex(configuration.getProperty(PROPERTY_FORMAT, ""), FORMAT_CODE, -1)];
 				int action = CompoundTableLoader.READ_DATA | CompoundTableLoader.REPLACE_DATA;
+				if (format == FileHelper.cFileTypeSDGZ) {
+					is = new GZIPInputStream(is);
+					format = FileHelper.cFileTypeSD;
+				}
+				else if (format == FileHelper.cFileTypeSDZIP) {
+					is = new ZipInputStream(is);
+					((ZipInputStream)is).getNextEntry();
+					format = FileHelper.cFileTypeSD;
+				}
 				loader.readStream(new BufferedReader(new InputStreamReader(is)), rtp, format, action, title);
 			}
 		}

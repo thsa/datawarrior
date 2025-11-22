@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	public static final String DATASET_COLUMN_TITLE = "Dataset Name";
@@ -251,14 +253,28 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	public void readFile(File file, RuntimeProperties properties, int dataType, int action) {
 		mFile = file;
 		try {
-			InputStream is = new FileInputStream(mFile);
+			InputStream is = null;
 			if (dataType == CompoundFileHelper.cFileTypeSDGZ) {
-				is = new GZIPInputStream(is);
+				is = new GZIPInputStream(new FileInputStream(mFile));
 				dataType = CompoundFileHelper.cFileTypeSD;
 				}
+			else if (dataType == CompoundFileHelper.cFileTypeSDZIP) {
+				ZipFile zipFile = new ZipFile(mFile);
+				ZipEntry zipEntry = zipFile.entries().nextElement();
+				is = zipFile.getInputStream(zipEntry);
+				dataType = CompoundFileHelper.cFileTypeSD;
+				}
+			else {
+				is = new FileInputStream(mFile);
+			}
 			BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 			BOMSkipper.skip(reader);
 			readStream(reader, properties, dataType, action, mFile.getName());
+			}
+		catch (NoSuchElementException nsee) {
+			mTableModel.unlock();
+			showMessageOnEDT("No entry found in .sdf.zip file.", "Error", JOptionPane.WARNING_MESSAGE);
+			return;
 			}
 		catch (FileNotFoundException e) {
 			mTableModel.unlock();
@@ -1658,7 +1674,7 @@ try {
 		}
 
 	/**
-	 * extracts and returns the first double quoted value directly following an equal sign
+	 * extracts and returns the first double-quoted value directly following an equal sign
 	 * @param theLine
 	 * @return
 	 */
@@ -1703,12 +1719,27 @@ try {
 
 	private boolean initializeReaderFromFile() {
 		boolean isGZipped = CompoundFileHelper.getFileType(mFile) == CompoundFileHelper.cFileTypeSDGZ;
+		boolean isZipped = CompoundFileHelper.getFileType(mFile) == CompoundFileHelper.cFileTypeSDZIP;
 		try {
 			mDataReader.close();
 
-			InputStream is = new FileInputStream(mFile);
-			if (isGZipped)
-				is = new GZIPInputStream(is);
+			InputStream is = null;
+
+			if (isZipped) {
+				try {
+					ZipFile zipFile = new ZipFile(mFile);
+					ZipEntry zipEntry = zipFile.entries().nextElement();
+					is = zipFile.getInputStream(zipEntry);
+				}
+				catch (NoSuchElementException nsee) {
+					return false;
+					}
+				}
+			else {
+				is = new FileInputStream(mFile);
+				if (isGZipped)
+					is = new GZIPInputStream(is);
+				}
 
 			mDataReader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 			BOMSkipper.skip(mDataReader);

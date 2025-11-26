@@ -70,9 +70,9 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 	public JPanel createDialogContent() {
 		JPanel panel = new JPanel();
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, HiDPIHelper.scale(160), gap},
-				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap/2,
-						TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap*2,
+		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1, HiDPIHelper.scale(160), gap},
+				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap*2, TableLayout.PREFERRED, gap>>1,
+						TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap*2,
 						TableLayout.PREFERRED, gap} };
 		panel.setLayout(new TableLayout(size));
 
@@ -141,7 +141,7 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 
 		JPanel pruningPanel = new JPanel();
 		pruningPanel.add(new JLabel("Retrieve"));
-		mComboBoxPruningMode = new JComboBox(CODE_PRUNING_MODE);
+		mComboBoxPruningMode = new JComboBox<>(CODE_PRUNING_MODE);
 		pruningPanel.add(mComboBoxPruningMode);
 		pruningPanel.add(new JLabel("subset if more building blocks match"));
 		panel.add(pruningPanel, "1,15,5,15");
@@ -166,7 +166,7 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 	}
 
 	private boolean validateDoubleField(String value) {
-		if (value.length() == 0)
+		if (value.isEmpty())
 			return true;
 
 		try {
@@ -178,7 +178,7 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 	}
 
 	private boolean validateIntField(String value) {
-		if (value.length() == 0)
+		if (value.isEmpty())
 			return true;
 
 		try {
@@ -190,7 +190,7 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 	}
 
 	private boolean validateFieldMolweight(String molweight) {
-		if (molweight.length() == 0)
+		if (molweight.isEmpty())
 			return true;
 
 		try {
@@ -254,7 +254,7 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 	public Properties getDialogConfiguration() {
 		Properties configuration = super.getDialogConfiguration();
 
-		// for Enamine we use always SkeletonSpheres rather than the default FFP512
+		// For Enamine, we use always SkeletonSpheres rather than the default FFP512.
 		configuration.setProperty(PROPERTY_DESCRIPTOR_NAME, DescriptorConstants.DESCRIPTOR_SkeletonSpheres.shortName);
 
 		String providers = (String)mComboBoxProviders.getSelectedItem();
@@ -264,16 +264,16 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 			providers = QUERY_PROVIDERS_VALUE_ANY;
 		configuration.setProperty(PROPERTY_PROVIDER_LIST, providers);
 
-		if (mTextFieldMaxPrice.getText().length() != 0)
+		if (!mTextFieldMaxPrice.getText().isEmpty())
 			configuration.setProperty(PROPERTY_MAX_PRICE, mTextFieldMaxPrice.getText());
 
-		if (mTextFieldMinPackageSize.getText().length() != 0)
+		if (!mTextFieldMinPackageSize.getText().isEmpty())
 			configuration.setProperty(PROPERTY_MIN_PACKAGE_SIZE, mTextFieldMinPackageSize.getText());
 
-		if (mTextFieldMolweight.getText().length() != 0)
+		if (!mTextFieldMolweight.getText().isEmpty())
 			configuration.setProperty(PROPERTY_MOLWEIGHT, mTextFieldMolweight.getText());
 
-		if (mTextFieldMaxRows.getText().length() != 0)
+		if (!mTextFieldMaxRows.getText().isEmpty())
 			configuration.setProperty(PROPERTY_MAX_ROWS, mTextFieldMaxRows.getText());
 
 		configuration.setProperty(PROPERTY_PRUNING_MODE, (String)mComboBoxPruningMode.getSelectedItem());
@@ -331,7 +331,7 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 			}
 		}
 		String providers = configuration.getProperty(PROPERTY_PROVIDER_LIST);
-		if (providers != null && providers.length() == 0) {
+		if (providers != null && providers.isEmpty()) {
 			showErrorMessage("No providers selected.");
 			return false;
 		}
@@ -420,8 +420,7 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 			for (int r=rowIndex; r<resultTable.length; r++) {
 				byte[][] resultLine = resultTable[r];
 				Object[] row = new Object[resultLine.length];
-				for (int i=0; i<resultLine.length; i++)
-					row[i] = resultLine[i];
+				System.arraycopy(resultLine, 0, row, 0, resultLine.length);
 				row[RESULT_COLUMN_FFP512] = DescriptorHandlerLongFFP512.getDefaultInstance().decode((byte[])row[RESULT_COLUMN_FFP512]);
 				mResultList.add(row);
 			}

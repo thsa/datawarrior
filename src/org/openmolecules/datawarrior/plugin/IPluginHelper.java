@@ -336,4 +336,17 @@ public interface IPluginHelper {
 	 * @return
 	 */
 	boolean isCancelled();  // true, if the user has pressed the stop/cancel button of a progress dialog
+
+	/**
+	 * Allows to define any-purpose information from plugin to DataWarrior and back for future use.
+	 * @param key
+	 */
+	String getAnyPurposeProperty(String key);
+
+	/**
+	 * Allows to define any-purpose information from plugin to DataWarrior and back for future use.
+	 * @param key
+	 * @param value
+	 */
+	void setAnyPurposeProperty(String key, String value);
 	}

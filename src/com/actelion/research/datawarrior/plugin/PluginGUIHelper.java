@@ -16,11 +16,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class PluginGUIHelper implements IUserInterfaceHelper {
-	private DataWarrior mApplication;
-	private JDialog mDialog;
-	private DETaskPluginTask mPluginTask;
+	private final DataWarrior mApplication;
+	private final JDialog mDialog;
+	private final DETaskPluginTask mPluginTask;
 	private CompoundTableModel mTableModel;
-	private boolean mIsInteractive;
+	private final boolean mIsInteractive;
 	private String mDefaultButtonText;
 
 	public PluginGUIHelper(DataWarrior application, JDialog dialog, DETaskPluginTask task, boolean isInteractive) {

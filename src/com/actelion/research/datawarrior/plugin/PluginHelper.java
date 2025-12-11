@@ -39,6 +39,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.TreeMap;
 
 public class PluginHelper implements IPluginHelper {
@@ -51,6 +52,7 @@ public class PluginHelper implements IPluginHelper {
 	private int[] mColumnType;
 	private StereoMolecule mMol;
 	private TreeMap<Integer,Integer> mCoordinateColumnMap;
+	private Properties mAnyPurposeProperties;
 
 	public PluginHelper(DataWarrior application, DETaskPluginTask task, ProgressController pl) {
 		mApplication = application;
@@ -449,5 +451,18 @@ public class PluginHelper implements IPluginHelper {
 	@Override
 	public boolean isCancelled() {
 		return mProgressController.threadMustDie();
+	}
+
+	@Override
+	public String getAnyPurposeProperty(String key) {
+		return mAnyPurposeProperties == null ? null : mAnyPurposeProperties.getProperty(key);
+	}
+
+	@Override
+	public void setAnyPurposeProperty(String key, String value) {
+		if (mAnyPurposeProperties == null)
+			mAnyPurposeProperties = new Properties();
+
+		mAnyPurposeProperties.setProperty(key, value);
 	}
 }

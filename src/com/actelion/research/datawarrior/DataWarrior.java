@@ -775,7 +775,8 @@ public abstract class DataWarrior implements WindowFocusListener {
 				: (path.endsWith(".dwar")) ? DETaskRetrieveDataFromURL.FORMAT_DWAR
 				: (path.endsWith(".dwam")) ? DETaskRetrieveDataFromURL.FORMAT_DWAM
 				: (path.endsWith(".sdf")) ? DETaskRetrieveDataFromURL.FORMAT_SDF
-				: (path.endsWith(".sdf.gz")) ? DETaskRetrieveDataFromURL.FORMAT_SDF_GZ : -1;
+				: (path.endsWith(".sdf.gz")) ? DETaskRetrieveDataFromURL.FORMAT_SDF_GZ
+				: (path.endsWith(".sdf.zip")) ? DETaskRetrieveDataFromURL.FORMAT_SDF_ZIP : -1;
 		if (frmt == -1) {
 			JOptionPane.showMessageDialog(getActiveFrame(), "Extention within custom URI not found or recognized.");
 			return;

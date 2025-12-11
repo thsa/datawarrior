@@ -17,11 +17,18 @@
  */
 package com.actelion.research.datawarrior.task.chem;
 
-import com.actelion.research.chem.Coordinates;
-import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
-import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.chem.*;
+import com.actelion.research.chem.conf.Conformer;
+import com.actelion.research.chem.conf.ConformerSet;
+import com.actelion.research.chem.conf.ConformerSetGenerator;
+import com.actelion.research.chem.docking.DockingEngine;
+import com.actelion.research.chem.docking.LigandPose;
+import com.actelion.research.chem.docking.scoring.AbstractScoringEngine;
+import com.actelion.research.chem.docking.scoring.ChemPLP;
+import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
 import com.actelion.research.chem.interactions.InteractionPoint;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.chem.io.pdb.calc.MoleculeGrid;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -29,28 +36,33 @@ import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
+import org.openmolecules.chem.conf.gen.ConformerGenerator;
+import org.openmolecules.chem.conf.gen.RigidFragmentCache;
 import org.openmolecules.fx.viewer3d.interactions.drugscore.DrugScoreAtomClassifier;
 import org.openmolecules.fx.viewer3d.interactions.drugscore.DrugScoreInteractionCalculator;
 import org.openmolecules.fx.viewer3d.interactions.drugscore.DrugScorePotential;
 
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DETaskAddDockingScore extends ConfigurableTask {
+	private static final String MMFF_TABLE_SET = ForceFieldMMFF94.MMFF94SPLUS;
+	private static final double DIELECTRIC_CONSTANT = 80.0;
+
 	public static final String TASK_NAME = "Add Docking Score";
 
 	private static final String PROPERTY_LIGAND_COLUMN = "ligandColumn";
 	private static final String PROPERTY_SCORE_TYPE = "scoreType";
-	private static final String[] TYPE_CODE = {"drugscore"};
-	private static final String[] TYPE_TEXT = {"Drugscore 2018"};
+	private static final String[] TYPE_CODE = {"chemplp", "drugscore"};
+	private static final String[] TYPE_TEXT = {"ChemPLP Score", "Drugscore 2018"};
+	private static final int SCORE_TYPE_CHEMPLP = 0;
+	private static final int SCORE_TYPE_DRUGSCORE = 1;
 
 	private final CompoundTableModel mTableModel;
 	private JComboBox<String> mComboBoxLigandCoords,mComboBoxType;
 	private int mScoreType;
+	private volatile Map<String,Object> mMMFFOptions;
 
 	public DETaskAddDockingScore(DEFrame parent) {
 		super(parent, true);
@@ -185,6 +197,7 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 
 	@Override
 	public void runTask(Properties configuration) {
+		final int scoreType = findListIndex(configuration.getProperty(PROPERTY_SCORE_TYPE), TYPE_CODE, 0);
 		final int ligandCoordsColumn = mTableModel.findColumn(configuration.getProperty(PROPERTY_LIGAND_COLUMN));
 		final int ligandIDCodeColumn = mTableModel.getParentColumn(ligandCoordsColumn);
 		final int cavityCoordsColumn = mTableModel.findColumn(mTableModel.getColumnProperty(ligandCoordsColumn, CompoundTableConstants.cColumnPropertyProteinCavityColumn));
@@ -196,7 +209,12 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 		final int totalRowCount = mTableModel.getTotalRowCount();
 		final AtomicInteger remaining = new AtomicInteger(totalRowCount);
 		final double[] score = new double[totalRowCount];
-		final TreeMap<String, DrugScorePotential> drugScorePotentials = DrugScoreInteractionCalculator.getPotentials();
+
+		final TreeMap<String, DrugScorePotential> drugScorePotentials = (scoreType == SCORE_TYPE_DRUGSCORE) ?
+				DrugScoreInteractionCalculator.getPotentials() : null;
+
+		if (scoreType == SCORE_TYPE_CHEMPLP)
+			initializeMMFF94();
 
 		startProgress("Processing binding sites...", 0, totalRowCount);
 
@@ -225,26 +243,11 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 									cavity = parser.getCompactMolecule(cavityIDCode, cavityCoords);
 								}
 
-								List<InteractionPoint> ligandIPList = determineDrugscroreInteractionPoints(ligand);
-								List<InteractionPoint> cavityIPList = determineDrugscroreInteractionPoints(cavity);
-
-								double drugscore = 0.0;
-								for (InteractionPoint p1: ligandIPList) {
-									for (InteractionPoint p2 : cavityIPList) {
-										Coordinates c1 = p1.getMol().getAtomCoordinates(p1.getAtom());
-										Coordinates c2 = p2.getMol().getAtomCoordinates(p2.getAtom());
-										double distance = c1.distance(c2);
-
-										String key1 = DrugScoreAtomClassifier.typeName(p1.getType());
-										String key2 = DrugScoreAtomClassifier.typeName(p2.getType());
-										String key = key1.compareTo(key2) < 0 ? key1+"-"+key2 : key2+"-"+key1;
-										DrugScorePotential dsp = drugScorePotentials.get(key);
-										if (dsp != null)
-											drugscore += dsp.getPotential(distance);
-									}
-								}
-
-								score[row] = drugscore;
+								score[row] = (scoreType == SCORE_TYPE_CHEMPLP) ?
+										calculateChemPLPScore(cavity, ligand)
+										   : (scoreType == SCORE_TYPE_DRUGSCORE) ?
+										calculateDrugScore2018(cavity, ligand, drugScorePotentials)
+										   : Double.NaN;
 							}
 							catch (Exception e) {
 								e.printStackTrace();
@@ -263,17 +266,94 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 			try { t.join(); } catch (InterruptedException ie) {}
 
 		int scoreColumn = mTableModel.addNewColumns(1);
-		mTableModel.setColumnName(configuration.getProperty(PROPERTY_SCORE_TYPE), scoreColumn);
+		mTableModel.setColumnName(TYPE_TEXT[scoreType], scoreColumn);
 		for (int row=0; row<score.length; row++)
 			mTableModel.setTotalValueAt(DoubleFormat.toString(score[row]), row, scoreColumn);
 		mTableModel.finalizeNewColumns(scoreColumn, this);
 	}
 
-	private List<InteractionPoint> determineDrugscroreInteractionPoints(StereoMolecule mol) {
+	private double calculateDrugScore2018(StereoMolecule cavity, StereoMolecule ligand, TreeMap<String, DrugScorePotential> drugScorePotentials) {
+		List<InteractionPoint> ligandIPList = determineDrugscoreInteractionPoints(ligand);
+		List<InteractionPoint> cavityIPList = determineDrugscoreInteractionPoints(cavity);
+
+		double drugscore = 0.0;
+		for (InteractionPoint p1: ligandIPList) {
+			for (InteractionPoint p2 : cavityIPList) {
+				Coordinates c1 = p1.getMol().getAtomCoordinates(p1.getAtom());
+				Coordinates c2 = p2.getMol().getAtomCoordinates(p2.getAtom());
+				double distance = c1.distance(c2);
+
+				String key1 = DrugScoreAtomClassifier.typeName(p1.getType());
+				String key2 = DrugScoreAtomClassifier.typeName(p2.getType());
+				String key = key1.compareTo(key2) < 0 ? key1+"-"+key2 : key2+"-"+key1;
+				DrugScorePotential dsp = drugScorePotentials.get(key);
+				if (dsp != null)
+					drugscore += dsp.getPotential(distance);
+			}
+		}
+
+		return drugscore;
+	}
+
+	private List<InteractionPoint> determineDrugscoreInteractionPoints(StereoMolecule mol) {
 		int[] type = new DrugScoreAtomClassifier().classifyAtoms(mol);
 		ArrayList<InteractionPoint> list = new ArrayList<>();
 		for (int atom=0; atom<type.length; atom++)
 			list.add(new InteractionPoint(mol, atom, type[atom]));
 		return list;
+	}
+
+	private double calculateChemPLPScore(StereoMolecule cavity, StereoMolecule ligand) {
+		try {
+			final double GRID_DIMENSION = 6;
+			final double GRID_RESOLUTION = 0.5;
+			MoleculeGrid grid = new MoleculeGrid(ligand, GRID_RESOLUTION, new Coordinates(GRID_DIMENSION, GRID_DIMENSION, GRID_DIMENSION));
+
+			AbstractScoringEngine engine = null;
+			Set<Integer> bindingSiteAtoms = new HashSet<Integer>();
+
+			// ChemPLP
+			DockingEngine.getBindingSiteAtoms(cavity, bindingSiteAtoms, grid, true);
+			engine = new ChemPLP(new Molecule3D(cavity), bindingSiteAtoms, grid);
+
+			// IdoScore
+			//		DockingEngine.getBindingSiteAtoms(receptor, bindingSiteAtoms, grid, false);
+			//		engine = new IdoScore(receptor,bindingSiteAtoms, getReceptorAtomTypes(receptor),grid);
+
+			double e0 = getMinConformerEnergy(ligand);
+			engine.init(new LigandPose(new Conformer(ligand), engine, e0), e0);
+
+			return engine.getScore();
+		}
+		catch (Exception e) {
+			System.out.println("ERROR calculating ChemPLP score:"+e.getMessage());
+			return Double.NaN;
+		}
+	}
+
+	private void initializeMMFF94() {
+		ForceFieldMMFF94.initialize(MMFF_TABLE_SET);
+		mMMFFOptions = new HashMap<>();
+		mMMFFOptions.put("dielectric constant", DIELECTRIC_CONSTANT);
+		RigidFragmentCache.getDefaultInstance().loadDefaultCache();
+		RigidFragmentCache.getDefaultInstance().resetAllCounters();
+		}
+
+	private double getMinConformerEnergy(StereoMolecule ligand) {
+		Molecule3D nativePose = new Molecule3D(ligand);
+
+		ConformerSetGenerator confSetGen = new ConformerSetGenerator(64, ConformerGenerator.STRATEGY_LIKELY_RANDOM, false, LigandPose.SEED);
+		ConformerSet confSet = confSetGen.generateConformerSet(nativePose);
+		double eMin = Double.MAX_VALUE;
+
+		for (Conformer conformer : confSet) {
+			StereoMolecule conf = conformer.toMolecule();
+			ForceFieldMMFF94 mmff = new ForceFieldMMFF94(conf, ForceFieldMMFF94.MMFF94SPLUS, mMMFFOptions);
+			mmff.minimise();
+			double e = mmff.getTotalEnergy();
+			if (eMin > e)
+				eMin = e;
+		}
+		return eMin;
 	}
 }

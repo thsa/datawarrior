@@ -123,7 +123,7 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 		Properties configuration = super.getDialogConfiguration();
 		String isSmarts = (mCheckBoxIsSmarts == null) ? "false" : mCheckBoxIsSmarts.isSelected()? "true" : "false";
 		configuration.setProperty(PROPERTY_IS_SMARTS, isSmarts);
-		String useDoubleDot = (mCheckBoxUseDoubleDot == null) ? "true" : mCheckBoxUseDoubleDot.isSelected()? "true" : "false";
+		String useDoubleDot = (mCheckBoxUseDoubleDot == null) ? "false" : mCheckBoxUseDoubleDot.isSelected()? "true" : "false";
 		configuration.setProperty(PROPERTY_USE_DOUBLE_DOT, useDoubleDot);
 		String useServer = (mCheckBoxUseServer == null) ? "true" : mCheckBoxUseServer.isSelected()? "true" : "false";
 		configuration.setProperty(PROPERTY_USE_SERVER, useServer);
@@ -136,7 +136,7 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 		if (mCheckBoxIsSmarts != null)
 			mCheckBoxIsSmarts.setSelected("true".equals(configuration.getProperty(PROPERTY_IS_SMARTS, "false")));
 		if (mCheckBoxUseDoubleDot != null)
-			mCheckBoxUseDoubleDot.setSelected("true".equals(configuration.getProperty(PROPERTY_USE_DOUBLE_DOT, "true")));
+			mCheckBoxUseDoubleDot.setSelected("true".equals(configuration.getProperty(PROPERTY_USE_DOUBLE_DOT, "false")));
 		if (mCheckBoxUseServer != null)
 			mCheckBoxUseServer.setSelected("true".equals(configuration.getProperty(PROPERTY_USE_SERVER, "true")));
 		}
@@ -147,7 +147,7 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 		if (mCheckBoxIsSmarts != null)
 			mCheckBoxIsSmarts.setSelected(false);
 		if (mCheckBoxUseDoubleDot != null)
-			mCheckBoxUseDoubleDot.setSelected(true);
+			mCheckBoxUseDoubleDot.setSelected(false);
 		if (mCheckBoxUseServer != null)
 			mCheckBoxUseServer.setSelected(true);
 		}
@@ -159,7 +159,7 @@ public class DETaskAddChemistryFromName extends AbstractSingleColumnTask {
 		boolean isSmarts = "true".equals(configuration.getProperty(PROPERTY_IS_SMARTS, "false"));
 		boolean isReactionSmiles = isReactionSmilesOrSmirks(sourceColumn, isSmarts, catalystsFound);
 		int smilesMode = isSmarts ? SmilesParser.SMARTS_MODE_IS_SMARTS : SmilesParser.SMARTS_MODE_GUESS;
-		if ("false".equals(configuration.getProperty(PROPERTY_USE_DOUBLE_DOT, "true")))
+		if (!"true".equals(configuration.getProperty(PROPERTY_USE_DOUBLE_DOT, "false")))
 			smilesMode += SmilesParser.MODE_SINGLE_DOT_SEPARATOR;
 
 		int idcodeColumn = getTableModel().addNewColumns(!isReactionSmiles ? 3 : catalystsFound[0] ? 8 : 6);

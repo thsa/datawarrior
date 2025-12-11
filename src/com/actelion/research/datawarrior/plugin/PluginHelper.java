@@ -288,15 +288,19 @@ public class PluginHelper implements IPluginHelper {
 			if (mMol == null)
 				mMol = new StereoMolecule();
 			boolean is3D = type == COLUMN_TYPE_3D_STRUCTURE_FROM_MOLFILE || type == COLUMN_TYPE_3D_STRUCTURE_FROM_IDCODE;
-			int coordsColumn = mTargetTableModel.addNewColumns(1);
+			String coordsColumnName = is3D ? "Conformer" : "atomCoordinates2D";
+			int coordsColumn = mTargetTableModel.findColumn(coordsColumnName);
+			if (coordsColumn == -1) {
+				coordsColumn = mTargetTableModel.addNewColumns(1);
+				mTargetTableModel.setColumnName(coordsColumnName, coordsColumn);
+				mTargetTableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertySpecialType,
+						CompoundTableConstants.cColumnTypeIDCode);
+				mTargetTableModel.setColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertySpecialType,
+						is3D ? CompoundTableConstants.cColumnType3DCoordinates : CompoundTableConstants.cColumnType2DCoordinates);
+				mTargetTableModel.setColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertyParentColumn,
+						mTargetTableModel.getColumnTitleNoAlias(column));
+			}
 			mCoordinateColumnMap.put(column, coordsColumn);
-			mTargetTableModel.setColumnName(is3D ? "Conformer" : "atomCoordinates2D", coordsColumn);
-			mTargetTableModel.setColumnProperty(column, CompoundTableConstants.cColumnPropertySpecialType,
-					CompoundTableConstants.cColumnTypeIDCode);
-			mTargetTableModel.setColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertySpecialType,
-					is3D ? CompoundTableConstants.cColumnType3DCoordinates : CompoundTableConstants.cColumnType2DCoordinates);
-			mTargetTableModel.setColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertyParentColumn,
-					mTargetTableModel.getColumnTitleNoAlias(column));
 		}
 	}
 

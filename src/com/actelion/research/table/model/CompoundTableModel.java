@@ -1092,7 +1092,7 @@ public class CompoundTableModel extends AbstractTableModel
 
 		columnName = columnName.trim();
 		for (int i=0; i<mColumnInfo.length; i++)
-			if (mColumnInfo[i].name.equalsIgnoreCase(columnName))
+			if (mColumnInfo[i].name != null && mColumnInfo[i].name.equalsIgnoreCase(columnName))
 				return i;
 
 		for (int i=0; i<mColumnInfo.length; i++)

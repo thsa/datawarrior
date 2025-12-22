@@ -195,6 +195,13 @@ public interface IPluginHelper {
 	int initializeNewColumns(String[] columnTitle);
 
 	/**
+	 * Call this if you need to append one or more new rows to DataWarrior's active window.
+	 * Use setCellDataNative() to populate new rows and then finalizeNewRows().
+	 * @param newRowCount
+	 */
+	void initializeNewRows(int newRowCount);
+
+	/**
 	 * Call this if you need a new window to be populated with your data.
 	 * After this method define new column types and titles. Then add the cell data.
 	 * @param columnCount visible column count
@@ -263,10 +270,18 @@ public interface IPluginHelper {
 	/**
 	 * If you have called initializeNewColumns() and, thus, appended a few columns
 	 * to the currently active window, then you need to call this method after
-	 * setting supplying the content for the new column's cells.
+	 * setting the content for the new column's cells.
 	 * @param firstColumn
 	 */
 	void finalizeNewColumns(int firstColumn);
+
+	/**
+	 * If you have called initializeNewRows() and, thus, appended a few rows
+	 * to the currently active window, then you need to call this method after
+	 * setting the content for the new column's cells.
+	 * @param firstRow
+	 */
+	void finalizeNewRows(int firstRow);
 
 	/**
 	 * If a variable was defined earlier in the running macro, then this method

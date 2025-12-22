@@ -41,11 +41,11 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
     @Serial
     private static final long serialVersionUID = 0x20070312;
 
+	private TreeMap<Integer,ArrayList<CellEntry>> mRowEntryMap;
     private boolean mAlternateBackground;
 	private LookupURLBuilder mLookupURLBuilder;
     private VisualizationColor mForegroundColor,mBackgroundColor;
     private int mMouseX,mMouseY,mMouseRow;
-    private final TreeMap<Integer,String> mClickableEntryMap;
 
 	public int URL_NO = 0;
 	public int URL_MAYBE = 1;
@@ -57,7 +57,7 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 	    setOpaque(false);
 	    mMouseX = 10000;
 	    mMouseY = 10000;
-	    mClickableEntryMap = new TreeMap<>();
+		mRowEntryMap = new TreeMap<>();
 		}
 
 	public void setAlternateRowBackground(boolean b) {
@@ -75,8 +75,13 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 			}
 		}
 
-	public String getClickableEntry(int row) {
-    	return mClickableEntryMap.get(row);
+	public CellEntry getClickableEntryUnderMouse(int row) {
+		ArrayList<CellEntry> entryList = mRowEntryMap.get(row);
+		if (entryList != null)
+			for (CellEntry entry : entryList)
+				if (entry.isUnderMouse && entry.url != null)
+					return entry;
+    	return null;
 		}
 
 	public void setLookupURLBuilder(LookupURLBuilder retriever) {
@@ -106,14 +111,11 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 
     public Component getTableCellRendererComponent(JTable table, Object value,
 							boolean isSelected, boolean hasFocus, int row, int col) {
-	    if (LookAndFeelHelper.isAqua()
-			    // Quaqua does not use the defined background color if CellRenderer is translucent
-	     || (LookAndFeelHelper.isQuaQua()
-		  && mBackgroundColor != null
-		  && mBackgroundColor.getColorColumn() != JVisualization.cColumnUnassigned))
-		    setOpaque(true);
-		else
-		    setOpaque(false);
+		setOpaque(LookAndFeelHelper.isAqua()
+				// Quaqua does not use the defined background color if CellRenderer is translucent
+				|| (LookAndFeelHelper.isQuaQua()
+				&& mBackgroundColor != null
+				&& mBackgroundColor.getColorColumn() != JVisualization.cColumnUnassigned));
 
 		if (isSelected) {
             setForeground(UIManager.getColor("Table.selectionForeground"));
@@ -158,13 +160,13 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 			setText("Unicode Error!!!");
 			}    // some unicode chars create exceptions with setText() and then with paintComponent()
 
-	    if (mLookupURLBuilder != null) {
+	    if (mLookupURLBuilder != null && value != null) {
 			int column = ((CompoundTableModel)table.getModel()).convertFromDisplayableColumnIndex(table.convertColumnIndexToModel(col));
-			if (mLookupURLBuilder.hasURL(row, column, 0)) {
+			if (mLookupURLBuilder.hasURL(row, column)) {
 		        Color color = LookAndFeelHelper.isDarkLookAndFeel() ? Color.CYAN : Color.BLUE;
 			    setForeground(color);
 			    try {
-				    getHighlighter().addHighlight(0, value == null ? 0 : ((String)value).length(), new UnderlinePainter(row, color));
+				    getHighlighter().addHighlight(0, ((String)value).length(), new UnderlinePainter(color, column, row, mRowEntryMap));
 				    }
 			    catch (Exception e) {}
 				}
@@ -177,14 +179,15 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 	 *  Implements a simple highlight painter that renders an underline
 	 */
 	class UnderlinePainter extends DefaultHighlighter.DefaultHighlightPainter {
-		private ArrayList<int[]> mEntryIndexList;
-		private int mEntryUnderMouse;
-		private final int mRow;
+		private final TreeMap<Integer,ArrayList<CellEntry>> mRowEntryMap;
+		private final int mColumn,mRow;
 
-		public UnderlinePainter(int row, Color color) {
+		public UnderlinePainter(Color color, int column, int row, TreeMap<Integer,ArrayList<CellEntry>> rowEntryMap) {
 			super(color);
-			mEntryUnderMouse = -1;
+			mColumn = column;
 			mRow = row;
+			mRowEntryMap = rowEntryMap;
+			mRowEntryMap.put(row, null);
 			}
 
 		/**
@@ -200,42 +203,52 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 		 * @return region drawing occured in
 		 */
 		public Shape paintLayer(Graphics g, int offs0, int offs1, Shape bounds, JTextComponent c, View view) {
-			// The cell may contain multiple entries. Find start- and end-indexes of every entry
-			// and locate that entry that is under the mouse pointer
-			if (mEntryIndexList == null) {
-				mClickableEntryMap.put(mRow, null);
-				mEntryIndexList = new ArrayList<>();
+			if (mRowEntryMap.get(mRow) == null) {
+				ArrayList<CellEntry> entryList = new ArrayList<>();
+				int indexAtMousePosition = (mMouseRow == mRow) ? c.viewToModel2D(new Point(mMouseX, mMouseY)) : -1;
 
-				String value = c.getText();
-				int indexAtMousePosition = (mMouseRow == mRow) ? viewToModel(new Point(mMouseX, mMouseY)) : -1;
-
+				// The cell may contain multiple entries. Find start- and end-indexes of every entry
+				// and locate that entry that is under the mouse pointer
+				String cellValue = c.getText();
 				int ei1 = 0;
-				while (ei1<value.length()) {
-					int candidate1 = value.indexOf(cEntrySeparator, ei1);
-					int candidate2 = value.indexOf(cLineSeparator, ei1);
+				while (ei1<cellValue.length()) {
+					int entryNo = entryList.size();
+					int candidate1 = cellValue.indexOf(cEntrySeparator, ei1);
+					int candidate2 = cellValue.indexOf(cLineSeparator, ei1);
 					if (candidate1 == -1 && candidate2 == -1) {
-						addEntry(ei1, value.length(), indexAtMousePosition, value);
+						String entry = cellValue.substring(ei1);
+						String url = mLookupURLBuilder.getURL(mRow, mColumn, entry, entryNo);
+						entryList.add(createCellEntry(ei1, cellValue.length(), indexAtMousePosition, entryNo, entry, url));
 						break;
-						}
+					}
 					int ei2 = (candidate1 == -1) ? candidate2
 							: (candidate2 == -1) ? candidate1
 							: Math.min(candidate1, candidate2);
-					if (ei2 != ei1)
-						addEntry(ei1, ei2, indexAtMousePosition, value);
 
-					ei1 = ei2 + (value.charAt(ei2) == cLineSeparatorByte ? 1 : 2);
-					}
+					String entry = cellValue.substring(ei1, ei2);
+					String url = mLookupURLBuilder.getURL(mRow, mColumn, entry, entryNo);
+					entryList.add(createCellEntry(ei1, ei2, indexAtMousePosition, entryNo, entry, url));
+
+					ei1 = ei2 + (cellValue.charAt(ei2) == cLineSeparatorByte ? 1 : 2);
 				}
+				mRowEntryMap.put(mRow, entryList);
+			}
 
 			// Depending on wrapping, offs0 and offs1 may overlap with entries and separators
 			// We may need to split into multiple sections.
-			if (mEntryUnderMouse != -1) {
-				int[] entryIndex = mEntryIndexList.get(mEntryUnderMouse);
-				if (offs0<entryIndex[1] && offs1>entryIndex[0])
-					paintLayerSection(g, Math.max(offs0, entryIndex[0]), Math.min(offs1, entryIndex[1]), bounds, c, view);
+			for (CellEntry entry : mRowEntryMap.get(mRow)) {
+				if (entry.isUnderMouse && entry.url != null) {
+					if (offs0<entry.index2 && offs1>entry.index1)
+						paintLayerSection(g, Math.max(offs0, entry.index1), Math.min(offs1, entry.index2), bounds, c, view);
+					}
 				}
 
 			return getDrawingArea(offs0, offs1, bounds, view);
+			}
+
+		private CellEntry createCellEntry(int index1, int index2, int indexAtMousePosition, int entryNo, String entry, String url) {
+			boolean isUnderMouse = (indexAtMousePosition >= index1 && indexAtMousePosition < index2);
+			return new CellEntry(entry, entryNo, index1, index2, isUnderMouse, url);
 			}
 
 		public void paintLayerSection(Graphics g, int offs0, int offs1, Shape bounds, JTextComponent c, View view) {
@@ -246,18 +259,6 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 				int linewidth = Math.max(1, Math.round(HiDPIHelper.getUIScaleFactor() * c.getFont().getSize() / 12));
 				g.fillRect(r.x, r.y+r.height-linewidth, r.width, linewidth);
 				}
-			}
-
-		private void addEntry(int index1, int index2, int indexAtMousePosition, String value) {
-			if (indexAtMousePosition >= index1 && indexAtMousePosition < index2) {
-				mEntryUnderMouse = mEntryIndexList.size();
-				mClickableEntryMap.put(mRow, value.substring(index1, index2));
-				}
-
-			int[] indexes = new int[2];
-			indexes[0] = index1;
-			indexes[1] = index2;
-			mEntryIndexList.add(indexes);
 			}
 
 		private Rectangle getDrawingArea(int offs0, int offs1, Shape bounds, View view) {
@@ -272,6 +273,23 @@ public class MultiLineCellRenderer extends JTextArea implements ColorizedCellRen
 				catch (BadLocationException e) {}
 				}
 			return null;
+			}
+		}
+
+	public static class CellEntry {
+		public String entry;
+		public int entryNo;
+		public int index1,index2;
+		public boolean isUnderMouse;
+		public String url;
+
+		public CellEntry(String entry, int entryNo, int index1, int index2, boolean isUnderMouse, String url) {
+			this.entry = entry;
+			this.entryNo = entryNo;
+			this.index1 = index1;
+			this.index2 = index2;
+			this.isUnderMouse = isUnderMouse;
+			this.url = url;
 			}
 		}
 	}

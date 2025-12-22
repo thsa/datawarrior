@@ -30,8 +30,8 @@ import com.actelion.research.gui.hidpi.HiDPIIconButton;
 import com.actelion.research.gui.swing.SwingCursorHelper;
 import com.actelion.research.gui.table.JTableWithRowNumbers;
 import com.actelion.research.table.CompoundTableChemistryCellRenderer;
-import com.actelion.research.table.MultiLineCellRenderer;
 import com.actelion.research.table.LookupURLBuilder;
+import com.actelion.research.table.MultiLineCellRenderer;
 import com.actelion.research.table.model.*;
 import com.actelion.research.table.view.CellDecorationPainter;
 import com.actelion.research.table.view.VisualizationColor;
@@ -175,10 +175,11 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 				Point p = e.getPoint();
 				if (isClickableCell(p) && getClickableCellEntry(p) != null) {
 					int column = convertTotalColumnIndexFromView(columnAtPoint(p));
-					String entry = getClickableCellEntry(p);
+					String entry = getClickableCellEntry(p).entry;
 					if (entry != null) {
+						int entryNo = getClickableCellEntry(p).entryNo;
 						CompoundTableModel tableModel = (CompoundTableModel)getModel();
-						String url = new LookupURLBuilder(tableModel).getURL(rowAtPoint(p), column, 0, entry);
+						String url = new LookupURLBuilder(tableModel).getURL(rowAtPoint(p), column, entry, entryNo);
 						if (url != null)
 							BrowserControl.displayURL(url);
 						}
@@ -348,14 +349,14 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 		if (row == -1)
 			return false;
 		CompoundTableModel tableModel = (CompoundTableModel)getModel();
-		return tableModel.getRecord(row).getData(column) != null && new LookupURLBuilder(tableModel).hasURL(row, column, 0);
+		return tableModel.getRecord(row).getData(column) != null && new LookupURLBuilder(tableModel).hasURL(row, column);
 		}
 
-	private String getClickableCellEntry(Point p) {
+	private MultiLineCellRenderer.CellEntry getClickableCellEntry(Point p) {
 		int row = rowAtPoint(p);
 		int col = columnAtPoint(p);
 		TableColumn tc = getColumnModel().getColumn(col);
-		return ((MultiLineCellRenderer)tc.getCellRenderer()).getClickableEntry(row);
+		return ((MultiLineCellRenderer)tc.getCellRenderer()).getClickableEntryUnderMouse(row);
 		}
 
 	private boolean isSelectedFilledCell(Point p) {

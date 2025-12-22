@@ -256,6 +256,14 @@ public class PluginHelper implements IPluginHelper {
 	}
 
 	@Override
+	public void initializeNewRows(int newRowCount) {
+		if (mProgressController.threadMustDie())
+			return;
+
+		mSourceTableModel.addNewRows(newRowCount, true);
+	}
+
+	@Override
 	public void initializeData(int columnCount, int rowCount, String newWindowName) {
 		if (mProgressController.threadMustDie())
 			return;
@@ -403,6 +411,14 @@ public class PluginHelper implements IPluginHelper {
 			return;
 
 		mTargetTableModel.finalizeNewColumns(firstColumn, mProgressController);
+	}
+
+	@Override
+	public void finalizeNewRows(int firstRow) {
+		if (mProgressController.threadMustDie())
+			return;
+
+		mTargetTableModel.finalizeNewRows(firstRow, mProgressController);
 	}
 
 	@Override

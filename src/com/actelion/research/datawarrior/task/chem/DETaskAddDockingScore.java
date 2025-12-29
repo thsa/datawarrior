@@ -61,7 +61,6 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 
 	private final CompoundTableModel mTableModel;
 	private JComboBox<String> mComboBoxLigandCoords,mComboBoxType;
-	private int mScoreType;
 	private volatile Map<String,Object> mMMFFOptions;
 
 	public DETaskAddDockingScore(DEFrame parent) {
@@ -150,7 +149,6 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 		if (!CompoundTableConstants.cColumnType3DCoordinates.equals(mTableModel.getColumnSpecialType(coordsColumn)))
 			return false;
 
-		int ligandColumn = mTableModel.getParentColumn(coordsColumn);
 		String cavityIDCode = mTableModel.getColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertyProteinCavity);
 		if (cavityIDCode != null)
 			return true;
@@ -203,8 +201,10 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 		final int cavityCoordsColumn = mTableModel.findColumn(mTableModel.getColumnProperty(ligandCoordsColumn, CompoundTableConstants.cColumnPropertyProteinCavityColumn));
 		final int cavityIDCodeColumn = (cavityCoordsColumn == -1) ? -1 : mTableModel.getParentColumn(cavityCoordsColumn);
 
-		String cavityIDCode = mTableModel.getColumnProperty(ligandCoordsColumn, CompoundTableConstants.cColumnPropertyProteinCavity);
+		final String cavityIDCode = mTableModel.getColumnProperty(ligandCoordsColumn, CompoundTableConstants.cColumnPropertyProteinCavity);
 		final StereoMolecule sharedCavity = (cavityIDCode == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavityIDCode);
+		if (sharedCavity != null)
+			sharedCavity.ensureHelperArrays(Molecule.cHelperRings);
 
 		final int totalRowCount = mTableModel.getTotalRowCount();
 		final AtomicInteger remaining = new AtomicInteger(totalRowCount);
@@ -309,16 +309,15 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 			final double GRID_RESOLUTION = 0.5;
 			MoleculeGrid grid = new MoleculeGrid(ligand, GRID_RESOLUTION, new Coordinates(GRID_DIMENSION, GRID_DIMENSION, GRID_DIMENSION));
 
-			AbstractScoringEngine engine = null;
 			Set<Integer> bindingSiteAtoms = new HashSet<Integer>();
 
 			// ChemPLP
 			DockingEngine.getBindingSiteAtoms(cavity, bindingSiteAtoms, grid, true);
-			engine = new ChemPLP(new Molecule3D(cavity), bindingSiteAtoms, grid);
+			AbstractScoringEngine engine = new ChemPLP(new Molecule3D(cavity), bindingSiteAtoms, grid);
 
 			// IdoScore
 			//		DockingEngine.getBindingSiteAtoms(receptor, bindingSiteAtoms, grid, false);
-			//		engine = new IdoScore(receptor,bindingSiteAtoms, getReceptorAtomTypes(receptor),grid);
+			//		AbstractScoringEngine engine = new IdoScore(receptor,bindingSiteAtoms, getReceptorAtomTypes(receptor),grid);
 
 			double e0 = getMinConformerEnergy(ligand);
 			engine.init(new LigandPose(new Conformer(ligand), engine, e0), e0);

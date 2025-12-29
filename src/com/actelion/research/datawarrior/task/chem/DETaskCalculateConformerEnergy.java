@@ -22,8 +22,10 @@ import java.util.Map;
 import java.util.Properties;
 
 public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure {
-	private static final String MMFF_TABLE_SET = ForceFieldMMFF94.MMFF94SPLUS;
 	public static final String TASK_NAME = "Calculate Conformer Energy";
+
+	private static final String MMFF_TABLE_SET = ForceFieldMMFF94.MMFF94SPLUS;
+	private static final String DEFAULT_DIELECTRIC_CONSTANT = "80.0";
 
 	private static final String PROPERTY_CALC_LOCAL = "calcLocal";
 	private static final String PROPERTY_CALC_GLOBAL = "calcGlobal";
@@ -123,7 +125,7 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		mCheckBoxAddConformers.setSelected(configuration.getProperty(PROPERTY_ADD_CONFORMERS, "").equals("true"));
 		mCheckBoxAngleBendAndTorsionOnly.setSelected(configuration.getProperty(PROPERTY_ANGLEBEND_AND_TORSION_ONLY, "").equals("true"));
 		mCheckBoxSkipHydrogenContributions.setSelected(configuration.getProperty(PROPERTY_SKIP_HYDROGEN, "").equals("true"));
-		mTextFieldDielectricConstant.setText(configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT, "1.0"));
+		mTextFieldDielectricConstant.setText(configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT, DEFAULT_DIELECTRIC_CONSTANT));
 	}
 
 	@Override
@@ -136,7 +138,7 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		mCheckBoxAngleBendAndTorsionOnly.setSelected(false);
 		mCheckBoxSkipHydrogenContributions.setSelected(false);
 		mCheckBoxAddConformers.setSelected(false);
-		mTextFieldDielectricConstant.setText("1.0");
+		mTextFieldDielectricConstant.setText(DEFAULT_DIELECTRIC_CONSTANT);
 	}
 
 	@Override
@@ -267,8 +269,8 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		mCalcGlobal = configuration.getProperty(PROPERTY_CALC_GLOBAL, "").equals("true");
 		try { mMaxConformers = Integer.parseInt(configuration.getProperty(PROPERTY_GLOBAL_CONFORMERS, "64")); } catch (NumberFormatException e) {}
 		mAddConformers = configuration.getProperty(PROPERTY_ADD_CONFORMERS, "").equals("true");
-		double dielectricConstant = 1.0;
-		try { dielectricConstant = Double.parseDouble(configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT, "1.0")); } catch (NumberFormatException e) {}
+		double dielectricConstant = 80.0;
+		try { dielectricConstant = Double.parseDouble(configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT, DEFAULT_DIELECTRIC_CONSTANT)); } catch (NumberFormatException e) {}
 
 		ForceFieldMMFF94.initialize(MMFF_TABLE_SET);
 		mMMFFOptions = new HashMap<>();

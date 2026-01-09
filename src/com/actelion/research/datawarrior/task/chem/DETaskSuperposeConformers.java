@@ -217,7 +217,8 @@ public class DETaskSuperposeConformers extends DETaskAbstractFromStructure {
 						 && new ConformerGenerator().getOneConformerAsMolecule(containerMol) == null)
 							break;
 
-						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(conformer, containerMol, 0.5);
+						double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(conformer, containerMol, 0.5, this);
+
 						if (mIsFlexible) {
 							FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(conformer, containerMol);
 							fit = fsa.align()[0];	// WARNING: refMol must be centered for the scoring to work!!!

@@ -41,7 +41,7 @@ import java.util.Properties;
 public class DETaskPasteMacro extends AbstractTaskWithoutConfiguration {
 	public static final String TASK_NAME = "Paste Macro";
 
-	private CompoundTableModel mTableModel;
+	private final CompoundTableModel mTableModel;
 
 	/**
 	 * @param application

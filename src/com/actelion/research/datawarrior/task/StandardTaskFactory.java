@@ -88,6 +88,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskAddEmptyRows.TASK_NAME) ? new DETaskAddEmptyRows(frame)
 			 : codeMatches(taskCode, DETaskAddCIPInfo.TASK_NAME) ? new DETaskAddCIPInfo(frame)
 			 : codeMatches(taskCode, DETaskAddColumnsToGroup.TASK_NAME) ? new DETaskAddColumnsToGroup(frame, mainPane.getTableView(), mainPane.getTableModel())
+			 : codeMatches(taskCode, DETaskAddDockingScore.TASK_NAME) ? new DETaskAddDockingScore(frame)
 			 : codeMatches(taskCode, DETaskAddFormula.TASK_NAME) ? new DETaskAddFormula(frame)
 			 : codeMatches(taskCode, DETaskAddInchiKey.TASK_NAME) ? new DETaskAddInchiKey(frame)
 			 : codeMatches(taskCode, DETaskAddStandardInchi.TASK_NAME) ? new DETaskAddStandardInchi(frame)
@@ -331,6 +332,7 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskAddEmptyColumns.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskAddEmptyRows.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAddCIPInfo.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAddDockingScore.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAddFormula.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAddInchiKey.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAddStandardInchi.TASK_NAME));

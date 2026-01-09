@@ -742,4 +742,15 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 			mParentFrame.setDirty(true);
 			}
 		}
+
+//	public void macroDeleted(DEMacro macro) {
+//		boolean isSelected = (macro == mCurrentMacro);
+//		mComboBoxMacro.removeItem(macro.getName());
+//		if (mComboBoxMacro.getItemCount() == 0) {
+//			resetListModel(null);
+//		}
+//		else {
+//
+//			}
+//		}
 	}

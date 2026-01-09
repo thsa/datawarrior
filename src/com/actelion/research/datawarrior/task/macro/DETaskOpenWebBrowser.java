@@ -56,7 +56,7 @@ public class DETaskOpenWebBrowser extends ConfigurableTask {
     public JPanel createDialogContent() {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap},
-							{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap} };
+							{gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap} };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
@@ -87,7 +87,7 @@ public class DETaskOpenWebBrowser extends ConfigurableTask {
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String name = configuration.getProperty(PROPERTY_URL);
-		if (name == null || name.length() == 0) {
+		if (name == null || name.isEmpty()) {
 			showErrorMessage("No URL defined.");
 			return false;
 			}
@@ -98,7 +98,7 @@ public class DETaskOpenWebBrowser extends ConfigurableTask {
 	@Override
 	public void runTask(Properties configuration) {
 		String url = configuration.getProperty(PROPERTY_URL, "");
-		if (url.length() != 0) {
+		if (!url.isEmpty()) {
 			url = DataWarrior.getApplication().resolveURLVariables(((DEMacroRecorder)getProgressController()).resolveVariables(url));
 			BrowserControl.displayURL(url);
 			}

@@ -18,17 +18,13 @@
 
 package com.actelion.research.datawarrior.task.macro;
 
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import info.clearthought.layout.TableLayout;
 
-import java.awt.Frame;
+import javax.swing.*;
+import java.awt.*;
 import java.util.Properties;
-
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
-import com.actelion.research.datawarrior.DEFrame;
 
 public class DETaskDefineLabel extends ConfigurableTask {
     public static final String TASK_NAME = "Define Label";
@@ -85,7 +81,7 @@ public class DETaskDefineLabel extends ConfigurableTask {
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String name = configuration.getProperty(PROPERTY_LABEL);
-		if (name == null || name.length() == 0) {
+		if (name == null || name.isEmpty()) {
 			showErrorMessage("No label name defined.");
 			return false;
 			}

@@ -96,24 +96,24 @@ public class DETaskDefineVariable extends ConfigurableTask {
 	}
 
 	private void enableItems() {
-		boolean enabled = (mTextFieldValue.getText().length() == 0);
+		boolean enabled = (mTextFieldValue.getText().isEmpty());
 		mTextFieldOptions.setEnabled(enabled);
 		mTextFieldMessage.setEnabled(enabled);
-		mCheckBoxIsPassword.setEnabled(enabled && mTextFieldOptions.getText().length() == 0);
+		mCheckBoxIsPassword.setEnabled(enabled && mTextFieldOptions.getText().isEmpty());
 	}
 
 	@Override
 	public Properties getDialogConfiguration() {
 		Properties configuration = new Properties();
 		configuration.setProperty(PROPERTY_NAME, mTextFieldName.getText());
-		if (mTextFieldValue.getText().length() != 0)
+		if (!mTextFieldValue.getText().isEmpty())
 			configuration.setProperty(PROPERTY_VALUE, mTextFieldValue.getText());
 		else {
-			if (mTextFieldMessage.getText().length() != 0)
+			if (!mTextFieldMessage.getText().isEmpty())
 				configuration.setProperty(PROPERTY_MESSAGE, mTextFieldMessage.getText());
-			if (mTextFieldOptions.getText().length() != 0)
+			if (!mTextFieldOptions.getText().isEmpty())
 				configuration.setProperty(PROPERTY_OPTIONS, mTextFieldOptions.getText());
-			if (mTextFieldOptions.getText().length() == 0 && mCheckBoxIsPassword.isSelected())
+			if (mTextFieldOptions.getText().isEmpty() && mCheckBoxIsPassword.isSelected())
 				configuration.setProperty(PROPERTY_IS_PASSWORD, "true");
 		}
 		return configuration;
@@ -141,12 +141,12 @@ public class DETaskDefineVariable extends ConfigurableTask {
 
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
-		if (configuration.getProperty(PROPERTY_NAME, "").length() == 0) {
+		if (configuration.getProperty(PROPERTY_NAME, "").isEmpty()) {
 			showErrorMessage("No variable name defined.");
 			return false;
 		}
 		if ("true".equals(configuration.getProperty(PROPERTY_IS_PASSWORD))
-		 && configuration.getProperty(PROPERTY_OPTIONS, "").length() != 0) {
+		 && !configuration.getProperty(PROPERTY_OPTIONS, "").isEmpty()) {
 			showErrorMessage("A password cannot be selected from predefined options.");
 			return false;
 		}
@@ -158,13 +158,13 @@ public class DETaskDefineVariable extends ConfigurableTask {
 	public void runTask(Properties configuration) {
 		String name = configuration.getProperty(PROPERTY_NAME);
 		String value = configuration.getProperty(PROPERTY_VALUE, "");
-		if (value.length() == 0) {
+		if (value.isEmpty()) {
 			String question = configuration.getProperty(PROPERTY_MESSAGE, "Please define the value of variable '" + name + "'");
 			String options = configuration.getProperty(PROPERTY_OPTIONS, "");
 			boolean isPassword = "true".equals(configuration.getProperty(PROPERTY_IS_PASSWORD));
-			if (options.length() != 0) {
+			if (!options.isEmpty()) {
 				String[] option = options.split("\\s*,\\s*");
-				if (option != null && option.length != 0)
+				if (option.length != 0)
 					value = (String)JOptionPane.showInputDialog(getParentFrame(), question,
 						"Define Variable", JOptionPane.QUESTION_MESSAGE, null, option, option[0]);
 			}

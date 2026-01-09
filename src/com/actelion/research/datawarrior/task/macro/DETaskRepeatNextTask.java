@@ -60,7 +60,7 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 	private static final String[] FILETYPE_CODE = {"datawarrior", "sd", "text", "dir"};
 
 	private JTextField		mTextFieldCount;
-    private JComboBox		mComboBoxTasks,mComboBoxFileType;
+    private JComboBox<String>	mComboBoxTasks,mComboBoxFileType;
 	private JFilePathLabel	mFilePathLabel;
 	private JButton			mButtonEdit;
 	private JCheckBox		mCheckBoxChooseDuringMacro;
@@ -92,14 +92,14 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 
         JPanel gp = new JPanel();
         int gap = HiDPIHelper.scale(8);
-        double[][] size = { {gap, HiDPIHelper.scale(24), TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, gap},
-                            {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED,
-							 gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap} };
+        double[][] size = { {gap, HiDPIHelper.scale(24), TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, gap},
+                            {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED,
+							 gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap} };
         gp.setLayout(new TableLayout(size));
 
-		double[][] size1 = { {TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL}, {TableLayout.PREFERRED} };
+		double[][] size1 = { {TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL}, {TableLayout.PREFERRED} };
 		JPanel tasksPanel = new JPanel(new TableLayout(size1));
-		mComboBoxTasks = new JComboBox(TASK_COUNT__ITEM);
+		mComboBoxTasks = new JComboBox<>(TASK_COUNT__ITEM);
 		tasksPanel.add(new JLabel("Repeat"), "0,0,");
 		tasksPanel.add(mComboBoxTasks, "2,0");
         gp.add(tasksPanel, "1,1,6,1");
@@ -109,7 +109,7 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 		buttonGroup.add(mRadioButtonForever);
         gp.add(mRadioButtonForever, "1,3,6,3");
 
-		double[][] size2 = { {TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL}, {TableLayout.PREFERRED} };
+		double[][] size2 = { {TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL}, {TableLayout.PREFERRED} };
 		JPanel countPanel = new JPanel(new TableLayout(size2));
 		mRadioButtonCount = new JRadioButton("Repeat");
 		mRadioButtonCount.addActionListener(this);
@@ -136,9 +136,9 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 		mCheckBoxChooseDuringMacro.addActionListener(this);
 		gp.add(mCheckBoxChooseDuringMacro, "2,11,6,11");
 
-		double[][] size3 = { {TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL}, {TableLayout.PREFERRED} };
+		double[][] size3 = { {TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL}, {TableLayout.PREFERRED} };
 		JPanel filetypePanel = new JPanel(new TableLayout(size3));
-		mComboBoxFileType = new JComboBox(FILETYPE_ITEM);
+		mComboBoxFileType = new JComboBox<>(FILETYPE_ITEM);
 		filetypePanel.add(new JLabel("Allowed file types:"), "0,0");
 		filetypePanel.add(mComboBoxFileType, "2,0");
 		gp.add(filetypePanel, "2,13,6,13");
@@ -180,8 +180,8 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 		int filetype = findListIndex(configuration.getProperty(PROPERTY_FILETYPE, ""), FILETYPE_CODE, -1);
 		mTextFieldCount.setText(count);
 
-		mRadioButtonForever.setSelected(count.length() == 0 && filetype == -1);
-		mRadioButtonCount.setSelected(count.length() != 0);
+		mRadioButtonForever.setSelected(count.isEmpty() && filetype == -1);
+		mRadioButtonCount.setSelected(!count.isEmpty());
 		mRadioButtonFiles.setSelected(filetype != -1);
 
 		String dirName = configuration.getProperty(PROPERTY_DIRECTORY);
@@ -214,8 +214,7 @@ public class DETaskRepeatNextTask extends ConfigurableTask implements ActionList
 		if (dirName != null) {
 			if (ASK_FOR_FILE.equals(dirName))
 				return true;
-			if (isLive && !isFileAndPathValid(dirName, false, false))
-				return false;
+			return !isLive || isFileAndPathValid(dirName, false, false);
 			}
 
 		return true;

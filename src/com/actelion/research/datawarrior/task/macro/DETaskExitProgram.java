@@ -22,6 +22,7 @@ package com.actelion.research.datawarrior.task.macro;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -37,8 +38,8 @@ public class DETaskExitProgram extends ConfigurableTask {
 	private static final int SAVE_CHANGES_YES = 1;
 	private static final int SAVE_CHANGES_NO = 2;
 
-	private DataWarrior mApplication;
-	private JComboBox mComboBoxMode;
+	private final DataWarrior mApplication;
+	private JComboBox<String> mComboBoxMode;
 
 	public DETaskExitProgram(DEFrame parent, DataWarrior application) {
 		super(parent, false);
@@ -68,13 +69,14 @@ public class DETaskExitProgram extends ConfigurableTask {
 
 	@Override
 	public JPanel createDialogContent() {
-		double[][] size = { {8, TableLayout.PREFERRED, 8, TableLayout.PREFERRED, 8},
-							{8, TableLayout.PREFERRED, 8} };
+		int gap = HiDPIHelper.scale(8);
+		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
+							{gap, TableLayout.PREFERRED, gap} };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
-		mComboBoxMode = new JComboBox(MODE_TEXT);
+		mComboBoxMode = new JComboBox<>(MODE_TEXT);
 		content.add(new JLabel("Unsaved changes:"), "1,1");
 		content.add(mComboBoxMode, "3,1");
 

@@ -55,8 +55,8 @@ public class DETaskExecuteProgram extends ConfigurableTask {
 	@Override
 	public JPanel createDialogContent() {
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap},
-							{gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+		double[][] size = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap},
+							{gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
@@ -101,7 +101,7 @@ public class DETaskExecuteProgram extends ConfigurableTask {
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String executable = configuration.getProperty(PROPERTY_EXECUTABLE);
-		if (executable == null || executable.length() == 0) {
+		if (executable == null || executable.isEmpty()) {
 			showErrorMessage("No path/name defined for executable program defined.");
 			return false;
 			}
@@ -125,7 +125,7 @@ public class DETaskExecuteProgram extends ConfigurableTask {
 	public void runTask(Properties configuration) {
 		String executable = resolvePathVariables(configuration.getProperty(PROPERTY_EXECUTABLE));
 		String parameters = configuration.getProperty(PROPERTY_PARAMETERS, "");
-		if (parameters.length() != 0)
+		if (!parameters.isEmpty())
 			executable = executable.concat(" ").concat(resolvePathVariables(parameters));
 
 		boolean wait = "true".equals(configuration.getProperty(PROPERTY_WAIT_TO_FINISH));

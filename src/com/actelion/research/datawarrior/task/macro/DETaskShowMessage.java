@@ -84,7 +84,7 @@ public class DETaskShowMessage extends ConfigurableTask {
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String message = configuration.getProperty(PROPERTY_MESSAGE, "");
-		if (message.length() == 0) {
+		if (message.isEmpty()) {
 			showErrorMessage("No message defined.");
 			return false;
 			}

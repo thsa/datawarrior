@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -27,19 +27,15 @@ import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Properties;
 
-public class DETaskCopyMacro extends ConfigurableTask {
-	public static final String TASK_NAME = "Copy Macro";
+public class DETaskDeleteMacro extends ConfigurableTask {
+	public static final String TASK_NAME = "Delete Macro";
 
 	private static final String PROPERTY_MACRO_NAME = "macroName";
 
+	private final DEFrame mParentFrame;
 	private final String mMacroName;
 	private final CompoundTableModel mTableModel;
 	private JComboBox<String> mComboBoxMacroName;
@@ -48,11 +44,12 @@ public class DETaskCopyMacro extends ConfigurableTask {
 	 * @param parentFrame
 	 * @param macroName null if non-interactive; otherwise name of macro to be run
 	 */
-	public DETaskCopyMacro(DEFrame parentFrame, String macroName) {
+	public DETaskDeleteMacro(DEFrame parentFrame, String macroName) {
 		super(parentFrame, false);
+		mParentFrame = parentFrame;
 		mTableModel = parentFrame.getTableModel();
 		mMacroName = macroName;
-		}
+	}
 
 	@Override
 	public boolean isConfigurable() {
@@ -66,7 +63,7 @@ public class DETaskCopyMacro extends ConfigurableTask {
 	@Override
 	public String getTaskName() {
 		return TASK_NAME;
-		}
+	}
 
 	@Override
 	public Properties getPredefinedConfiguration() {
@@ -76,7 +73,7 @@ public class DETaskCopyMacro extends ConfigurableTask {
 		Properties configuration = new Properties();
 		configuration.setProperty(PROPERTY_MACRO_NAME, mMacroName);
 		return configuration;
-		}
+	}
 
 	@Override
 	public JComponent createDialogContent() {
@@ -96,25 +93,25 @@ public class DETaskCopyMacro extends ConfigurableTask {
 		p.add(mComboBoxMacroName, "3,1");
 
 		return p;
-		}
+	}
 
 	@Override
 	public Properties getDialogConfiguration() {
 		Properties configuration = new Properties();
 		configuration.setProperty(PROPERTY_MACRO_NAME, (String)mComboBoxMacroName.getSelectedItem());
 		return configuration;
-		}
+	}
 
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
 		mComboBoxMacroName.setSelectedItem(configuration.getProperty(PROPERTY_MACRO_NAME, ""));
-		}
+	}
 
 	@Override
 	public void setDialogConfigurationToDefault() {
 		if (mComboBoxMacroName.getItemCount() != 0)
 			mComboBoxMacroName.setSelectedIndex(0);
-		}
+	}
 
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
@@ -122,7 +119,7 @@ public class DETaskCopyMacro extends ConfigurableTask {
 		if (macroName == null) {
 			showErrorMessage("No macro name defined.");
 			return false;
-			}
+		}
 
 		if (isLive) {
 			@SuppressWarnings("unchecked")
@@ -133,44 +130,50 @@ public class DETaskCopyMacro extends ConfigurableTask {
 					if (m.getName().equals(macroName)) {
 						macro = m;
 						break;
-						}
 					}
 				}
+			}
 			if (macro == null) {
 				showErrorMessage("Macro '"+macroName+"' not found.");
 				return false;
-				}
 			}
+		}
 
 		return true;
-		}
+	}
 
 	@Override
 	public void runTask(Properties configuration) {
 		String macroName = configuration.getProperty(PROPERTY_MACRO_NAME);
+
 		@SuppressWarnings("unchecked")
 		ArrayList<DEMacro> macroList = (ArrayList<DEMacro>)mTableModel.getExtensionData(CompoundTableModel.cExtensionNameMacroList);
+		if (macroList == null) {
+			showErrorMessage("Macro '"+macroName+"' couldn't be deleted, because the current window doesn't contain any macros.");
+			return;
+		}
+
+		DEMacro theMacro = null;
 		for (DEMacro macro:macroList) {
 			if (macro.getName().equals(macroName)) {
-				try {
-					StringWriter sw = new StringWriter();
-					BufferedWriter bw = new BufferedWriter(sw);
-					macro.writeMacro(bw);
-					bw.flush();
-					StringSelection theData = new StringSelection(sw.toString());
-					Toolkit.getDefaultToolkit().getSystemClipboard().setContents(theData, theData);
-					bw.close();
-					}
-				catch (IOException ioe) {
-					showErrorMessage("Macro '"+macroName+"' could not be written:\n"+ioe.toString());
-					}
+				theMacro = macro;
 				break;
 				}
 			}
+		if (theMacro == null) {
+			showErrorMessage("Macro '"+macroName+"' was not be deleted, because it couldn't be found.");
+			return;
+			}
+
+		macroList.remove(theMacro);
+
+		// to trigger change events and update the macro lists in the menu
+		mParentFrame.getTableModel().setExtensionData(CompoundTableConstants.cExtensionNameMacroList, macroList);
+		mParentFrame.setDirty(true);
 		}
 
 	@Override
 	public DEFrame getNewFrontFrame() {
 		return null;
-		}
 	}
+}

@@ -18,32 +18,28 @@
 
 package com.actelion.research.datawarrior.task.macro;
 
-import com.actelion.research.datawarrior.task.ConfigurableTask;
-import com.actelion.research.datawarrior.task.DEMacro;
-import com.actelion.research.datawarrior.task.DEMacroRecorder;
-import info.clearthought.layout.TableLayout;
-
-import java.util.ArrayList;
-import java.util.Properties;
-
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMacroEditor;
+import com.actelion.research.datawarrior.task.ConfigurableTask;
+import com.actelion.research.datawarrior.task.DEMacro;
+import com.actelion.research.datawarrior.task.DEMacroRecorder;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.view.CompoundTableView;
+import info.clearthought.layout.TableLayout;
+
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.Properties;
 
 public class DETaskRunMacro extends ConfigurableTask implements GenericTaskRunMacro {
 	public static final String TASK_NAME = "Run Macro";
 
 	private static final String PROPERTY_MACRONAME = "macroName";
 
-	private DEFrame		mParentFrame;
-	private String		mMacroName;
-	private JComboBox	mComboBox;
+	private final DEFrame		mParentFrame;
+	private final String		mMacroName;
+	private JComboBox<String>	mComboBox;
 
 	/**
 	 * @param parentFrame
@@ -83,18 +79,19 @@ public class DETaskRunMacro extends ConfigurableTask implements GenericTaskRunMa
 
 	@Override
 	public JComponent createDialogContent() {
+		int gap = HiDPIHelper.scale(8);
 		JPanel p = new JPanel();
-		double[][] size = { {8, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 8},
-		        			{8, TableLayout.PREFERRED, 8, TableLayout.PREFERRED} };
-        p.setLayout(new TableLayout(size));
+		double[][] size = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap},
+				{gap, TableLayout.PREFERRED, gap} };
+       p.setLayout(new TableLayout(size));
 
         DEMacro parentMacro = null;
 		CompoundTableView view = mParentFrame.getMainFrame().getMainPane().getSelectedView();
-		if (view != null && view instanceof DEMacroEditor)
+		if (view instanceof DEMacroEditor)
 			parentMacro = ((DEMacroEditor)view).getCurrentMacro();
 
         p.add(new JLabel("Macro name:"), "1,1");
-        mComboBox = new JComboBox();
+        mComboBox = new JComboBox<>();
 		@SuppressWarnings("unchecked")
 		ArrayList<DEMacro> macroList = (ArrayList<DEMacro>)mParentFrame.getTableModel().getExtensionData(CompoundTableConstants.cExtensionNameMacroList);
 		if (macroList != null)

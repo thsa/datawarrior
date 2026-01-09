@@ -660,7 +660,7 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 					String idcode = modifiedQueryCanonizer.getIDCode();
 					String idcoordsMinimized = modifiedQueryCanonizer.getEncodedCoordinates();
 
-					double phesaRigidScore = PheSAAlignmentOptimizer.alignTwoMolsInPlace(mQueryMol, modifiedQuery, 0.5);
+					double phesaRigidScore = PheSAAlignmentOptimizer.alignTwoMolsInPlace(mQueryMol, modifiedQuery, 0.5, this);
 					String idcoordsPheSARigid = modifiedQueryCanonizer.getEncodedCoordinates();
 
 					FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(mQueryMol, modifiedQuery);

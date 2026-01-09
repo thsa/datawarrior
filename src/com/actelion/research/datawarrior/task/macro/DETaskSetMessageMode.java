@@ -18,23 +18,13 @@
 
 package com.actelion.research.datawarrior.task.macro;
 
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
-import com.actelion.research.datawarrior.task.DEMacro;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import info.clearthought.layout.TableLayout;
 
-import java.util.ArrayList;
+import javax.swing.*;
 import java.util.Properties;
-
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
-import com.actelion.research.chem.io.CompoundTableConstants;
-import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.DEMacroEditor;
-import com.actelion.research.table.view.CompoundTableView;
 
 public class DETaskSetMessageMode extends ConfigurableTask {
 	public static final String TASK_NAME = "Set Message Mode";
@@ -46,15 +36,13 @@ public class DETaskSetMessageMode extends ConfigurableTask {
 	private static final String[] MODE_CODE = { "showErrors", "showOneError", "skipErrors" };
 
 
-	private DEFrame		mParentFrame;
-	private JComboBox	mComboBox;
+	private JComboBox<String>	mComboBox;
 
 	/**
 	 * @param parentFrame
 	 */
 	public DETaskSetMessageMode(DEFrame parentFrame) {
 		super(parentFrame, false);
-		mParentFrame = parentFrame;
 	}
 
 	@Override
@@ -75,7 +63,7 @@ public class DETaskSetMessageMode extends ConfigurableTask {
 		p.setLayout(new TableLayout(size));
 
 		p.add(new JLabel("Message mode:"), "1,1");
-		mComboBox = new JComboBox(MODE_TEXT);
+		mComboBox = new JComboBox<>(MODE_TEXT);
 		p.add(mComboBox, "3,1");
 
 		return p;

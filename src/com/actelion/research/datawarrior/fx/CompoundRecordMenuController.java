@@ -364,7 +364,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	 */
 	private double alignConformer(StereoMolecule staticMol, StereoMolecule movingMol, int alignMethod) {
 		if (alignMethod == ALIGN_BY_SHAPE) {
-			return PheSAAlignmentOptimizer.alignTwoMolsInPlace(staticMol, movingMol);
+			return PheSAAlignmentOptimizer.alignTwoMolsInPlace(staticMol, movingMol, null);
 		}
 		else if (alignMethod == ALIGN_BY_MCS) {
 			MCS mcsSearcher = new MCS();

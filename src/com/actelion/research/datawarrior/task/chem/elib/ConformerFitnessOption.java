@@ -168,7 +168,7 @@ System.out.println(c.getIDCode()+" "+c.getEncodedCoordinates());
 c = new Canonizer(conformer);
 System.out.println(c.getIDCode()+" "+c.getEncodedCoordinates());
 */
-					double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol, conformer, 0.5);
+					double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol, conformer, 0.5, mProcessController);
 					if (ALGORITHM_TEXT[ALGO_PHESA_FLEX].equals(mAlgorithm)) {
 						FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(refMol, conformer);
 						fit = fsa.align()[0];
@@ -229,7 +229,7 @@ System.out.println(c.getIDCode()+" "+c.getEncodedCoordinates());
 			if (generator.getNextConformerAsMolecule(conformer) == null)
 				break;
 
-			double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol, conformer, 0.5);
+			double fit = PheSAAlignmentOptimizer.alignTwoMolsInPlace(refMol, conformer, 0.5, mProcessController);
 			if (bestFit < fit) {
 				bestFit = fit;
 				bestConformer = new Conformer(conformer);

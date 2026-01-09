@@ -30,6 +30,7 @@ import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.JEditableStructureView;
+import com.actelion.research.gui.clipboard.ClipboardHandler;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
@@ -671,6 +672,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
         mStructureView.setMinimumSize(new Dimension(scaled100, scaled100));
         mStructureView.setPreferredSize(new Dimension(scaled100, scaled100));
         mStructureView.setBorder(BorderFactory.createTitledBorder("Structure"));
+		mStructureView.setClipboardHandler(new ClipboardHandler());
         return mStructureView;
     	}
 

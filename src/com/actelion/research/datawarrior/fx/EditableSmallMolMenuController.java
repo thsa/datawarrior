@@ -1,9 +1,6 @@
 package com.actelion.research.datawarrior.fx;
 
-import com.actelion.research.chem.MolecularFormula;
-import com.actelion.research.chem.Molecule3D;
-import com.actelion.research.chem.MolfileParser;
-import com.actelion.research.chem.StereoMolecule;
+import com.actelion.research.chem.*;
 import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.io.Mol2FileParser;
 import com.actelion.research.chem.io.pdb.mmcif.MMCIFParser;
@@ -22,7 +19,12 @@ import org.openmolecules.render.MoleculeArchitect;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 public class EditableSmallMolMenuController implements V3DPopupMenuController {
@@ -58,10 +60,15 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 			javafx.scene.control.MenuItem itemLoadPDBDBLigand = new javafx.scene.control.MenuItem("Load Ligand From PDB Database...");
 			itemLoadPDBDBLigand.setOnAction(e -> loadPDBLigand(true));
 
+			javafx.scene.control.MenuItem itemSaveMolfile = new javafx.scene.control.MenuItem("Save As Molfile...");
+			itemSaveMolfile.setOnAction(e -> saveMolfile());
+
 			popup.getItems().add(itemLoadMolecule);
 			popup.getItems().add(itemLoadMolecules);
 			popup.getItems().add(itemLoadPDBFile);
 			popup.getItems().add(itemLoadPDBDBLigand);
+			popup.getItems().add(new SeparatorMenuItem());
+			popup.getItems().add(itemSaveMolfile);
 			popup.getItems().add(new SeparatorMenuItem());
 			}
 		}
@@ -250,4 +257,29 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 			}
 		catch (Exception ie) {}
 		}
+
+	private void saveMolfile() {
+		SwingUtilities.invokeLater(() -> {
+			ArrayList<StereoMolecule> moleculeList = mConformerPanel.getMolecules(V3DMolecule.MoleculeRole.LIGAND);
+			if (moleculeList.isEmpty()) {
+				showMessageInEDT("Couldn't find any small molecule in the view.");
+				return;
+			}
+
+			String name = moleculeList.get(0).getName();
+			if (name == null || name.isEmpty())
+				name = "Unknown Molecule";
+			String selectedFile = new FileHelper(mParentFrame).selectFileToSave("Save Structure", FileHelper.cFileTypeMOL, name);
+			if (selectedFile != null) {
+				try {
+					BufferedWriter writer = new BufferedWriter(new FileWriter(selectedFile, StandardCharsets.UTF_8));
+					writer.write(new MolfileCreator(moleculeList.get(0), false).getMolfile());
+					writer.close();
+				}
+				catch (IOException ioe) {
+					showMessageInEDT("Couldn't save molfile: "+ioe.getMessage());
+				}
+			}
+		});
 	}
+}

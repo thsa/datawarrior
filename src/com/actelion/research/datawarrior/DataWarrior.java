@@ -345,8 +345,8 @@ public abstract class DataWarrior implements WindowFocusListener {
 		return template;
 		}
 
-	public StandardMenuBar createMenuBar(DEFrame frame) {
-		return new StandardMenuBar(frame);
+	public DEMenuBar createMenuBar(DEFrame frame) {
+		return new DEMenuBar(frame);
 		}
 
 	public DatabaseActions createDatabaseActions(DEFrame parent) {

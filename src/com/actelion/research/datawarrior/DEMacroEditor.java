@@ -64,7 +64,7 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
     private final StandardTaskFactory mTaskFactory;
     private DEMacro mCurrentMacro;
 	private JPopupMenu mMacroPopup;
-	private JCheckBoxMenuItem mItemAutoStart;
+	private JCheckBoxMenuItem mItemAutoStart,mItemHidden;
 	private ViewSelectionHelper	mViewSelectionHelper;
 
 	@SuppressWarnings("unchecked")
@@ -307,6 +307,9 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 			mItemAutoStart = new JCheckBoxMenuItem("Auto-Starting", mCurrentMacro.isAutoStarting());
 			mItemAutoStart.addActionListener(this);
 			mMacroPopup.add(mItemAutoStart);
+			mItemHidden = new JCheckBoxMenuItem("Hidden", mCurrentMacro.isHidden());
+			mItemHidden.addActionListener(this);
+			mMacroPopup.add(mItemHidden);
 			}
 		mMacroPopup.show(button.getParent(),
 							 button.getBounds().x,
@@ -522,10 +525,21 @@ public class DEMacroEditor extends JSplitPane implements ActionListener,Compound
 			return;
 			}
 		if (e.getSource() == mItemAutoStart) {
-			if (mCurrentMacro != null)
+			if (mCurrentMacro != null) {
 				mCurrentMacro.setAutoStarting(mItemAutoStart.isSelected());
+				mParentFrame.getTableModel().setExtensionData(CompoundTableConstants.cExtensionNameMacroList, mMacroList);
+				mParentFrame.setDirty(true);
+				}
 			return;
 			}
+		if (e.getSource() == mItemHidden) {
+			if (mCurrentMacro != null) {
+				mCurrentMacro.setHidden(mItemHidden.isSelected());
+				mParentFrame.getTableModel().setExtensionData(CompoundTableConstants.cExtensionNameMacroList, mMacroList);
+				mParentFrame.setDirty(true);
+				}
+			return;
+		}
 		if (e.getActionCommand().equals(COMMAND_DELETE_SELECTED)) {
 			deleteSelectedTasks();
 			return;

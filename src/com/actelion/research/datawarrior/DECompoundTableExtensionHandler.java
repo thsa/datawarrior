@@ -18,14 +18,14 @@
 
 package com.actelion.research.datawarrior;
 
+import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.task.DEMacro;
+import com.actelion.research.table.model.CompoundTableExtensionHandler;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-
-import com.actelion.research.chem.io.CompoundTableConstants;
-import com.actelion.research.datawarrior.task.DEMacro;
-import com.actelion.research.table.model.CompoundTableExtensionHandler;
 
 public class DECompoundTableExtensionHandler implements CompoundTableConstants,CompoundTableExtensionHandler {
 	public static final int ID_FILE_EXPLANATION = 0;
@@ -128,13 +128,13 @@ public class DECompoundTableExtensionHandler implements CompoundTableConstants,C
 				String name = DEMacro.extractMacroName(theLine);
 				if (name != null) {
 					boolean autoStarts = DEMacro.isAutoStarting(theLine);
+					boolean isHidden = DEMacro.isHidden(theLine);
 					DEMacro macro = new DEMacro(name, reader);
-//					if (!macro.isEmpty()) {	// keep also empty macros TLS 31-Mar-14
-						macro.setAutoStarting(autoStarts);
-						if (macroList == null)
-							macroList = new ArrayList<DEMacro>();
-						macroList.add(macro);
-//						}
+					macro.setAutoStarting(autoStarts);
+					macro.setHidden(isHidden);
+					if (macroList == null)
+						macroList = new ArrayList<>();
+					macroList.add(macro);
 					}
 				}
 

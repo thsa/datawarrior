@@ -50,13 +50,14 @@ public class DEMacro implements CompoundTableConstants {
 	private static final String TASK_START = "<task name=\"";
 	private static final String TASK_END = "</task";
 	private static final String AUTOSTART = " auto-start=\"true\"";
+	private static final String HIDDEN = " hidden=\"true\"";
 	private String			mName,mDescription;
 	private ArrayList<Task> mTaskList;
 	private ArrayList<DEMacroListener> mListenerList;
 	private ArrayList<Loop> mLoopList;
 	private DEMacro			mParentMacro;
 	private int				mParentIndex;
-	private boolean			mIsAutoStarting;
+	private boolean			mIsAutoStarting,mIsHidden;
 
 	public static String extractMacroName(String headerLine) {
 		if (!headerLine.startsWith(MACRO_START))
@@ -71,6 +72,10 @@ public class DEMacro implements CompoundTableConstants {
 
 	public static boolean isAutoStarting(String headerLine) {
 		return headerLine.startsWith(MACRO_START) && headerLine.contains(AUTOSTART);
+		}
+
+	public static boolean isHidden(String headerLine) {
+		return headerLine.startsWith(MACRO_START) && headerLine.contains(HIDDEN);
 		}
 
 	/**
@@ -97,6 +102,7 @@ public class DEMacro implements CompoundTableConstants {
 		mListenerList = new ArrayList<>();
 		mName = getUniqueName(name, macroList);
 		mIsAutoStarting = sourceMacro != null && sourceMacro.isAutoStarting();
+		mIsHidden = sourceMacro != null && sourceMacro.isHidden();
 		if (sourceMacro != null) {
 			for (int i=0; i<sourceMacro.getTaskCount(); i++) {
 				Task sourceTask = sourceMacro.getTask(i);
@@ -131,6 +137,7 @@ public class DEMacro implements CompoundTableConstants {
 		if (mName != null) {
 			mName = getUniqueName(mName, macroList);
 			mIsAutoStarting = isAutoStarting(headerLine);
+			mIsHidden = isHidden(headerLine);
 			readMacro(reader);
 			}
 		reader.close();
@@ -288,6 +295,8 @@ public class DEMacro implements CompoundTableConstants {
 		writer.write(MACRO_START+mName+"\"");
 		if (mIsAutoStarting)
 			writer.write(AUTOSTART);
+		if (mIsHidden)
+			writer.write(HIDDEN);
 		writer.write(">");
 		writer.newLine();
 		for (Task task:mTaskList) {
@@ -327,6 +336,14 @@ public class DEMacro implements CompoundTableConstants {
 	public void setAutoStarting(boolean b) {
 		mIsAutoStarting = b;
 		}
+
+	public boolean isHidden() {
+		return mIsHidden;
+	}
+
+	public void setHidden(boolean b) {
+		mIsHidden = b;
+	}
 
 	public void readMacro(BufferedReader reader) throws IOException {
 		mTaskList.clear();

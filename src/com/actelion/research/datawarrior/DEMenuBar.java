@@ -72,7 +72,7 @@ import static com.actelion.research.chem.descriptor.DescriptorConstants.DESCRIPT
 import static com.actelion.research.chem.io.CompoundTableConstants.cReactionPartProducts;
 import static com.actelion.research.chem.io.CompoundTableConstants.cReactionPartReactants;
 
-public class StandardMenuBar extends JMenuBar implements ActionListener,
+public class DEMenuBar extends JMenuBar implements ActionListener,
 		CompoundTableListener,CompoundTableListListener,ItemListener {
 	static final long serialVersionUID = 0x20060728;
 
@@ -166,7 +166,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			jMenuListSelectFrom,jMenuListDeselectFrom,jMenuListDelete;
 	private JLabel mMessageLabel;
 
-	public StandardMenuBar(DEFrame parentFrame) {
+	public DEMenuBar(DEFrame parentFrame) {
 		mApplication = parentFrame.getApplication();
 		mParentFrame = parentFrame;
 		mParentPane = parentFrame.getMainFrame();
@@ -1546,10 +1546,12 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 					}
 				else {
 					for (DEMacro macro : macroList) {
-						addMenuItem(jMenuMacroExport, macro.getName() + "...", EXPORT_MACRO + macro.getName());
-						addMenuItem(jMenuMacroCopy, macro.getName(), COPY_MACRO + macro.getName());
-						addMenuItem(jMenuMacroDelete, macro.getName(), DELETE_MACRO + macro.getName());
-						addMenuItem(jMenuMacroRun, macro.getName(), RUN_INTERNAL_MACRO + macro.getName());
+						if (!macro.isHidden()) {
+							addMenuItem(jMenuMacroExport, macro.getName() + "...", EXPORT_MACRO + macro.getName());
+							addMenuItem(jMenuMacroCopy, macro.getName(), COPY_MACRO + macro.getName());
+							addMenuItem(jMenuMacroDelete, macro.getName(), DELETE_MACRO + macro.getName());
+							addMenuItem(jMenuMacroRun, macro.getName(), RUN_INTERNAL_MACRO + macro.getName());
+							}
 						}
 					}
 				} );
@@ -2411,7 +2413,7 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 				}
 
 			directory = new File(System.getProperty("user.home")+File.separator+"datawarrior"+File.separator+"macro");
-			if (directory != null && directory.exists()) {
+			if (directory.exists()) {
 				SwingUtilities.invokeLater(() -> { if (parentMenu.getItemCount() != 0) parentMenu.addSeparator(); } );
 				addMacroFileItemsLater(parentMenu, USER_MACRO_DIR, directory, Event.SHIFT_MASK);
 				}
@@ -2475,19 +2477,21 @@ public class StandardMenuBar extends JMenuBar implements ActionListener,
 			for (File file:files) {
 				try {
 					DEMacro macro = new DEMacro(file, null);
-					SwingUtilities.invokeLater(() -> {
-						int[] countHolder = mMacroItemCountMap.get(secondModifier);
-						if (countHolder == null) {
-							countHolder = new int[1];
-							countHolder[0] = 1; // we start with 2 because Ctrl-1 is 'Add selection to default list'
-							mMacroItemCountMap.put(secondModifier, countHolder);
+					if (!macro.isHidden()) {
+						SwingUtilities.invokeLater(() -> {
+							int[] countHolder = mMacroItemCountMap.get(secondModifier);
+							if (countHolder == null) {
+								countHolder = new int[1];
+								countHolder[0] = 1; // we start with 2 because Ctrl-1 is 'Add selection to default list'
+								mMacroItemCountMap.put(secondModifier, countHolder);
+							}
+							countHolder[0]++;
+							int keyCode = (countHolder[0] < 10) ? '0' + countHolder[0] : 0;
+							addMenuItem(parentMenu, macro.getName(),
+									RUN_GLOBAL_MACRO + dirPath + File.separator + file.getName(),
+									macro.getDescription(), keyCode, MENU_MASK | secondModifier);
+							} );
 						}
-						countHolder[0]++;
-						int keyCode = (countHolder[0] < 10) ? '0' + countHolder[0] : 0;
-						addMenuItem(parentMenu, macro.getName(),
-								RUN_GLOBAL_MACRO + dirPath + File.separator + file.getName(),
-								macro.getDescription(), keyCode, MENU_MASK | secondModifier);
-						} );
 					}
 				catch (IOException ioe) {}
 				}

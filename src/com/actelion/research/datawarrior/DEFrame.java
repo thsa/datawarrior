@@ -47,7 +47,7 @@ public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTa
 	private static final long serialVersionUID = 0x20070227;
 	private static final String DEFAULT_TITLE = "DataWarrior";
 
-	private StandardMenuBar	mMenuBar;
+	private DEMenuBar mMenuBar;
 	private DEParentPane	mParentPane;
 	private final DataWarrior mDataExplorer;
 	private boolean			mIsDirty;
@@ -162,7 +162,7 @@ public class DEFrame extends JFrame implements ApplicationViewFactory,CompoundTa
 		return mDataExplorer;
 		}
 
-	public StandardMenuBar getDEMenuBar() {
+	public DEMenuBar getDEMenuBar() {
 		return mMenuBar;
 		}
 

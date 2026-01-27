@@ -3,8 +3,8 @@ package com.actelion.research.datawarrior.plugin;
 import org.openmolecules.datawarrior.plugin.IPluginTask;
 
 public class PluginMenuEntry {
-	private IPluginTask mTask;
-	private String mMenuPath,mMenuItem;
+	private final IPluginTask mTask;
+	private final String mMenuPath,mMenuItem;
 
 	public PluginMenuEntry(IPluginTask task, String menuPath, String menuItem) {
 		mTask = task;

@@ -54,6 +54,11 @@ public class PluginGUIHelper implements IUserInterfaceHelper {
 	}
 
 	@Override
+	public void setAccessoryComponents(JComponent[] buttons) {
+		mPluginTask.setAccessoryComponents(buttons);
+	}
+
+	@Override
 	public float getUIScaleFactor() {
 		return HiDPIHelper.getUIScaleFactor();
 		}

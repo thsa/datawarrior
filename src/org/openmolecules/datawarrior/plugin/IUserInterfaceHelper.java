@@ -101,4 +101,9 @@ public interface IUserInterfaceHelper {
 	 * @param text text shown on the OK-button (default is 'OK')
 	 */
 	void setDefaultButtonText(String text);
+
+	/**
+	 * @param components one or more buttons to be displayed at the bottom left of the dialog
+	 */
+	void setAccessoryComponents(JComponent[] components);
 	}

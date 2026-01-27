@@ -373,18 +373,18 @@ public abstract class AbstractTask implements ProgressController {
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new TableLayout(size));
-		JButton[] optionButtons = getAccessoryButtons();
-		if (optionButtons != null || getHelpURL() != null) {
+		JComponent[] optionComponents = getAccessoryComponents();
+		if (optionComponents != null || getHelpURL() != null) {
 			JPanel libp = new JPanel();
-			int count = (optionButtons == null ? 0 : optionButtons.length) + (getHelpURL() == null ? 0 : 1);
+			int count = (optionComponents == null ? 0 : optionComponents.length) + (getHelpURL() == null ? 0 : 1);
 			libp.setLayout(new GridLayout(1, count, gap, 0));
 			if (getHelpURL() != null) {
 				JButton bhelp = new JButton("Help");
 				bhelp.addActionListener(al);
 				libp.add(bhelp);
 				}
-			if (optionButtons != null)
-				for (JButton b:optionButtons)
+			if (optionComponents != null)
+				for (JComponent b:optionComponents)
 					libp.add(b);
 			buttonPanel.add(libp, "1,1");
 			}
@@ -508,7 +508,7 @@ public abstract class AbstractTask implements ProgressController {
 	 * All buttons (including help) will be equally sized.
 	 * @return additional buttons to be shown at the bottom of the dialog
 	 */
-	public JButton[] getAccessoryButtons() {
+	public JComponent[] getAccessoryComponents() {
 		return null;
 		}
 

@@ -35,6 +35,7 @@ public class DETaskPluginTask extends ConfigurableTask {
 	private PluginHelper mPluginHelper;
 	private PluginGUIHelper mGUIHelper;
 	private final DataWarrior mApplication;
+	private JComponent[] mAccessoryComponents;
 
 	public DETaskPluginTask(DataWarrior application, IPluginTask delegate) {
 		super(application.getActiveFrame(), true);
@@ -54,6 +55,15 @@ public class DETaskPluginTask extends ConfigurableTask {
 	@Override
 	public String getTaskName() {
 		return mDelegate.getTaskName();
+	}
+
+	@Override
+	public JComponent[] getAccessoryComponents() {
+		return mAccessoryComponents;
+	}
+
+	public void setAccessoryComponents(JComponent[] components) {
+		mAccessoryComponents = components;
 	}
 
 	@Override

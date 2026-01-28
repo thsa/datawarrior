@@ -251,7 +251,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 
 				addColumnDetailView(view, mTableModel.getParentColumn(column), column, TYPE_STRUCTURE_3D, mTableModel.getColumnTitle(column));
 				view.setPopupMenuController(new CompoundRecordMenuController(view, mTableModel, column, true));
-				view.setAnimate(true);
+				view.setAnimationMode(cavityMol == null ? V3DScene.ANIMATION_ROTATE : V3DScene.ANIMATION_OSCILLATE);
 				continue;
 			}
 			if (columnName.equalsIgnoreCase("imagefilename")

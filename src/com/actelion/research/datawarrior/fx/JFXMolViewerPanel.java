@@ -225,12 +225,12 @@ public class JFXMolViewerPanel extends JFXPanel {
 		} );
 	}
 
-	public boolean isAnimate() {
-		return mScene.isAnimate();
+	public int getAnimationMode() {
+		return mScene.getAnimationMode();
 	}
 
-	public void setAnimate(boolean b) {
-		Platform.runLater(() -> mScene.setAnimate(b));
+	public void setAnimationMode(int mode) {
+		Platform.runLater(() -> mScene.setAnimationMode(mode));
 	}
 
 	public String getOverlayMolColor() {

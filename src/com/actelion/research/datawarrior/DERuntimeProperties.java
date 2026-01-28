@@ -39,6 +39,7 @@ import com.actelion.research.table.view.config.ViewConfiguration;
 import com.actelion.research.util.DoubleFormat;
 import org.openmolecules.fx.surface.SurfaceMesh;
 import org.openmolecules.fx.viewer3d.V3DMolecule;
+import org.openmolecules.fx.viewer3d.V3DScene;
 import org.openmolecules.fx.viewer3d.nodes.Ribbons;
 import org.openmolecules.render.MoleculeArchitect;
 
@@ -513,7 +514,13 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String geometry = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry);
 				if (geometry != null)
 					panel3D.setGeometry(geometry);
-				panel3D.setAnimate(!"false".equals(getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerIsAnimate)));
+				String animation = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerIsAnimate);
+				// to be compatible with original boolean...
+				if (animation == null || "false".equals(animation))
+					animation = V3DScene.ANIMATION_CODE[V3DScene.ANIMATION_NONE];
+				else if ("true".equals(animation))
+					animation = V3DScene.ANIMATION_CODE[V3DScene.ANIMATION_OSCILLATE];
+				panel3D.setAnimationMode(decodeValue(animation, V3DScene.ANIMATION_CODE));
 				}
 			}
 		}
@@ -2033,7 +2040,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String geometry = panel3D.getGeometry();
 				if (geometry != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry, geometry);
-				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerIsAnimate, panel3D.isAnimate() ? "true" : "false");
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerIsAnimate, V3DScene.ANIMATION_CODE[panel3D.getAnimationMode()]);
 				}
 			}
 
@@ -2149,7 +2156,10 @@ public class DERuntimeProperties extends RuntimeProperties {
 		}
 
 	public int decodeProperty(String key, String[] option) {
-		String value = getProperty(key);
+		return decodeValue(getProperty(key), option);
+		}
+
+	public int decodeValue(String value, String[] option) {
 		if (value != null)
 			for (int i=0; i<option.length; i++)
 				if (value.equals(option[i]))

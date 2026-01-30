@@ -36,6 +36,7 @@ import com.actelion.research.table.model.*;
 import com.actelion.research.table.view.CellDecorationPainter;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.util.BrowserControl;
+import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -899,8 +900,10 @@ public class DETable extends JTableWithRowNumbers implements ActionListener,Comp
 								  : model.getColumnSummaryMode(column) == CompoundTableModel.cSummaryModeSum ? " sum" : " ???");
 						html.append("</b> value is shown.");
 						}
-					if (model.getColumnSignificantDigits(column) != 0)
-						html.append("<br>Numerical values are rounded to ").append(model.getColumnSignificantDigits(column)).append(" significant digits.");
+					if (model.getColumnRoundingMode(column) == DoubleFormat.ROUNDING_MODE_SIGNIFICANT_DIGITS)
+						html.append("<br>Numerical values are rounded to ").append((int)model.getColumnRoundingValue(column)).append(" significant digits.");
+					if (model.getColumnRoundingMode(column) == DoubleFormat.ROUNDING_MODE_MULTIPLE_OF)
+						html.append("<br>Numerical values are rounded to multiples of ").append(model.getColumnRoundingValue(column)).append(".");
 					String refColumn = model.getColumnProperty(column, CompoundTableConstants.cColumnPropertyReferencedColumn);
 					if (refColumn != null) {
 						String refColumnTitle = model.getColumnTitle(model.findColumn(refColumn));

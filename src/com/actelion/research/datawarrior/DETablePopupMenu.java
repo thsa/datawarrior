@@ -26,9 +26,12 @@ import com.actelion.research.datawarrior.task.filter.DETaskAddNewFilter;
 import com.actelion.research.datawarrior.task.table.*;
 import com.actelion.research.gui.JProgressDialog;
 import com.actelion.research.gui.JScrollableMenu;
+import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.filter.JCategoryFilterPanel;
 import com.actelion.research.table.filter.JFilterPanel;
 import com.actelion.research.table.model.CompoundTableModel;
+import com.actelion.research.util.DoubleFormat;
+import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -318,7 +321,7 @@ public class DETablePopupMenu extends JPopupMenu implements ActionListener {
 			}
 		if (command.startsWith(SUMMARY)) {
 			int summaryMode = decodeItem(command.substring(SUMMARY.length()), CompoundTableConstants.cSummaryModeCode);
-            new DETaskSetNumericalColumnDisplayMode(mParentFrame, mTableModel, mColumn, summaryMode, -1, -1, -1, -1).defineAndRun();
+            new DETaskSetNumericalColumnDisplayMode(mParentFrame, mTableModel, mColumn, summaryMode, -1, -1, -1, -1, -1).defineAndRun();
 	        return;
 	        }
 		if (command.startsWith(HILITE_STRUCTURE)) {
@@ -438,33 +441,48 @@ public class DETablePopupMenu extends JPopupMenu implements ActionListener {
             }
         else if (e.getActionCommand().equals(HIDE_VALUE_COUNT)) {
 			new DETaskSetNumericalColumnDisplayMode(mParentFrame, mTableModel, mColumn, -1,
-					mTableModel.isColumnSummaryCountHidden(mColumn) ? 0 : 1, -1, -1, -1).defineAndRun();
+					mTableModel.isColumnSummaryCountHidden(mColumn) ? 0 : 1, -1, -1, -1, -1).defineAndRun();
 			}
         else if (e.getActionCommand().equals(SHOW_STD_DEVIATION)) {
 			new DETaskSetNumericalColumnDisplayMode(mParentFrame, mTableModel, mColumn, -1, -1,
-					mTableModel.isColumnStdDeviationShown(mColumn) ? 1 : 0, -1, -1).defineAndRun();
+					mTableModel.isColumnStdDeviationShown(mColumn) ? 1 : 0, -1, -1, -1).defineAndRun();
 			}
         else if (e.getActionCommand().equals(SHOW_ROUNDED_VALUES)) {
-            int oldDigits = mTableModel.getColumnSignificantDigits(mColumn);
-            String selection = (String)JOptionPane.showInputDialog(
-                    mParentFrame,
-                    "Number of significant digits:",
-                    "Display Rounded Value",
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-		            DETaskSetNumericalColumnDisplayMode.ROUNDING_TEXT,
-		            DETaskSetNumericalColumnDisplayMode.ROUNDING_TEXT[oldDigits]);
-            if (selection != null) {// if not cancelled
-                int newDigits = 0;
-                while (!selection.equals(DETaskSetNumericalColumnDisplayMode.ROUNDING_TEXT[newDigits]))
-                    newDigits++;
-
-                if (newDigits != oldDigits)  // if changed
-	                new DETaskSetNumericalColumnDisplayMode(mParentFrame, mTableModel, mColumn, -1, -1, -1, newDigits, -1).defineAndRun();
+			int oldMode = mTableModel.getColumnRoundingMode(mColumn);
+			double oldValue = mTableModel.getColumnRoundingValue(mColumn);
+			final JComboBox<String> comboBoxRoundingMode = new JComboBox<>(DoubleFormat.ROUNDING_MODE_TEXT);
+			final JTextField textFieldRounddingValue = new JTextField(6);
+			comboBoxRoundingMode.addActionListener(ae -> textFieldRounddingValue.setEnabled(comboBoxRoundingMode.getSelectedIndex() != DoubleFormat.ROUNDING_MODE_NONE));
+			comboBoxRoundingMode.setSelectedIndex(oldMode);
+			textFieldRounddingValue.setText(Double.toString(oldValue));
+			int gap = HiDPIHelper.scale(8);
+			double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
+								{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, 2*gap} };
+			JPanel roundignPanel = new JPanel();
+			roundignPanel.setLayout(new TableLayout(size));
+			roundignPanel.add(new JLabel("Rounding mode:"), "1,1");
+			roundignPanel.add(comboBoxRoundingMode, "3,1");
+			roundignPanel.add(new JLabel("Rounding value:"), "1,3");
+			roundignPanel.add(textFieldRounddingValue, "3,3");
+            if (JOptionPane.showConfirmDialog(mParentFrame, roundignPanel, "Set Rounding Options", JOptionPane.OK_CANCEL_OPTION)
+					== JOptionPane.OK_OPTION) {
+				int newMode = comboBoxRoundingMode.getSelectedIndex();
+				try {
+					double newValue = Double.parseDouble(textFieldRounddingValue.getText());
+					if (newMode == DoubleFormat.ROUNDING_MODE_SIGNIFICANT_DIGITS && (newValue <= 0 || (int)newValue != newValue))
+						JOptionPane.showMessageDialog(mParentFrame, "Rounding mode 'Significant Digits' requires a positive integer value!", "Invalid Rounding Value", JOptionPane.ERROR_MESSAGE);
+					else if (newMode == DoubleFormat.ROUNDING_MODE_MULTIPLE_OF && newValue <= 0)
+						JOptionPane.showMessageDialog(mParentFrame, "Rounding mode 'Multiple Of' requires a positive rounding value!", "Invalid Rounding Value", JOptionPane.ERROR_MESSAGE);
+					else if (newMode != oldMode || (newMode != DoubleFormat.ROUNDING_MODE_NONE && oldValue != newValue))
+						new DETaskSetNumericalColumnDisplayMode(mParentFrame, mTableModel, mColumn, -1, -1, -1, newMode, newValue, -1).defineAndRun();
+					}
+				catch (NumberFormatException nfe) {
+					JOptionPane.showMessageDialog(mParentFrame, "Rounding value is not numerical!", "Invalid Rounding Value", JOptionPane.ERROR_MESSAGE);
+					}
                 }
             }
         else if (e.getActionCommand().equals(EXCLUDE_MODIFIER_VALUES)) {
-			new DETaskSetNumericalColumnDisplayMode(mParentFrame, mTableModel, mColumn, -1, -1, -1, -1, mTableModel.getColumnModifierExclusion(mColumn) ? 0 : 1).defineAndRun();
+			new DETaskSetNumericalColumnDisplayMode(mParentFrame, mTableModel, mColumn, -1, -1, -1, -1, -1, mTableModel.getColumnModifierExclusion(mColumn) ? 0 : 1).defineAndRun();
             }
         else if (e.getActionCommand().equals(SET_TEXT_COLOR)
        		  || e.getActionCommand().equals(SET_STRUCTURE_COLOR)

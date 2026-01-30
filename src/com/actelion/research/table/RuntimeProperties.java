@@ -24,6 +24,7 @@ import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.table.view.config.AbstractConfiguration;
 import com.actelion.research.table.view.config.CardsViewConfiguration;
 import com.actelion.research.table.view.config.ViewConfiguration;
+import com.actelion.research.util.DoubleFormat;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -44,6 +45,8 @@ public class RuntimeProperties extends AbstractConfiguration implements Compound
 	private static final String cColumnDataTypeCount = "explicitColumnTypeCount";
     private static final String cSignificantDigits = "significantDigits";
     private static final String cSignificantDigitColumnCount = "significantDigitColumnCount";
+	private static final String cMultipleOfValue = "multipleOfValue";
+	private static final String cMultipleOfColumnCount = "multipleOfColumnCount";
     private static final String cModifierValuesExcluded = "modifierValuesExcluded";
     private static final String cCurrentRecord = "currentRecord";
     private static final String cColumnDescription = "columnDescription";
@@ -175,7 +178,7 @@ public class RuntimeProperties extends AbstractConfiguration implements Compound
                             if (column != -1) {
                                 try {
                                     int digits = Integer.parseInt(significantDigits.substring(index+1));
-                                    mTableModel.setColumnSignificantDigits(column, digits);
+                                    mTableModel.setColumnRounding(column, DoubleFormat.ROUNDING_MODE_SIGNIFICANT_DIGITS, digits);
                                     } catch (NumberFormatException e) {}
                                 }
                             }
@@ -183,6 +186,27 @@ public class RuntimeProperties extends AbstractConfiguration implements Compound
                     }
                 } catch (NumberFormatException e) {}
             }
+		columnCount = getProperty(cMultipleOfColumnCount);
+		if (columnCount != null) {
+			try {
+				int count = Integer.parseInt(columnCount);
+				for (int i=0; i<count; i++) {
+					String roundingValue = getProperty(cMultipleOfValue+"_"+i);
+					if (roundingValue != null) {
+						int index = roundingValue.indexOf('\t');
+						if (index != -1) {
+							int column = mTableModel.findColumn(roundingValue.substring(0, index));
+							if (column != -1) {
+								try {
+									double value = Double.parseDouble(roundingValue.substring(index+1));
+									mTableModel.setColumnRounding(column, DoubleFormat.ROUNDING_MODE_MULTIPLE_OF, value);
+								} catch (NumberFormatException e) {}
+							}
+						}
+					}
+				}
+			} catch (NumberFormatException e) {}
+		}
         columnCount = getProperty(cCustomOrderCount);
         if (columnCount != null) {
             try {
@@ -354,17 +378,19 @@ public class RuntimeProperties extends AbstractConfiguration implements Compound
 							+ (mTableModel.isForceCategories(column) ? cForceCategoriesCode : ""));
 		}
         int significantDigitColumnCount = 0;
-        for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
-            if (mTableModel.getColumnSignificantDigits(column) != 0)
-                significantDigitColumnCount++;
-        if (significantDigitColumnCount != 0) {
-            setProperty(cSignificantDigitColumnCount, ""+significantDigitColumnCount);
-            significantDigitColumnCount = 0;
-            for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
-                if (mTableModel.getColumnSignificantDigits(column) != 0)
-                    setProperty(cSignificantDigits+"_"+significantDigitColumnCount++,
-                            mTableModel.getColumnTitleNoAlias(column)+"\t"+mTableModel.getColumnSignificantDigits(column));
-            }
+		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
+			if (mTableModel.getColumnRoundingMode(column) == DoubleFormat.ROUNDING_MODE_SIGNIFICANT_DIGITS)
+				setProperty(cSignificantDigits+"_"+significantDigitColumnCount++,
+						mTableModel.getColumnTitleNoAlias(column)+"\t"+(int)mTableModel.getColumnRoundingValue(column));
+		if (significantDigitColumnCount != 0)
+			setProperty(cSignificantDigitColumnCount, ""+significantDigitColumnCount);
+		int multipleOfColumnCount = 0;
+		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
+			if (mTableModel.getColumnRoundingMode(column) == DoubleFormat.ROUNDING_MODE_MULTIPLE_OF)
+				setProperty(cMultipleOfValue+"_"+multipleOfColumnCount++,
+						mTableModel.getColumnTitleNoAlias(column)+"\t"+mTableModel.getColumnRoundingValue(column));
+		setProperty(cMultipleOfColumnCount, ""+multipleOfColumnCount);
+
 		int customOrderCount = 0;
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
 			if (mTableModel.getCategoryCustomOrder(column) != null)

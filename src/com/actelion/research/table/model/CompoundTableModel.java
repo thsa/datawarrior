@@ -396,9 +396,9 @@ public class CompoundTableModel extends AbstractTableModel
 							(float)Math.pow(10.0, record.mFloat[column])
 						  : record.mFloat[column];
 	
-					String numPart = (mColumnInfo[column].significantDigits == 0) ?
+					String numPart = (mColumnInfo[column].roundingMode == DoubleFormat.ROUNDING_MODE_NONE) ?
 							  DoubleFormat.toString(value)
-							: DoubleFormat.toString(value, mColumnInfo[column].significantDigits);
+							: DoubleFormat.toString(value, mColumnInfo[column].roundingMode, mColumnInfo[column].roundingValue);
 	
 					try {   // this is to generate modifier and value count
 						tryParseDouble(record, column, mColumnInfo[column].summaryMode, mColumnInfo[column].stdDeviationShown);
@@ -409,7 +409,7 @@ public class CompoundTableModel extends AbstractTableModel
 					}
 				}
 
-			if (mColumnInfo[column].significantDigits != 0
+			if (mColumnInfo[column].roundingMode != DoubleFormat.ROUNDING_MODE_NONE
 			 || mColumnInfo[column].excludeModifierValues) {
 				String[] entry = separateEntries(encodeData(record, column));
 				String[] separator = getEntrySeparators(encodeData(record, column), entry);
@@ -417,12 +417,12 @@ public class CompoundTableModel extends AbstractTableModel
 				for (int i=0; i<entry.length; i++) {
 					if (!entry[i].isEmpty()) {
 						EntryAnalysis analysis = new EntryAnalysis(entry[i]);
-						if (mColumnInfo[column].significantDigits != 0
+						if (mColumnInfo[column].roundingMode != DoubleFormat.ROUNDING_MODE_NONE
 						 && !analysis.isNaN()) {
 							try {
 								float value = Float.parseFloat(analysis.getValue());
 								entry[i] = analysis.getModifier()
-										 + DoubleFormat.toString(value, mColumnInfo[column].significantDigits);
+										 + DoubleFormat.toString(value, mColumnInfo[column].roundingMode, mColumnInfo[column].roundingValue);
 								}
 							catch (NumberFormatException nfe) {}
 							}
@@ -1551,14 +1551,16 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	/**
-	 * Sets the number of displayed significant digits.
+	 * Sets the rounding mode and its corresponding value.
 	 * @param column
-	 * @param digits 0 for original value, 1,2,3,... for rounded value
+	 * @param mode
+	 * @param value (depends on mode, e.g. sigDigits: 0 for original value, 1,2,3,... for rounded value
 	 */
-	public void setColumnSignificantDigits(int column, int digits) {
-		if (mColumnInfo[column].significantDigits != digits) {
-			mColumnInfo[column].significantDigits = digits;
-
+	public void setColumnRounding(int column, int mode, double value) {
+		if (mColumnInfo[column].roundingMode != mode
+		 || (mode != DoubleFormat.ROUNDING_MODE_NONE && mColumnInfo[column].roundingValue != value)) {
+			mColumnInfo[column].roundingMode = mode;
+			mColumnInfo[column].roundingValue = value;
 			if (column < mAllColumns) {    // if we change the mode of already finalized columns
 				int oldCategoryCount = isColumnTypeCategory(column) ? getCategoryCount(column) : -1;
 				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1, oldCategoryCount),
@@ -2376,9 +2378,19 @@ public class CompoundTableModel extends AbstractTableModel
 	 * @param column
 	 * @return 0 or number of significant digits
 	 */
-	public int getColumnSignificantDigits(int column) {
-		return mColumnInfo[column].significantDigits;
+	public int getColumnRoundingMode(int column) {
+		return mColumnInfo[column].roundingMode;
 		}
+
+	/**
+	 * Returns the number of significant digits used to show numerical values
+	 * of this column. If no rounding is applied, then 0 is returned.
+	 * @param column
+	 * @return 0 or number of significant digits
+	 */
+	public double getColumnRoundingValue(int column) {
+		return mColumnInfo[column].roundingValue == 0 ? 1.0 : mColumnInfo[column].roundingValue;
+	}
 
 	public boolean hasReferencedDetail() {
 		for (int column = 0; column< mAllColumns; column++)
@@ -2843,7 +2855,8 @@ public class CompoundTableModel extends AbstractTableModel
 		HashMap<String,String> properties = mColumnInfo[sourceColumn].getProperties();
 		for (String key:properties.keySet())
 			targetTableModel.setColumnProperty(targetColumn, key, properties.get(key));
-		targetTableModel.mColumnInfo[targetColumn].significantDigits = mColumnInfo[sourceColumn].significantDigits;
+		targetTableModel.mColumnInfo[targetColumn].roundingMode = mColumnInfo[sourceColumn].roundingMode;
+		targetTableModel.mColumnInfo[targetColumn].roundingValue = mColumnInfo[sourceColumn].roundingValue;
 		targetTableModel.mColumnInfo[targetColumn].logarithmicViewMode = mColumnInfo[sourceColumn].logarithmicViewMode;
 		if (includeAlias)
 			targetTableModel.mColumnInfo[targetColumn].alias = mColumnInfo[sourceColumn].alias;
@@ -5799,12 +5812,13 @@ public class CompoundTableModel extends AbstractTableModel
 
 class CompoundTableColumnInfo {
 	protected volatile boolean	isDescriptorIncomplete;
-	protected int				type,explicitType,summaryMode,significantDigits, hiliteMode;
+	protected int				type,explicitType,summaryMode,hiliteMode,roundingMode;
 	protected boolean			isComplete,isCompleteChild,isUnique,isEqual,isInteger,
 								containsMultiLineText,hasDetail,hasMultipleEntries,
 								belongsToMultipleCategories,logarithmicViewMode,forceCategories,
 								hasModifiers,excludeModifierValues,summaryCountHidden,stdDeviationShown;
 	protected float				minValue,maxValue,dataMin,dataMax;
+	protected double			roundingValue;
 	protected CategoryList<?>	categoryList;
 	protected UniqueList<String> mCategoryCustomOrder;
 	protected String			name;

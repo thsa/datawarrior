@@ -1,0 +1,6 @@
+smiles,name
+CC(=O)Oc1ccccc1C(O)=O,Aspirin
+CC(C)Cc1ccc(cc1)C(C)C(O)=O,Ibuprofen
+CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C,Testosterone
+c1ccc2c(c1)cc1ccc3cccc4ccc2c1c34,Pyrene
+O=C(O)c1ccccc1O,Salicylic acid

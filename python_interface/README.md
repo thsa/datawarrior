@@ -5,39 +5,74 @@ cheminformatics engine behind [DataWarrior](https://openmolecules.org/datawarrio
 
 Takes a CSV file with a SMILES column and outputs all computed chemical properties.
 
-## Prerequisites
+## Setup on a Fresh Linux Machine
 
-- **Java 11+** (JDK or JRE)
-- **Python 3.8+**
-- **pandas** (optional, for DataFrame API)
+### 1. Install system dependencies
 
-## Quick Start
+```bash
+# Ubuntu / Debian
+sudo apt update
+sudo apt install -y default-jdk python3 python3-pip git
 
-### 1. Build the Java backend (one-time)
+# Verify
+java -version    # needs 11+
+python3 --version  # needs 3.8+
+```
+
+For other distros:
+```bash
+# Fedora / RHEL
+sudo dnf install -y java-21-openjdk-devel python3 python3-pip git
+
+# Arch
+sudo pacman -S jdk-openjdk python python-pip git
+```
+
+### 2. Clone the repo
+
+```bash
+git clone https://github.com/KSUN63/datawarrior.git
+cd datawarrior
+```
+
+### 3. Build the Java backend (one-time, ~1 second)
 
 ```bash
 cd python_interface
 bash build.sh
 ```
 
-### 2. Run from command line
-
-```bash
-python calculate_properties.py molecules.csv -o results.csv
+You should see:
+```
+Compiling PropertyCalculatorCLI...
+Creating property_calculator.jar...
+Build complete: .../python_interface/build/property_calculator.jar
 ```
 
-### 3. Use from Python
+### 4. Install Python dependencies
+
+```bash
+pip install pandas   # needed for DataFrame API
+```
+
+### 5. Test it
+
+```bash
+python3 calculate_properties.py test_molecules.csv -o results.csv
+```
+
+Or from Python:
 
 ```python
-from calculate_properties import calculate_properties, calculate_smiles_list
+from calculate_properties import calculate_smiles_list
 
-# From a CSV file
-output_path = calculate_properties("molecules.csv", "results.csv")
-
-# From a list of SMILES (returns pandas DataFrame)
 df = calculate_smiles_list(["CCO", "c1ccccc1", "CC(=O)Oc1ccccc1C(O)=O"])
 print(df[["smiles", "cLogP", "cLogS", "Polar_Surface_Area"]])
 ```
+
+That's it -- no DataWarrior GUI, no Maven/Gradle, no additional downloads.
+The required JARs (`openchemlib.jar`, `molviewerlib.jar`) are already in the
+repo under `lib/`.
 
 ## CLI Usage
 

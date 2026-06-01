@@ -2768,7 +2768,7 @@ public class JVisualization2D extends JVisualization {
 
 		if (mLabelColumn[MarkerLabelDisplayer.cMidCenter] != -1
 		 && (!mLabelsInTreeViewOnly || isTreeViewGraph())) {
-			LabelPosition2D lp = vp.getLabelPosition(mLabelColumn[cMidCenter]);
+			LabelPosition2D lp = vp.getOrCreateLabelPosition(mLabelColumn[cMidCenter], false);
 			g.draw(new Rectangle2D.Float(lp.getScreenX1(), lp.getScreenY1(), lp.getScreenWidth(), lp.getScreenHeight()));
 //			sizeX = vp.widthOrAngle1 + 2f*GAP;
 //			sizeY = vp.heightOrAngle2 + 2f*GAP;

@@ -940,9 +940,9 @@ public class JFXMolViewerPanel extends JFXPanel {
 				uncroppedNeighbours[atom1]++;
 		}
 		for (int i = 0; i<protein.getAllAtoms(); i++) {
-			if (isInCropRadius[i] && uncroppedNeighbours[i] == 0)
+			if (isInCropRadius[i] && uncroppedNeighbours[i] == 0 && protein.getAllConnAtomsPlusMetalBonds(i) != 0)
 				isInCropRadius[i] = false;
-			else if (!isInCropRadius[i] && uncroppedNeighbours[i] != 0 && protein.getAllConnAtoms(i) == uncroppedNeighbours[i])
+			else if (!isInCropRadius[i] && uncroppedNeighbours[i] != 0 && protein.getAllConnAtomsPlusMetalBonds(i) == uncroppedNeighbours[i])
 				isInCropRadius[i] = true;
 		}
 

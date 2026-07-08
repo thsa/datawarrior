@@ -43,7 +43,7 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 	private static final String PROPERTY_EDGE_SMOOTHING = "smoothing";
 
 
-	private JComboBox	mComboBoxType,mComboBoxColumn,mComboBoxMode;
+	private JComboBox<String> mComboBoxType,mComboBoxColumn,mComboBoxMode;
 	private JLabel		mLabelSizeBy,mLabelColumn;
 	private JSlider     mSliderEdgeSmoothing;
 	
@@ -75,7 +75,7 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 		p1.setLayout(new TableLayout(size));
 
 		p1.add(new JLabel("Preferred Chart Type:"), "1,1");
-		mComboBoxType = new JComboBox();
+		mComboBoxType = new JComboBox<>();
 		if (hasInteractiveView())
 			for (int type: getInteractiveVisualization().getSupportedChartTypes())
 				mComboBoxType.addItem(ChartType.TYPE_NAME[type]);
@@ -87,13 +87,13 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 
 		mLabelSizeBy = new JLabel("Bar/Pie size by:");
 		p1.add(mLabelSizeBy, "1,3");
-		mComboBoxMode = new JComboBox(ChartType.MODE_NAME);
+		mComboBoxMode = new JComboBox<>(ChartType.MODE_NAME);
 		mComboBoxMode.addItemListener(this);
 		p1.add(mComboBoxMode, "3,3");
 
 		mLabelColumn = new JLabel("of");
 		p1.add(mLabelColumn, "5,3");
-		mComboBoxColumn = new JComboBox();
+		mComboBoxColumn = new JComboBox<>();
 		for (int column=0; column<getTableModel().getTotalColumnCount(); column++)
 			if (columnQualifies(column))
 				mComboBoxColumn.addItem(getTableModel().getColumnTitle(column));
@@ -101,11 +101,13 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 		mComboBoxColumn.addItemListener(this);
 		p1.add(mComboBoxColumn, "7,3");
 
-		mSliderEdgeSmoothing = new JSlider(JSlider.HORIZONTAL, 0, 100, 50);
-//		mSliderEdgeSmoothing.setPreferredSize(new Dimension(HiDPIHelper.scale(150), mSliderEdgeSmoothing.getPreferredSize().height));
-		mSliderEdgeSmoothing.addChangeListener(this);
-		p1.add(new JLabel("Edge Smoothing:"), "1,5");
-		p1.add(mSliderEdgeSmoothing, "3,5");
+		if (getInteractiveVisualization() == null || getInteractiveVisualization() instanceof JVisualization2D) {
+			mSliderEdgeSmoothing = new JSlider(JSlider.HORIZONTAL, 0, 100, 50);
+//			mSliderEdgeSmoothing.setPreferredSize(new Dimension(HiDPIHelper.scale(150), mSliderEdgeSmoothing.getPreferredSize().height));
+			mSliderEdgeSmoothing.addChangeListener(this);
+			p1.add(new JLabel("Edge Smoothing:"), "1,5");
+			p1.add(mSliderEdgeSmoothing, "3,5");
+		}
 
 		mComboBoxMode.setEnabled(!hasInteractiveView() || mComboBoxColumn.getItemCount() != 0);
 
@@ -122,7 +124,8 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
         mComboBoxMode.setSelectedIndex(0);
         if (mComboBoxColumn.getItemCount() != 0)
         	mComboBoxColumn.setSelectedIndex(0);
-		mSliderEdgeSmoothing.setValue(50);
+		if (mSliderEdgeSmoothing != null)
+			mSliderEdgeSmoothing.setValue(50);
 		}
 
 	@Override
@@ -139,9 +142,11 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 			mComboBoxColumn.setSelectedItem(!hasInteractiveView() && column == -1 ? columnName : getTableModel().getColumnTitleExtended(column));
 			}
 
-		String value = configuration.getProperty(PROPERTY_EDGE_SMOOTHING);
-		float smoothing = (value == null) ? JVisualization2D.DEFAULT_EDGE_SMOOTHING : Float.parseFloat(value);
-		mSliderEdgeSmoothing.setValue(Math.round(100*smoothing));
+		if (mSliderEdgeSmoothing != null) {
+			String value = configuration.getProperty(PROPERTY_EDGE_SMOOTHING);
+			float smoothing = (value == null) ? JVisualization2D.DEFAULT_EDGE_SMOOTHING : Float.parseFloat(value);
+			mSliderEdgeSmoothing.setValue(Math.round(100*smoothing));
+			}
 		}
 
 	@Override
@@ -154,7 +159,7 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mode != ChartType.cModeCountLog && mComboBoxColumn.getItemCount() != 0)
 				configuration.setProperty(PROPERTY_COLUMN, getTableModel().getColumnTitleNoAlias((String)mComboBoxColumn.getSelectedItem()));
 			}
-		if (ChartType.supportsEdgeSmoothing(type)) {
+		if (mSliderEdgeSmoothing != null && ChartType.supportsEdgeSmoothing(type)) {
 			float smoothing = (float)mSliderEdgeSmoothing.getValue()/100f;
 			configuration.setProperty(PROPERTY_EDGE_SMOOTHING, ""+smoothing);
 			}
@@ -169,9 +174,9 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 			int mode = visualization.getPreferredChartMode();
 			configuration.setProperty(PROPERTY_MODE, ChartType.MODE_CODE[mode]);
 			if (mode != ChartType.cModeCount && mode != ChartType.cModePercent && mode != ChartType.cModeCountLog)
-				configuration.setProperty(PROPERTY_COLUMN, ""+getTableModel().getColumnTitleNoAlias(visualization.getPreferredChartColumn()));
+				configuration.setProperty(PROPERTY_COLUMN, getTableModel().getColumnTitleNoAlias(visualization.getPreferredChartColumn()));
 			}
-		if (ChartType.supportsEdgeSmoothing(type))
+		if (visualization instanceof JVisualization2D && ChartType.supportsEdgeSmoothing(type))
 			configuration.setProperty(PROPERTY_EDGE_SMOOTHING, DoubleFormat.toString(((JVisualization2D)visualization).getEdgeSmoothing()));
 		}
 
@@ -215,7 +220,8 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 		mComboBoxMode.setEnabled(supportsSizeBy);
 		mLabelColumn.setEnabled(columnEnabled);
 		mComboBoxColumn.setEnabled(columnEnabled);
-		mSliderEdgeSmoothing.setEnabled(ChartType.supportsEdgeSmoothing(type));
+		if (mSliderEdgeSmoothing != null)
+			mSliderEdgeSmoothing.setEnabled(ChartType.supportsEdgeSmoothing(type));
 		}
 
 	@Override
@@ -231,8 +237,10 @@ public class DETaskSetPreferredChartType extends DETaskAbstractSetViewOptions {
 					column = getTableModel().findColumn(configuration.getProperty(PROPERTY_COLUMN));
 				}
 			visualization.setPreferredChartType(type, mode, column);
-			String smoothing = configuration.getProperty(PROPERTY_EDGE_SMOOTHING);
-			((JVisualization2D)visualization).setEdgeSmoothing(smoothing != null ? Float.parseFloat(smoothing) : JVisualization2D.DEFAULT_EDGE_SMOOTHING);
+			if (visualization instanceof JVisualization2D) {
+				String smoothing = configuration.getProperty(PROPERTY_EDGE_SMOOTHING);
+				((JVisualization2D)visualization).setEdgeSmoothing(smoothing != null ? Float.parseFloat(smoothing) : JVisualization2D.DEFAULT_EDGE_SMOOTHING);
+				}
 			}
 		}
 	}

@@ -34,6 +34,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class JCategoryBrowser extends JFilterPanel
 				implements ActionListener,ChangeListener,CompoundTableListener,Runnable {
@@ -41,8 +42,8 @@ public class JCategoryBrowser extends JFilterPanel
 
 	private static final String DISABLED_TEXT = "Category Browser";
 
-	private Frame			mParentFrame;
-	private JComboBox		mComboBox;
+	private final Frame		mParentFrame;
+	private final JComboBox<String> mComboBox;
 	private JSlider			mSlider;
 	private JTextField		mTextFieldCategory;
 	private JButton			mButtonLeft,mButtonRight,mPressedButton;
@@ -295,8 +296,7 @@ public class JCategoryBrowser extends JFilterPanel
 			  || e.getType() == CompoundTableEvent.cChangeColumnData) {
 			int columnIndex = mColumnIndex;
 			updateComboBox();	// may set mColumnIndex to -1 if column type changes
-			if ((e.getType() == CompoundTableEvent.cChangeColumnData && e.getColumn() == columnIndex)
-			 || e.getType() != CompoundTableEvent.cChangeColumnData) {
+			if (e.getType() != CompoundTableEvent.cChangeColumnData || e.getColumn() == columnIndex) {
 				if (mColumnIndex != -1) {
 					mSlider.setMaximum(mTableModel.getCategoryCount(mColumnIndex)-1);
 					String[] categoryList = mTableModel.getCategoryList(mColumnIndex);
@@ -382,6 +382,7 @@ public class JCategoryBrowser extends JFilterPanel
 		mComboBox.removeAllItems();
 		boolean found = false;
 		String[] columnList = getCategoryColumnList();
+		Arrays.sort(columnList, String.CASE_INSENSITIVE_ORDER);
 		for (int i=0; i<columnList.length; i++) {
 			mComboBox.addItem(columnList[i]);
 			if (mTableModel.findColumn(columnList[i]) == mColumnIndex) {

@@ -660,7 +660,7 @@ public class VisualizationColor implements CompoundTableListener,CompoundTableLi
 			else if (column == JVisualization.cColumnUnassigned
 			 || mTableModel.isColumnTypeDouble(column)
 			 || mTableModel.isDescriptorColumn(column))
-				setColor(column, createColorWedge(Color.red, Color.blue, cColorListModeHSBLong, null), cColorListModeHSBLong);
+				setColor(column, createColorWedge(Color.BLUE, Color.RED, cColorListModeHSBLong, null), cColorListModeHSBLong);
 			else if (mTableModel.isColumnTypeCategory(column)
 				  && mTableModel.getCategoryCount(column) <= cMaxColorCategories)
 				setColor(column, createDefaultCategoryColorList(column), cColorListModeCategories);

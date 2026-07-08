@@ -3847,8 +3847,11 @@ public class JVisualization2D extends JVisualization {
 				if (label != null)
 					mScaleLineList[axis].add(new ScaleLine(position, label));
 				}
-			else
-				mScaleLineList[axis].add(new ScaleLine(position, DoubleFormat.toShortString(theMarker, exponent)));
+			else {
+				String label = DoubleFormat.toShortString(theMarker, exponent);
+				if (!mTableModel.isColumnTypeInteger(mAxisIndex[axis]) || label.indexOf('.') == -1)
+					mScaleLineList[axis].add(new ScaleLine(position, label));
+				}
 
 			theMarker += gridSpacing;
 			}

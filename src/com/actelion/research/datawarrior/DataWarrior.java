@@ -767,7 +767,8 @@ public abstract class DataWarrior implements WindowFocusListener {
 			return;
 			}
 
-		String url = "https://".concat(uri.toString().substring(14));
+		String protocol = uri.toString().startsWith("datawarrior://localhost") ? "http://" : "https://";
+		String url = protocol.concat(uri.toString().substring(14));
 
 		String path = uri.getPath();
 		int frmt = (path.endsWith(".txt")) ? DETaskRetrieveDataFromURL.FORMAT_TAB_DELIMITED

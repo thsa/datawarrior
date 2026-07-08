@@ -257,7 +257,7 @@ public class MarkerColorPanel extends JPanel
 			}
 		else {
 			if (mWedgeColorList == null)
-			    mWedgeColorList = VisualizationColor.createColorWedge(Color.RED, Color.BLUE, mColorListMode, null);
+			    mWedgeColorList = VisualizationColor.createColorWedge(Color.BLUE, Color.RED, mColorListMode, null);
 			else
 			    mWedgeColorList = VisualizationColor.createColorWedge(mWedgeColorList[0], mWedgeColorList[mWedgeColorList.length-1], mColorListMode, null);
 			}

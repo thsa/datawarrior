@@ -173,7 +173,11 @@ public class DEPruningPanel extends JScrollPane
 			repaint();
 			}
 		catch (FilterException fpe) {
-			showErrorMessage(fpe.getMessage());
+			// Currently, FilterExceptions are only generated when the number of row flags is exceeded.
+			// We don't show an message anymore for these anymore
+//			showErrorMessage(fpe.getMessage());
+			validate();
+			repaint();
 			}
 		}
 

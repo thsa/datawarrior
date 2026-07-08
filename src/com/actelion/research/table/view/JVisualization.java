@@ -295,7 +295,7 @@ public abstract class JVisualization extends JComponent
 		mLegendList = new ArrayList<>();
 		mSuppressLegend = false;
 		mScaleMode = cScaleModeShown;
-		mGridMode = cGridModeShown;
+		mGridMode = (mDimensions == 2) ? cGridModeHidden : cGridModeShown;
 		mFocusList = FocusableView.cFocusNone;
 		mLabelList = cLabelsOnAllRows;
 		mShowLabelBackground = false;

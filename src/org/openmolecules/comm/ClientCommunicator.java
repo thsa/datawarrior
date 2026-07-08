@@ -18,6 +18,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 public abstract class ClientCommunicator extends CommunicationHelper {
 	private static final int CONNECT_TIME_OUT = 5000;
@@ -99,7 +100,7 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 			}
         }
 
-	private void convertToPostRequest(HttpURLConnection con, String request, String... keyValuePair) throws IOException {
+	private void convertToPostRequest(HttpURLConnection con, String request, Properties properties, String... keyValuePair) throws IOException {
 		StringBuilder postData = new StringBuilder();
 
 		postData.append(URLEncoder.encode(KEY_REQUEST, StandardCharsets.UTF_8));
@@ -110,6 +111,16 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 		postData.append(URLEncoder.encode(KEY_APP_NAME, StandardCharsets.UTF_8));
 		postData.append('=');
 		postData.append(URLEncoder.encode(mAppicationName, StandardCharsets.UTF_8));
+
+		if (properties != null) {
+			for (String key : properties.stringPropertyNames()) {
+				con.addRequestProperty(key, properties.getProperty(key));
+				postData.append('&');
+				postData.append(URLEncoder.encode(key, StandardCharsets.UTF_8));
+				postData.append('=');
+				postData.append(URLEncoder.encode(properties.getProperty(key), StandardCharsets.UTF_8));
+				}
+			}
 
 		if (keyValuePair != null) {
 			for (int i=0; i<keyValuePair.length; i+=2) {
@@ -185,12 +196,13 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 	 * errors a proper error message is shown through showErrorMessage().
 	 * Different from getResponse() this method does not decode the original result,
 	 * it just returns the body of the HTML result.
+	 * Parameters may be supplied as key-value pairs.
 	 * @param request
 	 * @param keyValuePair
 	 * @return null in case of any error
 	 */
 	public String getPlainResponse(String request, String... keyValuePair) {
-		return (String)getResponse(request, true, keyValuePair);
+		return (String)getResponse(request, true, null, keyValuePair);
 		}
 
 	/**
@@ -199,22 +211,70 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 	 * then the secondary server is contacted and in case of a successful completion
 	 * used for further getResponse() calls. In case of connection problems or other
 	 * errors a proper error message is shown through showErrorMessage().
+	 * Different from getResponse() this method does not decode the original result,
+	 * it just returns the body of the HTML result.
+	 * Parameters may be supplied as properties object and/or key-value pairs.
+	 * @param request
+	 * @param properties
+	 * @param keyValuePair
+	 * @return null in case of any error
+	 */
+	public String getPlainResponse(String request, Properties properties, String... keyValuePair) {
+		return (String)getResponse(request, true, properties, keyValuePair);
+	}
+
+	/**
+	 * Tries to get a proper response or search result from the primary server.
+	 * If the primary server cannot be contacted and a secondary server exists,
+	 * then the secondary server is contacted and in case of a successful completion
+	 * used for further getResponse() calls. In case of connection problems or other
+	 * errors a proper error message is shown through showErrorMessage().
+	 * Parameters may be supplied as key-value pairs.
 	 * @param request
 	 * @param keyValuePair
 	 * @return null in case of any error
 	 */
 	public Object getResponse(String request, String... keyValuePair) {
-		return getResponse(request, false, keyValuePair);
-		}
+		return getResponse(request, false, null, keyValuePair);
+	}
 
-	private Object getResponse(String request, boolean plainResult, String... keyValuePair) {
+	/**
+	 * Tries to get a proper response or search result from the primary server.
+	 * If the primary server cannot be contacted and a secondary server exists,
+	 * then the secondary server is contacted and in case of a successful completion
+	 * used for further getResponse() calls. In case of connection problems or other
+	 * errors a proper error message is shown through showErrorMessage().
+	 * Parameters may be supplied as properties object and/or key-value pairs.
+	 * @param request
+	 * @param properties
+	 * @param keyValuePair
+	 * @return null in case of any error
+	 */
+	public Object getResponse(String request, Properties properties, String... keyValuePair) {
+		return getResponse(request, false, properties, keyValuePair);
+	}
+
+	/**
+	 * Tries to get a proper response or search result from the primary server.
+	 * If the primary server cannot be contacted and a secondary server exists,
+	 * then the secondary server is contacted and in case of a successful completion
+	 * used for further getResponse() calls. In case of connection problems or other
+	 * errors a proper error message is shown through showErrorMessage().
+	 * Parameters may be supplied as properties object and/or key-value pairs.
+	 * @param request
+	 * @param plainResult
+	 * @param properties
+	 * @param keyValuePair
+	 * @return null in case of any error
+	 */
+	private Object getResponse(String request, boolean plainResult, Properties properties, String... keyValuePair) {
 		boolean mayUseSecondaryServer = (getSecondaryServerURL() != null && mSessionServerURL == null);
 
 		if (!isUseSecondaryServer() || mSessionServerURL != null) {
 			String url = null;
 			try {
 				url = (mSessionServerURL != null) ? mSessionServerURL : getPrimaryServerURL();
-				Object response = getResponseWithURL(url, request, plainResult, keyValuePair);
+				Object response = getResponseWithURL(url, request, plainResult, properties, keyValuePair);
 				if (response != null
 				 && !(mayUseSecondaryServer && response instanceof String && ((String)response).startsWith(BODY_ERROR)))
 					return response;
@@ -238,7 +298,7 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 
 		if (mayUseSecondaryServer) {
 			try {
-				Object response = getResponseWithURL(getSecondaryServerURL(), request, plainResult, keyValuePair);
+				Object response = getResponseWithURL(getSecondaryServerURL(), request, plainResult, properties, keyValuePair);
 				if (response != null) {
 					setUseSecondaryServer();
 					return response;
@@ -261,7 +321,7 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 	 */
 	public void reportException(Exception e) {}
 
-	public Object getResponseWithURL(String serverURL, String request, boolean plainResponse, String... keyValuePair) throws IOException {
+	public Object getResponseWithURL(String serverURL, String request, boolean plainResponse, Properties properties, String... keyValuePair) throws IOException {
 		if (mWithSessions && mSessionID == null) {
 			getNewSession();
 			if (mSessionID == null)
@@ -275,12 +335,15 @@ public abstract class ClientCommunicator extends CommunicationHelper {
 			// The default is a GET request, which is limited on Apache to 8700 characters.
 			// As long as we use Apache as entry door to distribute our requests to virtual
 			// servers, this may be a problem.
-			convertToPostRequest((HttpURLConnection)con, request, keyValuePair);
+			convertToPostRequest((HttpURLConnection)con, request, properties, keyValuePair);
 			}
 		else {
 			con.addRequestProperty(KEY_REQUEST, request);
 			con.addRequestProperty(KEY_APP_NAME, mAppicationName);
-			for (int i = 0; i<keyValuePair.length; i += 2)
+			if (properties != null)
+				for (String key : properties.stringPropertyNames())
+					con.addRequestProperty(key, properties.getProperty(key));
+			for (int i=0; i<keyValuePair.length; i += 2)
 				con.addRequestProperty(keyValuePair[i], keyValuePair[i + 1]);
 			}
 

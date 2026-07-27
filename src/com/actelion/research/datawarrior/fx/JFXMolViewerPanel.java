@@ -26,14 +26,12 @@ import org.openmolecules.render.MoleculeArchitect;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringBufferInputStream;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Vector;
@@ -42,6 +40,7 @@ import java.util.concurrent.FutureTask;
 
 public class JFXMolViewerPanel extends JFXPanel {
 	public static final double CAVITY_CROP_DISTANCE = 10.0;
+	public static final double WATER_CROP_DISTANCE = 6.0;
 	private static boolean sURLStreamHandlerSet = false;
 	private static final String EDIT_MESSAGE = "<right mouse click to add content>";
 	private static final Color DEFAULT_CAVITY_MOL_COLOR = Color.LIGHTGRAY;
@@ -51,19 +50,19 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private static final int MAX_ATOMS_FOR_SURFACE = 2400;
 
 	private V3DScene mScene;
-	private volatile V3DMolecule mCavityMol,mOverlayMol,mRefMol,mSingleConformer;
+	private volatile V3DMolecule mCavityMol,mWaterMol,mOverlayMol,mRefMol,mSingleConformer;
 	private V3DPopupMenuController mController;
 	private FutureTask<Object> mConstructionTask;
 	private volatile int mCurrentUpdateID,mCavityConstructionMode,mCavityHydrogenMode,mCavityRibbonMode,mCavitySideChainMode,mCavitySurfaceMode,
 			mCavitySurfaceColorMode,mLargeCavityConstructionMode,mLargeCavitySurfaceMode,mLargeCavityRibbonMode,mLargeCavitySideChainMode,
 			mRefMolSurfaceMode,mRefMolSurfaceColorMode,mSingleConformerSurfaceMode,mSingleConformerSurfaceColorMode,
 			mSingleConformerConstructionMode,mSingleConformerHydrogenMode,mRefMolConstructionMode,mRefMolHydrogenMode,
-			mOverlayMolConstructionMode,mOverlayMolHydrogenMode;
+			mOverlayMolConstructionMode,mOverlayMolHydrogenMode,mWaterConstructionMode,mWaterHydrogenMode;
 	private volatile double mRefMolSurfaceTransparency,mSingleConformerSurfaceTransparency;
 	private boolean mAdaptToLookAndFeelChanges;
 	private final boolean mIsEditable;
 	private volatile Color mCavityMolColor,mRefMolColor,mOverlayMolColor,mSingleConformerColor,mCavitySurfaceColor,
-			mRefMolSurfaceColor,mSingleConformerSurfaceColor;
+			mRefMolSurfaceColor,mSingleConformerSurfaceColor,mWaterMolColor;
 	private volatile double mCavitySurfaceTransparency;
 	private java.awt.Color mSceneBackground, mLookAndFeelSpotColor,
 			mMenuItemBackground,mMenuItemForeground,/*mMenuItemSelectionBackground,*/mMenuItemSelectionForeground;
@@ -106,7 +105,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 		mSingleConformerSurfaceTransparency = 0.1;
 
 		mCavityConstructionMode = MoleculeArchitect.CONSTRUCTION_MODE_WIRES;
-		mCavityHydrogenMode = MoleculeArchitect.HYDROGEN_MODE_POLAR;
+		mCavityHydrogenMode = MoleculeArchitect.HYDROGEN_MODE_NONE;
 		mCavityRibbonMode = Ribbons.MODE_NONE;
 		mCavitySideChainMode = V3DMolecule.SIDECHAIN_MODE_NEAR_LIGAND;
 		mCavitySurfaceMode = V3DMolecule.SURFACE_MODE_FILLED;
@@ -895,6 +894,37 @@ public class JFXMolViewerPanel extends JFXPanel {
 		});
 	}
 
+	/**
+	 * Adds the given, typically cropped, cavity water into the scene.
+	 * @param water
+	 */
+	public void setCavityWater(StereoMolecule water) {
+		final int updateID = mCurrentUpdateID;
+		Platform.runLater(() -> {
+			if (updateID != mCurrentUpdateID)	// skip this, if we have already cued another set of updates
+				return;
+
+			if (mWaterMol != null) {
+				mWaterConstructionMode = mWaterMol.getConstructionMode();
+				mWaterHydrogenMode = mWaterMol.getHydrogenMode();
+				mWaterMolColor = mWaterMol.getColor();
+				mScene.delete(mWaterMol);
+			}
+
+			if (water != null) {
+				mWaterMol = new V3DMolecule(water, mWaterConstructionMode, mWaterHydrogenMode, 0, V3DMolecule.MoleculeRole.SOLVENT);
+				mWaterMol.setColor(mWaterMolColor);
+
+				if (updateID != mCurrentUpdateID)
+					return;
+
+				mScene.addMolecule(mWaterMol, false);
+				}
+
+			SwingUtilities.invokeLater(() -> fireStructureChanged());
+		});
+	}
+
 	public static Coordinates calculateCOG(StereoMolecule mol) {
 		Coordinates cog = new Coordinates(mol.getAtomCoordinates(0));
 		for (int i = 1; i<mol.getAllAtoms(); i++)
@@ -910,7 +940,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 		for (int i = 0; i<ligand.getAllAtoms(); i++)
 			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getAtomCoordinates(i)));
 
-		double cropDistance = JFXMolViewerPanel.CAVITY_CROP_DISTANCE;
+		double cropDistance = CAVITY_CROP_DISTANCE;
 		maxDistance += cropDistance;
 
 		// mark all protein atoms within crop distance
@@ -964,6 +994,37 @@ public class JFXMolViewerPanel extends JFXPanel {
 		protein.copyMoleculeByAtoms(croppedProtein, isInCropRadius, false, null);
 		croppedProtein.setFragment(false);
 		return croppedProtein;
+	}
+
+	public static StereoMolecule cropWater(StereoMolecule water, StereoMolecule ligand, Coordinates ligandCOG) {
+		double maxDistance = 0;
+		for (int i = 0; i<ligand.getAllAtoms(); i++)
+			maxDistance = Math.max(maxDistance, ligandCOG.distance(ligand.getAtomCoordinates(i)));
+
+		double cropDistance = WATER_CROP_DISTANCE;
+		maxDistance += cropDistance;
+
+		// mark all water atoms within crop distance
+		boolean[] isInCropRadius = new boolean[water.getAllAtoms()];
+		for (int i = 0; i<water.getAllAtoms(); i++) {
+			Coordinates pc = water.getAtomCoordinates(i);
+			if (Math.abs(pc.x - ligandCOG.x)<maxDistance
+					&& Math.abs(pc.y - ligandCOG.y)<maxDistance
+					&& Math.abs(pc.z - ligandCOG.z)<maxDistance
+					&& pc.distance(ligandCOG)<maxDistance) {
+				for (int j = 0; j<ligand.getAllAtoms(); j++) {
+					if (pc.distance(ligand.getAtomCoordinates(j))<cropDistance) {
+						isInCropRadius[i] = true;
+						break;
+					}
+				}
+			}
+		}
+
+		StereoMolecule croppedWater = new StereoMolecule();
+		water.copyMoleculeByAtoms(croppedWater, isInCropRadius, false, null);
+		croppedWater.setFragment(false);
+		return croppedWater;
 	}
 
 	/**
@@ -1022,8 +1083,6 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private V3DMolecule addMoleculeNow(StereoMolecule mol, int constructionMode, int hydrogenMode, Color color, Point3D centerOfRotation, int surfaceMode, int surfaceColorMode, double surfaceTransparency, boolean showTorsionStrain) {
 		V3DMolecule fxmol = new V3DMolecule(mol, constructionMode, hydrogenMode, 0,
 				V3DMolecule.MoleculeRole.LIGAND, true, mScene.isSplitAllBonds());
-
-
 
 		fxmol.setColor(color);
 		fxmol.setSurface(MoleculeSurfaceAlgorithm.CONNOLLY, surfaceMode, surfaceColorMode, surfaceTransparency);
@@ -1183,8 +1242,8 @@ public class JFXMolViewerPanel extends JFXPanel {
 		}
 
 		@Override
-		public InputStream getInputStream() throws IOException {
-			return new StringBufferInputStream(sCSS);
+		public InputStream getInputStream() {
+			return new ByteArrayInputStream(sCSS.getBytes(StandardCharsets.UTF_8));
 		}
 	}
 

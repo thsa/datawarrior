@@ -21,12 +21,18 @@ package com.actelion.research.table;
 import com.actelion.research.calc.ProgressController;
 import com.actelion.research.calc.ProgressListener;
 import com.actelion.research.chem.*;
+import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.DescriptorHandler;
 import com.actelion.research.chem.io.*;
+import com.actelion.research.chem.io.pdb.mmcif.MMCIFParser;
+import com.actelion.research.chem.io.pdb.parser.PDBFileEntry;
+import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
+import com.actelion.research.chem.io.pdb.parser.StructureAssembler;
 import com.actelion.research.chem.reaction.Reaction;
 import com.actelion.research.chem.reaction.ReactionEncoder;
 import com.actelion.research.chem.reaction.mapping.ChemicalRuleEnhancedReactionMapper;
+import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.JProgressDialog;
 import com.actelion.research.io.BOMSkipper;
@@ -43,6 +49,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -264,6 +271,14 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				is = zipFile.getInputStream(zipEntry);
 				dataType = CompoundFileHelper.cFileTypeSD;
 				}
+			else if (dataType == CompoundFileHelper.cFileTypePDBGZ) {
+				is = new GZIPInputStream(new FileInputStream(mFile));
+				dataType = CompoundFileHelper.cFileTypePDB;
+			}
+			else if (dataType == CompoundFileHelper.cFileTypeMMCIFGZ) {
+				is = new GZIPInputStream(new FileInputStream(mFile));
+				dataType = CompoundFileHelper.cFileTypeMMCIF;
+				}
 			else {
 				is = new FileInputStream(mFile);
 			}
@@ -274,22 +289,18 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		catch (NoSuchElementException nsee) {
 			mTableModel.unlock();
 			showMessageOnEDT("No entry found in .sdf.zip file.", "Error", JOptionPane.WARNING_MESSAGE);
-			return;
 			}
 		catch (FileNotFoundException e) {
 			mTableModel.unlock();
 			showMessageOnEDT("File not found.", "Error", JOptionPane.WARNING_MESSAGE);
-			return;
 			}
 		catch (UnsupportedEncodingException e) {
 			mTableModel.unlock();
 			showMessageOnEDT("Unsupported encoding.", "File Format Error", JOptionPane.WARNING_MESSAGE);
-			return;
 			}
 		catch (IOException e) {
 			mTableModel.unlock();
 			showMessageOnEDT("IO-Exception.", "Error", JOptionPane.WARNING_MESSAGE);
-			return;
 			}
 		}
 
@@ -1750,7 +1761,6 @@ try {
 			}
 		}
 
-
 	private boolean readMol2File() {
 		mProgressController.startProgress("Examining Records...", 0, 0);
 
@@ -1818,6 +1828,97 @@ try {
 		}
 
 		return true;
+	}
+
+	private boolean readProteinFile() {
+		mProgressController.startProgress("Processing Binding Sites...", 0, 0);
+
+		PDBFileEntry entry;
+		try {
+			entry = mDataType == FileHelper.cFileTypeMMCIF ?
+					MMCIFParser.parse(new BufferedReader(mDataReader)) : new PDBFileParser().parse(new BufferedReader(mDataReader));
+			}
+		catch (Exception e) {
+			showMessageOnEDT(e.getMessage(), "Couldn't parse file: "+e.getMessage(), JOptionPane.WARNING_MESSAGE);
+			return false;
+			}
+
+		ArrayList<BindingSite> siteList = getBindingSites(entry);
+		if (siteList == null)
+			return false;
+
+		mFieldNames = BindingSite.PROTEIN_COLUMN_TITLE;
+
+		ArrayList<Object[]> fieldDataList = new ArrayList<>();
+		for (BindingSite site : siteList)
+			fieldDataList.add(site.getEntryLine());
+
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[0], "lookupURL0", "https://www.rcsb.org/structure/%s");
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[0], "lookupName0", "RCSB PDB-Entry");
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[0], "lookupCount", "1");
+
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[1], cColumnPropertySpecialType, cColumnTypeIDCode);
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[2], cColumnPropertySpecialType, cColumnType3DCoordinates);
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[2], cColumnPropertyParentColumn, BindingSite.PROTEIN_COLUMN_TITLE[1]);
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[2], cColumnPropertyProteinCavityColumn, BindingSite.PROTEIN_COLUMN_TITLE[4]);
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[2], cColumnPropertyCavityWaterColumn, BindingSite.PROTEIN_COLUMN_TITLE[6]);
+
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[3], cColumnPropertySpecialType, cColumnTypeIDCode);
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[3], cColumnPropertyDetailView, "none");
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[4], cColumnPropertySpecialType, cColumnType3DCoordinates);
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[4], cColumnPropertyParentColumn, BindingSite.PROTEIN_COLUMN_TITLE[3]);
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[4], cColumnPropertyDetailView, "none");
+
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[5], cColumnPropertySpecialType, cColumnTypeIDCode);
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[5], cColumnPropertyDetailView, "none");
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[6], cColumnPropertySpecialType, cColumnType3DCoordinates);
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[6], cColumnPropertyParentColumn, BindingSite.PROTEIN_COLUMN_TITLE[5]);
+		addColumnProperty(BindingSite.PROTEIN_COLUMN_TITLE[6], cColumnPropertyDetailView, "none");
+
+		mFieldData = fieldDataList.toArray(new Object[0][]);
+
+		try {
+			mRuntimeProperties.read(new BufferedReader(new StringReader(PROTEIN_TEMPLATE)));
+		} catch (IOException e) {}
+
+		return true;
+	}
+
+	private ArrayList<BindingSite> getBindingSites(PDBFileEntry entry) {
+		try {
+			Map<String, List<Molecule3D>> map = entry.extractMols(true, true);
+			List<Molecule3D> ligands = map.get(StructureAssembler.LIGAND_GROUP);
+			if (ligands == null || ligands.isEmpty()) {
+				showMessageOnEDT("Didn't find any binding sites in the file", "No Binding Sites", JOptionPane.WARNING_MESSAGE);
+				return null;
+			}
+
+			List<Molecule3D> proteins = map.get(StructureAssembler.PROTEIN_GROUP);
+
+			if (proteins == null || proteins.isEmpty()) {
+				showMessageOnEDT("Didn't find any protein in the file", "No Protein", JOptionPane.WARNING_MESSAGE);
+				return null;
+			}
+
+			Molecule3D protein = proteins.getFirst();
+			for (int i=1; i<proteins.size(); i++)
+				protein.addMolecule(proteins.get(i));
+
+			List<Molecule3D> waters = map.get(StructureAssembler.SOLVENT_GROUP);
+			Molecule3D water = waters.isEmpty() ? null : waters.getFirst();
+
+			ArrayList<BindingSite> siteList = new ArrayList<>();
+			for (Molecule3D ligand : ligands) {
+				ligand.ensureHelperArrays(Molecule.cHelperNeighbours);
+				siteList.add(new BindingSite(entry, new Molecule3D(protein), ligand, water));
+			}
+
+			return siteList;
+		}
+		catch (Exception e) {
+			showMessageOnEDT("Unexpected Exception: "+e.getMessage(), "Exception", JOptionPane.WARNING_MESSAGE);
+			return null;
+		}
 	}
 
 	private boolean readSDFile() {
@@ -2486,6 +2587,8 @@ try {
 				return readSDFile();
 			if ((mDataType & FileHelper.cFileTypeMOL2) != 0)
 				return readMol2File();
+			if ((mDataType & FileHelper.cFileTypeProtein) != 0)
+				return readProteinFile();
 			}
 		catch (OutOfMemoryError err) {
 			showMessageOnEDT("Out of memory. Launch this application with Java option -Xms???m or -Xmx???m.", "Memory Error", JOptionPane.WARNING_MESSAGE);
@@ -3199,8 +3302,104 @@ try {
 	 * @param success true if file was successfully read
 	 */
 	public void finalStatus(boolean success) {}
+
+	private static final String PROTEIN_TEMPLATE =
+			"<datawarrior properties>\n" +
+			"<columnFilter_Table=\"\">\n" +
+			"<columnVisibility_Table_Cavity=\"false\">\n" +
+			"<columnVisibility_Table_Water=\"false\">\n" +
+			"<detailView=\"height[Data]=0.17107;height[Binding Site]=0.82893\">\n" +
+			"<detailView_Binding Site_fxmvBackgroundColor=\"#000000\">\n" +
+			"<detailView_Binding Site_fxmvCavityColor=\"#00FFFF\">\n" +
+			"<detailView_Binding Site_fxmvCavityConstructionMode=\"wires\">\n" +
+			"<detailView_Binding Site_fxmvCavityHydrogenMode=\"none\">\n" +
+			"<detailView_Binding Site_fxmvCavityRibbonMode=\"none\">\n" +
+			"<detailView_Binding Site_fxmvCavitySideChainMode=\"all\">\n" +
+			"<detailView_Binding Site_fxmvCavitySurfaceColor=\"#D3D3D3\">\n" +
+			"<detailView_Binding Site_fxmvCavitySurfaceColorMode=\"atomicNo\">\n" +
+			"<detailView_Binding Site_fxmvCavitySurfaceMode=\"none\">\n" +
+			"<detailView_Binding Site_fxmvCavitySurfaceTransparency=\"0.2\">\n" +
+			"<detailView_Binding Site_fxmvInteractionType=\"rf\">\n" +
+			"<detailView_Binding Site_fxmvIsAnimate=\"none\">\n" +
+			"<detailView_Binding Site_fxmvSingleConformerColor=\"#00FF00\">\n" +
+			"<detailView_Binding Site_fxmvSingleConformerConstructionMode=\"sticks\">\n" +
+			"<detailView_Binding Site_fxmvSingleConformerHydrogenMode=\"none\">\n" +
+			"<detailView_Binding Site_fxmvSingleConformerSurfaceColor=\"#4169E1\">\n" +
+			"<detailView_Binding Site_fxmvSingleConformerSurfaceColorMode=\"inherit\">\n" +
+			"<detailView_Binding Site_fxmvSingleConformerSurfaceMode=\"none\">\n" +
+			"<detailView_Binding Site_fxmvSingleConformerSurfaceTransparency=\"0.1\">\n" +
+			"<filter0=\"#string#\t#allColumns#\">\n" +
+			"<filter1=\"#structure#\tLigand\">\n" +
+			"<headerLines_Table=\"2\">\n" +
+			"<mainSplitting=\"0.40\">\n" +
+			"<mainView=\"Table\">\n" +
+			"<mainViewCount=\"1\">\n" +
+			"<mainViewDockInfo0=\"root\">\n" +
+			"<mainViewName0=\"Table\">\n" +
+			"<mainViewType0=\"tableView\">\n" +
+			"<multipleOfColumnCount=\"0\">\n" +
+			"<rightSplitting=\"0\">\n" +
+			"<rowHeight_Table=\"80\">\n" +
+			"</datawarrior properties>\n";
 	}
 
 class SDFileContentAnalysis {
 	boolean chiralFlagFound,v2000Found,v3000Found,definedStereoCentersFound,singleRacemicStereoCenterFound,singleUnspecifiedStereoCenterFound;
+}
+
+class BindingSite {
+	public static final String[] PROTEIN_COLUMN_TITLE = { "PDB-ID", "Ligand", "Binding Site", "Cavity", "CoordsCavity",
+			"Water", "CoordsWater", "Title", "Ligand Name", "Keywords", "Deposition", "Resolution" };
+
+	private final PDBFileEntry mEntry;
+	private final StereoMolecule mCavity,mLigand,mWater;
+
+	public BindingSite(final PDBFileEntry entry, final Molecule3D cavity, final Molecule3D ligand, final Molecule3D water) {
+		// if we have both, protein and ligand, then we can crop, center and add all to emptied scene
+		mEntry = entry;
+		Coordinates cog = JFXMolViewerPanel.calculateCOG(ligand);
+		mCavity = JFXMolViewerPanel.cropProtein(cavity, ligand, cog);
+		mLigand = ligand;
+		mWater = JFXMolViewerPanel.cropWater(water, ligand, cog);
+
+		new HydrogenAssembler(mLigand).addImplicitHydrogens();
+		new HydrogenAssembler(mCavity).addImplicitHydrogens();
+	}
+
+	public Object[] getEntryLine() {
+		Canonizer ligandCanonizer = new Canonizer(mLigand, Canonizer.ENCODE_ATOM_CUSTOM_LABELS | Canonizer.NEGLECT_LARGE_ATOM_STEREO_INFORMATION);
+		Canonizer cavityCanonizer = new Canonizer(mCavity, Canonizer.ENCODE_ATOM_CUSTOM_LABELS);
+		Canonizer waterCanonizer = new Canonizer(mWater, Canonizer.ENCODE_ATOM_CUSTOM_LABELS);
+
+		Object[] cell = new Object[PROTEIN_COLUMN_TITLE.length];
+		cell[0] = getBytes(mEntry.getID());
+		cell[1] = getBytes(ligandCanonizer.getIDCode());
+		cell[2] = getBytes(ligandCanonizer.getEncodedCoordinates());
+		cell[3] = getBytes(cavityCanonizer.getIDCode());
+		cell[4] = getBytes(cavityCanonizer.getEncodedCoordinates());
+		cell[5] = getBytes(waterCanonizer.getIDCode());
+		cell[6] = getBytes(waterCanonizer.getEncodedCoordinates());
+		cell[7] = getBytes(mEntry.getTitle());
+		cell[8] = getBytes(mLigand.getName());
+		if (mEntry.getKeywords() != null)
+			cell[9] = getBytes(mEntry.getKeywords().toLowerCase());
+		if (mEntry.getDateDeposition() != null)
+			cell[10] = getBytes(new SimpleDateFormat("dd-MMM-yyyy").format(mEntry.getDateDeposition()));
+		if (mEntry.getResolution() != null)
+			cell[11] = getBytes(mEntry.getResolution());
+
+		return cell;
+	}
+
+	private byte[] getBytes(String s) {
+		return (s == null || s.isEmpty()) ? null : s.getBytes();
+	}
+
+	public StereoMolecule getCavity() {
+		return mCavity;
+	}
+
+	public StereoMolecule getLigand() {
+		return mLigand;
+	}
 }

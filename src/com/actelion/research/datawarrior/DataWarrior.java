@@ -741,19 +741,16 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 */
 	public void readFile(String filename) {
 		final int filetype = FileHelper.getFileType(filename);
-		switch (filetype) {
-		case FileHelper.cFileTypeDataWarrior:
-		case FileHelper.cFileTypeSD:
-		case FileHelper.cFileTypeTextTabDelimited:
-		case FileHelper.cFileTypeTextAnyCSV:
-		    new DETaskOpenFile(this, filename).defineAndRun();
+		if ((filetype & FileHelper.cFileTypeDataWarriorCompatibleData) != 0) {
+			new DETaskOpenFile(this, filename).defineAndRun();
 			return;
-		case FileHelper.cFileTypeDataWarriorMacro:
+		}
+		if (filetype == FileHelper.cFileTypeDataWarriorMacro) {
 			new DETaskRunMacroFromFile(this, filename).defineAndRun();
 			return;
-		default:
-			JOptionPane.showMessageDialog(getActiveFrame(), "Unsupported file type.\n"+filename);
-			}
+		}
+
+		JOptionPane.showMessageDialog(getActiveFrame(), "Unsupported file type.\n"+filename);
 		}
 
 	public void handleCustomURI(URI uri) {
@@ -806,11 +803,8 @@ public abstract class DataWarrior implements WindowFocusListener {
 		if (file == null || !file.exists())
 			return;
 
-		int type = FileHelper.getFileType(file.getName());
-		if (type != FileHelper.cFileTypeDataWarrior
-				&& type != FileHelper.cFileTypeSD
-				&& type != FileHelper.cFileTypeTextTabDelimited
-				&& type != FileHelper.cFileTypeTextCommaSeparated)
+		int filetype = FileHelper.getFileType(file.getName());
+		if ((filetype & FileHelper.cFileTypeDataWarriorCompatibleData) == 0)
 			return;
 
 		try {

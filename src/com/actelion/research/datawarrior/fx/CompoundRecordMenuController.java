@@ -113,7 +113,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 			if (mAllowSuperposeReference) {
 				javafx.scene.control.CheckMenuItem itemSuperposeRefRow = new CheckMenuItem("Overlay Structure From Reference Row");
 				itemSuperposeRefRow.setSelected(isSuperposeRefRow);
-				itemSuperposeRefRow.setOnAction(e -> setSuperposeMode(!isSuperposeRefRow, alignMethod, superposeColumn, -1));
+				itemSuperposeRefRow.setOnAction(e -> setSuperposeMode(!isSuperposeRefRow, alignMethod, superposeColumn, -1, -1));
 				popup.getItems().add(itemSuperposeRefRow);
 			}
 
@@ -122,7 +122,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				 && !"none".equals(mTableModel.getColumnProperty(coordsColumn, CompoundTableConstants.cColumnPropertyDetailView))) {
 					javafx.scene.control.CheckMenuItem itemSuperposeColumn = new CheckMenuItem("Overlay '"+mTableModel.getColumnTitle(coordsColumn)+"'");
 					itemSuperposeColumn.setSelected(superposeColumn == coordsColumn);
-					itemSuperposeColumn.setOnAction(e -> setSuperposeMode(false, alignMethod, superposeColumn == coordsColumn ? -1 : coordsColumn, -1));
+					itemSuperposeColumn.setOnAction(e -> setSuperposeMode(false, alignMethod, superposeColumn == coordsColumn ? -1 : coordsColumn, -1, -1));
 					popup.getItems().add(itemSuperposeColumn);
 				}
 			}
@@ -134,12 +134,12 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				javafx.scene.control.CheckMenuItem itemAlignShape = new CheckMenuItem("Align Structures By Shape");
 				itemAlignShape.setSelected(alignMethod == ALIGN_BY_SHAPE);
 				itemAlignShape.setDisable(!overlayShown);
-				itemAlignShape.setOnAction(e -> setSuperposeMode(isSuperposeRefRow, alignMethod == ALIGN_BY_SHAPE ? ALIGN_DONT_NONE : ALIGN_BY_SHAPE, superposeColumn, -1));
+				itemAlignShape.setOnAction(e -> setSuperposeMode(isSuperposeRefRow, alignMethod == ALIGN_BY_SHAPE ? ALIGN_DONT_NONE : ALIGN_BY_SHAPE, superposeColumn, -1, -1));
 
 				javafx.scene.control.CheckMenuItem itemAlignMCS = new CheckMenuItem("Align Structures By MCS");
 				itemAlignMCS.setSelected(alignMethod == ALIGN_BY_MCS);
 				itemAlignMCS.setDisable(!overlayShown);
-				itemAlignMCS.setOnAction(e -> setSuperposeMode(isSuperposeRefRow, alignMethod == ALIGN_BY_MCS ? ALIGN_DONT_NONE : ALIGN_BY_MCS, superposeColumn, -1));
+				itemAlignMCS.setOnAction(e -> setSuperposeMode(isSuperposeRefRow, alignMethod == ALIGN_BY_MCS ? ALIGN_DONT_NONE : ALIGN_BY_MCS, superposeColumn, -1, -1));
 
 				popup.getItems().addAll(new SeparatorMenuItem(), itemAlignShape, itemAlignMCS);
 			}
@@ -240,9 +240,10 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	 * @param isSuperposeRefRow whether the reference row's conformer shall be superposed to this row's one
 	 * @param alignmentMethod whether and how the reference row's conformer shall be also aligned to this row's one
 	 * @param superposeColumn whether and which other 3D-coord column's conformer of the same row shall be superposed to this column's one
-	 * @param cavityColumn whether and which cavity column shall be shown with this column's ligand structure
+	 * @param cavityColumn whether and which column's cavity shall be shown with this column's ligand structure
+	 * @param waterColumn whether and which column's cavity water shall be shown with this column's ligand structure
 	 */
-	private void setSuperposeMode(boolean isSuperposeRefRow, int alignmentMethod, int superposeColumn, int cavityColumn) {
+	private void setSuperposeMode(boolean isSuperposeRefRow, int alignmentMethod, int superposeColumn, int cavityColumn, int waterColumn) {
 		SwingUtilities.invokeLater(() -> {
 			HashMap<String, String> map = new HashMap<>();
 			String superposeWhat = isSuperposeRefRow ? CompoundTableConstants.cSuperposeValueReferenceRow
@@ -251,7 +252,7 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 			map.put(CompoundTableConstants.cColumnPropertySuperposeAlign, alignmentMethod == ALIGN_BY_SHAPE ? CompoundTableConstants.cSuperposeAlignValueShape
 																		: alignmentMethod == ALIGN_BY_MCS ? CompoundTableConstants.cSuperposeAlignValueMCS : null);
 			new DETaskSetColumnProperties(getFrame(), mCoordsColumn, map, false).defineAndRun();
-			update3DView(isSuperposeRefRow, alignmentMethod, superposeColumn, cavityColumn);
+			update3DView(isSuperposeRefRow, alignmentMethod, superposeColumn, cavityColumn, waterColumn);
 		});
 	}
 
@@ -292,8 +293,9 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	 * @param alignmentMethod whether and how the shown conformer(s) shall be rigidly aligned to the active row's conformer (if shown)
 	 * @param superposeColumn -1 or coords3D column of another conformer column which shall be superposed to this column's conformer
 	 * @param cavityColumn -1 or coords3D column of cavity column that is assigned to this controller's ligand column to complete a binding site structure
+	 * @param waterColumn -1 or coords3D column of cavity water column that is assigned to this controller's ligand column to complete a binding site structure
 	 */
-	public void update3DView(boolean isSuperposeRefRow, int alignmentMethod, int superposeColumn, int cavityColumn) {
+	public void update3DView(boolean isSuperposeRefRow, int alignmentMethod, int superposeColumn, int cavityColumn, int waterColumn) {
 		mUpdateThread = new Thread(() -> {
 			// cancel all FX-threads that work on older updates, because a new one is on its way
 			mConformerPanel.increaseUpdateID();
@@ -346,6 +348,12 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				StereoMolecule[] cavity = getConformers(cavityColumn, mParentRecord, false);
 				mConformerPanel.clear();
 				mConformerPanel.setProteinCavity(cavity == null || cavity.length==0 ? null : cavity[0], rowMol == null ? null : rowMol[0], true, true);
+			}
+
+			if (waterColumn != -1 && mParentRecord != null && Thread.currentThread() == mUpdateThread) {
+				StereoMolecule[] water = getConformers(waterColumn, mParentRecord, false);
+				if (water != null && water.length != 1)
+					mConformerPanel.setCavityWater(water[0]);
 			}
 
 			if (Thread.currentThread() == mUpdateThread)

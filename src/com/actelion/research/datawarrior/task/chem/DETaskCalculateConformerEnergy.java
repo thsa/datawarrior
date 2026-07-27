@@ -39,6 +39,7 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 			mCheckBoxSkipHydrogenContributions,mCheckBoxAddConformers;
 	private JTextField mTextFieldConformerCount,mTextFieldDielectricConstant;
 	private volatile int mMaxConformers,mMinimizationErrors;
+	private volatile double mDielectricConstant;
 	private volatile boolean mAddConformers,mCalcLocal,mCalcGlobal,mAngleBendAndTorsionOnly,mSkipHydrogen;
 	private volatile Map<String,Object> mMMFFOptions;
 
@@ -269,12 +270,12 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		mCalcGlobal = configuration.getProperty(PROPERTY_CALC_GLOBAL, "").equals("true");
 		try { mMaxConformers = Integer.parseInt(configuration.getProperty(PROPERTY_GLOBAL_CONFORMERS, "64")); } catch (NumberFormatException e) {}
 		mAddConformers = configuration.getProperty(PROPERTY_ADD_CONFORMERS, "").equals("true");
-		double dielectricConstant = 80.0;
-		try { dielectricConstant = Double.parseDouble(configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT, DEFAULT_DIELECTRIC_CONSTANT)); } catch (NumberFormatException e) {}
+		mDielectricConstant = 80.0;
+		try { mDielectricConstant = Double.parseDouble(configuration.getProperty(PROPERTY_DIELECTRIC_CONSTANT, DEFAULT_DIELECTRIC_CONSTANT)); } catch (NumberFormatException e) {}
 
 		ForceFieldMMFF94.initialize(MMFF_TABLE_SET);
 		mMMFFOptions = new HashMap<>();
-		mMMFFOptions.put("dielectric constant", dielectricConstant);
+		mMMFFOptions.put("dielectric constant", mDielectricConstant);
 		mMinimizationErrors = 0;
 		if (mCalcGlobal) {
 			RigidFragmentCache.getDefaultInstance().loadDefaultCache();
@@ -368,6 +369,7 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 
 	private double calculateEnergy(StereoMolecule mol) {
 		Map<String,Object> options = new HashMap<>();
+		options.put("dielectric constant", mDielectricConstant);
 		options.put("angle bend", Boolean.TRUE);
 		options.put("bond stretch", mAngleBendAndTorsionOnly ? Boolean.FALSE : Boolean.TRUE);
 		options.put("electrostatic", mAngleBendAndTorsionOnly ? Boolean.FALSE : Boolean.TRUE);

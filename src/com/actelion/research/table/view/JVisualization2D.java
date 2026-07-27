@@ -2510,10 +2510,10 @@ public class JVisualization2D extends JVisualization {
 	private void drawFittedLine(Rectangle baseGraphRect, Rectangle[][] splitCurveBounds) {
 		int catCount = getSplitCurveCategoryCount();
 		int[][] count = new int[mHVCount][catCount];
-		float[][] sx = new float[mHVCount][catCount];
-		float[][] sy = new float[mHVCount][catCount];
-		float[][] sx2 = new float[mHVCount][catCount];
-		float[][] sxy = new float[mHVCount][catCount];
+		double[][] sx = new double[mHVCount][catCount];
+		double[][] sy = new double[mHVCount][catCount];
+		double[][] sx2 = new double[mHVCount][catCount];
+		double[][] sxy = new double[mHVCount][catCount];
 		long mask = mTableModel.getListHandler().getListMask(mCurveRowList);
 		for (int i=0; i<mDataPoints; i++) {
 			if (isConsideredForCurve(mPoint[i], mask)) {
@@ -2525,8 +2525,8 @@ public class JVisualization2D extends JVisualization {
 				count[mPoint[i].hvIndex][cat]++;
 				}
 			}
-		float[][] m = new float[mHVCount][catCount];
-		float[][] b = new float[mHVCount][catCount];
+		double[][] m = new double[mHVCount][catCount];
+		double[][] b = new double[mHVCount][catCount];
 		for (int hv=0; hv<mHVCount; hv++) {
 			for (int cat=0; cat<catCount; cat++) {
 				m[hv][cat] = (count[hv][cat]*sxy[hv][cat]-sx[hv][cat]*sy[hv][cat])/(count[hv][cat]*sx2[hv][cat]-sx[hv][cat]*sx[hv][cat]);
@@ -2535,15 +2535,15 @@ public class JVisualization2D extends JVisualization {
 			}
 
 		boolean showStdDev = (mCurveInfo & cCurveStandardDeviation) != 0;
-		float[][] stdDev = null;
+		double[][] stdDev = null;
 		if (showStdDev) {
-			stdDev = new float[mHVCount][catCount];
+			stdDev = new double[mHVCount][catCount];
 			for (int i=0; i<mDataPoints; i++) {
 				if (isConsideredForCurve(mPoint[i], mask)) {
 					int cat = (catCount == 1) ? 0 : getSplitCurveCategoryIndex(mPoint[i]);
-					float b2 = mPoint[i].screenY + mPoint[i].screenX/m[mPoint[i].hvIndex][cat];
-					float xs = (b2-b[mPoint[i].hvIndex][cat])/(m[mPoint[i].hvIndex][cat]+1.0f/m[mPoint[i].hvIndex][cat]);
-					float ys = -xs/m[mPoint[i].hvIndex][cat] + b2;
+					double b2 = mPoint[i].screenY + mPoint[i].screenX/m[mPoint[i].hvIndex][cat];
+					double xs = (b2-b[mPoint[i].hvIndex][cat])/(m[mPoint[i].hvIndex][cat]+1.0f/m[mPoint[i].hvIndex][cat]);
+					double ys = -xs/m[mPoint[i].hvIndex][cat] + b2;
 					stdDev[mPoint[i].hvIndex][cat] += (mPoint[i].screenX-xs)*(mPoint[i].screenX-xs);
 					stdDev[mPoint[i].hvIndex][cat] += (mPoint[i].screenY-ys)*(mPoint[i].screenY-ys);
 					}
@@ -2555,11 +2555,11 @@ public class JVisualization2D extends JVisualization {
 				if (count[hv][cat] < 2)
 					continue;
 
-				float dxy = 0;
+				double dxy = 0;
 				if (showStdDev) {
 					stdDev[hv][cat] /= (count[hv][cat]-1);
 					stdDev[hv][cat] = (float)Math.sqrt(stdDev[hv][cat]);
-					dxy = (float)Math.sqrt(stdDev[hv][cat]*stdDev[hv][cat]*(1+m[hv][cat]*m[hv][cat]));
+					dxy = Math.sqrt(stdDev[hv][cat]*stdDev[hv][cat]*(1+m[hv][cat]*m[hv][cat]));
 					}
 
 				Rectangle bounds = (splitCurveBounds == null) ? baseGraphRect : splitCurveBounds[hv][cat];
@@ -2568,19 +2568,19 @@ public class JVisualization2D extends JVisualization {
 					mG.setColor(mMarkerColor.getColor(getCurveColorIndexFromCombinedCategoryIndex(cat)));
 
 				if (count[hv][cat]*sx2[hv][cat] == sx[hv][cat]*sx[hv][cat]) {
-					float x = sx[hv][cat] / count[hv][cat];
-					float ymin = bounds.y;
+					double x = sx[hv][cat] / count[hv][cat];
+					double ymin = bounds.y;
 					if (isSplitView() && splitCurveBounds == null)
 						ymin += mSplitter.getVIndex(hv) * mSplitter.getGridHeight();
-					drawVerticalLine(x, ymin, ymin+bounds.height, dxy);
+					drawVerticalLine((float)x, (float)ymin, (float)(ymin+bounds.height), (float)dxy);
 					continue;
 					}
 				if (count[hv][cat]*sxy[hv][cat] == sx[hv][cat]*sy[hv][cat]) {
-					float y = sy[hv][cat] / count[hv][cat];
-					float xmin = bounds.x;
+					double y = sy[hv][cat] / count[hv][cat];
+					double xmin = bounds.x;
 					if (isSplitView() && splitCurveBounds == null)
 						xmin += mSplitter.getHIndex(hv) * mSplitter.getGridWidth();
-					drawHorizontalLine(xmin, xmin+bounds.width, y, dxy);
+					drawHorizontalLine((float)xmin, (float)(xmin+bounds.width), (float)y, (float)dxy);
 					continue;
 					}
 
@@ -2596,7 +2596,7 @@ public class JVisualization2D extends JVisualization {
 				int ymin = bounds.y+vOffset;
 				int ymax = ymin+bounds.height;
 
-				drawInclinedLine(xmin, xmax, ymin, ymax, m[hv][cat], b[hv][cat], dxy);
+				drawInclinedLine(xmin, xmax, ymin, ymax, (float)m[hv][cat], (float)b[hv][cat], (float)dxy);
 				}
 			}
 		}

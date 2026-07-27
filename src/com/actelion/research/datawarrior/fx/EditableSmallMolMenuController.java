@@ -203,7 +203,7 @@ public class EditableSmallMolMenuController implements V3DPopupMenuController {
 								new PDBFileParser().parse(pdbFile) : MMCIFParser.parse(pdbFile);
 					}
 
-					List<Molecule3D> ligands = entryFile.extractMols(true).get(StructureAssembler.LIGAND_GROUP);
+					List<Molecule3D> ligands = entryFile.extractMols(true, true).get(StructureAssembler.LIGAND_GROUP);
 					int covalentCount = 0;
 					if (ligands != null)
 						for (Molecule3D ligand : ligands)

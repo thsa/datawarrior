@@ -364,9 +364,10 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 								: CompoundTableConstants.cSuperposeAlignValueMCS.equals(alignString) ? CompoundRecordMenuController.ALIGN_BY_MCS : CompoundRecordMenuController.ALIGN_DONT_NONE;
 				int superposeColumn = mTableModel.findColumn(superposeWhat);
 				int cavityColumn = mTableModel.findColumn(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyProteinCavityColumn));
+				int waterColumn = mTableModel.findColumn(mTableModel.getColumnProperty(viewInfo.detail, CompoundTableConstants.cColumnPropertyCavityWaterColumn));
 				CompoundRecordMenuController controller = (CompoundRecordMenuController)((JFXMolViewerPanel)viewInfo.view).getPopupMenuController();
 				controller.setParentRecord(mHighlightedRecord);
-				controller.update3DView(isSuperposeRefRow, alignMethod, superposeColumn, cavityColumn);
+				controller.update3DView(isSuperposeRefRow, alignMethod, superposeColumn, cavityColumn, waterColumn);
 			}
 			case TYPE_REACTION -> {
 				Reaction rxn = null;

@@ -38,6 +38,8 @@ import com.actelion.research.util.DoubleFormat;
 import info.clearthought.layout.TableLayout;
 import org.openmolecules.chem.conf.gen.ConformerGenerator;
 import org.openmolecules.chem.conf.gen.RigidFragmentCache;
+import org.openmolecules.chem.interaction.rf.RFInteraction;
+import org.openmolecules.chem.interaction.rf.RFInteractionList;
 import org.openmolecules.fx.viewer3d.interactions.drugscore.DrugScoreAtomClassifier;
 import org.openmolecules.fx.viewer3d.interactions.drugscore.DrugScoreInteractionCalculator;
 import org.openmolecules.fx.viewer3d.interactions.drugscore.DrugScorePotential;
@@ -50,14 +52,19 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 	private static final String MMFF_TABLE_SET = ForceFieldMMFF94.MMFF94SPLUS;
 	private static final double DIELECTRIC_CONSTANT = 80.0;
 
+	// Shift to account for 1.0 representing an attractive interaction rather than being neutral
+	// Value was empirically determined uptimizing CASF decoy docking results with increasing shift values
+	private static final double NEUTRAL_RF_OFFSET = 0.41;
+
 	public static final String TASK_NAME = "Add Docking Score";
 
 	private static final String PROPERTY_LIGAND_COLUMN = "ligandColumn";
 	private static final String PROPERTY_SCORE_TYPE = "scoreType";
-	private static final String[] TYPE_CODE = {"chemplp", "drugscore"};
-	private static final String[] TYPE_TEXT = {"ChemPLP Score", "Drugscore 2018"};
+	private static final String[] TYPE_CODE = {"chemplp", "drugscore", "rfsum"};
+	private static final String[] TYPE_TEXT = {"ChemPLP Score", "Drugscore 2018", "RF-Score"};
 	private static final int SCORE_TYPE_CHEMPLP = 0;
 	private static final int SCORE_TYPE_DRUGSCORE = 1;
+	private static final int SCORE_TYPE_RF_SCORE = 2;
 
 	private final CompoundTableModel mTableModel;
 	private JComboBox<String> mComboBoxLigandCoords,mComboBoxType;
@@ -213,7 +220,7 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 		final TreeMap<String, DrugScorePotential> drugScorePotentials = (scoreType == SCORE_TYPE_DRUGSCORE) ?
 				DrugScoreInteractionCalculator.getPotentials() : null;
 
-		if (scoreType == SCORE_TYPE_CHEMPLP)
+		if (scoreType == SCORE_TYPE_CHEMPLP || scoreType == SCORE_TYPE_RF_SCORE)
 			initializeMMFF94();
 
 		startProgress("Processing binding sites...", 0, totalRowCount);
@@ -247,6 +254,8 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 										calculateChemPLPScore(cavity, ligand)
 										   : (scoreType == SCORE_TYPE_DRUGSCORE) ?
 										calculateDrugScore2018(cavity, ligand, drugScorePotentials)
+										   : (scoreType == SCORE_TYPE_RF_SCORE) ?
+										calculateRFScore(cavity, ligand)
 										   : Double.NaN;
 							}
 							catch (Exception e) {
@@ -319,7 +328,7 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 			//		DockingEngine.getBindingSiteAtoms(receptor, bindingSiteAtoms, grid, false);
 			//		AbstractScoringEngine engine = new IdoScore(receptor,bindingSiteAtoms, getReceptorAtomTypes(receptor),grid);
 
-			double e0 = getMinConformerEnergy(ligand);
+			double e0 = getMinConformerEnergy(ligand, false);
 			engine.init(new LigandPose(new Conformer(ligand), engine, e0), e0);
 
 			return engine.getScore();
@@ -330,6 +339,17 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 		}
 	}
 
+	private double calculateRFScore(StereoMolecule cavity, StereoMolecule ligand) {
+		RFInteractionList interactions = new RFInteractionList(ligand, cavity, false);
+		double rfScore = 0.0;
+		for (RFInteraction rf: interactions) {
+			double rfValue = rf.getRFValue(null);
+			if (!Double.isNaN(rfValue))
+				rfScore -= Math.log(NEUTRAL_RF_OFFSET + rfValue);
+		}
+		return rfScore /* + getMinConformerEnergy(ligand, true) doesn't seem to improve it */;
+	}
+
 	private void initializeMMFF94() {
 		ForceFieldMMFF94.initialize(MMFF_TABLE_SET);
 		mMMFFOptions = new HashMap<>();
@@ -338,8 +358,20 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 		RigidFragmentCache.getDefaultInstance().resetAllCounters();
 		}
 
-	private double getMinConformerEnergy(StereoMolecule ligand) {
+	/**
+	 *
+	 * @param ligand
+	 * @param isRelative whether eMin or eLigand - eMin shall be returned
+	 * @return
+	 */
+	private double getMinConformerEnergy(StereoMolecule ligand, boolean isRelative) {
 		Molecule3D nativePose = new Molecule3D(ligand);
+
+		double eLigand = 0.0;
+		if (isRelative) {
+			ForceFieldMMFF94 mmff = new ForceFieldMMFF94(nativePose, ForceFieldMMFF94.MMFF94SPLUS, mMMFFOptions);
+			eLigand = mmff.getTotalEnergy();
+		}
 
 		ConformerSetGenerator confSetGen = new ConformerSetGenerator(64, ConformerGenerator.STRATEGY_LIKELY_RANDOM, false, LigandPose.SEED);
 		ConformerSet confSet = confSetGen.generateConformerSet(nativePose);
@@ -353,6 +385,6 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 			if (eMin > e)
 				eMin = e;
 		}
-		return eMin;
+		return isRelative ? eLigand-eMin : eMin;
 	}
 }

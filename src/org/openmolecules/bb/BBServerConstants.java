@@ -19,10 +19,6 @@
 package org.openmolecules.bb;
 
 public interface BBServerConstants {
-	// The SERVER_URL is only used by the client
-//	public static final String SERVER_URL = "http://localhost:8087";
-	public static final String SERVER_URL = "http://bb.openmolecules.org";
-
 	int RESULT_STRUCTURE_COLUMNS = 3;
 	int RESULT_COLUMN_IDCODE = 0;
 	int RESULT_COLUMN_COORDS2D = 1;

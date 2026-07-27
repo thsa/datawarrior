@@ -143,7 +143,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 	}
 
 	private void addProteinAndLigand(PDBFileEntry entryFile) {
-		Map<String, List<Molecule3D>> map = entryFile.extractMols(true);
+		Map<String, List<Molecule3D>> map = entryFile.extractMols(true, true);
 		List<Molecule3D> ligands = map.get(StructureAssembler.LIGAND_GROUP);
 
 		int covalentCount = 0;

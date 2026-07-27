@@ -43,8 +43,7 @@ public class JFXPDBViewer extends JFXPanel {
 	}
 
 	public void setPDBData(final byte[] pdbData) {
-		mLatestRunnable = null;
-		Runnable r = new Runnable() {
+		mLatestRunnable = new Runnable() {
 			@Override
 			public void run () {
 				if (this == mLatestRunnable) {
@@ -54,7 +53,7 @@ public class JFXPDBViewer extends JFXPanel {
 						if (this == mLatestRunnable && pdbData != null) {
 							System.out.print("loading data...");
 //							Map<String, List<Molecule3D>> molMap = parser.parse(new File("/Users/thomas/Documents/data/pdb/reninOpenFlap.pdb")).extractMols();
-							Map<String, List<Molecule3D>> molMap = parser.parse(new BufferedReader(new StringReader(new String(pdbData)))).extractMols();
+							Map<String, List<Molecule3D>> molMap = parser.parse(new BufferedReader(new StringReader(new String(pdbData)))).extractMols(true, true);
 							mol = new Molecule3D();
 							for (List<Molecule3D> l:molMap.values())
 								for (Molecule3D m:l)
@@ -81,7 +80,6 @@ public class JFXPDBViewer extends JFXPanel {
 					}
 				}
 			};
-		mLatestRunnable = r;
 		Platform.runLater(mLatestRunnable);
 		}
 	}

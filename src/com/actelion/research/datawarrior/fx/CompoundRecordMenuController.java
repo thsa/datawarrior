@@ -21,6 +21,7 @@ import com.actelion.research.table.model.CompoundTableModel;
 import com.actelion.research.util.ArrayUtils;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import org.openmolecules.fx.viewer3d.V3DMolecule;
@@ -143,6 +144,14 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 
 				popup.getItems().addAll(new SeparatorMenuItem(), itemAlignShape, itemAlignMCS);
 			}
+
+			javafx.scene.control.MenuItem itemPresetDefault = new MenuItem("Default");
+			itemPresetDefault.setOnAction(e -> mConformerPanel.presetDefault());
+			javafx.scene.control.MenuItem itemPresetMOE = new CheckMenuItem("MOE Style");
+			itemPresetMOE.setOnAction(e -> mConformerPanel.presetMOE());
+			javafx.scene.control.Menu menuPresets = new Menu("Presets");
+			menuPresets.getItems().addAll(itemPresetDefault, itemPresetMOE);
+			popup.getItems().addAll(new SeparatorMenuItem(), menuPresets);
 
 //			if (hasCavity) {
 //				boolean isShowInteractions = (hasLigand && mConformerPanel.getV3DScene().isShowInteractions());
@@ -344,16 +353,11 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				}
 			}
 
-			if (cavityColumn != -1 && mParentRecord != null && Thread.currentThread() == mUpdateThread) {
-				StereoMolecule[] cavity = getConformers(cavityColumn, mParentRecord, false);
+			if ((cavityColumn != -1 || waterColumn != -1) && mParentRecord != null && Thread.currentThread() == mUpdateThread) {
+				StereoMolecule[] cavity = (cavityColumn == -1) ? null : getConformers(cavityColumn, mParentRecord, false);
+				StereoMolecule[] water = (waterColumn == -1) ? null : getConformers(waterColumn, mParentRecord, false);
 				mConformerPanel.clear();
-				mConformerPanel.setProteinCavity(cavity == null || cavity.length==0 ? null : cavity[0], rowMol == null ? null : rowMol[0], true, true);
-			}
-
-			if (waterColumn != -1 && mParentRecord != null && Thread.currentThread() == mUpdateThread) {
-				StereoMolecule[] water = getConformers(waterColumn, mParentRecord, false);
-				if (water != null && water.length != 1)
-					mConformerPanel.setCavityWater(water[0]);
+				mConformerPanel.setProteinCavity(cavity == null || cavity.length==0 ? null : cavity[0], water == null || water.length==0 ? null : water[0], rowMol == null ? null : rowMol[0], true, true);
 			}
 
 			if (Thread.currentThread() == mUpdateThread)

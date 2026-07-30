@@ -3360,7 +3360,7 @@ class BindingSite {
 		Coordinates cog = JFXMolViewerPanel.calculateCOG(ligand);
 		mCavity = JFXMolViewerPanel.cropProtein(cavity, ligand, cog);
 		mLigand = ligand;
-		mWater = JFXMolViewerPanel.cropWater(water, ligand, cog);
+		mWater = (water == null) ? null : JFXMolViewerPanel.cropWater(water, ligand, cog);
 
 		new HydrogenAssembler(mLigand).addImplicitHydrogens();
 		new HydrogenAssembler(mCavity).addImplicitHydrogens();
@@ -3369,7 +3369,7 @@ class BindingSite {
 	public Object[] getEntryLine() {
 		Canonizer ligandCanonizer = new Canonizer(mLigand, Canonizer.ENCODE_ATOM_CUSTOM_LABELS | Canonizer.NEGLECT_LARGE_ATOM_STEREO_INFORMATION);
 		Canonizer cavityCanonizer = new Canonizer(mCavity, Canonizer.ENCODE_ATOM_CUSTOM_LABELS);
-		Canonizer waterCanonizer = new Canonizer(mWater, Canonizer.ENCODE_ATOM_CUSTOM_LABELS);
+		Canonizer waterCanonizer = (mWater == null) ? null : new Canonizer(mWater, Canonizer.ENCODE_ATOM_CUSTOM_LABELS);
 
 		Object[] cell = new Object[PROTEIN_COLUMN_TITLE.length];
 		cell[0] = getBytes(mEntry.getID());
@@ -3377,8 +3377,10 @@ class BindingSite {
 		cell[2] = getBytes(ligandCanonizer.getEncodedCoordinates());
 		cell[3] = getBytes(cavityCanonizer.getIDCode());
 		cell[4] = getBytes(cavityCanonizer.getEncodedCoordinates());
-		cell[5] = getBytes(waterCanonizer.getIDCode());
-		cell[6] = getBytes(waterCanonizer.getEncodedCoordinates());
+		if (waterCanonizer != null) {
+			cell[5] = getBytes(waterCanonizer.getIDCode());
+			cell[6] = getBytes(waterCanonizer.getEncodedCoordinates());
+		}
 		cell[7] = getBytes(mEntry.getTitle());
 		cell[8] = getBytes(mLigand.getName());
 		if (mEntry.getKeywords() != null)

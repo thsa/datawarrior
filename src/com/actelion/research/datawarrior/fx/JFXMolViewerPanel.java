@@ -26,7 +26,10 @@ import org.openmolecules.render.MoleculeArchitect;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
@@ -44,9 +47,16 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private static boolean sURLStreamHandlerSet = false;
 	private static final String EDIT_MESSAGE = "<right mouse click to add content>";
 	private static final Color DEFAULT_CAVITY_MOL_COLOR = Color.LIGHTGRAY;
+	private static final Color DEFAULT_WATER_MOL_COLOR = Color.ROYALBLUE;
 	private static final Color DEFAULT_REFMOL_COLOR = Color.INDIANRED;
 	private static final Color DEFAULT_OVERLAY_MOL_COLOR = Color.LIGHTGRAY;
 	private static final Color DEFAULT_SINGLE_CONF_COLOR = Color.GRAY.darker(); // for some reason, DARKGREY is lighter than GREY
+	private static final int DEFAULT_CAVITY_CONSTRUCTION_MODE = MoleculeArchitect.CONSTRUCTION_MODE_WIRES;
+	private static final int DEFAULT_CAVITY_HYDROGEN_MODE = MoleculeArchitect.HYDROGEN_MODE_NONE;
+	private static final int DEFAULT_WATER_CONSTRUCTION_MODE = MoleculeArchitect.CONSTRUCTION_MODE_STICKS;
+	private static final int DEFAULT_WATER_HYDROGEN_MODE = MoleculeArchitect.HYDROGEN_MODE_NONE;
+	private static final int DEFAULT_LIGAND_CONSTRUCTION_MODE = MoleculeArchitect.CONSTRUCTION_MODE_STICKS;
+	private static final int DEFAULT_LIGAND_HYDROGEN_MODE = MoleculeArchitect.HYDROGEN_MODE_NONE;
 	private static final int MAX_ATOMS_FOR_SURFACE = 2400;
 
 	private V3DScene mScene;
@@ -86,26 +96,26 @@ public class JFXMolViewerPanel extends JFXPanel {
 		mIsEditable = settings.contains(V3DScene.ViewerSettings.EDITING);
 
 		mCavityMolColor = DEFAULT_CAVITY_MOL_COLOR;
-		mOverlayMolConstructionMode = MoleculeArchitect.CONSTRUCTION_MODE_STICKS;
-		mOverlayMolHydrogenMode = MoleculeArchitect.HYDROGEN_MODE_ALL;
+		mOverlayMolConstructionMode = DEFAULT_LIGAND_CONSTRUCTION_MODE;
+		mOverlayMolHydrogenMode = DEFAULT_LIGAND_HYDROGEN_MODE;
 		mOverlayMolColor = DEFAULT_OVERLAY_MOL_COLOR;
-		mRefMolConstructionMode = MoleculeArchitect.CONSTRUCTION_MODE_STICKS;
-		mRefMolHydrogenMode = MoleculeArchitect.HYDROGEN_MODE_ALL;
+		mRefMolConstructionMode = DEFAULT_LIGAND_CONSTRUCTION_MODE;
+		mRefMolHydrogenMode = DEFAULT_LIGAND_HYDROGEN_MODE;
 		mRefMolColor = DEFAULT_REFMOL_COLOR;
 		mRefMolSurfaceMode = V3DMolecule.SURFACE_MODE_NONE;
 		mRefMolSurfaceColorMode = SurfaceMesh.SURFACE_COLOR_INHERIT;
 		mRefMolSurfaceColor = DEFAULT_REFMOL_COLOR;
 		mRefMolSurfaceTransparency = 0.1;
-		mSingleConformerConstructionMode = MoleculeArchitect.CONSTRUCTION_MODE_STICKS;
-		mSingleConformerHydrogenMode = MoleculeArchitect.HYDROGEN_MODE_ALL;
+		mSingleConformerConstructionMode = DEFAULT_LIGAND_CONSTRUCTION_MODE;
+		mSingleConformerHydrogenMode = DEFAULT_LIGAND_HYDROGEN_MODE;
 		mSingleConformerColor = null;
 		mSingleConformerSurfaceMode = V3DMolecule.SURFACE_MODE_NONE;
 		mSingleConformerSurfaceColorMode = SurfaceMesh.SURFACE_COLOR_INHERIT;
 		mSingleConformerSurfaceColor = DEFAULT_SINGLE_CONF_COLOR;
 		mSingleConformerSurfaceTransparency = 0.1;
 
-		mCavityConstructionMode = MoleculeArchitect.CONSTRUCTION_MODE_WIRES;
-		mCavityHydrogenMode = MoleculeArchitect.HYDROGEN_MODE_NONE;
+		mCavityConstructionMode = DEFAULT_CAVITY_CONSTRUCTION_MODE;
+		mCavityHydrogenMode = DEFAULT_CAVITY_HYDROGEN_MODE;
 		mCavityRibbonMode = Ribbons.MODE_NONE;
 		mCavitySideChainMode = V3DMolecule.SIDECHAIN_MODE_NEAR_LIGAND;
 		mCavitySurfaceMode = V3DMolecule.SURFACE_MODE_FILLED;
@@ -117,6 +127,10 @@ public class JFXMolViewerPanel extends JFXPanel {
 		mLargeCavitySurfaceMode = V3DMolecule.SURFACE_MODE_NONE;
 		mLargeCavityRibbonMode = Ribbons.MODE_CARTOON;
 		mLargeCavitySideChainMode = V3DMolecule.SIDECHAIN_MODE_NONE;
+
+		mWaterConstructionMode = DEFAULT_WATER_CONSTRUCTION_MODE;
+		mWaterHydrogenMode = DEFAULT_WATER_HYDROGEN_MODE;
+		mWaterMolColor = DEFAULT_WATER_MOL_COLOR;
 
 		collectLookAndFeelColors(); // we have to do this on the EDT
 
@@ -291,6 +305,19 @@ public class JFXMolViewerPanel extends JFXPanel {
 		return mCavityMol != null ? mCavityMol.getSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY) : mCavitySurfaceTransparency;
 	}
 
+	public String getWaterMolColor() {
+		Color color = (mWaterMol != null) ? mWaterMol.getColor() : mWaterMolColor;
+		return color == null ? "none" : toRGBString(color);
+	}
+
+	public int getWaterConstructionMode() {
+		return mWaterMol != null ? mWaterMol.getConstructionMode() : mWaterConstructionMode;
+	}
+
+	public int getWaterHydrogenMode() {
+		return mWaterMol != null ? mWaterMol.getHydrogenMode() : mWaterHydrogenMode;
+	}
+
 	public int getRefMolSurfaceMode() {
 		return mRefMol != null ? mRefMol.getSurfaceMode(MoleculeSurfaceAlgorithm.CONNOLLY) : mRefMolSurfaceMode;
 	}
@@ -454,6 +481,25 @@ public class JFXMolViewerPanel extends JFXPanel {
 			Platform.runLater(() -> mCavityMol.setSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY, mCavitySurfaceTransparency) );
 	}
 
+	public void setWaterMolColor(String color) {
+		mWaterMolColor = color.equals("none") ? null : Color.valueOf(color);
+		if (mWaterMol != null)
+			Platform.runLater(() -> mWaterMol.setColor(mWaterMolColor) );
+	}
+
+	public void setWaterConstructionMode(int mode) {
+		mWaterConstructionMode = mode;
+		if (mWaterMol != null) {
+			Platform.runLater(() -> mWaterMol.setConstructionMode(mode));
+		}
+	}
+
+	public void setWaterHydrogenMode(int mode) {
+		mWaterHydrogenMode = mode;
+		if (mWaterMol != null)
+			Platform.runLater(() -> mWaterMol.setHydrogenMode(mWaterHydrogenMode) );
+	}
+
 	public void setRefMolConstructionMode(int mode) {
 		mRefMolConstructionMode = mode;
 		if (mRefMol != null)
@@ -601,7 +647,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 		Platform.runLater(() -> {
 			boolean changed = false;
 			for (V3DMolecule fxmol : mScene.getMolsInScene()) {
-				if (fxmol != mOverlayMol && fxmol != mCavityMol) {
+				if (fxmol != mOverlayMol && fxmol != mCavityMol && fxmol != mWaterMol) {
 					mScene.delete(fxmol);
 					changed = true;
 				}
@@ -806,12 +852,13 @@ public class JFXMolViewerPanel extends JFXPanel {
 	 * of any ligand atom are marked. Then, a surface for the protein is generated, which covers
 	 * unmarked atoms only.<br>
 	 * NOTE: The ligand structure is not added to the scene!
-	 * @param cavity
+	 * @param cavity may be null, if water != null
+	 * @param water may be null, if cavity != null
 	 * @param ligand may be null
 	 * @param optimizeView whether the view shall be centered after adding cavity
 	 * @param mayInterrupt whether this method may be interrupted because this method is called again with different content
 	 */
-	public void setProteinCavity(StereoMolecule cavity, StereoMolecule ligand, boolean optimizeView, boolean mayInterrupt) {
+	public void setProteinCavity(StereoMolecule cavity, StereoMolecule water, StereoMolecule ligand, boolean optimizeView, boolean mayInterrupt) {
 		final int updateID = mCurrentUpdateID;
 		Platform.runLater(() -> {
 			if (mayInterrupt && updateID != mCurrentUpdateID)	// skip this, if we have already cued another set of updates
@@ -836,11 +883,24 @@ public class JFXMolViewerPanel extends JFXPanel {
 				mCavitySurfaceColor = mCavityMol.getSurfaceColor(MoleculeSurfaceAlgorithm.CONNOLLY);
 				mCavitySurfaceTransparency = mCavityMol.getSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY);
 				mScene.delete(mCavityMol);
+				mCavityMol = null;
+
+				if (mayInterrupt && updateID != mCurrentUpdateID)
+					return;
 			}
 
-			if (mayInterrupt && updateID != mCurrentUpdateID)
-				return;
+			if (mWaterMol != null) {
+				mWaterConstructionMode = mWaterMol.getConstructionMode();
+				mWaterHydrogenMode = mWaterMol.getHydrogenMode();
+				mWaterMolColor = mWaterMol.getColor();
+				mScene.delete(mWaterMol);
+				mWaterMol = null;
 
+				if (mayInterrupt && updateID != mCurrentUpdateID)
+					return;
+			}
+
+			int sideChainMode = V3DMolecule.SIDECHAIN_MODE_NONE;
 			if (cavity != null) {
 				ArrayList<StereoMolecule> ligands = null;
 				if (ligand != null) {
@@ -850,10 +910,10 @@ public class JFXMolViewerPanel extends JFXPanel {
 					ligands.add(ligand);
 				}
 
-				int constructionMode = (cavity.getAllAtoms() > MAX_ATOMS_FOR_SURFACE) ? mLargeCavityConstructionMode : mCavityConstructionMode;
-				int ribbonMode = (cavity.getAllAtoms() > MAX_ATOMS_FOR_SURFACE) ? mLargeCavityRibbonMode : mCavityRibbonMode;
-				int sideChainMode = (cavity.getAllAtoms() > MAX_ATOMS_FOR_SURFACE) ? mLargeCavitySideChainMode : mCavitySideChainMode;
-				int surfaceMode = (cavity.getAllAtoms() > MAX_ATOMS_FOR_SURFACE) ? mLargeCavitySurfaceMode : mCavitySurfaceMode;
+				int constructionMode = (cavity.getAllAtoms()>MAX_ATOMS_FOR_SURFACE) ? mLargeCavityConstructionMode : mCavityConstructionMode;
+				int ribbonMode = (cavity.getAllAtoms()>MAX_ATOMS_FOR_SURFACE) ? mLargeCavityRibbonMode : mCavityRibbonMode;
+				sideChainMode = (cavity.getAllAtoms()>MAX_ATOMS_FOR_SURFACE) ? mLargeCavitySideChainMode : mCavitySideChainMode;
+				int surfaceMode = (cavity.getAllAtoms()>MAX_ATOMS_FOR_SURFACE) ? mLargeCavitySurfaceMode : mCavitySurfaceMode;
 
 				mCavityMol = new V3DMolecule(cavity, ligands, constructionMode, mCavityHydrogenMode, ribbonMode, sideChainMode,
 						surfaceMode, mCavitySurfaceColorMode, mCavitySurfaceColor, mCavitySurfaceTransparency, 0);
@@ -864,12 +924,23 @@ public class JFXMolViewerPanel extends JFXPanel {
 
 				mScene.getWorld().clearTransform();
 				mScene.addMolecule(mCavityMol, false);
-
 				mCavityMol.getMolecule().removeAtomMarkers();
 
 				if (mayInterrupt && updateID != mCurrentUpdateID)
 					return;
+			}
 
+			if (water != null) {
+				mWaterMol = new V3DMolecule(water, mWaterConstructionMode, mWaterHydrogenMode, 0, V3DMolecule.MoleculeRole.SOLVENT);
+				mWaterMol.setColor(mWaterMolColor);
+
+				if (mayInterrupt && updateID != mCurrentUpdateID)
+					return;
+
+				mScene.addMolecule(mWaterMol, false);
+			}
+
+			if (cavity != null || water != null) {
 				if (optimizeView) {
 					// rotate such that one looks into the cavity
 					if (ligand != null) {
@@ -889,37 +960,6 @@ public class JFXMolViewerPanel extends JFXPanel {
 				mScene.reviveAnimation();	// just in case, there was a stopped animation
 				mScene.setSuspendInteractions(sideChainMode == V3DMolecule.SIDECHAIN_MODE_NONE);
 			}
-
-			SwingUtilities.invokeLater(() -> fireStructureChanged());
-		});
-	}
-
-	/**
-	 * Adds the given, typically cropped, cavity water into the scene.
-	 * @param water
-	 */
-	public void setCavityWater(StereoMolecule water) {
-		final int updateID = mCurrentUpdateID;
-		Platform.runLater(() -> {
-			if (updateID != mCurrentUpdateID)	// skip this, if we have already cued another set of updates
-				return;
-
-			if (mWaterMol != null) {
-				mWaterConstructionMode = mWaterMol.getConstructionMode();
-				mWaterHydrogenMode = mWaterMol.getHydrogenMode();
-				mWaterMolColor = mWaterMol.getColor();
-				mScene.delete(mWaterMol);
-			}
-
-			if (water != null) {
-				mWaterMol = new V3DMolecule(water, mWaterConstructionMode, mWaterHydrogenMode, 0, V3DMolecule.MoleculeRole.SOLVENT);
-				mWaterMol.setColor(mWaterMolColor);
-
-				if (updateID != mCurrentUpdateID)
-					return;
-
-				mScene.addMolecule(mWaterMol, false);
-				}
 
 			SwingUtilities.invokeLater(() -> fireStructureChanged());
 		});
@@ -1137,6 +1177,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 			for (V3DMolecule fxmol : mScene.getMolsInScene())
 				if (fxmol != mOverlayMol
 				 && fxmol != mCavityMol
+				 && fxmol != mWaterMol
 				 && updateID == mCurrentUpdateID) {
 					isTorsionStrainVisible |= (fxmol.getTorsionStrainVis() != null);
 					mScene.delete(fxmol);
@@ -1165,7 +1206,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 			}
 
 			// Don't optimize view if we have a cavity or overlay molecules. User may have optimized the view to look into the cavity
-			if ((conformers != null || refConformer != null) && mOverlayMol == null && mCavityMol == null && updateID == mCurrentUpdateID)
+			if ((conformers != null || refConformer != null) && mOverlayMol == null && mCavityMol == null && mWaterMol == null && updateID == mCurrentUpdateID)
 				mScene.optimizeView();
 
 			SwingUtilities.invokeLater(() -> fireStructureChanged());
@@ -1222,6 +1263,57 @@ public class JFXMolViewerPanel extends JFXPanel {
 		}
 
 		return imageList.isEmpty() ? null : imageList.get(0);
+	}
+
+	public void presetDefault() {
+		setBackground(java.awt.Color.WHITE);
+		setCavityMolColor(toRGBString(DEFAULT_CAVITY_MOL_COLOR));
+		setCavityConstructionMode(DEFAULT_CAVITY_CONSTRUCTION_MODE);
+		setCavityHydrogenMode(DEFAULT_CAVITY_HYDROGEN_MODE);
+		setCavitySurfaceMode(V3DMolecule.SURFACE_MODE_FILLED);
+		setCavitySurfaceColor(toRGBString(DEFAULT_CAVITY_MOL_COLOR));
+		setCavitySurfaceTransparency(0.2);
+		setCavitySurfaceColorMode(SurfaceMesh.SURFACE_COLOR_ATOMIC_NOS);
+		setCavityRibbonMode(Ribbons.MODE_CARTOON);
+		setCavitySideChainMode(V3DMolecule.SIDECHAIN_MODE_NEAR_LIGAND);
+
+		setOverlayMolColor(toRGBString(DEFAULT_OVERLAY_MOL_COLOR));
+		setOverlayMolConstructionMode(DEFAULT_LIGAND_CONSTRUCTION_MODE);
+		setOverlayMolHydrogenMode(DEFAULT_LIGAND_HYDROGEN_MODE);
+
+		setRefMolColor(toRGBString(DEFAULT_REFMOL_COLOR));
+		setRefMolConstructionMode(DEFAULT_LIGAND_CONSTRUCTION_MODE);
+		setRefMolHydrogenMode(DEFAULT_LIGAND_HYDROGEN_MODE);
+
+		setSingleConformerColor(toRGBString(DEFAULT_SINGLE_CONF_COLOR));
+		setSingleConformerConstructionMode(DEFAULT_LIGAND_CONSTRUCTION_MODE);
+		setSingleConformerHydrogenMode(DEFAULT_LIGAND_HYDROGEN_MODE);
+
+		setInteractionType(V3DScene.INTERACTION_TYPE_RF);
+	}
+
+	public void presetMOE() {
+		setBackground(java.awt.Color.BLACK);
+		setCavityMolColor("#00FF00");
+		setCavityConstructionMode(MoleculeArchitect.CONSTRUCTION_MODE_THINSTICKS);
+		setCavityHydrogenMode(MoleculeArchitect.HYDROGEN_MODE_NONE);
+		setCavitySurfaceMode(V3DMolecule.SURFACE_MODE_NONE);
+		setCavityRibbonMode(Ribbons.MODE_NONE);
+		setCavitySideChainMode(V3DMolecule.SIDECHAIN_MODE_ALL);
+
+		setOverlayMolColor("#FFFFFF");
+		setOverlayMolConstructionMode(MoleculeArchitect.CONSTRUCTION_MODE_STICKS);
+		setOverlayMolHydrogenMode(MoleculeArchitect.HYDROGEN_MODE_NONE);
+
+		setRefMolColor("#FF8000");
+		setRefMolConstructionMode(MoleculeArchitect.CONSTRUCTION_MODE_STICKS);
+		setRefMolHydrogenMode(MoleculeArchitect.HYDROGEN_MODE_NONE);
+
+		setSingleConformerColor("#00FFFF");
+		setSingleConformerConstructionMode(MoleculeArchitect.CONSTRUCTION_MODE_STICKS);
+		setSingleConformerHydrogenMode(MoleculeArchitect.HYDROGEN_MODE_NONE);
+
+		setInteractionType(V3DScene.INTERACTION_TYPE_RF);
 	}
 
 	private static class StringURLConnection extends URLConnection {

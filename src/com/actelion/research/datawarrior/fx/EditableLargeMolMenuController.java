@@ -9,8 +9,7 @@ import com.actelion.research.chem.io.pdb.parser.PDBFileParser;
 import com.actelion.research.chem.io.pdb.parser.StructureAssembler;
 import com.actelion.research.gui.FileHelper;
 import javafx.application.Platform;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import org.openmolecules.fx.surface.SurfaceMesh;
 import org.openmolecules.fx.viewer3d.*;
@@ -206,7 +205,7 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 			Platform.runLater(() -> {
 				V3DScene scene = mConformerPanel.getV3DScene();
 				scene.clearAll();
-				mConformerPanel.setProteinCavity(_cavity, _ligand, true, false);
+				mConformerPanel.setProteinCavity(_cavity, null, _ligand, true, false);
 				mConformerPanel.setOverlayMolecule(_ligand, false);
 			});
 		}

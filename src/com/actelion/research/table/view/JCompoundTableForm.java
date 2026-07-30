@@ -116,10 +116,12 @@ public class JCompoundTableForm extends JFormView implements CompoundTableColorH
 
 					String cavityIDCode = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyProteinCavity);
 					StereoMolecule cavityMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavityIDCode);
+					String waterIDCode = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyCavityWater);
+					StereoMolecule waterMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(waterIDCode);
 					String ligandIDCode = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyNaturalLigand);
 					StereoMolecule ligandMol = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligandIDCode);
-					if (cavityMol != null)
-						((JStructure3DFormObject)formObject).setCavityMolecule(cavityMol, ligandMol);
+					if (cavityMol != null || waterMol != null)
+						((JStructure3DFormObject)formObject).setCavityMolecule(cavityMol, waterMol, ligandMol);
 
 					((JStructure3DFormObject)formObject).setPopupMenuController(new CompoundRecordMenuController(
 							(JFXMolViewerPanel)formObject.getComponent(), mTableModel, column, false));

@@ -233,12 +233,14 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 			if (CompoundTableModel.cColumnType3DCoordinates.equals(specialType)) {
 				String cavity = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyProteinCavity);
 				StereoMolecule cavityMol = (cavity == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(cavity);
+				String water = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyCavityWater);
+				StereoMolecule waterMol = (water == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(water);
 
 				final JFXMolViewerPanel view = new JFXMolViewerPanel(false, V3DScene.CONFORMER_VIEW_MODE);
 				view.adaptToLookAndFeelChanges();
-				view.setSingleConformerHydrogenMode(cavityMol == null ? MoleculeArchitect.HYDROGEN_MODE_ALL : MoleculeArchitect.HYDROGEN_MODE_NONE);
-				view.setRefMolHydrogenMode(cavityMol == null ? MoleculeArchitect.HYDROGEN_MODE_ALL : MoleculeArchitect.HYDROGEN_MODE_NONE);
-				view.setOverlayMolHydrogenMode(cavityMol == null ? MoleculeArchitect.HYDROGEN_MODE_ALL : MoleculeArchitect.HYDROGEN_MODE_NONE);
+				view.setSingleConformerHydrogenMode(cavityMol == null && waterMol == null ? MoleculeArchitect.HYDROGEN_MODE_ALL : MoleculeArchitect.HYDROGEN_MODE_NONE);
+				view.setRefMolHydrogenMode(cavityMol == null && waterMol == null ? MoleculeArchitect.HYDROGEN_MODE_ALL : MoleculeArchitect.HYDROGEN_MODE_NONE);
+				view.setOverlayMolHydrogenMode(cavityMol == null && waterMol == null ? MoleculeArchitect.HYDROGEN_MODE_ALL : MoleculeArchitect.HYDROGEN_MODE_NONE);
 
 				String overlay = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertySuperposeMolecule);
 				StereoMolecule overlayMol = (overlay == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(overlay);
@@ -250,8 +252,8 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				boolean showLigand = !"false".equals(mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyShowNaturalLigand));
 				String ligand = showLigand ? mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyNaturalLigand) : null;
 				StereoMolecule ligandMol = (ligand == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(ligand);
-				if (cavityMol != null)
-					view.setProteinCavity(cavityMol, ligandMol, true, false);
+				if (cavityMol != null || waterMol != null)
+					view.setProteinCavity(cavityMol, waterMol, ligandMol, true, false);
 				if (ligandMol != null)
 					view.setOverlayMolecule(ligandMol, cavityMol == null);
 

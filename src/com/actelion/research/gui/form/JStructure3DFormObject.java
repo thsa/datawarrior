@@ -38,7 +38,7 @@ import java.util.concurrent.CountDownLatch;
 public class JStructure3DFormObject extends AbstractFormObject {
 	public static final String FORM_OBJECT_TYPE = "structure3D";
 
-	private StereoMolecule mOverlayMol,mCavityMol,mLigandMol;
+	private StereoMolecule mOverlayMol,mCavityMol,mWaterMol,mLigandMol;
 
 	public JStructure3DFormObject(String key, String type) {
 		super(key, type);
@@ -55,15 +55,16 @@ public class JStructure3DFormObject extends AbstractFormObject {
 	}
 
 	public void setReferenceMolecule(StereoMolecule refMol) {
-		((JFXMolViewerPanel)mComponent).setOverlayMolecule(refMol, mCavityMol == null);
+		((JFXMolViewerPanel)mComponent).setOverlayMolecule(refMol, mCavityMol == null && mWaterMol == null);
 		mOverlayMol = refMol;
 		}
 
-	public void setCavityMolecule(StereoMolecule cavityMol, StereoMolecule ligandMol) {
-		((JFXMolViewerPanel)mComponent).setProteinCavity(cavityMol, ligandMol, true, false);
-		((JFXMolViewerPanel)mComponent).setOverlayMolecule(ligandMol, false);
-		mCavityMol = cavityMol;
-		mLigandMol = ligandMol;
+	public void setCavityMolecule(StereoMolecule cavity, StereoMolecule water, StereoMolecule ligand) {
+		((JFXMolViewerPanel)mComponent).setProteinCavity(cavity, water, ligand, true, false);
+		((JFXMolViewerPanel)mComponent).setOverlayMolecule(ligand, false);
+		mCavityMol = cavity;
+		mWaterMol = water;
+		mLigandMol = ligand;
 		}
 
 	@Override
@@ -80,7 +81,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
 		else if (data instanceof StereoMolecule) {
 			((JFXMolViewerPanel)mComponent).clear();
 			((JFXMolViewerPanel)mComponent).addMolecule((StereoMolecule)data, null, null);
-			if (mCavityMol == null)
+			if (mCavityMol == null && mWaterMol == null)
 				((JFXMolViewerPanel)mComponent).optimizeView();
 			}
 		else if (data instanceof String) {
@@ -109,7 +110,7 @@ public class JStructure3DFormObject extends AbstractFormObject {
 						index = ArrayUtils.indexOf(idcode, (byte)32, index+1);
 						}
 					}
-				if (mCavityMol == null)
+				if (mCavityMol == null && mWaterMol == null)
 					((JFXMolViewerPanel)mComponent).optimizeView();
 				}
 			}
@@ -155,8 +156,8 @@ public class JStructure3DFormObject extends AbstractFormObject {
 				JFXMolViewerPanel fxp = new JFXMolViewerPanel(false, (int)(4*r.width), (int)(4*r.height), V3DScene.CONFORMER_EDIT_MODE);
 			    fxp.waitForCompleteConstruction();
 				fxp.setBackground(Color.WHITE);
-			    if (mCavityMol != null)
-				    fxp.setProteinCavity(mCavityMol, mLigandMol, false, false);
+			    if (mCavityMol != null || mWaterMol != null)
+				    fxp.setProteinCavity(mCavityMol, mWaterMol, mLigandMol, false, false);
 			    if (mOverlayMol != null)
 				    fxp.setOverlayMolecule(mOverlayMol, false);
 

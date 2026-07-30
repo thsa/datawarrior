@@ -107,6 +107,9 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMolViewerCavitySurfaceColorMode = "fxmvCavitySurfaceColorMode";
 	private static final String cMolViewerCavitySurfaceColor = "fxmvCavitySurfaceColor";
 	private static final String cMolViewerCavitySurfaceTransparency = "fxmvCavitySurfaceTransparency";
+	private static final String cMolViewerWaterColor = "fxmvWaterColor";
+	private static final String cMolViewerWaterConstructionMode = "fxmvWaterConstructionMode";
+	private static final String cMolViewerWaterHydrogenMode = "fxmvWaterHydrogenMode";
 	private static final String cMolViewerGeometry = "fxmvGeometry";
 	private static final String cMolViewerInteractionType = "fxmvInteractionType";
 	private static final String cMolViewerIsAnimate = "fxmvIsAnimate";
@@ -536,6 +539,15 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String cavitySurfaceTransparency = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceTransparency);
 				if (cavitySurfaceTransparency != null)
 					panel3D.setCavitySurfaceTransparency(Double.parseDouble(cavitySurfaceTransparency));
+				String waterColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerWaterColor);
+				if (waterColor != null)
+					panel3D.setWaterMolColor(waterColor);
+				int waterConstructionMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerWaterConstructionMode, MoleculeArchitect.CONSTRUCTION_MODE_CODE);
+				if (waterConstructionMode != -1)
+					panel3D.setWaterConstructionMode(waterConstructionMode);
+				int waterHydrogenMode = decodeProperty(cDetailView+"_"+column3DName+"_"+cMolViewerWaterHydrogenMode, MoleculeArchitect.HYDROGEN_MODE_CODE);
+				if (waterHydrogenMode != -1)
+					panel3D.setWaterHydrogenMode(waterHydrogenMode);
 				String geometry = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry);
 				if (geometry != null)
 					panel3D.setGeometry(geometry);
@@ -2077,6 +2089,13 @@ public class DERuntimeProperties extends RuntimeProperties {
 				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceColorMode, SurfaceMesh.SURFACE_COLOR_MODE_CODE[cavitySurfaceColorMode]);
 				double cavitySurfaceTransparency = panel3D.getCavitySurfaceTransparency();
 				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavitySurfaceTransparency, DoubleFormat.toString(cavitySurfaceTransparency));
+				String waterColor = panel3D.getWaterMolColor();
+				if (waterColor != null)
+					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerWaterColor, waterColor);
+				int waterConstructionMode = panel3D.getWaterConstructionMode();
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerWaterConstructionMode, MoleculeArchitect.CONSTRUCTION_MODE_CODE[waterConstructionMode]);
+				int waterHydrogenMode = panel3D.getWaterHydrogenMode();
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerWaterHydrogenMode, MoleculeArchitect.HYDROGEN_MODE_CODE[waterHydrogenMode]);
 				String geometry = panel3D.getGeometry();
 				if (geometry != null)
 					setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerGeometry, geometry);

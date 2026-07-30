@@ -98,7 +98,7 @@ public class PluginConformerPanel extends JFXMolViewerPanel implements IConforme
 		StereoMolecule cavity = getStructureFromIDCode(proteinIDCode);
 		StereoMolecule ligand = getStructureFromIDCode(ligandIDCode);
 		if (cavity != null)
-			setProteinCavity(cavity, ligand, true, false);
+			setProteinCavity(cavity, null, ligand, true, false);
 		if (ligand != null)
 			setOverlayMolecule(ligand, cavity == null);
 	}

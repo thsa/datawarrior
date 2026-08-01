@@ -236,7 +236,7 @@ public class DEDetailPane extends JMultiPanelView implements HighlightListener,C
 				String water = mTableModel.getColumnProperty(column, CompoundTableConstants.cColumnPropertyCavityWater);
 				StereoMolecule waterMol = (water == null) ? null : new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(water);
 
-				final JFXMolViewerPanel view = new JFXMolViewerPanel(false, V3DScene.CONFORMER_VIEW_MODE);
+				final JFXMolViewerPanel view = new JFXMolViewerPanel(false, V3DScene.CONFORMER_VIEW_MODE & ~V3DScene.SETTING_ALLOW_PHARMACOPHORES);
 				view.adaptToLookAndFeelChanges();
 				view.setSingleConformerHydrogenMode(cavityMol == null && waterMol == null ? MoleculeArchitect.HYDROGEN_MODE_ALL : MoleculeArchitect.HYDROGEN_MODE_NONE);
 				view.setRefMolHydrogenMode(cavityMol == null && waterMol == null ? MoleculeArchitect.HYDROGEN_MODE_ALL : MoleculeArchitect.HYDROGEN_MODE_NONE);

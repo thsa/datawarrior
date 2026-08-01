@@ -53,7 +53,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -104,9 +103,7 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 		mMol = new StereoMolecule(mol);
 		mMol.stripSmallFragments(true);
 
-		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_VIEW_MODE.clone();
-		settings.add(V3DScene.ViewerSettings.INDIVIDUAL_ROTATION);
-		mConformationPanel = new JFXMolViewerPanel(true, settings);
+		mConformationPanel = new JFXMolViewerPanel(true, V3DScene.CONFORMER_EDIT_MODE | V3DScene.SETTING_INDIVIDUAL_ROTATION);
 		mConformationPanel.adaptToLookAndFeelChanges();
 		mConformationPanel.setPopupMenuController(new V3DPopupMenuController() {
 			@Override

@@ -145,12 +145,14 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				popup.getItems().addAll(new SeparatorMenuItem(), itemAlignShape, itemAlignMCS);
 			}
 
-			javafx.scene.control.MenuItem itemPresetDefault = new MenuItem("Default");
-			itemPresetDefault.setOnAction(e -> mConformerPanel.presetDefault());
-			javafx.scene.control.MenuItem itemPresetMOE = new CheckMenuItem("MOE Style");
-			itemPresetMOE.setOnAction(e -> mConformerPanel.presetMOE());
-			javafx.scene.control.Menu menuPresets = new Menu("Presets");
-			menuPresets.getItems().addAll(itemPresetDefault, itemPresetMOE);
+			javafx.scene.control.MenuItem itemPresetSurface = new MenuItem("Cavity Surface & Cartoon");
+			itemPresetSurface.setOnAction(e -> mConformerPanel.presetWithSurface());
+			javafx.scene.control.MenuItem itemPresetCartoon = new CheckMenuItem("Cartoon & Sidechains Near Ligand");
+			itemPresetCartoon.setOnAction(e -> mConformerPanel.presetCartoon());
+			javafx.scene.control.MenuItem itemPresetAllSticks = new CheckMenuItem("All Sidechains As Sticks");
+			itemPresetAllSticks.setOnAction(e -> mConformerPanel.presetSticksOnly());
+			javafx.scene.control.Menu menuPresets = new Menu("Presentation Presets");
+			menuPresets.getItems().addAll(itemPresetSurface, itemPresetCartoon, itemPresetAllSticks);
 			popup.getItems().addAll(new SeparatorMenuItem(), menuPresets);
 
 //			if (hasCavity) {

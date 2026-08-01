@@ -36,7 +36,6 @@ import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
@@ -74,7 +73,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private volatile Color mCavityMolColor,mRefMolColor,mOverlayMolColor,mSingleConformerColor,mCavitySurfaceColor,
 			mRefMolSurfaceColor,mSingleConformerSurfaceColor,mWaterMolColor;
 	private volatile double mCavitySurfaceTransparency;
-	private java.awt.Color mSceneBackground, mLookAndFeelSpotColor,
+	private java.awt.Color mSceneBackground, mLookAndFeelSpotColor, mLookAndFeelContrastColor,
 			mMenuItemBackground,mMenuItemForeground,/*mMenuItemSelectionBackground,*/mMenuItemSelectionForeground;
 	private Vector<StructureChangeListener> mListeners;
 
@@ -82,18 +81,18 @@ public class JFXMolViewerPanel extends JFXPanel {
 		this(withSidePanel, 512, 384, V3DScene.CONFORMER_VIEW_MODE);
 	}
 
-	public JFXMolViewerPanel(boolean withSidePanel, EnumSet<V3DScene.ViewerSettings> settings) {
+	public JFXMolViewerPanel(boolean withSidePanel, int settings) {
 		this(withSidePanel, 512, 384, settings);
 	}
 
-	public JFXMolViewerPanel(boolean withSidePanel, int width, int height, EnumSet<V3DScene.ViewerSettings> settings) {
+	public JFXMolViewerPanel(boolean withSidePanel, int width, int height, int settings) {
 		super();
 		if (!sURLStreamHandlerSet) {
 			URL.setURLStreamHandlerFactory(new StringURLStreamHandlerFactory());
 			sURLStreamHandlerSet = true;
 		}
 
-		mIsEditable = settings.contains(V3DScene.ViewerSettings.EDITING);
+		mIsEditable = (settings & V3DScene.SETTING_EDITING) != 0;
 
 		mCavityMolColor = DEFAULT_CAVITY_MOL_COLOR;
 		mOverlayMolConstructionMode = DEFAULT_LIGAND_CONSTRUCTION_MODE;
@@ -706,6 +705,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private void collectLookAndFeelColors() {
 		mSceneBackground = UIManager.getColor(isEnabled() ? "TextField.background" : "TextField.inactiveBackground");
 		mLookAndFeelSpotColor = new java.awt.Color(HiDPIIcon.getThemeSpotRGBs()[0]);
+		mLookAndFeelContrastColor = new java.awt.Color(HiDPIIcon.getThemeSpotRGBs()[1]);
 		mMenuItemBackground = UIManager.getColor("MenuItem.background");
 		mMenuItemForeground = UIManager.getColor("MenuItem.foreground");
 //		mMenuItemSelectionBackground = UIManager.getColor("MenuItem.selectionBackground");
@@ -724,6 +724,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private String generateStyleSheet() {
 		String textSize = "12 pt;";
 		String lafSpot = toStyleText(mLookAndFeelSpotColor == null ? java.awt.Color.CYAN : mLookAndFeelSpotColor);
+		String contrast = toStyleText(mLookAndFeelContrastColor == null ? java.awt.Color.BLUE : mLookAndFeelContrastColor);
 		String menuBG = toStyleText(mMenuItemBackground == null ? java.awt.Color.LIGHT_GRAY : mMenuItemBackground);
 		String menuFG = toStyleText(mMenuItemForeground == null ? java.awt.Color.DARK_GRAY : mMenuItemForeground);
 //		String menuSBG = toStyleText(mMenuItemSelectionBackground == null ? java.awt.Color.WHITE : mMenuItemSelectionBackground);
@@ -738,10 +739,10 @@ public class JFXMolViewerPanel extends JFXPanel {
 				" -fx-select-color: rgba(128, 0, 0, 1.0);\n" +
 				" -fx-faint-focus-color: rgba(0, 128, 0, 1.0);\n" +
 				" }\n" +
-			".check-menu-item:checked {\n" +
-				" -fx-mark-color: rgb(207, 178, 125) ;\n" +
+			".menu-item:checked {\n" +
+				" -fx-mark-color: "+contrast+"\n" +
 				" -fx-focused-mark-color: "+menuFG+"\n" +
-				" -fx-background-color: "+menuFG+"\n" +
+				" -fx-background-color: "+menuBG+"\n" +
 				"}\n" +
 			".menu {\n" +
 				" -fx-text-fill: "+menuFG+"\n" +
@@ -762,6 +763,11 @@ public class JFXMolViewerPanel extends JFXPanel {
 				" -fx-font-size: "+textSize+"\n" +
 				" -fx-background-color: "+lafSpot+"\n" +
 				" -fx-text-fill: "+menuSFG+"\n" +
+				"}\n" +
+			".color-picker {\n" +
+				" -fx-text-fill: "+menuFG+"\n" +
+				" -fx-background-color: "+menuBG+"\n" +
+				" -fx-effect: null;\n" +
 				"}\n";
 	}
 
@@ -1265,7 +1271,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 		return imageList.isEmpty() ? null : imageList.get(0);
 	}
 
-	public void presetDefault() {
+	public void presetWithSurface() {
 		setBackground(java.awt.Color.WHITE);
 		setCavityMolColor(toRGBString(DEFAULT_CAVITY_MOL_COLOR));
 		setCavityConstructionMode(DEFAULT_CAVITY_CONSTRUCTION_MODE);
@@ -1292,7 +1298,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 		setInteractionType(V3DScene.INTERACTION_TYPE_RF);
 	}
 
-	public void presetMOE() {
+	public void presetSticksOnly() {
 		setBackground(java.awt.Color.BLACK);
 		setCavityMolColor("#00FF00");
 		setCavityConstructionMode(MoleculeArchitect.CONSTRUCTION_MODE_THINSTICKS);
@@ -1300,6 +1306,30 @@ public class JFXMolViewerPanel extends JFXPanel {
 		setCavitySurfaceMode(V3DMolecule.SURFACE_MODE_NONE);
 		setCavityRibbonMode(Ribbons.MODE_NONE);
 		setCavitySideChainMode(V3DMolecule.SIDECHAIN_MODE_ALL);
+
+		setOverlayMolColor("#FFFFFF");
+		setOverlayMolConstructionMode(MoleculeArchitect.CONSTRUCTION_MODE_STICKS);
+		setOverlayMolHydrogenMode(MoleculeArchitect.HYDROGEN_MODE_NONE);
+
+		setRefMolColor("#FF8000");
+		setRefMolConstructionMode(MoleculeArchitect.CONSTRUCTION_MODE_STICKS);
+		setRefMolHydrogenMode(MoleculeArchitect.HYDROGEN_MODE_NONE);
+
+		setSingleConformerColor("#00FFFF");
+		setSingleConformerConstructionMode(MoleculeArchitect.CONSTRUCTION_MODE_STICKS);
+		setSingleConformerHydrogenMode(MoleculeArchitect.HYDROGEN_MODE_NONE);
+
+		setInteractionType(V3DScene.INTERACTION_TYPE_RF);
+	}
+
+	public void presetCartoon() {
+		setBackground(java.awt.Color.BLACK);
+		setCavityMolColor("#FFC000");
+		setCavityConstructionMode(MoleculeArchitect.CONSTRUCTION_MODE_THINSTICKS);
+		setCavityHydrogenMode(MoleculeArchitect.HYDROGEN_MODE_NONE);
+		setCavitySurfaceMode(V3DMolecule.SURFACE_MODE_NONE);
+		setCavityRibbonMode(Ribbons.MODE_CARTOON);
+		setCavitySideChainMode(V3DMolecule.SIDECHAIN_MODE_NEAR_LIGAND);
 
 		setOverlayMolColor("#FFFFFF");
 		setOverlayMolConstructionMode(MoleculeArchitect.CONSTRUCTION_MODE_STICKS);

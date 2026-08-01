@@ -54,7 +54,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.concurrent.SynchronousQueue;
@@ -139,8 +138,7 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
-		EnumSet<V3DScene.ViewerSettings> settings = V3DScene.CONFORMER_EDIT_MODE.clone();
-		settings.add(V3DScene.ViewerSettings.ATOM_LEVEL_SELECTION);
+		int settings = V3DScene.CONFORMER_EDIT_MODE | V3DScene.SETTING_ATOM_LEVEL_SELECTION;
 
 		mConformerPanel = new JFXMolViewerPanel(false, settings);
 		mConformerPanel.adaptToLookAndFeelChanges();

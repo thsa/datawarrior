@@ -86,7 +86,8 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 	public void addExternalMenuItems(ContextMenu popup, int type) {
 		if (type == V3DPopupMenuController.TYPE_VIEW) {
 			String superposeWhat = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperpose);
-			boolean hasCavity = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyProteinCavity) != null;
+			boolean hasCavity = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyProteinCavity) != null
+							 || mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyProteinCavityColumn) != null;
 			boolean hasLigand = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyNaturalLigand) != null;
 			boolean hasQuery = mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertySuperposeMolecule) != null;
 			boolean isShowLigand = !"false".equals(mTableModel.getColumnProperty(mCoordsColumn, CompoundTableConstants.cColumnPropertyShowNaturalLigand));
@@ -145,16 +146,6 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				popup.getItems().addAll(new SeparatorMenuItem(), itemAlignShape, itemAlignMCS);
 			}
 
-			javafx.scene.control.MenuItem itemPresetSurface = new MenuItem("Cavity Surface & Cartoon");
-			itemPresetSurface.setOnAction(e -> mConformerPanel.presetWithSurface());
-			javafx.scene.control.MenuItem itemPresetCartoon = new CheckMenuItem("Cartoon & Sidechains Near Ligand");
-			itemPresetCartoon.setOnAction(e -> mConformerPanel.presetCartoon());
-			javafx.scene.control.MenuItem itemPresetAllSticks = new CheckMenuItem("All Sidechains As Sticks");
-			itemPresetAllSticks.setOnAction(e -> mConformerPanel.presetSticksOnly());
-			javafx.scene.control.Menu menuPresets = new Menu("Presentation Presets");
-			menuPresets.getItems().addAll(itemPresetSurface, itemPresetCartoon, itemPresetAllSticks);
-			popup.getItems().addAll(new SeparatorMenuItem(), menuPresets);
-
 //			if (hasCavity) {
 //				boolean isShowInteractions = (hasLigand && mConformerPanel.getV3DScene().isShowInteractions());
 //				javafx.scene.control.CheckMenuItem itemShowInteractions = new CheckMenuItem("Show Interactions");
@@ -193,6 +184,18 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 					}
 				} );
 				popup.getItems().addAll(new SeparatorMenuItem(), itemDev);
+			}
+
+			if (hasCavity) {
+				javafx.scene.control.MenuItem itemPresetSurface = new MenuItem("Cavity Surface & Cartoon");
+				itemPresetSurface.setOnAction(e -> mConformerPanel.presetWithSurface());
+				javafx.scene.control.MenuItem itemPresetCartoon = new CheckMenuItem("Cartoon & Sidechains Near Ligand");
+				itemPresetCartoon.setOnAction(e -> mConformerPanel.presetCartoon());
+				javafx.scene.control.MenuItem itemPresetAllSticks = new CheckMenuItem("All Sidechains As Sticks");
+				itemPresetAllSticks.setOnAction(e -> mConformerPanel.presetSticksOnly());
+				javafx.scene.control.Menu menuPresets = new Menu("View Style Presets");
+				menuPresets.getItems().addAll(itemPresetSurface, itemPresetCartoon, itemPresetAllSticks);
+				popup.getItems().addAll(new SeparatorMenuItem(), menuPresets);
 			}
 
 			popup.getItems().add(new SeparatorMenuItem());

@@ -59,7 +59,7 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 
 	// IMPORTANT: When creating a new manual(!!!) installer (not an update for automatic deployment),
 	// then DataWarriorLauncher.BASE_VERSION must also be changed to match this DATAWARRIOR_VERSION!
-	public static final String DATAWARRIOR_VERSION = "v06.06.00";	// format must be v00.00.00
+	public static final String DATAWARRIOR_VERSION = "v06.06.01";	// format must be v00.00.00
 
 	private static final String PREFERENCES_2ND_POST_INSTALL_INFO_SERVER = "2nd_post_install_info_server";
 	public static final String PREFERENCES_POST_INSTALL_INFO_FAILURE_MILLIS = "post_install_info_failure_time";
@@ -140,7 +140,8 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 			boolean consistentFailure = false;
 			if (error == null) {
 				updateServerURLs(prefs);
-				handlePostInstallMessages(parent, prefs);
+				if (!"true".equals(System.getProperty("skipMessages")))
+					handlePostInstallMessages(parent, prefs);
 				prefs.putLong(PREFERENCES_POST_INSTALL_INFO_FAILURE_MILLIS, 0L);
 				}
 			else {
@@ -156,14 +157,15 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 
 			String modeString = prefs.get(PREFERENCES_KEY_UPDATE_MODE, PREFERENCES_UPDATE_MODE_CODE[PREFERENCES_UPDATE_MODE_ASK]);
 			int updateMode = AbstractTask.findListIndex(modeString, PREFERENCES_UPDATE_MODE_CODE, PREFERENCES_UPDATE_MODE_ASK);
-			if (updateMode != PREFERENCES_UPDATE_MODE_NEVER) {
+			if (updateMode != PREFERENCES_UPDATE_MODE_NEVER && !"true".equals(System.getProperty("skipUpdates"))) {
 				if (consistentFailure)
 					askForBrowser(URL1 + params, parent, prefs, error);
 				else
 					handleUpdate(parent, updateMode);
 				}
 
-			if (!sPostInstallInfo.isEmpty())	// skip creating trusted plugin menu, if we couldn't download any data
+			// skip creating trusted plugin menu, if we couldn't download any data
+			if (!sPostInstallInfo.isEmpty() && !"true".equals(System.getProperty("skipPlugins")))
 				handleTrustesPlugins(parent, prefs);
 			} ).start();
 		}

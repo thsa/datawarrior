@@ -27,14 +27,29 @@ public class DataWarriorLauncher {
 			try {
 				File appJar = null;
 
-				// Try using newest datawarrior_vXX.XX.XX.jar from datawarrior/update directory
-				Preferences prefs = Preferences.userRoot().node(PREFERENCES_ROOT);
-				File updateDir = new File(prefs.get(PREFERENCES_KEY_UPDATE_PATH, ""));
-				if (updateDir.exists() && updateDir.isDirectory()) {
-					File[] files = updateDir.listFiles(file -> fileQualifies(file));
-					if (files != null && files.length != 0) {
-						Arrays.sort(files, Comparator.comparing(File::getName));
-						appJar = files[files.length-1];
+				// First priority is, if we have a system property 'rootpath'
+				String rootPath = System.getProperty("rootpath");
+				if (rootPath != null) {
+					File updateDir = new File(rootPath+File.separator+"update");
+					if (updateDir.exists() && updateDir.isDirectory()) {
+						File[] files = updateDir.listFiles(file -> fileQualifies(file));
+						if (files != null && files.length != 0) {
+							Arrays.sort(files, Comparator.comparing(File::getName));
+							appJar = files[files.length-1];
+							}
+						}
+					}
+
+				if (appJar == null) {
+					// Try using newest datawarrior_vXX.XX.XX.jar from datawarrior/update directory
+					Preferences prefs = Preferences.userRoot().node(PREFERENCES_ROOT);
+					File updateDir = new File(prefs.get(PREFERENCES_KEY_UPDATE_PATH, ""));
+					if (updateDir.exists() && updateDir.isDirectory()) {
+						File[] files = updateDir.listFiles(file -> fileQualifies(file));
+						if (files != null && files.length != 0) {
+							Arrays.sort(files, Comparator.comparing(File::getName));
+							appJar = files[files.length-1];
+							}
 						}
 					}
 

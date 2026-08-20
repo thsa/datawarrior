@@ -2,3 +2,5 @@ mkdir ./bin
 javac -d ./bin -sourcepath ./src src/org/openmolecules/datawarrior/launcher/DataWarriorLauncher.java
 jar -cfm datawarriorlauncher.jar manifest_additions_launcher.txt -C ./bin .
 rm -r bin
+ls -l datawarriorlauncher.jar
+

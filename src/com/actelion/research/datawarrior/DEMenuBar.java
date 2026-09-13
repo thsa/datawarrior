@@ -1445,13 +1445,20 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 			prefs.put(DEUpdateHandler.PREFERENCES_KEY_UPDATE_MODE, DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE[DEUpdateHandler.PREFERENCES_UPDATE_MODE_ASK]);
 		int mode = AbstractTask.findListIndex(modeString, DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE, DEUpdateHandler.PREFERENCES_UPDATE_MODE_ASK);
 
+		boolean isSkipped = "true".equals(System.getProperty("skipUpdates"));
+
 		jMenuHelpUpdate.setText("Update Mode");
 		for (int i=0; i<DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE.length; i++) {
 			JCheckBoxMenuItem item = new JCheckBoxMenuItem();
-			item.setActionCommand(UPDATE+DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE[i]);
 			item.setText(DEUpdateHandler.PREFERENCES_UPDATE_MODE_TEXT[i]);
-			item.setSelected(mode == i);
-			item.addActionListener(this);
+			item.setSelected(isSkipped ? i == DEUpdateHandler.PREFERENCES_UPDATE_MODE_NEVER : mode == i);
+			if (isSkipped) {
+				item.setEnabled(false);
+				}
+			else {
+				item.setActionCommand(UPDATE + DEUpdateHandler.PREFERENCES_UPDATE_MODE_CODE[i]);
+				item.addActionListener(this);
+				}
 			jMenuHelpUpdate.add(item);
 			}
 

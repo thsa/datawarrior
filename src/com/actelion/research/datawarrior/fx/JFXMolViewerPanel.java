@@ -1346,6 +1346,13 @@ public class JFXMolViewerPanel extends JFXPanel {
 		setInteractionType(V3DScene.INTERACTION_TYPE_RF);
 	}
 
+	public void writeImageSequence() {
+		Platform.runLater(() -> {
+			boolean success = mScene.writeImageSequence("/home/thomas/Pictures/fxmolviewer", 3840, 2160);
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, success ? "All images were written." : "Error writing images.") );
+		} );
+	}
+
 	private static class StringURLConnection extends URLConnection {
 		private static String sCSS;
 

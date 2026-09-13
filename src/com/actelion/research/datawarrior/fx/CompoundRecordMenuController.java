@@ -198,6 +198,12 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 				popup.getItems().addAll(new SeparatorMenuItem(), menuPresets);
 			}
 
+			if (System.getProperty("development") != null) {
+				javafx.scene.control.MenuItem itemWriteImageSequence = new MenuItem("Write Image Sequence");
+				itemWriteImageSequence.setOnAction(e -> mConformerPanel.writeImageSequence());
+				popup.getItems().addAll(new SeparatorMenuItem(), itemWriteImageSequence);
+			}
+
 			popup.getItems().add(new SeparatorMenuItem());
 		}
 	}

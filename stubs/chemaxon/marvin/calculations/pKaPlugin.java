@@ -4,8 +4,8 @@ import chemaxon.marvin.plugin.PluginException;
 import chemaxon.struc.Molecule;
 
 public class pKaPlugin {
-	public static final int ACIDIC = 0;
-	public static final int BASIC = 0;
+	public static final int ACIDIC = -1;
+	public static final int BASIC = 1;
 
 	public void getMacropKaValues(int type, double[] pKa, int[] index) throws PluginException {
 		if (pKa == null)
@@ -19,7 +19,6 @@ public class pKaPlugin {
 	public void setpHLower(double l) {}
 	public void setpHUpper(double l) {}
 	public void setpHStep(double l) {}
-	public void setMolecule(Molecule l) {}
-	public void run() {}
+	public Molecule setMolecule(Molecule l) { return l; }
+	public boolean run() { return true; }
 }
-

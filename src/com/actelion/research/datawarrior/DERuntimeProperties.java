@@ -98,6 +98,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 	private static final String cMolViewerSingleConformerSurfaceColorMode = "fxmvSingleConformerSurfaceColorMode";
 	private static final String cMolViewerSingleConformerSurfaceColor = "fxmvSingleConformerSurfaceColor";
 	private static final String cMolViewerSingleConformerSurfaceTransparency = "fxmvSingleConformerSurfaceTransparency";
+	private static final String cMolViewerSingleConformerShowRFPotential = "fxmvSingleConformerShowRFPotential";
+	private static final String cMolViewerSingleConformerShowTorsionStrain = "fxmvSingleConformerShowTorsionStrain";
 	private static final String cMolViewerCavityColor = "fxmvCavityColor";
 	private static final String cMolViewerCavityConstructionMode = "fxmvCavityConstructionMode";
 	private static final String cMolViewerCavityHydrogenMode = "fxmvCavityHydrogenMode";
@@ -512,6 +514,12 @@ public class DERuntimeProperties extends RuntimeProperties {
 				String confSurfaceTransparency = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerSurfaceTransparency);
 				if (confSurfaceTransparency != null)
 					panel3D.setSingleConformerSurfaceTransparency(Double.parseDouble(confSurfaceTransparency));
+				String confShowRFPotential = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerShowRFPotential);
+				if (confShowRFPotential != null)
+					panel3D.setSingleConformerShowRFPotential("true".equals(confShowRFPotential));
+				String confShowTorsionStrain = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerShowTorsionStrain);
+				if (confShowTorsionStrain != null)
+					panel3D.setSingleConformerShowTorsionStrain("true".equals(confShowTorsionStrain));
 				String cavityColor = getProperty(cDetailView+"_"+column3DName+"_"+cMolViewerCavityColor);
 				if (cavityColor != null)
 					panel3D.setCavityMolColor(cavityColor);
@@ -2053,6 +2061,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerSurfaceColorMode, SurfaceMesh.SURFACE_COLOR_MODE_CODE[confSurfaceColorMode]);
 				double confSurfaceTransparency = panel3D.getSingleConformerSurfaceTransparency();
 				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerSurfaceTransparency, DoubleFormat.toString(confSurfaceTransparency));
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerShowTorsionStrain, panel3D.isSingleConformerShowTorsionStrain() ? "true" : "false");
+				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerSingleConformerShowRFPotential, panel3D.isSingleConformerShowRFPotential() ? "true" : "false");
 				int refMolConstructionMode = panel3D.getRefMolConstructionMode();
 				setProperty(cDetailView+"_"+column3DName+"_"+cMolViewerRefMolConstructionMode, MoleculeArchitect.CONSTRUCTION_MODE_CODE[refMolConstructionMode]);
 				int refMolHydrogenMode = panel3D.getRefMolHydrogenMode();

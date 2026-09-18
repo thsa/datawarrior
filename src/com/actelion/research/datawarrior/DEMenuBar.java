@@ -153,7 +153,7 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 					jMenuChemSuperposeFlexible,jMenuChemSuperposeRigid,jMenuChemDock, jMenuChem3DFragmentsBuildLib, jMenuChem3DFragmentsReplace,
 					jMenuChemAddSubstructureCount,jMenuChemAddStructureFromName, jMenuChemDecomposeRGroups,jMenuChemPerformReaction,jMenuChemInteractiveSARTable,
 					jMenuChemAnalyzeScaffolds,jMenuChemAnalyzeCliffs,jMenuChemMatchFile,jMenuChemSelectDiverse,
-					jMenuChemCluster, jMenuChemExtractFragment,jMenuChemMapReactions,jMenuChemCompareReactionMapping,jMenuChemAddReactionSmiles,
+					jMenuChemCluster,jMenuChemBitBirchCluster,jMenuChemExtractFragment,jMenuChemMapReactions,jMenuChemCompareReactionMapping,jMenuChemAddReactionSmiles,
 					jMenuChemCreateGenericTautomers,jMenuChemCompareDescriptorSimilarityDistribution,jMenuChemGenerateRandomMolecules,
 					jMenuChemCreateTaggedSmiles,jMenuChemAddDockingScore,
 					jMenuChemExtractPairwiseCompoundSimilarities,jMenuChemExtractPairwiseStuff,jMenuChemCountAtomTypes,jMenuChemCheckIDCodes,
@@ -929,6 +929,7 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemMatchFile = new JMenuItem();
 		jMenuChemSelectDiverse = new JMenuItem();
 		jMenuChemCluster = new JMenuItem();
+		jMenuChemBitBirchCluster = new JMenuItem();
 		jMenuChemCreateGenericTautomers = new JMenuItem();
 		jMenuChemCheckIDCodes = new JMenuItem();
 		jMenuChemCreateTaggedSmiles = new JMenuItem();
@@ -1021,6 +1022,8 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemSelectDiverse.addActionListener(this);
 		jMenuChemCluster.setText("Cluster Compounds/Reactions...");
 		jMenuChemCluster.addActionListener(this);
+		jMenuChemBitBirchCluster.setText("BitBirch Cluster Compounds...");
+		jMenuChemBitBirchCluster.addActionListener(this);
 		jMenuChemCreateGenericTautomers.setText("Create Generic Tautomers");
 		jMenuChemCreateGenericTautomers.addActionListener(this);
 		jMenuChemCheckIDCodes.setText("Check IDCode Correctness");
@@ -1123,6 +1126,8 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 		jMenuChem.addSeparator();
 		jMenuChem.add(jMenuChemSelectDiverse);
 		jMenuChem.add(jMenuChemCluster);
+		if (System.getProperty("development") != null)
+			jMenuChem.add(jMenuChemBitBirchCluster);
 
 		if (System.getProperty("development") != null) {
 			jMenuChem.addSeparator();
@@ -1920,6 +1925,8 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 				new DETaskSelectDiverse(mParentFrame).defineAndRun();
 			else if (source == jMenuChemCluster)
 				new DETaskClusterCompounds(mParentFrame).defineAndRun();
+			else if (source == jMenuChemBitBirchCluster)
+				new DETaskBitBirchClusterCompounds(mParentFrame).defineAndRun();
 /*		  else if (source == jMenuChemExtractPKATree)
 				new PKATreeExtractor(mParentFrame, new PKADataWarriorAdapter(mTableModel)).extract();	*/
 			else if (source == jMenuChemCheckIDCodes)

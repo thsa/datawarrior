@@ -199,9 +199,15 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 			}
 
 			if (System.getProperty("development") != null) {
-				javafx.scene.control.MenuItem itemWriteImageSequence = new MenuItem("Write Image Sequence");
-				itemWriteImageSequence.setOnAction(e -> mConformerPanel.writeImageSequence());
-				popup.getItems().addAll(new SeparatorMenuItem(), itemWriteImageSequence);
+				javafx.scene.control.Menu menuWriteImages = new Menu("Write Image Sequence");
+				javafx.scene.control.MenuItem itemWriteImagesLD = new MenuItem("960 x 540");
+				itemWriteImagesLD.setOnAction(e -> mConformerPanel.writeImageSequence(960, 540));
+				javafx.scene.control.MenuItem itemWriteImagesHD = new MenuItem("1920 x 1080");
+				itemWriteImagesHD.setOnAction(e -> mConformerPanel.writeImageSequence(1920, 1080));
+				javafx.scene.control.MenuItem itemWriteImages4k = new MenuItem("3840 x 2160");
+				itemWriteImages4k.setOnAction(e -> mConformerPanel.writeImageSequence(3840, 2160));
+				menuWriteImages.getItems().addAll(itemWriteImagesLD, itemWriteImagesHD, itemWriteImages4k);
+				popup.getItems().addAll(new SeparatorMenuItem(), menuWriteImages);
 			}
 
 			popup.getItems().add(new SeparatorMenuItem());

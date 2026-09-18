@@ -76,6 +76,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 	private java.awt.Color mSceneBackground, mLookAndFeelSpotColor, mLookAndFeelContrastColor,
 			mMenuItemBackground,mMenuItemForeground,/*mMenuItemSelectionBackground,*/mMenuItemSelectionForeground;
 	private Vector<StructureChangeListener> mListeners;
+	private volatile boolean mSingleConformerShowTorsionStrain,mSingleConformerShowRFPotential;
 
 	public JFXMolViewerPanel(boolean withSidePanel) {
 		this(withSidePanel, 512, 384, V3DScene.CONFORMER_VIEW_MODE);
@@ -359,6 +360,14 @@ public class JFXMolViewerPanel extends JFXPanel {
 		return mSingleConformer != null ? mSingleConformer.getSurfaceTransparency(MoleculeSurfaceAlgorithm.CONNOLLY) : mSingleConformerSurfaceTransparency;
 	}
 
+	public boolean isSingleConformerShowTorsionStrain() {
+		return mSingleConformer != null ? mSingleConformer.getTorsionStrainVis() != null : mSingleConformerShowTorsionStrain;
+	}
+
+	public boolean isSingleConformerShowRFPotential() {
+		return mSingleConformer != null ? mSingleConformer.getRFInteractionMesh() != null : mSingleConformerShowRFPotential;
+	}
+
 	public String getSingleConformerColor() {
 		Color color = (mSingleConformer != null) ? mSingleConformer.getColor() : mSingleConformerColor;
 		return color == null ? "none" : toRGBString(color);
@@ -588,6 +597,26 @@ public class JFXMolViewerPanel extends JFXPanel {
 				Math.min(255, (int)(color.getRed() * 256)),
 				Math.min(255, (int)(color.getGreen() * 256)),
 				Math.min(255, (int)(color.getBlue() * 256)));
+	}
+
+	public void setSingleConformerShowTorsionStrain(boolean b) {
+		mSingleConformerShowTorsionStrain = b;
+		if (mSingleConformer != null) {
+			if (b)
+				Platform.runLater(() -> mSingleConformer.addTorsionStrainVisualization());
+			else
+				Platform.runLater(() -> mSingleConformer.removeTorsionStrainVisualization());
+		}
+	}
+
+	public void setSingleConformerShowRFPotential(boolean b) {
+		mSingleConformerShowRFPotential = b;
+		if (mSingleConformer != null) {
+			if (b)
+				Platform.runLater(() -> mSingleConformer.addRFPotentialMesh());
+			else
+				Platform.runLater(() -> mSingleConformer.removeRFPotentialMesh());
+		}
 	}
 
 	@Override
@@ -1123,10 +1152,11 @@ public class JFXMolViewerPanel extends JFXPanel {
 
 	private V3DMolecule addMoleculeNow(StereoMolecule mol, int constructionMode, int hydrogenMode, Color color, Point3D centerOfRotation) {
 		return addMoleculeNow(mol, constructionMode, hydrogenMode, color, centerOfRotation,
-				V3DMolecule.SURFACE_MODE_NONE, SurfaceMesh.SURFACE_COLOR_INHERIT, 0.2, false);
+				V3DMolecule.SURFACE_MODE_NONE, SurfaceMesh.SURFACE_COLOR_INHERIT, 0.2, false, false);
 	}
 
-	private V3DMolecule addMoleculeNow(StereoMolecule mol, int constructionMode, int hydrogenMode, Color color, Point3D centerOfRotation, int surfaceMode, int surfaceColorMode, double surfaceTransparency, boolean showTorsionStrain) {
+	private V3DMolecule addMoleculeNow(StereoMolecule mol, int constructionMode, int hydrogenMode, Color color, Point3D centerOfRotation,
+									   int surfaceMode, int surfaceColorMode, double surfaceTransparency, boolean showTorsionStrain, boolean isRFPotentialVisible) {
 		V3DMolecule fxmol = new V3DMolecule(mol, constructionMode, hydrogenMode, 0,
 				V3DMolecule.MoleculeRole.LIGAND, true, mScene.isSplitAllBonds());
 
@@ -1135,6 +1165,8 @@ public class JFXMolViewerPanel extends JFXPanel {
 		fxmol.setCenterOfRotation(centerOfRotation);
 		if (showTorsionStrain)
 			fxmol.addTorsionStrainVisualization();
+		if (isRFPotentialVisible)
+			fxmol.addRFPotentialMesh();
 		mScene.addMolecule(fxmol, false);
 		return fxmol;
 	}
@@ -1178,16 +1210,24 @@ public class JFXMolViewerPanel extends JFXPanel {
 			}
 			mSingleConformer = null;
 
-			boolean isTorsionStrainVisible = false;
+			boolean isShowTorsionStrain = false;
+			boolean isShowRFPotential = false;
 			int surfaceMode = V3DMolecule.SURFACE_MODE_NONE;
+			boolean hasSingleConformers = false;
 			for (V3DMolecule fxmol : mScene.getMolsInScene())
 				if (fxmol != mOverlayMol
 				 && fxmol != mCavityMol
 				 && fxmol != mWaterMol
 				 && updateID == mCurrentUpdateID) {
-					isTorsionStrainVisible |= (fxmol.getTorsionStrainVis() != null);
+					hasSingleConformers = true;
+					isShowTorsionStrain |= (fxmol.getTorsionStrainVis() != null);
+					isShowRFPotential |= (fxmol.getRFInteractionMesh() != null);
 					mScene.delete(fxmol);
 				}
+			if (hasSingleConformers) {
+				mSingleConformerShowTorsionStrain = isShowTorsionStrain;
+				mSingleConformerShowRFPotential = isShowRFPotential;
+			}
 
 			if (conformers != null) {
 				if (conformers.length == 1) {
@@ -1195,7 +1235,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 						mSingleConformer = addMoleculeNow(conformers[0], mSingleConformerConstructionMode,
 								mSingleConformerHydrogenMode, mSingleConformerColor, null,
 								mSingleConformerSurfaceMode, mSingleConformerSurfaceColorMode,
-								mSingleConformerSurfaceTransparency, isTorsionStrainVisible);
+								mSingleConformerSurfaceTransparency, isShowTorsionStrain, isShowRFPotential);
 					}
 				} else {
 					Point3D cor = new Point3D(0, 0, 0);
@@ -1208,7 +1248,7 @@ public class JFXMolViewerPanel extends JFXPanel {
 
 			if (refConformer != null && updateID == mCurrentUpdateID) {
 				mRefMol = addMoleculeNow(refConformer, mRefMolConstructionMode, mRefMolHydrogenMode, mRefMolColor,
-						null, mRefMolSurfaceMode, mRefMolSurfaceColorMode, mRefMolSurfaceTransparency, isTorsionStrainVisible);
+						null, mRefMolSurfaceMode, mRefMolSurfaceColorMode, mRefMolSurfaceTransparency, isShowTorsionStrain, isShowRFPotential);
 			}
 
 			// Don't optimize view if we have a cavity or overlay molecules. User may have optimized the view to look into the cavity
@@ -1346,10 +1386,10 @@ public class JFXMolViewerPanel extends JFXPanel {
 		setInteractionType(V3DScene.INTERACTION_TYPE_RF);
 	}
 
-	public void writeImageSequence() {
+	public void writeImageSequence(int width, int height) {
 		Platform.runLater(() -> {
-			boolean success = mScene.writeImageSequence("/home/thomas/Pictures/fxmolviewer", 3840, 2160);
-			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, success ? "All images were written." : "Error writing images.") );
+			boolean success = mScene.writeImageSequence("/home/thomas/Pictures/fxmolviewer", width, height);
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, success ? "All images were written. Now create a movie with e.g.\nffmpeg -framerate 24 -i frame_%4d.jpg -c:v libx264 -r 30 movie.mp4" : "Error writing images.") );
 		} );
 	}
 

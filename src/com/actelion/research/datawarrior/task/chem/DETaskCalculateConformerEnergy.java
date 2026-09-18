@@ -64,7 +64,7 @@ public class DETaskCalculateConformerEnergy extends DETaskAbstractFromStructure 
 		mTextFieldConformerCount = new JTextField(3);
 		mCheckBoxCalcLocalEnergyDif = new JCheckBox("Local minimum energy conformer");
 		mCheckBoxCalcGlobalEnergyDif = new JCheckBox("Global minimum energy conformer");
-		mCheckBoxSkipHydrogenContributions = new JCheckBox("Skip energy contributions with hydrogen atoms");
+		mCheckBoxSkipHydrogenContributions = new JCheckBox("Skip energy contributions of hydrogen atoms");
 		mCheckBoxAngleBendAndTorsionOnly = new JCheckBox("Torsion and angle bend energies only");
 		mCheckBoxAddConformers = new JCheckBox("Add structures of minimum energy conformer(s)");
 		mCheckBoxCalcGlobalEnergyDif.addActionListener(e -> mTextFieldConformerCount.setEnabled(mCheckBoxCalcGlobalEnergyDif.isSelected()));

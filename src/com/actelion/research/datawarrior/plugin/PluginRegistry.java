@@ -107,47 +107,49 @@ public class PluginRegistry implements IPluginStartHelper {
 			}
 		}
 
-		Preferences prefs = DataWarrior.getPreferences();
-		String trustedPluginDir = prefs.get(PREFERENCES_KEY_UPDATE_PATH, null);
-		if (trustedPluginDir != null) {
-			File dir = new File(trustedPluginDir);
-			if (dir.exists() && dir.isDirectory()) {
-				try {
-					// before loading trusted plugins remove those that were listed to be removed (because of uninstall, unlisting or update)
-					String pluginsForRemoval = prefs.get(PREFERENCES_KEY_TRUSTED_PLUGINS_FOR_REMOVAL, null);
-					if (pluginsForRemoval != null) {
-						for (String filename : pluginsForRemoval.split(",")) {
-							File file = new File(trustedPluginDir+File.separator+filename);
-							if (file.exists())
-								file.delete();
+		if (!"true".equals(System.getProperty("skipPlugins"))) {
+			Preferences prefs = DataWarrior.getPreferences();
+			String trustedPluginDir = prefs.get(PREFERENCES_KEY_UPDATE_PATH, null);
+			if (trustedPluginDir != null) {
+				File dir = new File(trustedPluginDir);
+				if (dir.exists() && dir.isDirectory()) {
+					try {
+						// before loading trusted plugins remove those that were listed to be removed (because of uninstall, unlisting or update)
+						String pluginsForRemoval = prefs.get(PREFERENCES_KEY_TRUSTED_PLUGINS_FOR_REMOVAL, null);
+						if (pluginsForRemoval != null) {
+							for (String filename : pluginsForRemoval.split(",")) {
+								File file = new File(trustedPluginDir+File.separator+filename);
+								if (file.exists())
+									file.delete();
+							}
+						}
+						prefs.remove(PREFERENCES_KEY_TRUSTED_PLUGINS_FOR_REMOVAL);
+
+						File[] files = dir.listFiles(file -> !file.isDirectory() && DETrustedPlugin.isValidFileName(file.getName()));
+
+						if (files != null) {
+							// Create plugin array sorted by ID and version. Then load those plugins, where no newer version exists
+							DETrustedPlugin[] plugins = new DETrustedPlugin[files.length];
+							for (int i=0; i<files.length; i++)
+								plugins[i] = new DETrustedPlugin(files[i].getName());
+
+							Arrays.sort(plugins);
+
+							ArrayList<File> fileList = new ArrayList<>();
+							for (int i=0; i<plugins.length; i++) {
+								String filename = trustedPluginDir+File.separator+plugins[i].getFilename(true);
+								if (i == plugins.length-1 || !plugins[i].getID().equals(plugins[i+1].getID()))
+									fileList.add(new File(filename));
+								else
+									new File(filename).delete();
+							}
+
+							loadPlugins(fileList.toArray(new File[0]), dir, config, parent);
 						}
 					}
-					prefs.remove(PREFERENCES_KEY_TRUSTED_PLUGINS_FOR_REMOVAL);
-
-					File[] files = dir.listFiles(file -> !file.isDirectory() && DETrustedPlugin.isValidFileName(file.getName()));
-
-					if (files != null) {
-						// Create plugin array sorted by ID and version. Then load those plugins, where no newer version exists
-						DETrustedPlugin[] plugins = new DETrustedPlugin[files.length];
-						for (int i=0; i<files.length; i++)
-							plugins[i] = new DETrustedPlugin(files[i].getName());
-
-						Arrays.sort(plugins);
-
-						ArrayList<File> fileList = new ArrayList<>();
-						for (int i=0; i<plugins.length; i++) {
-							String filename = trustedPluginDir+File.separator+plugins[i].getFilename(true);
-							if (i == plugins.length-1 || !plugins[i].getID().equals(plugins[i+1].getID()))
-								fileList.add(new File(filename));
-							else
-								new File(filename).delete();
-						}
-
-						loadPlugins(fileList.toArray(new File[0]), dir, config, parent);
+					catch (SecurityException se) {
+						System.out.println("A security manager prevented loading plugins: "+se.getMessage());
 					}
-				}
-				catch (SecurityException se) {
-					System.out.println("A security manager prevented loading plugins: "+se.getMessage());
 				}
 			}
 		}

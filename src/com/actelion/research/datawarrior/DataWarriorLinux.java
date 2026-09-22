@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -36,7 +36,7 @@ public class DataWarriorLinux extends DataWarrior {
 
 	private static final LookAndFeel DEFAULT_LAF = GRAPHITE;
 
-	protected static DataWarriorLinux sDataExplorer;
+	protected static DataWarriorLinux sDataWarrior;
 	protected static ArrayList<String> sPendingDocumentList;
 
 	private static class NewSubstanceFontSet implements FontSet {
@@ -113,15 +113,15 @@ System.out.println();
 			if (args[0].toLowerCase().startsWith("datawarrior:")) {
 				try {
 					SwingUtilities.invokeAndWait(() -> {
-						if (sDataExplorer != null)
-							sDataExplorer.handleCustomURI(args);
+						if (sDataWarrior != null)
+							sDataWarrior.handleCustomURI(args);
 						} );
 					}
 				catch(Exception e) {}
 				}
 			else {
-				String[] filename = sDataExplorer.deduceFileNamesFromArgs(args);
-				if (sDataExplorer == null) {
+				String[] filename = sDataWarrior.deduceFileNamesFromArgs(args);
+				if (sDataWarrior == null) {
 					if (sPendingDocumentList == null)
 						sPendingDocumentList = new ArrayList<>();
 
@@ -131,7 +131,7 @@ System.out.println();
 				else {
 					for (final String f:filename) {
 						try {
-							SwingUtilities.invokeAndWait(() -> sDataExplorer.readFile(f) );
+							SwingUtilities.invokeAndWait(() -> sDataWarrior.readFile(f) );
 							}
 						catch(Exception e) {}
 						}
@@ -201,7 +201,7 @@ for (String arg:args) {
 		// On Windows Liberica 21 moved libraries from jre\bin\javafx to jre\bin. These dlls are wrongly accessed via the old path.
 		// If not found there, then the jre tries to find them using the java.library.path runtime variable.
 		// For things to work correctly, java.library.path should start with "C:\\Program Files\\DataWarrior\\jre\\bin;".
-		// If DataWarrior on WIndows is started using the putjar/bootstrap mechanism, then java.library.path should starts
+		// If DataWarrior on Windows is started using the putjar/bootstrap mechanism, then java.library.path should start
 		// with "C:\\Program Files\\DataWarrior;" If an older JRE is installed, this variable contains another path causing
 		// to load outdated libraries...
 		// (On Macintosh and Linux this doesn't seem to be an issue.)
@@ -226,28 +226,30 @@ for (String arg:args) {
 					SwingUtilities.invokeLater(() -> {
 						e.printStackTrace();
 						if (e.getMessage() != null)
-							JOptionPane.showMessageDialog(sDataExplorer.getActiveFrame(), "Uncaught Exception:"+e.getMessage());
+							JOptionPane.showMessageDialog(sDataWarrior.getActiveFrame(), "Uncaught Exception:"+e.getMessage());
 						} )
 					);
 
-				sDataExplorer = new DataWarriorLinux();
+				sDataWarrior = new DataWarriorLinux();
 
 				if (args != null && args.length != 0) {
 					if (args[0].toLowerCase().startsWith("datawarrior:")) {
-						sDataExplorer.handleCustomURI(args);
+						sDataWarrior.handleCustomURI(args);
 						}
 					else {
-						String[] filename = sDataExplorer.deduceFileNamesFromArgs(args);
+						String[] filename = sDataWarrior.deduceFileNamesFromArgs(args);
 						for (String f:filename)
-							sDataExplorer.readFile(f);
+							sDataWarrior.readFile(f);
 						}
 					}
 
 				if (sPendingDocumentList != null) {
 					for (String doc:sPendingDocumentList)
-						sDataExplorer.readFile(doc);
+						sDataWarrior.readFile(doc);
 					sPendingDocumentList.clear();
 					}
+
+				sDataWarrior.tryReadStartupFile();
 				}
 			catch(Exception e) {
 				e.printStackTrace();

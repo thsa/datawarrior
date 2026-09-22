@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -21,6 +21,7 @@ package com.actelion.research.table.view;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
+import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.datawarrior.task.macro.DETaskRunMacro;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -95,6 +96,17 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 										else
 											new DETaskRunMacro(frame, link.substring(6)).defineAndRun();
 							} ), false );
+						}
+						if (link.startsWith("task:")) {
+							((com.sun.webkit.dom.HTMLAnchorElementImpl)nodeList.item(i)).addEventListener("click", e ->
+									SwingUtilities.invokeLater(() -> {
+										DEFrame frame = DataWarrior.getApplication().getActiveFrame();
+										AbstractTask task = DataWarrior.getApplication().getTaskFactory().createTaskFromCode(frame, link.substring(5));
+										if (task == null)
+											JOptionPane.showMessageDialog(frame, "Couldn't open search dialog, because\ntask '"+link.substring(5)+"' is not available.\nProbably, you miss a required plugin for it.");
+										else
+											task.defineAndRun();
+									} ), false );
 						}
 					}
 				}

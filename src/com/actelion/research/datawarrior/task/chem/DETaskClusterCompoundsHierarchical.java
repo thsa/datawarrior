@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -31,7 +31,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Properties;
 
-public class DETaskClusterCompounds extends ConfigurableTask implements ActionListener {
+public class DETaskClusterCompoundsHierarchical extends ConfigurableTask implements ActionListener {
     static final long serialVersionUID = 0x20061004;
 
     private static final String PROPERTY_DESCRIPTOR_COLUMN = "descriptorColumn";
@@ -42,12 +42,12 @@ public class DETaskClusterCompounds extends ConfigurableTask implements ActionLi
 
     public static final String TASK_NAME = "Cluster Compounds Or Reactions";
 
-	private CompoundTableModel  mTableModel;
-	private JComboBox			mComboBoxDescriptorColumn;
+	private final CompoundTableModel  mTableModel;
+	private JComboBox<String>	mComboBoxDescriptorColumn;
 	private JCheckBox	        mOptionButton1,mOptionButton2;
 	private JTextField          mTextField1,mTextField2;
 
-    public DETaskClusterCompounds(DEFrame parent) {
+    public DETaskClusterCompoundsHierarchical(DEFrame parent) {
 		super(parent, true);
 		mTableModel = parent.getTableModel();
     	}
@@ -90,7 +90,7 @@ public class DETaskClusterCompounds extends ConfigurableTask implements ActionLi
     public JPanel createDialogContent() {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
-							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap} };
+							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, 2*gap, TableLayout.PREFERRED, gap} };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
@@ -111,7 +111,7 @@ public class DETaskClusterCompounds extends ConfigurableTask implements ActionLi
 		content.add(mTextField2, "5,5");
 
 		content.add(new JLabel("Descriptor:"), "1,7");
-		mComboBoxDescriptorColumn = new JComboBox();
+		mComboBoxDescriptorColumn = new JComboBox<>();
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++)
 			if (qualifiesAsDescriptorColumn(column))
 				mComboBoxDescriptorColumn.addItem(mTableModel.getColumnTitle(column));
@@ -151,7 +151,7 @@ public class DETaskClusterCompounds extends ConfigurableTask implements ActionLi
 			}
 
 		String descriptorName = configuration.getProperty(PROPERTY_DESCRIPTOR_COLUMN, "");
-		if (descriptorName.length() == 0) {
+		if (descriptorName.isEmpty()) {
 			showErrorMessage("Descriptor column not defined.");
 			return false;
 			}
@@ -215,7 +215,7 @@ public class DETaskClusterCompounds extends ConfigurableTask implements ActionLi
 			}
 
 		value = configuration.getProperty(PROPERTY_DESCRIPTOR_COLUMN, "");
-		if (value.length() != 0) {
+		if (!value.isEmpty()) {
 			int column = mTableModel.findColumn(value);
 			if (column != -1 && qualifiesAsDescriptorColumn(column))
 				mComboBoxDescriptorColumn.setSelectedItem(mTableModel.getColumnTitle(column));
@@ -249,10 +249,10 @@ public class DETaskClusterCompounds extends ConfigurableTask implements ActionLi
     public Properties getDialogConfiguration() {
     	Properties configuration = new Properties();
 
-    	if (mOptionButton1.isSelected() && mTextField1.getText().length() != 0)
+    	if (mOptionButton1.isSelected() && !mTextField1.getText().isEmpty())
     		configuration.setProperty(PROPERTY_CLUSTER_COUNT_LIMIT, mTextField1.getText());
 
-    	if (mOptionButton2.isSelected() && mTextField2.getText().length() != 0)
+    	if (mOptionButton2.isSelected() && !mTextField2.getText().isEmpty())
     		configuration.setProperty(PROPERTY_SIMILARITY_LIMIT, mTextField2.getText());
 
     	String descriptorColumn = (String)mComboBoxDescriptorColumn.getSelectedItem();

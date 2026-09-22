@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -100,23 +100,24 @@ public class DataWarriorOSX extends DataWarrior {
 
 				System.setProperty("com.apple.mrj.application.apple.menu.about.name", "DataWarrior");
 
-				final DataWarriorOSX explorer = new DataWarriorOSX();
+				final DataWarriorOSX datawarrior = new DataWarriorOSX();
 
 				Thread.setDefaultUncaughtExceptionHandler((t, e) -> SwingUtilities.invokeLater(() -> {
 					if (e.getStackTrace()[0].getClassName().startsWith("org.pushingpixels")) {
 						if (!sSubstanceExceptionOccurred) {
 							sSubstanceExceptionOccurred = true;
 							e.printStackTrace();
-							JOptionPane.showMessageDialog(explorer.getActiveFrame(), "Uncaught L&F Exception: Please quit and start again.");
+							JOptionPane.showMessageDialog(datawarrior.getActiveFrame(), "Uncaught L&F Exception: Please quit and start again.");
 							}
 						}
 					else {
 						e.printStackTrace();
-						JOptionPane.showMessageDialog(explorer.getActiveFrame(), "Uncaught Exception:" + e.getMessage());
+						JOptionPane.showMessageDialog(datawarrior.getActiveFrame(), "Uncaught Exception:" + e.getMessage());
 						}
 					}));
 
-				explorer.registerAppleEvents();
+				datawarrior.registerAppleEvents();
+				datawarrior.tryReadStartupFile();
 				}
 			catch(Exception e) {
 				JOptionPane.showMessageDialog(null, "Unexpected Exception: "+e);

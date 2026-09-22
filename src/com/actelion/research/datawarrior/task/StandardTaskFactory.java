@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -81,6 +81,7 @@ public class StandardTaskFactory {
 		DataWarrior application = frame.getApplication();
 		DEMainPane mainPane = frame.getMainFrame().getMainPane();
 		DEPruningPanel pruningPanel = frame.getMainFrame().getPruningPanel();
+		boolean skipDatabases = "true".equals(System.getProperty("skipDatabases"));
 		return codeMatches(taskCode, DETaskAdd2DCoordinates.TASK_NAME) ? new DETaskAdd2DCoordinates(frame)
 			 : codeMatches(taskCode, DETaskAdd3DCoordinates.TASK_NAME) ? new DETaskAdd3DCoordinates(frame)
 			 : codeMatches(taskCode, DETaskAddBinsFromNumbers.TASK_NAME) ? new DETaskAddBinsFromNumbers(frame)
@@ -113,7 +114,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskAutomaticSAR.TASK_NAME) ? new DETaskAutomaticSAR(frame)
 			 : codeMatches(taskCode, DETaskBuild3DFragmentLibrary.TASK_NAME) ? new DETaskBuild3DFragmentLibrary(frame)
 			 : codeMatches(taskCode, DETaskBuildEvolutionaryLibrary.TASK_NAME) ? new DETaskBuildEvolutionaryLibrary(frame, application)
-			 : codeMatches(taskCode, DETaskBuildingBlockQuery.TASK_NAME) ? new DETaskBuildingBlockQuery(frame, application)
+			 : !skipDatabases && codeMatches(taskCode, DETaskBuildingBlockQuery.TASK_NAME) ? new DETaskBuildingBlockQuery(frame, application)
 			 : codeMatches(taskCode, DETaskCalculateChemicalProperties.TASK_NAME) ? new DETaskCalculateChemicalProperties(frame)
 			 : codeMatches(taskCode, DETaskCalculateConformerEnergy.TASK_NAME) ? new DETaskCalculateConformerEnergy(frame)
 			 : codeMatches(taskCode, DETaskCalculateDescriptor.TASK_NAME) ? new DETaskCalculateDescriptor(frame, null, null)
@@ -132,14 +133,14 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskChangeColumnOrder.TASK_NAME) ? new DETaskChangeColumnOrder(frame, mainPane.getTableView())
 			 : codeMatches(taskCode, DETaskChangeDividerLocation.TASK_NAME) ? new DETaskChangeDividerLocation(frame, null, null, 0.5)
 			 : codeMatches(taskCode, DETaskChangeTextFilter.TASK_NAME) ? new DETaskChangeTextFilter(frame, pruningPanel, null)
-			 : codeMatches(taskCode, DETaskChemblQuery.TASK_NAME) ? new DETaskChemblQuery(frame, application)
-			 : codeMatches(taskCode, DETaskChemSpaceQuery.TASK_NAME) ? new DETaskChemSpaceQuery(frame, application)
+			 : !skipDatabases && codeMatches(taskCode, DETaskChemblQuery.TASK_NAME) ? new DETaskChemblQuery(frame, application)
+			 : !skipDatabases && codeMatches(taskCode, DETaskChemSpaceQuery.TASK_NAME) ? new DETaskChemSpaceQuery(frame, application)
 			 : codeMatches(taskCode, DETaskClassifyReactions.TASK_NAME) ? new DETaskClassifyReactions(frame)
 			 : codeMatches(taskCode, DETaskCloseFilter.TASK_NAME) ? new DETaskCloseFilter(frame, pruningPanel, null)
 			 : codeMatches(taskCode, DETaskCloseView.TASK_NAME) ? new DETaskCloseView(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskCloseWindow.TASK_NAME) ? new DETaskCloseWindow(frame, application, null)
-			 : codeMatches(taskCode, DETaskClusterCompounds.TASK_NAME) ? new DETaskClusterCompounds(frame)
-			 : codeMatches(taskCode, DETaskCODQuery.TASK_NAME) ? new DETaskCODQuery(frame, application)
+			 : codeMatches(taskCode, DETaskClusterCompoundsHierarchical.TASK_NAME) ? new DETaskClusterCompoundsHierarchical(frame)
+			 : !skipDatabases && codeMatches(taskCode, DETaskCODQuery.TASK_NAME) ? new DETaskCODQuery(frame, application)
 			 : codeMatches(taskCode, DETaskCombineTwoRowLists.TASK_NAME) ? new DETaskCombineTwoRowLists(frame)
 			 : codeMatches(taskCode, DETaskCopyMacro.TASK_NAME) ? new DETaskCopyMacro(frame, null)
 			 : codeMatches(taskCode, DETaskCopyTableCells.TASK_NAME) ? new DETaskCopyTableCells(frame, mainPane.getTableModel(), mainPane.getTable())
@@ -235,8 +236,8 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskRenameView.TASK_NAME) ? new DETaskRenameView(frame, mainPane, null)
 			 : codeMatches(taskCode, DETaskRepeatNextTask.TASK_NAME) ? new DETaskRepeatNextTask(frame)
 			 : codeMatches(taskCode, DETaskReplace3DFragment.TASK_NAME) ? new DETaskReplace3DFragment(frame)
-			 : codeMatches(taskCode, DETaskRetrieveDataFromURL.TASK_NAME) ? new DETaskRetrieveDataFromURL(frame, application)
-			 : codeMatches(taskCode, DETaskRetrieveWikipediaCompounds.TASK_NAME) ? new DETaskRetrieveWikipediaCompounds(frame, application)
+			 : !skipDatabases && codeMatches(taskCode, DETaskRetrieveDataFromURL.TASK_NAME) ? new DETaskRetrieveDataFromURL(frame, application)
+			 : !skipDatabases && codeMatches(taskCode, DETaskRetrieveWikipediaCompounds.TASK_NAME) ? new DETaskRetrieveWikipediaCompounds(frame, application)
 			 : codeMatches(taskCode, DETaskResetAllFilters.TASK_NAME) ? new DETaskResetAllFilters(frame)
 			 : codeMatches(taskCode, DETaskRunTaskInteractive.TASK_NAME) ? new DETaskRunTaskInteractive(frame)
 			 : codeMatches(taskCode, DETaskRunMacro.TASK_NAME) ? new DETaskRunMacro(frame, null)
@@ -246,8 +247,8 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskSaveSelectedRowsAs.TASK_NAME) ? new DETaskSaveSelectedRowsAs(frame)
 			 : codeMatches(taskCode, DETaskSaveTemplateFileAs.TASK_NAME) ? new DETaskSaveTemplateFileAs(frame)
 			 : codeMatches(taskCode, DETaskSaveVisibleRowsAs.TASK_NAME) ? new DETaskSaveVisibleRowsAs(frame)
-			 : codeMatches(taskCode, DETaskSearchGooglePatents.TASK_NAME) ? new DETaskSearchGooglePatents(frame, application)
-			 : codeMatches(taskCode, DETaskSearchPatentReactions.TASK_NAME) ? new DETaskSearchPatentReactions(frame, application)
+			 : !skipDatabases && codeMatches(taskCode, DETaskSearchGooglePatents.TASK_NAME) ? new DETaskSearchGooglePatents(frame, application)
+			 : !skipDatabases && codeMatches(taskCode, DETaskSearchPatentReactions.TASK_NAME) ? new DETaskSearchPatentReactions(frame, application)
 			 : codeMatches(taskCode, DETaskSelectAll.TASK_NAME) ? new DETaskSelectAll(frame)
 			 : codeMatches(taskCode, DETaskSelectDiverse.TASK_NAME) ? new DETaskSelectDiverse(frame)
 			 : codeMatches(taskCode, DETaskSelectRowsFromList.TASK_NAME) ? new DETaskSelectRowsFromList(frame, -1)
@@ -300,7 +301,7 @@ public class StandardTaskFactory {
 			 : codeMatches(taskCode, DETaskSortStructuresBySimilarity.TASK_NAME) ? new DETaskSortStructuresBySimilarity(frame, -1, null)
 			 : codeMatches(taskCode, DETaskSplitRows.TASK_NAME) ? new DETaskSplitRows(frame, frame.getTableModel())
 			 : codeMatches(taskCode, DETaskSplitView.TASK_NAME) ? new DETaskSplitView(frame, mainPane, null)
-			 : codeMatches(taskCode, DETaskSQLQuery.TASK_NAME) ? new DETaskSQLQuery(frame, application)
+			 : !skipDatabases && codeMatches(taskCode, DETaskSQLQuery.TASK_NAME) ? new DETaskSQLQuery(frame, application)
 			 : codeMatches(taskCode, DETaskSuperposeConformers.TASK_NAME_FLEX) ? new DETaskSuperposeConformers(frame, true)
 			 : codeMatches(taskCode, DETaskSuperposeConformers.TASK_NAME_RIGID) ? new DETaskSuperposeConformers(frame, false)
 			 : codeMatches(taskCode, DETaskSynchronizeView.TASK_NAME) ? new DETaskSynchronizeView(frame, mainPane, null, null)
@@ -331,6 +332,7 @@ public class StandardTaskFactory {
 
 	public TreeSet<TaskSpecification> getTaskDictionary(DEFrame frame) {
 		if (mTaskDictionary == null) {
+			boolean skipDatabases = "true".equals(System.getProperty("skipDatabases"));
 			mTaskDictionary = new TreeSet<>();
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAdd2DCoordinates.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAdd3DCoordinates.TASK_NAME));
@@ -365,7 +367,8 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskAutomaticSAR.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskBuild3DFragmentLibrary.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskBuildEvolutionaryLibrary.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskBuildingBlockQuery.TASK_NAME));
+			if (!skipDatabases)
+				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskBuildingBlockQuery.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskCalculateChemicalProperties.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskCalculateConformerEnergy.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskCalculateDescriptor.TASK_NAME));
@@ -383,14 +386,17 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskChangeSubstructureListFilter.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_TABLE, DETaskChangeColumnOrder.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskChangeTextFilter.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskChemblQuery.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskChemSpaceQuery.TASK_NAME));
+			if (!skipDatabases)
+				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskChemblQuery.TASK_NAME));
+			if (!skipDatabases)
+				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskChemSpaceQuery.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskClassifyReactions.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskCloseFilter.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskCloseView.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILE, DETaskCloseWindow.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskClusterCompounds.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskCODQuery.TASK_NAME));
+			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskClusterCompoundsHierarchical.TASK_NAME));
+			if (!skipDatabases)
+				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskCODQuery.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskCombineTwoRowLists.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskCopyMacro.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_EDIT, DETaskCopyStatisticalValues.TASK_NAME));
@@ -486,8 +492,10 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskRenameView.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskRepeatNextTask.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskReplace3DFragment.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskRetrieveDataFromURL.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskRetrieveWikipediaCompounds.TASK_NAME));
+			if (!skipDatabases)
+				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskRetrieveDataFromURL.TASK_NAME));
+			if (!skipDatabases)
+				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskRetrieveWikipediaCompounds.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILTER, DETaskResetAllFilters.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_MACRO, DETaskRunMacro.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILE, DETaskRunMacroFromFile.TASK_NAME));
@@ -496,8 +504,10 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILE, DETaskSaveSelectedRowsAs.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILE, DETaskSaveTemplateFileAs.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_FILE, DETaskSaveVisibleRowsAs.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskSearchGooglePatents.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskSearchPatentReactions.TASK_NAME));
+			if (!skipDatabases)
+				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskSearchGooglePatents.TASK_NAME));
+			if (!skipDatabases)
+				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskSearchPatentReactions.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_EDIT, DETaskSelectAll.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskSelectDiverse.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_LIST, DETaskSelectRowsFromList.TASK_NAME));
@@ -551,7 +561,8 @@ public class StandardTaskFactory {
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskSortStructuresBySimilarity.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATA, DETaskSplitRows.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSplitView.TASK_NAME));
-			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskSQLQuery.TASK_NAME));
+			if (!skipDatabases)
+				mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_DATABASE, DETaskSQLQuery.TASK_NAME));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskSuperposeConformers.TASK_NAME_FLEX));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_CHEMISTRY, DETaskSuperposeConformers.TASK_NAME_RIGID));
 			mTaskDictionary.add(new TaskSpecification(TaskSpecification.CATEGORY_VIEW, DETaskSynchronizeView.TASK_NAME));

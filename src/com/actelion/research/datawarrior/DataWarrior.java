@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -44,15 +44,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.CodeSource;
 import java.util.ArrayList;
+import java.util.Properties;
 import java.util.prefs.Preferences;
 
 public abstract class DataWarrior implements WindowFocusListener {
@@ -162,20 +160,30 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 
 	/**
-	 * Tries to find the directory with the specified name in the DataWarrior installation directory.
-	 * resourceDir may contain capital letters, but it is converted to lower case before checked against
-	 * installed resource directories, which are supposed to be lower case.
-	 * @param resourceDir as shown to the user, e.g. "Example"; "" to return datawarrior installation dir
+	 * Tries to find a file or directory with the specified name in the DataWarrior installation directory.
+	 * name may contain capital letters, but it is converted to lower case before being checked against
+	 * existing files or directories, which are supposed to be lower case.
+	 * @param name of file or directory; capital letter are converted to small ones, e.g. "Example"
 	 * @return null or full path to resource directory
 	 */
-	public File resolveResourcePath(String resourceDir) {
-		File directory = new File(mRootPath != null ? mRootPath + File.separator + resourceDir.toLowerCase()
-			: Platform.isWindows() ? "C:\\Program Files\\DataWarrior\\" + resourceDir.toLowerCase()
-			: Platform.isMacintosh() ? "/Applications/DataWarrior.app/"+resourceDir.toLowerCase()
-			: "/opt/datawarrior/"+resourceDir.toLowerCase());
+	public File resolveResourcePath(String name) {
+		String installationPath = getInstallationPath();
+		if (installationPath == null)
+			return null;
 
+		File directory = new File(installationPath + File.separator + name.toLowerCase());
 		return FileHelper.fileExists(directory) ? directory : null;
 		}
+
+	/**
+	 * @return datawarrior installation directory considering system property 'rootpath' if it exists
+	 */
+	public static String getInstallationPath() {
+		return (System.getProperty("rootpath") != null) ? System.getProperty("rootpath")
+				: Platform.isWindows() ? "C:\\Program Files\\DataWarrior"
+				: Platform.isMacintosh() ? "/Applications/DataWarrior.app"
+				: "/opt/datawarrior";
+	}
 
 	/**
 	 * Creates a path variable name from a resource directory name.
@@ -735,6 +743,14 @@ public abstract class DataWarrior implements WindowFocusListener {
 		return filename;
 		}
 
+	public void tryReadStartupFile() {
+		String startupFile = System.getProperty("startupFile");
+		if (startupFile == null)
+			startupFile = getInstallationPath() + File.separator + "startup.dwar";
+		if (new File(startupFile).exists())
+			readFile(startupFile);
+	}
+
 	/**
 	 * Opens the file, runs the query, starts the macro depending on the file type.
 	 * @param filename
@@ -850,7 +866,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 * If not called from the event dispatch thread and if called after closeFrameSafely()
 	 * then this call waits until this class receives a windowGainedFocus() and
 	 * returns the frame that has gotten the focus. If no frames are left after
-	 * one was closed, then null is returned. 
+	 * one was closed, then null is returned.
 	 * @return active frame or null
 	 */
 	public DEFrame getNewFrontFrameAfterClosing() {
@@ -951,9 +967,31 @@ public abstract class DataWarrior implements WindowFocusListener {
 	}
 
 	public static void main(final String[] args) {
+		readSystemProperties();
 		if (Platform.isMacintosh())
 			DataWarriorOSX.main(args);
 		else
 			DataWarriorLinux.main(args);
 	}
-}
+
+	/**
+	 * Reads optional properties from a config file if one exists.
+	 * Config files may overwrite system properties given to the java JRE with the -D option.
+	 */
+	private static void readSystemProperties() {
+		String configPath = System.getProperty("configFile");
+		if (configPath == null)
+			configPath = getInstallationPath() + File.separator + "config.txt";
+
+		File configFile = new File(configPath);
+		if (configFile.exists()) {
+			Properties config = new Properties();
+			try {
+				config.load(new FileReader(configFile));
+				for (String key : config.stringPropertyNames())
+					System.setProperty(key, config.getProperty(key));
+				}
+			catch (IOException ioe) {}
+			}
+		}
+	}

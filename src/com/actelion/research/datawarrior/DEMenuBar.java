@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -153,7 +153,7 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 					jMenuChemSuperposeFlexible,jMenuChemSuperposeRigid,jMenuChemDock, jMenuChem3DFragmentsBuildLib, jMenuChem3DFragmentsReplace,
 					jMenuChemAddSubstructureCount,jMenuChemAddStructureFromName, jMenuChemDecomposeRGroups,jMenuChemPerformReaction,jMenuChemInteractiveSARTable,
 					jMenuChemAnalyzeScaffolds,jMenuChemAnalyzeCliffs,jMenuChemMatchFile,jMenuChemSelectDiverse,
-					jMenuChemCluster,jMenuChemBitBirchCluster,jMenuChemExtractFragment,jMenuChemMapReactions,jMenuChemCompareReactionMapping,jMenuChemAddReactionSmiles,
+			jMenuChemClusterHierarchical, jMenuChemClusterBitBIRCH,jMenuChemExtractFragment,jMenuChemMapReactions,jMenuChemCompareReactionMapping,jMenuChemAddReactionSmiles,
 					jMenuChemCreateGenericTautomers,jMenuChemCompareDescriptorSimilarityDistribution,jMenuChemGenerateRandomMolecules,
 					jMenuChemCreateTaggedSmiles,jMenuChemAddDockingScore,
 					jMenuChemExtractPairwiseCompoundSimilarities,jMenuChemExtractPairwiseStuff,jMenuChemCountAtomTypes,jMenuChemCheckIDCodes,
@@ -455,7 +455,8 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 		add(buildDataMenu());
 		if (!SUPPRESS_CHEMISTRY)
 			add(buildChemistryMenu());
-		add(buildDatabaseMenu());
+		if (!"true".equals(System.getProperty("skipDatabases")))
+			add(buildDatabaseMenu());
 		add(buildListMenu());
 		add(buildMacroMenu());
 		mApplication.getPluginRegistry().addPluginMenuItems(this);
@@ -928,8 +929,8 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemAnalyzeCliffs = new JMenuItem();
 		jMenuChemMatchFile = new JMenuItem();
 		jMenuChemSelectDiverse = new JMenuItem();
-		jMenuChemCluster = new JMenuItem();
-		jMenuChemBitBirchCluster = new JMenuItem();
+		jMenuChemClusterHierarchical = new JMenuItem();
+		jMenuChemClusterBitBIRCH = new JMenuItem();
 		jMenuChemCreateGenericTautomers = new JMenuItem();
 		jMenuChemCheckIDCodes = new JMenuItem();
 		jMenuChemCreateTaggedSmiles = new JMenuItem();
@@ -1020,10 +1021,10 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 		jMenuChemMatchFile.addActionListener(this);
 		jMenuChemSelectDiverse.setText("Select Diverse Set...");
 		jMenuChemSelectDiverse.addActionListener(this);
-		jMenuChemCluster.setText("Cluster Compounds/Reactions...");
-		jMenuChemCluster.addActionListener(this);
-		jMenuChemBitBirchCluster.setText("BitBirch Cluster Compounds...");
-		jMenuChemBitBirchCluster.addActionListener(this);
+		jMenuChemClusterHierarchical.setText("Hierarchical...");
+		jMenuChemClusterHierarchical.addActionListener(this);
+		jMenuChemClusterBitBIRCH.setText("BitBIRCH (fast)...");
+		jMenuChemClusterBitBIRCH.addActionListener(this);
 		jMenuChemCreateGenericTautomers.setText("Create Generic Tautomers");
 		jMenuChemCreateGenericTautomers.addActionListener(this);
 		jMenuChemCheckIDCodes.setText("Check IDCode Correctness");
@@ -1125,9 +1126,11 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 		jMenuChem.add(jMenuChemMatchFile);
 		jMenuChem.addSeparator();
 		jMenuChem.add(jMenuChemSelectDiverse);
-		jMenuChem.add(jMenuChemCluster);
+		JMenu jMenuChemCluster = new JMenu("Cluster Compounds");
+		jMenuChemCluster.add(jMenuChemClusterHierarchical);
 		if (System.getProperty("development") != null)
-			jMenuChem.add(jMenuChemBitBirchCluster);
+			jMenuChemCluster.add(jMenuChemClusterBitBIRCH);
+		jMenuChem.add(jMenuChemCluster);
 
 		if (System.getProperty("development") != null) {
 			jMenuChem.addSeparator();
@@ -1923,10 +1926,10 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 				new DETaskFindSimilarCompoundsInFile(mParentFrame).defineAndRun();
 			else if (source == jMenuChemSelectDiverse)
 				new DETaskSelectDiverse(mParentFrame).defineAndRun();
-			else if (source == jMenuChemCluster)
-				new DETaskClusterCompounds(mParentFrame).defineAndRun();
-			else if (source == jMenuChemBitBirchCluster)
-				new DETaskBitBirchClusterCompounds(mParentFrame).defineAndRun();
+			else if (source == jMenuChemClusterHierarchical)
+				new DETaskClusterCompoundsHierarchical(mParentFrame).defineAndRun();
+			else if (source == jMenuChemClusterBitBIRCH)
+				new DETaskClusterCompoundsBitBIRCH(mParentFrame).defineAndRun();
 /*		  else if (source == jMenuChemExtractPKATree)
 				new PKATreeExtractor(mParentFrame, new PKADataWarriorAdapter(mTableModel)).extract();	*/
 			else if (source == jMenuChemCheckIDCodes)

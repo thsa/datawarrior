@@ -49,7 +49,14 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.MouseAdapter;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serial;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLConnection;
+import java.util.prefs.Preferences;
 
 import static javafx.geometry.Orientation.HORIZONTAL;
 import static javafx.geometry.Orientation.VERTICAL;
@@ -108,6 +115,18 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 											task.defineAndRun();
 									} ), false );
 						}
+						if (link.startsWith("datawarrior:")) {
+							((com.sun.webkit.dom.HTMLAnchorElementImpl)nodeList.item(i)).addEventListener("click", e ->
+									SwingUtilities.invokeLater(() -> {
+										try {
+											DataWarrior.getApplication().handleCustomURI(new URI(link));
+										}
+										catch (URISyntaxException use) {
+											DEFrame frame = DataWarrior.getApplication().getActiveFrame();
+											JOptionPane.showMessageDialog(frame, "URISyntaxException:"+link);
+										}
+									} ), false );
+						}
 					}
 				}
 			});
@@ -124,7 +143,72 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 			}
 		});
 
-		setText((String)mTableModel.getExtensionData(cExtensionNameFileExplanation));
+		String text = (String)mTableModel.getExtensionData(cExtensionNameFileExplanation);
+
+		// We allow including and resolving specific content from the preferences
+		text = resolveVariable("$DW_PREFERENCES(", text, key -> {
+			int index3 = key.lastIndexOf('.');
+			if (index3 == -1)
+				return null;
+
+			try {
+				Preferences prefs = Preferences.userRoot().node(key.substring(0, index3));
+				return prefs.get(key.substring(index3 + 1), null);
+			}
+			catch (Exception e) {
+				return null;
+			}
+		});
+
+		// We also allow including dynamic HTML content from a given URL (after preferences to allow them to be part of a URL)
+		text = resolveVariable("$DW_REMOTE_HTML(", text, url -> {
+			try {
+				URLConnection con = new URI(url).toURL().openConnection();
+				con.setRequestProperty("Content-Type", "text/plain");
+				InputStream is = con.getInputStream();
+				if (is != null) {
+					BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+					StringBuilder sb = new StringBuilder();
+					String line;
+					while ((line = reader.readLine()) != null) {
+						sb.append(line + "\n");
+					}
+					is.close();
+					return sb.toString();
+				}
+			}
+			catch (Exception e) {}
+			return null;
+		});
+
+		setText(text);
+	}
+
+	private String resolveVariable(String variableName, String text, VariableResolver resolver) {
+		// We allow including and resolving specific content from the preferences
+		int index = text.indexOf(variableName);
+		if (index != -1) {
+			boolean error = false;
+			StringBuilder sb = new  StringBuilder(text.substring(0, index));
+			while (index != -1) {
+				int index2 = text.indexOf(")", index);
+				if (index2 == -1) {
+					error = true;
+					break;
+				}
+
+				String key = text.substring(index + variableName.length(), index2);
+				String value = resolver.resolve(key);
+				if (value != null)
+					sb.append(value);
+
+				index = text.indexOf(variableName, index2+1);
+				sb.append(index == -1 ? text.substring(index2+1) : text.substring(index2+1, index));
+			}
+			if (!error)
+				text = sb.toString();
+		}
+		return text;
 	}
 
 	public void reload() {
@@ -184,6 +268,10 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 	public CompoundTableModel getTableModel() {
 		return mTableModel;
 	}
+
+	private interface VariableResolver {
+		String resolve(String key);
+	};
 }
 
 class WebEventDispatcher implements EventDispatcher {
@@ -234,7 +322,7 @@ class WebEventDispatcher implements EventDispatcher {
 			)
 				event.consume();
 
-/*				// Avoid copy with Ctrl+C or Ctrl+Insert
+/*			// Avoid copy with Ctrl+C or Ctrl+Insert
 			if((k.getCode().equals(KeyCode.C) || k.getCode().equals(KeyCode.INSERT)) && k.isControlDown()){
 				event.consume();
 			}
@@ -264,89 +352,3 @@ class WebEventDispatcher implements EventDispatcher {
 		return limit;
 	}
 }
-
-/*
-public class ExplanationView extends JScrollPane implements CompoundTableConstants,CompoundTableView {
-    private static final long serialVersionUID = 0x20130114;
-
-	private ViewSelectionHelper	mViewSelectionHelper;
-    private CompoundTableModel	mTableModel;
-    private JTextPane			mTextPane;
-
-	public ExplanationView(CompoundTableModel tableModel) {
-		mTableModel = tableModel;
-
-		setBorder(BorderFactory.createEmptyBorder());
-		mTextPane = new JTextPane();
-		mTextPane.setBorder(null);
-		mTextPane.setContentType("text/html");
-		mTextPane.setEditable(false);
-		mTextPane.setBackground(Color.white);
-
-		setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_AS_NEEDED);
-		setViewportView(mTextPane);
-
-		String explanation = (String)mTableModel.getExtensionData(cExtensionNameFileExplanation);
-
-		Handler.install();
-		mTextPane.setText(explanation == null ? "" : explanation);
-		mTextPane.setCaretPosition(0);
-
-		final CompoundTableView _this = this;
-		mTextPane.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mousePressed(MouseEvent e) {
-				super.mousePressed(e);
-				mViewSelectionHelper.setSelectedView(_this);
-				}
-			});
-		}
-
-	@Override
-	public void compoundTableChanged(CompoundTableEvent e) {
-		if (e.getType() == CompoundTableEvent.cChangeExtensionData
-		 && cExtensionNameFileExplanation.equals(mTableModel.getExtensionHandler().getName(e.getSpecifier()))) {
-			String explanation = (String)mTableModel.getExtensionData(cExtensionNameFileExplanation);
-			mTextPane.setText(explanation == null ? "" : explanation);
-			}
-		if (e.getType() == CompoundTableEvent.cNewTable) {
-			mTextPane.setText("");
-			}
-		}
-
-	@Override
-	public void setViewSelectionHelper(ViewSelectionHelper l) {
-		mViewSelectionHelper = l;
-		}
-
-	public String getText() {
-		return mTextPane.getText();
-		}
-
-	@Override
-	public boolean copyViewContent() {
-		StringSelection stringSelection = new StringSelection(getText());
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		clipboard.setContents(stringSelection, null);
-		return true;
-		}
-
-	public void setText(String text) {
-		mTextPane.setText(text);
-		}
-
-	@Override
-	public void listChanged(CompoundTableListEvent e) {
-		}
-
-	@Override
-	public void cleanup() {
-		mTextPane.setText("");
-		}
-
-	@Override
-	public CompoundTableModel getTableModel() {
-		return mTableModel;
-		}
-	}
-*/

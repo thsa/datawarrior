@@ -7,7 +7,11 @@ import java.util.function.IntFunction;
 
 /**
  * BitBIRCH clustering of binary fingerprints (long[] packed) with the Tanimoto index.
- *
+ * The authors of the original code developed in Python are:
+ * Kenneth López Pérez; Vicky Jung, Kate Huddleston, Ramón Alain Miranda-Quintana
+ * The paper accessible from: https://pubs.rsc.org/dd/article/4/4/1042/888988/BitBIRCH-efficient-clustering-of-large-molecular.
+ * The software used in the paper can be found in: https://github.com/mqcomplab/bitbirch (DOI: 10.5281/zenodo.14977624).
+ * Benchmark data can be found in: https://github.com/molML/MoleculeACE/tree/main/MoleculeACE/Data/benchmark_data.
  * <p>A height-balanced tree (as in BIRCH) whose entries are {@link BitFeature}s:
  * <ul>
  *   <li>A compound descends from the root, at every node moving to the entry whose members have the highest

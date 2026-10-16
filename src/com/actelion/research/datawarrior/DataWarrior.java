@@ -716,7 +716,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 	 * @param args
 	 * @return list of file names
 	 */
-	public String[] deduceFileNamesFromArgs(String[] args) {
+	public static String[] deduceFileNamesFromArgs(String[] args) {
 		if (args == null || args.length < 2)
 			return args;
 

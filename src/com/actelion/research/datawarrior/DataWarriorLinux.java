@@ -120,7 +120,7 @@ System.out.println();
 				catch(Exception e) {}
 				}
 			else {
-				String[] filename = sDataWarrior.deduceFileNamesFromArgs(args);
+				String[] filename = DataWarrior.deduceFileNamesFromArgs(args);
 				if (sDataWarrior == null) {
 					if (sPendingDocumentList == null)
 						sPendingDocumentList = new ArrayList<>();
@@ -237,19 +237,20 @@ for (String arg:args) {
 						sDataWarrior.handleCustomURI(args);
 						}
 					else {
-						String[] filename = sDataWarrior.deduceFileNamesFromArgs(args);
+						String[] filename = DataWarrior.deduceFileNamesFromArgs(args);
 						for (String f:filename)
 							sDataWarrior.readFile(f);
 						}
 					}
+				else {
+					sDataWarrior.tryReadStartupFile();
+				}
 
 				if (sPendingDocumentList != null) {
 					for (String doc:sPendingDocumentList)
 						sDataWarrior.readFile(doc);
 					sPendingDocumentList.clear();
 					}
-
-				sDataWarrior.tryReadStartupFile();
 				}
 			catch(Exception e) {
 				e.printStackTrace();

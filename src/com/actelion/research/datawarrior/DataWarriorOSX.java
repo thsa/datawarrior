@@ -117,7 +117,13 @@ public class DataWarriorOSX extends DataWarrior {
 					}));
 
 				datawarrior.registerAppleEvents();
-				datawarrior.tryReadStartupFile();
+
+				new Thread(() -> {	// we have to wait a little to let DataWarrior process file open events
+					try { Thread.sleep(1000); } catch (InterruptedException e) {}
+					SwingUtilities.invokeLater(() -> {
+						if (datawarrior.getActiveFrame() == null || datawarrior.getActiveFrame().getTableModel().isEmpty())
+							datawarrior.tryReadStartupFile(); } );
+					}).start();
 				}
 			catch(Exception e) {
 				JOptionPane.showMessageDialog(null, "Unexpected Exception: "+e);

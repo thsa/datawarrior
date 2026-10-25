@@ -44,8 +44,14 @@
     are counted, meaning no third atom may be closer than its VDW-radius to the connection line between the two partners.
     Confidence intervals are estimated by bootstrapping.</p>
 
-<p>When applying the concept to protein-ligand complexes, the situation gets a little more complicated. Since the original
-    paper described the concept, but didn't publish the final statistics with it, the RF-statistics for
+<p>When applying the concept to protein-ligand complexes, the situation gets a little more complicated, because two different
+    kinds of molecules interact with eachother. Since ligand atom types are much more diverse than protein atoms types,
+    ligand and protein atoms are classified by different rules. For the same reason, individual RF-values can be calculated
+    from a ligand perspective and from the protein perspective, always considering surface fractions of the type of the
+    opposite atom. Final RF-values for the complete interaction are then calulated as a geometric mean from both individual
+    values.</p>
+
+<p>Since the original paper described the concept, but didn't publish the final statistics with it, the RF-statistics for
     <span class="keyword">DataWarrior</span> was rebuilt from scratch by processing all PDB structure entries submitted
     before Aug 2026. From these, we considered all non-covalent binding sites, which don't contain metal atoms, with ligands
     containing at least eight non-hydrogen atoms, with a resolution of at least 2.5&#8491;, and that are not redundant
@@ -60,11 +66,12 @@
     of incompatibilities of the original SMARTS based encoding with our OpenChemLib concepts, mainly regarding aromaticity.</p>
 
 <p>As in the 2019 paper described, we consider ligand-protein atom contacts only, if the atoms are closer that the sum of
-    their VDW-radii + 0.5A, and if there is an ubostructed line of sight between the atom center coordinates. Then, for
-    every ligand and protein atom type combination we determined all bindings sites that contained at least one atom of the ligand
-    type and at least one of the protein type. From these binding sites we calculated the RF-value RFL from the ligand perspective
-    using surface fractions on the protein side. Likewise, we calculated RF-value RFP from the protein perspective using surface
-    fractions on the ligand side. Finally, we obtained the raw RF-value for the ligand protein type combination as SQRT(RFL * RFP).</p>
+    their VDW-radii + 0.5A, and if there is an unobstructed line of sight between the atom center coordinates. Then, for
+    every ligand and protein atom type combination we determined all bindings sites that contained at least one atom of
+    the ligand type and one of the protein type. From these binding sites we calculated the RF-value RF<sub>L</sub> from
+    the ligand perspective using surface fractions on the protein side. Likewise, we calculated RF-value RF<sub>P</sub>
+    from the protein perspective using surface fractions on the ligand side. Finally, we obtained the raw RF-value for
+    the ligand-protein type combination as SQRT(RF<sub>L</sub> * RF<sub>P</sub>).</p>
 
 <p>The published RF-approach defines an atom type specific angle as one additional parameter. Then, from the angle distribution
     statistics an angle range is derived, beyond which a contact is not considered an interaction anymore. Different to that binary

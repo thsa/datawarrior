@@ -285,7 +285,7 @@ with a given conformer of the CNS-drug Alpidem.</i></center></p>
 
 <p>After clicking <span class="menu">OK</span>, <span class="keyword">DataWarrior</span> tries
 matching the shape of all conformers of any row with the given target molecule(s).
-As result you will receive a new column named 'PheSA Score'. Scores close to 1.0 indicate
+As result, you will receive a new column named 'PheSA Score'. Scores close to 1.0 indicate
 a very high shape and pharmacophore feature match. Lower values represent poorer matches.
 Another new column contains the best matching conformer superposed to the query structure,
 which can only be seen in the <span class="keyword">Detail View</span>, because the
@@ -319,7 +319,7 @@ the initial number of conformers generated to be aligned rigidly, and the number
 which are then run through the flexible optimization process.</p>
 
 <p>In order to start the flexible alignment of your molecules in <span class="keyword">DataWarrior</span>
-with a given conformer choose <span class="menu">Superpose Conformers->Flexible...</span> from the menu and 
+with a given conformer choose <span class="menu">Superpose Conformers->Flexible...</span> from the menu and
 continue as described above.</p>
 <br>
 
@@ -347,7 +347,7 @@ It also calculates the Conolly surface inside the cavity and starts docking your
 ligands into the cavity. This may take a few hours for thousands of molecules.</p>
 
 <p align="center"><img src="help/img/conf/dockingResult.jpeg" width="532" height="363"></p>
-<p><center><i>Docked molecule into complement factor B protease domain, PDB-ID: 6RAV).</i></center></p>
+<p align="center"><i>Docked molecule into complement factor B protease domain, PDB-ID: 6RAV).</i></p>
 
 <p>Once the docking calculation has finished, the <span class="keyword">DataWarrior</span> table contains
 two new columns, the ChemPLP based docking score and a docked structure itself. This structure
@@ -357,12 +357,85 @@ and invisible column, which contains the structure atom's 3D-coordinates of the 
 knows about the natural ligand and the protein cavity; an information that is attached to the third column.
 The thirds column's coordinates together with the cavity information are used by an associated detail view
 to display the docking pose, i.e. the cropped cavity together with the docked structure.</p>
+<br>
 
-<p>Optionally, the cavity surface, major interactions, and the natural ligand structure at its original position
-can be shown. If you have a device that is capable of displaying stereoscopic content, you may open a daughter
-view that mirrors the detail view for real 3D-perception. Interactions are calculated and shown according to
+<h3><a name="Interactions"></a>Protein-Ligand Interactions</h3>
+
+<p>Multiple factors have an influence on a ligand's binding affinity within a protein-ligand complex.
+Among these are conformational energies of ligand and protein, how well the ligand's shape fits into the
+binding site, solvation effects, and the flexibility of the ligand and protein structures. And finally,
+of particular importance are the kind of interactions between ligand and protein atoms. Repulsive or attractive
+interactions have a large influence on the stability of a ligand-protein complex. Whether an interaction
+is beneficial depends on the types of the involved atoms, on their geometries, i.e. distance and angles
+between involved bonds and pi-systems.</p>
+<p><span class="keyword">DataWarrior</span> supports multiple published methods for
+determining and visualizing atom interactions within a binding size, be it from a docking result or
+from an experimentally determined structure. Studying these interactions provides a better understanding
+of binding modes and affinities of protein-ligand complexes, which is crucial for developing better therapeutic
+agents in drug discovery and structural biology. If you have a device that is capable of displaying stereoscopic
+content, you may open a daughter view that mirrors the detail view for real 3D-perception.</p>
+<p>Within <span class="keyword">DataWarrior</span>, if a view shows a 3-dimensional ligand structure inside
+a protein cavity, the view may also show interactions. To switch between different displayed interaction
+types, press the right mouse button over the 3D-view and select an interaction type from the
+<span class="menu">Interactions</span> submenu.<p>
+
+<p align="center"><img src="help/img/conf/interactions.jpeg" width="600" height="190"></p>
+<p align="center"><i>PDB entry 5SBQ showing PLIP- or RF-interactions. Note that PLIP interactions (left)
+involve hydrogen atoms, while RF-interactions (right) use implicit hydrogen atoms</i></p>
+
+<p><b>PLIP interactions:</b> The Protein-Ligand Interaction Profiler (PLIP) is a tool designed by M. Schroeder
+to analyze and visualize non-covalent interactions between proteins and ligands. By examining the spatial
+relationships between protein and ligand atoms It identifies various types of interactions, such as hydrogen
+bonds (light blue), hydrophobic contacts (beige), π-stacking (orange), cation–π (yellow), salt bridges (olive),
+water bridges (blue), and halogen bonds (purple). PLIP operates by assessing the interactions based on distance
+cutoffs and geometric criteria. The applied thresholds are taken from literature and are thus knowledge based.
+Most of them originate from analysis of large sets of high-quality protein structures in other studies.
+If an atom faces multiple interactions, then only the most relevant (the shortest) is shown.
+PLIP hydrogen bonds are assessed using hydrogen atom coordinates, which typically are not part of PDB- or CIF-
+files. When hydrogen coordinates are missing, then they are predicted by <span class="keyword">DataWarrior</span>.</p>
+
+<p>PLIP interactions in <span class="keyword">DataWarrior</span> are calculated and shown according to
 S. Salentin, S. Schreiber, V. J. Haupt, M. F. Adasme, M. Schroeder; <i>PLIP: fully automated protein-ligand
-interaction profiler</i>; Nucleic Acids Research, 2015 1; doi: 10.1093/nar/gkv315</p>
+interaction profiler</i>; Nucleic Acids Research, 2015 1; doi: 10.1093/nar/gkv315. PLIP can also be accessed through
+a <a href="HTTPS://projects.biotec.tu-dresden.de/plip-web">web service</a> run by the original authors.
+The output there includes detailed reports and visualizations.</p>
+
+<p><b>RF-interactions</b> are protein-ligand interactions based on the Ratio Of Frequencies (RF). In contrast to
+PLIP interactions, which are based on a small set of handcrafted rules, RF-interactions are based on statistics.
+The RF-approach relies on a fine-grained definition of atom types and millions of analyzed interactions from high
+resolution structures of the Protein Data Bank (PDB). It determines how often a particular combination of ligand and
+protein atoms form a close contact in crystal structures. Then, that number is devided by the number that pure chance would give.
+The RF-interaction concept and how it is applied in <span class="keyword">DataWarrior</span>
+is explained in more detail in <a href="help/rfinteractions.html">RF-Interactions</a> in the special topics section.</p>
+
+<p>The RF-concept was originally conceived by R. Taylor to study crystal packing on small molecule crystal structures:
+<i>Which intermolecular interactions have a significant influence on crystal packing?</i>
+R Taylor; CrystEngComm, 2014, 16, 6852; DOI: 10.1039/c4ce00452c. Later the concept was extended and applied to binding sites:
+B Kuhn, E Gilberg, R Taylor, J Cole, O Korb; <i>How Significant Are Unusual Protein-Ligand Interactions? Insights from Database Mining</i>;
+J Med Chem, 62, 22, (2019), 10441-55; DOI: 10.1021/acs.jmedchem.9b01545.</p>
+
+<p>If that ratio, called RF-value, is greater than 1.0, it means that in real binding sites we see more contacts of this kind
+than expected. Thus, we can assume that that interaction is caused by an attractive force and is beneficial for binding.
+Likewise, RF-values significantly below 1.0 are likely to have a negative contribution possibly due to repulsive forces
+or a bad geometry. Values slightly below 1.0 indicate a more neutral effect. This is because week attractive
+forces often have to compete with stronger forces in the molecular vicinity. Therefore, week interactions are likely
+to occurr less often that pure chance would suggest. In contrast to the original papers, RF-values in
+<span class="keyword">DataWarrior</span> not only consider how often atoms of a certain type have a close contact in
+experimental binding sites. They also include a factor for the geometry comprising atom-distance, binding angles,
+and torsions.</p>
+
+<p align="center"><img src="help/img/conf/rf_info.jpeg" width="430" height="203"></p>
+<p align="center"><i>RF-Interactions within binding site of PDB-entry 19GS with detail data</i></p>
+
+<p>RF-Interactions are visualized as a dashed line in blue, gray, or red to indicate a beneficial, more neutral,
+or negative influence, respectively. In addition, when moving the mouse over a ligand atoms, interaction information
+about this atom is listed, in this case from the ligand perspective. The first line lists this atom's type,
+in the example above it is a bromine atom at aromatic ring. Each subsequent line lists one interaction to a
+protein atom (<i>P</i>). The first information is the RF-value with uncertainty followed by the protein atom type.
+Then, the geometry parameters distance, angle, and torsions are listed. The last value <i>geom</i> is the geometry
+factor applid to the reported RF-value. Factors close to 1.0 mean that the interaction's geometry is a typical
+one seen in PDB binding sites. Values much lower indicate that this geometry is rarely seen and probably
+somewhat fishy.</p>
 <br>
 
 <h3><a name="FragmentLib"></a>Fragment Libraries</h3>
@@ -410,13 +483,13 @@ that position. That pseudo atom is marked to be an exit vector. Duplicate fragme
 and similar 3D-geometry are not collected again. Finally, generated 3D-fragments look like this:</p>
 
 <p align="center"><img src="help/img/conf/fragments3D.jpeg" width="650" height="102"></p>
-<p><center><i>Visualization of generated 3D-fragments with exit vectors.</i></center></p>
+<p><div style="text-align: center;"><i>Visualization of generated 3D-fragments with exit vectors.</i></div></p>
 
 <p>To generate a new fragment library from an open window that contains structures with 3D-coordinates choose
 <span class="menu">3D-Fragments -> Build Library...</span> from the <span class="menu">Chemistry</span> menu.</p>
 
 <p align="center"><img src="help/img/conf/fragmentlibDialog.png" width="330" height="307"></p>
-<p><center><i>Dialog to generate a fragment library with default parameters.</i></center></p>
+<p><div style="text-align: center;"><i>Dialog to generate a fragment library with default parameters.</i></div></p>
 
 <p><b>3D-structure column:</b> Here you select the structure column with associated 3D-atom coordinates,
 i.e. conformer(s), that will be the molecule source for generating 3-dimensional fragments.</p>
@@ -597,7 +670,7 @@ Inside the glasses the computer output in split into left and right parts,
 which are then projected to your left and right eyes individually.
 To view 3D-molecules with XR-glasses, make sure the glasses are connected
 in stereo mode to your computer. Then, within a DataWarrior 3D-view do a right mouse click and
-select <span class="menu">View->Show Stereo View->SBS</span> for the device representing your XR-glasses.</p>  
+select <span class="menu">View->Show Stereo View->SBS</span> for the device representing your XR-glasses.</p>
 
 <p align="center"><img src="help/img/conf/xrglasses.jpeg" width="600" height="479"></p>
 <p><center><i>Scientist watching docking pose with XR-glasses.</i></center></p>

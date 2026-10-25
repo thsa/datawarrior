@@ -18,7 +18,6 @@
 
 package com.actelion.research.datawarrior.task.macro;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import info.clearthought.layout.TableLayout;
@@ -138,9 +137,4 @@ public class DETaskExecuteProgram extends ConfigurableTask {
 			e.printStackTrace();
 			}
 		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-	}
 }

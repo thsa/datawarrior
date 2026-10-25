@@ -81,11 +81,6 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 	}
 
 	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-	}
-
-	@Override
 	public JPanel createDialogContent() {
 		JPanel content = new JPanel();
 		int gap = HiDPIHelper.scale(8);
@@ -343,7 +338,7 @@ public class DETaskAddDockingScore extends ConfigurableTask {
 		RFInteractionList interactions = new RFInteractionList(ligand, cavity, false);
 		double rfScore = 0.0;
 		for (RFInteraction rf: interactions) {
-			double rfValue = rf.getRFValue(null);
+			double rfValue = rf.getRFValue(null, null);
 			if (!Double.isNaN(rfValue))
 				rfScore -= Math.log(NEUTRAL_RF_OFFSET + rfValue);
 		}

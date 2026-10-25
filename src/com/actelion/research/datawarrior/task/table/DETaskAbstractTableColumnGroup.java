@@ -161,11 +161,6 @@ public abstract class DETaskAbstractTableColumnGroup extends ConfigurableTask {
 		return mTableView;
 		}
 
- 	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-		}
-
 	@Override
 	public void runTask(Properties configuration) {
 		prepareColumnGroupActions(configuration);

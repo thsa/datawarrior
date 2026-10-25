@@ -62,8 +62,8 @@ public class DETaskBuildingBlockQuery extends DETaskStructureQuery implements BB
 	private String[] mColumnTitle,mProviderList;
 	private String mColumnProperties;
 
-	public DETaskBuildingBlockQuery(DEFrame owner, DataWarrior application) {
-		super(owner, application);
+	public DETaskBuildingBlockQuery(DEFrame owner) {
+		super(owner);
 	}
 
 	@Override

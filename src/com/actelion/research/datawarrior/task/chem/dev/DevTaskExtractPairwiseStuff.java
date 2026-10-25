@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,39 +18,30 @@
 
 package com.actelion.research.datawarrior.task.chem.dev;
 
-import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLongArray;
-
 import com.actelion.research.chem.descriptor.*;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
 import com.actelion.research.table.model.CompoundTableModel;
 
+import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLongArray;
+
 
 public class DevTaskExtractPairwiseStuff extends AbstractTaskWithoutConfiguration {
     public static final String TASK_NAME = "Extract Pairwise Compound Similarities";
 
-	private DataWarrior			mApplication;
-	private DEFrame				mTargetFrame;
-    private CompoundTableModel	mSourceTableModel;
+    private final CompoundTableModel	mSourceTableModel;
     private AtomicInteger		mSMPRecordIndex,mSMPPairCount;
     private CountDownLatch		mSMPDoneSignal;
 
 	public DevTaskExtractPairwiseStuff(DEFrame parent) {
 		super(parent, true);
 		mSourceTableModel = parent.getTableModel();
-		mApplication = parent.getApplication();
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 
 	@Override
@@ -240,8 +231,8 @@ public class DevTaskExtractPairwiseStuff extends AbstractTaskWithoutConfiguratio
 		if (!threadMustDie()) {
 			startProgress("Populating new document...", 0, 0);
 
-			mTargetFrame = mApplication.getEmptyFrame("Descriptor Similarity Comparison");
-	        CompoundTableModel targetTableModel = mTargetFrame.getTableModel();
+			DEFrame targetFrame = getEmptyFrame("Descriptor Similarity Comparison");
+	        CompoundTableModel targetTableModel = targetFrame.getTableModel();
 	        final String[] columnName = { "Type", "Similarity", "Distance", "Count" };
 	        targetTableModel.initializeTable(descriptorColumn.length * positionColumn.length * 101 * 101, columnName.length);
 	        for (int column=0; column<columnName.length; column++)

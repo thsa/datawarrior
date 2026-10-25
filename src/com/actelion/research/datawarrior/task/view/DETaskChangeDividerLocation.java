@@ -185,11 +185,6 @@ public class DETaskChangeDividerLocation extends ConfigurableTask {
 			}
 		}
 
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-		}
-
 	private JSplitPane findSplitPane(String leftTargetName, String rightTargetName) {
 		Dockable leftDockable = mParentPane.getMainPane().getDockable(leftTargetName);
 		if (leftDockable == null)

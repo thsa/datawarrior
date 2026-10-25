@@ -20,7 +20,6 @@ package com.actelion.research.datawarrior.task.data.fuzzy;
 
 import com.actelion.research.chem.SortedStringList;
 import com.actelion.research.chem.StereoMolecule;
-import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.chem.prediction.MolecularPropertyHelper;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
@@ -61,9 +60,8 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 
 	private static Properties sRecentConfiguration;
 
-	private DEFrame				mSourceFrame;
-	private CompoundTableModel	mTableModel;
-	private JComboBox			mComboBoxParameter,mComboBoxStructureColumn;
+	private final CompoundTableModel	mTableModel;
+	private JComboBox<String>	mComboBoxParameter,mComboBoxStructureColumn;
 	private JTextField			mTextFieldMeanName, mTextFieldGeomName;
 	private JCheckBox			mCheckBoxMean, mCheckBoxGeom,mCheckBoxIndividualScores;
 	private JPanel				mParameterPanel;
@@ -71,8 +69,7 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 
 	public DETaskCalculateFuzzyScore(DEFrame sourceFrame) {
 		super(sourceFrame, true);
-		mSourceFrame = sourceFrame;
-		mTableModel = mSourceFrame.getTableModel();
+		mTableModel = sourceFrame.getTableModel();
 	}
 
 	@Override
@@ -101,11 +98,6 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 	}
 
 	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-	}
-
-	@Override
 	public JPanel createDialogContent() {
 		int scaled4 = HiDPIHelper.scale(4);
 		int scaled8 = HiDPIHelper.scale(8);
@@ -116,7 +108,7 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 				TableLayout.PREFERRED, scaled16, TableLayout.PREFERRED, scaled16, TableLayout.PREFERRED, scaled4, TableLayout.FILL, scaled8} };
 		content.setLayout(new TableLayout(size));
 
-		mComboBoxStructureColumn = new JComboBox();
+		mComboBoxStructureColumn = new JComboBox<>();
 		for (int i=0; i<mTableModel.getTotalColumnCount(); i++)
 			if (mTableModel.isColumnTypeStructure(i))
 				mComboBoxStructureColumn.addItem(mTableModel.getColumnTitle(i));
@@ -158,7 +150,7 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 				return o1.compareToIgnoreCase(o2);
 			}
 		});
-		mComboBoxParameter = new JComboBox(paramNames);
+		mComboBoxParameter = new JComboBox<>(paramNames);
 		if (!isInteractive())
 			mComboBoxParameter.setEditable(true);
 
@@ -220,7 +212,7 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 		Properties configuration = new Properties();
 
 		String structureColumn = (String) mComboBoxStructureColumn.getSelectedItem();
-		if (structureColumn != null && structureColumn.length() != 0)
+		if (structureColumn != null && !structureColumn.isEmpty())
 				configuration.setProperty(PROPERTY_STRUCTURE_COLUMN, isInteractive() ?
 						mTableModel.getColumnTitleNoAlias(structureColumn) : structureColumn);
 
@@ -267,15 +259,15 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 			mComboBoxStructureColumn.setSelectedItem(mTableModel.getColumnTitle(structureColumn));
 
 		String meanColumnName = configuration.getProperty(PROPERTY_MEAN_COLUMN_NAME, "");
-		mCheckBoxMean.setSelected(meanColumnName.length() != 0);
-		mTextFieldMeanName.setEnabled(meanColumnName.length() != 0);
-		if (meanColumnName.length() != 0)
+		mCheckBoxMean.setSelected(!meanColumnName.isEmpty());
+		mTextFieldMeanName.setEnabled(!meanColumnName.isEmpty());
+		if (!meanColumnName.isEmpty())
 			mTextFieldMeanName.setText(meanColumnName);
 
 		String productColumnName = configuration.getProperty(PROPERTY_PRODUCT_COLUMN_NAME, "");
-		mCheckBoxGeom.setSelected(productColumnName.length() != 0);
-		mTextFieldGeomName.setEnabled(productColumnName.length() != 0);
-		if (productColumnName.length() != 0)
+		mCheckBoxGeom.setSelected(!productColumnName.isEmpty());
+		mTextFieldGeomName.setEnabled(!productColumnName.isEmpty());
+		if (!productColumnName.isEmpty())
 			mTextFieldGeomName.setText(productColumnName);
 
 		mCheckBoxIndividualScores.setSelected(configuration.getProperty(PROPERTY_INDIVIDUAL_SCORES, "false").equals("true"));
@@ -314,7 +306,7 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 
 		String meanColumnName = configuration.getProperty(PROPERTY_MEAN_COLUMN_NAME, "");
 		String productColumnName = configuration.getProperty(PROPERTY_PRODUCT_COLUMN_NAME, "");
-		if (meanColumnName.length() == 0 && productColumnName.length() == 0) {
+		if (meanColumnName.isEmpty() && productColumnName.isEmpty()) {
 			showErrorMessage("No fuzzy score result columns defined.");
 			return false;
 		}
@@ -328,18 +320,18 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 		for (int i=0; i<parameterCount; i++) {
 			String columnName = configuration.getProperty(PROPERTY_PARAM_COLUMN_NAME+i, "");
 			String propertyName = configuration.getProperty(PROPERTY_PARAM_PROPERTY+i, "");
-			if (columnName.length() == 0 && propertyName.length() == 0) {
+			if (columnName.isEmpty() && propertyName.isEmpty()) {
 				showErrorMessage("Neither column name nor computable property name defined (parameter "+(i+1)+").");
 				return false;
 			}
 
-			if (propertyName.length() != 0) {
+			if (!propertyName.isEmpty()) {
 				int property = MolecularPropertyHelper.getTypeFromCode(propertyName);
 				if (property == -1) {
 					showErrorMessage("Computable property '" + propertyName + "' not found.");
 					return false;
 				}
-				if (structureColumnName.length() == 0) {
+				if (structureColumnName.isEmpty()) {
 					showErrorMessage("Computable properties require a structure column.");
 					return false;
 				}
@@ -350,7 +342,7 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 			}
 
 			String min = configuration.getProperty(PROPERTY_PARAM_MIN+i, "");
-			if (min.length() != 0)
+			if (!min.isEmpty())
 				try {
 					Double.parseDouble(min);
 				} catch (NumberFormatException nfe) {
@@ -358,7 +350,7 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 					return false;
 				}
 			String max = configuration.getProperty(PROPERTY_PARAM_MAX+i, "");
-			if (max.length() != 0)
+			if (!max.isEmpty())
 				try {
 					Double.parseDouble(max);
 				} catch (NumberFormatException nfe) {
@@ -367,7 +359,7 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 				}
 
 			if (isLive) {
-				if (columnName.length() != 0) {
+				if (!columnName.isEmpty()) {
 					int column = mTableModel.findColumn(columnName);
 					if (column == -1) {
 						showErrorMessage("Column '" + columnName + "' not found (parameter "+(i+1)+").");
@@ -465,9 +457,9 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 		boolean addIndividualScores = configuration.getProperty(PROPERTY_INDIVIDUAL_SCORES, "false").equals("true");
 
 		int columnCount = addIndividualScores ? parameterCount : 0;
-		if (meanColumnName.length() != 0)
+		if (!meanColumnName.isEmpty())
 			columnCount++;
-		if (geomColumnName.length() != 0)
+		if (!geomColumnName.isEmpty())
 			columnCount++;
 		columnCount++;	// for Score Coverage
 
@@ -479,9 +471,9 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 				columnName[index++] = "Score of " + (column[i] == -1 ?
 						MolecularPropertyHelper.getPropertyName(property[i]) : mTableModel.getColumnTitle(column[i]));
 
-		if (meanColumnName.length() != 0)
+		if (!meanColumnName.isEmpty())
 			columnName[index++] = meanColumnName;
-		if (geomColumnName.length() != 0)
+		if (!geomColumnName.isEmpty())
 			columnName[index++] = geomColumnName;
 
 		columnName[index++] = "Score Coverage";
@@ -540,9 +532,9 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 				fuzzyGeom = Double.NaN;
 			}
 
-			if (meanColumnName.length() != 0)
+			if (!meanColumnName.isEmpty())
 				mTableModel.setTotalValueAt(formatScore(fuzzyMean), row, columnIndex++);
-			if (geomColumnName.length() != 0)
+			if (!geomColumnName.isEmpty())
 				mTableModel.setTotalValueAt(formatScore(fuzzyGeom), row, columnIndex++);
 			mTableModel.setTotalValueAt(formatScore(weightSum/totalWeightSum), row, columnIndex++);
 		}

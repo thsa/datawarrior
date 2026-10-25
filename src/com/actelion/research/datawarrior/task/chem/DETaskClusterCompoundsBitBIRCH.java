@@ -321,9 +321,4 @@ for (int i=0; i<clusters.length; i++)
 
 		mTableModel.finalizeNewColumns(clusterColumn, this);
 	}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-	}
 }

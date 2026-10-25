@@ -1,6 +1,5 @@
 package com.actelion.research.datawarrior.task.macro;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -185,10 +184,5 @@ public class DETaskDefineVariable extends ConfigurableTask {
 
 		if (getProgressController() instanceof DEMacroRecorder)	// the progress controller of a running macro should always be a DEMacroRecorder
 			((DEMacroRecorder)getProgressController()).setVariable(name, value);
-	}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 	}
 }

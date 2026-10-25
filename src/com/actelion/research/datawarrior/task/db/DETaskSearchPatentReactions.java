@@ -73,13 +73,12 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 
 	private static final String DOC_TITLE = "Reactions From EU And US Patents";
 
-	private DataWarrior         	mApplication;
 	private DEFrame         		mTargetFrame;
-	private CompoundTableModel      mSourceTableModel;
+	private final CompoundTableModel mSourceTableModel;
 	private JTextField[]	        mQueryTextField;
 	private JPanel                  mChemistryPanel;
 	private CardLayout              mChemistryCardLayout;
-	private JComboBox   		    mComboBoxSearchType,mComboBoxQuerySource;
+	private JComboBox<String>	    mComboBoxSearchType,mComboBoxQuerySource;
 	private JEditableStructureView  mStructureView;
 	private JEditableChemistryView  mReactionView;
 	private JSlider         		mStructureSimSlider,mReactionSimSlider1,mReactionSimSlider2;
@@ -87,10 +86,9 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 	private int                     mIDCodeColumn;
 	private boolean                 mAreReactionsSelected,mAreSubReactionsSelected,mAreStructuresSelected,mAreSubStructuresSelected,mDisableEvents;
 
-	public DETaskSearchPatentReactions(DEFrame parent, DataWarrior application) {
+	public DETaskSearchPatentReactions(DEFrame parent) {
 		super(parent, true);
 		mSourceTableModel = parent.getTableModel();
-		mApplication = application;
 
 		mAreReactionsSelected = false;
 		mAreSubReactionsSelected = false;
@@ -153,11 +151,6 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 //	public String getHelpURL() {
 //		return "/html/help/actelion.html#Mercury";
 //	}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
-	}
 
 	@Override
 	public JComponent createDialogContent() {
@@ -229,8 +222,8 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 			for (int i=0; i<mQueryField.length; i++) {
 				int x = (i<verticalFieldCount) ? 1 : 5;
 				int y = 2 * (i % verticalFieldCount);
-				queryFieldPanel.add(new JLabel(mQueryField[i]+":", JLabel.RIGHT), ""+x+","+y);
-				queryFieldPanel.add(mQueryTextField[i] = new JTextField(12), ""+(x+2)+","+y);
+				queryFieldPanel.add(new JLabel(mQueryField[i]+":", JLabel.RIGHT), x+","+y);
+				queryFieldPanel.add(mQueryTextField[i] = new JTextField(12), (x+2)+","+y);
 				}
 			queryFieldPanel.add(new JLabel("use '<', '>', '-' for numerical fields and ',' for text fields. Examples: \"80-90\" or \"mukaiyama,sakurai\"", JLabel.CENTER),
 					"1,"+(verticalFieldCount*2)+",7,"+(verticalFieldCount*2));
@@ -242,14 +235,14 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 		}
 
 	private JComponent createComboBoxSearchType() {
-		mComboBoxSearchType = new JComboBox(STRUCTURE_SEARCH_TYPE_TEXT);
+		mComboBoxSearchType = new JComboBox<>(STRUCTURE_SEARCH_TYPE_TEXT);
 		mComboBoxSearchType.setMaximumRowCount(12);
 		mComboBoxSearchType.addActionListener(this);
 		return mComboBoxSearchType;
 		}
 
 	private JComponent createComboBoxQuerySource() {
-		mComboBoxQuerySource = new JComboBox(QUERY_SOURCE);
+		mComboBoxQuerySource = new JComboBox<>(QUERY_SOURCE);
 		mComboBoxQuerySource.addActionListener(this);
 		mComboBoxQuerySource.setEnabled(mAreReactionsSelected || mAreSubReactionsSelected || mAreStructuresSelected || mAreSubStructuresSelected);
 		return mComboBoxQuerySource;
@@ -293,10 +286,10 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 
 	private JSlider createSimilaritySlider1() {
 		Hashtable<Integer,JLabel> labels = new Hashtable<>();
-		labels.put(Integer.valueOf(70), new JLabel("70%"));
-		labels.put(Integer.valueOf(80), new JLabel("80%"));
-		labels.put(Integer.valueOf(90), new JLabel("90%"));
-		labels.put(Integer.valueOf(100), new JLabel("100%"));
+		labels.put(70, new JLabel("70%"));
+		labels.put(80, new JLabel("80%"));
+		labels.put(90, new JLabel("90%"));
+		labels.put(100, new JLabel("100%"));
 		JSlider slider = new JSlider(JSlider.HORIZONTAL, 70, 100, 90);
 		slider.setMinorTickSpacing(1);
 		slider.setMajorTickSpacing(10);
@@ -312,9 +305,9 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 
 	private JSlider createSimilaritySlider2() {
 		Hashtable<Integer,JLabel> labels = new Hashtable<>();
-		labels.put(Integer.valueOf(0), new JLabel("0%"));
-		labels.put(Integer.valueOf(50), new JLabel("50%"));
-		labels.put(Integer.valueOf(100), new JLabel("100%"));
+		labels.put(0, new JLabel("0%"));
+		labels.put(50, new JLabel("50%"));
+		labels.put(100, new JLabel("100%"));
 		JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
 		slider.setMinorTickSpacing(5);
 		slider.setMajorTickSpacing(25);
@@ -474,7 +467,7 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 			int count = 0;
 			for (int i=0; i<mQueryField.length; i++) {
 				String query = mQueryTextField[i].getText();
-				if (query.length() != 0)
+				if (!query.isEmpty())
 					configuration.setProperty(PROPERTY_TEXT_QUERY +(++count), mQueryField[i]+","+query);
 				}
 			}
@@ -531,7 +524,7 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 		int count = 0;
 		while (mQueryField != null) {
 			String textQuery = configuration.getProperty(PROPERTY_TEXT_QUERY+(++count), "");
-			if (textQuery.length() == 0)
+			if (textQuery.isEmpty())
 				break;
 
 			int index = textQuery.indexOf(",");
@@ -923,7 +916,7 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 		int count = 0;
 		while (true) {
 			String queryText = configuration.getProperty(PROPERTY_TEXT_QUERY+(++count), "");
-			if (queryText.length() == 0)
+			if (queryText.isEmpty())
 				break;
 
 			int index = queryText.indexOf(",");
@@ -934,7 +927,7 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 				keyValuePairs.add(keyValuePair);
 				}
 			}
-		if (keyValuePairs.size() != 0)
+		if (!keyValuePairs.isEmpty())
 			query.put(QUERY_KEY_VALUE_PAIRS, keyValuePairs.toArray(new String[0][]));
 
 		Object[][] resultTable = new PatentReactionCommunicator(this, "datawarrior").search(query);
@@ -946,7 +939,7 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 		}
 
 	private long[] mergeLongDescriptors(Object o) {
-		if (o != null && o instanceof long[][]) {
+		if (o instanceof long[][]) {
 			long[][] ffpArray = (long[][])o;
 			if (ffpArray.length == 0)
 				return null;
@@ -991,7 +984,7 @@ public class DETaskSearchPatentReactions extends ConfigurableTask implements Act
 		startProgress("Populating table...", 0, 0);
 
 		if (!threadMustDie()) {
-			mTargetFrame = mApplication.getEmptyFrame(DOC_TITLE);
+			mTargetFrame = getEmptyFrame(DOC_TITLE);
 			int columnCount = resultTable[0].length;
 			CompoundTableModel tableModel = mTargetFrame.getTableModel();
 			tableModel.initializeTable(resultTable.length-1, columnCount);

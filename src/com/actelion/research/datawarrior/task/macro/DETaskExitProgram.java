@@ -123,9 +123,4 @@ public class DETaskExitProgram extends ConfigurableTask {
 
 		mApplication.closeApplication(isInteractive());
 	}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-	}
 }

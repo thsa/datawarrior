@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -38,10 +38,10 @@ public class DETaskCombineTwoRowLists extends ConfigurableTask {
 
 	private static final String DEFAULT_LIST_NAME = "Unnamed List";
 
-    private CompoundTableModel			mTableModel;
-	private CompoundTableListHandler mHitlistHandler;
-	private JComboBox					mComboBoxHitlist1,mComboBoxHitlist2,mComboBoxOperation;
-	private JTextField					mTextFieldName;
+    private final CompoundTableModel		mTableModel;
+	private final CompoundTableListHandler	mHitlistHandler;
+	private JComboBox<String>				mComboBoxHitlist1,mComboBoxHitlist2,mComboBoxOperation;
+	private JTextField						mTextFieldName;
 
     public DETaskCombineTwoRowLists(DEFrame parent) {
 		super(parent, true);
@@ -90,17 +90,17 @@ public class DETaskCombineTwoRowLists extends ConfigurableTask {
 		mp.add(new JLabel("New list name:"), "1, 1");
 		mp.add(mTextFieldName, "3, 1");
 
-		mComboBoxHitlist1 = new JComboBox(hitlistNames);
+		mComboBoxHitlist1 = new JComboBox<>(hitlistNames);
 		mp.add(new JLabel("1st list:"), "1, 3");
 		mp.add(mComboBoxHitlist1, "3, 3");
 		mComboBoxHitlist1.setEditable(!isInteractive());
 
-		mComboBoxHitlist2 = new JComboBox(hitlistNames);
+		mComboBoxHitlist2 = new JComboBox<>(hitlistNames);
 		mp.add(new JLabel("2nd list:"), "1, 5");
 		mp.add(mComboBoxHitlist2, "3, 5");
 		mComboBoxHitlist2.setEditable(!isInteractive());
 
-		mComboBoxOperation = new JComboBox(HitlistOptionRenderer.OPERATION_TEXT);
+		mComboBoxOperation = new JComboBox<>(HitlistOptionRenderer.OPERATION_TEXT);
 		mComboBoxOperation.setRenderer(new HitlistOptionRenderer());
 		mp.add(new JLabel("Operation:"), "1, 7");
 		mp.add(mComboBoxOperation, "3, 7");
@@ -150,7 +150,7 @@ public class DETaskCombineTwoRowLists extends ConfigurableTask {
 			showErrorMessage("Logical operation not found.");
 			return false;
 			}
-		if (configuration.getProperty(PROPERTY_NEW_HITLIST, "").length() == 0) {
+		if (configuration.getProperty(PROPERTY_NEW_HITLIST, "").isEmpty()) {
 			showErrorMessage("No list name specified.");
 			return false;
 			}
@@ -185,10 +185,5 @@ public class DETaskCombineTwoRowLists extends ConfigurableTask {
 
 		if (mHitlistHandler.createList(configuration.getProperty(PROPERTY_NEW_HITLIST), hitlist1, hitlist2, operation) == null)
 			showErrorMessage("The maximum number of filters/lists is reached.");
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 	}

@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,19 +18,6 @@
 
 package com.actelion.research.datawarrior.task.view;
 
-import info.clearthought.layout.TableLayout;
-
-import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Properties;
-
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.dock.Dockable;
@@ -38,6 +25,13 @@ import com.actelion.research.table.view.CompoundTableView;
 import com.actelion.research.table.view.VisualizationPanel;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.table.view.VisualizationPanel3D;
+import info.clearthought.layout.TableLayout;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Properties;
 
 public class DETaskSynchronizeView extends ConfigurableTask implements ActionListener {
 	public static final String TASK_NAME = "Synchronize View";
@@ -199,10 +193,5 @@ public class DETaskSynchronizeView extends ConfigurableTask implements ActionLis
 		String masterName = configuration.getProperty(PROPERTY_MASTER);
 		VisualizationPanel master = (masterName == null) ? null : (VisualizationPanel)mMainPane.getDockable(masterName).getContent();
 		mMainPane.synchronizeView(slave, master);
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 	}

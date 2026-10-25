@@ -1,6 +1,5 @@
 package com.actelion.research.datawarrior.help;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.clipboard.ImageClipboardHandler;
 import com.actelion.research.gui.clipboard.TextClipboardHandler;
@@ -52,11 +51,6 @@ public class DETaskSetExplanationHTML extends ConfigurableTask implements Action
 	@Override
 	public String getTaskName() {
 		return TASK_NAME;
-	}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 	}
 
 	@Override

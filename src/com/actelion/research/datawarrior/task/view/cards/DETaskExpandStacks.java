@@ -1,19 +1,15 @@
 package com.actelion.research.datawarrior.task.view.cards;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.view.JCardView;
 import com.actelion.research.table.view.card.CardElement;
-import com.actelion.research.table.view.card.JCardPane;
-import com.actelion.research.table.view.card.positioning.SpiralOutPositioner;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 public class DETaskExpandStacks extends AbstractTaskWithoutConfiguration {
 
@@ -79,10 +75,5 @@ public class DETaskExpandStacks extends AbstractTaskWithoutConfiguration {
 
             }
         }
-    }
-
-    @Override
-    public DEFrame getNewFrontFrame() {
-        return null;
     }
 }

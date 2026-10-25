@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -46,11 +46,11 @@ public abstract class DETaskAbstractNewColumns extends ConfigurableTask implemen
 	private static final int COLUMN_TYPE_WEBLINK = 5;
 	private static final String[] DEFAULT_COLUMN_NAME = { "Column", "Structure", "Substructure", "Reaction", "Transformation", "Weblink" };
 
-    private DataWarrior			mApplication;
-	private JComboBox           mComboBox;
+    private final DataWarrior	mApplication;
+	private JComboBox<String>   mComboBox;
 	private JTextField			mTextField;
 	private JButton             mButtonAdd;
-    private DefaultListModel	mListModel;
+    private DefaultListModel<String> mListModel;
 	private DEFrame				mNewFrame;
 
 
@@ -66,15 +66,15 @@ public abstract class DETaskAbstractNewColumns extends ConfigurableTask implemen
 		                    {8, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 24, TableLayout.PREFERRED, 4, TableLayout.PREFERRED, 32, TableLayout.PREFERRED, 8} };
 		p.setLayout(new TableLayout(size));
 
-        mListModel = new DefaultListModel();
-        final JList list = new JList(mListModel);
+        mListModel = new DefaultListModel<>();
+        final JList<String> list = new JList<>(mListModel);
         list.addKeyListener(new KeyAdapter() {
         	@Override
         	public void keyPressed(KeyEvent e) {
         		if (e.getKeyCode() == KeyEvent.VK_DELETE) {
         			int[] selected = list.getSelectedIndices();
         			for (int i=selected.length-1; i>=0; i--)
-        			mListModel.remove(selected[i]);
+        				mListModel.remove(selected[i]);
         			}
         		}
         	} );
@@ -145,14 +145,14 @@ public abstract class DETaskAbstractNewColumns extends ConfigurableTask implemen
 		    	}
 		    configuration.setProperty(PROPERTY_COLUMN_NAME_LIST, sb.toString());
 			}
-		
+
 		return configuration;
 		}
 
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
 		String columnNames = configuration.getProperty(PROPERTY_COLUMN_NAME_LIST, "");
-		if (columnNames.length() != 0) {
+		if (!columnNames.isEmpty()) {
 			String[] columnName = columnNames.split("\\t");
 			for (String cn:columnName)
 				mListModel.addElement(cn);
@@ -166,7 +166,7 @@ public abstract class DETaskAbstractNewColumns extends ConfigurableTask implemen
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String columnNames = configuration.getProperty(PROPERTY_COLUMN_NAME_LIST, "");
-		if (columnNames.length() == 0) {
+		if (columnNames.isEmpty()) {
 			showErrorMessage("No column names defined.");
 			return false;
 			}
@@ -174,14 +174,9 @@ public abstract class DETaskAbstractNewColumns extends ConfigurableTask implemen
 		return true;
 		}
 
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mNewFrame;
-		}
-
 	protected void addNewColumns(Properties configuration) {
 		String titles = configuration.getProperty(PROPERTY_COLUMN_NAME_LIST, "");
-		if (titles.length() == 0)
+		if (titles.isEmpty())
 			return;
 
 		String[] title = titles.split("\\t");
@@ -200,7 +195,7 @@ public abstract class DETaskAbstractNewColumns extends ConfigurableTask implemen
         CompoundTableModel tableModel = null;
         DEFrame oldFrame = null;
         if (createNewTable()) {
-        	mNewFrame = mApplication.getEmptyFrame("Untitled");
+        	mNewFrame = getEmptyFrame("Untitled");
         	tableModel = mNewFrame.getTableModel();
             tableModel.initializeTable(1, columnCount);
         	}

@@ -1,6 +1,5 @@
 package com.actelion.research.datawarrior.task.view.cards;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.datawarrior.task.TaskUIDelegate;
 import com.actelion.research.table.model.CompoundRecord;
@@ -10,7 +9,6 @@ import com.actelion.research.table.view.card.CardPaneModel;
 import com.actelion.research.table.view.card.JCardPane;
 import com.actelion.research.table.view.card.JFastCardPaneForSorting;
 import com.actelion.research.table.view.card.tools.DataWarriorLink;
-import com.actelion.research.table.view.card.tools.IntOrderedPair;
 import info.clearthought.layout.TableLayout;
 
 import javax.swing.*;
@@ -137,12 +135,6 @@ public class DETaskPositionCards extends ConfigurableTask {
         mCardPane.startAnimateViewportToShowAllCards();
 
     }
-
-    @Override
-    public DEFrame getNewFrontFrame() {
-        return null;
-    }
-
 
     public void initColumns() {
 

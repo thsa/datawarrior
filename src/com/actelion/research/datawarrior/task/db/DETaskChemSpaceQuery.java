@@ -78,8 +78,8 @@ public class DETaskChemSpaceQuery extends DETaskStructureQuery {
 	private String      mToken;
 	private JComboBox   mComboBoxTargetDB;
 
-	public DETaskChemSpaceQuery(DEFrame owner, DataWarrior application) {
-		super(owner, application);
+	public DETaskChemSpaceQuery(DEFrame owner) {
+		super(owner);
 	}
 
 	@Override

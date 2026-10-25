@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -34,14 +34,12 @@ import java.util.*;
 public class DETaskNewFileFromVisible extends AbstractTaskWithoutConfiguration {
 	public static final String TASK_NAME = "New File From Visible Rows";
 
-	private final DataWarrior	mApplication;
 	private final DEFrame		mSourceFrame;
 	private DEFrame				mTargetFrame;
 
-	public DETaskNewFileFromVisible(DEFrame sourceFrame, DataWarrior application) {
+	public DETaskNewFileFromVisible(DEFrame sourceFrame) {
 		super(sourceFrame, false);
 		mSourceFrame = sourceFrame;
-		mApplication = application;
 		}
 
 	@Override
@@ -54,11 +52,6 @@ public class DETaskNewFileFromVisible extends AbstractTaskWithoutConfiguration {
         	}
 
         return true;
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 
 	@Override
@@ -87,7 +80,7 @@ public class DETaskNewFileFromVisible extends AbstractTaskWithoutConfiguration {
        			if ((sourceTableModel.getRecord(row).getFlags() & hitlistMask[i]) != 0)
        				hitlistUsed[i] = true;
 
-        mTargetFrame = mApplication.getEmptyFrame("Subset of "+mSourceFrame.getTitle());
+        mTargetFrame = getEmptyFrame("Subset of "+mSourceFrame.getTitle());
         CompoundTableModel targetTableModel = mTargetFrame.getTableModel();
         CompoundTableListHandler targetHitlistHandler = targetTableModel.getListHandler();
         targetTableModel.initializeTable(sourceTableModel.getRowCount(), sourceTableModel.getTotalColumnCount());

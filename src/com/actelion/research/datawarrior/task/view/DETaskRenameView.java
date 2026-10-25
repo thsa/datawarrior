@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,27 +18,21 @@
 
 package com.actelion.research.datawarrior.task.view;
 
+import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.task.AbstractViewTask;
+import com.actelion.research.table.view.CompoundTableView;
 import info.clearthought.layout.TableLayout;
 
-import java.awt.Frame;
+import javax.swing.*;
+import java.awt.*;
 import java.util.Properties;
-
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
-import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.DEMainPane;
-import com.actelion.research.table.view.CompoundTableView;
 
 public class DETaskRenameView extends AbstractViewTask {
 	public static final String TASK_NAME = "Rename View";
 
 	private static final String PROPERTY_NEW_NAME = "newName";
 
-	private DEMainPane	mMainPane;
+	private final DEMainPane	mMainPane;
 	private JTextField	mTextFieldNewName;
 
 	public DETaskRenameView(Frame parent, DEMainPane mainPane, CompoundTableView view) {
@@ -103,7 +97,7 @@ public class DETaskRenameView extends AbstractViewTask {
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String newTitle = configuration.getProperty(PROPERTY_NEW_NAME, "");
-		if (newTitle.length() == 0) {
+		if (newTitle.isEmpty()) {
 			showErrorMessage("New view name is not defined.");
 			return false;
 			}
@@ -120,10 +114,5 @@ public class DETaskRenameView extends AbstractViewTask {
 	public void runTask(Properties configuration) {
 		String newName = configuration.getProperty(PROPERTY_NEW_NAME);
 		mMainPane.renameView(getConfiguredViewName(configuration), newName);
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 	}

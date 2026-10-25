@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -71,11 +71,6 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 	public DETaskAddBinsFromNumbers(DEFrame parent) {
 		super(parent, true);
 		mTableModel = parent.getTableModel();
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 
 	@Override
@@ -549,12 +544,12 @@ public class DETaskAddBinsFromNumbers extends ConfigurableTask implements Change
 				mComboBoxColumn.setSelectedItem(mTableModel.getColumnTitleExtended(column));
 			else
 				mComboBoxColumn.setSelectedItem(columnName);
-	
+
 			String binSize = configuration.getProperty(PROPERTY_BIN_SIZE, "");
 			if (binSize.length() != 0) {
 				mTextFieldBinSize.setText(binSize);
 				validateBinSizeField();
-	
+
 				String binStart = configuration.getProperty(PROPERTY_BIN_START, "");
 				if (binStart.length() != 0) {
 					mTextFieldBinStart.setText(binStart);

@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -45,14 +45,12 @@ public class DETaskSetReferenceRow extends ConfigurableTask {
 	private static final String[] WHICH_CODE = { "next", "random" };
 	private static final String[] WHICH_ITEM = { "the next row", "a random row" };
 
-	private DEFrame				mParentFrame;
-	private CompoundTableModel	mTableModel;
-	private JComboBox			mComboBoxWhich,mComboBoxWhere;
+	private final CompoundTableModel	mTableModel;
+	private JComboBox<String>			mComboBoxWhich,mComboBoxWhere;
 
 	public DETaskSetReferenceRow(DEFrame owner) {
 		super(owner, false);
-		mParentFrame = owner;
-		mTableModel = mParentFrame.getTableModel();
+		mTableModel = owner.getTableModel();
 		}
 
 	@Override
@@ -67,9 +65,9 @@ public class DETaskSetReferenceRow extends ConfigurableTask {
 
 	@Override
 	public JPanel createDialogContent() {
-		mComboBoxWhich = new JComboBox(WHICH_ITEM);
+		mComboBoxWhich = new JComboBox<>(WHICH_ITEM);
 
-		mComboBoxWhere = new JComboBox();
+		mComboBoxWhere = new JComboBox<>();
 		mComboBoxWhere.addItem(OPTION_IN_FILE);
 		String[] names = mTableModel.getListHandler().getListNames();
 		if (names != null)
@@ -101,7 +99,7 @@ public class DETaskSetReferenceRow extends ConfigurableTask {
 				WHICH_CODE[findListIndex((String)mComboBoxWhich.getSelectedItem(), WHICH_ITEM, 0)]);
 
 		String where = (String)mComboBoxWhere.getSelectedItem();
-		if (where.length() != 0 && !where.equals(OPTION_IN_FILE))
+		if (!where.isEmpty() && !where.equals(OPTION_IN_FILE))
 			configuration.setProperty(PROPERTY_WHERE, where);
 
 		return configuration;
@@ -112,7 +110,7 @@ public class DETaskSetReferenceRow extends ConfigurableTask {
 		mComboBoxWhich.setSelectedItem(WHICH_ITEM[findListIndex(configuration.getProperty(PROPERTY_WHICH), WHICH_CODE, 0)]);
 
 		String where = configuration.getProperty(PROPERTY_WHERE, "");
-		if (where.length() == 0)
+		if (where.isEmpty())
 			mComboBoxWhere.setSelectedItem(OPTION_IN_FILE);
 		else
 			mComboBoxWhere.setSelectedItem(where);
@@ -135,7 +133,7 @@ public class DETaskSetReferenceRow extends ConfigurableTask {
 		int which = findListIndex(configuration.getProperty(PROPERTY_WHICH), WHICH_CODE, 0);
 		String listName = configuration.getProperty(PROPERTY_WHERE, "");
 		int list = -1;
-		if (listName.length() != 0 && !listName.equals(OPTION_IN_FILE))
+		if (!listName.isEmpty() && !listName.equals(OPTION_IN_FILE))
 			list = mTableModel.getListHandler().getListIndex(listName);
 
 		int oldRow = mTableModel.getActiveRowIndex();
@@ -180,10 +178,5 @@ public class DETaskSetReferenceRow extends ConfigurableTask {
 			}
 
 		mTableModel.setActiveRow(newRow);
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 	}

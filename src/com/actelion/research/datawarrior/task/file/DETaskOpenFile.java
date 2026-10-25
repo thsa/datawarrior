@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -47,18 +47,15 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 	private static final String[] DELIMITER_TEXT = { "Comma (default)", "Semicolon", "Vertical line" };
 	private static final int[] DELIMITER_FILETYPE = { FileHelper.cFileTypeTextCommaSeparated, FileHelper.cFileTypeTextSemicolonSeparated, FileHelper.cFileTypeTextVLineSeparated };
 
-	private final DataWarrior mApplication;
 	private JComboBox<String> mComboBoxCSVDelimiter;
     private JCheckBox mCheckBoxCreateDefaultFilters,mCheckBoxCreateDefaultViews,mCheckBoxAssumeChiralTrue,mCheckBoxMakeRacemic,mCheckBoxAddMapping;
 
     public DETaskOpenFile(DataWarrior application) {
 		super(application, "Open DataWarrior-, SD-, gzipped SD- or Text-File", FileHelper.cFileTypeDataWarriorCompatibleData);
-		mApplication = application;
 		}
 
     public DETaskOpenFile(DataWarrior application, String filePath) {
 		super(application, "Open DataWarrior-, SD-, gzipped SD-, or Text-File", FileHelper.cFileTypeDataWarriorCompatibleData, filePath);
-		mApplication = application;
 		}
 
 	@Override
@@ -180,7 +177,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 				type = DELIMITER_FILETYPE[delimiter];
 			}
 		final int filetype = type;
-		final DEFrame emptyFrame = mApplication.getEmptyFrame(file.getName());
+		final DEFrame emptyFrame = getEmptyFrame(file.getName());
 		CompoundTableLoader loader = new CompoundTableLoader(emptyFrame, emptyFrame.getTableModel(), this) {
 			public void finalStatus(boolean success) {
 				if (success && filetype == FileHelper.cFileTypeDataWarrior) {
@@ -205,6 +202,7 @@ public class DETaskOpenFile extends DETaskAbstractOpenFile {
 			configuration.setProperty(PROPERTY_ADD_MAPPING, "true");
 		if ((filetype & FileHelper.cFileTypeTextAnyCSV) != 0)
 			configuration.setProperty(PROPERTY_CSV_DELIMITER, CompoundTableLoader.DELIMITER_STRING[loader.getCSVDelimiter()]);
+
 		return emptyFrame;
 		}
 

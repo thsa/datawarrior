@@ -257,11 +257,6 @@ public class DETaskPerformReaction extends ConfigurableTask {
 			try { t[i].join(); } catch (InterruptedException e) {}
 	}
 
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-	}
-
 	private void sortByVisibleOrder(int[] column) {
 		for (int i=0; i<column.length; i++) {
 			int viewIndex = mTable.convertTotalColumnIndexToView(column[i]);

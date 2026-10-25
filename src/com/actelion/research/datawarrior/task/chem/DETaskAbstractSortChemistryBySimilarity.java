@@ -342,16 +342,8 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 
 		mTableModel.createSimilarityListSMP(null, descriptor, idcode, descriptorColumn, pc, !isInteractive());
 
-		if (isInteractive())
-			((JProgressDialog)pc).setVisible(true);
-
 		similarity = mTableModel.getSimilarityListSMP(false);
 
 		return similarity;
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 	}

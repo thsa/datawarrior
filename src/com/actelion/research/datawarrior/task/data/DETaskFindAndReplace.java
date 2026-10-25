@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -53,7 +53,7 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 	private static final String PROPERTY_CASE_SENSITIVE = "caseSensitive";
 	private static final String PROPERTY_ALLOW_SUBSTITUENTS = "allowSubstituents";
 	private static final String PROPERTY_MODE = "mode";
-	
+
 	private static final String OPTION_ANY_COLUMN = "<any column>";
 	private static final String OPTION_VISIBLE_COLUMN = "<visible columns>";
 	private static final String OPTION_SELECTED_COLUMN = "<selected columns>";
@@ -1105,11 +1105,6 @@ public class DETaskFindAndReplace extends ConfigurableTask implements ActionList
 			mColumns++;
 			mReplacements += replacements;
 			}
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 
 	private static class Link {

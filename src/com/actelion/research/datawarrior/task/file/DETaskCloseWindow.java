@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -37,7 +37,7 @@ public class DETaskCloseWindow extends AbstractWindowTask {
 	private static final int SAVE_CHANGES_YES = 1;
 	private static final int SAVE_CHANGES_NO = 2;
 
-	private JComboBox mComboBoxMode;
+	private JComboBox<String> mComboBoxMode;
 
 	public DETaskCloseWindow(Frame parent, DataWarrior application, DEFrame window) {
 		super(parent, application, window);
@@ -55,7 +55,7 @@ public class DETaskCloseWindow extends AbstractWindowTask {
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 
-		mComboBoxMode = new JComboBox(MODE_TEXT);
+		mComboBoxMode = new JComboBox<>(MODE_TEXT);
 		content.add(new JLabel("Unsaved changes:"), "0,0");
 		content.add(mComboBoxMode, "2,0");
 
@@ -91,10 +91,5 @@ public class DETaskCloseWindow extends AbstractWindowTask {
 			if (result != 0)
 				configuration.setProperty(PROPERTY_SAVE_CHANGES, MODE_CODE[result == 1 ? SAVE_CHANGES_NO : SAVE_CHANGES_YES]);
 			}
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return getApplication().getNewFrontFrameAfterClosing();
 		}
 	}

@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -40,13 +40,13 @@ import java.util.ArrayList;
 
 
 public class DENativeMDLReactionReader implements Runnable {
-    private Frame                   mParentFrame;
-	private DataWarrior				mApplication;
+    private final Frame             mParentFrame;
+	private final DataWarrior		mApplication;
 	private DEFrame					mTargetFrame;
 	private JProgressDialog    		mProgressDialog;
     private NativeMDLReactionReader mReader;
     private String					mDirectoryName;
-    private int                     mAnswer;
+    private volatile int            mAnswer;
 
     public DENativeMDLReactionReader(Frame owner, DataWarrior application) {
 		mParentFrame = owner;
@@ -69,7 +69,7 @@ public class DENativeMDLReactionReader implements Runnable {
                 mReader = new NativeMDLReactionReader(fc.getSelectedFile().getPath());
                 if (mReader.getReactionCount() > 0) {
                     mProgressDialog = new JProgressDialog(mParentFrame);
-            
+
             		Thread t = new Thread(this, "DENativeMDLReactionReader");
                     t.setPriority(Thread.MIN_PRIORITY);
                     t.start();
@@ -94,7 +94,9 @@ public class DENativeMDLReactionReader implements Runnable {
 				} );
 			}
 
-		mProgressDialog.close(mTargetFrame);
+		mProgressDialog.close();
+		if (mTargetFrame != null)
+			SwingUtilities.invokeLater(() -> mTargetFrame.toFront());
 		}
 
 	private void readData() {
@@ -199,11 +201,11 @@ public class DENativeMDLReactionReader implements Runnable {
             if (rxnList[row] != null) {
             	tableModel.setTotalValueAt(""+(row+1), row, 0);
             	if (rxnList[row] != null) {
-            		if (rxnList[row][0] != null && rxnList[row][0].length() != 0)
+            		if (rxnList[row][0] != null && !rxnList[row][0].isEmpty())
 						tableModel.setTotalDataAt(rxnList[row][0].getBytes(), row, 1);
-					if (rxnList[row][1] != null && rxnList[row][1].length() != 0)
+					if (rxnList[row][1] != null && !rxnList[row][1].isEmpty())
 						tableModel.setTotalDataAt(rxnList[row][1].getBytes(), row, 2);
-					if (rxnList[row][2] != null && rxnList[row][2].length() != 0)
+					if (rxnList[row][2] != null && !rxnList[row][2].isEmpty())
 						tableModel.setTotalDataAt(rxnList[row][2].getBytes(), row, 3);
 	            	tableModel.setTotalDataAt(catalystList[row], row, 4);
 					}

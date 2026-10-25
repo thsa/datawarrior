@@ -22,17 +22,14 @@ import java.util.Properties;
 public class DETaskOpenMDLReactionDatabase extends DETaskAbstractOpenFile {
 	public static final String TASK_NAME = "Open MDL Reaction Database";
 
-	private DataWarrior mApplication;
 	private NativeMDLReactionReader mReader;
 
 	public DETaskOpenMDLReactionDatabase(DataWarrior application) {
 		super(application, "Open MDL Reaction Database", FileHelper.cFileTypeDirectory);
-		mApplication = application;
 		}
 
 	public DETaskOpenMDLReactionDatabase(DataWarrior application, String filePath) {
 		super(application, "Open MDL Reaction Database", FileHelper.cFileTypeDirectory, filePath);
-		mApplication = application;
 		}
 
 	@Override
@@ -71,7 +68,7 @@ public class DETaskOpenMDLReactionDatabase extends DETaskAbstractOpenFile {
 		StereoMolecule catalysts = new StereoMolecule();
 		StereoMolecule solvents = new StereoMolecule();
 
-		final DEFrame targetFrame = mApplication.getEmptyFrame(frameName);
+		final DEFrame targetFrame = getEmptyFrame(frameName);
 
 		int failed = 0;
 

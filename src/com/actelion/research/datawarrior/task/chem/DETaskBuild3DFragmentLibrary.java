@@ -7,7 +7,6 @@ import com.actelion.research.chem.shredder.Fragment3D;
 import com.actelion.research.chem.shredder.Fragmenter3D;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
-import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
@@ -37,7 +36,6 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 
 	private static final String FRAGMENT_COLUMN_NAME = "Fragment";
 
-	private final DataWarrior mApplication;
 	private DEFrame mTargetFrame;
 	private final CompoundTableModel mTableModel;
 	private JComboBox<String> mComboBoxStructureColumn,mComboBoxSourceID;
@@ -45,7 +43,6 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 
 	public DETaskBuild3DFragmentLibrary(DEFrame parent) {
 		super(parent, true);
-		mApplication = parent.getApplication();
 		mTableModel = parent.getTableModel();
 		}
 
@@ -53,11 +50,6 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 	public String getTaskName() {
 		return TASK_NAME;
 		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
-	}
 
 	@Override
 	public boolean isConfigurable() {
@@ -345,7 +337,7 @@ public class DETaskBuild3DFragmentLibrary extends ConfigurableTask {
 			try { t.join(); } catch (InterruptedException ie) {}
 
 		if (!fragmentSet.isEmpty()) {
-			mTargetFrame = mApplication.getEmptyFrame("3D-Fragments");
+			mTargetFrame = getEmptyFrame("3D-Fragments");
 
 			CompoundTableModel tableModel = mTargetFrame.getTableModel();
 			tableModel.initializeTable(fragmentSet.size(), 4+(idColumn == -1 ? 0 : 1));

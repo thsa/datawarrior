@@ -1,6 +1,5 @@
 package com.actelion.research.datawarrior.task.data;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractSingleColumnTask;
 import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
@@ -101,10 +100,5 @@ public class DETaskDuplicateColumn extends AbstractSingleColumnTask {
 
 		getTableModel().finalizeNewColumns(newColumn, this);
 		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 	}
-}
 

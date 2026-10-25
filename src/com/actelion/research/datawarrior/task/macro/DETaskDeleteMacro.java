@@ -171,9 +171,4 @@ public class DETaskDeleteMacro extends ConfigurableTask {
 		mParentFrame.getTableModel().setExtensionData(CompoundTableConstants.cExtensionNameMacroList, macroList);
 		mParentFrame.setDirty(true);
 		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 	}
-}

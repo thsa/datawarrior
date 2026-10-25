@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -62,11 +62,6 @@ public class DETaskSelectDiverse extends ConfigurableTask implements ActionListe
 		super(parent, true);
 		mSourceFrame = parent;
 		mTableModel = mSourceFrame.getTableModel();
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 
 	@Override
@@ -281,7 +276,7 @@ public class DETaskSelectDiverse extends ConfigurableTask implements ActionListe
 		try {
 			selectionCount = Integer.parseInt(configuration.getProperty(PROPERTY_SELECTION_COUNT, "-1"));
 			}
-		catch (NumberFormatException nfe) {}		
+		catch (NumberFormatException nfe) {}
 
 		String fileName = configuration.getProperty(PROPERTY_FILE_NAME);
 
@@ -302,11 +297,11 @@ public class DETaskSelectDiverse extends ConfigurableTask implements ActionListe
 													   new SDFileParser(fileName)
 										  : (extention.equals(".ode") || extention.equals(".dwar")) ?
 													   new DWARFileParser(fileName) : null;
-	
+
 				int records = 0;
 				int errors = 0;
 				String descriptorType = mTableModel.getColumnSpecialType(descriptorColumn);
-	
+
 				// TODO this should be descriptor dependent, although currently all binary descriptors have 512 bits
 				selector.initializeExistingSet(512);
 
@@ -318,7 +313,7 @@ public class DETaskSelectDiverse extends ConfigurableTask implements ActionListe
 					while (parser.next()) {
 						if (threadMustDie())
 							break;
-	
+
 						records++;
 						String idcode = parser.getIDCode();
 						if (idcode != null && !uniqueCompoundList.contains(idcode)) {
@@ -328,11 +323,11 @@ public class DETaskSelectDiverse extends ConfigurableTask implements ActionListe
 						else {
 							errors++;
 							}
-	
+
 						if (rowCount != -1)
 							updateProgress(records);
 						}
-	
+
 					if (errors != 0)
 						showErrorMessage(""+errors+" of "+records+" file records could not be read and were skipped.");
 					}
@@ -364,7 +359,7 @@ public class DETaskSelectDiverse extends ConfigurableTask implements ActionListe
 				long[][] featureList = new long[indexList.size()][];
 				for (int i=0; i<indexList.size(); i++)
 					featureList[i] = indexList.get(i);
-	
+
 				int compoundsToSelect = (selectionCount == -1) ? uniqueStructureCount : selectionCount;
 				selected = selector.select(indexList.toArray(new long[0][]), compoundsToSelect);
 				}

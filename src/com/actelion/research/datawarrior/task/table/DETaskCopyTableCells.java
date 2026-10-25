@@ -133,9 +133,4 @@ public class DETaskCopyTableCells extends ConfigurableTask {
 		boolean withHeader = "true".equals(configuration.getProperty(PROPERTY_WITH_HEADER, "true"));
 		new CompoundTableSaver(getParentFrame(), mTableModel, mTable).copy(!withHeader);
 	}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-	}
 }

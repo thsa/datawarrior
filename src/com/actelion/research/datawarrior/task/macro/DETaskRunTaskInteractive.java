@@ -131,9 +131,4 @@ public class DETaskRunTaskInteractive extends ConfigurableTask {
 		else if (exitOnCancel)
 			setStopMacro();
 		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-	}
 }

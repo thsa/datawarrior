@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -46,17 +46,15 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
 
 	public static final String TASK_NAME = "New File From Pivoting";
 
-	private CompoundTableModel
-	mSourceTableModel;
-	private JList				mGroupColumns,mSplitColumns,mDataColumns;
-	private DEFrame				mSourceFrame,mTargetFrame;
-	private DataWarrior		mApplication;
+	private final CompoundTableModel	mSourceTableModel;
+	private JList<String>				mGroupColumns,mSplitColumns,mDataColumns;
+	private final DEFrame				mSourceFrame;
+	private DEFrame						mTargetFrame;
 
-	public DETaskNewFileFromPivoting(DEFrame sourceFrame, DataWarrior application) {
+	public DETaskNewFileFromPivoting(DEFrame sourceFrame) {
 		super(sourceFrame, false);
 		mSourceFrame = sourceFrame;
 		mSourceTableModel = sourceFrame.getTableModel();
-		mApplication = application;
 		}
 
 	@Override
@@ -70,13 +68,13 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
 			final BufferedImage pivotImage = ImageIO.read(new BufferedInputStream(getClass().getResourceAsStream("/images/pivot.png")));
 			content.add(new JPanel() {
 				private static final long serialVersionUID = 0x20131016;
-	
+
 				@Override
 	            protected void paintComponent(Graphics g) {
 	                super.paintComponent(g);
 	                g.drawImage(pivotImage, (getWidth()-pivotImage.getWidth())/2, (getHeight()-pivotImage.getHeight())/2, this);
 	            	}
-	
+
 	            @Override
 	            public Dimension getPreferredSize() {
 	                return new Dimension(pivotImage.getWidth(), pivotImage.getHeight());
@@ -410,7 +408,7 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
         	else
         		usedTargetColumn[i] = -1;
 
-        mTargetFrame = mApplication.getEmptyFrame("Pivoting of "+mSourceFrame.getTitle());
+        mTargetFrame = getEmptyFrame("Pivoting of "+mSourceFrame.getTitle());
         CompoundTableModel targetTableModel = mTargetFrame.getTableModel();
         targetTableModel.initializeTable(newRowMap.size(), usedTargetColumnCount);
 
@@ -557,10 +555,5 @@ public class DETaskNewFileFromPivoting extends ConfigurableTask {
 				}
 			}
 		return oldDetailRefs;
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 	}

@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -98,11 +98,6 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 		mCheckOverwriteSim = true;
 		mCheckOverwriteDissim = true;
 		mCheckOverwritePairs = true;
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 
 	@Override
@@ -275,7 +270,7 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 					return false;
 					}
 				}
-	
+
 			String similarFileName = configuration.getProperty(PROPERTY_SIMILAR_FILE_NAME);
 			if (similarFileName != null) {
 				if (!isFileAndPathValid(similarFileName, true, mCheckOverwriteSim))
@@ -286,7 +281,7 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 					return false;
 					}
 				}
-	
+
 			String dissimilarFileName = configuration.getProperty(PROPERTY_DISSIMILAR_FILE_NAME);
 			if (dissimilarFileName != null) {
 				if (!isFileAndPathValid(dissimilarFileName, true, mCheckOverwriteDissim))

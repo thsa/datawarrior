@@ -1,6 +1,5 @@
 package com.actelion.research.datawarrior.task.view.cards;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundRecord;
@@ -86,11 +85,6 @@ public class DETaskCreateCategoricalColumnFromStacks extends ConfigurableTask {
 
         mLink.getCTM().finalizeNewColumns(col_idx, null);
 
-    }
-
-    @Override
-    public DEFrame getNewFrontFrame() {
-        return null;
     }
 
     @Override

@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,7 +18,6 @@
 
 package com.actelion.research.datawarrior.task.filter;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEPruningPanel;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
@@ -50,7 +49,7 @@ public abstract class DEAbstractFilterTask extends ConfigurableTask {
 
 	/**
 	 * @param parent
-	 * @param pruningPanel 
+	 * @param pruningPanel
 	 * @param filter null, if not interactive
 	 */
 	public DEAbstractFilterTask(Frame parent, DEPruningPanel pruningPanel, JFilterPanel filter) {
@@ -254,7 +253,7 @@ public abstract class DEAbstractFilterTask extends ConfigurableTask {
 
 	/**
 	 * Returns the name of the interactive view that was passed with the constructor.
-	 * @return null if task was not created interactively 
+	 * @return null if task was not created interactively
 	 */
 	public JFilterPanel getInteractiveFilter() {
 		return mFilter;
@@ -288,10 +287,5 @@ public abstract class DEAbstractFilterTask extends ConfigurableTask {
 			if (animation != null)
 				filter.applyAnimationSettings(animation);
 			}
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 	}

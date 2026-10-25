@@ -1,6 +1,5 @@
 package com.actelion.research.datawarrior.task.view.cards;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
 import com.actelion.research.table.view.card.CardPaneEvent;
 import com.actelion.research.table.view.card.JCardPane;
@@ -73,10 +72,5 @@ public class DETaskCreateStackFromSelection extends AbstractTaskWithoutConfigura
     @Override
     public boolean isConfigurable(){
         return true;
-    }
-
-    @Override
-    public DEFrame getNewFrontFrame() {
-        return null;
     }
 }

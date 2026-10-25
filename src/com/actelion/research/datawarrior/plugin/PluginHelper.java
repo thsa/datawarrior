@@ -268,7 +268,7 @@ public class PluginHelper implements IPluginHelper {
 		if (mProgressController.threadMustDie())
 			return;
 
-		mNewFrame = mApplication.getEmptyFrame(newWindowName);
+		mNewFrame = mPluginTask.getEmptyFrame(newWindowName);
 		mTargetTableModel = mNewFrame.getTableModel();
 		mTargetTableModel.initializeTable(rowCount, columnCount);
 		mColumnType = new int[columnCount];

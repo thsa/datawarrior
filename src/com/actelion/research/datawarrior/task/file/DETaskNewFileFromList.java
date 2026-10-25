@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -59,11 +59,6 @@ public class DETaskNewFileFromList extends DETaskAbstractListTask {
 		}
 
 	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
-		}
-
-	@Override
 	public void runTask(Properties configuration) {
 		DERuntimeProperties rp = new DERuntimeProperties(mSourceFrame.getMainFrame());
 		rp.learn();
@@ -92,7 +87,7 @@ public class DETaskNewFileFromList extends DETaskAbstractListTask {
 				}
 			}
 
-		mTargetFrame = mApplication.getEmptyFrame("Selection of "+mSourceFrame.getTitle());
+		mTargetFrame = getEmptyFrame("Selection of "+mSourceFrame.getTitle());
 		CompoundTableModel targetTableModel = mTargetFrame.getTableModel();
 		CompoundTableListHandler targetHitlistHandler = targetTableModel.getListHandler();
 		targetTableModel.initializeTable(listMemberCount, sourceTableModel.getTotalColumnCount());

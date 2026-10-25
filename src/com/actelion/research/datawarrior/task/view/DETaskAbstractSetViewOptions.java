@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,7 +18,6 @@
 
 package com.actelion.research.datawarrior.task.view;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.task.AbstractViewTask;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
@@ -105,11 +104,6 @@ public abstract class DETaskAbstractSetViewOptions extends AbstractViewTask impl
 		p.add(mCheckBoxApplyToAll, "1,2");
 
 		return p;
-		}
-
-		@Override
-	public final DEFrame getNewFrontFrame() {
-		return null;
 		}
 
 	public boolean isIgnoreEvents() {
@@ -393,7 +387,7 @@ public abstract class DETaskAbstractSetViewOptions extends AbstractViewTask impl
  * TODO: One could consider instead of going back to the last valid configuration
  * (which is not necessarily available, if we edit a task of a macro)
  * catching the message by overriding showErrorMessage() and displaying it in
- * an additional JPanel below the dialog content.		
+ * an additional JPanel below the dialog content.
  */
 			else if (mLastGoodConfiguration != null) {
 				mIgnoreEvents = true;

@@ -172,8 +172,7 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 			new Thread(() -> {
 				byte[][][] resultTable = retrieveBuildingBlocks();
 
-				mProgressDialog.setVisible(false);
-				mProgressDialog.dispose();
+				mProgressDialog.close();
 
 				if (resultTable != null) {
 					SwingUtilities.invokeLater(() -> {
@@ -192,8 +191,6 @@ public class BuildingBlockRetrievalDialog extends JDialog implements ActionListe
 						});
 					}
 				}).start();
-
-			mProgressDialog.setVisible(true);
 			}
 
 		setVisible(false);

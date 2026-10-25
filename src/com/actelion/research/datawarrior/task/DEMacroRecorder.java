@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -198,7 +198,7 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 
 				for (DEFrame frame:frontFrame.getApplication().getFrameList())
 					frame.getMainFrame().getMainPane().getMacroProgressPanel().initializeThreadMustDie();
-		
+
 				mMacroThread = new Thread(this, "DataWarriorMacro");
 				mMacroThread.setPriority(Thread.MIN_PRIORITY);
 				mMacroThread.start();
@@ -303,23 +303,23 @@ public class DEMacroRecorder implements ProgressController,Runnable {
 							}
 					    continue;
 	    				}
-	
+
 		    		// if the task is a macro itself, then spawn a daughter macro
 		    		if (cf instanceof GenericTaskRunMacro) {
 						DEMacro daughterMacro = ((GenericTaskRunMacro)cf).getMacro(mRunningMacro.getTaskConfiguration(currentTask));
 						if (daughterMacro == null)
 							continue;	// just skip the internal macro
-	
+
 						daughterMacro.setParentMacro(mRunningMacro, currentTask);
 						mRunningMacro = daughterMacro;
 						currentTask = -1;
 						continue;	// start with the first task of the daughter macro
 						}
-	
+
 					cf.execute(mRunningMacro.getTaskConfiguration(currentTask), this);
 
-					if (cf.getNewFrontFrame() != null) {
-						mFrontFrame = cf.getNewFrontFrame();
+					if (cf.getNewFrame() != null) {
+						mFrontFrame = cf.getNewFrame();
 						try {
 		                    SwingUtilities.invokeAndWait(() -> mFrontFrame.toFront() );
 							}

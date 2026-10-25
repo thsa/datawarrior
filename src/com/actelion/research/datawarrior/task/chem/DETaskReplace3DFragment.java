@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -31,7 +31,6 @@ import com.actelion.research.chem.io.DWARFileParser;
 import com.actelion.research.chem.phesaflex.FlexibleShapeAlignment;
 import com.actelion.research.chem.shredder.FragmentGeometry3D;
 import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.fx.EditableSmallMolMenuController;
 import com.actelion.research.datawarrior.fx.JFXMolViewerPanel;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
@@ -115,11 +114,6 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 
 	public DETaskReplace3DFragment(DEFrame parent) {
 		super(parent, true);
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 
 	@Override
@@ -659,6 +653,9 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 					String idcoordsMinimized = modifiedQueryCanonizer.getEncodedCoordinates();
 
 					double phesaRigidScore = PheSAAlignmentOptimizer.alignTwoMolsInPlace(mQueryMol, modifiedQuery, 0.5, this);
+					if (Double.isNaN(phesaRigidScore))
+						continue;
+
 					String idcoordsPheSARigid = modifiedQueryCanonizer.getEncodedCoordinates();
 
 					FlexibleShapeAlignment fsa = new FlexibleShapeAlignment(mQueryMol, modifiedQuery);
@@ -811,7 +808,7 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 			return;
 		}
 
-		mTargetFrame = DataWarrior.getApplication().getEmptyFrame("Scaffold Replacement");
+		mTargetFrame = getEmptyFrame("Scaffold Replacement");
 
 		CompoundTableModel tableModel = mTargetFrame.getTableModel();
 		tableModel.initializeTable(rowList.size(), NEW_COLUMN_NAME.length);

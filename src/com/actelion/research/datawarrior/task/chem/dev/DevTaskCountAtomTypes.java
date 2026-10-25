@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,13 +18,13 @@
 
 package com.actelion.research.datawarrior.task.chem.dev;
 
-import java.util.Properties;
-
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.prediction.TotalSurfaceAreaPredictor;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
 import com.actelion.research.table.model.CompoundTableModel;
+
+import java.util.Properties;
 
 
 public class DevTaskCountAtomTypes extends AbstractTaskWithoutConfiguration {
@@ -37,11 +37,6 @@ public class DevTaskCountAtomTypes extends AbstractTaskWithoutConfiguration {
 	public DevTaskCountAtomTypes(DEFrame parent) {
 		super(parent, true);
 		mTableModel = parent.getTableModel();
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 
 	@Override
@@ -87,7 +82,7 @@ public class DevTaskCountAtomTypes extends AbstractTaskWithoutConfiguration {
 				int[] count = sap.getPolarAtomTypeCounts(mol);
 				for (int i=0; i<polarAtomTypeCount; i++)
 					atomTypeCount[r][i] = count[i];
-				
+
 				count = sap.getNonPolarAtomTypeCounts(mol);
 				for (int i=0; i<nonPolarAtomTypeCount; i++)
 					atomTypeCount[r][polarAtomTypeCount+i] = count[i];

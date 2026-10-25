@@ -145,6 +145,4 @@ public class DETaskSelectRowsRandomly extends ConfigurableTask {
 
 		mTableModel.invalidateSelectionModel();
 		}
-
-	public DEFrame getNewFrontFrame() { return null; }
 	}

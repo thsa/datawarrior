@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -65,7 +65,6 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 	private static final int CYCLE_COUNT_UNLIMITED = Integer.MAX_VALUE;
 
 	private Frame				mParentFrame;
-	private DataWarrior			mApplication;
 	private CompoundTableModel	mSourceTableModel;
 	private JDialog				mControllingDialog;
 	private DEFrame				mTargetFrame;
@@ -79,12 +78,11 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 	private AtomicFloat			mBestFitness;
 	private AtomicInteger		mCurrentResultID;
 
-	public DETaskBuildEvolutionaryLibrary(DEFrame owner, DataWarrior application) {
+	public DETaskBuildEvolutionaryLibrary(DEFrame owner) {
 		super(owner, false);
 
 		mParentFrame = owner;
 		mSourceTableModel = owner.getTableModel();
-		mApplication = application;
 		}
 
 	@Override
@@ -100,11 +98,6 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 	@Override
 	public TaskUIDelegate createUIDelegate() {
 		return new UIDelegateELib(mParentFrame, mSourceTableModel, this);
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 
 	private JDialog createControllingDialog() {
@@ -636,7 +629,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 					mControllingDialog.dispose();
 
 					if (mKeepData) {
-						mTargetFrame = mApplication.getEmptyFrame("Evolutionary Library");
+						mTargetFrame = getEmptyFrame("Evolutionary Library");
 						createDocument(result, fitnessOption, runCount != 1, runCount);
 						}
 					} );

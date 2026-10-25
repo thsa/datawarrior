@@ -1,6 +1,5 @@
 package com.actelion.research.datawarrior.task.view.cards;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.view.JCardView;
@@ -169,14 +168,6 @@ public class DETaskCreateSubstacks extends AbstractTaskWithoutConfiguration {
 
 
         }
-
-
         //System.out.println("NOT YET SUPPORTED!");
     }
-
-    @Override
-    public DEFrame getNewFrontFrame() {
-        return null;
-    }
-
 }

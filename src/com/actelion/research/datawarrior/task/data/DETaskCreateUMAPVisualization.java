@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -75,11 +75,6 @@ public class DETaskCreateUMAPVisualization extends ConfigurableTask {
 		mParentFrame = parent;
 		mIsInteractive = isInteractive;
 		mTableModel = parent.getTableModel();
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 
 	@Override
@@ -155,7 +150,7 @@ public class DETaskCreateUMAPVisualization extends ConfigurableTask {
 
 		JLabel parameterLabel = new JLabel("Used columns:");
 		parameterLabel.setVerticalAlignment(SwingConstants.TOP);
-		
+
 		JScrollPane scrollPane = null;
 		if (mIsInteractive) {
 			mListColumns = new JList(columnNameList);
@@ -300,20 +295,20 @@ public class DETaskCreateUMAPVisualization extends ConfigurableTask {
 
 		if (isLive) {
 	    	int[] column = new int[columnName.length];
-	
+
 	    	for (int i=0; i<columnName.length; i++) {
 				column[i] = mTableModel.findColumn(columnName[i]);
 				if (column[i] == -1) {
 		            showErrorMessage("Column '"+columnName+"' not found.");
 		            return false;
 					}
-	
+
 				if (mTableModel.isDescriptorColumn(column[i])) {
 		            if (!mTableModel.isDescriptorAvailable(column[i])) {
 	                    showErrorMessage("Descriptor calculation has not finished yet: '"+mTableModel.getColumnTitle(column[i])+"'.");
 	                    return false;
 		                }
-	
+
 					descriptorCount++;
 					}
 				else {
@@ -321,7 +316,7 @@ public class DETaskCreateUMAPVisualization extends ConfigurableTask {
 						showErrorMessage("Parameter '"+columnName+"' is not a complete numerical column with varying values.");
 						return false;
 						}
-	
+
 					parameterCount++;
 					}
 				}
@@ -448,7 +443,7 @@ public class DETaskCreateUMAPVisualization extends ConfigurableTask {
 							}
 						}
 					}
-	
+
 				varyingKey[fp] = new int[varyingKeyCount];
 				int index = 0;
 				for (int i=0; i<isVarying.length; i++)

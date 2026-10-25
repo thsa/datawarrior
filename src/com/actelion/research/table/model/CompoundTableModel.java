@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -362,7 +362,7 @@ public class CompoundTableModel extends AbstractTableModel
 	 * Descriptors are encoded and empty values are returned as empty String.
 	 * @param row is index in non excluded row list
 	 * @param column is index in visible(!!!) column list
-	 * @return 
+	 * @return
 	 */
 	public Object getValueAt(int row, int column) {
 		// substance LaF accesses non existing column index in case of column deletion if rows are selected
@@ -391,15 +391,15 @@ public class CompoundTableModel extends AbstractTableModel
 								86400000 * (long) record.mFloat[column] + 43200000));
 						return mColumnInfo[column].summaryCountHidden ? date : date + getSummaryModeString(column, entry.length);
 						}
-	
+
 					float value = (mColumnInfo[column].logarithmicViewMode) ?
 							(float)Math.pow(10.0, record.mFloat[column])
 						  : record.mFloat[column];
-	
+
 					String numPart = (mColumnInfo[column].roundingMode == DoubleFormat.ROUNDING_MODE_NONE) ?
 							  DoubleFormat.toString(value)
 							: DoubleFormat.toString(value, mColumnInfo[column].roundingMode, mColumnInfo[column].roundingValue);
-	
+
 					try {   // this is to generate modifier and value count
 						tryParseDouble(record, column, mColumnInfo[column].summaryMode, mColumnInfo[column].stdDeviationShown);
 						} catch (NumberFormatException nfe) {}
@@ -426,15 +426,15 @@ public class CompoundTableModel extends AbstractTableModel
 								}
 							catch (NumberFormatException nfe) {}
 							}
-	
+
 						if (mColumnInfo[column].excludeModifierValues
 						 && analysis.hasModifier())
 							entry[i] = "("+entry[i]+")";
 						}
-	
+
 					if (entry.length == 1)
 						return entry[0];
-	
+
 					if (i == 0)
 						buf = new StringBuilder(entry[i]);
 					else
@@ -487,7 +487,7 @@ public class CompoundTableModel extends AbstractTableModel
 	 * If the column type is neither float nor date, or the cell is empty, NaN is returned.
 	 * @param row index referring to visible rows
 	 * @param column index referring to all columns
-	 * @return 
+	 * @return
 	 */
 	public float getDoubleAt(int row, int column) {
 		return mNonExcludedRecord[row].mFloat[column];
@@ -503,7 +503,7 @@ public class CompoundTableModel extends AbstractTableModel
 	 * If the column type is neither float nor date, or the cell is empty, NaN is returned.
 	 * @param row index referring to all rows
 	 * @param column index referring to all columns
-	 * @return 
+	 * @return
 	 */
 	public float getTotalDoubleAt(int row, int column) {
 		return mRecord[row].mFloat[column];
@@ -527,7 +527,7 @@ public class CompoundTableModel extends AbstractTableModel
 	 * If the column type is neither float nor date, or the cell is empty, NaN is returned.
 	 * @param row index referring to all rows
 	 * @param column index referring to all columns
-	 * @return 
+	 * @return
 	 */
 	public float getTotalOriginalDoubleAt(int row, int column) {
 		float value = mRecord[row].mFloat[column];
@@ -688,7 +688,7 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	/**
-	 * Returns the identifier of a parent object from an identifier column, if 
+	 * Returns the identifier of a parent object from an identifier column, if
 	 * this column exists and contains an identifier.
 	 * @param record
 	 * @param parentColumn e.g. column containing idcodes
@@ -1361,7 +1361,7 @@ public class CompoundTableModel extends AbstractTableModel
 						// mean calculation is different in logarithmic view mode
 				TableModelEvent tme = (mColumnInfo[column].summaryMode != cSummaryModeNormal) ?
 						new TableModelEvent(this, 0, mNonExcludedRecords-1, mColumnToDisplayableColumn[column], TableModelEvent.UPDATE) : null;
-	
+
 				fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeColumnData, column, -1, oldCategoryCount), tme);
 				}
 			}
@@ -1610,7 +1610,7 @@ public class CompoundTableModel extends AbstractTableModel
 
 		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeSelection, -1), null);
 		}
-	
+
 	/**
 	 * Select all records which have a given flag set.
 	 * @param flagNo >= 0
@@ -1623,7 +1623,7 @@ public class CompoundTableModel extends AbstractTableModel
 
 		fireEventsNow(new CompoundTableEvent(this, CompoundTableEvent.cChangeSelection, -1), null);
 		}
-	
+
 	public void invertSelection() {
 		long unselectionMask = mAllocatedExclusionFlags
 							| CompoundRecord.cFlagMaskSelected;
@@ -1940,7 +1940,7 @@ public class CompoundTableModel extends AbstractTableModel
 		String specialType = getColumnSpecialType(column);
 		if (specialType == null)
 			return true;
-		
+
 		for (int i=0; i<cParentSpecialColumnTypes.length; i++)
 			if (specialType.equals(cParentSpecialColumnTypes[i]))
 				return true;
@@ -2659,7 +2659,7 @@ public class CompoundTableModel extends AbstractTableModel
 	public boolean isDescriptorColumn(int column) {
 		return (column >= 0) && DescriptorHelper.isDescriptorShortName(getColumnSpecialType(column));
 		}
-	
+
 	public boolean isDescriptorAvailable(int column) {
 		return !mColumnInfo[column].isDescriptorIncomplete;
 		}
@@ -3605,7 +3605,7 @@ public class CompoundTableModel extends AbstractTableModel
 								fragmentIndex = newFragmentIndex;
 								searcherWithIndex.setFragment(fragment[fragmentIndex], (long[])null);
 								}
-	
+
 							if (cColumnTypeRXNCode.equals(getColumnSpecialType(idcodeColumn))) {
 								// do the substructure search in two steps for not unneccessarily creating the product molecule
 								long[] molIndex = (long[])mRecord[recordIndex].getData(fingerprintColumn);
@@ -3987,7 +3987,7 @@ public class CompoundTableModel extends AbstractTableModel
 				final boolean isReaction = dh.getInfo().type == DESCRIPTOR_TYPE_REACTION;
 
 				pc.startProgress("Calculating query descriptor...", 0, 0);
-		
+
 				final Object refDescriptor = (descriptor != null) ? descriptor
 						: mColumnInfo[descriptorColumn].getCachedDescriptor(chemObject);
 				if (pc.threadMustDie()) {
@@ -3996,7 +3996,7 @@ public class CompoundTableModel extends AbstractTableModel
 						pc.stopProgress();
 					return;
 					}
-		
+
 				pc.startProgress("Calculating similarities...", 0, mRecord.length);
 
 				mSimilarityListSMP = new float[mRecord.length];
@@ -4011,7 +4011,7 @@ public class CompoundTableModel extends AbstractTableModel
 							while (recordIndex >= 0 && !pc.threadMustDie()) {
 								if (pc.threadMustDie())
 									break;
-		
+
 								try {
 									Object descriptor = mRecord[recordIndex].getData(descriptorColumn);
 									if (descriptor != null) {
@@ -4029,7 +4029,7 @@ public class CompoundTableModel extends AbstractTableModel
 								catch (Exception e) {
 									mSMPSimilarityErrors++;
 									}
-		
+
 								pc.updateProgress(-1);
 								recordIndex = mSimRecordIndex.decrementAndGet();
 								}
@@ -4580,7 +4580,7 @@ public class CompoundTableModel extends AbstractTableModel
 					}
 				}
 			}
-		
+
 		if (mColumnInfo[column].categoryList != null) {
 
 			// check for range categories (before Jun 2014 binBase,binSize,binIsLog were not defined as properties)
@@ -4650,11 +4650,11 @@ public class CompoundTableModel extends AbstractTableModel
 						break;
 						}
 					}
-	
+
 				if (rangeCategories) {
 					if (mColumnInfo[column].categoryList.getSize() > 1)
 						mColumnInfo[column].type = cColumnTypeRangeCategory;
-	
+
 					RangeCategoryList rangeCategoryList = new RangeCategoryList();
 
 					lowCenter /= 2;
@@ -4676,7 +4676,7 @@ public class CompoundTableModel extends AbstractTableModel
 						}
 					if (emptyCategoryExists)
 						rangeCategoryList.add(cRangeNotAvailable);
-	
+
 					mColumnInfo[column].categoryList = rangeCategoryList;
 					}
 				}
@@ -4905,7 +4905,7 @@ public class CompoundTableModel extends AbstractTableModel
 			return mColumnInfo[column].dateAnalysis.getDateFloat(entry);
 
 		boolean logarithmic = mColumnInfo[column].logarithmicViewMode;
-		
+
 		EntryAnalysis analysis = new EntryAnalysis(entry);
 		if (analysis.isEmpty() || analysis.isNaN())
 			return Float.NaN;
@@ -4997,7 +4997,7 @@ public class CompoundTableModel extends AbstractTableModel
 							}
 						v = (float)Math.log10(v);
 						}
-	
+
 					switch (summaryMode) {
 					case cSummaryModeMinimum:
 						if (valueWithModifierCount == 0 || v < valueWithModifierSum) {
@@ -5358,7 +5358,7 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	/**
-	 * 
+	 *
 	 * @param column
 	 */
 	private void updateMinAndMaxFromDate(int column) {
@@ -5550,7 +5550,7 @@ public class CompoundTableModel extends AbstractTableModel
 		}
 
 	/**
-	 * 
+	 *
 	 */
 	public void updateDescriptors() {
 		if (mSMPProcessWaiting)
@@ -5581,7 +5581,7 @@ public class CompoundTableModel extends AbstractTableModel
 						if (isDescriptorColumn(column)
 						 && mColumnInfo[column].isDescriptorIncomplete)
 							descriptorColumnCount++;
-	
+
 					if (descriptorColumnCount != 0) {
 						mSMPColumnSpec = new DescriptorColumnSpec[descriptorColumnCount];
 						descriptorColumnCount = 0;

@@ -66,11 +66,6 @@ public class DETaskGenerateRandomMolecules extends ConfigurableTask implements C
 	}
 
 	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
-		}
-
-	@Override
 	public boolean isConfigurable() {
 		return true;
 		}
@@ -325,7 +320,7 @@ public class DETaskGenerateRandomMolecules extends ConfigurableTask implements C
 			try { t.join(); } catch (InterruptedException ie) {}
 
 		if (!moleculeQueue.isEmpty()) {
-			mTargetFrame = mApplication.getEmptyFrame("Random Molecules");
+			mTargetFrame = getEmptyFrame("Random Molecules");
 
 			CompoundTableModel tableModel = mTargetFrame.getTableModel();
 			tableModel.initializeTable(moleculeQueue.size(), 2);

@@ -46,15 +46,12 @@ import java.util.Properties;
 public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements TaskConstantsCLib {
 	public static final String TASK_NAME = "Enumerate Combinatorial Library";
 
-	private DEFrame			mParentFrame;
-	private DataWarrior		mApplication;
+	private final DEFrame			mParentFrame;
 	private DEFrame			mTargetFrame;
 
-	public DETaskEnumerateCombinatorialLibrary(DEFrame owner, DataWarrior application) {
+	public DETaskEnumerateCombinatorialLibrary(DEFrame owner) {
 		super(owner, true);
-
 		mParentFrame = owner;
-		mApplication = application;
 	}
 
 	@Override
@@ -70,11 +67,6 @@ public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements
 	@Override
 	public TaskUIDelegate createUIDelegate() {
 		return new UIDelegateCLib(mParentFrame);
-	}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 	}
 
 	@Override
@@ -94,7 +86,7 @@ public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements
 
 		boolean found = false;
 		for (int i = 0; i < reactantCount; i++)
-			if (configuration.getProperty(PROPERTY_REACTANT + i, "").length() != 0)
+			if (!configuration.getProperty(PROPERTY_REACTANT + i, "").isEmpty())
 				found = true;
 		if (!found) {
 			String msg = "There are no structures assigned to any of the "+reactantCount+" generic reactants.";
@@ -236,7 +228,7 @@ public class DETaskEnumerateCombinatorialLibrary extends AbstractTask implements
 	}
 
 	private void populateTable(Reaction reaction, ArrayList<Object[]> recordList) {
-		mTargetFrame = mApplication.getEmptyFrame("Combinatorial Library");
+		mTargetFrame = getEmptyFrame("Combinatorial Library");
 		startProgress("Populating Table...", 0, recordList.size());
 
 		CompoundTableModel tableModel = mTargetFrame.getTableModel();

@@ -115,9 +115,4 @@ public class DETaskIfThen extends ConfigurableTask {
 	public void runTask(Properties configuration) {
 		// the if/then is actually performed by the DEMacroRecorder
 	}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-	}
 }

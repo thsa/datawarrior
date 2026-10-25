@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,7 +24,6 @@ import com.actelion.research.chem.descriptor.DescriptorHandlerLongFFP512;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DELogWriter;
 import com.actelion.research.datawarrior.DETable;
-import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableDetailHandler;
 import com.actelion.research.table.model.CompoundTableEvent;
@@ -64,17 +63,16 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 	private static String           sDBVersion = "ChEMBL ??";
 
 	private JTextField				mTextFieldFilter,mTextFieldDocIDs;
-	private JList					mListTarget;
+	private JList<String>			mListTarget;
 	private JTextArea				mTextAreaTargetDetail;
-	private JScrollPane				mScrollPaneTargetDetail;
 	private JComboBox[]				mComboBoxFamily;
 	private JCheckBox				mCheckBoxGroupByStructure;
 	private byte[][]				mTargetID;
 	private String[]                mColumnTitle;
 	private HashMap<String,byte[]>	mAssayDetails;
 
-	public DETaskChemblQuery(DEFrame owner, DataWarrior application) {
-		super(owner, application);
+	public DETaskChemblQuery(DEFrame owner) {
+		super(owner);
 		}
 
 	@Override
@@ -112,7 +110,7 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 		filterPanel.setLayout(new TableLayout(fs));
 		mComboBoxFamily = new JComboBox[PROTEIN_CLASS_LEVELS];
 		for (int i=0; i<PROTEIN_CLASS_LEVELS; i++) {
-			mComboBoxFamily[i] = new JComboBox();
+			mComboBoxFamily[i] = new JComboBox<>();
 			mComboBoxFamily[i].addItemListener(this);
 			filterPanel.add(new JLabel("Level "+(i+1)), "1,"+(2*i));
 			filterPanel.add(mComboBoxFamily[i], "3,"+(2*i));
@@ -133,8 +131,8 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 		mTextAreaTargetDetail.setEditable(false);
 		mTextAreaTargetDetail.setLineWrap(true);
 		mTextAreaTargetDetail.setWrapStyleWord(true);
-		mScrollPaneTargetDetail = new JScrollPane(mTextAreaTargetDetail, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		panel.add(mScrollPaneTargetDetail, "5,7");
+		JScrollPane scrollPane = new JScrollPane(mTextAreaTargetDetail, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		panel.add(scrollPane, "5,7");
 
 		mTextFieldDocIDs = new JTextField();
 		panel.add(new JLabel("Pubmed-ID(s) or DOI(s):", JLabel.RIGHT), "1,9");
@@ -243,7 +241,7 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 				configuration.setProperty(PROPERTY_FAMILY+i, (String)mComboBoxFamily[i].getSelectedItem());
 
 		String filter = mTextFieldFilter.getText();
-		if (filter.length() != 0)
+		if (!filter.isEmpty())
 			configuration.setProperty(PROPERTY_FILTER, filter);
 
 		int[] targetIndex = mListTarget.getSelectedIndices();
@@ -257,7 +255,7 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 		configuration.setProperty(PROPERTY_GROUP_STRUCTURES, mCheckBoxGroupByStructure.isSelected() ? "true" : "false");
 
 		String docIDs = mTextFieldDocIDs.getText();
-		if (docIDs.length() != 0)
+		if (!docIDs.isEmpty())
 			configuration.setProperty(PROPERTY_DOC_ID_LIST, docIDs);
 
 		return configuration;
@@ -357,7 +355,7 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 					for (ProteinClass pc:sProteinClass)
 						if (pc.level == level && (level == 0 || sProteinClass[pc.parent].name.equals(parentTargetFamily)))
 							familySet.add(pc.name);
-		
+
 					for (String family:familySet)
 						mComboBoxFamily[level].addItem(family);
 					}
@@ -387,11 +385,11 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 		if (sTarget != null) {
 			for (Target t:sTarget) {
 				int[][] targetClassIndex = getProteinClassIndexHierarchy(t);
-	
+
 				boolean violatesFilter = false;
 				if (nameFilter != null) {
 					for (String filter:nameFilter) {
-						if (filter.length() != 0) {
+						if (!filter.isEmpty()) {
 							boolean matchFound =
 								t.name.toLowerCase().contains(filter)
 							 || t.type.toLowerCase().contains(filter)
@@ -418,7 +416,7 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 							}
 						}
 					}
-	
+
 				if (!violatesFilter && queryLevel != -1) {
 					if (targetClassIndex[queryLevel] == null) {
 						violatesFilter = true;
@@ -435,7 +433,7 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 							violatesFilter = true;
 						}
 					}
-	
+
 				if (!violatesFilter) {
 					mTargetID[itemList.size()] = t.id;
 					itemList.add(t.getDisplayName());
@@ -614,7 +612,7 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 				groupByStructure(null, groupColumns);
 			}
 
-		if (mResultList.size() != 0) {
+		if (!mResultList.isEmpty()) {
 			int assayIndexColumn = findColumn(COLUMN_TITLE_ASSAY_INDEX);
 			int assayCategoryColumn = findColumn(COLUMN_TITLE_ASSAY_CATEGORY);
 			if (assayIndexColumn != -1 && assayCategoryColumn != -1)
@@ -797,7 +795,7 @@ public class DETaskChemblQuery extends DETaskStructureQuery implements ChemblSer
 			}
 
 		protected String getDisplayName() {
-			return (organism.length() == 0) ? name : name+" ["+organism+"]";
+			return (organism.isEmpty()) ? name : name+" ["+organism+"]";
 			}
 		}
 	}

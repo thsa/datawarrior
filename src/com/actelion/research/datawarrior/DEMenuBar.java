@@ -1704,17 +1704,17 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuFileNew)
 				new DETaskNewFile(mApplication).defineAndRun();
 			else if (source == jMenuFileNewFromVisible)
-				new DETaskNewFileFromVisible(mParentFrame, mApplication).defineAndRun();
+				new DETaskNewFileFromVisible(mParentFrame).defineAndRun();
 			else if (source == jMenuFileNewFromSelection)
-				new DETaskNewFileFromSelection(mParentFrame, mApplication).defineAndRun();
+				new DETaskNewFileFromSelection(mParentFrame).defineAndRun();
 			else if (actionCommand.startsWith(NEW_FROM_LIST))
 				new DETaskNewFileFromList(mParentFrame, mApplication, Integer.parseInt(actionCommand.substring(NEW_FROM_LIST.length()))).defineAndRun();
 			else if (source == jMenuFileNewFromPivoting)
-				new DETaskNewFileFromPivoting(mParentFrame, mApplication).defineAndRun();
+				new DETaskNewFileFromPivoting(mParentFrame).defineAndRun();
 			else if (source == jMenuFileNewFromReversePivoting)
-				new DETaskNewFileFromReversePivoting(mParentFrame, mApplication).defineAndRun();
+				new DETaskNewFileFromReversePivoting(mParentFrame).defineAndRun();
 			else if (source == jMenuFileNewFromTransposition)
-				new DETaskNewFileFromTransposition(mParentFrame, mApplication).defineAndRun();
+				new DETaskNewFileFromTransposition(mParentFrame).defineAndRun();
 			else if (actionCommand.startsWith(OPEN_FILE))    // these are the reference,sample,etc-files
 				openFile(actionCommand.substring(OPEN_FILE.length()));
 			else if (source == jMenuFileOpen)
@@ -1775,9 +1775,9 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuEditPaste)
 				pasteDataOrMacro();
 			else if (source == jMenuEditPasteWithHeader)
-				new DETaskPaste(mParentFrame, mApplication, DETaskPaste.HEADER_WITH).defineAndRun();
+				new DETaskPaste(mParentFrame, DETaskPaste.HEADER_WITH).defineAndRun();
 			else if (source == jMenuEditPasteWithoutHeader)
-				new DETaskPaste(mParentFrame, mApplication, DETaskPaste.HEADER_WITHOUT).defineAndRun();
+				new DETaskPaste(mParentFrame, DETaskPaste.HEADER_WITHOUT).defineAndRun();
 			else if (source == jMenuEditPasteAppend)
 				new DETaskPasteIntoTable(mParentFrame, DETaskPasteIntoTable.NO_COLUMN, DETaskPasteIntoTable.ROW_APPEND).defineAndRun();
 			else if (source == jMenuEditPasteMerge)
@@ -1858,9 +1858,9 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuDataCorrelationMatrix)
 				new DECorrelationDialog(mParentFrame, mTableModel);
 			else if (source == jMenuChemCCLibrary)
-				new DETaskEnumerateCombinatorialLibrary(mParentFrame, mApplication).defineAndRun();
+				new DETaskEnumerateCombinatorialLibrary(mParentFrame).defineAndRun();
 			else if (source == jMenuChemEALibrary)
-				new DETaskBuildEvolutionaryLibrary(mParentFrame, mApplication).defineAndRun();
+				new DETaskBuildEvolutionaryLibrary(mParentFrame).defineAndRun();
 			else if (source == jMenuChemGenerateRandomMolecules)
 				new DETaskGenerateRandomMolecules(mParentFrame).defineAndRun();
 			else if (source == jMenuChemEnumerateMarkush)
@@ -1921,7 +1921,7 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 			} else if (source == jMenuChemAnalyzeScaffolds)
 				new DETaskAnalyseScaffolds(mParentFrame).defineAndRun();
 			else if (source == jMenuChemAnalyzeCliffs)
-				new DETaskAnalyseActivityCliffs(mParentFrame, mApplication).defineAndRun();
+				new DETaskAnalyseActivityCliffs(mParentFrame).defineAndRun();
 			else if (source == jMenuChemMatchFile)
 				new DETaskFindSimilarCompoundsInFile(mParentFrame).defineAndRun();
 			else if (source == jMenuChemSelectDiverse)
@@ -1962,27 +1962,27 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 			else if (source == jMenuChemCreateGenericTautomers)
 				new DETaskCreateGenericTautomer(mParentFrame).defineAndRun();
 			else if (source == jMenuDBWikipedia)
-				new DETaskRetrieveWikipediaCompounds(mParentFrame, mApplication).defineAndRun();
+				new DETaskRetrieveWikipediaCompounds(mParentFrame).defineAndRun();
 			else if (source == jMenuDBGooglePatents)
-				new DETaskSearchGooglePatents(mParentFrame, mApplication).defineAndRun();
+				new DETaskSearchGooglePatents(mParentFrame).defineAndRun();
 			else if (source == jMenuDBPatentReactions)
-				new DETaskSearchPatentReactions(mParentFrame, mApplication).defineAndRun();
+				new DETaskSearchPatentReactions(mParentFrame).defineAndRun();
 			else if (source == jMenuDBReadChEMBL)
-				new DETaskChemblQuery(mParentFrame, mApplication).defineAndRun();
+				new DETaskChemblQuery(mParentFrame).defineAndRun();
 			else if (source == jMenuDBFindChEMBLActives)
 				new DETaskFindSimilarActiveCompounds(mParentFrame).defineAndRun();
 			else if (source == jMenuDBSearchCOD)
-				new DETaskCODQuery(mParentFrame, mApplication).defineAndRun();
+				new DETaskCODQuery(mParentFrame).defineAndRun();
 			else if (source == jMenuDBSearchBuildingBlocks)
-				new DETaskBuildingBlockQuery(mParentFrame, mApplication).defineAndRun();
+				new DETaskBuildingBlockQuery(mParentFrame).defineAndRun();
 			else if (source == jMenuDBSearchChemSpace)
-				new DETaskChemSpaceQuery(mParentFrame, mApplication).defineAndRun();
+				new DETaskChemSpaceQuery(mParentFrame).defineAndRun();
 //			else if (source == jMenuDBSearchMolport)
 //				new DETaskMolportQuery(mParentFrame, mApplication).defineAndRun();
 			else if (source == jMenuDBRetrieveDataFromURL)
-				new DETaskRetrieveDataFromURL(mParentFrame, mApplication).defineAndRun();
+				new DETaskRetrieveDataFromURL(mParentFrame).defineAndRun();
 			else if (source == jMenuDBRetrieveSQLData)
-				new DETaskSQLQuery(mParentFrame, mApplication).defineAndRun();
+				new DETaskSQLQuery(mParentFrame).defineAndRun();
 			else if (source == jMenuListCreateSelected) {
 				if (checkAndAllowEmptyList(DETaskNewRowList.MODE_SELECTED))
 					new DETaskNewRowList(mParentFrame, DETaskNewRowList.MODE_SELECTED).defineAndRun();
@@ -2132,7 +2132,7 @@ public class DEMenuBar extends JMenuBar implements ActionListener,
 			if (s.startsWith(DEMacro.MACRO_START))
 				new DETaskPasteMacro(mApplication).defineAndRun();
 			else
-				new DETaskPaste(mParentFrame, mApplication, DETaskPaste.HEADER_ANALYZE).defineAndRun();
+				new DETaskPaste(mParentFrame, DETaskPaste.HEADER_ANALYZE).defineAndRun();
 			}
 		catch (Exception e) {}
 		}

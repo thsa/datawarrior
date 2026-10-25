@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -323,12 +323,12 @@ public class JVisualization2D extends JVisualization {
 						offG.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 //					mOffG.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);	// no sub-pixel accuracy looks cleaner
 					}
-		
+
 					offG.setColor(getViewBackground());
 					offG.fillRect(0, 0, width, height);
 					Insets insets = getInsets();
 					Rectangle bounds = new Rectangle(insets.left, insets.top, width-insets.left-insets.right, height-insets.top-insets.bottom);
-		
+
 					mCorrelationCoefficient = null;
 
 					mFontHeight = calculateFontSize(bounds.width, bounds.height, 1f, retinaFactor, true);
@@ -1437,7 +1437,7 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	/**
-	 * 
+	 *
 	 * @param considerFocus
 	 * @param inFocus
 	 */
@@ -1591,7 +1591,7 @@ public class JVisualization2D extends JVisualization {
 					byte[] data = (byte[])vp1.record.getData(mConnectionColumn);
 					if (data != null) {
 						String[] entry = mTableModel.separateEntries(new String(data));
-	
+
 						String[] strength = null;
 						if (strengthColumn != -1) {
 							byte[] strengthData = (byte[])vp1.record.getData(strengthColumn);
@@ -1601,7 +1601,7 @@ public class JVisualization2D extends JVisualization {
 									strength = null;
 								}
 							}
-	
+
 						int index = 0;
 						for (String ref:entry) {
 							VisualizationPoint vp2 = mConnectionLineMap.get(ref.getBytes());
@@ -1633,7 +1633,7 @@ public class JVisualization2D extends JVisualization {
 		}
 
 	/**
-	 * Draws a connection line between the given points. 
+	 * Draws a connection line between the given points.
 	 * If transparency is different from 0.0, then this method sets a Composite on mG. In this case the calling
 	 * method needs to save and restore the old Composite before/after calling this method.
 	 * If fast render mode is active, transparency is simulated by adapting the line color to the current background.
@@ -2123,7 +2123,7 @@ public class JVisualization2D extends JVisualization {
 					Rectangle bounds = (splitCurveBounds == null) ? baseGraphRect : splitCurveBounds[hv][cat];
 					int ymin = bounds.y + vOffset;
 					int ymax = ymin + bounds.height;
-	
+
 					if (isEffectiveCurveSplitByColorCategory())
 						mG.setColor(mMarkerColor.getColor(getCurveColorIndexFromCombinedCategoryIndex(cat)));
 
@@ -3614,7 +3614,7 @@ public class JVisualization2D extends JVisualization {
 					}
 				}
 			}
-		}   
+		}
 
 	private void updateScaleMolecules(int axis, int i1, int i2, int scaleSize) {
 		String[] idcodeList = mTableModel.getCategoryList(mAxisIndex[axis]);
@@ -3878,7 +3878,7 @@ public class JVisualization2D extends JVisualization {
 
 		int intMin = (int)Math.floor(axisStart);
 		int intMax = (int)Math.floor(axisStart+axisLength);
-		
+
 		if (axisLength > 5.4) {
 			int step = 1 + (int)axisLength/10;
 			for (int i=intMin; i<=intMax; i+=step)
@@ -4832,7 +4832,7 @@ public class JVisualization2D extends JVisualization {
 			invalidateOffImage(false);
 			}
 		}
-	
+
 	public int getCurveMode() {
 		return mCurveInfo & cCurveModeMask;
 		}

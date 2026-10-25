@@ -17,7 +17,6 @@
  */
 package com.actelion.research.datawarrior.task.db;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.plugin.PluginGUIHelper;
 import com.actelion.research.datawarrior.plugin.PluginHelper;
@@ -82,11 +81,6 @@ public class DETaskPluginTask extends ConfigurableTask {
 	public void runTask(Properties configuration) {
 		mPluginHelper = new PluginHelper(mApplication, this, getProgressController());
 		mDelegate.run(configuration, mPluginHelper);
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mPluginHelper.getNewFrame();
 		}
 
 	@Override

@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -44,17 +44,16 @@ public class DETaskNewFileFromReversePivoting extends ConfigurableTask {
 
 	public static final String TASK_NAME = "New File From Reverse-Pivoting";
 
-	private CompoundTableModel  mSourceTableModel;
-	private JList				mDataColumns;
-	private JTextField			mTextFieldGroupColumnName,mTextFieldDataColumnName;
-	private DEFrame				mSourceFrame,mTargetFrame;
-	private DataWarrior		mApplication;
+	private final CompoundTableModel	mSourceTableModel;
+	private JList<String>				mDataColumns;
+	private JTextField					mTextFieldGroupColumnName,mTextFieldDataColumnName;
+	private final DEFrame				mSourceFrame;
+	private DEFrame						mTargetFrame;
 
-	public DETaskNewFileFromReversePivoting(DEFrame sourceFrame, DataWarrior application) {
+	public DETaskNewFileFromReversePivoting(DEFrame sourceFrame) {
 		super(sourceFrame, false);
 		mSourceFrame = sourceFrame;
 		mSourceTableModel = sourceFrame.getTableModel();
-		mApplication = application;
 		}
 
 	@Override
@@ -69,13 +68,13 @@ public class DETaskNewFileFromReversePivoting extends ConfigurableTask {
 			final BufferedImage pivotImage = ImageIO.read(new BufferedInputStream(getClass().getResourceAsStream("/images/depivot.png")));
 			content.add(new JPanel() {
 				private static final long serialVersionUID = 0x20131213;
-	
+
 				@Override
 	            protected void paintComponent(Graphics g) {
 	                super.paintComponent(g);
 	                g.drawImage(pivotImage, (getWidth()-pivotImage.getWidth())/2, (getHeight()-pivotImage.getHeight())/2, this);
 	            	}
-	
+
 	            @Override
 	            public Dimension getPreferredSize() {
 	                return new Dimension(pivotImage.getWidth(), pivotImage.getHeight());
@@ -101,7 +100,7 @@ public class DETaskNewFileFromReversePivoting extends ConfigurableTask {
 				dataColumnList.add(mSourceTableModel.getColumnTitle(column));
 		String[] dataItemList = dataColumnList.toArray(new String[0]);
 		Arrays.sort(dataItemList, itemComparator);
-		mDataColumns = new JList(dataItemList);
+		mDataColumns = new JList<>(dataItemList);
 		JScrollPane scrollPane3 = new JScrollPane(mDataColumns);
 		scrollPane3.setPreferredSize(new Dimension(200,200));
 		content.add(scrollPane3, "3,3,3,8");
@@ -159,8 +158,8 @@ public class DETaskNewFileFromReversePivoting extends ConfigurableTask {
 		if (dataColumnNames != null)
 			p.setProperty(PROPERTY_DATA_COLUMNS, dataColumnNames);
 
-		p.setProperty(PROPERTY_GROUP_COLUMN_NAME, mTextFieldGroupColumnName.getText().length() == 0 ? "Kind" : mTextFieldGroupColumnName.getText());
-		p.setProperty(PROPERTY_DATA_COLUMN_NAME, mTextFieldDataColumnName.getText().length() == 0 ? "Value" : mTextFieldDataColumnName.getText());
+		p.setProperty(PROPERTY_GROUP_COLUMN_NAME, mTextFieldGroupColumnName.getText().isEmpty() ? "Kind" : mTextFieldGroupColumnName.getText());
+		p.setProperty(PROPERTY_DATA_COLUMN_NAME, mTextFieldDataColumnName.getText().isEmpty() ? "Value" : mTextFieldDataColumnName.getText());
 
 		return p;
 		}
@@ -178,7 +177,7 @@ public class DETaskNewFileFromReversePivoting extends ConfigurableTask {
 		for (int column=0; column<mSourceTableModel.getTotalColumnCount(); column++) {
 			if (mSourceTableModel.getColumnSpecialType(column) == null
 			 && mSourceTableModel.isColumnTypeDouble(column)) {
-				if (columns.length() != 0)
+				if (!columns.isEmpty())
 					columns.append('\t');
 				columns.append(mSourceTableModel.getColumnTitle(column));
 				}
@@ -260,7 +259,7 @@ public class DETaskNewFileFromReversePivoting extends ConfigurableTask {
         		}
         	}
 
-        mTargetFrame = mApplication.getEmptyFrame("Reverse-Pivoting of "+mSourceFrame.getTitle());
+        mTargetFrame = getEmptyFrame("Reverse-Pivoting of "+mSourceFrame.getTitle());
         CompoundTableModel targetTableModel = mTargetFrame.getTableModel();
         targetTableModel.initializeTable(rowList.size(), newColumnCount);
 
@@ -312,11 +311,6 @@ public class DETaskNewFileFromReversePivoting extends ConfigurableTask {
 	private void addDetailReferences(String[][] detailRef, int row, int column, ArrayList<DetailInfo> detailList) {
 		if (detailRef != null)
 			detailList.add(new DetailInfo(row, column, detailRef));
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 
 	private class DetailInfo {

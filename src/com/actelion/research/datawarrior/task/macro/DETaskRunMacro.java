@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -55,7 +55,7 @@ public class DETaskRunMacro extends ConfigurableTask implements GenericTaskRunMa
 	public boolean isConfigurable() {
 		@SuppressWarnings("unchecked")
 		ArrayList<DEMacro> macroList = (ArrayList<DEMacro>)mParentFrame.getTableModel().getExtensionData(CompoundTableConstants.cExtensionNameMacroList);
-		if (macroList == null || macroList.size() == 0) {
+		if (macroList == null || macroList.isEmpty()) {
 			showErrorMessage("This DataWarrior document does not contain any macros.");
 			return false;
 			}
@@ -177,11 +177,6 @@ public class DETaskRunMacro extends ConfigurableTask implements GenericTaskRunMa
 			if (macro.getName().equals(macroName))
 				return macro;
 
-		return null;
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
 		return null;
 		}
 	}

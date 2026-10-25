@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,7 +19,6 @@
 package com.actelion.research.datawarrior.task.data;
 
 import com.actelion.research.chem.io.CompoundTableConstants;
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.datawarrior.task.jep.*;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -176,7 +175,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask implements Actio
 		mTextAreaFormula.setLineWrap(true);
 		mTextAreaFormula.setWrapStyleWord(true);
 		mDialogPanel.add(mTextAreaFormula, "1,3,7,3");
-		
+
 		JButton buttonAdd = new JButton("Add Variable");
 		buttonAdd.addActionListener(this);
 		mDialogPanel.add(buttonAdd, "3,5");
@@ -308,7 +307,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask implements Actio
 	/**
 	 * JEP evidently assumes that '\' within the formula escape the following character.
 	 * Intentional '\' characters need to be passed as '\\'. Since idcodes may contain
-	 * backslash characters, these need to be duplicated to correctly be treated by JEP. 
+	 * backslash characters, these need to be duplicated to correctly be treated by JEP.
 	 * @param formula
 	 * @return
 	 */
@@ -489,7 +488,7 @@ public class DETaskAddCalculatedValues extends ConfigurableTask implements Actio
 			String[] columnNameList = new String[mTableModel.getTotalColumnCount()];
 			for (int i=0; i<columnNameList.length; i++)
 				columnNameList[i] = mTableModel.getColumnTitle(i);
-	
+
 			String title = (String)JOptionPane.showInputDialog(getParentFrame(),
 								msg,
 								"Select Column",
@@ -803,10 +802,5 @@ public class DETaskAddCalculatedValues extends ConfigurableTask implements Actio
 				return false;	// parseFormula shows error message
 			}
 		return true;
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 	}

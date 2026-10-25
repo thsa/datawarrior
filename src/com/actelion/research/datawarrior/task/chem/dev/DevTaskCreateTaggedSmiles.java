@@ -5,7 +5,6 @@ import com.actelion.research.chem.Molecule;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
-import com.actelion.research.gui.FileHelper;
 import com.actelion.research.table.model.CompoundTableModel;
 
 import java.util.Properties;
@@ -20,11 +19,6 @@ public class DevTaskCreateTaggedSmiles extends AbstractTaskWithoutConfiguration 
     public DevTaskCreateTaggedSmiles(DEFrame parent) {
         super(parent, true);
         mTableModel = parent.getTableModel();
-    }
-
-    @Override
-    public DEFrame getNewFrontFrame() {
-        return null;
     }
 
     @Override

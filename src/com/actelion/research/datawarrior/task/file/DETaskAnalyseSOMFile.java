@@ -4,7 +4,6 @@ import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.table.CompoundTableSOM;
-import com.actelion.research.table.view.JVisualization2D;
 import com.actelion.research.table.view.VisualizationColor;
 import com.actelion.research.table.view.VisualizationPanel2D;
 import com.actelion.research.table.view.chart.ChartType;
@@ -28,7 +27,7 @@ public class DETaskAnalyseSOMFile extends DETaskAbstractOpenFile {
 
 	@Override
 	public DEFrame openFile(File file, Properties configuration) {
-		final DEFrame newFrame = getApplication().getEmptyFrame("SOM Analysis of "+file.getName());
+		final DEFrame newFrame = getEmptyFrame("SOM Analysis of "+file.getName());
 		try {
 			CompoundTableSOM som = DETaskApplySOMFile.readSOMFile(file, newFrame.getTableModel(), getProgressController());
 			som.createSimilarityMap(newFrame.getTableModel());
@@ -41,16 +40,14 @@ public class DETaskAnalyseSOMFile extends DETaskAbstractOpenFile {
 			}
 
 		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-				public void run() {
-                    VisualizationPanel2D vpanel1 = newFrame.getMainFrame().getMainPane().add2DView("SOM", null);
-                    vpanel1.setAxisColumnName(0, CompoundTableSOM.SOM_ANALYSIS_COLUMN_NAME[0]);
-                    vpanel1.setAxisColumnName(1, CompoundTableSOM.SOM_ANALYSIS_COLUMN_NAME[1]);
-                    ((JVisualization2D)vpanel1.getVisualization()).setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
-                    int colorListMode = VisualizationColor.cColorListModeHSBLong;
-                    Color[] colorList = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode, null);
-                    vpanel1.getVisualization().getMarkerColor().setColor(2, colorList, colorListMode);
-	                }
+			SwingUtilities.invokeAndWait((Runnable)() -> {
+				VisualizationPanel2D vpanel1 = newFrame.getMainFrame().getMainPane().add2DView("SOM", null);
+				vpanel1.setAxisColumnName(0, CompoundTableSOM.SOM_ANALYSIS_COLUMN_NAME[0]);
+				vpanel1.setAxisColumnName(1, CompoundTableSOM.SOM_ANALYSIS_COLUMN_NAME[1]);
+				vpanel1.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
+				int colorListMode = VisualizationColor.cColorListModeHSBLong;
+				Color[] colorList = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode, null);
+				vpanel1.getVisualization().getMarkerColor().setColor(2, colorList, colorListMode);
 				} );
 			}
 		catch (Exception ie) {}

@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -36,19 +36,18 @@ public abstract class DETaskAbstractOpenFile extends ConfigurableTask implements
 	protected static final String PROPERTY_FILENAME = "fileName";
 	protected static final String ASK_FOR_FILE = "#ask#";
 
-	private DataWarrior		mApplication;
+	private final DataWarrior mApplication;
 	private JFilePathLabel	mFilePathLabel;
 	private JButton			mButtonEdit;
 	private JCheckBox		mCheckBoxChooseDuringMacro;
-	private int				mAllowedFileTypes;
-	private String			mDialogTitle;
-	private String			mPredefinedFilePath;
-	private DEFrame			mNewFrame;
+	private final int		mAllowedFileTypes;
+	private final String	mDialogTitle;
+	private final String	mPredefinedFilePath;
 	private volatile File	mFile;
 
 	/**
 	 * Creates an open-file task which only shows a configuration dialog, if the task
-	 * is not invoked interactively. Otherwise a file chooser is shown to directly select
+	 * is not invoked interactively. Otherwise, a file chooser is shown to directly select
 	 * the file to be opened.
 	 * @param application
 	 * @param dialogTitle
@@ -116,11 +115,6 @@ public abstract class DETaskAbstractOpenFile extends ConfigurableTask implements
 		}
 
 	@Override
-	public DEFrame getNewFrontFrame() {
-		return mNewFrame;
-		}
-
-	@Override
 	public JPanel createDialogContent() {
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, gap},
@@ -147,7 +141,7 @@ public abstract class DETaskAbstractOpenFile extends ConfigurableTask implements
 		JPanel moreOptions = createInnerDialogContent();
 		if (moreOptions != null)
 			content.add(moreOptions, "1,5,5,5");
-		
+
 		return content;
 		}
 
@@ -315,7 +309,7 @@ public abstract class DETaskAbstractOpenFile extends ConfigurableTask implements
 				}
 			}
 
-		mNewFrame = openFile(file, configuration);
+		openFile(file, configuration);
 		}
 
 	/**

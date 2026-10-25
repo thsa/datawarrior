@@ -18,7 +18,6 @@
 
 package com.actelion.research.datawarrior.task;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
@@ -245,11 +244,6 @@ public abstract class AbstractSingleColumnTask extends ConfigurableTask implemen
 			return NO_COLUMN;
 
 		return mTableModel.findColumn(name);
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 	}
 

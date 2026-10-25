@@ -76,7 +76,6 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 
 	private final DEFrame mSourceFrame;
     private DEFrame mTargetFrame;
-	private final DataWarrior mApplication;
 	private JComboBox<String> mComboBoxDatabase;
 	private JTextArea mTextAreaSQL;
 	private JTextField mTextFieldConnectString;
@@ -94,10 +93,9 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		sKnownDatabaseMap.put(spec[0], new DatabaseSpec(spec, connector));
 		}
 
-	public DETaskSQLQuery(DEFrame owner, DataWarrior application) {
+	public DETaskSQLQuery(DEFrame owner) {
 		super(owner, true);
 		mSourceFrame = owner;
-		mApplication = application;
 		}
 
 	@Override
@@ -381,7 +379,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
-		
+
 		mTextAreaSQL = new JTextArea(6, 64);
 		mTextAreaSQL.setLineWrap(true);
 		mTextAreaSQL.setWrapStyleWord(true);
@@ -538,7 +536,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 			columnName = new String[metaData.getColumnCount()];
 			for (int column=0; column<metaData.getColumnCount(); column++)
 				columnName[column] = metaData.getColumnName(column+1);
-	
+
 			while (rset.next()) {
 				byte[][] result = new byte[metaData.getColumnCount()][];
 				for (int column=0; column<metaData.getColumnCount(); column++) {
@@ -558,7 +556,7 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 		int oldColumnCount = columnName.length;
 		columnName = handleSmiles(columnName, resultList);
 
-		mTargetFrame = mApplication.getEmptyFrame("Custom SQL Result");
+		mTargetFrame = getEmptyFrame("Custom SQL Result");
 		mTargetFrame.getTableModel().initializeTable(resultList.size(), columnName.length);
 
 		for (int column=0; column<columnName.length; column++)
@@ -619,11 +617,6 @@ public class DETaskSQLQuery extends ConfigurableTask implements ItemListener {
 				}
 			}
 		return sql;
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 
 	private String[] handleSmiles(String[] columnName, ArrayList<byte[][]> resultList) {

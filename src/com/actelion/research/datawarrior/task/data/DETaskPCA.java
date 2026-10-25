@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -52,13 +52,14 @@ public class DETaskPCA extends ConfigurableTask {
 	private static final String PROPERTY_CREATE_VIEWS = "createViews";
 	private static final String PROPERTY_NEW_EIGEN_VALUE_WINDOW = "newEigenValueWindow";
 
-    private DEFrame				mParentFrame,mTargetFrame;
-	private CompoundTableModel  mTableModel;
-	private JComboBox			mComboBoxNoOfComponents;
+    private final DEFrame		mParentFrame;
+	private DEFrame				mTargetFrame;
+	private final CompoundTableModel  mTableModel;
+	private JComboBox<String>	mComboBoxNoOfComponents;
 	private JCheckBox			mCheckBoxCreateViews,mCheckBoxNewEigenValueWindow;
-	private JList				mListColumns;
+	private JList<String>		mListColumns;
 	private JTextArea			mTextArea;
-	private boolean				mIsInteractive;
+	private final boolean		mIsInteractive;
 	private int					mFullDataRowCount;
 	private int[]				mFullDataRow;
 
@@ -67,11 +68,6 @@ public class DETaskPCA extends ConfigurableTask {
 		mParentFrame = parent;
 		mIsInteractive = isInteractive;
 		mTableModel = parent.getTableModel();
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 
 	@Override
@@ -145,7 +141,7 @@ public class DETaskPCA extends ConfigurableTask {
 
 		JLabel parameterLabel = new JLabel("Used parameters:");
 		parameterLabel.setVerticalAlignment(SwingConstants.TOP);
-		
+
 		JScrollPane scrollPane = null;
 		if (mIsInteractive) {
 			mListColumns = new JList(columnNameList);
@@ -232,20 +228,20 @@ public class DETaskPCA extends ConfigurableTask {
     	if (isLive) {
 	    	String[] columnName = columnList.split("\\t");
 	    	int[] column = new int[columnName.length];
-	
+
 	    	for (int i=0; i<columnName.length; i++) {
 				column[i] = mTableModel.findColumn(columnName[i]);
 				if (column[i] == -1) {
 		            showErrorMessage("Column '"+columnName+"' not found.");
 		            return false;
 					}
-	
+
 				if (mTableModel.isDescriptorColumn(column[i])) {
 		            if (!mTableModel.isDescriptorAvailable(column[i])) {
 	                    showErrorMessage("Descriptor calculation has not finished yet: '"+mTableModel.getColumnTitle(column[i])+"'.");
 	                    return false;
 		                }
-	
+
 					descriptorCount++;
 					}
 				else {
@@ -253,7 +249,7 @@ public class DETaskPCA extends ConfigurableTask {
 						showErrorMessage("Parameter '"+columnName+"' is not a complete numerical column with varying values.");
 						return false;
 						}
-	
+
 					parameterCount++;
 					}
 				}
@@ -378,7 +374,7 @@ public class DETaskPCA extends ConfigurableTask {
 							}
 						}
 					}
-	
+
 				varyingKey[fp] = new int[varyingKeyCount];
 				int index = 0;
 				for (int i=0; i<isVarying.length; i++)
@@ -405,7 +401,7 @@ public class DETaskPCA extends ConfigurableTask {
 			}
 		if (!threadMustDie())
 			for (int i=0; i<regularCount; i++)
-				meanParameter[i] /= (double)mFullDataRowCount;
+				meanParameter[i] /= mFullDataRowCount;
 
 		startProgress("Calculating variance...", 0, mFullDataRowCount);
 		double[] variance = new double[regularCount];
@@ -505,85 +501,75 @@ public class DETaskPCA extends ConfigurableTask {
 						: findBestCorrelatingColumn(regularColumn, eigenVectorsLeft, 3);
 
 				final int dimensions = pcaCount;
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						DEMainPane mainPane = mParentFrame.getMainFrame().getMainPane();
-	                    VisualizationPanel2D vpanel1 = mainPane.add2DView("2D-PCA", null);
-	                    vpanel1.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
-	                    vpanel1.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn+1));
-	                    vpanel1.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
-	                    int colorListMode = VisualizationColor.cColorListModeHSBLong;
-	                    Color[] colorList = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode, null);
-	                    vpanel1.getVisualization().getMarkerColor().setColor(bestCorrelatingColumn2D, colorList, colorListMode);
+				SwingUtilities.invokeLater(() -> {
+					DEMainPane mainPane = mParentFrame.getMainFrame().getMainPane();
+					VisualizationPanel2D vpanel1 = mainPane.add2DView("2D-PCA", null);
+					vpanel1.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
+					vpanel1.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn+1));
+					vpanel1.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
+					int colorListMode = VisualizationColor.cColorListModeHSBLong;
+					Color[] colorList = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode, null);
+					vpanel1.getVisualization().getMarkerColor().setColor(bestCorrelatingColumn2D, colorList, colorListMode);
 
-	                    if (dimensions >= 3) {
-	                    	String title = mainPane.getDockable(vpanel1).getTitle();
-		                    VisualizationPanel3D vpanel2 = mainPane.add3DView("3D-PCA", title+"\tright");
-		                    vpanel2.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
-		                    vpanel2.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn+1));
-		                    vpanel2.setAxisColumnName(2, mTableModel.getColumnTitle(firstNewColumn+2));
-		                    vpanel2.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
-		                    vpanel2.getVisualization().getMarkerColor().setColor(bestCorrelatingColumn3D, colorList, colorListMode);
-	                    	}
+					if (dimensions >= 3) {
+						String title = mainPane.getDockable(vpanel1).getTitle();
+						VisualizationPanel3D vpanel2 = mainPane.add3DView("3D-PCA", title+"\tright");
+						vpanel2.setAxisColumnName(0, mTableModel.getColumnTitle(firstNewColumn));
+						vpanel2.setAxisColumnName(1, mTableModel.getColumnTitle(firstNewColumn+1));
+						vpanel2.setAxisColumnName(2, mTableModel.getColumnTitle(firstNewColumn+2));
+						vpanel2.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
+						vpanel2.getVisualization().getMarkerColor().setColor(bestCorrelatingColumn3D, colorList, colorListMode);
 						}
-					} );
+					});
 				}
 			}
-
-		mTargetFrame = null;
 
 		if (!threadMustDie() && configuration.getProperty(PROPERTY_NEW_EIGEN_VALUE_WINDOW, "false").equals("true")) {
 			final double[][] eigenValues = eigenVectorsLeft;
 			final int _pcaCount = pcaCount;
 			final int _paramCount = regularCount;
-			mTargetFrame = mParentFrame.getApplication().getEmptyFrame("Eigenvalues of " + mParentFrame.getTitle());
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					CompoundTableModel targetTableModel = mTargetFrame.getTableModel();
-					targetTableModel.initializeTable(_paramCount, 1 + _pcaCount);
-					targetTableModel.setColumnName("Variable Name", 0);
-					for (int column = 1; column <= _pcaCount; column++)
-						targetTableModel.setColumnName("pc" + column, column);
+			mTargetFrame = getEmptyFrame("Eigenvalues of " + mParentFrame.getTitle());
+			SwingUtilities.invokeLater(() -> {
+				CompoundTableModel targetTableModel = mTargetFrame.getTableModel();
+				targetTableModel.initializeTable(_paramCount, 1 + _pcaCount);
+				targetTableModel.setColumnName("Variable Name", 0);
+				for (int column = 1; column <= _pcaCount; column++)
+					targetTableModel.setColumnName("pc" + column, column);
 
-					int row = 0;
-					for (int d = 0; d < descriptorColumn.length; d++)
-						for (int i = 0; i < varyingBits[d]; i++)
-							targetTableModel.setTotalValueAt(mTableModel.getColumnTitle(descriptorColumn[d]) + " bit " + i, row++, 0);
-					for (int i = 0; i < regularColumn.length; i++)
-						targetTableModel.setTotalValueAt(mTableModel.getColumnTitle(regularColumn[i]), row++, 0);
+				int row = 0;
+				for (int d = 0; d < descriptorColumn.length; d++)
+					for (int i = 0; i < varyingBits[d]; i++)
+						targetTableModel.setTotalValueAt(mTableModel.getColumnTitle(descriptorColumn[d]) + " bit " + i, row++, 0);
+				for (int i = 0; i < regularColumn.length; i++)
+					targetTableModel.setTotalValueAt(mTableModel.getColumnTitle(regularColumn[i]), row++, 0);
 
-					for (row = 0; row < _paramCount; row++)
-						for (int i = 0; i < _pcaCount; i++)
-							targetTableModel.setTotalValueAt(DoubleFormat.toString(eigenValues[row][i], 8), row, i + 1);
+				for (row = 0; row < _paramCount; row++)
+					for (int i = 0; i < _pcaCount; i++)
+						targetTableModel.setTotalValueAt(DoubleFormat.toString(eigenValues[row][i], 8), row, i + 1);
 
-					targetTableModel.finalizeTable(CompoundTableEvent.cSpecifierNoRuntimeProperties, getProgressController());
+				targetTableModel.finalizeTable(CompoundTableEvent.cSpecifierDefaultFilters, getProgressController());
 
-//					SwingUtilities.invokeLater(new Runnable() {
-//						public void run() {
-							DEMainPane mainPane = mTargetFrame.getMainFrame().getMainPane();
-							VisualizationPanel2D vpanel1 = mainPane.add2DView("Eigenvalues 2D", "Table\tbottom");
-							vpanel1.setAxisColumnName(0, targetTableModel.getColumnTitle(1));
-							vpanel1.setAxisColumnName(1, targetTableModel.getColumnTitle(2));
-							vpanel1.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
-							vpanel1.getVisualization().addMarkerLabel(MarkerLabelConstants.cTopRight, 0);
-							vpanel1.getVisualization().setMarkerLabelSize(2f, false);
-							vpanel1.getVisualization().getMarkerColor().setDefaultDataColor(Color.BLUE);
+				DEMainPane mainPane = mTargetFrame.getMainFrame().getMainPane();
+				VisualizationPanel2D vpanel1 = mainPane.add2DView("Eigenvalues 2D", "Table\tbottom");
+				vpanel1.setAxisColumnName(0, targetTableModel.getColumnTitle(1));
+				vpanel1.setAxisColumnName(1, targetTableModel.getColumnTitle(2));
+				vpanel1.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
+				vpanel1.getVisualization().addMarkerLabel(MarkerLabelConstants.cTopRight, 0);
+				vpanel1.getVisualization().setMarkerLabelSize(2f, false);
+				vpanel1.getVisualization().getMarkerColor().setDefaultDataColor(Color.BLUE);
 
-							if (_pcaCount >= 3) {
-								String title = mainPane.getDockable(vpanel1).getTitle();
-								VisualizationPanel3D vpanel2 = mainPane.add3DView("Eigenvalues 3D", title+"\tright");
-								vpanel2.setAxisColumnName(0, targetTableModel.getColumnTitle(1));
-								vpanel2.setAxisColumnName(1, targetTableModel.getColumnTitle(2));
-								vpanel2.setAxisColumnName(2, targetTableModel.getColumnTitle(3));
-								vpanel2.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
-								vpanel1.getVisualization().addMarkerLabel(MarkerLabelConstants.cTopRight, 0);
-								vpanel2.getVisualization().setMarkerLabelSize(2f, false);
-								vpanel2.getVisualization().getMarkerColor().setDefaultDataColor(Color.BLUE);
-								}
-//							}
-//						} );
+				if (_pcaCount >= 3) {
+					String title = mainPane.getDockable(vpanel1).getTitle();
+					VisualizationPanel3D vpanel2 = mainPane.add3DView("Eigenvalues 3D", title+"\tright");
+					vpanel2.setAxisColumnName(0, targetTableModel.getColumnTitle(1));
+					vpanel2.setAxisColumnName(1, targetTableModel.getColumnTitle(2));
+					vpanel2.setAxisColumnName(2, targetTableModel.getColumnTitle(3));
+					vpanel2.getVisualization().setPreferredChartType(ChartType.cTypeScatterPlot, -1, -1);
+					vpanel1.getVisualization().addMarkerLabel(MarkerLabelConstants.cTopRight, 0);
+					vpanel2.getVisualization().setMarkerLabelSize(2f, false);
+					vpanel2.getVisualization().getMarkerColor().setDefaultDataColor(Color.BLUE);
 					}
-				} );
+				});
 			}
 
 		if (!threadMustDie()) {
@@ -597,8 +583,18 @@ public class DETaskPCA extends ConfigurableTask {
 			for (int i=0; i<maxIndex; i++)
 				sb.append("Explained variance percentage of PC"+(i+1)+": "+((double)((int)(100000*singularValue[i]/sum))/1000)+"<BR>");
 
-			// we need to wait until dialog is closed before continueing and moving target frame to front
-			try { SwingUtilities.invokeAndWait(new PCADetailDialog(sb.toString())); } catch (Exception ie) {}
+			DEFrame parent = mTargetFrame != null ? mTargetFrame : mParentFrame;
+
+			SwingUtilities.invokeLater(() -> {
+				JEditorPane textArea = new JEditorPane();
+				textArea.setEditorKit(new HTMLEditorKit());
+				textArea.setEditable(false);
+				textArea.setBorder(BorderFactory.createLineBorder(Color.gray));
+				textArea.setText(sb.toString());
+				JScrollPane sp = new JScrollPane(textArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+				sp.setPreferredSize(new Dimension(520, 200));
+				JOptionPane.showMessageDialog(parent, sp, "Principal Component Analysis", JOptionPane.INFORMATION_MESSAGE);
+				} );
 			}
 		}
 
@@ -660,25 +656,6 @@ public class DETaskPCA extends ConfigurableTask {
 		for (int i=0; i<regularColumn.length; i++) {
 			int column = regularColumn[i];
 			rowParameter[paramIndex++] = mTableModel.getTotalDoubleAt(row, column);
-			}
-		}
-
-	private class PCADetailDialog implements Runnable {
-		private String mMessage;
-		public PCADetailDialog(String message) {
-			mMessage = message;
-			}
-
-		public void run() {
-			JEditorPane textArea = new JEditorPane();
-			textArea.setEditorKit(new HTMLEditorKit());
-			textArea.setEditable(false);
-			textArea.setBorder(BorderFactory.createLineBorder(Color.gray));
-			textArea.setText(mMessage);
-			JScrollPane sp = new JScrollPane(textArea, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-			sp.setPreferredSize(new Dimension(400, 200));
-
-			JOptionPane.showMessageDialog(getParentFrame(), sp, "Principal Component Analysis", JOptionPane.INFORMATION_MESSAGE);
 			}
 		}
 	}

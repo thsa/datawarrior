@@ -20,7 +20,6 @@ package com.actelion.research.datawarrior.task.db;
 
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DERuntimeProperties;
-import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -74,20 +73,16 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 										  FileHelper.cFileTypeSDGZ,
 										  FileHelper.cFileTypeSDZIP };
 
-	private final DataWarrior mApplication;
-	private DEFrame mTargetFrame;
 	private JTextArea mTextAreaURL;
 	private JComboBox<String> mComboBoxFormat;
 	private String mURL,mFormat,mTemplate,mWindowName;
 
-	public DETaskRetrieveDataFromURL(Frame parent, DataWarrior application) {
+	public DETaskRetrieveDataFromURL(Frame parent) {
 		super(parent, true);
-		mApplication = application;
 	}
 
-	public DETaskRetrieveDataFromURL(Frame parent, DataWarrior application, String url, String format, String template, String windowName) {
+	public DETaskRetrieveDataFromURL(Frame parent, String url, String format, String template, String windowName) {
 		super(parent, true);
-		mApplication = application;
 		mURL = url;
 		mFormat = format;
 		mTemplate = template;
@@ -171,11 +166,6 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 	}
 
 	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
-	}
-
-	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String url = configuration.getProperty(PROPERTY_URL, "");
 		if (url.isEmpty()) {
@@ -195,8 +185,6 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 	@Override
 	public void runTask(Properties configuration) {
 		try {
-			startProgress("Retrieving Data From URL...", 0, 0);
-
 			URLConnection con = new URI(configuration.getProperty(PROPERTY_URL)).toURL().openConnection();
 			con.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)");
 			con.setRequestProperty("Content-Type", "text/plain");
@@ -204,11 +192,12 @@ public class DETaskRetrieveDataFromURL extends ConfigurableTask {
 			InputStream is = con.getInputStream();
 			if (is != null) {
 				String title = configuration.getProperty(PROPERTY_WINDOW_NAME, "Data From URL");
-				mTargetFrame = mApplication.getEmptyFrame(title);
-				CompoundTableLoader loader = new CompoundTableLoader(mTargetFrame, mTargetFrame.getTableModel(), this);
+				DEFrame targetFrame = getEmptyFrame(title);
+				startProgress("Retrieving Data From URL...", 0, 0);
+				CompoundTableLoader loader = new CompoundTableLoader(targetFrame, targetFrame.getTableModel(), this);
 				DERuntimeProperties rtp = "none".equals(configuration.getProperty(PROPERTY_TEMPLATE)) ?
-						DERuntimeProperties.getTableOnlyProperties(mTargetFrame.getMainFrame())
-						: new DERuntimeProperties(mTargetFrame.getMainFrame());
+						DERuntimeProperties.getTableOnlyProperties(targetFrame.getMainFrame())
+						: new DERuntimeProperties(targetFrame.getMainFrame());
 				int format = FORMAT[findListIndex(configuration.getProperty(PROPERTY_FORMAT, ""), FORMAT_CODE, -1)];
 				int action = CompoundTableLoader.READ_DATA | CompoundTableLoader.REPLACE_DATA;
 				if (format == FileHelper.cFileTypeSDGZ) {

@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -299,7 +299,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 				}
 
 			cbp.setLayout(new TableLayout(size2));
-	
+
 			if (TAB_HEADER[tab] != null)
 				for (int i=0; i<TAB_HEADER[tab].length; i++)
 					if (TAB_HEADER[tab][i] != null)
@@ -320,7 +320,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 						if (!isInteractive())
 							mPropertyGUI[property.type].getComboBox().setEditable(true);
 						}
-		
+
 					row += 2;
 					}
 				}
@@ -460,11 +460,6 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 			}
 
 		return true;
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 
 	@Override
@@ -1537,7 +1532,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 		public final String dependentColumnFilter;	// if not null, e.g. 'ic50', serves as substring to prioritize numerical columns for selection, lower case!!!
 		public final int predictorFlags,tab,type;
 		public DEBackgroundColor backgroundColor;
-	
+
 		/**
 		 * @param columnTitle
 		 * @param description

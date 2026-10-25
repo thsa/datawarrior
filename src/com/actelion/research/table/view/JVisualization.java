@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -632,7 +632,7 @@ public abstract class JVisualization extends JComponent
 
 				VisualizationNode[] rootShell = new VisualizationNode[1];
 				rootShell[0] = createVisualizationNode(mActivePoint, null, 1.0f);
-	
+
 				ArrayList<VisualizationNode[]> shellList = new ArrayList<VisualizationNode[]>();
 				shellList.add(rootShell);
 
@@ -752,13 +752,13 @@ public abstract class JVisualization extends JComponent
 								}
 							}
 						}
-	
+
 					if (vpList.isEmpty())
 						break;
-	
+
 					shellList.add(vpList.toArray(new VisualizationNode[0]));
 					}
-	
+
 				mTreeNodeList = shellList.toArray(new VisualizationNode[0][]);
 				}
 			}
@@ -1293,7 +1293,7 @@ public abstract class JVisualization extends JComponent
 			//	1. colorMin is explicitly set; max is real max, but lower than min
 			// or 2. colorMax is explicitly set; min is real min, but larger than max
 			// first case is OK, second needs adaption below to be handled as indented
-			if (min >= max)  
+			if (min >= max)
 				if (!Float.isNaN(visualizationColor.getColorMax()))
 					min = Float.MIN_VALUE;
 
@@ -1482,7 +1482,6 @@ public abstract class JVisualization extends JComponent
 
 	   	mTableModel.createSimilarityListSMP(null, descriptor, idcode, descriptorColumn, progressDialog, false);
 
-   		progressDialog.setVisible(true);
    		similarity = mTableModel.getSimilarityListSMP(false);
 
 		return similarity;
@@ -1932,8 +1931,8 @@ public abstract class JVisualization extends JComponent
 	}
 
 	/** Determines whether mean and/or median values are shown in a current box or whisker plot.
-	 *  Returns false if the current plot is neither box nor whisker plot. 
-	 * @return false if the current box or whisker plot shows 
+	 *  Returns false if the current plot is neither box nor whisker plot.
+	 * @return false if the current box or whisker plot shows
 	 */
 	public boolean isShowMeanAndMedianValues() {
 		return mChartType.supportsShowMeanAndMedian()
@@ -2018,7 +2017,7 @@ public abstract class JVisualization extends JComponent
 	/** Determines whether p-values are shown in a current box or whisker plot.
 	 *  Returns false if the current plot is neither box nor whisker plot
 	 *  or if no proper p-value column is assigned.
-	 * @return false if the current box or whisker plot shows 
+	 * @return false if the current box or whisker plot shows
 	 */
 	public boolean isShowPValue() {
 		return mChartType.supportsPValues()
@@ -2042,7 +2041,7 @@ public abstract class JVisualization extends JComponent
 	/** Determines whether fold-change values are shown in a current box or whisker plot.
 	 *  Returns false if the current plot is neither box nor whisker plot
 	 *  or if no proper p-value column is assigned.
-	 * @return false if the current box or whisker plot shows 
+	 * @return false if the current box or whisker plot shows
 	 */
 	public boolean isShowFoldChange() {
 		return mChartType.supportsPValues()
@@ -2663,7 +2662,7 @@ public abstract class JVisualization extends JComponent
 					writer.append("\tp-Value");
 				}
 			writer.newLine();
-		
+
 			int[] categoryIndex = new int[6];
 			while (categoryIndex[0] < categoryList[0].length) {
 				int columnIndex = 0;
@@ -2692,7 +2691,7 @@ public abstract class JVisualization extends JComponent
 							writer.append(" (ref)");
 						writer.append("\t");
 						}
-			
+
 					if (!mChartType.supportsOutliers())
 						writer.append(""+mChartInfo.getPointsInCategory(hv, cat));
 
@@ -2739,7 +2738,7 @@ public abstract class JVisualization extends JComponent
 						}
 					writer.newLine();
 					}
-	
+
 				// update category indices for next row
 				for (int i=categoryColumnCount-1; i>=0; i--) {
 					if (++categoryIndex[i] < categoryList[i].length || i == 0)
@@ -3331,7 +3330,7 @@ public abstract class JVisualization extends JComponent
 			updateShapeIndices();
 			}
 		}
-	
+
 	private void updateShapeIndices() {
 		if (mMarkerShapeColumn == cColumnUnassigned)
 			for (int i=0; i<mDataPoints; i++)
@@ -3499,7 +3498,7 @@ public abstract class JVisualization extends JComponent
 			cat -= individualIndex[i] * mCombinedCategoryCount[i-1];
 			}
 		individualIndex[0] = cat;
-		
+
 		if (mCaseSeparationCategoryCount != 1 && categoryColumn == mCaseSeparationColumn) {
 			individualIndex[0] = categoryIndex;
 			}
@@ -4105,7 +4104,7 @@ public abstract class JVisualization extends JComponent
 						mSplittingColumn[1] = cColumnUnassigned;
 						}
 					}
-				
+
 				invalidateSplittingIndices();
 				}
 			for (int i=0; i<mLabelColumn.length; i++) {

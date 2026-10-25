@@ -195,11 +195,6 @@ public class DETaskConfigureCard extends DETaskAbstractSetViewOptions {
 //
 //    }
 
-//    @Override
-//    public DEFrame getNewFrontFrame() {
-//        return null;
-//    }
-
 
 //----------------------Implementation Card Layout Logic --------------------------------------------------------------
                         // This is needed both by the GUI and by the Task without the GUI

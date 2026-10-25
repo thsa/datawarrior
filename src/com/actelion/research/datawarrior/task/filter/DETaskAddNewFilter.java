@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,38 +18,25 @@
 
 package com.actelion.research.datawarrior.task.filter;
 
+import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.io.CompoundTableConstants;
+import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.DEPruningPanel;
+import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
+import com.actelion.research.table.RuntimePropertyEvent;
 import com.actelion.research.table.filter.*;
+import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Frame;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-
-import com.actelion.research.chem.descriptor.DescriptorConstants;
-import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.DEPruningPanel;
-import com.actelion.research.datawarrior.task.ConfigurableTask;
-import com.actelion.research.table.model.CompoundTableModel;
-import com.actelion.research.table.RuntimePropertyEvent;
-import com.actelion.research.table.filter.JRangeFilterPanel;
 
 /**
  * Title:
@@ -133,7 +120,7 @@ public class DETaskAddNewFilter extends ConfigurableTask implements ActionListen
      */
     public DETaskAddNewFilter(Frame parent, DEPruningPanel pruningPanel, int column, int filterType, String reactionPart) {
 		super(parent, false);
-    	
+
 		mPruningPanel = pruningPanel;
 		mTableModel = pruningPanel.getTableModel();
 		mFilterType = filterType;
@@ -202,7 +189,7 @@ public class DETaskAddNewFilter extends ConfigurableTask implements ActionListen
                 }
             else {
    				addItem(itemList, i, JFilterPanel.FILTER_TYPE_TEXT, allowDuplicates);
-    
+
     		    if (mTableModel.isColumnTypeDouble(i)
                  && mTableModel.hasNumericalVariance(i))
     				addItem(itemList, i, JFilterPanel.FILTER_TYPE_DOUBLE, allowDuplicates);
@@ -331,11 +318,11 @@ public class DETaskAddNewFilter extends ConfigurableTask implements ActionListen
 	        mFilterList = new JList();
 	        mFilterList.setCellRenderer(new DefaultListCellRenderer() {
 	            private static final long serialVersionUID = 0x20110526;
-	
+
 	            public Component getListCellRendererComponent(JList list,
 	            	      Object value, int index, boolean isSelected, boolean cellHasFocus) {
 	            	Component renderer = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-	
+
 	            	if (((String)value).endsWith(" "))
 	            		renderer.setForeground(Color.RED);
 	            	return renderer;
@@ -343,7 +330,7 @@ public class DETaskAddNewFilter extends ConfigurableTask implements ActionListen
 	        	});
 	        scrollPane = new JScrollPane(mFilterList);
 	        scrollPane.setPreferredSize(new Dimension(HiDPIHelper.scale(320) ,HiDPIHelper.scale(240)));
-	
+
 			mCheckBox = new JCheckBox("Show duplicate filters");
 			mCheckBox.addActionListener(this);
 			}
@@ -377,14 +364,14 @@ public class DETaskAddNewFilter extends ConfigurableTask implements ActionListen
         	    configuration.setProperty(PROPERTY_SHOW_DUPLICATES, "true");
 
         	List<String> selectedFilters = mFilterList.getSelectedValuesList();
-	
+
 		    configuration.setProperty(PROPERTY_FILTER_COUNT, ""+selectedFilters.size());
-	
+
 			for (int filter=0; filter<selectedFilters.size(); filter++) {
 				String selected = selectedFilters.get(filter).trim();	// get rid of color indication
-	
+
 				int type = getFilterTypeFromName(selected);
-	
+
 				String columnName = null;
 				String reactionPart = "";
 				if (FILTER_NEEDS_COLUMN[type]) {
@@ -435,7 +422,7 @@ public class DETaskAddNewFilter extends ConfigurableTask implements ActionListen
 			mCheckBox.setSelected("true".equals(configuration.getProperty(PROPERTY_SHOW_DUPLICATES)));
 
 			populateFilterList(mCheckBox.isSelected());
-	
+
 			mFilterList.clearSelection();
 			for (int filter=0; filter<filterCount; filter++) {
 				String filterDef = configuration.getProperty(PROPERTY_FILTER+filter);
@@ -646,7 +633,7 @@ public class DETaskAddNewFilter extends ConfigurableTask implements ActionListen
 		                    mPruningPanel.addCategoryBrowser(mTableModel);
 		                	break;
 							}
-		
+
 						foundCount++;
 						}
 					catch (DEPruningPanel.FilterException fpe) {
@@ -665,10 +652,5 @@ public class DETaskAddNewFilter extends ConfigurableTask implements ActionListen
 	private void ensureDescriptor(int column, String shortName, String reactionPart) {
 		if (!mTableModel.hasDescriptorColumn(column, shortName, reactionPart))
 			mTableModel.addDescriptorColumn(column, shortName, reactionPart);
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 	}

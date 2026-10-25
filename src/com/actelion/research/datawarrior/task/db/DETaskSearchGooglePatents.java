@@ -98,16 +98,14 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 	private static final String[] LITIGATION_TEXT = {"Any", "No known litigation", "Has related litigation" };
 	private static final String[] LITIGATION_CODE = {"ANY", "NO", "YES" };
 
-	private DataWarrior mApplication;
 	private DEFrame mTargetFrame;
 	private JEditableStructureView mStructureView;
-	private JComboBox mComboBoxSearchType,mComboBoxDateType,mComboBoxType,mComboBoxStatus,mComboBoxLitigation;
+	private JComboBox<String> mComboBoxSearchType,mComboBoxDateType,mComboBoxType,mComboBoxStatus,mComboBoxLitigation;
 	private JTextField  mTextFieldKeywords,mTextFieldAssignee,mTextFieldInventor,mTextFieldAfter,mTextFieldBefore;
 	private JCheckBox   mCheckBoxWithConcepts;
 
-	public DETaskSearchGooglePatents(Frame parent, DataWarrior application) {
+	public DETaskSearchGooglePatents(Frame parent) {
 		super(parent, true);
-		mApplication = application;
 	}
 
 	@Override
@@ -130,9 +128,9 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, TableLayout.FILL, gap},
 							{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.FILL, gap, TableLayout.PREFERRED,
-							2*gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED,
-							gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED,
-							gap/2, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
+							2*gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED,
+							gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED,
+							gap>>1, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
@@ -151,7 +149,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 		content.add(mStructureView, "3,1,4,5");
 
 		content.add(new JLabel("Search Type:", JLabel.RIGHT), "1,7");
-		mComboBoxSearchType = new JComboBox(SEARCH_TYPE_TEXT);
+		mComboBoxSearchType = new JComboBox<>(SEARCH_TYPE_TEXT);
 		mComboBoxSearchType.addActionListener(this);
 		content.add(mComboBoxSearchType, "3,7");
 
@@ -169,7 +167,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 
 		content.add(new JLabel("Date:", JLabel.RIGHT), "1,15");
 		JPanel datePanel = new JPanel();
-		mComboBoxDateType = new JComboBox(DATE_TYPE_CODE);
+		mComboBoxDateType = new JComboBox<>(DATE_TYPE_CODE);
 		datePanel.add(mComboBoxDateType, "1,15");
 		mTextFieldAfter = new JTextField(6);
 		mTextFieldBefore = new JTextField(6);
@@ -179,15 +177,15 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 		content.add(datePanel, "3,15,4,15");
 
 		content.add(new JLabel("Type:", JLabel.RIGHT), "1,17");
-		mComboBoxType = new JComboBox(TYPE_TEXT);
+		mComboBoxType = new JComboBox<>(TYPE_TEXT);
 		content.add(mComboBoxType, "3,17");
 
 		content.add(new JLabel("Status:", JLabel.RIGHT), "1,19");
-		mComboBoxStatus = new JComboBox(STATUS_TEXT);
+		mComboBoxStatus = new JComboBox<>(STATUS_TEXT);
 		content.add(mComboBoxStatus, "3,19");
 
 		content.add(new JLabel("Litigation:", JLabel.RIGHT), "1,21");
-		mComboBoxLitigation = new JComboBox(LITIGATION_TEXT);
+		mComboBoxLitigation = new JComboBox<>(LITIGATION_TEXT);
 		content.add(mComboBoxLitigation, "3,21");
 
 		mCheckBoxWithConcepts = new JCheckBox("Include individual concepts/structures (larger file)");
@@ -215,20 +213,20 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 			configuration.setProperty(PROPERTY_SEARCH_TYPE, SEARCH_TYPE_CODE[mComboBoxSearchType.getSelectedIndex()]);
 			}
 
-		if (mTextFieldKeywords.getText().length() != 0)
+		if (!mTextFieldKeywords.getText().isEmpty())
 			configuration.setProperty(PROPERTY_KEYWORDS, mTextFieldKeywords.getText());
-		if (mTextFieldAssignee.getText().length() != 0)
+		if (!mTextFieldAssignee.getText().isEmpty())
 			configuration.setProperty(PROPERTY_ASSIGNEE, mTextFieldAssignee.getText());
-		if (mTextFieldInventor.getText().length() != 0)
+		if (!mTextFieldInventor.getText().isEmpty())
 			configuration.setProperty(PROPERTY_INVENTOR, mTextFieldInventor.getText());
 
 		String after = mTextFieldAfter.getText();
-		if (after.length() != 0)
+		if (!after.isEmpty())
 			configuration.setProperty(PROPERTY_DATE_AFTER, after);
 		String before = mTextFieldBefore.getText();
-		if (before.length() != 0)
+		if (!before.isEmpty())
 			configuration.setProperty(PROPERTY_DATE_BEFORE, before);
-		if (after.length() != 0 || before.length() != 0)
+		if (!after.isEmpty() || !before.isEmpty())
 			configuration.setProperty(PROPERTY_DATE_TYPE, DATE_TYPE_CODE[mComboBoxDateType.getSelectedIndex()]);
 
 		configuration.setProperty(PROPERTY_TYPE, TYPE_CODE[mComboBoxType.getSelectedIndex()]);
@@ -244,7 +242,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 	public void setDialogConfiguration(Properties configuration) {
 		String idcode = configuration.getProperty(PROPERTY_IDCODE, "");
 		String coords = configuration.getProperty(PROPERTY_IDCOORDS, "");
-		if (idcode.length() != 0 && coords.length() != 0) {
+		if (!idcode.isEmpty() && !coords.isEmpty()) {
 			new IDCodeParser(true).parse(mStructureView.getMolecule(), idcode, coords);
 			mStructureView.structureChanged();
 
@@ -273,11 +271,6 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 		}
 
 	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
-		}
-
-	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String idcode = configuration.getProperty(PROPERTY_IDCODE, "");
 		String coords = configuration.getProperty(PROPERTY_IDCOORDS, "");
@@ -285,19 +278,19 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 		String assignee = configuration.getProperty(PROPERTY_ASSIGNEE, "");
 		String inventor = configuration.getProperty(PROPERTY_INVENTOR, "");
 
-		if (idcode.length() == 0
-		 && keywords.length() == 0
-		 && assignee.length() == 0
-		 && inventor.length() == 0) {
+		if (idcode.isEmpty()
+		 && keywords.isEmpty()
+		 && assignee.isEmpty()
+		 && inventor.isEmpty()) {
 			showErrorMessage("No patent search criteria defined.");
 			return false;
 			}
 
 		String after = configuration.getProperty(PROPERTY_DATE_AFTER, "");
-		if (after.length() != 0 && !checkDateFormat(after))
+		if (!after.isEmpty() && !checkDateFormat(after))
 			return false;
 		String before = configuration.getProperty(PROPERTY_DATE_BEFORE, "");
-		if (before.length() != 0 && !checkDateFormat(before))
+		if (!before.isEmpty() && !checkDateFormat(before))
 			return false;
 
 		mTextFieldBefore.setText(configuration.getProperty(PROPERTY_DATE_BEFORE, ""));
@@ -349,13 +342,8 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 		}
 
 	private static String encodeValue(String value) {
-		try {
-			return URLEncoder.encode(value, StandardCharsets.UTF_8.toString()).replace("+", "%20");
-			}
-		catch (UnsupportedEncodingException ex) {
-			throw new RuntimeException(ex.getCause());
-			}
-		}
+		return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
+	}
 
 	@Override
 	public void runTask(Properties configuration) {
@@ -368,7 +356,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 			// structure searches are handled as search terms
 			String idcode = configuration.getProperty(PROPERTY_IDCODE, "");
 			String coords = configuration.getProperty(PROPERTY_IDCOORDS, "");
-			if (idcode.length() != 0 && coords.length() != 0) {
+			if (!idcode.isEmpty() && !coords.isEmpty()) {
 				StereoMolecule mol = new IDCodeParser(true).getCompactMolecule(idcode, coords);
 				String smiles = new IsomericSmilesCreator(mol).getSmiles();
 				int searchType = findListIndex(configuration.getProperty(PROPERTY_SEARCH_TYPE), SEARCH_TYPE_CODE, 0);
@@ -378,13 +366,13 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 				}
 
 			String searchTerms = configuration.getProperty(PROPERTY_KEYWORDS, "");
-			if (searchTerms.length() != 0)
+			if (!searchTerms.isEmpty())
 				for (String keyword:searchTerms.split(","))
 					searchTermList.add(keyword.trim());
 
 			StringBuilder sb = new StringBuilder();
 
-			if (searchTermList.size() != 0) {
+			if (!searchTermList.isEmpty()) {
 				sb.append("q=");
 				sb.append(searchTermList.get(0));
 				for (int i=1; i<searchTermList.size(); i++) {
@@ -394,26 +382,26 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 				}
 
 			String assignee = configuration.getProperty(PROPERTY_ASSIGNEE, "");
-			if (assignee.length() != 0) {
-				if (sb.length() != 0)
+			if (!assignee.isEmpty()) {
+				if (!sb.isEmpty())
 					sb.append("&");
 				sb.append("assignee=");
 				sb.append(assignee);
 				}
 
 			String inventor = configuration.getProperty(PROPERTY_INVENTOR, "");
-			if (inventor.length() != 0) {
-				if (sb.length() != 0)
+			if (!inventor.isEmpty()) {
+				if (!sb.isEmpty())
 					sb.append("&");
 				sb.append("inventor=");
 				sb.append(inventor);
 				}
 
 			String dateType = configuration.getProperty(PROPERTY_INVENTOR, "");
-			if (dateType.length() != 0) {
+			if (!dateType.isEmpty()) {
 				String after = configuration.getProperty(PROPERTY_DATE_AFTER, "");
-				if (after.length() != 0) {
-					if (sb.length() != 0)
+				if (!after.isEmpty()) {
+					if (!sb.isEmpty())
 						sb.append("&");
 					sb.append("after=");
 					sb.append(dateType);
@@ -423,8 +411,8 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 						sb.append("0101");
 					}
 				String before = configuration.getProperty(PROPERTY_DATE_BEFORE, "");
-				if (before.length() != 0) {
-					if (sb.length() != 0)
+				if (!before.isEmpty()) {
+					if (!sb.isEmpty())
 						sb.append("&");
 					sb.append("before=");
 					sb.append(dateType);
@@ -437,7 +425,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 
 			int type = findListIndex(configuration.getProperty(PROPERTY_TYPE), TYPE_CODE, 0);
 			if (type != 0) {
-				if (sb.length() != 0)
+				if (!sb.isEmpty())
 					sb.append("&");
 				sb.append("type=");
 				sb.append(TYPE_CODE[type]);
@@ -445,7 +433,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 
 			int status = findListIndex(configuration.getProperty(PROPERTY_STATUS), STATUS_CODE, 0);
 			if (status != 0) {
-				if (sb.length() != 0)
+				if (!sb.isEmpty())
 					sb.append("&");
 				sb.append("status=");
 				sb.append(STATUS_CODE[status]);
@@ -453,7 +441,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 
 			int litigation = findListIndex(configuration.getProperty(PROPERTY_LITIGATION), LITIGATION_CODE, 0);
 			if (litigation != 0) {
-				if (sb.length() != 0)
+				if (!sb.isEmpty())
 					sb.append("&");
 				sb.append("litigation=");
 				sb.append(LITIGATION_CODE[litigation]);
@@ -470,7 +458,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 			InputStream is = con.getInputStream();
 			if (is != null) {
 				String title = "Google Patent Search Result";
-				mTargetFrame = mApplication.getEmptyFrame(title);
+				mTargetFrame = getEmptyFrame(title);
 				CompoundTableLoader loader = new CompoundTableLoader(mTargetFrame, mTargetFrame.getTableModel(), this);
 				DERuntimeProperties rtp = DERuntimeProperties.getTableOnlyProperties(mTargetFrame.getMainFrame());
 				int format = FileHelper.cFileTypeTextCommaSeparated;
@@ -538,7 +526,7 @@ public class DETaskSearchGooglePatents extends ConfigurableTask implements Actio
 		int urlCount = 0;
 		for (int row=0; row<rowCount; row++) {
 			String value = tableModel.getTotalValueAt(row, column);
-			if (value.length() != 0) {
+			if (!value.isEmpty()) {
 				if (!value.startsWith("http://") && !value.startsWith("https://"))
 					return false;
 				if (++urlCount == 10)

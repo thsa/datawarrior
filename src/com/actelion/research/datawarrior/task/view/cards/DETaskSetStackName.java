@@ -1,7 +1,5 @@
 package com.actelion.research.datawarrior.task.view.cards;
 
-import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.view.card.JCardPane;
@@ -61,11 +59,6 @@ public class DETaskSetStackName extends ConfigurableTask {
         int compound_record_id = Integer.parseInt(configuration.getProperty(PROPERTY_STACK_DEFINING_RECORD_ID) );
         String sn_new = configuration.getProperty(PROPERTY_NEW_STACK_NAME);
         mCardPane.getCardPaneModel().renameStack( compound_record_id , sn_new);
-    }
-
-    @Override
-    public DEFrame getNewFrontFrame() {
-        return null;
     }
 
     @Override

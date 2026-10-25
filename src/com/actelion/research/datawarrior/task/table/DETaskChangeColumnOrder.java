@@ -1,12 +1,11 @@
 package com.actelion.research.datawarrior.task.table;
 
 import com.actelion.research.datawarrior.DEColumnOrder;
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DETable;
 import com.actelion.research.datawarrior.DETableView;
-import com.actelion.research.gui.ScrollPaneAutoScrollerWhenDragging;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.datawarrior.task.view.ListTransferHandler;
+import com.actelion.research.gui.ScrollPaneAutoScrollerWhenDragging;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
@@ -24,12 +23,10 @@ public class DETaskChangeColumnOrder extends ConfigurableTask {
 
 	private static final String PROPERTY_LIST = "list";
 
-	private CompoundTableModel  mTableModel;
-	private DETable             mTable;
-	private JList				mList;
-	private JScrollPane			mScrollPane;
-	private JTextArea			mTextArea;
-	private DefaultListModel	mListModel;
+	private final CompoundTableModel	mTableModel;
+	private final DETable           	mTable;
+	private JTextArea					mTextArea;
+	private DefaultListModel<String>	mListModel;
 
 	/**
 	 * @param parent
@@ -57,23 +54,24 @@ public class DETaskChangeColumnOrder extends ConfigurableTask {
 
 		int scaled80 = HiDPIHelper.scale(80);
 
+		JScrollPane scrollPane;
 		if (isInteractive()) {
-			mListModel = new DefaultListModel();
-			mList = new JList(mListModel);
-			mList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-			mList.setDropMode(DropMode.INSERT);
-			mList.setTransferHandler(new ListTransferHandler());
-			mList.setDragEnabled(true);
-			mList.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, mList.getFont().getSize()));
+			mListModel = new DefaultListModel<>();
+			JList<String> list = new JList<String>(mListModel);
+			list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+			list.setDropMode(DropMode.INSERT);
+			list.setTransferHandler(new ListTransferHandler());
+			list.setDragEnabled(true);
+			list.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, list.getFont().getSize()));
 
-			mScrollPane = new JScrollPane(mList);
+			scrollPane = new JScrollPane(list);
 			int height = Math.max(3*scaled80, Math.min(8*scaled80, (1 + mTableModel.getColumnCount()) * scaled80/4));
-			mScrollPane.setPreferredSize(new Dimension(3*scaled80, height));
+			scrollPane.setPreferredSize(new Dimension(3*scaled80, height));
 
 			// Hack to fix an issue with Swing's auto scrolling when dragging in a scroll pane
-			ScrollPaneAutoScrollerWhenDragging scroller = new ScrollPaneAutoScrollerWhenDragging(mScrollPane, true);
+			ScrollPaneAutoScrollerWhenDragging scroller = new ScrollPaneAutoScrollerWhenDragging(scrollPane, true);
 			try {
-				mList.getDropTarget().addDropTargetListener(new DropTargetAdapter() {
+				list.getDropTarget().addDropTargetListener(new DropTargetAdapter() {
 					@Override
 					public void dragOver(DropTargetDragEvent dtde) {
 						scroller.autoScroll();
@@ -87,11 +85,11 @@ public class DETaskChangeColumnOrder extends ConfigurableTask {
 			}
 		else {
 			mTextArea = new JTextArea();
-			mScrollPane = new JScrollPane(mTextArea);
-			mScrollPane.setPreferredSize(new Dimension(3*scaled80, 3*scaled80));
+			scrollPane = new JScrollPane(mTextArea);
+			scrollPane.setPreferredSize(new Dimension(3*scaled80, 3*scaled80));
 			}
 
-		dialogPanel.add(mScrollPane, "1,3");
+		dialogPanel.add(scrollPane, "1,3");
 
 		return dialogPanel;
 		}
@@ -145,7 +143,7 @@ public class DETaskChangeColumnOrder extends ConfigurableTask {
 				mListModel.addElement(title);
 				}
 			else {
-				if (sb.length() != 0)
+				if (!sb.isEmpty())
 					sb.append('\n');
 				sb.append(title);
 				}
@@ -168,12 +166,7 @@ public class DETaskChangeColumnOrder extends ConfigurableTask {
 	@Override
 	public void runTask(Properties configuration) {
 		String columnList = configuration.getProperty(PROPERTY_LIST, "");
-		if (columnList.length() != 0)
+		if (!columnList.isEmpty())
 			mTable.setColumnOrderString(columnList);
 		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-	}
 }

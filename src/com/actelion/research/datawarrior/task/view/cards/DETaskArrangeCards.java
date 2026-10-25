@@ -74,12 +74,6 @@ public class DETaskArrangeCards extends ConfigurableTask {
         arrange( idx );
     }
 
-    @Override
-    public DEFrame getNewFrontFrame() {
-        return null;
-    }
-
-
     public static final String VALUE_NO_COL_SELECTED = "<none>";
 
     /**

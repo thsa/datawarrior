@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -22,7 +22,6 @@ import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
-import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.table.MarkerLabelDisplayer;
 import com.actelion.research.table.model.CompoundRecord;
@@ -69,10 +68,10 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 
 	public static final String TASK_NAME = "Analyse Activity Cliffs";
 
-	private DataWarrior			mApplication;
-	private DEFrame				mParentFrame,mTargetFrame;
-	private CompoundTableModel	mSourceTableModel;
-	private JComboBox			mComboBoxDescriptorColumn,mComboBoxActivityColumn,mComboBoxIdentifierColumn,mComboBoxGroupByColumn;
+	private final DEFrame		mParentFrame;
+	private DEFrame				mTargetFrame;
+	private final CompoundTableModel	mSourceTableModel;
+	private JComboBox<String>	mComboBoxDescriptorColumn,mComboBoxActivityColumn,mComboBoxIdentifierColumn,mComboBoxGroupByColumn;
 	private JSlider				mSimilaritySlider;
 	private JCheckBox			mCheckBoxSimilarityAutomatic,mCheckBoxNewSimilarityView,mCheckBoxNewDocument;
 	private ExecutorService		mExecutor;
@@ -84,16 +83,10 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 	private AtomicInteger		mSMPRecordIndex,mSMPPairCount,mSMPPairIndex,mSMPMaxSali;
 	private CountDownLatch		mSMPDoneSignal;
 
-	public DETaskAnalyseActivityCliffs(DEFrame parent, DataWarrior application) {
+	public DETaskAnalyseActivityCliffs(DEFrame parent) {
 		super(parent, true);
 		mParentFrame = parent;
 		mSourceTableModel = parent.getTableModel();
-		mApplication = application;
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 
 	@Override
@@ -123,9 +116,9 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
-		
+
 		// create components
-		mComboBoxDescriptorColumn = new JComboBox();
+		mComboBoxDescriptorColumn = new JComboBox<>();
 		for (int column=0; column<mSourceTableModel.getTotalColumnCount(); column++)
 			if (qualifiesAsDescriptorColumn(column))
 				mComboBoxDescriptorColumn.addItem(mSourceTableModel.getColumnTitle(column));
@@ -133,7 +126,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 		content.add(new JLabel("Similarity on:"), "1,1");
 		content.add(mComboBoxDescriptorColumn, "3,1,5,1");
 
-		mComboBoxActivityColumn = new JComboBox();
+		mComboBoxActivityColumn = new JComboBox<>();
 		mComboBoxActivityColumn.addItem(ITEM_SIMILARITY_ONLY);
 		for (int column=0; column<mSourceTableModel.getTotalColumnCount(); column++)
 			if (qualifiesAsActivityColumn(column))
@@ -143,7 +136,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 		content.add(new JLabel("Activity column:"), "1,3");
 		content.add(mComboBoxActivityColumn, "3,3,5,3");
 
-		mComboBoxIdentifierColumn = new JComboBox();
+		mComboBoxIdentifierColumn = new JComboBox<>();
 		for (int column=0; column<mSourceTableModel.getTotalColumnCount(); column++)
 			if (qualifiesAsIdentifierColumn(column))
 				mComboBoxIdentifierColumn.addItem(mSourceTableModel.getColumnTitle(column));
@@ -152,7 +145,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 		content.add(new JLabel("Identifier column:"), "1,5");
 		content.add(mComboBoxIdentifierColumn, "3,5,5,5");
 
-		mComboBoxGroupByColumn = new JComboBox();
+		mComboBoxGroupByColumn = new JComboBox<>();
 		mComboBoxGroupByColumn.addItem(ITEM_NONE);
 		for (int column=0; column<mSourceTableModel.getTotalColumnCount(); column++)
 			if (qualifiesAsGroupByColumn(column))
@@ -233,9 +226,9 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 
 	private JComponent createSimilaritySlider() {
 		Hashtable<Integer,JLabel> labels = new Hashtable<Integer,JLabel>();
-		labels.put(Integer.valueOf(MIN_SIMILARITY), new JLabel(""+MIN_SIMILARITY+"%"));
-		labels.put(Integer.valueOf((100+MIN_SIMILARITY)/2), new JLabel(""+((100+MIN_SIMILARITY)/2)+"%"));
-		labels.put(Integer.valueOf(100), new JLabel("100%"));
+		labels.put(MIN_SIMILARITY, new JLabel(MIN_SIMILARITY+"%"));
+		labels.put((100 + MIN_SIMILARITY) / 2, new JLabel(((100+MIN_SIMILARITY)/2)+"%"));
+		labels.put(100, new JLabel("100%"));
 		mSimilaritySlider = new JSlider(JSlider.HORIZONTAL, MIN_SIMILARITY, 100, DEFAULT_SIMILARITY);
 		mSimilaritySlider.setMinorTickSpacing(1);
 		mSimilaritySlider.setMajorTickSpacing(10);
@@ -251,7 +244,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 	@Override
 	public void setDialogConfiguration(Properties configuration) {
 		String value = configuration.getProperty(PROPERTY_DESCRIPTOR_COLUMN, "");
-		if (value.length() != 0) {
+		if (!value.isEmpty()) {
 			int column = mSourceTableModel.findColumn(value);
 			if (column != -1)
 				mComboBoxDescriptorColumn.setSelectedItem(mSourceTableModel.getColumnTitle(column));
@@ -266,7 +259,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 
 		value = configuration.getProperty(PROPERTY_ACTIVITY_COLUMN, "");
 		mComboBoxActivityColumn.setSelectedItem(ITEM_SIMILARITY_ONLY);	// default
-		if (value.length() != 0) {
+		if (!value.isEmpty()) {
 			int column = mSourceTableModel.findColumn(value);
 			if (column != -1 && qualifiesAsActivityColumn(column))
 				mComboBoxActivityColumn.setSelectedItem(mSourceTableModel.getColumnTitle(column));
@@ -276,7 +269,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 
 		value = configuration.getProperty(PROPERTY_IDENTIFIER_COLUMN, "");
 		mComboBoxIdentifierColumn.setSelectedItem(ITEM_CREATE_COLUMN);	// default
-		if (value.length() != 0 && !PROPERTY_VALUE_CREATE_COLUMN.equals(value)) {
+		if (!value.isEmpty() && !PROPERTY_VALUE_CREATE_COLUMN.equals(value)) {
 			int column = mSourceTableModel.findColumn(value);
 			if (column != -1 && qualifiesAsIdentifierColumn(column))
 				mComboBoxIdentifierColumn.setSelectedItem(mSourceTableModel.getColumnTitle(column));
@@ -285,7 +278,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 			}
 
 		value = configuration.getProperty(PROPERTY_GROUP_BY_COLUMN, "");
-		if (value.length() != 0) {
+		if (!value.isEmpty()) {
 			int column = mSourceTableModel.findColumn(value);
 			if (column != -1 && qualifiesAsGroupByColumn(column))
 				mComboBoxGroupByColumn.setSelectedItem(mSourceTableModel.getColumnTitle(column));
@@ -320,7 +313,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 			}
 		if (!isInteractive()) {
 			String descriptorColumn = (String)mComboBoxDescriptorColumn.getSelectedItem();
-			if (descriptorColumn == null || descriptorColumn.length() == 0)
+			if (descriptorColumn == null || descriptorColumn.isEmpty())
 				mComboBoxDescriptorColumn.setSelectedItem("Structure ["+DescriptorConstants.DESCRIPTOR_SkeletonSpheres.shortName+"]");
 			}
 		boolean identifierFound = false;
@@ -353,21 +346,21 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 		Properties configuration = new Properties();
 
 		String descriptorColumn = (String)mComboBoxDescriptorColumn.getSelectedItem();
-		if (descriptorColumn.length() != 0)
+		if (!descriptorColumn.isEmpty())
 			configuration.setProperty(PROPERTY_DESCRIPTOR_COLUMN, descriptorColumn);
 
 		String activityColumn = (String)mComboBoxActivityColumn.getSelectedItem();
-		if (activityColumn.length() != 0 && !activityColumn.equals(ITEM_SIMILARITY_ONLY))
+		if (!activityColumn.isEmpty() && !activityColumn.equals(ITEM_SIMILARITY_ONLY))
 			configuration.setProperty(PROPERTY_ACTIVITY_COLUMN, mSourceTableModel.getColumnTitleNoAlias(activityColumn));
 
 		String identifierColumn = (String)mComboBoxIdentifierColumn.getSelectedItem();
-		if (identifierColumn.length() == 0 || identifierColumn.equals(ITEM_CREATE_COLUMN))
+		if (identifierColumn.isEmpty() || identifierColumn.equals(ITEM_CREATE_COLUMN))
 			configuration.setProperty(PROPERTY_IDENTIFIER_COLUMN, PROPERTY_VALUE_CREATE_COLUMN);
 		else
 			configuration.setProperty(PROPERTY_IDENTIFIER_COLUMN, mSourceTableModel.getColumnTitleNoAlias(identifierColumn));
 
 		String groupByColumn = (String)mComboBoxGroupByColumn.getSelectedItem();
-		if (mComboBoxGroupByColumn.isEnabled() && (groupByColumn.length() == 0 || !ITEM_NONE.equals(groupByColumn)))
+		if (mComboBoxGroupByColumn.isEnabled() && (groupByColumn.isEmpty() || !ITEM_NONE.equals(groupByColumn)))
 			configuration.setProperty(PROPERTY_GROUP_BY_COLUMN, mSourceTableModel.getColumnTitleNoAlias(groupByColumn));
 
 		configuration.setProperty(PROPERTY_SIMILARITY, mCheckBoxSimilarityAutomatic.isSelected() ? PROPERTY_VALUE_SIMILARITY_AUTOMATIC : ""+mSimilaritySlider.getValue());
@@ -437,7 +430,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 							for (int row1=0; row1<row2 && !threadMustDie(); row1++) {
 								if (mSMPPairCount.incrementAndGet() % rowCount == 0)
 									updateProgress(-1);
-	
+
 								CompoundRecord r1 = mSourceTableModel.getTotalRecord(row1);
 								if (r1.getData(descriptorColumn) != null) {
 									float similarity = mSourceTableModel.getDescriptorSimilarity(r1, r2, descriptorColumn);
@@ -623,7 +616,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 
 			mSortedID = new Integer[rowCount];
 			for (int row=0; row<rowCount; row++)
-				mSortedID[row] = Integer.valueOf(row);
+				mSortedID[row] = row;
 
 			int zero = Float.floatToIntBits(0.0f);
 
@@ -635,9 +628,9 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 				Arrays.sort(mSortedID, new Comparator<Integer>() {
 					@Override
 					public int compare(Integer i1, Integer i2) {
-						float x1 = Float.intBitsToFloat(mX.get(i1.intValue()));
-						float x2 = Float.intBitsToFloat(mX.get(i2.intValue()));
-						return x1 < x2 ? -1	: x1 == x2 ? 0 : 1;
+						float x1 = Float.intBitsToFloat(mX.get(i1));
+						float x2 = Float.intBitsToFloat(mX.get(i2));
+						return Float.compare(x1, x2);
 						}
 					} );
 
@@ -670,17 +663,17 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 			Arrays.sort(mSortedID, new Comparator<Integer>() {
 				@Override
 				public int compare(Integer i1, Integer i2) {
-					float x1 = Float.intBitsToFloat(mX.get(i1.intValue()))-0.5f;
-					float y1 = Float.intBitsToFloat(mY.get(i1.intValue()))-0.5f;
+					float x1 = Float.intBitsToFloat(mX.get(i1))-0.5f;
+					float y1 = Float.intBitsToFloat(mY.get(i1))-0.5f;
 					float d1 = (float)Math.sqrt(x1*x1+y1*y1);
-					float x2 = Float.intBitsToFloat(mX.get(i2.intValue()))-0.5f;
-					float y2 = Float.intBitsToFloat(mY.get(i2.intValue()))-0.5f;
+					float x2 = Float.intBitsToFloat(mX.get(i2))-0.5f;
+					float y2 = Float.intBitsToFloat(mY.get(i2))-0.5f;
 					float d2 = (float)Math.sqrt(x2*x2+y2*y2);
-					return d1 < d2 ? -1	: d1 == d2 ? 0 : 1;
+					return Float.compare(d1, d2);
 					}
 				} );
 			for (int i=0; i<rowCount; i++) {
-				int row = mSortedID[i].intValue();
+				int row = mSortedID[i];
 				float x = Float.intBitsToFloat(mX.get(row))-0.5f;
 				float y = Float.intBitsToFloat(mY.get(row))-0.5f;
 
@@ -863,8 +856,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 							structureView.setColumnCount(5);
 							structureView.setFocusList(FocusableView.cFocusOnSelection);
 							int[] columnAtPosition = new int[MarkerLabelDisplayer.cPositionCode.length];
-							for (int i=0; i<columnAtPosition.length; i++)
-								columnAtPosition[i] = -1;
+							Arrays.fill(columnAtPosition, -1);
 							int position = MarkerLabelDisplayer.cInTableLine1;
 							if (saliColumn != -1)
 								columnAtPosition[position++] = saliColumn;
@@ -895,7 +887,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
  			}
 
 		if (configuration.getProperty(PROPERTY_NEW_DOCUMENT, "false").equals("true")) {
-			startProgress("Populating new document...", 0, 0);
+			mTargetFrame = getEmptyFrame("Activity-Cliff Analysis");
 
 			int idcodeSourceColumn = mSourceTableModel.getParentColumn(descriptorColumn);
 			int coordsSourceColumn = mSourceTableModel.getChildColumn(idcodeSourceColumn, CompoundTableModel.cColumnType2DCoordinates);
@@ -904,7 +896,6 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 			final int dataColumnCount = (activityColumn == -1 ? 3 : 7) + (groupByColumn != -1 ? 1 : 0);
 //final int dataColumnCount = (activityColumn == -1 ? 5 : 9) + (groupByColumn != -1 ? 1 : 0);
 
-			mTargetFrame = mApplication.getEmptyFrame("Activity-Cliff Analysis");
 			CompoundTableModel targetTableModel = mTargetFrame.getTableModel();
 			targetTableModel.initializeTable(mPairList.size(), 2 * structureColumnCount + dataColumnCount);
 			targetTableModel.prepareStructureColumns(0, "Structure 1", false, prepareCoordinates, descriptorShortName);
@@ -958,17 +949,17 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 						public void run() {
 							mTargetFrame.getTableModel().setLogarithmicViewMode(2 * structureColumnCount + 3, true);
 					   		mTargetFrame.getTableModel().setLogarithmicViewMode(2 * structureColumnCount + 4, true);
-		
+
 							mTargetFrame.getMainFrame().setMainSplitting(0.7);
 							mTargetFrame.getMainFrame().setRightSplitting(0.4);
 							VisualizationPanel2D vpanel1 = mTargetFrame.getMainFrame().getMainPane().add2DView("SALI Plot", null);
-				
+
 							vpanel1.setAxisColumnName(0, "Activity 1");
 							vpanel1.setAxisColumnName(1, "Activity 2");
-		
+
 							vpanel1.getVisualization().setMarkerSizeColumn(2 * structureColumnCount + 6, Float.NaN, Float.NaN);
 							vpanel1.getVisualization().setMarkerSize(0.64f, false);
-		
+
 							int colorListMode1 = VisualizationColor.cColorListModeHSBLong;
 							Color[] colorList1 = VisualizationColor.createColorWedge(Color.red, Color.blue, colorListMode1, null);
 							vpanel1.getVisualization().getMarkerColor().setColor(2 * structureColumnCount + 5, colorList1, colorListMode1);
@@ -1048,9 +1039,9 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 			if (i >= rowCount-1)
 				break;
 
-			int row1 = mSortedID[i].intValue();
+			int row1 = mSortedID[i];
 			for (int j=i+1; j<rowCount; j++) {
-				int row2 = mSortedID[j].intValue();
+				int row2 = mSortedID[j];
 				float dx = Float.intBitsToFloat(mX.get(row2))-Float.intBitsToFloat(mX.get(row1));
 				if (Math.abs(dx) >= cycleMinDistance)
 					break;
@@ -1066,8 +1057,8 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 							}
 						else {
 							double shift = cycleMinDistance - distance;
-							dx *= shift/distance;
-							dy *= shift/distance;
+							dx *= (float)(shift/distance);
+							dy *= (float)(shift/distance);
 							}
 						do {
 							current = mDX.get(row1);
@@ -1199,7 +1190,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 		public void initialize(CountDownLatch doneSignal, int cycle) {
 			mDoneSignal = doneSignal;
 			mCycle = cycle;
-			
+
 			}
 
 		public void run() {
@@ -1209,7 +1200,7 @@ public class DETaskAnalyseActivityCliffs extends ConfigurableTask implements Ite
 			}
 		}
 
-	private class SimilarPair {
+	private static class SimilarPair {
 		public int row1,row2;
 		public float sali,activityDif,similarity /* ,attraction */;
 

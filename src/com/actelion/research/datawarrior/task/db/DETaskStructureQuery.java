@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -80,8 +80,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 	protected ArrayList<Object[]>	mResultList;
     protected CompoundTableModel	mSourceTableModel;
 
-	private DataWarrior				mApplication;
-    private JComboBox   		    mComboBoxSearchType,mComboBoxQuerySource;
+    private JComboBox<String>	    mComboBoxSearchType,mComboBoxQuerySource;
     private JEditableStructureView  mStructureView;
     private JSlider         		mSimilaritySlider;
     private boolean					mDisableEvents,mAreStructuresSelected,mAreSubStructuresSelected,mIsSSS;
@@ -108,11 +107,10 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 
 		return indexVersionOK;
 		}
-	
-    public DETaskStructureQuery(DEFrame owner, DataWarrior application) {
+
+    public DETaskStructureQuery(DEFrame owner) {
     	super(owner, true);
 
-    	mApplication = application;
 		mSourceTableModel = owner.getTableModel();
 
         CompoundTableModel tableModel = owner.getTableModel();
@@ -164,10 +162,10 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
     	if (drawnStructureAvailable || (mComboBoxQuerySource != null && mComboBoxQuerySource.getSelectedIndex() == QUERY_SOURCE_SELECTED)) {
 	    	if (mComboBoxSearchType != null)
 	    		configuration.setProperty(PROPERTY_SEARCH_TYPE, SEARCH_TYPE_CODE[mComboBoxSearchType.getSelectedIndex()]);
-	
+
 	    	if (mComboBoxQuerySource != null)
 	    		configuration.setProperty(PROPERTY_QUERY_SOURCE, QUERY_SOURCE_CODE[mComboBoxQuerySource.getSelectedIndex()]);
-	
+
 	    	if (mSimilaritySlider != null && mSimilaritySlider.isEnabled())
 	        	configuration.setProperty(PROPERTY_SIMILARITY, ""+mSimilaritySlider.getValue());
     		}
@@ -367,7 +365,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 
 		StructureSearchSpecification spec = new StructureSearchSpecification(searchType, idcode,
 				descriptor, getDescriptorShortName(configuration), getSimilarityValue(configuration));
-		
+
 		String errorMessage = spec.validate();
 		if (errorMessage == null)
 			return spec;
@@ -442,6 +440,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 
 	@Override
 	public void runTask(Properties configuration) {
+		mTargetFrame = getEmptyFrame(getDocumentTitle());
 		startProgress("Retrieving Chemical Structure Data...", 0, 0);
 
 		mIsSSS = (SEARCH_TYPE_SSS == SEARCH_TYPE[findListIndex(configuration.getProperty(PROPERTY_SEARCH_TYPE), SEARCH_TYPE_CODE, 1)]);
@@ -455,7 +454,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 			mResultList = null;
 			return;
 			}
-		if (mResultList.size() == 0) {
+		if (mResultList.isEmpty()) {
 			showMessage("Your query did not retrieve any records.", WARNING_MESSAGE);
 			mResultList = null;
 			return;
@@ -464,7 +463,6 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 		startProgress("Checking Index Version...", 0, 0);
 
 		if (!threadMustDie()) {
-			mTargetFrame = mApplication.getEmptyFrame(getDocumentTitle());
 			CompoundTableModel tableModel = mTargetFrame.getTableModel();
             String[] columnName = getColumnNames();
 		    int columnCount = columnName.length + getStructureColumnCount();
@@ -485,15 +483,17 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 					}
 				}
 			}
+		else {
+			DataWarrior.getApplication().closeFrameSilently(mTargetFrame, false);
+			mTargetFrame = null;
+		}
 
 		mResultList = null;
 
         if (mTargetFrame != null) {
         	setColumnProperties(mTargetFrame.getTableModel());
         	mTargetFrame.getTableModel().finalizeTable(getRuntimePropertiesMode(), this);
-        	}
 
-        if (mTargetFrame != null) {
         	try {
 				SwingUtilities.invokeAndWait(() -> {
 		            mTargetFrame.setTitle(getDocumentTitle());
@@ -503,11 +503,6 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
         	catch (Exception e) {}
         	}
 	    }
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
-		}
 
 	protected void retrieveRecords() throws Exception {
 	    Statement stmt = mConnection.createStatement();
@@ -524,7 +519,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 			    	}
 				else {
 					String s = rset.getString(i+1);
-					if (s != null && s.length() != 0) {
+					if (s != null && !s.isEmpty()) {
 						newResult[i] = s.getBytes();
 				        found = true;
 						}
@@ -566,7 +561,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 	 * Optionally one may flag other columns to show the first row's value rather
 	 * than every source row's values.
 	 * @param skipColumn null or flags to define which columns shall be skipped
-	 * @param otherGroupColumn null or column(s) that cause row splitting if its content differs 
+	 * @param otherGroupColumn null or column(s) that cause row splitting if its content differs
 	 */
     protected void groupByStructure(boolean[] skipColumn, int[] otherGroupColumn) {
         TreeMap<String,Object[]> map = new TreeMap<String,Object[]>();
@@ -596,13 +591,13 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
                     			}
                     		}
                     	}
-                	
+
                 	if (!isExtendedKey && (skipColumn == null || !skipColumn[i])) {
 	                    byte[] bytes1 = (byte[])newResult[i];
 	                    byte[] bytes2 = (byte[])result[i];
 	                    int bytes1count = (bytes1 == null) ? 0 : bytes1.length;
 	                    int bytes2count = (bytes2 == null) ? 0 : bytes2.length;
-	
+
 	                    byte[] bytes = new byte[bytes1count+bytes2count+1];
 	                    int byteIndex = 0;
 	                    for (int j=0; j<bytes1count; j++)
@@ -650,7 +645,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 	 * @return
 	 */
 	protected JComponent createComboBoxSearchType(int options) {
-        mComboBoxSearchType = new JComboBox();
+        mComboBoxSearchType = new JComboBox<>();
         for (int i=0; i<options; i++)
         	mComboBoxSearchType.addItem(SEARCH_TYPE_TEXT[i]);
         mComboBoxSearchType.addActionListener(this);
@@ -658,7 +653,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
     	}
 
     protected JComponent createComboBoxQuerySource() {
-        mComboBoxQuerySource = new JComboBox(QUERY_SOURCE);
+        mComboBoxQuerySource = new JComboBox<>(QUERY_SOURCE);
         mComboBoxQuerySource.addActionListener(this);
         mComboBoxQuerySource.setEnabled(mAreStructuresSelected);
         return mComboBoxQuerySource;
@@ -678,10 +673,10 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
 
     protected JComponent createSimilaritySlider() {
         Hashtable<Integer,JLabel> labels = new Hashtable<Integer,JLabel>();
-	    labels.put(Integer.valueOf(70), new JLabel("70%"));
-        labels.put(Integer.valueOf(80), new JLabel("80%"));
-        labels.put(Integer.valueOf(90), new JLabel("90%"));
-        labels.put(Integer.valueOf(100), new JLabel("100%"));
+	    labels.put(70, new JLabel("70%"));
+        labels.put(80, new JLabel("80%"));
+        labels.put(90, new JLabel("90%"));
+        labels.put(100, new JLabel("100%"));
         mSimilaritySlider = new JSlider(JSlider.VERTICAL, 70, 100, 90);
         mSimilaritySlider.setMinorTickSpacing(1);
         mSimilaritySlider.setMajorTickSpacing(10);
@@ -775,7 +770,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
                     idcodeColumn = column;
                     }
                 else if (structureColumnList == null) {
-                    structureColumnList = new ArrayList<String>();
+                    structureColumnList = new ArrayList<>();
                     structureColumnList.add(mSourceTableModel.getColumnTitle(idcodeColumn));
                     structureColumnList.add(mSourceTableModel.getColumnTitle(column));
                     }
@@ -795,7 +790,7 @@ public abstract class DETaskStructureQuery extends ConfigurableTask implements A
                                         structureColumnList.get(0));
             idcodeColumn = mSourceTableModel.findColumn(idcodeColumnName);
             }
-        
+
         return idcodeColumn;
         }
 

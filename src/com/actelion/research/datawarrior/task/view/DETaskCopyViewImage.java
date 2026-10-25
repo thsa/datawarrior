@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,7 +19,6 @@
 package com.actelion.research.datawarrior.task.view;
 
 import com.actelion.research.datawarrior.DEFormView;
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.task.AbstractViewTask;
 import com.actelion.research.datawarrior.task.file.JFilePathLabel;
@@ -135,7 +134,7 @@ public class DETaskCopyViewImage extends AbstractViewTask implements ActionListe
 		mTextFieldHeight = new JTextField();
 		mCheckBoxKeepAspectRatio = new JCheckBox("Keep aspect ratio");
 		mCheckBoxKeepAspectRatio.addActionListener(this);
- 
+
 		mTextFieldWidth.addKeyListener(new KeyAdapter() {
 			public void keyReleased(KeyEvent arg0) {
 				try {
@@ -545,7 +544,7 @@ public class DETaskCopyViewImage extends AbstractViewTask implements ActionListe
 				showErrorMessage("Only structure-, form-, and 2D-views can be saved as SVG.");
 				return false;
 				}
-	
+
 			if (isLive && viewComponent instanceof JVisualization3D && "true".equals(configuration.getProperty(PROPERTY_TRANSPARENT_BG))) {
 				showErrorMessage("The 3D-view does not support a transparent background.");
 				return false;
@@ -565,11 +564,6 @@ public class DETaskCopyViewImage extends AbstractViewTask implements ActionListe
 			}
 
 		return true;
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 
 	@Override
@@ -650,7 +644,6 @@ public class DETaskCopyViewImage extends AbstractViewTask implements ActionListe
 						}
 					dialog.close();
 					}).start();
-				dialog.setVisible(true);
 				}
 			else {	// png
 				BufferedImage image = createViewImage(viewComponent, size, dpi, isAllViews, transparentBG);
@@ -801,7 +794,7 @@ public class DETaskCopyViewImage extends AbstractViewTask implements ActionListe
 
 		size.width *= mCurrentResolutionFactor;
 		size.height *= mCurrentResolutionFactor;
-			
+
 		if (viewComponent instanceof JStructureGrid)
 			size.height = ((JStructureGrid)viewComponent).getTotalHeight(size.width);
 

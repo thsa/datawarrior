@@ -1,6 +1,5 @@
 package com.actelion.research.datawarrior.task.macro;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
 
 import java.awt.*;
@@ -26,10 +25,5 @@ public class DETaskEndIf extends AbstractTaskWithoutConfiguration {
 	@Override
 	public void runTask(Properties configuration) {
 		// the if/then is actually performed by the DEMacroRecorder
-	}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 	}
 }

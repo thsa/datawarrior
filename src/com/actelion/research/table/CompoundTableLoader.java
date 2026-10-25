@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -337,7 +337,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 	 * @param keyColumnName matching the total previously read column count with at least one MERGE_MODE_IS_KEY entry
 	 * @param isIgnoreCase defines for every key column, whether its content shall be treated in a case sensitive way
 	 * @param pl null or progress listener to receive messages
-	 * @return true if all 
+	 * @return true if all
 	 */
 	public boolean areMergeKeysUnique(String[] keyColumnName, boolean[] isIgnoreCase, ProgressListener pl) {
 		if (pl != null)
@@ -428,13 +428,10 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 				mProgressController = new JProgressDialog(mParentFrame);
 				mOwnsProgressController = true;
 				}
-	
+
 			mThread = new Thread(this, "CompoundTableLoader");
 			mThread.setPriority(Thread.MIN_PRIORITY);
 			mThread.start();
-
-			if (mOwnsProgressController)
-				((JProgressDialog)mProgressController).setVisible(true);
 			}
 		else {
 			run();
@@ -1005,7 +1002,7 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 					}
 				else {
 					byte[] cellBytes = Arrays.copyOfRange(lineBytes, fromIndex, toIndex);
-	
+
 					if (descriptorHandler[column] == null)
 						mFieldData[row][column] = convertNLAndTAB(cellBytes);
 					else if (descriptorValid[column])
@@ -2533,19 +2530,19 @@ try {
 			boolean error = false;
 			if ((mAction & READ_DATA) != 0)
 				error = !readData();
-	
+
 			if ((mAction & REPLACE_DATA) != 0 && !error && !mProgressController.threadMustDie())
 				replaceTable();
-	
+
 			if ((mAction & APPEND_DATA) != 0 && !error && !mProgressController.threadMustDie())
 				appendTable();
-	
+
 			if ((mAction & MERGE_DATA) != 0 && !error && !mProgressController.threadMustDie())
 				error = mergeTable();
-	
+
 			if (mOwnsProgressController) {
 				mProgressController.stopProgress();
-				((JProgressDialog)mProgressController).close(mParentFrame);
+				((JProgressDialog)mProgressController).close();
 				}
 
 			if ((mAction & (REPLACE_DATA | APPEND_DATA | MERGE_DATA | APPLY_TEMPLATE)) != 0
@@ -2655,7 +2652,7 @@ try {
 					columnName[newColumns++] = mFieldNames[i];
 
 			int destinationColumn = mTableModel.addNewColumns(columnName);
-			
+
 			if (newDatasetNameColumns != 0) {
 				mAppendDatasetColumn = destinationColumn++;
 				for (int row=0; row<mTableModel.getTotalRowCount(); row++)

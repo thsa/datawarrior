@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,7 +18,6 @@
 
 package com.actelion.research.datawarrior.task.filter;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEPruningPanel;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
@@ -47,7 +46,7 @@ public class DETaskCloseFilter extends ConfigurableTask implements ActionListene
 	private static final String PROPERTY_TYPE = "type";
 	private static final String PROPERTY_COLUMN = "column";
 	private static final String PROPERTY_DUPLICATE = "duplicate";
-    
+
 	private CompoundTableModel  mTableModel;
 	private DEPruningPanel      mPruningPanel;
 	private JComboBox			mComboBoxType;
@@ -62,7 +61,7 @@ public class DETaskCloseFilter extends ConfigurableTask implements ActionListene
      */
     public DETaskCloseFilter(Frame parent, DEPruningPanel pruningPanel, JFilterPanel filter) {
 		super(parent, false);
-    	
+
 		mPruningPanel = pruningPanel;
 		mTableModel = pruningPanel.getTableModel();
 		mFilter = filter;
@@ -208,10 +207,5 @@ public class DETaskCloseFilter extends ConfigurableTask implements ActionListene
 		int column = DETaskAddNewFilter.FILTER_NEEDS_COLUMN[type] ? mTableModel.findColumn(configuration.getProperty(PROPERTY_COLUMN)) : -1;
 		int duplicate = Integer.parseInt(configuration.getProperty(PROPERTY_DUPLICATE, "1")) - 1;
 		mPruningPanel.getFilter(type, column, duplicate).removePanel();
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 	}

@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,20 +18,13 @@
 
 package com.actelion.research.datawarrior.task.data;
 
-import info.clearthought.layout.TableLayout;
-
-import java.awt.Frame;
-import java.util.Properties;
-
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.table.model.CompoundTableModel;
+import info.clearthought.layout.TableLayout;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.Properties;
 
 public class DETaskSortRows extends ConfigurableTask {
 	public static final String TASK_NAME = "Sort Rows";
@@ -153,10 +146,5 @@ public class DETaskSortRows extends ConfigurableTask {
 		boolean descending = "true".equals(configuration.getProperty(PROPERTY_DESCENDING));
 		boolean selectedFirst = "true".equals(configuration.getProperty(PROPERTY_SELECTED_FIRST));
 		mTableModel.sort(column, descending, selectedFirst);
-		}
-	
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 	}

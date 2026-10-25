@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -43,7 +43,7 @@ import java.util.ArrayList;
 public class DEInteractiveSARDialog extends JDialog
                 implements ActionListener, GenericEventListener<EditorEvent>,ItemListener,Runnable {
     private static final long serialVersionUID = 0x20090206;
- 
+
     private static final String[] COMPOUND_FILTER_OPTIONS = {
                               "All compounds",
                               "All matching compounds",
@@ -280,7 +280,7 @@ public class DEInteractiveSARDialog extends JDialog
                         SwingUtilities.invokeLater(new Runnable() {
                             public void run() {
                                 mBuildingBlockPane.getModel().addCompound(bb);
-                    
+
                                 if (mCurrentABB == null) {
                                     mCurrentABB = new AbstractBuildingBlock();
                                     mCurrentABB.add(bb);
@@ -323,7 +323,7 @@ public class DEInteractiveSARDialog extends JDialog
 			if (true) { //TODO check stuff
 			    if (checkForCompleteMatches()) {
     			    mProgressDialog = new JProgressDialog(mParentFrame);
-    
+
     				Thread t = new Thread(this, "DEInteractiveSARAnalyzer");
                     t.setPriority(Thread.MIN_PRIORITY);
                     t.start();
@@ -650,7 +650,7 @@ public class DEInteractiveSARDialog extends JDialog
 		runAnalysis();
 
 		mProgressDialog.stopProgress();
-	    mProgressDialog.close(null);
+	    mProgressDialog.close();
 		}
 
 	private void runAnalysis() {
@@ -745,7 +745,7 @@ public class DEInteractiveSARDialog extends JDialog
                     }
                 }
             }
-                
+
 	    if (newColumnNameList.size() != 0)
 	        mTableModel.finalizeNewColumns(firstNewColumn, mProgressDialog);
 		}
@@ -778,7 +778,7 @@ class BBConnection {
     /**
      * Constructs a new connection by cloning connection, but using atom
      * @param atom atom within fragment that carries/requires the upward connection
-     * @param connection 
+     * @param connection
      */
     public BBConnection(int atom, BBConnection connection) {
         this.atom = atom;
@@ -1009,7 +1009,7 @@ class BuildingBlock {
                 mDisplayMol.setAtomCustomLabel(atom, "R"+(mConnection[i].anchorNo+1));
             else
                 mDisplayMol.setAtomCustomLabel(atom, "B"+mConnection[i].bbID+":"+(mConnection[i].anchorNo+1));
-            
+
             int bond = mDisplayMol.addBond(mConnection[i].atom, atom, mConnection[i].getDisplayBondType());
             mDisplayMol.setBondQueryFeature(bond, mConnection[i].getDisplayBondQueryFeatures(), true);
             }
@@ -1108,12 +1108,12 @@ class MoleculeContext {
             for (BuildingBlock bb:abb) {
                 if (bb.qualifiesAsMatch(bbIDList)) {
                     int[] bestMatch = getPreferredMatch(bb.getMoleculeForQuery(), bb.getFragFp(), bb.getConnectionList());
-    
+
                     // if we have a valid match
                     if (bestMatch != null) {
                         int bbID = abb.getID();
                         bbIDList = addIDToList(bbID, bbIDList);
-    
+
                         for (int atom:bestMatch) {
                             mAtomUsed[atom] = true;
                             mBBID[atom] = bbID;
@@ -1130,7 +1130,7 @@ class MoleculeContext {
                         mMatchingAtomCount += bestMatch.length;
                         if (mMatchingAtomCount == mAtomUsed.length)
                             return bbIDList;
-    
+
                         break;
                         }
                     }

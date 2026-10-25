@@ -30,13 +30,12 @@ import com.actelion.research.table.model.CompoundTableModel;
 public class DETaskNewFileFromTransposition extends AbstractSingleColumnTask {
 	public static final String TASK_NAME = "New File From Transposition";
 
-	private DEFrame mSourceFrame,mTargetFrame;
-	private DataWarrior mApplication;
+	private final DEFrame mSourceFrame;
+	private DEFrame mTargetFrame;
 
-	public DETaskNewFileFromTransposition(DEFrame sourceFrame, DataWarrior application) {
+	public DETaskNewFileFromTransposition(DEFrame sourceFrame) {
 		super(sourceFrame, sourceFrame.getTableModel(), false);
 		mSourceFrame = sourceFrame;
-		mApplication = application;
 	}
 
 	@Override
@@ -69,11 +68,6 @@ public class DETaskNewFileFromTransposition extends AbstractSingleColumnTask {
 	}
 
 	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
-	}
-
-	@Override
 	public String getTaskName() {
 		return TASK_NAME;
 	}
@@ -89,7 +83,7 @@ public class DETaskNewFileFromTransposition extends AbstractSingleColumnTask {
 			if (sourceTableModel.getColumnSpecialType(i) != null)
 				rowCount--;
 
-		mTargetFrame = mApplication.getEmptyFrame("Transposition of "+mSourceFrame.getTitle());
+		mTargetFrame = getEmptyFrame("Transposition of "+mSourceFrame.getTitle());
 		CompoundTableModel targetTableModel = mTargetFrame.getTableModel();
 		targetTableModel.initializeTable(rowCount, columnCount);
 

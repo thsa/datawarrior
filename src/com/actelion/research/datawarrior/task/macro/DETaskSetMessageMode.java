@@ -96,9 +96,4 @@ public class DETaskSetMessageMode extends ConfigurableTask {
 		if (!isInteractive())
 			DEMacroRecorder.getInstance().setMessageMode(findListIndex(configuration.getProperty(PROPERTY_MODE), MODE_CODE, DEMacroRecorder.DEFAULT_MESSAGE_MODE));
 		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 	}
-}

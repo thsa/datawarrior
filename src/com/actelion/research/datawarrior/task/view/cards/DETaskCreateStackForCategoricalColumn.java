@@ -1,9 +1,8 @@
 package com.actelion.research.datawarrior.task.view.cards;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
-import com.actelion.research.table.view.card.JCardPane;
 import com.actelion.research.table.model.CompoundRecord;
+import com.actelion.research.table.view.card.JCardPane;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -91,10 +90,5 @@ public class DETaskCreateStackForCategoricalColumn extends AbstractTaskWithoutCo
     @Override
     public boolean isConfigurable(){
         return true;
-    }
-
-    @Override
-    public DEFrame getNewFrontFrame() {
-        return null;
     }
 }

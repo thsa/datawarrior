@@ -53,11 +53,6 @@ public class DETaskClusterCompoundsHierarchical extends ConfigurableTask impleme
     	}
 
 	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-		}
-
-	@Override
 	public boolean isConfigurable() {
 		boolean descriptorFound = false;
 		for (int column=0; column<mTableModel.getTotalColumnCount(); column++) {

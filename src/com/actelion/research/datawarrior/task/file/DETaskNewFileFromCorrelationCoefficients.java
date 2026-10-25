@@ -46,11 +46,12 @@ public class DETaskNewFileFromCorrelationCoefficients extends ConfigurableTask {
 
 	public static final String TASK_NAME = "New File From Correlation Coefficient";
 
-	private CompoundTableModel	mSourceTableModel;
-	private JComboBox			mComboBoxCorrelationType,mComboBoxRowMode;
-	private DEFrame				mSourceFrame,mTargetFrame;
-	private int					mCorrelationType,mRowMode;
-	private String              mListName;
+	private final CompoundTableModel mSourceTableModel;
+	private JComboBox<String>	mComboBoxCorrelationType,mComboBoxRowMode;
+	private final DEFrame		mSourceFrame;
+	private DEFrame				mTargetFrame;
+	private final int			mCorrelationType,mRowMode;
+	private final String        mListName;
 
 	public DETaskNewFileFromCorrelationCoefficients(DEFrame sourceFrame, int correlationType, int rowMode, String listName) {
 		super(sourceFrame, false);
@@ -70,10 +71,10 @@ public class DETaskNewFileFromCorrelationCoefficients extends ConfigurableTask {
 		content.setLayout(new TableLayout(size));
 
 		content.add(new JLabel("Correlation Coefficient:"), "1,1");
-		mComboBoxCorrelationType = new JComboBox(CorrelationCalculator.TYPE_LONG_NAME);
+		mComboBoxCorrelationType = new JComboBox<>(CorrelationCalculator.TYPE_LONG_NAME);
 		content.add(mComboBoxCorrelationType, "3,1");
 
-		mComboBoxRowMode = new JComboBox(DECorrelationDialog.ROW_MODE_TEXT);
+		mComboBoxRowMode = new JComboBox<>(DECorrelationDialog.ROW_MODE_TEXT);
 		for (int i = 0; i<mSourceTableModel.getListHandler().getListCount(); i++)
 			mComboBoxRowMode.addItem(mSourceTableModel.getListHandler().getListName(i));
 		mComboBoxRowMode.setEditable(!isInteractive());
@@ -175,7 +176,7 @@ public class DETaskNewFileFromCorrelationCoefficients extends ConfigurableTask {
 		String subset = (rows == DECorrelationDialog.ROWS_SELECTED) ? " (selected subset)"
 					  : (rows == DECorrelationDialog.ROWS_VISIBLE) ? " (visible subset)"
 					  : (rows == DECorrelationDialog.ROWS_ALL) ? "" : "(list: "+rowsText+")";
-		mTargetFrame = mSourceFrame.getApplication().getEmptyFrame("Correlations of "+mSourceFrame.getTitle()+subset);
+		mTargetFrame = getEmptyFrame("Correlations of "+mSourceFrame.getTitle()+subset);
 		CompoundTableModel targetTableModel = mTargetFrame.getTableModel();
 
 		targetTableModel.initializeTable(numericalColumn.length * (numericalColumn.length-1) / 2, 4);
@@ -216,10 +217,5 @@ public class DETaskNewFileFromCorrelationCoefficients extends ConfigurableTask {
 		catch (FilterException fpe) {
 			showErrorMessage(fpe.getMessage());
 			}
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 	}

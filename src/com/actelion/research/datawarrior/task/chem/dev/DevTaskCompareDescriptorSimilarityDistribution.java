@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -21,7 +21,6 @@ package com.actelion.research.datawarrior.task.chem.dev;
 import com.actelion.research.chem.descriptor.*;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DERuntimeProperties;
-import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
 import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.model.CompoundTableEvent;
@@ -88,21 +87,14 @@ public class DevTaskCompareDescriptorSimilarityDistribution extends AbstractTask
 			"<splitCurveByCategory_2D View=\"true\">\n" +
 			"</datawarrior properties>";
 
-	private DataWarrior			mApplication;
 	private DEFrame				mTargetFrame;
-    private CompoundTableModel	mSourceTableModel;
+    private final CompoundTableModel	mSourceTableModel;
     private AtomicInteger		mSMPRecordIndex,mSMPPairCount;
     private CountDownLatch		mSMPDoneSignal;
 
 	public DevTaskCompareDescriptorSimilarityDistribution(DEFrame parent) {
 		super(parent, true);
 		mSourceTableModel = parent.getTableModel();
-		mApplication = parent.getApplication();
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 
 	@Override
@@ -204,7 +196,7 @@ public class DevTaskCompareDescriptorSimilarityDistribution extends AbstractTask
 		if (!threadMustDie()) {
 			startProgress("Populating new document...", 0, 0);
 
-			mTargetFrame = mApplication.getEmptyFrame("Descriptor Similarity Comparison");
+			mTargetFrame = getEmptyFrame("Descriptor Similarity Comparison");
 	        CompoundTableModel targetTableModel = mTargetFrame.getTableModel();
 	        final String[] columnName = { "Descriptor", "Similarity", "Count" };
 	        targetTableModel.initializeTable(descriptorColumn.length * 101, columnName.length);

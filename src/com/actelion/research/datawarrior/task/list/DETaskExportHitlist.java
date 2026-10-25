@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -18,8 +18,14 @@
 
 package com.actelion.research.datawarrior.task.list;
 
+import com.actelion.research.datawarrior.DEFrame;
+import com.actelion.research.datawarrior.task.ConfigurableTask;
+import com.actelion.research.datawarrior.task.file.JFilePathLabel;
+import com.actelion.research.gui.FileHelper;
+import com.actelion.research.table.model.CompoundTableModel;
 import info.clearthought.layout.TableLayout;
 
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
@@ -30,17 +36,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.TreeSet;
-
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
-import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.task.ConfigurableTask;
-import com.actelion.research.datawarrior.task.file.JFilePathLabel;
-import com.actelion.research.gui.FileHelper;
-import com.actelion.research.table.model.CompoundTableModel;
 
 public class DETaskExportHitlist extends ConfigurableTask implements ActionListener {
 	private static final String PROPERTY_FILENAME = "fileName";
@@ -59,10 +54,6 @@ public class DETaskExportHitlist extends ConfigurableTask implements ActionListe
 		mTableModel = parent.getTableModel();
 		mIsInteractive = isInteractive;
 		mCheckOverwrite = true;
-		}
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 		}
 
 	@Override

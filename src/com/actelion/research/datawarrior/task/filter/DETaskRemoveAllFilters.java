@@ -18,11 +18,11 @@
 
 package com.actelion.research.datawarrior.task.filter;
 
-import java.util.Properties;
-
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEPruningPanel;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
+
+import java.util.Properties;
 
 public class DETaskRemoveAllFilters extends AbstractTaskWithoutConfiguration {
 	public static final String TASK_NAME = "Remove All Filters";
@@ -47,10 +47,5 @@ public class DETaskRemoveAllFilters extends AbstractTaskWithoutConfiguration {
 	@Override
 	public void runTask(Properties configuration) {
 		mPruningPanel.removeAllFilters();
-	}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 	}
 }

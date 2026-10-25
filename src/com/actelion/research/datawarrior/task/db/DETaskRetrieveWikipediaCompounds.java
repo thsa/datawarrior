@@ -40,12 +40,10 @@ public class DETaskRetrieveWikipediaCompounds extends AbstractTaskWithoutConfigu
 			"</body>\n"+
 			"</html>";
 
-	private DataWarrior	mApplication;
 	private DEFrame		mTargetFrame;
 
-	public DETaskRetrieveWikipediaCompounds(Frame parent, DataWarrior application) {
+	public DETaskRetrieveWikipediaCompounds(Frame parent) {
 		super(parent, true);
-		mApplication = application;
 		}
 
 	@Override
@@ -61,11 +59,6 @@ public class DETaskRetrieveWikipediaCompounds extends AbstractTaskWithoutConfigu
 	@Override
 	public String getHelpURL() {
 		return "/html/help/databases.html#Wikipedia";
-		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mTargetFrame;
 		}
 
 	@Override
@@ -103,7 +96,7 @@ public class DETaskRetrieveWikipediaCompounds extends AbstractTaskWithoutConfigu
 			}
 
 		if (rowList.size() != 0) {
-			mTargetFrame = mApplication.getEmptyFrame("Wikipedia Compounds");
+			mTargetFrame = getEmptyFrame("Wikipedia Compounds");
 			CompoundTableModel tableModel = mTargetFrame.getTableModel();
 		    int columnCount = COLUMN_NAME.length + 3;
 			tableModel.initializeTable(rowList.size(), columnCount);

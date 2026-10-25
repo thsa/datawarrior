@@ -744,11 +744,16 @@ public abstract class DataWarrior implements WindowFocusListener {
 		}
 
 	public void tryReadStartupFile() {
+		String startupFileName = startupFileName();
+		if (new File(startupFileName).exists())
+			readFile(startupFileName);
+	}
+
+	private String startupFileName() {
 		String startupFile = System.getProperty("startupFile");
 		if (startupFile == null)
 			startupFile = getInstallationPath() + File.separator + "startup.dwar";
-		if (new File(startupFile).exists())
-			readFile(startupFile);
+		return startupFile;
 	}
 
 	/**
@@ -801,7 +806,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 		int index2 = path.lastIndexOf('.');
 		String windowName = path.substring(index1+1, index2);
 
-		new DETaskRetrieveDataFromURL(getActiveFrame(), this, url, format, null, windowName).defineAndRun();
+		new DETaskRetrieveDataFromURL(getActiveFrame(), url, format, null, windowName).defineAndRun();
 		}
 
 	public void handleCustomURI(String[] args) {
@@ -821,6 +826,9 @@ public abstract class DataWarrior implements WindowFocusListener {
 
 		int filetype = FileHelper.getFileType(file.getName());
 		if ((filetype & FileHelper.cFileTypeDataWarriorCompatibleData) == 0)
+			return;
+
+		if (file.getAbsolutePath().equals(startupFileName()))
 			return;
 
 		try {

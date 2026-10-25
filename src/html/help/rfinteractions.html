@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>RF-Interactions</title>
+    <base href="../">
+    <link type="text/css" href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+<hr align="left" size="2" width="550">
+<h2><a name="rfinteractions"></a>RF-Interaction Concept</h2>
+<hr align="left" size="2" width="550">
+
+<p><b>RF-interactions</b> are protein-ligand interactions based on the Ratio Of Frequencies (RF).
+    When looking at a ligand inside a protein binding site, one wants to know which contacts help binding and which don't.
+    The classic approach (e.g. PLIP) uses geometric rules to determine which atoms interact with each other.
+    Typically, rules can tell that a contact exists, but don't really allow to quantify interaction strength.
+    The Ratio of Frequencies (RF) approach adresses this question with statistics.
+    It counts how often a given pair of precisely defined atom types occurrs in real crystal structures and compares
+    that count with what pure chance would give. The concept was originally conceived by R. Taylor to study crystal packing
+    on small molecule crystal structures: <i>Which intermolecular interactions have a significant influence on crystal
+    packing?</i> R Taylor; CrystEngComm, 2014, 16, 6852; DOI: 10.1039/c4ce00452c.</p>
+    <p>Later the concept was extended and applied to binding sites: B Kuhn, E Gilberg, R Taylor, J Cole, O Korb;
+    <i>How Significant Are Unusual Protein-Ligand Interactions? Insights from Database Mining</i>; J Med Chem, 62, 22, (2019),
+    10441-55; DOI: 10.1021/acs.jmedchem.9b01545.</p>
+
+<p><b>The RF-concept</b> will be explained here first for the crystal packing study. Afterward, the extention to ligand-protein
+    interactions will be discussed. In order to build the interaction statistics for small molecule crystals, all non-covalent
+    atom-atom contacts were studied in about 137,000 crystal structures from the Cambridge Structural Database.
+    Simple atom types were assigned to all atoms based on atomic number and close neighbor environment.</p>
+
+<p>Imagine molecules packed with random orientations. Then, the chance that a particular atom of type A touches any atom
+    of type B would depend only on how much of the molecular surface belongs to atoms of type B. For each structure,
+    the expected number of A&#x21e2;B contacts is E(A&#x21e2;B) = N<sub>A</sub> * S<sub>B</sub> / S<sub>t</sub>.
+    Here N<sub>A</sub> is the number of type A atoms that form a contact, S<sub>B</sub> the exposed surface area of B atoms,
+    and S<sub>t</sub> is the total exposed surface area. RF is the observed number of contacts divided by this expected
+    number, averaged over the whole dataset:
+    <ul>
+        <li>RF > 1: the contact occurs more often than chance predicts. Nature prefers it.</li>
+        <li>RF &#x2248; 1: the contact is neutral and occurs as often as random packing would produce.</li>
+        <li>RF < 1: the contact is avoided. Other contacts win.</li>
+    </ul>
+    Contacts with distances larger than the VDW-radii sum plus 1.0&#8491; were not considered. And only line-of-sight contacts
+    are counted, meaning no third atom may be closer than its VDW-radius to the connection line between the two partners.
+    Confidence intervals are estimated by bootstrapping.</p>
+
+<p>When applying the concept to protein-ligand complexes, the situation gets a little more complicated. Since the original
+    paper described the concept, but didn't publish the final statistics with it, the RF-statistics for
+    <span class="keyword">DataWarrior</span> was rebuilt from scratch by processing all PDB structure entries submitted
+    before Aug 2026. From these, we considered all non-covalent binding sites, which don't contain metal atoms, with ligands
+    containing at least eight non-hydrogen atoms, with a resolution of at least 2.5&#8491;, and that are not redundant
+    regarding PDB-ID and ligand structure. This yielded about 200,000 binding sites.</p>
+
+<p>Atom types were assigned to all ligand atoms applying a predefined dictionary of 265 meaningful substructures,
+    that distinguish atoms of different interaction behavior.
+    Likewise, 53 protein atom types were assigned to all protein cavity atoms applying a different substructure dictionary.
+    Thus, we distinguish 14045 (265*53) potential interactions, considering that any ligand atom type can interact with any protein type.
+    The substructure definitions and atom type names were taken J. Cole's GitHub repository
+    (https://github.com/jasonccole/relative-interaction-frequencies/tree/main/atom_types), but were slightly adapted, because
+    of incompatibilities of the original SMARTS based encoding with our OpenChemLib concepts, mainly regarding aromaticity.</p>
+
+<p>As in the 2019 paper described, we consider ligand-protein atom contacts only, if the atoms are closer that the sum of
+    their VDW-radii + 0.5A, and if there is an ubostructed line of sight between the atom center coordinates. Then, for
+    every ligand and protein atom type combination we determined all bindings sites that contained at least one atom of the ligand
+    type and at least one of the protein type. From these binding sites we calculated the RF-value RFL from the ligand perspective
+    using surface fractions on the protein side. Likewise, we calculated RF-value RFP from the protein perspective using surface
+    fractions on the ligand side. Finally, we obtained the raw RF-value for the ligand protein type combination as SQRT(RFL * RFP).</p>
+
+<p>The published RF-approach defines an atom type specific angle as one additional parameter. Then, from the angle distribution
+    statistics an angle range is derived, beyond which a contact is not considered an interaction anymore. Different to that binary
+    cutoff, we went a step further for <span class="keyword">DataWarrior</span>: We assigned a geometry class to any ligand and protein
+    atom type. Basically, the geometry class depends on the interacting atom's neighbor count and its or its neighbor's hybridization.
+    Then, we defined two geometry class specific parameters, an angle and a torsion value.</p>
+
+<p align="center"><img src="help/img/rf/geometry.jpeg" width="300" height="165"></p>
+<p align="center"><i>angle and torsion definition for geometry class n1-sp2</i></p>
+
+<p>For every geometry class we harvested the binding sites to collect a two-dimensional frequency map with angle and
+    torsion as parameters. Since shorter and longer interactions differ somewhat regarding the angle-torsion distribution,
+    we build separate maps for shorter and for longer interactions.
+    Then, using a kernel density estimation, we built smoother versions of the maps. With this we are able to calculate
+    a geometry aware RF-value by multiplying the raw RF-value with a normalized density value taken from the map with
+    angle and torsion as input parameters.</p>
+
+<p align="center"><img src="help/img/rf/frequencymap.jpeg" width="560" height="245"></p>
+<p align="center"><i>Smooth frequency maps for geometry class n4sp3 (4 neighbors at interacting atom)</i></p>
+
+<br>
+</body>
+</html>

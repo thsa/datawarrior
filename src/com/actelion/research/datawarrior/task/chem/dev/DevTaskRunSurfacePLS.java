@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -49,11 +49,6 @@ public class DevTaskRunSurfacePLS extends AbstractTaskWithoutConfiguration {
 		}
 
 	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
-		}
-
-	@Override
     public String getTaskName() {
     	return TASK_NAME;
     	}
@@ -72,7 +67,7 @@ public class DevTaskRunSurfacePLS extends AbstractTaskWithoutConfiguration {
 							   : (mode == MODE_TOTAL) ? TotalSurfaceAreaPredictor.getPolarAtomTypeCount()
 									   				  + TotalSurfaceAreaPredictor.getNonPolarAtomTypeCount()
 							   : 						TotalSurfaceAreaPredictor.getNonPolarAtomTypeCount();
-	
+
 			startProgress("Running PLS regression...", 0, 0);
 
 			double[][] x = new double[rowCount][parameterCount];
@@ -98,12 +93,12 @@ public class DevTaskRunSurfacePLS extends AbstractTaskWithoutConfiguration {
 					p++;
 					}
 				}
-	
+
 			int surfaceAreaColumn = mTableModel.findColumn(SURFACE_COLUMN_TITLE[mode]);
 			double[][] y = new double[rowCount][1];
 			for (int r=0; r<rowCount; r++)
 				y[r][0] = mTableModel.getTotalDoubleAt(r, surfaceAreaColumn);
-	
+
 			System.out.println("############# "+SURFACE_COLUMN_TITLE[mode]+" ############");
 			ModelXYIndex modelData = new ModelXYIndex();
 			modelData.X = new Matrix(x);
@@ -111,7 +106,7 @@ public class DevTaskRunSurfacePLS extends AbstractTaskWithoutConfiguration {
 			RegressionModelCalculatorOptimumFactors rmc = new RegressionModelCalculatorOptimumFactors();
 			ModelError error = rmc.calculateModel(modelData, parameterCount/2, parameterCount);
 			System.out.println("average:"+error.error+" max:"+error.errMax);
-	
+
 			double[][] b = rmc.getB().getArray();
 			for (int r=0; r<b.length; r++) {
 				System.out.print(count[r]+": ");
@@ -119,18 +114,18 @@ public class DevTaskRunSurfacePLS extends AbstractTaskWithoutConfiguration {
 					System.out.print(b[r][c]+" ");
 				System.out.println();
 				}
-	
+
 			if (!threadMustDie()) {
 				startProgress("Extending table...", 0, 0);
-	
+
 				double[][] predictedY = rmc.getYHat().getArray();
-	
+
 				String[] columnTitle = new String[1];
 				columnTitle[0] = "Predicted "+SURFACE_COLUMN_TITLE[mode];
 				final int firstNewColumn = mTableModel.addNewColumns(columnTitle);
 				for (int r=0; r<rowCount; r++)
 					mTableModel.setTotalValueAt(""+predictedY[r][0], r, firstNewColumn);
-	
+
 				mTableModel.finalizeNewColumns(firstNewColumn, this);
 				}
 			}

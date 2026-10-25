@@ -18,7 +18,6 @@
 
 package com.actelion.research.datawarrior.task.view;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
 import com.actelion.research.gui.dock.Dockable;
@@ -38,10 +37,10 @@ public abstract class DETaskAbstractNewView extends ConfigurableTask {
 	private static final String[] TEXT_RELATION = { "Center",  "Top", "Left", "Bottom", "Right" };
 	private static final String[] CODE_WHERE = { "center",  "top", "left", "bottom", "right" };
 
-	private DEMainPane	mMainPane;
-	private JTextField	mTextFieldViewName,mTextFieldSplitting;
-	private JComboBox	mComboBoxView,mComboBoxWhere;
-	private String		mWhereViewName;
+	private final DEMainPane	mMainPane;
+	private JTextField			mTextFieldViewName,mTextFieldSplitting;
+	private JComboBox<String>	mComboBoxView,mComboBoxWhere;
+	private final String		mWhereViewName;
 
 	public DETaskAbstractNewView(Frame parent, DEMainPane mainPane, String whereViewName) {
 		super(parent, false);
@@ -61,7 +60,7 @@ public abstract class DETaskAbstractNewView extends ConfigurableTask {
 	public JComponent createDialogContent() {
 		int gap = HiDPIHelper.scale(8);
 		JPanel p = new JPanel();
-		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, gap},
+		double[][] size = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, gap},
 				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap} };
 		p.setLayout(new TableLayout(size));
 /*
@@ -74,12 +73,12 @@ for (Dockable d:mMainPane.getDockables())
 
 		p.add(new JLabel("New view's position:"), "1,3");
 
-		mComboBoxWhere = new JComboBox(TEXT_RELATION);
+		mComboBoxWhere = new JComboBox<>(TEXT_RELATION);
 		p.add(mComboBoxWhere, "3,3");
 
 		p.add(new JLabel(" of "), "4,3");
 
-		mComboBoxView = new JComboBox();
+		mComboBoxView = new JComboBox<>();
 		for (Dockable d:mMainPane.getDockables())
 			if (d.isVisibleDockable())
 				mComboBoxView.addItem(d.getTitle());
@@ -113,7 +112,7 @@ for (Dockable d:mMainPane.getDockables())
 		configuration.setProperty(PROPERTY_NEW_VIEW, mTextFieldViewName.getText());
 		configuration.setProperty(PROPERTY_WHERE_VIEW, (String)mComboBoxView.getSelectedItem());
 		configuration.setProperty(PROPERTY_WHERE, CODE_WHERE[mComboBoxWhere.getSelectedIndex()]);
-		if (mTextFieldSplitting.getText().length() != 0)
+		if (!mTextFieldSplitting.getText().isEmpty())
 			configuration.setProperty(PROPERTY_SPLITTING, mTextFieldSplitting.getText());
 		return configuration;
 	}
@@ -143,7 +142,7 @@ for (Dockable d:mMainPane.getDockables())
 			return false;
 		}
 		String splitting = configuration.getProperty(PROPERTY_SPLITTING, "");
-		if (splitting.length() != 0) {
+		if (!splitting.isEmpty()) {
 			try {
 				double s = Double.parseDouble(splitting);
 				if (s < 0.1 || s > 1.0) {
@@ -176,13 +175,8 @@ for (Dockable d:mMainPane.getDockables())
 		String whereView = configuration.getProperty(PROPERTY_WHERE_VIEW);
 		String where = CODE_WHERE[findListIndex(configuration.getProperty(PROPERTY_WHERE), CODE_WHERE, 0)];
 		String splitting = configuration.getProperty(PROPERTY_SPLITTING, "");
-		if (splitting.length() != 0)
+		if (!splitting.isEmpty())
 			where = where.concat("\t").concat(splitting);
 		createNewView(viewName, whereView, where, configuration);
-	}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return null;
 	}
 }

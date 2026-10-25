@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -47,6 +47,7 @@ public abstract class AbstractTask implements ProgressController {
 	private TaskUIDelegate		mUIDelegate;
 	private boolean				mStatusOK,mIsLive, mStopMacro;
 	private final Frame		    mParentFrame;
+	private DEFrame				mNewFrame;
 	private volatile ProgressController	mProgressController;
 	private volatile Properties	mTaskConfiguration,mPredefinedConfiguration;
 	private final boolean       mUseOwnThread;
@@ -133,11 +134,11 @@ public abstract class AbstractTask implements ProgressController {
 	 */
 	public abstract void runTask(final Properties configuration);
 
-	/**
-	 * After task execution this method is called to put the correct frame in front
-	 * @return null or new created during task processing
-	 */
-	public abstract DEFrame getNewFrontFrame();
+//	/**
+//	 * After task execution this method is called to put the correct frame in front
+//	 * @return null or new created during task processing
+//	 */
+//	public abstract DEFrame getNewFrontFrame();
 
 	/**
 	 * If a task shall not show a dialog, when being launched interactively with defineAndRun(),
@@ -349,7 +350,7 @@ public abstract class AbstractTask implements ProgressController {
 	 * A Help button is shown in addition, if getHelpURL() != null.
 	 * Override this if more buttons are needed. Make this class an ActionListener
 	 * of OK and Cancel buttons and make the OK button the default button of the
-	 * getDialog()s root pane. 
+	 * getDialog()s root pane.
 	 * @return
 	 */
 	private JPanel createButtonPanel() {
@@ -581,7 +582,7 @@ public abstract class AbstractTask implements ProgressController {
 
 	public void stopProgress() {
 		// Don't let any employed class call stopProgress on mProgressController.
-		// mProgressController.stopProgress() is called explicitly from execute()
+		// mProgressController.stopProgress() is called explicitly from defineAndRun()
 		// after the ConfigurableTask has finished.
 		}
 
@@ -636,6 +637,31 @@ public abstract class AbstractTask implements ProgressController {
 		}
 
 	/**
+	 * Gets or creates an empty frame from the application to be filled with new data.
+	 * If your task runs in a background thread and uses a progress dialog, the this dialog
+	 * is discarded and a new one with the new frame as owner is instantiated instead.
+	 * The next call to startProgress() will make ist visible.
+	 * @param title
+	 * @return
+	 */
+	public DEFrame getEmptyFrame(String title) {
+		boolean hasProgressDialog = mProgressController != null && mProgressController instanceof JProgressDialog;
+		if (hasProgressDialog)
+			((JProgressDialog)mProgressController).close();
+		mNewFrame = DataWarrior.getApplication().getEmptyFrame(title);
+		if (hasProgressDialog)
+			mProgressController = new JProgressDialog(mNewFrame);
+		return mNewFrame;
+		}
+
+	/**
+	 * @return new frame if the task has created one, null otherwise
+	 */
+	public DEFrame getNewFrame() {
+		return mNewFrame;
+	}
+
+	/**
 	 * Interactively let the user configure the task and run it.
 	 * This method must be called from the EventDispatchThread.
 	 * Non-configurable tasks are executed without showing a dialog.
@@ -653,8 +679,8 @@ public abstract class AbstractTask implements ProgressController {
 
 				mTaskConfiguration = configuration;
 				if (mUseOwnThread) {
-					mProgressController = new JProgressDialog(mParentFrame, true);
 					Thread t = new Thread(() -> {
+						mProgressController = new JProgressDialog(mParentFrame);
 						try {
 							runAndRecordTask(mTaskConfiguration);
 							}
@@ -662,9 +688,11 @@ public abstract class AbstractTask implements ProgressController {
 							showErrorMessage("Out of memory. Launch DataWarrior with Java option -Xms???m or -Xmx???m.");
 							}
 
-						mProgressController.stopProgress();
-						((JProgressDialog)mProgressController).close(getNewFrontFrame());
+						((JProgressDialog)mProgressController).close();
 						mProgressController = null;
+						if (mNewFrame != null) {
+							try { SwingUtilities.invokeAndWait(() -> mNewFrame.toFront()); } catch (Exception e) {}
+							}
 						}, getTaskName());
 					t.setPriority(Thread.MIN_PRIORITY);
 					t.start();
@@ -813,7 +841,7 @@ public abstract class AbstractTask implements ProgressController {
 	 * @return true if file is readable (isSaving==false) / can be written (isSaving==true)
 	 */
 	public boolean isFileAndPathValid(String filename, boolean isSaving, boolean askOverwrite) {
-		if (filename == null || filename.length() == 0) {
+		if (filename == null || filename.isEmpty()) {
 			showErrorMessage("No file name specified.");
 			return false;
 			}
@@ -913,7 +941,7 @@ public abstract class AbstractTask implements ProgressController {
 			showInteractiveMessageInEDT(message, messageType);
 		else {
 			SwingUtilities.invokeLater(() ->
-				JOptionPane.showMessageDialog(mParentFrame, message, getTaskName(), messageType)
+				JOptionPane.showMessageDialog(mNewFrame != null ? mNewFrame : mParentFrame, message, getTaskName(), messageType)
 				);
 			}
 		}
@@ -922,6 +950,6 @@ public abstract class AbstractTask implements ProgressController {
 		if (mDialog != null)
 			JOptionPane.showMessageDialog(mDialog, message, getTaskName(), messageType);
 		else
-			JOptionPane.showMessageDialog(mParentFrame, message, getTaskName(), messageType);
+			JOptionPane.showMessageDialog(mNewFrame != null ? mNewFrame : mParentFrame, message, getTaskName(), messageType);
 		}
 	}

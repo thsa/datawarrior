@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -19,7 +19,6 @@
 package com.actelion.research.datawarrior.task;
 
 import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.table.CompoundTableLoader;
 import info.clearthought.layout.TableLayout;
 
@@ -37,14 +36,11 @@ public class DETaskPaste extends ConfigurableTask {
 	public static final int HEADER_ANALYZE = 2;
 	private static final int DEFAULT_HEADER_HANDLING = HEADER_ANALYZE;
 
-	private DataWarrior	mApplication;
-    private DEFrame		mNewFrame;
-	private int         mHeaderHandling;
-	private JComboBox   mComboBoxHeaderHandling;
+	private final int   mHeaderHandling;
+	private JComboBox<String>   mComboBoxHeaderHandling;
 
-    public DETaskPaste(DEFrame parent, DataWarrior application, int headerHandling) {
+    public DETaskPaste(DEFrame parent, int headerHandling) {
 		super(parent, false);
-		mApplication = application;
 	    mHeaderHandling = headerHandling;
 		}
 
@@ -65,7 +61,7 @@ public class DETaskPaste extends ConfigurableTask {
 		JPanel content = new JPanel();
 		content.setLayout(new TableLayout(size));
 		content.add(new JLabel("Includes header row:"), "1,1");
-		mComboBoxHeaderHandling = new JComboBox(TEXT_HEADER_HANDLING);
+		mComboBoxHeaderHandling = new JComboBox<>(TEXT_HEADER_HANDLING);
 		content.add(mComboBoxHeaderHandling, "3,1");
 
 		return content;
@@ -109,14 +105,9 @@ public class DETaskPaste extends ConfigurableTask {
 
 	@Override
 	public void runTask(Properties configuration) {
-		mNewFrame = mApplication.getEmptyFrame(null);
+		DEFrame newFrame = getEmptyFrame(null);
 		int headerHandling = findListIndex(configuration.getProperty(PROPERTY_HEADER_HANDLING),
 				CODE_HEADER_HANDLING, DEFAULT_HEADER_HANDLING);
-		new CompoundTableLoader(mNewFrame, mNewFrame.getTableModel(), null).paste(headerHandling, false);
+		new CompoundTableLoader(newFrame, newFrame.getTableModel(), null).paste(headerHandling, false);
 		}
-
-	@Override
-	public DEFrame getNewFrontFrame() {
-		return mNewFrame;
-		}
-}
+	}

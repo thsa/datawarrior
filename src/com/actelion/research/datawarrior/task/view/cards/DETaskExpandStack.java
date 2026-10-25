@@ -1,11 +1,10 @@
 package com.actelion.research.datawarrior.task.view.cards;
 
-import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.AbstractTaskWithoutConfiguration;
+import com.actelion.research.table.model.CompoundRecord;
 import com.actelion.research.table.view.card.CardElement;
 import com.actelion.research.table.view.card.CardPaneEvent;
 import com.actelion.research.table.view.card.JCardPane;
-import com.actelion.research.table.model.CompoundRecord;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -91,10 +90,4 @@ public class DETaskExpandStack extends AbstractTaskWithoutConfiguration {
     public boolean isConfigurable(){
         return true;
     }
-
-    @Override
-    public DEFrame getNewFrontFrame() {
-        return null;
-    }
-
 }

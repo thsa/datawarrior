@@ -42,7 +42,6 @@ import java.util.ArrayList;
 public class DENativeMDLReactionReader implements Runnable {
     private final Frame             mParentFrame;
 	private final DataWarrior		mApplication;
-	private DEFrame					mTargetFrame;
 	private JProgressDialog    		mProgressDialog;
     private NativeMDLReactionReader mReader;
     private String					mDirectoryName;
@@ -87,16 +86,8 @@ public class DENativeMDLReactionReader implements Runnable {
 			}
 		catch (OutOfMemoryError e) {
 			final String message = "Out of memory. Launch DataWarrior with Java option -Xms???m or -Xmx???m.";
-			SwingUtilities.invokeLater(new Runnable() {
-				public void run() {
-					JOptionPane.showMessageDialog(mParentFrame, message);
-					}
-				} );
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(mParentFrame, message));
 			}
-
-		mProgressDialog.close();
-		if (mTargetFrame != null)
-			SwingUtilities.invokeLater(() -> mTargetFrame.toFront());
 		}
 
 	private void readData() {
@@ -188,8 +179,10 @@ public class DENativeMDLReactionReader implements Runnable {
 
 //        mReader.printPointerStatistics();
 
-        mTargetFrame = mApplication.getEmptyFrame("Reactions From "+mDirectoryName);
-        CompoundTableModel tableModel = mTargetFrame.getTableModel();
+		mProgressDialog.close(true);
+
+		DEFrame targetFrame = mApplication.getEmptyFrame("Reactions From "+mDirectoryName);
+        CompoundTableModel tableModel = targetFrame.getTableModel();
         String[] specialFieldName = { "Registry No", "Reaction", "mapping", "coords", "Reaction Catalysts", "rxnfp", "reactantffp",
 				"productffp", "catalystffp", "Solvents", "Reactant Data", "Product Data", "Catalyst Data", "Solvent Data" };
         tableModel.initializeTable(rows, specialFieldName.length+fieldName.length);

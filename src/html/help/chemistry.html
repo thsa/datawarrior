@@ -259,7 +259,7 @@ of the displayed structures is usually drawn in black.</p>
 <br>
 
 <h3>Structure Similarity Search</h3>
-  
+
 <p>To find structurally similar compounds rather than compounds sharing a specific
 sub-structure, select any of the <span class="menu">is similar to [...]</span> options. Then
 double-click the filter's structure area and draw a molecule using the
@@ -393,7 +393,7 @@ Usually, <span class="keyword">Find & Replace</span> functionality is performed 
 For this purpose the <span class="keyword">Find & Replace</span> dialog (left) lets you select a column,
 a text string to be searched for and another piece of text as a replacement string.
 You may also choose all empty cells or any cell content to be replaced by a new content.
-In addition you may define, whether the replacement shall take place in all rows, or whether
+In addition, you may define, whether the replacement shall take place in all rows, or whether
 it shall be restricted to visible or selected rows only. This way you may for instance choose
 to replace any content of all selected cells with some new content.</p>
 <p>When using this dialog to replace text, then the option <span class="menu">Find regex:</span>
@@ -426,6 +426,23 @@ fragment is kept empty, then the search fragments are just removed from the targ
 <li>Remove all selected structures</li>
 </p><br>
 
+<h3><a name="ApplyReaction"></a>Perform A Chemical Reaction On Chemical Structures</h3>
+<p>As an alternative to the chemical search and replace functionality, one may achieve a controlled structure
+change by performing a defined chemical reaction on chemical structures.
+For instance, this may be used to add or remove protective groups, to replace substituents by SN<sub>2</sub>
+, to oxidize group, to perform ring closure, to cut a molecule into two pieces, just to name a few.</p>
+
+<p align="center"><img src="help/img/chem/performReaction.png" width="282" height="214"></p>
+<p><center><i>Dialog defined to protect amino acids with a BOC-group</i></center></p>
+
+<p>In the example above all molecules in the 'Synthon' column, which contain an amino acid substructure
+with an unprotected amino group, will be protected with a BOC-group. When pressing <span class="menu">OK</span>,
+a new column will be generated containing the molecules from the 'Synthon' column plus an attached BOC-group,
+if they had a primary amino group as part of an amino acid substructure in the first place. Note, that
+the mapping numbers in the picture above are shown for illustration purposes only. To see and change the
+atom mapping you need to double-click the dialog's reaction and select the mapping tool in the reaction editor.</p>
+<br>
+
 <h3><a name="Add2DCoords"></a>Unifying 2D Atom Coordinates</h3>
 <p>
 Typically, every column that contains chemical structures is accompanied by an invisible column
@@ -442,7 +459,7 @@ A dialog opens where one can choose the structure column to be used.
 <p align="center"><img src="help/img/chem/add2DCoords.jpeg"></p>
 <p><center><i>Options for 2D atom coordinate calculation and unification.</i></center></p>
 <p>
-If no further options are selected and OK is pressed, then <span class="keyword">DataWarrior</span>
+If no further options are selected and <span class="menu">OK</span> is pressed, then <span class="keyword">DataWarrior</span>
 tries to generate atom coordinates for every structure individually. If, however, as in the example
 above, some scaffold are defined, then <span class="keyword">DataWarrior</span> checks every
 structure of the selected column, whether it contains any of the given scaffolds. If a scaffold is

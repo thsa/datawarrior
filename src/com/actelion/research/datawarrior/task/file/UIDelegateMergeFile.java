@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -24,6 +24,7 @@ import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.TaskUIDelegate;
 import com.actelion.research.gui.FileHelper;
 import com.actelion.research.gui.JPopupButton;
+import com.actelion.research.gui.JProgressDialog;
 import com.actelion.research.gui.hidpi.HiDPIHelper;
 import com.actelion.research.table.CompoundTableLoader;
 import com.actelion.research.table.model.CompoundTableModel;
@@ -49,18 +50,18 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 	private static final String COMMAND_DESTINATION = "dest:";
 	private static final String COMMAND_TYPE = "type:";
 
-	private DEFrame				mParentFrame;
-	private DETaskMergeFile		mParentTask;
-	private CompoundTableModel  mTableModel;
-	private JPanel				mDialogPanel;
-	private JComponent			mMatchingPanel;
-	private JFilePathLabel		mFilePathLabel;
-	private JComboBox<String>[]	mComboBoxUsage;
-	private JComboBox<String>[]	mComboBoxOldColumn;
-	private JCheckBox			mCheckBoxAppendRows,mCheckBoxAppendColumns;
-	private CompoundTableLoader	mLoader;
-	private String[]			mTotalFieldName,mFieldName,mFieldAlias;
-	private boolean 			mIsInteractive,mIsClipboard;
+	private final DEFrame			mParentFrame;
+	private final DETaskMergeFile	mParentTask;
+	private final CompoundTableModel  mTableModel;
+	private JPanel					mDialogPanel;
+	private JComponent				mMatchingPanel;
+	private JFilePathLabel			mFilePathLabel;
+	private JComboBox<String>[]		mComboBoxUsage;
+	private JComboBox<String>[]		mComboBoxOldColumn;
+	private JCheckBox				mCheckBoxAppendRows,mCheckBoxAppendColumns;
+	private CompoundTableLoader		mLoader;
+	private String[]				mFieldName,mFieldAlias;
+	private final boolean 			mIsInteractive,mIsClipboard;
 
 	public UIDelegateMergeFile(DEFrame parent, DETaskMergeFile parentTask, boolean isInteractive, boolean isClipboard) {
 		mParentFrame = parent;
@@ -80,8 +81,8 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 			}
 
 		int gap = HiDPIHelper.scale(8);
-		double[][] size1 = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, gap},
-							 {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, 8} };
+		double[][] size1 = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, gap},
+							 {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, 8} };
 		mDialogPanel = new JPanel();
 		mDialogPanel.setLayout(new TableLayout(size1));
 
@@ -113,8 +114,9 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 
 	private void updateUIFromFile(File file) {
 		DERuntimeProperties rtp = new DERuntimeProperties(mParentFrame.getMainFrame());
+		JProgressDialog progressDialog = new JProgressDialog(mParentFrame);
 		if (mIsClipboard) {
-			mLoader = new CompoundTableLoader(mParentFrame, mParentFrame.getTableModel(), null);
+			mLoader = new CompoundTableLoader(mParentFrame, mParentFrame.getTableModel(), progressDialog);
 			mLoader.paste(1, true);
 			}
 		else {
@@ -122,17 +124,18 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 
 			// parse the file to be merged
 			int fileType = FileHelper.getFileType(file);
-			mLoader = new CompoundTableLoader(mParentFrame, mParentFrame.getTableModel(), null);
+			mLoader = new CompoundTableLoader(mParentFrame, mParentFrame.getTableModel(), progressDialog);
 			mLoader.readFile(file, rtp, fileType, CompoundTableLoader.READ_DATA);
 			}
+		progressDialog.close();
 
 		// create arrays with field names
-		mTotalFieldName = mLoader.getFieldNames();
+		String[] totalFieldName = mLoader.getFieldNames();
 		ArrayList<String> visibleFieldList = new ArrayList<String>();
-		for (int i=0; i<mTotalFieldName.length; i++) {
-			int displayableType = getDisplayableType(mLoader.getColumnSpecialType(mTotalFieldName[i]));
+		for (int i=0; i<totalFieldName.length; i++) {
+			int displayableType = getDisplayableType(mLoader.getColumnSpecialType(totalFieldName[i]));
 			if (displayableType != IS_NOT_DISPLAYABLE) {
-				visibleFieldList.add(mTotalFieldName[i]);
+				visibleFieldList.add(totalFieldName[i]);
 				}
 			}
 		mFieldName = visibleFieldList.toArray(new String[0]);
@@ -220,8 +223,7 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 				String destColumnAlias = mIsInteractive ? mTableModel.getColumnAlias(destColumn) : null;
 				if (mFieldName[i].equalsIgnoreCase(destColumnName)
 				 || (mFieldAlias[i] != null && mFieldAlias[i].equalsIgnoreCase(destColumnName))
-				 || (destColumnAlias != null
-				  && mFieldName[i].equalsIgnoreCase(destColumnAlias)
+				 || (mFieldName[i].equalsIgnoreCase(destColumnAlias)
 				   || (mFieldAlias[i] != null && mFieldAlias[i].equalsIgnoreCase(destColumnAlias)))) {
 					mComboBoxOldColumn[i].setSelectedIndex(j);
 					break;
@@ -368,22 +370,8 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 						mComboBoxUsage[index].removeItemListener(this);
 						mComboBoxUsage[index].setSelectedIndex(CompoundTableLoader.MERGE_MODE_USE_IF_EMPTY);
 						mComboBoxUsage[index].addItemListener(this);
-						return;
 						}
 					}
-/*	multiple merge keys are now allowed. 14-Nov-2014
-				else if (OPTION_TEXT[CompoundTableLoader.MERGE_MODE_IS_KEY].equals(e.getItem())) {
-					for (int i=0; i<mFieldCount; i++) {
-						JComboBox cb = mComboBoxUsage[i];
-						if (cb != e.getSource() && cb.getSelectedIndex() == CompoundTableLoader.MERGE_MODE_IS_KEY) {
-							String newColumnName = mLabelSourceColumn[i].getText();
-							int displayableType = getDisplayableType(mLoader.getColumnSpecialType(newColumnName));
-							cb.removeItemListener(this);
-							cb.setSelectedIndex((displayableType != IS_NORMAL_DISPLAYABLE) ? CompoundTableLoader.MERGE_MODE_USE_IF_EMPTY : CompoundTableLoader.MERGE_MODE_APPEND);
-							cb.addItemListener(this);
-							}
-						}
-					}	*/
 				}
 			}
 		}
@@ -425,7 +413,7 @@ public class UIDelegateMergeFile implements ActionListener,ItemListener,TaskUIDe
 		if (!mIsInteractive) {
 			String fileName = configuration.getProperty(PROPERTY_FILENAME);
 			File file = (fileName == null) ? null : new File(mParentTask.resolvePathVariables(fileName));
-			if (file.exists() || mIsClipboard)
+			if (mIsClipboard || (file != null && file.exists()))
 				updateUIFromFile(file);
 			}
 

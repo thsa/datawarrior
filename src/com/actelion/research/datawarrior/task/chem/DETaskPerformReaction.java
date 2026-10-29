@@ -104,7 +104,11 @@ public class DETaskPerformReaction extends ConfigurableTask {
 
 	@Override
 	public boolean isConfigurable() {
-		return mTableModel.getSpecialColumnList(CompoundTableConstants.cColumnTypeIDCode) != null;
+		if (mTableModel.getSpecialColumnList(CompoundTableConstants.cColumnTypeIDCode) == null) {
+			showErrorMessage("Performing a reaction requires at least one column to contain chemical structures.");
+			return false;
+		}
+		return true;
 	}
 
 	@Override

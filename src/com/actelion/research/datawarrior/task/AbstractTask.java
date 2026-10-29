@@ -647,7 +647,7 @@ public abstract class AbstractTask implements ProgressController {
 	public DEFrame getEmptyFrame(String title) {
 		boolean hasProgressDialog = mProgressController != null && mProgressController instanceof JProgressDialog;
 		if (hasProgressDialog)
-			((JProgressDialog)mProgressController).close();
+			((JProgressDialog)mProgressController).close(true);
 		mNewFrame = DataWarrior.getApplication().getEmptyFrame(title);
 		if (hasProgressDialog)
 			mProgressController = new JProgressDialog(mNewFrame);
@@ -688,7 +688,7 @@ public abstract class AbstractTask implements ProgressController {
 							showErrorMessage("Out of memory. Launch DataWarrior with Java option -Xms???m or -Xmx???m.");
 							}
 
-						((JProgressDialog)mProgressController).close();
+						((JProgressDialog)mProgressController).close(true);
 						mProgressController = null;
 						if (mNewFrame != null) {
 							try { SwingUtilities.invokeAndWait(() -> mNewFrame.toFront()); } catch (Exception e) {}

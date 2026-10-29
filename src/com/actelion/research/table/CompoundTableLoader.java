@@ -316,8 +316,10 @@ public class CompoundTableLoader implements CompoundTableConstants,Runnable {
 		}
 
 	public String[] getFieldNames() {
-		while (mThread != null)
-			try { Thread.sleep(100); } catch (InterruptedException e) {}
+		try {
+			if (mThread != null)
+				mThread.join();
+		} catch (InterruptedException ie) {}
 
 		return mFieldNames;
 		}
@@ -2564,8 +2566,6 @@ try {
 		catch (Throwable t) {
 			t.printStackTrace();
 			}
-
-		mThread = null;
 		}
 
 	private boolean readData() {

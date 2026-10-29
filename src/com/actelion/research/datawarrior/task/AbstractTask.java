@@ -611,7 +611,7 @@ public abstract class AbstractTask implements ProgressController {
 		}
 
 	public boolean threadMustDie() {
-		return (mProgressController == null) ? false : mProgressController.threadMustDie();
+		return mProgressController != null && mProgressController.threadMustDie();
 		}
 
 	/**

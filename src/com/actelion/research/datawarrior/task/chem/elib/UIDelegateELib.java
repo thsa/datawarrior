@@ -61,11 +61,11 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 			"fnkq@@L\\jCHeEDehdhddlZ\\TZI\\uZZjfJBbdH@@",
 			"fbmi`@DTxIPDyrJIQQJjJKILyIW`mLtuSUUVMKtC@@" };
 
-	private Frame				mParentFrame;
-	private CompoundTableModel	mTableModel;
-	private DETaskBuildEvolutionaryLibrary mTask;
+	private final Frame			mParentFrame;
+	private final CompoundTableModel mTableModel;
+	private final DETaskBuildEvolutionaryLibrary mTask;
 	private boolean             mDiableEvents;
-	private JComboBox           mComboBoxRootCompounds, mComboBoxCycleCount, mComboBoxCompoundCount, mComboBoxRunCount,
+	private JComboBox<String>   mComboBoxRootCompounds, mComboBoxCycleCount, mComboBoxCompoundCount, mComboBoxRunCount,
 								mComboBoxSurvivalCount,mComboBoxCreateLike,mComboBoxFitnessOption;
 	private JCheckBox           mCheckBoxDeferred;
 	private JButton             mButtonDeferredDetails;
@@ -75,7 +75,6 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 	private JScrollPane			mFitnessScrollpane;
 	private CompoundCollectionPane<StereoMolecule> mRootGenerationPane;
 	private DefaultCompoundCollectionModel.Molecule mRootGeneration;
-	private DECompoundProvider  mCompoundCollectionHelper;
 
 	public UIDelegateELib(Frame parent, CompoundTableModel tableModel, DETaskBuildEvolutionaryLibrary task) {
 		mParentFrame = parent;
@@ -102,7 +101,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 
 		p1.add(new JLabel("Root generation compounds:", JLabel.RIGHT), "1,1");
 
-		mComboBoxRootCompounds = new JComboBox(START_COMPOUND_TEXT);
+		mComboBoxRootCompounds = new JComboBox<>(START_COMPOUND_TEXT);
 		mComboBoxRootCompounds.addActionListener(this);
 		p1.add(mComboBoxRootCompounds, "3,1");
 
@@ -127,14 +126,14 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 
 		p1.add(new JLabel("(Select sub-structures to protect them from being changed)", JLabel.CENTER), "1,5,8,5");
 
-		mCompoundCollectionHelper = new DECompoundProvider(mRootGenerationPane);
-		mCompoundCollectionHelper.addPopupItems(mParentFrame);
+		DECompoundProvider compoundCollectionHelper = new DECompoundProvider(mRootGenerationPane);
+		compoundCollectionHelper.addPopupItems(mParentFrame);
 
-		mComboBoxCycleCount = new JComboBox(GENERATION_OPTIONS);
-		mComboBoxCompoundCount = new JComboBox(COMPOUND_OPTIONS);
+		mComboBoxCycleCount = new JComboBox<>(GENERATION_OPTIONS);
+		mComboBoxCompoundCount = new JComboBox<>(COMPOUND_OPTIONS);
 		mComboBoxCompoundCount.setSelectedItem(DEFAULT_COMPOUND_COUNT);
 		mComboBoxCompoundCount.setEditable(true);
-		mComboBoxSurvivalCount = new JComboBox(SURVIVAL_OPTIONS);
+		mComboBoxSurvivalCount = new JComboBox<>(SURVIVAL_OPTIONS);
 		mComboBoxSurvivalCount.setSelectedItem(DEFAULT_SURVIVAL_COUNT);
 		mComboBoxSurvivalCount.setEditable(true);
 		p1.add(mComboBoxCycleCount, "1,7");
@@ -145,11 +144,11 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		p1.add(new JLabel("Compounds survive a cycle"), "3,11");
 
 		p1.add(new JLabel("Create compounds like"), "6,7");
-		mComboBoxCreateLike = new JComboBox(COMPOUND_KIND_TEXT);
+		mComboBoxCreateLike = new JComboBox<>(COMPOUND_KIND_TEXT);
 		p1.add(mComboBoxCreateLike, "8,7");
 
 		p1.add(new JLabel("Total run count:"), "6,11");
-		mComboBoxRunCount = new JComboBox(RUN_OPTIONS);
+		mComboBoxRunCount = new JComboBox<>(RUN_OPTIONS);
 		mComboBoxRunCount.setEditable(true);
 		p1.add(mComboBoxRunCount, "8,11");
 
@@ -158,7 +157,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		bAdd.setActionCommand("addOption");
 		bAdd.addActionListener(this);
 		p1.add(bAdd, "6,13");
-		mComboBoxFitnessOption = new JComboBox();
+		mComboBoxFitnessOption = new JComboBox<>();
 		mComboBoxFitnessOption.addItem(FitnessPanel.STRUCTURE_OPTION_TEXT);
 		mComboBoxFitnessOption.addItem(FitnessPanel.CONFORMER_OPTION_TEXT);
 		mComboBoxFitnessOption.addItem(FitnessPanel.DOCKING_OPTION_TEXT);
@@ -315,7 +314,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 
 	public void editDeferredFile() {
 		int gap = HiDPIHelper.scale(8);
-		double[][] size = { {gap, TableLayout.PREFERRED, gap/2, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, gap},
+		double[][] size = { {gap, TableLayout.PREFERRED, gap>>1, TableLayout.PREFERRED, TableLayout.FILL, TableLayout.PREFERRED, gap},
 				{gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap } };
 
 		JPanel content = new JPanel();
@@ -441,7 +440,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 			if (e.getActionCommand().equals("OK")) {
 				if (comboBox1 != null)
 					columnNameAndListName[0] = (String)comboBox1.getSelectedItem();
-				if (columnNameAndListName[0] != null && columnNameAndListName[0].length() == 0)
+				if (columnNameAndListName[0] != null && columnNameAndListName[0].isEmpty())
 					columnNameAndListName[0] = null;
 				if (columnNameAndListName[0] != null) {
 					int column = mTableModel.findColumn(columnNameAndListName[0]);
@@ -449,7 +448,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 						columnNameAndListName[0] = mTableModel.getColumnTitleNoAlias(column);
 					if (comboBox2 != null) {
 						columnNameAndListName[1] = (String)comboBox2.getSelectedItem();
-						if (columnNameAndListName[1] != null && columnNameAndListName[1].length() == 0)
+						if (columnNameAndListName[1] != null && columnNameAndListName[1].isEmpty())
 							columnNameAndListName[1] = null;
 						}
 					}
@@ -504,7 +503,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 					}
 				}
 			}
-		return (moleculeList.size() == 0) ? null : moleculeList;
+		return (moleculeList.isEmpty()) ? null : moleculeList;
 		}
 
 	/**
@@ -548,7 +547,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		else if (mRootGeneration.getSize() != 0) {
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i<mRootGeneration.getSize(); i++) {
-				if (sb.length() != 0)
+				if (!sb.isEmpty())
 					sb.append('\t');
 				sb.append(new Canonizer(mRootGeneration.getMolecule(i), Canonizer.ENCODE_ATOM_SELECTION).getIDCode());
 				}
@@ -602,7 +601,7 @@ public class UIDelegateELib implements ActionListener,TaskConstantsELib,TaskUIDe
 		mCheckBoxDeferred.setSelected(isDeferred);
 
 		String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
-		if (startSet.length() != 0)
+		if (!startSet.isEmpty())
 			for (String idcode:configuration.getProperty(PROPERTY_START_COMPOUNDS, "").split("\\t"))
 				mRootGeneration.addCompound(new IDCodeParser(true).getCompactMolecule(idcode));
 

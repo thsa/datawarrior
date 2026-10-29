@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -28,7 +28,7 @@ import javax.swing.JTextField;
 public class PropertyFitnessPanel extends FitnessPanel {
 	private static final long serialVersionUID = 20140724L;
 
-	private JTextField mTextFieldValueMin,mTextFieldValueMax;
+	private final JTextField mTextFieldValueMin,mTextFieldValueMax;
 	private int mType;
 
 	/**
@@ -56,9 +56,9 @@ public class PropertyFitnessPanel extends FitnessPanel {
 		mTextFieldValueMax = new JTextField(defaultMax, 4);
 
 		int gap = HiDPIHelper.scale(8);
-		double[][] cpsize = { {gap/2, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED,
-								2*gap, TableLayout.FILL, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap/2},
-							  {gap/2, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL} };
+		double[][] cpsize = { {gap>>1, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED, TableLayout.PREFERRED,
+								2*gap, TableLayout.FILL, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap>>1},
+							  {gap>>1, TableLayout.FILL, TableLayout.PREFERRED, TableLayout.FILL} };
 		setLayout(new TableLayout(cpsize));
 
 		add(new JLabel("Prefer '"+ MolecularPropertyHelper.getPropertyName(type)+"' >= "), "1,2");
@@ -74,10 +74,8 @@ public class PropertyFitnessPanel extends FitnessPanel {
 	 */
 	@Override
 	protected String getConfiguration() {
-		StringBuilder sb = new StringBuilder(MolecularPropertyHelper.getPropertyCode(mType));
-		sb.append('\t').append(mTextFieldValueMin.getText());
-		sb.append('\t').append(mTextFieldValueMax.getText());
-		sb.append('\t').append(Integer.toString(mSlider.getValue()));
-		return sb.toString();
+		return MolecularPropertyHelper.getPropertyCode(mType) + '\t' + mTextFieldValueMin.getText() +
+				'\t' + mTextFieldValueMax.getText() +
+				'\t' + mSlider.getValue();
 		}
 	}

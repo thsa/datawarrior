@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -23,7 +23,6 @@ import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.descriptor.DescriptorConstants;
 import com.actelion.research.chem.descriptor.DescriptorHandler;
-import com.actelion.research.chem.descriptor.DescriptorHandlerFlexophore;
 import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.table.model.CompoundTableModel;
 import org.openmolecules.chem.conf.gen.RigidFragmentCache;
@@ -31,11 +30,11 @@ import org.openmolecules.chem.conf.gen.RigidFragmentCache;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class StructureFitnessOption extends FitnessOption {
-	private volatile boolean mIsFexophore;
+	private volatile boolean mIsFlexophore;
 	private int mSearchType;
 	private String mDescriptorShortName;
 	private MoleculeWithDescriptor[] mRefMoleculeList;
-	private static ConcurrentHashMap<String,DescriptorHandlerFlexophore> sDescriptorHandlerMap;
+	private ConcurrentHashMap<String,DescriptorHandler<Object,StereoMolecule>> mDescriptorHandlerMap;
 
 	public StructureFitnessOption(String params, ProgressListener pl) {
 		String[] param = params.split("\\t");
@@ -46,19 +45,19 @@ public class StructureFitnessOption extends FitnessOption {
 			mRefMoleculeList = new MoleculeWithDescriptor[param.length-3];
 			@SuppressWarnings("unchecked")
 			DescriptorHandler<Object,StereoMolecule> dh = CompoundTableModel.getDefaultDescriptorHandler(mDescriptorShortName);
-			mIsFexophore = DescriptorConstants.DESCRIPTOR_Flexophore.shortName.equals(mDescriptorShortName);
-			if (mIsFexophore)
+			mIsFlexophore = DescriptorConstants.DESCRIPTOR_Flexophore.shortName.equals(mDescriptorShortName);
+			if (mIsFlexophore)
 				RigidFragmentCache.getDefaultInstance().loadDefaultCache();
 
 			for (int i=0; i<mRefMoleculeList.length; i++) {
 				StereoMolecule mol = new IDCodeParser(true).getCompactMolecule(param[i+3]);
 
-				if (mIsFexophore)
+				if (mIsFlexophore)
 					pl.startProgress("Calculating Flexophore...", 0, 0);
 
 				Object descriptor = dh.createDescriptor(mol);
 
-				if (mIsFexophore)
+				if (mIsFlexophore)
 					pl.stopProgress();
 
 				mRefMoleculeList[i] = new MoleculeWithDescriptor(mol, descriptor);
@@ -81,7 +80,7 @@ public class StructureFitnessOption extends FitnessOption {
 				}
 			catch (Exception e) {
 				return "Structure validation error:"+e.getMessage();
-				}	
+				}
 			}
 
 		return null;
@@ -97,20 +96,15 @@ public class StructureFitnessOption extends FitnessOption {
 		boolean isSimilar = (mSearchType == 0);
 		@SuppressWarnings("unchecked")
 		DescriptorHandler<Object,StereoMolecule> dh;
-		if (mIsFexophore) {
-			synchronized (this) {
-				if (sDescriptorHandlerMap == null)
-					sDescriptorHandlerMap = new ConcurrentHashMap<>();
+		synchronized (this) {
+			if (mDescriptorHandlerMap == null)
+				mDescriptorHandlerMap = new ConcurrentHashMap<>();
 
-				dh = sDescriptorHandlerMap.get(Thread.currentThread().getName());
-				if (dh == null) {
-					dh = CompoundTableModel.getDefaultDescriptorHandler(mDescriptorShortName).getThreadSafeCopy();
-					sDescriptorHandlerMap.put(Thread.currentThread().getName(), (DescriptorHandlerFlexophore)dh);
-					}
+			dh = mDescriptorHandlerMap.get(Thread.currentThread().getName());
+			if (dh == null) {
+				dh = CompoundTableModel.getDefaultDescriptorHandler(mDescriptorShortName).getThreadSafeCopy();
+				mDescriptorHandlerMap.put(Thread.currentThread().getName(), dh);
 				}
-			}
-		else {
-			dh = CompoundTableModel.getDefaultDescriptorHandler(mDescriptorShortName);
 			}
 
 		Object descriptor = dh.createDescriptor(mol);

@@ -22,7 +22,6 @@ import com.actelion.research.chem.*;
 import com.actelion.research.chem.io.CompoundFileHelper;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
-import com.actelion.research.datawarrior.DataWarrior;
 import com.actelion.research.datawarrior.task.AbstractTask;
 import com.actelion.research.datawarrior.task.TaskUIDelegate;
 import com.actelion.research.datawarrior.task.chem.DECompoundProvider;
@@ -64,8 +63,8 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 	private static final int CYCLE_COUNT_AUTOMATIC = Integer.MAX_VALUE-1;
 	private static final int CYCLE_COUNT_UNLIMITED = Integer.MAX_VALUE;
 
-	private Frame				mParentFrame;
-	private CompoundTableModel	mSourceTableModel;
+	private final Frame			mParentFrame;
+	private final CompoundTableModel mSourceTableModel;
 	private JDialog				mControllingDialog;
 	private DEFrame				mTargetFrame;
 	private JStructureView[]	mCompoundView;
@@ -131,8 +130,8 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 				p2.add(mFitnessLabel[i], "7,4");
 				}
 			else {
-				p2.add(mCompoundView[i], ""+(i*2-3)+",8");
-				p2.add(mFitnessLabel[i], ""+(i*2-3)+",9");
+				p2.add(mCompoundView[i], (i*2-3)+",8");
+				p2.add(mFitnessLabel[i], (i*2-3)+",9");
 				}
 			}
 		mLabelGeneration = new JLabel();
@@ -197,7 +196,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 			int startSetOption = findListIndex(configuration.getProperty(PROPERTY_START_SET_OPTION), START_COMPOUND_CODE, RANDOM_OPTION);
 			if (startSetOption == FILE_OPTION) {
 				String fileName = configuration.getProperty(PROPERTY_START_SET_FILE, "");
-				if (isLive && fileName.length() != 0) {
+				if (isLive && !fileName.isEmpty()) {
 					File file = new File(fileName);
 					if (!file.exists()) {
 						showErrorMessage("First generation file '"+fileName+"' not found.");
@@ -223,7 +222,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 				}
 			if (startSetOption == LIST_OPTION) {
 				String listName = configuration.getProperty(PROPERTY_START_SET_LIST, "");
-				if (listName.length() == 0) {
+				if (listName.isEmpty()) {
 					showErrorMessage("First generation row list not specified.");
 					return false;
 					}
@@ -235,7 +234,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 			}
 		else {
 			String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
-			if (startSet.length() != 0) {
+			if (!startSet.isEmpty()) {
 				for (String idcode:startSet.split("\\t")) {
 					try {
 						new IDCodeParser(true).getCompactMolecule(idcode).validate();
@@ -397,7 +396,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 				else if (startSetOption == FILE_OPTION) {
 					String fileName = configuration.getProperty(PROPERTY_START_SET_FILE, "");
 					File[] file = new File[1];
-					file[0] = (fileName.length() == 0) ? null : new File(resolvePathVariables(fileName));
+					file[0] = (fileName.isEmpty()) ? null : new File(resolvePathVariables(fileName));
 					if (file[0] == null)
 						try {
 							SwingUtilities.invokeAndWait(() -> file[0] = new FileHelper(mParentFrame).selectFileToOpen(
@@ -431,7 +430,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 
 			if (parentCycleResults.isEmpty()) {
 				String startSet = configuration.getProperty(PROPERTY_START_COMPOUNDS, "");
-				if (startSet.length() == 0) {
+				if (startSet.isEmpty()) {
 					ConcurrentLinkedQueue<StereoMolecule> compounds = new ConcurrentLinkedQueue<>();
 					DECompoundProvider.createRandomCompounds(mProgressPanel, 4*survivalCount, kind, compounds);
 					for (StereoMolecule compound:compounds) {
@@ -523,7 +522,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 						 || parentResult.getOverallFitness() < fitnessLimit[resultIndex])
 							break;
 
-						if (parentResult.getMutationList().size() == 0)
+						if (parentResult.getMutationList().isEmpty())
 							continue;
 
 						parentResult.ensureCoordinates();
@@ -550,7 +549,7 @@ public class DETaskBuildEvolutionaryLibrary extends AbstractTask implements Acti
 				for (Thread thread : consumerThread)
 					try { thread.join(); } catch (InterruptedException e) {}
 
-				if (currentCycleResults.size() == 0) {
+				if (currentCycleResults.isEmpty()) {
 					if (isInteractive()) {
 						try {
 							SwingUtilities.invokeAndWait(() ->

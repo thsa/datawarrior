@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -49,11 +49,11 @@ public class StructureFitnessPanel extends FitnessPanel {
 	private static final String SELECTION_OPTION = "Selected structure(s)";
 	private static final String LIST_OPTION = "Structure(s) from row list";
 
-	protected JComboBox mComboBoxSearchType,mComboBoxDescriptor,mComboBoxRefStructures;
+	protected JComboBox<String> mComboBoxSearchType,mComboBoxDescriptor,mComboBoxRefStructures;
 	protected CompoundCollectionPane<StereoMolecule> mStructurePane;
 	protected ArrayList<MoleculeWithDescriptor> mRefMoleculeList;
-	private Frame mParentFrame;
-	private UIDelegateELib mUIDelegate;
+	private final Frame mParentFrame;
+	private final UIDelegateELib mUIDelegate;
 
 	/**
 	 * Creates a new StructureFitnessPanel, which is configured according to the given configuration.
@@ -80,9 +80,9 @@ public class StructureFitnessPanel extends FitnessPanel {
 		mParentFrame = owner;
 		mUIDelegate = delegate;
 
-		mComboBoxSearchType = new JComboBox(SEARCH_TYPE_TEXT);
+		mComboBoxSearchType = new JComboBox<>(SEARCH_TYPE_TEXT);
 		mComboBoxSearchType.setSelectedIndex(0);
-		mComboBoxRefStructures = new JComboBox();
+		mComboBoxRefStructures = new JComboBox<>();
 		mComboBoxRefStructures.addItem(CUSTOM_OPTION);
 		mComboBoxRefStructures.addItem(FILE_OPTION);
 		if (delegate.getTableModel().getSpecialColumnList(CompoundTableConstants.cColumnTypeIDCode) != null) {
@@ -93,7 +93,7 @@ public class StructureFitnessPanel extends FitnessPanel {
 				mComboBoxRefStructures.addItem(LIST_OPTION);
 			}
 		mComboBoxRefStructures.addActionListener(this);
-		mComboBoxDescriptor = new JComboBox();
+		mComboBoxDescriptor = new JComboBox<>();
 		for (int i=0; i<DescriptorConstants.DESCRIPTOR_LIST.length; i++)
 			if (DescriptorConstants.DESCRIPTOR_LIST[i].type == DescriptorConstants.DESCRIPTOR_TYPE_MOLECULE)
 				mComboBoxDescriptor.addItem(DescriptorConstants.DESCRIPTOR_LIST[i].shortName);

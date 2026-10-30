@@ -429,8 +429,15 @@ fragment is kept empty, then the search fragments are just removed from the targ
 <h3><a name="ApplyReaction"></a>Perform A Chemical Reaction On Chemical Structures</h3>
 <p>As an alternative to the chemical search and replace functionality, one may achieve a controlled structure
 change by performing a defined chemical reaction on chemical structures.
-For instance, this may be used to add or remove protective groups, to replace substituents by SN<sub>2</sub>
-, to oxidize group, to perform ring closure, to cut a molecule into two pieces, just to name a few.</p>
+For instance, this may be used to add or remove protective groups, to replace substituents by SN<sub>2</sub>,
+to oxidize a functional group, to perform a ring closure, to cut a molecule into two pieces, just to name a few.</p>
+
+<p>For defining a reaction, or to be precise a transformation, one needs to draw a reactant substructure and
+a corresponding product substructure. The reactant may contain query features to more preceisely define which
+atoms and bonds are allowed to match. Typically, the product does not contain query features, because these
+would appear in generated products. Atoms that exist on the reactant and on the product side must be mapped,
+i.e. they must have matching mapping numbers. Atoms that are removed from the reactant or that are added to
+the product, should not have mapping numbers.</p>
 
 <p align="center"><img src="help/img/chem/performReaction.png" width="282" height="214"></p>
 <p><center><i>Dialog defined to protect amino acids with a BOC-group</i></center></p>
@@ -441,6 +448,10 @@ a new column will be generated containing the molecules from the 'Synthon' colum
 if they had a primary amino group as part of an amino acid substructure in the first place. Note, that
 the mapping numbers in the picture above are shown for illustration purposes only. To see and change the
 atom mapping you need to double-click the dialog's reaction and select the mapping tool in the reaction editor.</p>
+
+<p>If you have multiple columns with chemical structures and select more than one of them in the dialog,
+then you need to provide a reaction with the same number of reactant substructures. In this case you define
+a multi-component reaction leading to one product.</p>
 <br>
 
 <h3><a name="Add2DCoords"></a>Unifying 2D Atom Coordinates</h3>

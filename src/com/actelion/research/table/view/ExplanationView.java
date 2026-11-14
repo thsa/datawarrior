@@ -145,41 +145,44 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 
 		String text = (String)mTableModel.getExtensionData(cExtensionNameFileExplanation);
 
-		// We allow including and resolving specific content from the preferences
-		text = resolveVariable("$DW_PREFERENCES(", text, key -> {
-			int index3 = key.lastIndexOf('.');
-			if (index3 == -1)
-				return null;
+		if (text != null) {
+			// We allow including and resolving specific content from the preferences
+			text = resolveVariable("$DW_PREFERENCES(", text, key -> {
+				int index3 = key.lastIndexOf('.');
+				if (index3 == -1)
+					return null;
 
-			try {
-				Preferences prefs = Preferences.userRoot().node(key.substring(0, index3));
-				return prefs.get(key.substring(index3 + 1), null);
-			}
-			catch (Exception e) {
-				return null;
-			}
-		});
-
-		// We also allow including dynamic HTML content from a given URL (after preferences to allow them to be part of a URL)
-		text = resolveVariable("$DW_REMOTE_HTML(", text, url -> {
-			try {
-				URLConnection con = new URI(url).toURL().openConnection();
-				con.setRequestProperty("Content-Type", "text/plain");
-				InputStream is = con.getInputStream();
-				if (is != null) {
-					BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-					StringBuilder sb = new StringBuilder();
-					String line;
-					while ((line = reader.readLine()) != null) {
-						sb.append(line + "\n");
-					}
-					is.close();
-					return sb.toString();
+				try {
+					Preferences prefs = Preferences.userRoot().node(key.substring(0, index3));
+					return prefs.get(key.substring(index3 + 1), null);
+				} catch (Exception e) {
+					return null;
 				}
-			}
-			catch (Exception e) {}
-			return null;
-		});
+			});
+		}
+
+		if (text != null) {
+			// We also allow including dynamic HTML content from a given URL (after preferences to allow them to be part of a URL)
+			text = resolveVariable("$DW_REMOTE_HTML(", text, url -> {
+				try {
+					URLConnection con = new URI(url).toURL().openConnection();
+					con.setRequestProperty("Content-Type", "text/plain");
+					InputStream is = con.getInputStream();
+					if (is != null) {
+						BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+						StringBuilder sb = new StringBuilder();
+						String line;
+						while ((line = reader.readLine()) != null) {
+							sb.append(line + "\n");
+						}
+						is.close();
+						return sb.toString();
+					}
+				} catch (Exception e) {
+				}
+				return null;
+			});
+		}
 
 		setText(text);
 	}

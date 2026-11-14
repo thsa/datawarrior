@@ -716,7 +716,7 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 		ForceFieldMMFF94.initialize(ForceFieldMMFF94.MMFF94SPLUS);
 
 		StereoMolecule mol = new StereoMolecule(originalMol);
-		TorsionDescriptorHelper torsionHelper = new TorsionDescriptorHelper(mol);
+		TorsionDescriptorHelper torsionHelper = new TorsionDescriptorHelper(mol, true);
 		ArrayList<TorsionDescriptor> torsionDescriptorList = new ArrayList<>();
 
 		// add original conformer

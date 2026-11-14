@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -310,7 +310,7 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 			ForceFieldMMFF94.initialize(ForceFieldMMFF94.MMFF94S);
 
 		StereoMolecule mol = new StereoMolecule(mMol);
-		TorsionDescriptorHelper torsionHelper = new TorsionDescriptorHelper(mol);
+		TorsionDescriptorHelper torsionHelper = new TorsionDescriptorHelper(mol, true);
 		ArrayList<TorsionDescriptor> torsionDescriptorList = new ArrayList<>();
 
 		for (int i = 0; i < maxConformers; i++) {
@@ -789,8 +789,8 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 
 		private JLabel				mLabel;
 		private MoleculeViewer		mViewer;
-		private StereoMolecule		mMolecule;		
-	
+		private StereoMolecule		mMolecule;
+
 		public ConformationPanel(Frame parent, int no) {
 			mViewer = new MoleculeViewer();
 			mViewer.addActionProvider(new MolViewerActionCopy(parent));
@@ -800,27 +800,27 @@ public class JFXConformerExplorer extends JDialog implements ActionListener,Chan
 			mLabel.setForeground(java.awt.Color.cyan);
 			mLabel.setBackground(new java.awt.Color(99,99,99));
 			mLabel.setOpaque(true);
-	
+
 			setLayout(new BorderLayout());
 			add(mViewer, BorderLayout.CENTER);
 			add(mLabel, BorderLayout.SOUTH);
 			setBorder(BorderFactory.createLineBorder(java.awt.Color.LIGHT_GRAY, 2));
 			}
-	
+
 		public void setMolecule(StereoMolecule mol) {
 			if (mol == null) {
 				mViewer.setMolecule((Molecule)null);
 				mViewer.repaint();
 				return;
 				}
-	
+
 			mMolecule = mol;
 			mMolecule.ensureHelperArrays(Molecule.cHelperCIP);
 			mViewer.setMolecule(mMolecule);
 			mViewer.resetView();
 			mViewer.repaint();
 			}
-	
+
 		public void setText(String text) {
 			mLabel.setText(text);
 			}

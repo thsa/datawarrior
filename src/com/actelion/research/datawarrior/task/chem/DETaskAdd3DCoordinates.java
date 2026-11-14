@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -658,7 +658,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		TorsionDescriptorHelper torsionHelper = null;
 		ArrayList<TorsionDescriptor> torsionDescriptorList = null;
 		if (mMaxConformers > 1 && mMinimization != MINIMIZE_NONE) {
-			torsionHelper = new TorsionDescriptorHelper(mol);
+			torsionHelper = new TorsionDescriptorHelper(mol, true);
 			torsionDescriptorList = new ArrayList<>();
 			}
 
@@ -934,7 +934,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 		TorsionDescriptorHelper torsionHelper = null;
 		ArrayList<TorsionDescriptor> torsionDescriptorList = null;
 		if (mMaxConformers > 1 && mMinimization != MINIMIZE_NONE) {
-			torsionHelper = new TorsionDescriptorHelper(mol);
+			torsionHelper = new TorsionDescriptorHelper(mol, true);
 			torsionDescriptorList = new ArrayList<>();
 			}
 
@@ -1130,7 +1130,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 					}
 				else {
 					int maxAtoms = 0;
-	
+
 					StereoMolecule[] fragment = mol.getFragments(fragmentNo, fragmentCount);
 					for (StereoMolecule f:fragment) {
 						if (f.getAllAtoms() > 2) {
@@ -1138,7 +1138,7 @@ public class DETaskAdd3DCoordinates extends DETaskAbstractFromStructure {
 							int error = ff.minimise(10000, 0.0001, 1.0e-6);
 							if (error != 0)
 								throw new Exception("MMFF94 error code "+error);
-	
+
 							if (maxAtoms < f.getAllAtoms()) {	// we take the energy value from the largest fragment
 								maxAtoms = f.getAllAtoms();
 								result.energy = (float)ff.getTotalEnergy();

@@ -1669,7 +1669,7 @@ public class DETaskCalculateChemicalProperties extends ConfigurableTask {
 					CompoundRecord record = mTableModel.getRecord(row);
 					byte[] idcode = (byte[])record.getData(mIDCodeColumn);
 					byte[] coords = (byte[])record.getData(confColumn);
-					conformerSet = new ConformerSet(idcode, coords);
+					conformerSet = new ConformerSet(idcode, coords, null);
 					}
 				else {
 					conformerSet = new ConformerSetGenerator(16, ConformerGenerator.STRATEGY_LIKELY_RANDOM, false, 0).generateConformerSet(mol);

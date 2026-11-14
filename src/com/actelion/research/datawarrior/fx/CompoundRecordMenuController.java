@@ -5,6 +5,7 @@ import com.actelion.research.chem.IDCodeParserWithoutCoordinateInvention;
 import com.actelion.research.chem.SSSearcher;
 import com.actelion.research.chem.StereoMolecule;
 import com.actelion.research.chem.alignment3d.PheSAAlignmentOptimizer;
+import com.actelion.research.chem.conf.ConformerSet;
 import com.actelion.research.chem.conf.HydrogenAssembler;
 import com.actelion.research.chem.forcefield.mmff.ForceFieldMMFF94;
 import com.actelion.research.chem.io.CompoundTableConstants;
@@ -448,18 +449,38 @@ public class CompoundRecordMenuController implements V3DPopupMenuController {
 			}
 			else {
 				int count = 1;
+				boolean isPlusEnantiomers = false;
 				int index = ArrayUtils.indexOf(coords, (byte) 32);
 				if (index != -1 && allowMultiple) {
 					count++;
 					for (int i = index + 1; i < coords.length; i++)
 						if (coords[i] == (byte) 32)
 							count++;
+
+					if (coords.length > ConformerSet.PLUS_ENANTIOMERS.length()) {
+                        isPlusEnantiomers = true;
+                        for (int i=0; i<ConformerSet.PLUS_ENANTIOMERS.length(); i++) {
+                            if (coords[coords.length-ConformerSet.PLUS_ENANTIOMERS.length()+i] != (byte)ConformerSet.PLUS_ENANTIOMERS.charAt(i)) {
+								isPlusEnantiomers = false;
+                                break;
+                            }
+						}
+					}
+
+					if (isPlusEnantiomers)
+						count--;
+
 					index = -1;
 				}
-				StereoMolecule[] mol = new StereoMolecule[count];
+				StereoMolecule[] mol = new StereoMolecule[isPlusEnantiomers ? 2*count : count];
 				for (int i=0; i<count; i++) {
 					mol[i] = new IDCodeParserWithoutCoordinateInvention().getCompactMolecule(idcode, coords, 0, index + 1);
 					index = ArrayUtils.indexOf(coords, (byte) 32, index + 1);
+					if (isPlusEnantiomers) {
+						mol[count+i] = mol[i].getCompactCopy();
+						for (int atom=0; atom<mol[count+i].getAllAtoms(); atom++)
+							mol[count+i].setAtomZ(atom, -mol[count+i].getAtomZ(atom));
+					}
 				}
 				return mol;
 			}

@@ -56,10 +56,10 @@ public class EditableLargeMolMenuController implements V3DPopupMenuController {
 	@Override
 	public void addExternalMenuItems(ContextMenu popup, int type) {
 		if (type == V3DPopupMenuController.TYPE_FILE) {
-			javafx.scene.control.MenuItem itemLoadPDBFile = new javafx.scene.control.MenuItem("Load Protein Cavity From PDB-File...");
+			javafx.scene.control.MenuItem itemLoadPDBFile = new javafx.scene.control.MenuItem("Load Binding Site From PDB-File...");
 			itemLoadPDBFile.setOnAction(e -> loadFromPDBFile());
 
-			javafx.scene.control.MenuItem itemLoadPDBDB = new javafx.scene.control.MenuItem("Load Protein Cavity From PDB Database...");
+			javafx.scene.control.MenuItem itemLoadPDBDB = new javafx.scene.control.MenuItem("Load Binding Site From PDB Database...");
 			itemLoadPDBDB.setOnAction(e -> loadFromPDBDatabase());
 
 			javafx.scene.control.MenuItem itemLoadProtein = new javafx.scene.control.MenuItem("Load Protein From Molfile/Mol2-File...");

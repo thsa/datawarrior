@@ -785,7 +785,7 @@ public abstract class DataWarrior implements WindowFocusListener {
 			return;
 			}
 
-		String protocol = uri.toString().startsWith("datawarrior://localhost") ? "http://" : "https://";
+		String protocol = uri.toString().startsWith("datawarrior://localhost") || uri.getPort() > 8000 ? "http://" : "https://";
 		String url = protocol.concat(uri.toString().substring(14));
 
 		String path = uri.getPath();

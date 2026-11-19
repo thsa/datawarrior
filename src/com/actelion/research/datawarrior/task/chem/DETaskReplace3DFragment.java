@@ -644,7 +644,7 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 					}
 					catch (RuntimeException rte) {}
 
-					// Kabsch-align minimized structure to query using non-changing atoms.
+					// Kabsch-align the minimized structure with replaced part to query, but use only non-changing atoms for alignment.
 					// Then, determine RSMD of non-changing atoms.
 					double queryRMSD = alignAndGetRMSD(mQueryStaticAtomCoords, minimizedStaticAtomCoords, modifiedQuery);
 
@@ -918,6 +918,7 @@ public class DETaskReplace3DFragment extends ConfigurableTask implements ActionL
 			c.add(queryCOG);
 		}
 
+		// minimizedCoords are now aligned, because they are references to a subset of the coordinates of modifiedQuery, which gets aligned above!
 		return Coordinates.getRmsd(queryCoords, minimizedCoords);
 	}
 }

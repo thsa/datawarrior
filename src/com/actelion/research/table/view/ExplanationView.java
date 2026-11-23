@@ -56,6 +56,8 @@ import java.io.Serial;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.prefs.Preferences;
 
 import static javafx.geometry.Orientation.HORIZONTAL;
@@ -162,6 +164,12 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 		}
 
 		if (text != null) {
+			// We allow to URL-encode values, typically resolved preferences values. Therefore, this must be done after prefs-resolution
+			text = resolveVariable("$DW_ENCODE(", text, value ->
+					URLEncoder.encode(value, StandardCharsets.UTF_8) );
+		}
+
+		if (text != null) {
 			// We also allow including dynamic HTML content from a given URL (after preferences to allow them to be part of a URL)
 			text = resolveVariable("$DW_REMOTE_HTML(", text, url -> {
 				try {
@@ -204,7 +212,6 @@ public class ExplanationView extends JFXPanel implements CompoundTableConstants,
 				String value = resolver.resolve(key);
 				if (value != null)
 					sb.append(value);
-
 				index = text.indexOf(variableName, index2+1);
 				sb.append(index == -1 ? text.substring(index2+1) : text.substring(index2+1, index));
 			}

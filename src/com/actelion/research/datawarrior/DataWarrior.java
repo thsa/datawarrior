@@ -448,8 +448,9 @@ public abstract class DataWarrior implements WindowFocusListener {
 
 	private void waitIfUdating() {
 		if (DEUpdateHandler.isUpdating())
-			JOptionPane.showMessageDialog(getActiveFrame(), "Cannot exit, while update is downloading....");
-		while (DEUpdateHandler.isUpdating())
+			JOptionPane.showMessageDialog(getActiveFrame(), "Currently, DataWarrior is downloading an update.\nand will quit once the download has finished.");
+		long timeout = System.currentTimeMillis() + 75000;	// This should not be necessary, because the update process has its own timeout!
+		while (DEUpdateHandler.isUpdating() && System.currentTimeMillis() < timeout)
 			try { Thread.sleep(100); } catch (InterruptedException ie) {}
 		}
 

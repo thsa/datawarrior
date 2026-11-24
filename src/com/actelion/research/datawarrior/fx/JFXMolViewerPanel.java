@@ -602,10 +602,16 @@ public class JFXMolViewerPanel extends JFXPanel {
 	public void setSingleConformerShowTorsionStrain(boolean b) {
 		mSingleConformerShowTorsionStrain = b;
 		if (mSingleConformer != null) {
-			if (b)
-				Platform.runLater(() -> mSingleConformer.addTorsionStrainVisualization());
-			else
-				Platform.runLater(() -> mSingleConformer.removeTorsionStrainVisualization());
+			Platform.runLater(() -> {
+				// removeTorsionStrainVisualization() throws an exception, if the strain is not shown
+				V3DMolecule conformer = mSingleConformer;
+				if (conformer != null && b == (conformer.getTorsionStrainVis() == null)) {
+					if (b)
+						conformer.addTorsionStrainVisualization();
+					else
+						conformer.removeTorsionStrainVisualization();
+				}
+			} );
 		}
 	}
 

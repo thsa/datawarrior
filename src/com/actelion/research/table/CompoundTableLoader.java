@@ -2920,9 +2920,9 @@ try {
 		for (int destColumn : mMergeDestColumn) {
 			if (destColumn != NO_COLUMN && destColumn<mFirstNewColumn) {
 				if (mTableModel.isColumnTypeStructure(destColumn))
-					mTableModel.finalizeChangeChemistryColumn(destColumn, 0, mFieldData.length, true);
+					mTableModel.finalizeChangeChemistryColumn(destColumn, 0, mTableModel.getTotalRowCount(), true);
 				else
-					mTableModel.finalizeChangeAlphaNumericalColumn(destColumn, 0, mFieldData.length);
+					mTableModel.finalizeChangeAlphaNumericalColumn(destColumn, 0, mTableModel.getTotalRowCount());
 			}
 		}
 

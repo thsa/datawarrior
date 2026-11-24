@@ -76,6 +76,9 @@ public class VisualizationLegend {
 		}
 
 	public void paint(Rectangle bounds, boolean transparentBG) {
+		if (mHeight == 0)	// calculate() didn't create a legend
+			return;
+
 		mVisualization.setFontHeight(mFontHeight);
 		switch (mType) {
 		case cLegendTypeColorDouble:
@@ -460,6 +463,12 @@ public class VisualizationLegend {
 				mCategoryList = new String[2];
 				mCategoryList[0] = "yes";
 				mCategoryList[1] = "no";
+				}
+			else if (mColumn >= 0 && !mTableModel.isColumnTypeCategory(mColumn)) {
+				// the column may have lost its category status, e.g. if it contains one value only
+				mCategoryList = new String[0];
+				mHeight = 0;
+				return;
 				}
 			else {
 				mCategoryList = mTableModel.getCategoryList(mColumn);

@@ -4660,7 +4660,8 @@ public class CompoundTableModel extends AbstractTableModel
 					lowCenter /= 2;
 					highCenter /= 2;
 
-					if (isNewRangeCategories) {	// for logarithmic categories we need to use the BinGenerator
+					// if all values are empty, lowCenter > highCenter and the BinGenerator would never finish
+					if (isNewRangeCategories && lowCenter <= highCenter) {	// for logarithmic categories we need to use the BinGenerator
 						BigDecimal binBase = new BigDecimal(mColumnInfo[column].getProperty(cColumnPropertyBinBase));
 						BigDecimal binSize = new BigDecimal(mColumnInfo[column].getProperty(cColumnPropertyBinSize));
 						BinGenerator bg = new BinGenerator(binBase, binSize, binIsLog, lowCenter, highCenter, isDate);
@@ -4726,6 +4727,9 @@ public class CompoundTableModel extends AbstractTableModel
 
 		int coordsColumn = isIDCode ? getChildColumn(column, cColumnType2DCoordinates) : -1;
 
+		if (categoryList instanceof DefinedCategoryList)
+			((DefinedCategoryList<?>)categoryList).startBulkAdd();
+
 		// populate category list
 		for (int row=0; row<mRecord.length; row++) {
 			try {
@@ -4764,6 +4768,9 @@ public class CompoundTableModel extends AbstractTableModel
 				ee.printStackTrace();
 				}
 			}
+
+		if (categoryList instanceof DefinedCategoryList)
+			((DefinedCategoryList<?>)categoryList).finishBulkAdd();
 
 		return categoryList;
 		}

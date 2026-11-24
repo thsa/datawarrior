@@ -719,7 +719,8 @@ public class JStructureGrid extends JScrollPane
 
 	private void updateActiveRow(CompoundRecord record) {
 		if (mActiveRow != record) {
-			if (mTableModel.getHiliteMode(mStructureColumn) == CompoundTableModel.cStructureHiliteModeCurrentRow)
+			if (mStructureColumn != -1
+			 && mTableModel.getHiliteMode(mStructureColumn) == CompoundTableModel.cStructureHiliteModeCurrentRow)
 				invalidateView();
 
 			Rectangle r = new Rectangle();
@@ -727,8 +728,10 @@ public class JStructureGrid extends JScrollPane
 				int row = mIndexOfFirstImage + i;
 				if (getRecord(row) == mActiveRow
 				 || getRecord(row) == record) {
-					setFieldRect(r, row);
-					mContentPanel.repaint(r);
+					if (setFieldRect(r, row))
+						mContentPanel.repaint(r);
+					else
+						mContentPanel.repaint();
 					}
 				}
 			mActiveRow = record;
@@ -743,8 +746,10 @@ public class JStructureGrid extends JScrollPane
 				int row = mIndexOfFirstImage + i;
 				if (getRecord(row) == mHighlightedRow
 				 || getRecord(row) == record) {
-					setFieldRect(r, row);
-					mContentPanel.repaint(r);
+					if (setFieldRect(r, row))
+						mContentPanel.repaint(r);
+					else
+						mContentPanel.repaint();
 					}
 				}
 			mHighlightedRow = record;
@@ -901,11 +906,21 @@ public class JStructureGrid extends JScrollPane
 		return false;
 		}
 
-	private void setFieldRect(Rectangle r, int index) {
-		r.setRect((index % mNoOfColumns) * mCellSize.totalWidth,
-				  (index / mNoOfColumns) * mCellSize.totalHeight,
-				  mCellSize.totalWidth,
-				  mCellSize.totalHeight);
+	/**
+	 * @return false and an empty r, if the cell size is not known, e.g. after pixelScalingChanged() before the next paint
+	 */
+	private boolean setFieldRect(Rectangle r, int index) {
+		GridCellSize cellSize = mCellSize;
+		if (cellSize == null) {
+			r.setRect(0, 0, 0, 0);
+			return false;
+			}
+
+		r.setRect((index % mNoOfColumns) * cellSize.totalWidth,
+				  (index / mNoOfColumns) * cellSize.totalHeight,
+				  cellSize.totalWidth,
+				  cellSize.totalHeight);
+		return true;
 		}
 
 	private int getIndex(int x, int y) {

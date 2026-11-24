@@ -939,7 +939,32 @@ if (selectionModel.getMinSelectionIndex() != selectionModel.getMaxSelectionIndex
 		}
 
 	public CompoundTableView getSelectedView() {
-		return (CompoundTableView)getSelectedDockable().getContent();
+		Dockable selected = getSelectedDockable();
+		return selected == null ? null : (CompoundTableView)selected.getContent();
+		}
+
+	/**
+	 * JDockingPanel returns null, if no dockable has the selected flag set. In that case we return
+	 * the dockable that contains the keyboard focus, otherwise the first visible one, otherwise any.
+	 * @return null only if there is no dockable at all
+	 */
+	@Override
+	public Dockable getSelectedDockable() {
+		Dockable selected = super.getSelectedDockable();
+		if (selected != null || getDockableCount() == 0)
+			return selected;
+
+		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		if (focusOwner != null)
+			for (Dockable dockable:getDockables())
+				if (SwingUtilities.isDescendingFrom(focusOwner, dockable))
+					return dockable;
+
+		for (Dockable dockable:getDockables())
+			if (dockable.isVisibleDockable())
+				return dockable;
+
+		return getDockables().iterator().next();
 		}
 
 	/**

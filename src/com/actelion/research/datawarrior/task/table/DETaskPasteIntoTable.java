@@ -345,6 +345,10 @@ public class DETaskPasteIntoTable extends AbstractSingleColumnTask {
 		SortedStringList unresolvedNameList = null;
 		for (int clipRow=0; clipRow<clipRowCount; clipRow++) {
 			String value = mClipboardContent[clipRow][clipColumn].trim();
+			// idcodes (e.g. copied from a DataWarrior table) are used as they are and must not be sent to the name server
+			if (isValidIDCode(value))
+				continue;
+
 			if (!value.isEmpty()) {
 				StereoMolecule mol = new StereoMolecule();
 				try {

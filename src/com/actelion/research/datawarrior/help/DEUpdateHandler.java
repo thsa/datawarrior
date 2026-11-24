@@ -397,7 +397,10 @@ public class DEUpdateHandler extends JDialog implements ActionListener {
 		try {
 			sIsUpdating = true;
 			URL url = new URL(sourceURL+"/"+fileNameNoExtention+".jar");
-			ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
+			URLConnection connection = url.openConnection();
+			connection.setConnectTimeout(15000);	// default is no timeout: a server that doesn't answer would block forever
+			connection.setReadTimeout(60000);
+			ReadableByteChannel readableByteChannel = Channels.newChannel(connection.getInputStream());
 			FileOutputStream fileOutputStream = new FileOutputStream(tempFilePath);
 			FileChannel fileChannel = fileOutputStream.getChannel();
 			fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);

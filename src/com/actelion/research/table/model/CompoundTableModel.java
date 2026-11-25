@@ -3911,10 +3911,10 @@ public class CompoundTableModel extends AbstractTableModel
 			refDescriptor = mColumnInfo[descriptorColumn].getCachedDescriptor(chemObject);
 		DescriptorHandler<Object,Object> descriptorHandler = mColumnInfo[descriptorColumn].descriptorHandler;
 		float[] similarity = new float[mRecord.length];
-		for (int row=0; row<mRecord.length; row++) {
-			Object descriptor = mRecord[row].getData(descriptorColumn);
+		for (CompoundRecord record : mRecord) {
+			Object descriptor = record.getData(descriptorColumn);
 			if (descriptor != null)
-				similarity[mRecord[row].mOriginalIndex] = descriptorHandler.getSimilarity(refDescriptor, descriptor);
+				similarity[record.mOriginalIndex] = descriptorHandler.getSimilarity(refDescriptor, descriptor);
 			}
 		return similarity;
 		}
@@ -3925,11 +3925,11 @@ public class CompoundTableModel extends AbstractTableModel
 		// strange double casting, but it works!!!
 		DescriptorHandlerReactionFP descriptorHandler = (DescriptorHandlerReactionFP)(DescriptorHandler)mColumnInfo[descriptorColumn].descriptorHandler;
 		float[][] similarity = new float[2][mRecord.length];
-		for (int row=0; row<mRecord.length; row++) {
-			long[] descriptor = (long[])mRecord[row].getData(descriptorColumn);
+		for (CompoundRecord record : mRecord) {
+			long[] descriptor = (long[])record.getData(descriptorColumn);
 			if (descriptor != null) {
-				similarity[0][mRecord[row].mOriginalIndex] = descriptorHandler.getReactionCenterSimilarity((long[])refDescriptor, descriptor);
-				similarity[1][mRecord[row].mOriginalIndex] = descriptorHandler.getPeripherySimilarity((long[])refDescriptor, descriptor);
+				similarity[0][record.mOriginalIndex] = descriptorHandler.getReactionCenterSimilarity((long[])refDescriptor, descriptor);
+				similarity[1][record.mOriginalIndex] = descriptorHandler.getPeripherySimilarity((long[])refDescriptor, descriptor);
 				}
 			}
 		return similarity;
@@ -3946,10 +3946,14 @@ public class CompoundTableModel extends AbstractTableModel
 		if (mFlexophoreSimilarityListCache != null
 		 && idcode != null
 		 && mColumnInfo[descriptorColumn].descriptorHandler instanceof DescriptorHandlerFlexophore) {
-			return mFlexophoreSimilarityListCache.get(idcode);
+			return mFlexophoreSimilarityListCache.get(getDescriptorCacheKey(idcode, descriptorColumn));
 			}
 
 		return null;
+		}
+
+	private String getDescriptorCacheKey(String idcode, int descriptorColumn) {
+		return idcode + "\t" + getColumnTitleNoAlias(descriptorColumn);	// different descriptor columns have different lists
 		}
 
 	/**
@@ -4048,8 +4052,8 @@ public class CompoundTableModel extends AbstractTableModel
 										key = new Canonizer((StereoMolecule)chemObject).getIDCode();
 									if (key != null) {
 										if (mFlexophoreSimilarityListCache == null)
-											mFlexophoreSimilarityListCache = new ConcurrentHashMap<String,float[]>();
-										mFlexophoreSimilarityListCache.put(key, mSimilarityListSMP);
+											mFlexophoreSimilarityListCache = new ConcurrentHashMap<>();
+										mFlexophoreSimilarityListCache.put(getDescriptorCacheKey(key, descriptorColumn), mSimilarityListSMP);
 										}
 									}
 

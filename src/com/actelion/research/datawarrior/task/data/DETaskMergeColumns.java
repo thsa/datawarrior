@@ -436,9 +436,9 @@ public class DETaskMergeColumns extends ConfigurableTask implements ActionListen
 			if (createTargetColumn)
 				mTableModel.finalizeNewColumns(tc1, this);
 			else if (isStructureMerge)
-				mTableModel.finalizeChangeChemistryColumn(column[0], 0, mTableModel.getTotalRowCount(), true);
+				mTableModel.finalizeChangeChemistryColumn(tc1, 0, mTableModel.getTotalRowCount(), true);
 			else
-				mTableModel.finalizeChangeAlphaNumericalColumn(column[0], 0, mTableModel.getTotalRowCount());
+				mTableModel.finalizeChangeAlphaNumericalColumn(tc1, 0, mTableModel.getTotalRowCount());
 			} );
 
 		if (removeSourceColumns) {

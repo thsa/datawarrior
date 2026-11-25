@@ -935,7 +935,7 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 
 			Object descriptor = null;
 			if (isDescriptor || needsHash) {
-				descriptorCache.get(idcode);
+				descriptor = descriptorCache.get(idcode);
 				if (descriptor == null) {
 					descriptor = isDescriptor ? parser.getDescriptor(descriptorType)
 											  : CanonizerUtil.getHash(parser.getMolecule(), hashType, anySalt);
@@ -1084,7 +1084,7 @@ public class DETaskFindSimilarCompoundsInFile extends ConfigurableTask implement
 //} catch (Exception e) { e.printStackTrace(); }
 
 		for (int row=0; row<mTableModel.getTotalRowCount(); row++) {
-			CompoundRecord record = mTableModel.getRecord(row);
+			CompoundRecord record = mTableModel.getTotalRecord(row);
 			record.setData(Integer.toString(matchCount[row]).getBytes(), matchCountColumn);
 			if (maxSimilarityColumn != -1 && maxSimilarity[row] != 0)
 				record.setData(DoubleFormat.toString(maxSimilarity[row]).getBytes(), maxSimilarityColumn);

@@ -18,6 +18,7 @@
 
 package com.actelion.research.datawarrior.task.view;
 
+import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.DEMainPane;
 import com.actelion.research.datawarrior.task.AbstractViewTask;
 import com.actelion.research.datawarrior.task.DEMacroRecorder;
@@ -225,6 +226,9 @@ public abstract class DETaskAbstractSetViewOptions extends AbstractViewTask impl
 
 		if (getOtherViewMode() != OTHER_VIEWS.NONE && "true".equals(configuration.getProperty(PROPERTY_ALL_VIEWS)))
 			applyConfigurationForOtherViews(configuration);
+
+		if (getParentFrame() instanceof DEFrame)	// view settings are saved with the file
+			((DEFrame)getParentFrame()).setDirty(true);
 		}
 
 	private void applyConfigurationForOtherViews(Properties configuration) {

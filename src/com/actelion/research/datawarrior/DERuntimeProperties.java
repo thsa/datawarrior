@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -703,6 +703,8 @@ public class DERuntimeProperties extends RuntimeProperties {
 				}
 			else {	// this is the handling after version 3.5.0
 				chartType = decodeProperty(cChartType+viewName, ChartType.TYPE_CODE);
+				if (chartType == -1)
+					chartType = ChartType.cTypeScatterPlot;
 				value = getProperty(cChartMode+viewName);
 				for (int i = 0; i<ChartType.MODE_CODE.length; i++) {
 					if (ChartType.MODE_CODE[i].equals(value)) {
@@ -1019,7 +1021,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 
 			value = getProperty(cShowFoldChange+viewName);
 			visualization.setShowFoldChange(value != null && value.equals("true"));
-			
+
 			value = getProperty(cShowPValue+viewName);
 			visualization.setShowPValue(value != null && value.equals("true"));
 
@@ -1354,7 +1356,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 					}
 				}
 			}
-		
+
 		if (view instanceof FocusableView) {
 			String value = getProperty(cFocusList + viewName);
 			if (value != null) {
@@ -1383,11 +1385,11 @@ public class DERuntimeProperties extends RuntimeProperties {
 			value = getProperty(cColorColumn + vColorName);
 			if (value != null) {
 				int column = JVisualization.cColumnUnassigned;
-	
+
 					// to be compatible with format prior V2.7.0
 				if (value.equals("colorBySimilarity"))
 					column = mTableModel.findColumn(DescriptorConstants.DESCRIPTOR_FFP512.shortName);
-	
+
 				else if (value.startsWith("colorByHitlist")) {
 					String hitlistName = value.substring(value.indexOf('\t')+1);
 					int hitlistIndex = mTableModel.getListHandler().getListIndex(hitlistName);
@@ -1397,7 +1399,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 				else {
 					column = mTableModel.findColumn(value);
 					}
-	
+
 				if (column == JVisualization.cColumnUnassigned) {
 					vColor.setColor(JVisualization.cColumnUnassigned);
 					}
@@ -1412,7 +1414,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 							colorList[j] = Color.decode(value);
 							}
 						}
-	
+
 					value = getProperty(cColorListMode + vColorName);
 					int colorListMode = VisualizationColor.cColorListModeStraight;	// default
 					if (value != null) {
@@ -1425,7 +1427,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 						else if (value.equals("straight"))
 							colorListMode = VisualizationColor.cColorListModeStraight;
 						}
-	
+
 					if (colorList == null) {	// cColorCount is only available if mode is cColorListModeCategory
 						Color color1 = Color.decode(getProperty(cColor + vColorName + "_0"));
 						Color color2 = Color.decode(getProperty(cColor + vColorName + "_1"));
@@ -1436,7 +1438,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 							getProperty(cColorThresholds+vColorName), mTableModel, column);
 
 					vColor.setColor(column, colorList, colorListMode, thresholds);
-	
+
 					value = getProperty(cColorMin + vColorName);
 					float min = (value == null) ? Float.NaN : Float.parseFloat(value);
 					value = getProperty(cColorMax + vColorName);
@@ -2148,7 +2150,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 			else {
 				setProperty(key, mTableModel.getColumnTitleNoAlias(column));
 				}
-	
+
 			int mode = vColor.getColorListMode();
 			key = cColorListMode+vColorName;
 			if (mode == VisualizationColor.cColorListModeCategories)
@@ -2159,7 +2161,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 				setProperty(key, "HSBLong");
 			else if (mode == VisualizationColor.cColorListModeStraight)
 				setProperty(key, "straight");
-	
+
 			Color[] colorList = vColor.getColorListWithoutDefaults();
 			if (mode == VisualizationColor.cColorListModeCategories) {
 				setProperty(cColorCount+vColorName, ""+colorList.length);
@@ -2170,7 +2172,7 @@ public class DERuntimeProperties extends RuntimeProperties {
 				setProperty(cColor+vColorName+"_0", ""+colorList[0].getRGB());
 				setProperty(cColor+vColorName+"_1", ""+colorList[colorList.length-1].getRGB());
 				}
-	
+
 			if (!Double.isNaN(vColor.getColorMin()))
 				setProperty(cColorMin+vColorName, ""+vColor.getColorMin());
 			if (!Double.isNaN(vColor.getColorMax()))

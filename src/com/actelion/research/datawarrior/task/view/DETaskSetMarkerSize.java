@@ -2,11 +2,11 @@
  * Copyright 2017 Idorsia Pharmaceuticals Ltd., Hegenheimermattweg 91, CH-4123 Allschwil, Switzerland
  *
  * This file is part of DataWarrior.
- * 
+ *
  * DataWarrior is free software: you can redistribute it and/or modify it under the terms of the
  * GNU General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * DataWarrior is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
@@ -48,7 +48,7 @@ public class DETaskSetMarkerSize extends DETaskAbstractSetViewOptions implements
 	private static final String PROPERTY_PROPORTIONAL = "proportional";
 
 	private JSlider         mSlider;
-    private JComboBox		mComboBox;
+    private JComboBox<String> mComboBox;
     private JCheckBox		mCheckBoxProportional,mCheckBoxInverse,mCheckBoxAdaptive;
 	private JTextField		mTextFieldMin,mTextFieldMax;
 
@@ -97,8 +97,9 @@ public class DETaskSetMarkerSize extends DETaskAbstractSetViewOptions implements
 		sp.add(new JLabel("large"));
 		p.add(sp, "1,1,3,1");
 
+		int chartType = hasInteractiveView() ? ((VisualizationPanel)getInteractiveView()).getVisualization().getChartType().getType() : -1;
 		JPanel cp = new JPanel();
-		mComboBox = new JComboBox();
+		mComboBox = new JComboBox<>();
 		mComboBox.addItem(getTableModel().getColumnTitleExtended(-1));
 		for (int i=0; i<getTableModel().getTotalColumnCount(); i++)
 			if (getTableModel().isColumnTypeDouble(i))
@@ -106,15 +107,14 @@ public class DETaskSetMarkerSize extends DETaskAbstractSetViewOptions implements
 		for (int i=0; i<getTableModel().getTotalColumnCount(); i++)
 			if (getTableModel().isDescriptorColumn(i))
 				mComboBox.addItem(getTableModel().getColumnTitleExtended(i));
-		for (int i = 0; i<getTableModel().getListHandler().getListCount(); i++)
-			mComboBox.addItem(getTableModel().getColumnTitleExtended(CompoundTableListHandler.getColumnFromList(i)));
+		if (chartType != ChartType.cTypeBars && chartType != ChartType.cTypePies)
+			for (int i = 0; i<getTableModel().getListHandler().getListCount(); i++)
+				mComboBox.addItem(getTableModel().getColumnTitleExtended(CompoundTableListHandler.getColumnFromList(i)));
         mComboBox.setEditable(!hasInteractiveView());
 		mComboBox.addItemListener(this);
-		if (hasInteractiveView()) {
-			JVisualization visualization = ((VisualizationPanel)getInteractiveView()).getVisualization();
-			if (visualization.getChartType().getType() == ChartType.cTypePies)
-				mComboBox.setEnabled(false);
-			}
+		if (chartType == ChartType.cTypePies)
+			mComboBox.setEnabled(false);
+
 		cp.add(new JLabel("Size by: "));
 		cp.add(mComboBox);
 		p.add(cp, "1,2,3,2");
@@ -157,7 +157,7 @@ public class DETaskSetMarkerSize extends DETaskAbstractSetViewOptions implements
 		int column = getTableModel().findColumn((String) mComboBox.getSelectedItem());
 		boolean isLogarithmic = (column == -1) ? false : getTableModel().isLogarithmicViewMode(column);
 		try {
-			if (mTextFieldMin.getText().length() != 0)
+			if (!mTextFieldMin.getText().isEmpty())
 				min = Float.parseFloat(mTextFieldMin.getText());
 			mTextFieldMin.setBackground(UIManager.getColor("TextArea.background"));
 			}
@@ -165,7 +165,7 @@ public class DETaskSetMarkerSize extends DETaskAbstractSetViewOptions implements
 			mTextFieldMin.setBackground(Color.red);
 			}
 		try {
-			if (mTextFieldMax.getText().length() != 0)
+			if (!mTextFieldMax.getText().isEmpty())
 				max = Float.parseFloat(mTextFieldMax.getText());
 			mTextFieldMax.setBackground(UIManager.getColor("TextArea.background"));
 			}
@@ -178,9 +178,6 @@ public class DETaskSetMarkerSize extends DETaskAbstractSetViewOptions implements
 			}
 		else if (column > 0 && isLogarithmic && min <= 0) {
 			mTextFieldMin.setBackground(Color.red);
-			}
-		else if (column > 0 && isLogarithmic && max <= 0) {
-			mTextFieldMax.setBackground(Color.red);
 			}
 		else if (hasInteractiveView() && column > 0) {
 			((VisualizationPanel2D)getInteractiveView()).getVisualization().setMarkerSizeColumn(column, min, max);
@@ -221,9 +218,9 @@ public class DETaskSetMarkerSize extends DETaskAbstractSetViewOptions implements
 	public void addDialogConfiguration(Properties configuration) {
 		configuration.setProperty(PROPERTY_COLUMN, getTableModel().getColumnTitleNoAlias((String)mComboBox.getSelectedItem()));
 		configuration.setProperty(PROPERTY_SIZE, ""+(mSlider.getValue()*mSlider.getValue()/2500f));
-		if (mTextFieldMin.isEnabled() && mTextFieldMin.getText().length() != 0)
+		if (mTextFieldMin.isEnabled() && !mTextFieldMin.getText().isEmpty())
 			try { configuration.setProperty(PROPERTY_MINIMUM, ""+Float.parseFloat(mTextFieldMin.getText())); } catch (NumberFormatException nfe) {}
-		if (mTextFieldMax.isEnabled() && mTextFieldMax.getText().length() != 0)
+		if (mTextFieldMax.isEnabled() && !mTextFieldMax.getText().isEmpty())
 			try { configuration.setProperty(PROPERTY_MAXIMUM, ""+Float.parseFloat(mTextFieldMax.getText())); } catch (NumberFormatException nfe) {}
 		configuration.setProperty(PROPERTY_PROPORTIONAL, mCheckBoxProportional.isSelected() ? "true" : "false");
 		configuration.setProperty(PROPERTY_INVERSE, mCheckBoxInverse.isSelected() ? "true" : "false");

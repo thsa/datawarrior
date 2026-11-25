@@ -411,6 +411,10 @@ public class JRangeFilterPanel extends JFilterPanel
 		}
 
 	private void labelUpdated(JTextField source) {
+		// focusLost() may arrive after the column was deleted or the table was cleared
+		if (mColumnIndex < 0 || mColumnIndex >= mTableModel.getTotalColumnCount())
+			return;
+
 		String error = null;
 		try {
 			String valueString = source.getText();

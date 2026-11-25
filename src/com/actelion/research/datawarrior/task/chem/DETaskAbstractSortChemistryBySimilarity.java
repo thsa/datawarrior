@@ -1,10 +1,11 @@
 package com.actelion.research.datawarrior.task.chem;
 
-import com.actelion.research.calc.ProgressController;
 import com.actelion.research.chem.Canonizer;
 import com.actelion.research.chem.IDCodeParser;
 import com.actelion.research.chem.StereoMolecule;
-import com.actelion.research.chem.descriptor.*;
+import com.actelion.research.chem.descriptor.DescriptorHandler;
+import com.actelion.research.chem.descriptor.DescriptorHandlerStandardFactory;
+import com.actelion.research.chem.descriptor.DescriptorInfo;
 import com.actelion.research.chem.io.CompoundTableConstants;
 import com.actelion.research.datawarrior.DEFrame;
 import com.actelion.research.datawarrior.task.ConfigurableTask;
@@ -36,10 +37,10 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 
 	protected static final String PROPERTY_REACTION_PART = "reactionPart";
 
-	private CompoundTableModel mTableModel;
-	private CompoundRecord mRecord;
-	private int mDescriptorColumn;
-	private JComboBox mComboBoxStructureColumn,mComboBoxDescriptorType;
+	private final CompoundTableModel mTableModel;
+	private final CompoundRecord mRecord;
+	private final int mDescriptorColumn;
+	private JComboBox<String> mComboBoxStructureColumn,mComboBoxDescriptorType;
 	private JEditableStructureView mStructureView;
 
 	public DETaskAbstractSortChemistryBySimilarity(DEFrame parent, int descriptorColumn, CompoundRecord record) {
@@ -51,7 +52,7 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 
 	protected abstract String getChemistryName();
 	protected abstract String getParentColumnType();
-	protected abstract JComboBox getComboBoxReactionPart();
+	protected abstract JComboBox<String> getComboBoxReactionPart();
 
 	@Override
 	public Properties getPredefinedConfiguration() {
@@ -76,7 +77,7 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 
 	@Override
 	public JComponent createDialogContent() {
-		JComboBox comboBoxReactionPart = getComboBoxReactionPart();
+		JComboBox<String> comboBoxReactionPart = getComboBoxReactionPart();
 
 		int gap = HiDPIHelper.scale(8);
 		double[][] size = { {gap, TableLayout.PREFERRED, gap, TableLayout.PREFERRED, gap},
@@ -89,10 +90,10 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 
 		int[] structureColumn = getStructureColumnList();
 
-		mComboBoxStructureColumn = new JComboBox();
+		mComboBoxStructureColumn = new JComboBox<>();
 		if (structureColumn != null)
-			for (int i=0; i<structureColumn.length; i++)
-				mComboBoxStructureColumn.addItem(mTableModel.getColumnTitle(structureColumn[i]));
+			for (int column : structureColumn)
+				mComboBoxStructureColumn.addItem(mTableModel.getColumnTitle(column));
 		content.add(new JLabel(getChemistryName()+" column:"), "1,1");
 		content.add(mComboBoxStructureColumn, "3,1");
 		mComboBoxStructureColumn.setEditable(!isInteractive());
@@ -104,7 +105,7 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 			content.add(comboBoxReactionPart, "3,3");
 			}
 
-		mComboBoxDescriptorType = new JComboBox();
+		mComboBoxDescriptorType = new JComboBox<>();
 		populateComboBoxDescriptor(structureColumn == null? -1 : structureColumn[0],
 								   comboBoxReactionPart == null ? null : (String)comboBoxReactionPart.getSelectedItem());
 		content.add(new JLabel("Descriptor:"), "1,5");
@@ -149,12 +150,12 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 	public void setDialogConfiguration(Properties configuration) {
 		String structureColumnName = configuration.getProperty(PROPERTY_CHEMISTRY_COLUMN, "");
 		String descriptorName = configuration.getProperty(PROPERTY_DESCRIPTOR_TYPE, "");
-		if (structureColumnName.length() != 0) {
+		if (!structureColumnName.isEmpty()) {
 			int column = mTableModel.findColumn(structureColumnName);
 			if (column != -1) {
 				mComboBoxStructureColumn.setSelectedItem(mTableModel.getColumnTitle(column));
 
-				if (descriptorName.length() != 0) {
+				if (!descriptorName.isEmpty()) {
 					int descriptorColumn = mTableModel.getChildColumn(column, descriptorName);
 					if (descriptorColumn != -1 || !isInteractive())
 						mComboBoxDescriptorType.setSelectedItem(descriptorName);
@@ -190,7 +191,7 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 		if (mComboBoxDescriptorType.getItemCount() != 0)
 			mComboBoxDescriptorType.setSelectedIndex(0);
 
-		mStructureView.getMolecule().deleteMolecule();
+		mStructureView.getMolecule().clear();
 		mStructureView.structureChanged();
 		}
 
@@ -266,21 +267,21 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 	@Override
 	public boolean isConfigurationValid(Properties configuration, boolean isLive) {
 		String structureColumnName = configuration.getProperty(PROPERTY_CHEMISTRY_COLUMN, "");
-		if (structureColumnName.length() == 0) {
+		if (structureColumnName.isEmpty()) {
 			showErrorMessage(getChemistryName()+" column not defined.");
 			return false;
 			}
 		String idcode = configuration.getProperty(PROPERTY_IDCODE, "");
-		if (idcode.length() == 0) {
+		if (idcode.isEmpty()) {
 			showErrorMessage("Reference structure not defined.");
 			return false;
 			}
 		String descriptorName = configuration.getProperty(PROPERTY_DESCRIPTOR_TYPE, "");
-		if (descriptorName.length() == 0) {
+		if (descriptorName.isEmpty()) {
 			showErrorMessage("Descriptor type not defined.");
 			return false;
 			}
-		if (configuration.getProperty(PROPERTY_DESCRIPTOR, "").length() == 0) {
+		if (configuration.getProperty(PROPERTY_DESCRIPTOR, "").isEmpty()) {
 			showErrorMessage("Missing descriptor.");
 			return false;
 			}
@@ -312,12 +313,36 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 		int chemistryColumn = mTableModel.findColumn(configuration.getProperty(PROPERTY_CHEMISTRY_COLUMN));
 		int descriptorColumn = mTableModel.getChildColumn(chemistryColumn, configuration.getProperty(PROPERTY_DESCRIPTOR_TYPE), reactionPart);
 		Object descriptor = mTableModel.getDescriptorHandler(descriptorColumn).decode(configuration.getProperty(PROPERTY_DESCRIPTOR));
-		mTableModel.sortBySimilarity(createSimilarityList(idcode, descriptor, descriptorColumn), descriptorColumn);
+
+		if (isInteractive()
+		 && isSlowSimilarityCalculation(descriptorColumn)
+		 && mTableModel.getStructureSimilarityListFromCache(idcode, descriptorColumn) == null) {
+			// calculate the similarities in a background thread behind a progress dialog and sort when they are complete
+			final JProgressDialog pd = new JProgressDialog(getParentFrame());
+			new Thread(() -> {
+				mTableModel.createSimilarityListSMP(null, descriptor, idcode, descriptorColumn, pd, true);
+				float[] similarity = mTableModel.getSimilarityListSMP(false);
+				SwingUtilities.invokeLater(() -> {
+					pd.close();
+					if (similarity != null)	// null if cancelled
+						mTableModel.sortBySimilarity(similarity, descriptorColumn);
+					} );
+				}, "Similarity Sort").start();
+			return;
+			}
+
+		float[] similarity = createSimilarityList(idcode, descriptor, descriptorColumn);
+		if (similarity != null)	// null if cancelled
+			mTableModel.sortBySimilarity(similarity, descriptorColumn);
+		}
+
+	private boolean isSlowSimilarityCalculation(int descriptorColumn) {
+		return DESCRIPTOR_Flexophore.shortName.equals(mTableModel.getColumnSpecialType(descriptorColumn))
+			|| mTableModel.getTotalRowCount() > 400000;
 		}
 
 	private float[] createSimilarityList(String idcode, Object descriptor, int descriptorColumn) {
-		return (DESCRIPTOR_Flexophore.shortName.equals(mTableModel.getColumnSpecialType(descriptorColumn))
-				|| mTableModel.getTotalRowCount() > 400000) ?
+		return isSlowSimilarityCalculation(descriptorColumn) ?
 
 				// if we have the slow 3DPPMM2 then use a progress dialog
 				createSimilarityListSMP(idcode, descriptor, descriptorColumn)
@@ -331,19 +356,7 @@ public abstract class DETaskAbstractSortChemistryBySimilarity extends Configurab
 		if (similarity != null)
 			return similarity;
 
-		ProgressController pc = !isInteractive() ? getProgressController() : new JProgressDialog(getParentFrame()) {
-			private static final long serialVersionUID = 0x20160922;
-
-			public void stopProgress() {
-				super.stopProgress();
-				close();
-				}
-			};
-
-		mTableModel.createSimilarityListSMP(null, descriptor, idcode, descriptorColumn, pc, !isInteractive());
-
-		similarity = mTableModel.getSimilarityListSMP(false);
-
-		return similarity;
+		mTableModel.createSimilarityListSMP(null, descriptor, idcode, descriptorColumn, getProgressController(), true);
+		return mTableModel.getSimilarityListSMP(false);
 		}
 	}

@@ -490,7 +490,8 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 
 			if (computablePropertyFound) {
 				mol = mTableModel.getChemicalStructure(record, structureColumn, 0, mol);
-				mol.stripSmallFragments();
+				if (mol != null)	// null if the row has no structure
+					mol.stripSmallFragments();
 			}
 
 			double fuzzyMean = 0.0;
@@ -501,7 +502,7 @@ public class DETaskCalculateFuzzyScore extends ConfigurableTask implements Actio
 			int columnIndex = newColumn;
 			for (int i=0; i<parameterCount; i++) {
 				double value = column[i] != -1 ? mTableModel.getTotalDoubleAt(row, column[i])
-						: MolecularPropertyHelper.calculateProperty(mol, property[i]);
+						: mol == null ? Double.NaN : MolecularPropertyHelper.calculateProperty(mol, property[i]);
 
 				if (!Double.isNaN(value)) {
 					double valuation = MolecularPropertyHelper.getValuation(value, min[i], max[i], halfWidth[i]);

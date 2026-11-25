@@ -2542,7 +2542,7 @@ public abstract class JVisualization extends JComponent
 			return true;
 
 		if (mChartType.getType() == ChartType.cTypeBars
-		 && mMarkerSizeColumn != cColumnUnassigned
+		 && mMarkerSizeColumn >= 0	// pseudo columns (row lists) have no values
 		 && Float.isNaN(vp.record.getDouble(mMarkerSizeColumn)))
 			return true;
 
@@ -2558,7 +2558,7 @@ public abstract class JVisualization extends JComponent
 			return false;
 
 		if (mChartType.getType() == ChartType.cTypeBars
-		 && mMarkerSizeColumn != cColumnUnassigned
+		 && mMarkerSizeColumn >= 0	// pseudo columns (row lists) have no values
 		 && Float.isNaN(vp.record.getDouble(mMarkerSizeColumn)))
 			return false;
 
@@ -4689,6 +4689,14 @@ public abstract class JVisualization extends JComponent
 				mLocalExclusionFlagNo = mTableModel.getUnusedRowFlag(true);
 			}
 		else {
+			// hand the flag over to applyLocalExclusion(), which frees mPreviousLocalExclusionFlagNo;
+			// if that still holds another flag, then this one is freed right away
+			if (mLocalExclusionFlagNo != -1) {
+				if (mPreviousLocalExclusionFlagNo == -1)
+					mPreviousLocalExclusionFlagNo = mLocalExclusionFlagNo;
+				else if (mPreviousLocalExclusionFlagNo != mLocalExclusionFlagNo)
+					mTableModel.freeRowFlag(mLocalExclusionFlagNo);
+				}
 			mLocalExclusionFlagNo = -1;
 			}
 		applyLocalExclusion(false);
@@ -4771,6 +4779,12 @@ public abstract class JVisualization extends JComponent
 
 						mTableModel.freeRowFlag(mPreviousLocalExclusionFlagNo);
 						}
+
+					// a new flag was allocated before the previous one was freed
+					if (mLocalExclusionFlagNo != -1
+					 && mPreviousLocalExclusionFlagNo != -1
+					 && mPreviousLocalExclusionFlagNo != mLocalExclusionFlagNo)
+						mTableModel.freeRowFlag(mPreviousLocalExclusionFlagNo);
 
 					mPreviousLocalExclusionFlagNo = mLocalExclusionFlagNo;
 				});

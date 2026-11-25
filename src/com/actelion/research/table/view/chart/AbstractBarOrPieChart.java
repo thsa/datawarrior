@@ -52,7 +52,7 @@ public abstract class AbstractBarOrPieChart extends AbstractChart {
 			mAbsColorValueSum = new float[mHVCount][mCatCount][mColor.length];
 		}
 
-		if (mVisualization.getMarkerSizeColumn() != JVisualization.cColumnUnassigned) // variable width
+		if (mVisualization.getMarkerSizeColumn() >= 0) // variable width (not with a row list, which has no values)
 			mAbsColorWidthSum = new float[mHVCount][mCatCount][mColor.length];
 
 		double widthHeightRatio = 1.0;
@@ -102,7 +102,7 @@ public abstract class AbstractBarOrPieChart extends AbstractChart {
 				int cat = mVisualization.getChartCategoryIndex(vp);
 				int colorIndex = mVisualization.getColorIndex(vp, mBaseColorCount, mFocusFlagNo);
 				float chartValue = (chartColumn == -1) ? Float.NaN : vp.record.getDouble(chartColumn);
-				float widthValue = (markerSizeColumn == -1) ? Float.NaN : vp.record.getDouble(markerSizeColumn);
+				float widthValue = (markerSizeColumn < 0) ? Float.NaN : vp.record.getDouble(markerSizeColumn);
 				addValue(vp.hvIndex, cat, colorIndex, chartValue, widthValue);
 			}
 		}
